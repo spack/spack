@@ -25,9 +25,6 @@ class Nsimd(CMakePackage):
     # version('2.0', sha256='b239e98316f93257161b25c8232634884edcee358982a74742981cc9b68da642')
     version("1.0", sha256="523dae83f1d93eab30114321f1c9a67e2006a52595da4c51f121ca139abe0857")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "simd",
         default="auto",
@@ -56,6 +53,9 @@ class Nsimd(CMakePackage):
         when="@:1",
         description="Optional SIMD features",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Requires a C++14 compiler for building.
     # The C++ interface requires a C++11 compiler to use.

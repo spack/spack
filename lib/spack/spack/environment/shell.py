@@ -8,6 +8,7 @@ from typing import Optional
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.schema.environment
@@ -158,7 +159,8 @@ def activate(
     # become PATH variables.
     #
 
-    env_vars_yaml = env.manifest.configuration.get("env_vars", None)
+    with env.manifest.use_config():
+        env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 
@@ -195,7 +197,8 @@ def deactivate() -> EnvironmentModifications:
     if active is None:
         return env_mods
 
-    env_vars_yaml = active.manifest.configuration.get("env_vars", None)
+    with active.manifest.use_config():
+        env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
 

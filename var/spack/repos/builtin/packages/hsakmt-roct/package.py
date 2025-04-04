@@ -41,11 +41,11 @@ class HsakmtRoct(CMakePackage):
         version("5.3.3", sha256="b5350de915997ed48072b37a21c2c44438028255f6cc147c25a196ad383c52e7")
         version("5.3.0", sha256="c150be3958fd46e57bfc9db187819ec34b1db8f0cf9b69f8c3f8915001800ab8")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared or static library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3:", type="build")
@@ -100,7 +100,7 @@ class HsakmtRoct(CMakePackage):
             prefixes = ";".join(
                 [
                     self.spec["libdrm"].prefix,
-                    self.spec["hsakmt-roct"].prefix,
+                    self.prefix,
                     self.spec["numactl"].prefix,
                     self.spec["pkgconfig"].prefix,
                     self.spec["llvm-amdgpu"].prefix,
@@ -108,7 +108,7 @@ class HsakmtRoct(CMakePackage):
                     self.spec["ncurses"].prefix,
                 ]
             )
-            hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
+            hsakmt_path = ";".join([self.prefix])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,

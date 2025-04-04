@@ -28,9 +28,6 @@ class Libvips(AutotoolsPackage):
         default="meson",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("fftw", default=True, description="Uses FFTW3 for fourier transforms.")
 
     variant("jpeg", default=False, description="Enable JPEG support")
@@ -42,6 +39,9 @@ class Libvips(AutotoolsPackage):
     variant("poppler", default=False, description="Enable PDF rendering via poppler")
 
     # TODO: Add more variants!
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("glib")

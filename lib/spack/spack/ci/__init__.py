@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Set
+from typing import Callable, Dict, List, Set, Union
 from urllib.request import Request
 
 import llnl.path
@@ -24,7 +24,6 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
-import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -42,6 +41,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -78,6 +78,45 @@ def get_change_revisions():
         # TODO: require more thought outside of that narrow case.
         return "HEAD^", "HEAD"
     return None, None
+
+
+def get_added_versions(
+    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
+    path: str,
+    from_ref: str = "HEAD~1",
+    to_ref: str = "HEAD",
+) -> List[Union[StandardVersion, GitVersion]]:
+    """Get a list of the versions added between `from_ref` and `to_ref`.
+    Args:
+       checksums_version_dict (Dict): all package versions keyed by known checksums.
+       path (str): path to the package.py
+       from_ref (str): oldest git ref, defaults to `HEAD~1`
+       to_ref (str): newer git ref, defaults to `HEAD`
+    Returns: list of versions added between refs
+    """
+    git_exe = spack.util.git.git(required=True)
+
+    # Gather git diff
+    diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
+
+    # Store added and removed versions
+    # Removed versions are tracked here to determine when versions are moved in a file
+    # and show up as both added and removed in a git diff.
+    added_checksums = set()
+    removed_checksums = set()
+
+    # Scrape diff for modified versions and prune added versions if they show up
+    # as also removed (which means they've actually just moved in the file and
+    # we shouldn't need to rechecksum them)
+    for checksum in checksums_version_dict.keys():
+        for line in diff_lines:
+            if checksum in line:
+                if line.startswith("+"):
+                    added_checksums.add(checksum)
+                if line.startswith("-"):
+                    removed_checksums.add(checksum)
+
+    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
 
 
 def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
@@ -381,10 +420,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         args: (spack.main.SpackArgumentParser): Parsed arguments from the command
             line.
     """
-    with spack.concretize.disable_compiler_existence_check():
-        with env.write_transaction():
-            env.concretize()
-            env.write()
+    with env.write_transaction():
+        env.concretize()
+        env.write()
 
     options = collect_pipeline_options(env, args)
 

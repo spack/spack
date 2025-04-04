@@ -29,10 +29,6 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
     version("4.0", sha256="c532f7bdd5cca71f78c12e0885c492f6e276e283711806c84d0b0f80bb3e3b74")
     version("3.0", sha256="ee076c4e672d18d6bf8dd2250e4a91fa96aac1db2c788e4572b5513d86936efb")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     provides("mpi")
     provides("mpi@:3.1")
 
@@ -102,6 +98,10 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("findutils", type="build")
     depends_on("bison", type="build")

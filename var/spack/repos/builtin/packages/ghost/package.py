@@ -24,13 +24,13 @@ class Ghost(CMakePackage, CudaPackage):
 
     version("develop", branch="devel")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="enable/disable MPI")
     variant("scotch", default=False, description="enable/disable matrix reordering with PT-SCOTCH")
     variant("zoltan", default=False, description="enable/disable matrix reordering with Zoltan")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Everything should be compiled position independent (-fpic)
     depends_on("cmake@3.5:", type="build")

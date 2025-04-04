@@ -40,9 +40,6 @@ class Eigen(CMakePackage, ROCmPackage):
 
     variant("nightly", description="run Nightly test", default=False)
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # TODO: https://eigen.tuxfamily.org/dox/TopicUsingBlasLapack.html
 
     # Older eigen releases haven't been tested with ROCm
@@ -76,6 +73,9 @@ class Eigen(CMakePackage, ROCmPackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("boost@1.53:", when="@master", type="test")
     # TODO: latex and doxygen needed to produce docs with make doc
     # TODO: Other dependencies might be needed to test this package
@@ -84,7 +84,11 @@ class Eigen(CMakePackage, ROCmPackage):
         env.prepend_path("CPATH", self.prefix.include.eigen3)
 
     def cmake_args(self):
-        args = []
+        args = [
+            self.define("EIGEN_BUILD_TESTING", self.run_tests),
+            self.define("EIGEN_LEAVE_TEST_IN_ALL_TARGET", self.run_tests),
+        ]
+
         if self.spec.satisfies("@:3.4"):
             # CMake fails without this flag
             # https://gitlab.com/libeigen/eigen/-/issues/1656

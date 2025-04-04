@@ -20,8 +20,6 @@ class Cdt(CMakePackage):
     version("1.3.6", sha256="15881e4c451f3b7cceade9b11884b3813ff674dff3edae4fb7c440634f8d4c33")
     version("1.3.0", sha256="7e8feadf9534cf79f9bf188365510fd6bc68ea997758e1c68d1569f98da924da")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "boost",
         default=False,
@@ -38,6 +36,8 @@ class Cdt(CMakePackage):
         description="Instantiate templates for float and double and compiled into a library",
     )
     variant("shared", default=True, description="Compile as a shared library")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.4:", type="build")
     depends_on("boost", when="+boost")

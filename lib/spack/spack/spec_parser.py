@@ -72,6 +72,7 @@ import spack.paths
 import spack.spec
 import spack.util.spack_yaml
 import spack.version
+from spack.aliases import LEGACY_COMPILER_TO_BUILTIN
 from spack.tokenize import Token, TokenBase, Tokenizer
 
 #: Valid name for specs and variants. Here we are not using
@@ -98,8 +99,10 @@ VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
-#: Regex with groups to use for splitting (optionally propagated) key-value pairs
-SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
+SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
+
+#: Regex with groups to use for splitting %[virtuals=...] tokens
+SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
 
 #: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
 #: followed by a colon and "\" or "." or {name}\
@@ -131,11 +134,16 @@ class SpecTokens(TokenBase):
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}==(?:{VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"(?:{NAME}=(?:{VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
+    COMPILER_AND_VERSION_WITH_VIRTUALS = (
+        rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]"
+        rf"\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    )
+    COMPILER_WITH_VIRTUALS = rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]\s*(?:{NAME}))"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
@@ -315,12 +323,11 @@ class SpecParser:
 class SpecNodeParser:
     """Parse a single spec node from a stream of tokens"""
 
-    __slots__ = "ctx", "has_compiler", "has_version", "literal_str"
+    __slots__ = "ctx", "has_version", "literal_str"
 
     def __init__(self, ctx, literal_str):
         self.ctx = ctx
         self.literal_str = literal_str
-        self.has_compiler = False
         self.has_version = False
 
     def parse(
@@ -362,10 +369,10 @@ class SpecNodeParser:
             """Raise a spec parsing error with token context."""
             raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
 
-        def add_flag(name: str, value: str, propagate: bool):
+        def add_flag(name: str, value: str, propagate: bool, concrete: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
             try:
-                initial_spec._add_flag(name, value, propagate)
+                initial_spec._add_flag(name, value, propagate, concrete)
             except Exception as e:
                 raise_parsing_error(str(e), e)
 
@@ -376,24 +383,32 @@ class SpecNodeParser:
                 parser_warnings.append(f"`{token}` should go before `{last_compiler}`")
 
         while True:
-            if self.ctx.accept(SpecTokens.COMPILER):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
+            if (
+                self.ctx.accept(SpecTokens.COMPILER)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION)
+                or self.ctx.accept(SpecTokens.COMPILER_WITH_VIRTUALS)
+                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS)
+            ):
+                current_token = self.ctx.current_token
+                if current_token.kind in (
+                    SpecTokens.COMPILER_WITH_VIRTUALS,
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS,
+                ):
+                    m = SPLIT_COMPILER_TOKEN.match(current_token.value)
+                    assert m, "SPLIT_COMPILER_TOKEN and COMPILER_* do not agree."
+                    virtuals_str, compiler_str = m.groups()
+                    virtuals = tuple(virtuals_str.strip("'\" ").split(","))
+                else:
+                    virtuals = tuple()
+                    compiler_str = current_token.value[1:]
 
-                compiler_name = self.ctx.current_token.value[1:]
-                initial_spec.compiler = spack.spec.CompilerSpec(compiler_name.strip(), ":")
-                self.has_compiler = True
-                last_compiler = self.ctx.current_token.value
+                build_dependency = spack.spec.Spec(compiler_str)
+                if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                    build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
 
-            elif self.ctx.accept(SpecTokens.COMPILER_AND_VERSION):
-                if self.has_compiler:
-                    raise_parsing_error("Spec cannot have multiple compilers")
-
-                compiler_name, compiler_version = self.ctx.current_token.value[1:].split("@")
-                initial_spec.compiler = spack.spec.CompilerSpec(
-                    compiler_name.strip(), compiler_version
+                initial_spec._add_dependency(
+                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=virtuals, direct=True
                 )
-                self.has_compiler = True
                 last_compiler = self.ctx.current_token.value
 
             elif (
@@ -412,29 +427,34 @@ class SpecNodeParser:
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                name = self.ctx.current_token.value[1:].strip()
                 variant_value = self.ctx.current_token.value[0] == "+"
-                add_flag(self.ctx.current_token.value[1:].strip(), variant_value, propagate=False)
+                add_flag(name, variant_value, propagate=False, concrete=True)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
+                name = self.ctx.current_token.value[2:].strip()
                 variant_value = self.ctx.current_token.value[0:2] == "++"
-                add_flag(self.ctx.current_token.value[2:].strip(), variant_value, propagate=True)
+                add_flag(name, variant_value, propagate=True, concrete=True)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(self.ctx.current_token.value)
-                assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
+                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
 
-                name, _, value = match.groups()
-                add_flag(name, strip_quotes_and_unescape(value), propagate=False)
+                add_flag(
+                    name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
+                )
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(self.ctx.current_token.value)
-                assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
-
-                name, _, value = match.groups()
-                add_flag(name, strip_quotes_and_unescape(value), propagate=True)
+                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
+                add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.expect(SpecTokens.DAG_HASH):
@@ -493,7 +513,8 @@ class EdgeAttributeParser:
         while True:
             if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                name = name.strip("'\" ")
+                if name.endswith(":"):
+                    name = name[:-1]
                 value = value.strip("'\" ").split(",")
                 attributes[name] = value
                 if name not in ("deptypes", "virtuals"):

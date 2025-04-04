@@ -20,9 +20,6 @@ class PlanckLikelihood(Package):
         url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("lensing-ext", default=False, description="Provide lensing-ext data")
     variant("plik-DS", default=False, description="Provide plik-DS data")
     variant("plik-HM-ext", default=False, description="Provide plik-HM-ext data")
@@ -66,6 +63,9 @@ class PlanckLikelihood(Package):
         destination=".",
         when="+plik-unbinned",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("cfitsio +shared")
