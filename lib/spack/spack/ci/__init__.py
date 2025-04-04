@@ -24,6 +24,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
+import spack.builder
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -634,7 +635,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
             archive_files = []
             archive_root = package_metadata_root / "archived-files"
             if archive_root.is_dir():
-                archive_files = [f for f in archive_root.rglob("*") if f.is_file()]
+                archive_files = [str(f) for f in archive_root.rglob("*") if f.is_file()]
             else:
                 msg = "Cannot copy package archived files: archived-files must be a directory"
                 tty.warn(msg)
