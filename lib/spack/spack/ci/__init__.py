@@ -653,7 +653,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     build_env_mods = package_metadata_root / "spack-build-env.txt"
 
     for f in [build_log_zipped, build_log, build_env_mods, *archive_files]:
-        copy_files_to_artifacts(str(f), job_log_dir)
+        copy_files_to_artifacts(str(f), job_log_dir, compress_artifacts=True)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
@@ -670,7 +670,9 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
         tty.error(msg)
         return
 
-    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
+    copy_files_to_artifacts(
+        os.path.join(test_stage, "*", "*.txt"), job_test_dir, compress_artifacts=True
+    )
 
 
 def download_and_extract_artifacts(url, work_dir) -> str:

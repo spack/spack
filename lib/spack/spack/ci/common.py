@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import gzip
 import json
 import os
 import re
@@ -40,7 +41,26 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 _urlopen = web_util.urlopen
 
 
-def copy_files_to_artifacts(src, artifacts_dir):
+def is_gzipped(path):
+    """Check if the path is a gzipped file
+
+    Parameters:
+        path: path to file to test
+
+    Returns:
+        Trye if file is gzipped, otherwise False
+    """
+    try:
+        with gzip.open(path, "r") as f:
+            f.read(1)
+        return True
+    except gzip.BadGzipFile:
+        return False
+    except FileNotFoundError:
+        return False
+
+
+def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
     """
     Copy file(s) to the given artifacts directory
 
@@ -49,7 +69,14 @@ def copy_files_to_artifacts(src, artifacts_dir):
         artifacts_dir (str): the destination directory
     """
     try:
-        fs.copy(src, artifacts_dir)
+        if compress_artifacts and not is_gzipped(src):
+            # Compress and copy in one step
+            src_name = os.path.dirname(src)
+            zipped = os.path.join(artifacts_dir, f"{src_name}.gz")
+            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                fout.writelines(fin)
+        else:
+            fs.copy(src, artifacts_dir)
     except Exception as err:
         msg = (
             f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
