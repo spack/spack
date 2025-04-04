@@ -38,9 +38,9 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("aec", default=True, description="Use AEC library", when="@develop")
-    variant("openmp", default=False, description="Use OpenMP multithreading", when="@develop")
-    variant("utils", default=False, description="Build grib utilities", when="@develop")
+    variant("aec", default=True, description="Use AEC library", when="@4:")
+    variant("openmp", default=False, description="Use OpenMP multithreading", when="@4:")
+    variant("utils", default=False, description="Build grib utilities", when="@4:")
     variant(
         "g2c_compare",
         default=False,
@@ -62,9 +62,9 @@ class G2(CMakePackage):
     depends_on("g2c@2:", when="@4:")
     depends_on("g2c@2: +aec", when="+aec")
     depends_on("libpng")
-    depends_on("zlib-api", when="@develop")
+    depends_on("zlib-api", when="@4:")
     depends_on("bacio", when="@3.4.6:")
-    depends_on("ip", when="@develop")
+    depends_on("ip@3.3.3:", when="@4:")
     requires("^ip precision=d", when="^ip@4.1:")
     depends_on("sp", when="^ip@:4")
     requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
