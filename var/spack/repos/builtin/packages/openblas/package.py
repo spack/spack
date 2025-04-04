@@ -114,6 +114,9 @@ class Openblas(CMakePackage, MakefilePackage):
     # https://github.com/OpenMathLib/OpenBLAS/pull/4328
     patch("xcode15-fortran.patch", when="@0.3.25 %apple-clang@15:")
 
+    # https://github.com/OpenMathLib/OpenBLAS/issues/5202
+    patch("openblas-0.3.29-darwin-aarch64.patch", when="@0.3.29 platform=darwin")
+
     # https://github.com/xianyi/OpenBLAS/pull/2519/files
     patch("ifort-msvc.patch", when="%msvc")
 
