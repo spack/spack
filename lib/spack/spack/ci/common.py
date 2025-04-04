@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
-import gzip
 import json
 import os
 import re
@@ -35,6 +34,13 @@ from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
 
+try:
+    import gzip  # noqa
+
+    GZIP_SUPPORTED = True
+except ImportError:
+    GZIP_SUPPORTED = False
+
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 
@@ -64,7 +70,7 @@ def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
         artifacts_dir (str): the destination directory
     """
     try:
-        if compress_artifacts and not is_gzipped(src):
+        if GZIP_SUPPORTED and compress_artifacts and not is_gzipped(src):
             # Compress and copy in one step
             src_name = os.path.basename(src)
             zipped = os.path.join(artifacts_dir, f"{src_name}.gz")

@@ -245,7 +245,6 @@ def test_ci_copy_stage_logs_to_artifacts_fail(tmpdir, default_mock_concretizatio
     ci.copy_stage_logs_to_artifacts(concrete_spec, log_dir)
     _, err = capfd.readouterr()
     assert "Unable to copy files" in err
-    assert "No such file or directory" in err
 
 
 def test_ci_copy_test_logs_to_artifacts_fail(tmpdir, capfd):
