@@ -757,7 +757,7 @@ def test_concretize_variant_default_with_multiple_defs(
 
 
 @pytest.mark.parametrize(
-    "spec,variant_name,after",
+    "spec,variant_name,narrowed_type",
     [
         # dev_path is a special case
         ("foo dev_path=/path/to/source", "dev_path", SingleValuedVariant),
@@ -767,26 +767,20 @@ def test_concretize_variant_default_with_multiple_defs(
         ("variant-values@1.0 v=foo", "v", SingleValuedVariant),
         # simple, but with bool valued variant
         ("pkg-a bvv=true", "bvv", BoolValuedVariant),
-        # variant doesn't exist at version
-        ("variant-values@4.0 v=bar", "v", spack.spec.InvalidVariantForSpecError),
-        # multiple definitions, so not yet knowable
-        ("variant-values@2.0 v=bar", "v", VariantBase),
+        # takes the second definition, which overrides the single-valued one
+        ("variant-values@2.0 v=bar", "v", MultiValuedVariant),
     ],
 )
-def test_substitute_abstract_variants(mock_packages, spec, variant_name, after):
+def test_substitute_abstract_variants_narrowing(mock_packages, spec, variant_name, narrowed_type):
     spec = Spec(spec)
+    spack.spec.substitute_abstract_variants(spec)
+    assert type(spec.variants[variant_name]) is narrowed_type
 
-    # all variants start out as VariantBase
-    assert isinstance(spec.variants[variant_name], VariantBase)
 
-    if issubclass(after, Exception):
-        # if we're checking for an error, use pytest.raises
-        with pytest.raises(after):
-            spack.spec.substitute_abstract_variants(spec)
-    else:
-        # ensure that the type of the variant on the spec has been narrowed (or not)
-        spack.spec.substitute_abstract_variants(spec)
-        assert isinstance(spec.variants[variant_name], after)
+def test_substitute_abstract_variants_failure(mock_packages):
+    with pytest.raises(spack.spec.InvalidVariantForSpecError):
+        # variant doesn't exist at version
+        spack.spec.substitute_abstract_variants(Spec("variant-values@4.0 v=bar"))
 
 
 def test_abstract_variant_satisfies_abstract_abstract():
