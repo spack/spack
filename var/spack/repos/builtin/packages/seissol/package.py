@@ -158,7 +158,10 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
     conflicts(
         "%intel",
         when="@1.3.0",
-        msg="The Intel compiler is not supported in v1.3.0. Please use e.g. gcc or oneapi or a newer seissol",
+        msg=(
+            "The Intel compiler is not supported in v1.3.0. "
+            "Please use e.g. gcc, oneapi, or a newer SeisSol."
+        ),
     )
 
     variant(
