@@ -93,13 +93,13 @@ class Vtk(CMakePackage):
 
     # Based on PyPI wheel availability
     with when("+python"), default_args(type=("build", "link", "run")):
-        depends_on("python@:3.13")
-        depends_on("python@:3.12", when="@:9.3")
-        depends_on("python@:3.11", when="@:9.2")
-        depends_on("python@:3.10", when="@:9.2.2")
-        depends_on("python@:3.9", when="@:9.1")
-        depends_on("python@:3.8", when="@:9.0.1")
-        depends_on("python@:3.7", when="@:8.2.0")
+        extends("python@:3.13")
+        extends("python@:3.12", when="@:9.3")
+        extends("python@:3.11", when="@:9.2")
+        extends("python@:3.10", when="@:9.2.2")
+        extends("python@:3.9", when="@:9.1")
+        extends("python@:3.8", when="@:9.0.1")
+        extends("python@:3.7", when="@:8.2.0")
 
     # We need mpi4py if buidling python wrappers and using MPI
     depends_on("py-mpi4py", when="+python+mpi", type="run")
@@ -545,12 +545,3 @@ class Vtk(CMakePackage):
             examples = glob.glob("bin\\*.exe")
             for example in examples:
                 install(example, prefix.bin)
-
-    @when("+python")
-    def setup_run_environment(self, env):
-        env.prepend_path(
-            "PYTHONPATH",
-            os.path.join(self.prefix, "lib", "python{0}", "site-packages").format(
-                self.spec["python"].version.up_to(2)
-            ),
-        )
