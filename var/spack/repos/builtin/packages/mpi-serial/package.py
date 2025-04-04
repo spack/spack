@@ -24,14 +24,14 @@ class MpiSerial(AutotoolsPackage):
     variant(
         "fort-real-size",
         values=int,
-        default=4,
+        default="4",
         description="Specify the size of Fortran real variables",
     )
 
     variant(
         "fort-double-size",
         values=int,
-        default=8,
+        default="8",
         description="Specify the size of Fortran double precision variables",
     )
 

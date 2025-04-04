@@ -43,13 +43,13 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("pic", default=True, description="Position independent code")
     variant(
         "abs_tol",
-        default=1.0e-15,
+        default="1.0e-15",
         values=_parse_float,
         description="Absolute tolerance for regression tests",
     )
     variant(
         "rel_tol",
-        default=1.0e-12,
+        default="1.0e-12",
         values=_parse_float,
         description="Relative tolerance for regression tests",
     )

@@ -49,7 +49,7 @@ class Pythia6(CMakePackage):
     # intended to be used with other code with different requirements.
     variant(
         "nmxhep",
-        default=4000,
+        default="4000",
         values=_is_integral,
         description="Extent of particle arrays in the /HEPEVT/ COMMON block.",
     )

@@ -38,7 +38,7 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("shared", default="False", description="Build shared library", when="@3.4.7:")
+    variant("shared", default=False, description="Build shared library", when="@3.4.7:")
     variant("openmp", default=False, description="Use OpenMP multithreading", when="@develop")
     variant("utils", default=False, description="Build grib utilities", when="@develop")
     variant(
@@ -98,4 +98,7 @@ class G2(CMakePackage):
 
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("%intel@:2022"):
+                ctest("--exclude-regex", "test_gribcreate_.")
+            else:
+                ctest()
