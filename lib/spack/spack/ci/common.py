@@ -52,7 +52,7 @@ def is_gzipped(path):
         True if file is gzipped, otherwise False
     """
     with open(path, "rb") as fd:
-        return compression.GZipFileType.matches_magic(fd)
+        return compression.GZipFileType().matches_magic(fd)
 
 
 def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
