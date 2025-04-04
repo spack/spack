@@ -26,6 +26,7 @@ import spack.error
 import spack.mirrors.mirror
 import spack.schema
 import spack.spec
+import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
@@ -50,14 +51,8 @@ def is_gzipped(path):
     Returns:
         Trye if file is gzipped, otherwise False
     """
-    try:
-        with gzip.open(path, "r") as f:
-            f.read(1)
-        return True
-    except gzip.BadGzipFile:
-        return False
-    except FileNotFoundError:
-        return False
+    with open(path, "rb") as fd:
+        return compression.GZipFileType.matches_magic(fd)
 
 
 def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
