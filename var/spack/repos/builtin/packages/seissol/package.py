@@ -202,7 +202,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hdf5 +shared +threadsafe +hl +mpi")
 
-    depends_on("netcdf-c@4.6: +shared +mpi", when="+netcdf")
+    depends_on("netcdf-c@4.6:4.8.1 +shared +mpi", when="+netcdf")
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 
