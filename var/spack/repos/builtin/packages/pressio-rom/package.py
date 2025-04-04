@@ -36,15 +36,14 @@ class PressioRom(Package):
         include_dir = prefix.include
         install_tree("include", include_dir)
 
-        if str(spec.version) in self.supported_versions:
-            # Add symlinks to pressio-ops headers inside main include/pressio directory
-            pressio_includes = pjoin(include_dir, "pressio")
-            ops_include = pjoin(self.spec["pressio-ops"].prefix.include, "pressio")
-            for item in os.listdir(ops_include):
-                src_item = pjoin(ops_include, item)
-                dest_item = pjoin(pressio_includes, item)
-                symlink(src_item, dest_item, target_is_directory=os.path.isdir(src_item))
+        # Add symlinks to pressio-ops headers inside main include/pressio directory
+        pressio_includes = pjoin(include_dir, "pressio")
+        ops_include = pjoin(self.spec["pressio-ops"].prefix.include, "pressio")
+        for item in os.listdir(ops_include):
+            src_item = pjoin(ops_include, item)
+            dest_item = pjoin(pressio_includes, item)
+            symlink(src_item, dest_item, target_is_directory=os.path.isdir(src_item))
 
-            # Add symlink to pressio-log headers in include/pressio-log
-            log_include = pjoin(self.spec["pressio-log"].prefix.include, "pressio-log")
-            symlink(log_include, pjoin(include_dir, "pressio-log"), target_is_directory=True)
+        # Add symlink to pressio-log headers in include/pressio-log
+        log_include = pjoin(self.spec["pressio-log"].prefix.include, "pressio-log")
+        symlink(log_include, pjoin(include_dir, "pressio-log"), target_is_directory=True)
