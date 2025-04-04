@@ -47,12 +47,7 @@ class G2(CMakePackage):
         description="Enable copygb2 tests using g2c_compare",
         when="@4:",
     )
-    variant(
-        "use_g2c_api",
-        default=False,
-        description="Use new file-based API",
-        when="@4:",
-    )
+    variant("use_g2c_api", default=False, description="Use new file-based API", when="@4:")
 
     depends_on("c", type="build")
     depends_on("fortran", type="build")
