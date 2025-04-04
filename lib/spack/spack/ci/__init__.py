@@ -619,6 +619,9 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
+    if not job_spec.concrete:
+        tty.warn("Cannot copy artifacts for non-concrete specs")
+        return
 
     try:
         package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
@@ -641,10 +644,6 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
 
     except spack.error.SpackError as e:
         tty.error(f"Cannot copy logs: {str(e)}")
-        return
-    except AssertionError:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) must be concrete"
-        tty.error(msg)
         return
 
     # Try zipped and unzipped versions of the build log
