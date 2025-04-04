@@ -220,7 +220,13 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
             cuda_driver_path = self.find_libpath("libcuda", spec["cuda"].prefix)
             config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
-        config_args.extend(self.with_or_without("rocm", activation_value="prefix", variant="hip"))
+        config_args.extend(
+            self.with_or_without(
+                "rocm",
+                activation_value=lambda _ : self.spec["hip"].prefix,
+                variant="hip"
+            )
+        )
         config_args.extend(self.enable_or_disable("llvm-plugin"))
         config_args.extend(self.enable_or_disable("gcc-plugin"))
         config_args.extend(self.enable_or_disable("mpi_f08"))
