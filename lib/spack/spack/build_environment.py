@@ -36,6 +36,7 @@ import io
 import multiprocessing
 import os
 import re
+import signal
 import sys
 import traceback
 import types
@@ -1299,8 +1300,15 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
     p.join(timeout=timeout)
     if p.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+        # Opportunity for graceful termination
         p.terminate()
-        p.join()  # Ensure the process has fully stopped
+        p.join(timeout=1)
+
+        # If the process didn't gracefully terminate, forcefully kill
+        if p.is_alive():
+            assert isinstance(p.pid, int), f"unexpected value for PID: {p.pid}"
+            os.kill(p.pid, signal.SIGKILL)
+            p.join()
 
     try:
         child_result = read_pipe.recv()
