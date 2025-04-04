@@ -38,14 +38,20 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("shared", default=False, description="Build shared library", when="@3.4.7:")
+    variant("aec", default=True, description="Use AEC library", when="@develop")
     variant("openmp", default=False, description="Use OpenMP multithreading", when="@develop")
     variant("utils", default=False, description="Build grib utilities", when="@develop")
     variant(
         "g2c_compare",
         default=False,
         description="Enable copygb2 tests using g2c_compare",
-        when="@develop",
+        when="@4:",
+    )
+    variant(
+        "use_g2c_api",
+        default=False,
+        description="Use new file-based API",
+        when="@4:",
     )
 
     depends_on("c", type="build")
@@ -53,6 +59,8 @@ class G2(CMakePackage):
 
     depends_on("jasper@:2.0.32", when="@:3.4.7")
     depends_on("jasper")
+    depends_on("g2c@2:", when="@4:")
+    depends_on("g2c@2: +aec", when="+aec")
     depends_on("libpng")
     depends_on("zlib-api", when="@develop")
     depends_on("bacio", when="@3.4.6:")
@@ -73,10 +81,12 @@ class G2(CMakePackage):
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define_from_variant("BUILD_WITH_W3EMC", "w3emc"),
+            self.define_from_variant("USE_AEC", "aec"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("BUILD_4", self.spec.satisfies("precision=4")),
             self.define("BUILD_D", self.spec.satisfies("precision=d")),
             self.define_from_variant("G2C_COMPARE", "g2c_compare"),
+            self.define_from_variant("USE_G2C_API", "use_g2c_api"),
             self.define_from_variant("BUILD_UTILS", "utils"),
         ]
 
