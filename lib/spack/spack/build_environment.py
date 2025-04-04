@@ -1189,11 +1189,9 @@ def _setup_pkg_and_run(
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
             process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to {}. "
-                "This might be due to a change in Spack's package format "
-                "to support multiple build-systems for a single package. You can fix this "
-                "by updating the {} recipe, and you can also report the issue as a bug. "
-                "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
+                "The '{}' package cannot find an attribute while trying to {}. You can fix this "
+                "by updating the {} recipe, and you can also report the issue as a build-error or "
+                "a bug at https://github.com/spack/spack/issues"
             ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
             error_msg = "{}\n\n{}".format(str(e), error_msg)
