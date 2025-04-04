@@ -320,7 +320,8 @@ def test_test_output_multiple_specs(
     assert len(testlogs) == 3
 
     # Grab the output from the test log of the spec with a skipped test.
-    skiplog = [name for name in testlogs if "simple-standalone-test-1" in name][0]
+    skiplog = next((name for name in testlogs if "simple-standalone-test-1" in name), None)
+    assert skiplog is not None, "No log file found for simple-standalone-test@1.0"
     outfile = os.path.join(testdir, skiplog)
     with open(outfile, "r", encoding="utf-8") as f:
         test_log = f.read()
