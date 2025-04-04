@@ -1220,6 +1220,36 @@ def _setup_pkg_and_run(
             input_pipe.close()
 
 
+class BuildProcess:
+    def __init__(self, *, target, args) -> None:
+        self.p = multiprocessing.Process(target=target, args=args)
+
+    def start(self) -> None:
+        self.p.start()
+
+    def is_alive(self) -> bool:
+        return self.p.is_alive()
+
+    def join(self, *, timeout: Optional[int] = None):
+        self.p.join(timeout=timeout)
+
+    def terminate(self):
+        # Opportunity for graceful termination
+        self.p.terminate()
+        self.p.join(timeout=1)
+
+        # If the process didn't gracefully terminate, forcefully kill
+        if self.p.is_alive():
+            # TODO (python 3.6 removal): use self.p.kill() instead, consider removing this class
+            assert isinstance(self.p.pid, int), f"unexpected value for PID: {self.p.pid}"
+            os.kill(self.p.pid, signal.SIGKILL)
+            self.p.join()
+
+    @property
+    def exitcode(self):
+        return self.p.exitcode
+
+
 def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None):
     """Create a child process to do part of a spack build.
 
@@ -1227,8 +1257,8 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
 
         pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
-        function (typing.Callable): argless function to run in the child
-            process.
+        function (typing.Callable): argless function to run in the child process.
+        timeout: maximum time allowed to finish the execution of function
 
     Usage::
 
@@ -1263,7 +1293,7 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
                 jobserver_fd1 = Connection(int(m.group(1)))
                 jobserver_fd2 = Connection(int(m.group(2)))
 
-        p = multiprocessing.Process(
+        p = BuildProcess(
             target=_setup_pkg_and_run,
             args=(
                 serialized_pkg,
@@ -1300,15 +1330,8 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
     p.join(timeout=timeout)
     if p.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        # Opportunity for graceful termination
         p.terminate()
-        p.join(timeout=1)
-
-        # If the process didn't gracefully terminate, forcefully kill
-        if p.is_alive():
-            assert isinstance(p.pid, int), f"unexpected value for PID: {p.pid}"
-            os.kill(p.pid, signal.SIGKILL)
-            p.join()
+        p.join()
 
     try:
         child_result = read_pipe.recv()
