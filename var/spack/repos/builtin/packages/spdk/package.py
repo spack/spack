@@ -72,6 +72,7 @@ class Spdk(AutotoolsPackage):
     depends_on("numactl")
     depends_on("py-pyelftools")
     depends_on("rdma-core", when="+rdma")
+    depends_on("uuid")
 
     def configure_args(self):
         spec = self.spec
