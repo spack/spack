@@ -61,6 +61,7 @@ class Spdk(AutotoolsPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    depends_on("libtool", type="build")
     depends_on("pkgconfig", type="build")
 
     depends_on("dpdk@22.11:", when="+dpdk")
