@@ -37,6 +37,7 @@ class Nag(Package, CompilerPackage):
     )
 
     depends_on("fortran", type="build")  # generated
+    provides("fortran")
 
     # Licensing
     license_required = True
