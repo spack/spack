@@ -41,9 +41,9 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
         depends_on("binutils")
         depends_on("coreutils")
         depends_on("findutils")
+        depends_on("grep+pcre")
         depends_on("libc")
         depends_on("m4@1.4.6:")
-        depends_on("grep+pcre")
         depends_on("sed")
 
     with when("@develop"):
