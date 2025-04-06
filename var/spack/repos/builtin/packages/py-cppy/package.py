@@ -13,6 +13,8 @@ class PyCppy(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("1.3.1", sha256="55b5307c11874f242ea135396f398cb67a5bbde4fab3e3c3294ea5fce43a6d68")
+    version("1.3.0", sha256="da7413a286d5d31626ba35ed2c70ddfb033520cc81310088ba5a57d34039f604")
     version("1.2.1", sha256="83b43bf17b1085ac15c5debdb42154f138b928234b21447358981f69d0d6fe1b")
     version("1.1.0", sha256="4eda6f1952054a270f32dc11df7c5e24b259a09fddf7bfaa5f33df9fb4a29642")
 
