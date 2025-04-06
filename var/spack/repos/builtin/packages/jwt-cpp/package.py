@@ -36,7 +36,7 @@ class JwtCpp(CMakePackage):
         description="SSL library to use",
     )
 
-    depends_on("c", type="build")
+    depends_on("c", type="build", when="@:0.7.0")
     depends_on("cxx", type="build")
 
     depends_on("openssl@1.0.2:", when="@0.4.0:0.4.99")
