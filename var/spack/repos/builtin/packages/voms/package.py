@@ -15,6 +15,7 @@ class Voms(AutotoolsPackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
+    version("2.1.2", sha256="171cfa66b000422761b2a534a84ad88b646c675ff7910409b08b900775dbf035")
     version("2.1.0", sha256="2fd2468620af531c02e9ac495aaaf2a8d5b8cfbe24d4904f2e8fa7f64cdeeeec")
 
     depends_on("c", type="build")
