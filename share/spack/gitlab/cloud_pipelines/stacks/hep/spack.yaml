@@ -68,7 +68,7 @@ spack:
   - fjcontrib
   #- garfieldpp
   - gaudi +aida +examples +heppdt +xercesc ^gdb +debuginfod +python
-  - geant4 +vtk ^[virtuals=qmake] qt
+  - geant4 ~vtk ^[virtuals=qmake] qt
   - geant4 ~vtk ^[virtuals=qmake] qt-base
   #- genie +atmo
   - hepmc
