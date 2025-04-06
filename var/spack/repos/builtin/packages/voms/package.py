@@ -34,6 +34,7 @@ class Voms(AutotoolsPackage):
 
     force_autoreconf = True
 
+    @when("@:2.1.0")
     def patch(self):
         filter_file(
             r"/usr/bin/soapcpp2", f"{self.spec['gsoap'].prefix.bin.soapcpp2}", "m4/wsdl2h.m4"
