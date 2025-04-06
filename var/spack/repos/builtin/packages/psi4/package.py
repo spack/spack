@@ -26,6 +26,7 @@ class Psi4(CMakePackage):
         values=("Debug", "Release"),
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     # Required dependencies

@@ -26,6 +26,9 @@ class Fsl(Package, CudaPackage):
     version("6.0.4", sha256="58b88f38e080b05d70724d57342f58e1baf56e2bd3b98506a72b4446cad5033e")
     version("5.0.10", sha256="ca183e489320de0e502a7ba63230a7f55098917a519e8c738b005d526e700842")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("python", type=("build", "run"))
     depends_on("expat")
     depends_on("libx11")

@@ -23,6 +23,7 @@ class Fontconfig(AutotoolsPackage):
     version("2.11.1", sha256="b6b066c7dce3f436fdc0dfbae9d36122b38094f4f53bd8dffd45e195b0540d8d")
 
     depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")
 
     # freetype2 21.0.15+ provided by freetype 2.8.1+
     depends_on("freetype@2.8.1:", when="@2.13:")

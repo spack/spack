@@ -31,6 +31,10 @@ class Amp(CMakePackage):
     variant("trilinos", default=True, description="Build with support for Trilinos")
     variant("zlib", default=True, description="Build with support for zlib")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     # Everything should be compiled position independent (-fpic)
     depends_on("blas")
     depends_on("lapack")
