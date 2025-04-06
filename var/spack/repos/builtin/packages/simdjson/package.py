@@ -6,13 +6,13 @@ from spack.package import *
 
 
 class Simdjson(CMakePackage):
-    """
-    simdjson is a SIMD-accelerated JSON parsing library for C++ that can parse gigabytes of JSON
-    per second.
-    """
+    """simdjson is a SIMD-accelerated JSON parsing library for C++ that can parse gigabytes of JSON
+    text per second."""
 
     homepage = "https://simdjson.org"
     url = "https://github.com/simdjson/simdjson/archive/v3.12.2.tar.gz"
+
+    maintainers("ta7mid")
 
     license("Apache-2.0 OR MIT")
 
@@ -39,37 +39,34 @@ class Simdjson(CMakePackage):
         when="+shared",
     )
 
-    # variants by sanitizers
-    variant("ubsan", default=False, description="Enable UndefinedBehaviorSanitizer")
-    variant("asan", default=False, description="Enable AddressSanitizer")
-    variant("msan", default=False, description="Enable MemorySanitizer")
-    variant("tsan", default=False, description="Enable ThreadSanitizer", when="+ubsan")
-
-    # variants by features
+    # feature variants
+    variant("exceptions", default=True, description="Enable exception throwing")
+    variant("threads", default=True, description="Enable multithreading")
     variant("deprecated", default=True, description="Enable deprecated APIs")
-    variant("exceptions", default=False, description="Enable exception-throwing interface")
-    variant("threads", default=True, description="Link with thread support")
     variant("utf8-validation", default=True, description="Enable UTF-8 validation")
 
+    # variants for enabling sanitizers
+    variant("ubsan", default=False, description="Enable UndefinedBehaviorSanitizer")
+    variant("tsan", default=False, description="Enable ThreadSanitizer", when="+ubsan")
+    variant("asan", default=False, description="Enable AddressSanitizer", when="~tsan")
+    variant("msan", default=False, description="Enable MemorySanitizer", when="os=linux %clang")
+
     def cmake_args(self):
-        args = [
+        build_type = self.spec.variants["build_type"]
+        enable_dev_checks = "Debug" in build_type or "RelWithDebInfo" in build_type
+
+        return [
             "-DSIMDJSON_DEVELOPER_MODE:BOOL=OFF",
             "-DSIMDJSON_VERBOSE_LOGGING:BOOL=OFF",
-            self.define(
-                "SIMDJSON_DEVELOPMENT_CHECKS",
-                self.spec.satisfies("build_type=Debug")
-                or self.spec.satisfies("build_type=RelWithDebInfo"),
-            ),
+            self.define("SIMDJSON_DEVELOPMENT_CHECKS", enable_dev_checks),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("SIMDJSON_BUILD_STATIC_LIB", "simdjson_static"),
+            self.define_from_variant("SIMDJSON_ENABLE_THREADS", "threads"),
+            self.define_from_variant("SIMDJSON_EXCEPTIONS", "exceptions"),
+            self.define("SIMDJSON_DISABLE_DEPRECATED_API", self.spec.satisfies("~deprecated")),
+            self.define("SIMDJSON_SKIPUTF8VALIDATION", self.spec.satisfies("~utf8-validation")),
             self.define_from_variant("SIMDJSON_SANITIZE_UNDEFINED", "ubsan"),
+            self.define_from_variant("SIMDJSON_SANITIZE_THREADS", "tsan"),
             self.define_from_variant("SIMDJSON_SANITIZE", "asan"),
             self.define_from_variant("SIMDJSON_SANITIZE_MEMORY", "msan"),
-            self.define_from_variant("SIMDJSON_SANITIZE_THREADS", "tsan"),
-            self.define("SIMDJSON_DISABLE_DEPRECATED_API", self.spec.satisfies("-deprecated")),
-            self.define_from_variant("SIMDJSON_EXCEPTIONS", "exceptions"),
-            self.define_from_variant("SIMDJSON_ENABLE_THREADS", "threads"),
-            self.define_from_variant("SIMDJSON_SKIPUTF8VALIDATION", "utf8-validation"),
         ]
-
-        return args
