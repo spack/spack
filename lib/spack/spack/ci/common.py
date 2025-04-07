@@ -63,6 +63,7 @@ def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
     Parameters:
         src (str): the glob-friendly path expression for the file(s) to copy
         artifacts_dir (str): the destination directory
+        compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
         if compress_artifacts and not is_gzipped(src):
