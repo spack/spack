@@ -5,6 +5,7 @@ import os
 import os.path
 import pathlib
 import platform
+import sys
 import warnings
 
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
@@ -543,7 +544,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                     # For AMD plugin installer
                     bash(amd_script[0], "-y", "--install-dir", self.prefix)
 
-    @run_after("install")
+    @run_after("install", when="platform=linux")
     def inject_rpaths(self):
         # The oneapi compilers cannot find their own internal shared
         # libraries. If you are using an externally installed oneapi,
@@ -586,7 +587,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                     f.write(" ".join(flags))
                 set_install_permissions(p)
 
-    @run_after("install")
+    @run_after("install", when="platform=linux")
     def extend_config_flags(self):
         # Extends compiler config files to inject additional compiler flags.
 
@@ -707,3 +708,18 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     def _fortran_path(self):
         return str(self._llvm_bin.ifx)
+
+
+class WindowsGenericBuilder(spack.build_systems.generic.GenericBuilder):
+    pass
+
+class LinuxGenericBuilder(spack.build_systems.generic.GenericBuilder):
+    pass
+
+# Implement genric builders, one for Windows, one for Linux
+# I guess we could hide them behind actual if statements??
+
+class GenericBuilder(WindowsGenericBuilder, LinuxGenericBuilder):
+    def __init__(self, *args, **kwargs):
+        if sys.platform == "win32":
+            super()
