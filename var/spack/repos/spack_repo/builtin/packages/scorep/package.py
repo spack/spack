@@ -86,6 +86,7 @@ class Scorep(AutotoolsPackage):
         sha256="d20b3046ba6a89ad9c106bcf372bceb1bd9ab780d4c7dd9e7373f0099b92d933",
     )
 
+    # Variants
     variant("mpi", default=True, description="Enable MPI support")
     variant("papi", default=True, description="Enable PAPI")
     variant("pdt", default=False, description="Enable PDT", when="@:8.4")
@@ -110,6 +111,9 @@ class Scorep(AutotoolsPackage):
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
+
+    # Language dependencies
+    # TODO: we could allow a +fortran variant here.
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
@@ -157,6 +161,7 @@ class Scorep(AutotoolsPackage):
     depends_on("opari2@1.1.4", when="@1.3")
     depends_on("cube@4.2.3", when="@1.3")
 
+    # Conditional dependencies for variants
     depends_on("mpi@2.2:", when="@7.0:+mpi")
     depends_on("mpi", when="+mpi")
     depends_on("papi", when="+papi")
@@ -168,6 +173,7 @@ class Scorep(AutotoolsPackage):
     depends_on("hip@4.2:", when="+hip")
     depends_on("rocprofiler-dev", when="+hip")
     depends_on("rocm-smi-lib", when="+hip")
+
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
@@ -175,14 +181,16 @@ class Scorep(AutotoolsPackage):
     # Score-P first has support for ROCm 6.x as of v8.4
     conflicts("hip@6.0:", when="@1.0:8.3+hip")
 
+    # Utility function: extract the first directory in `root` where
+    # we find `libname`. Used to handle CUDA irregular layouts.
     def find_libpath(self, libname, root):
         libs = find_libraries(libname, root, shared=True, recursive=True)
         if len(libs.directories) == 0:
             return None
         return libs.directories[0]
 
-    # handle any mapping of Spack compiler names to Score-P args
-    # this should continue to exist for backward compatibility
+    # Handle any mapping of Spack compiler names to Score-P args
+    # This should continue to exist for backward compatibility
     def clean_compiler(self, compiler):
         renames = {"cce": "cray", "rocmcc": "amdclang"}
         if compiler in renames:
