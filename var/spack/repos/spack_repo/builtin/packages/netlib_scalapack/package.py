@@ -14,14 +14,18 @@ class ScalapackBase(CMakePackage):
 
     variant("shared", default=True, description="Build the shared library version")
     variant("pic", default=False, description="Build position independent code")
-    variant("ilp64", default=False, description="Build with 8-byte (long) integers rather than the regular 4-byte ones")
+    variant(
+        "ilp64",
+        default=False,
+        description="Build with 8-byte (long) integers rather than the regular 4-byte ones",
+    )
 
     provides("scalapack")
 
     depends_on("mpi")
     depends_on("lapack")
     depends_on("blas")
-    depends_on("openblas+ilp64", when="+ilp64")              # virtuals and variants do not play well together
+    depends_on("openblas+ilp64", when="+ilp64")  # virtuals and variants do not play well together
     depends_on("cmake", when="@2.0.0:", type="build")
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
@@ -65,35 +69,30 @@ class ScalapackBase(CMakePackage):
         spec = self.spec
         if "+ilp64" in spec:
             import os
+
             file_list = []
-            for root, dirs, files in os.walk("TESTING/EIG/", topdown=True, onerror=None, followlinks=False):
+            for root, dirs, files in os.walk(
+                "TESTING/EIG/", topdown=True, onerror=None, followlinks=False
+            ):
                 print("Parsing", files)
                 for myfile in files:
-                    rel_dir  = os.path.relpath(root, os.getcwd())
-                    rel_file  = os.path.join(rel_dir, myfile)
+                    rel_dir = os.path.relpath(root, os.getcwd())
+                    rel_file = os.path.join(rel_dir, myfile)
                     file_list.append(rel_file)
-            for root, dirs, files in os.walk("TESTING/LIN/", topdown=True, onerror=None, followlinks=False):
+            for root, dirs, files in os.walk(
+                "TESTING/LIN/", topdown=True, onerror=None, followlinks=False
+            ):
                 print("Parsing", files)
                 for myfile in files:
-                    rel_dir  = os.path.relpath(root, os.getcwd())
-                    rel_file  = os.path.join(rel_dir, myfile)
+                    rel_dir = os.path.relpath(root, os.getcwd())
+                    rel_file = os.path.join(rel_dir, myfile)
                     file_list.append(rel_file)
 
             # equivalent to sed -i 's/INTSZ = 4/INTSZ = 8/g'   TESTING/EIG/* TESTING/LIN/*
-            filter_file(
-                "(?i)INTSZ = 4",
-                "INTSZ = 8",
-                *file_list,
-                ignore_absent=True,
-            )
+            filter_file("(?i)INTSZ = 4", "INTSZ = 8", *file_list, ignore_absent=True)
 
             # equivalent to sed -i 's/INTGSZ = 4/INTGSZ = 8/g' TESTING/EIG/* TESTING/LIN/*
-            filter_file(
-                "(?i)INTGSZ = 4",
-                "INTGSZ = 8",
-                *file_list,
-                ignore_absent=True,
-            )
+            filter_file("(?i)INTGSZ = 4", "INTGSZ = 8", *file_list, ignore_absent=True)
 
     def cmake_args(self):
         spec = self.spec
