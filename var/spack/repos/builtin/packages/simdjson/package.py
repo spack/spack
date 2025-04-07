@@ -48,8 +48,20 @@ class Simdjson(CMakePackage):
     # variants for enabling sanitizers
     variant("ubsan", default=False, description="Enable UndefinedBehaviorSanitizer")
     variant("tsan", default=False, description="Enable ThreadSanitizer", when="+ubsan")
-    variant("asan", default=False, description="Enable AddressSanitizer", when="~tsan")
-    variant("msan", default=False, description="Enable MemorySanitizer", when="os=linux %clang")
+    variant("asan", default=False, description="Enable AddressSanitizer")
+    variant("msan", default=False, description="Enable MemorySanitizer")
+
+    conflicts("+asan+msan", msg="AddressSanitizer and MemorySanitizer cannot be combined")
+    conflicts("+asan+tsan", msg="AddressSanitizer and ThreadSanitizer cannot be combined")
+    conflicts("+msan+tsan", msg="MemorySanitizer and ThreadSanitizer cannot be combined")
+
+    # https://clang.llvm.org/docs/MemorySanitizer.html#supported-platforms
+    requires(
+        "platform=linux %clang",
+        "platform=freebsd %clang",
+        when="+msan",
+        msg="MemorySanitizer is supported only by Clang and on Linux, FreeBSD, and NetBSD",
+    )
 
     def cmake_args(self):
         build_type = self.spec.variants["build_type"]
