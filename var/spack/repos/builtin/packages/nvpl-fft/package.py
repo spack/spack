@@ -49,12 +49,8 @@ class NvplFft(Package):
     def libs(self):
         return find_libraries("libnvpl_fftw", self.spec.prefix.lib, shared=True, recursive=True)
 
-    @run_after("install")
+    @run_after("install", when="@0.4:")
     def fix_include(self):
-        # include/nvpl_fftw/ is only present in version 0.4 and later
-        if self.spec.satisfies("@:0.3"):
-            return
-
         subdir = os.path.join(self.prefix.include, "nvpl_fftw")  # include/nvpl_fftw/
 
         for file in os.listdir(subdir):
