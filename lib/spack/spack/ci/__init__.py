@@ -640,7 +640,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
             archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
         else:
             msg = f"No archived files detected at {archive_root}"
-            tty.warn(msg)
+            tty.debug(msg)
 
     # Try zipped and unzipped versions of the build log
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"

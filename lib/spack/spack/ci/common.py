@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import glob
 import gzip
 import json
 import os
@@ -66,14 +67,15 @@ def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
         compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-        if compress_artifacts and not is_gzipped(src):
-            # Compress and copy in one step
-            src_name = os.path.basename(src)
-            zipped = os.path.join(artifacts_dir, f"{src_name}.gz")
-            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
-                shutil.copyfileobj(fin, fout)
-        else:
-            fs.copy(src, artifacts_dir)
+        for s in glob.glob(src):
+            if compress_artifacts and not is_gzipped(s):
+                # Compress and copy in one step
+                src_name = os.path.basename(s)
+                zipped = os.path.join(artifacts_dir, f"{src_name}.gz")
+                with open(s, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                    shutil.copyfileobj(fin, fout)
+            else:
+                fs.copy(s, artifacts_dir)
     except Exception as err:
         msg = (
             f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
