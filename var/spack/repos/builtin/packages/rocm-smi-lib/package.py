@@ -23,6 +23,7 @@ class RocmSmiLib(CMakePackage):
     libraries = ["librocm_smi64"]
 
     version("master", branch="master")
+    version("6.3.3", sha256="679dfd0cbd213d27660e546584ab013afea286eff95928d748d168503305c9c4")
     version("6.3.2", sha256="29a9190143dfcbafeac93d8064b00c9320dbca57a3344adb009ec17d9b09d036")
     version("6.3.1", sha256="0f45e4823e361a1c6ac560eabf6000c3b59e08bcd96e87150149149e861c6a63")
     version("6.3.0", sha256="573cfb759f8c7700fdcb0c28d045aed0f2d950692bb66a10bd589b89b8f48d0f")
@@ -46,11 +47,11 @@ class RocmSmiLib(CMakePackage):
         version("5.3.3", sha256="c2c2a377c2e84f0c40297a97b6060dddc49183c2771b833ebe91ed98a98e4119")
         version("5.3.0", sha256="8f72ad825a021d5199fb73726b4975f20682beb966e0ec31b53132bcd56c5408")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared or static library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("python@3:", type=("build", "run"))
@@ -73,10 +74,22 @@ class RocmSmiLib(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in [
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+    ]:
         depends_on("llvm-amdgpu", when=f"@{ver}+asan")
 
     patch(

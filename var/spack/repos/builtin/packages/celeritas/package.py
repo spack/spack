@@ -46,8 +46,6 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")
-
     _cxxstd_values = ("17", "20")
 
     # Note: cuda and rocm variants are defined by mixin classes
@@ -67,6 +65,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     variant("shared", default=True, description="Build shared libraries")
     variant("swig", default=False, when="@:0.4", description="Generate SWIG Python bindings")
     variant("vecgeom", default=True, description="Use VecGeom geometry")
+
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.13:", type="build")
     depends_on("cmake@3.18:", type="build", when="+cuda+vecgeom")

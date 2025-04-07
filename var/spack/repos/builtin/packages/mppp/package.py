@@ -29,8 +29,6 @@ class Mppp(CMakePackage):
     version("0.21", sha256="49a05fc6874a800cb42a3ac16eb46a50583f0b59d3b54008c58af766186a8c69")
     version("0.20", sha256="c736daeaac30e38e1c09a19d249209ad49f8ec92ab1315a8fb9a47cc1f54e607")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "mpfr",
         default=True,
@@ -85,6 +83,8 @@ class Mppp(CMakePackage):
     )
 
     # Dependencies
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.8:", type="build")
 
     # Required dependencies

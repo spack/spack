@@ -32,9 +32,6 @@ class UfsWeatherModel(CMakePackage):
         submodules=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI")
     variant(
         "32bit", default=True, description="Enable 32-bit single precision arithmetic in dycore"
@@ -109,6 +106,9 @@ class UfsWeatherModel(CMakePackage):
     variant("mom6solo", default=False, description="Build MOM6 solo executable", when="@develop")
 
     variant("app", default="ATM", description="UFS application", when="@develop")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("bacio")
     depends_on("mpi", when="+mpi")

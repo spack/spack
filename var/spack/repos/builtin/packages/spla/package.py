@@ -36,10 +36,6 @@ class Spla(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, when="@:1.5.5", description="Build with OpenMP support")
     variant("static", default=False, description="Build as static library")
     variant("cuda", default=False, description="CUDA backend")
@@ -52,6 +48,10 @@ class Spla(CMakePackage):
         when="@1.5.0:1.5.4",
         msg="Version 1.5.0 to 1.5.4 is not compatible with GCC 13 and later.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("blas")

@@ -83,8 +83,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.4.0", tag="v0.4.0", commit="a8f669c1ad01d51132a4e3d9d6aa8b2cabc9eff0", submodules="True"
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=False, description="Build OpenMP backend")
     variant("omptarget", default=False, description="Build with OpenMP target support")
@@ -99,6 +97,8 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Tests to run",
     )
     variant("caliper", default=False, description="Build with support for Caliper based profiling")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blt")
     depends_on("blt@0.6.2:", type="build", when="@2024.07.0:")

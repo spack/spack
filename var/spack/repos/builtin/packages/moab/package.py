@@ -40,10 +40,6 @@ class Moab(AutotoolsPackage):
     version("4.9.0", sha256="267a7c05da847e4ea856db2c649a5484fb7bdc132ab56721ca50ee69a7389f4d")
     version("4.8.2", sha256="b105cff42930058dc14eabb9a25e979df7289b175732fe319d2494e83e09e968")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI parallelism support")
     variant("hdf5", default=True, description="Enable the HDF5 (default I/O) format")
     variant("netcdf", default=False, description="Enable the ExodusII reader/writer support")
@@ -74,6 +70,10 @@ class Moab(AutotoolsPackage):
     # variant('cgns', default=False, description='Enable CGNS support')
     # depends_on('cgns', when='+cgns')
     # depends_on('vtk', when='+vtk')
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build", when="@master,5.0.1:")
     depends_on("automake", type="build", when="@master,5.0.1:")

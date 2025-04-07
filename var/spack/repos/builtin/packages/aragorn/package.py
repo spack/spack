@@ -28,6 +28,8 @@ class Aragorn(Package):
         expand=False,
     )
 
+    depends_on("c", type="build")
+
     # fix checksum error
     def url_for_version(self, version):
         return f"http://www.ansikte.se/ARAGORN/Downloads/aragorn{version}.c"

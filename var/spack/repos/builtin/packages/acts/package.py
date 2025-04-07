@@ -196,9 +196,6 @@ class Acts(CMakePackage, CudaPackage):
     version("0.08.1", commit="289bdcc320f0b3ff1d792e29e462ec2d3ea15df6")
     version("0.08.0", commit="99eedb38f305e3a1cd99d9b4473241b7cd641fa9")
 
-    depends_on("c", type="build", when="+dd4hep")  # DD4hep requires C
-    depends_on("cxx", type="build")
-
     # Variants that affect the core Acts library
     variant(
         "benchmarks", default=False, description="Build the performance benchmarks", when="@0.16:"
@@ -350,6 +347,8 @@ class Acts(CMakePackage, CudaPackage):
     variant("analysis", default=False, description="Build analysis applications in the examples")
 
     # Build dependencies
+    depends_on("c", type="build", when="+dd4hep")  # DD4hep requires C
+    depends_on("cxx", type="build")
     depends_on("acts-dd4hep", when="@19 +dd4hep")
     with when("+svg"):
         depends_on("actsvg@0.4.20:", when="@20.1:")

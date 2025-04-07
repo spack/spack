@@ -99,8 +99,7 @@ VERSION = r"=?(?:[a-zA-Z0-9_][a-zA-Z_0-9\-\.]*\b)"
 VERSION_RANGE = rf"(?:(?:{VERSION})?:(?:{VERSION}(?!\s*=))?)"
 VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VERSION}))*"
 
-#: Regex with groups to use for splitting (optionally propagated) key-value pairs
-SPLIT_KVP = re.compile(rf"^({NAME})(==?)(.*)$")
+SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
 #: Regex with groups to use for splitting %[virtuals=...] tokens
 SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
@@ -135,8 +134,8 @@ class SpecTokens(TokenBase):
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
-    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}==(?:{VALUE}|{QUOTED_VALUE}))"
-    KEY_VALUE_PAIR = rf"(?:{NAME}=(?:{VALUE}|{QUOTED_VALUE}))"
+    PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
+    KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
     # Compilers
     COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
     COMPILER = rf"(?:%\s*(?:{NAME}))"
@@ -370,10 +369,10 @@ class SpecNodeParser:
             """Raise a spec parsing error with token context."""
             raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
 
-        def add_flag(name: str, value: str, propagate: bool):
+        def add_flag(name: str, value: str, propagate: bool, concrete: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
             try:
-                initial_spec._add_flag(name, value, propagate)
+                initial_spec._add_flag(name, value, propagate, concrete)
             except Exception as e:
                 raise_parsing_error(str(e), e)
 
@@ -428,29 +427,34 @@ class SpecNodeParser:
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.BOOL_VARIANT):
+                name = self.ctx.current_token.value[1:].strip()
                 variant_value = self.ctx.current_token.value[0] == "+"
-                add_flag(self.ctx.current_token.value[1:].strip(), variant_value, propagate=False)
+                add_flag(name, variant_value, propagate=False, concrete=True)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_BOOL_VARIANT):
+                name = self.ctx.current_token.value[2:].strip()
                 variant_value = self.ctx.current_token.value[0:2] == "++"
-                add_flag(self.ctx.current_token.value[2:].strip(), variant_value, propagate=True)
+                add_flag(name, variant_value, propagate=True, concrete=True)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(self.ctx.current_token.value)
-                assert match, "SPLIT_KVP and KEY_VALUE_PAIR do not agree."
+                name, value = self.ctx.current_token.value.split("=", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
 
-                name, _, value = match.groups()
-                add_flag(name, strip_quotes_and_unescape(value), propagate=False)
+                add_flag(
+                    name, strip_quotes_and_unescape(value), propagate=False, concrete=concrete
+                )
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.accept(SpecTokens.PROPAGATED_KEY_VALUE_PAIR):
-                match = SPLIT_KVP.match(self.ctx.current_token.value)
-                assert match, "SPLIT_KVP and PROPAGATED_KEY_VALUE_PAIR do not agree."
-
-                name, _, value = match.groups()
-                add_flag(name, strip_quotes_and_unescape(value), propagate=True)
+                name, value = self.ctx.current_token.value.split("==", maxsplit=1)
+                concrete = name.endswith(":")
+                if concrete:
+                    name = name[:-1]
+                add_flag(name, strip_quotes_and_unescape(value), propagate=True, concrete=concrete)
                 warn_if_after_compiler(self.ctx.current_token.value)
 
             elif self.ctx.expect(SpecTokens.DAG_HASH):
@@ -509,7 +513,8 @@ class EdgeAttributeParser:
         while True:
             if self.ctx.accept(SpecTokens.KEY_VALUE_PAIR):
                 name, value = self.ctx.current_token.value.split("=", maxsplit=1)
-                name = name.strip("'\" ")
+                if name.endswith(":"):
+                    name = name[:-1]
                 value = value.strip("'\" ").split(",")
                 attributes[name] = value
                 if name not in ("deptypes", "virtuals"):

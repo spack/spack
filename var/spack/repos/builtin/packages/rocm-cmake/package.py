@@ -20,6 +20,7 @@ class RocmCmake(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.3.3", sha256="4238cccc22226ba9487185fc2faa66b11c0cb8e7982240332e1b919cec8d909e")
     version("6.3.2", sha256="f5104c2289da99a70d8c4c1befbca4f8efa7c89711eaac7b6b63592cd4bd99a8")
     version("6.3.1", sha256="6994a5bdeea55cd41ec01ab4142785ea02bbdcb83e70f6911095c7cea766ebe8")
     version("6.3.0", sha256="45a1b96f85ae28a7f62895ddc4d6648500b883af250f52f6417bafb31b3cc75d")
@@ -65,6 +66,7 @@ class RocmCmake(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

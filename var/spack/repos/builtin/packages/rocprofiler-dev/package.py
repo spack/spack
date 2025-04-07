@@ -18,6 +18,7 @@ class RocprofilerDev(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["librocprofiler64"]
     license("MIT")
+    version("6.3.3", sha256="7ca6900b4a81f9dc0d7cdfe3be39372b3bf25f3c8304256705003294772890bd")
     version("6.3.2", sha256="c440ac79fa9f3e8c1decbfd83557d5cbbc4bb720927880b33dc36e682f37ec26")
     version("6.3.1", sha256="c4666c1167e551cfafc343b092506834477556ba6f7b0739552d660fd69c30fb")
     version("6.3.0", sha256="45ddc1d87a33bb27e9445e642a3495fef21cec1e545793b2ca5f551743961b1f")
@@ -90,6 +91,7 @@ class RocprofilerDev(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
@@ -109,6 +111,7 @@ class RocprofilerDev(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
@@ -131,6 +134,7 @@ class RocprofilerDev(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"aqlprofile@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")

@@ -14,9 +14,9 @@ class VariantValues(Package):
     version("2.0", md5="b2472aae70f542116d616e634cb3ff35")
     version("3.0", md5="d616e634cb3ff35b2472aae70f542116")
 
-    variant("v", default="foo", values=["foo"], when="@1.0")
+    variant("v", default="foo", values=["foo"], multi=False, when="@1.0")
 
-    variant("v", default="foo", values=["foo", "bar"], when="@2.0")
+    variant("v", default="foo", values=["foo", "bar"], multi=False, when="@2.0")
 
     # this overrides the prior definition entirely
-    variant("v", default="bar", values=["foo", "bar"], when="@2.0:3.0")
+    variant("v", default="bar", values=["foo", "bar"], multi=True, when="@2.0:3.0")

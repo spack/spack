@@ -43,10 +43,6 @@ class Whizard(AutotoolsPackage):
     version("2.8.1", sha256="0c759ce0598e25f38e04659f745c5963d238c4b5c12209f16449b6c0bc6dc64e")
     version("2.8.0", sha256="3b5175eafa879d1baca20237d18fb2b18bee89631e73ada499de9c082d009696")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "hepmc",
         default="3",
@@ -63,6 +59,10 @@ class Whizard(AutotoolsPackage):
     variant("openmp", default=False, description="builds with openmp")
     variant("openloops", default=False, description="builds with openloops")
     variant("latex", default=False, description="data visualization with latex")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("libtirpc", type=("build", "link", "run"))
     depends_on("ocaml@4.02.3:", type="build", when="@3:")

@@ -78,8 +78,6 @@ class Fairlogger(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     generator("make", "ninja", default="ninja")
 
     variant(
@@ -100,6 +98,8 @@ class Fairlogger(CMakePackage):
         "pretty", default=False, description="Use BOOST_PRETTY_FUNCTION macro (Supported by 1.4+)."
     )
     conflicts("+pretty", when="@:1.3")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.9.4:", type="build")
     depends_on("git", type="build", when="@develop")

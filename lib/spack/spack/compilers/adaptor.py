@@ -190,6 +190,10 @@ class CompilerAdaptor:
         self._lang_exists_or_raise("f77", lang=Languages.FORTRAN)
         return self.compilers[Languages.FORTRAN].package.fortran
 
+    @property
+    def stdcxx_libs(self):
+        return self._maybe_return_attribute("stdcxx_libs", lang=Languages.CXX)
+
 
 class DeprecatedCompiler(lang.DeprecatedProperty):
     def __init__(self) -> None:

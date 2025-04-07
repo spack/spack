@@ -35,6 +35,7 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
     version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
     version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
     version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
@@ -93,10 +94,6 @@ class Root(CMakePackage):
     version("6.06.06", sha256="0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b")
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
 
     # ###################### Patches ##########################
 
@@ -322,6 +319,10 @@ class Root(CMakePackage):
     )
 
     # ###################### Dependencies ######################
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("cmake@3.4.3:", type="build", when="@:6.16")
     depends_on("cmake@3.9:", type="build", when="@6.18.00:")
@@ -756,6 +757,7 @@ class Root(CMakePackage):
             define("tcmalloc", False),
             define_from_variant("tmva"),
             define_from_variant("unuran"),
+            define("use_gsl_cblas", False),
             define_from_variant("vc"),
             define_from_variant("vdt"),
             define_from_variant("veccore"),

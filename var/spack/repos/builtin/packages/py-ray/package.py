@@ -21,10 +21,10 @@ class PyRay(PythonPackage):
         deprecated=True,
     )
 
+    variant("default", default=False, description="Install default extras", when="@2.0.1")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("default", default=False, description="Install default extras", when="@2.0.1")
 
     depends_on("python@3.6:3.10", when="@2.0.1", type=("build", "run"))
     depends_on("python@3.6:3.8", when="@0.8.7", type=("build", "run"))
