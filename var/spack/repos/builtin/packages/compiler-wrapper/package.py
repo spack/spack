@@ -162,6 +162,7 @@ class CompilerWrapper(Package):
 
         bin_dir = self.bin_dir()
         implicit_rpaths, env_paths = [], []
+        extra_rpaths = []
         for language, attr_name, wrapper_var_name, spack_var_name in _var_list:
             compiler_pkg = dependent_spec[language].package
             if not hasattr(compiler_pkg, attr_name):
@@ -215,11 +216,20 @@ class CompilerWrapper(Package):
             # Check if this compiler has implicit rpaths
             implicit_rpaths.extend(_implicit_rpaths(pkg=compiler_pkg))
 
+            # Add extra rpaths, if they are defined in an external spec
+            extra_rpaths.extend(
+                getattr(compiler_pkg.spec, "extra_attributes", {}).get("extra_rpaths", [])
+            )
+
         if implicit_rpaths:
             # Implicit rpaths are accumulated across all compilers so, whenever they are mixed,
             # the compiler used in ccld mode will account for rpaths from other compilers too.
             implicit_rpaths = lang.dedupe(implicit_rpaths)
             env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
+
+        if extra_rpaths:
+            extra_rpaths = lang.dedupe(extra_rpaths)
+            env.set("SPACK_COMPILER_EXTRA_RPATHS", ":".join(extra_rpaths))
 
         env.set("SPACK_ENABLE_NEW_DTAGS", self.enable_new_dtags)
         env.set("SPACK_DISABLE_NEW_DTAGS", self.disable_new_dtags)

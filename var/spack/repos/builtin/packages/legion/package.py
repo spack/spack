@@ -344,19 +344,19 @@ class Legion(CMakePackage, ROCmPackage):
     variant(
         "max_dims",
         values=int,
-        default=3,
+        default="3",
         description="Set max number of dimensions for logical regions.",
     )
     variant(
         "max_fields",
         values=int,
-        default=512,
+        default="512",
         description="Maximum number of fields allowed in a logical region.",
     )
     variant(
         "max_num_nodes",
         values=int,
-        default=1024,
+        default="1024",
         description="Maximum number of nodes supported by Legion.",
     )
     variant("prof", default=False, description="Install Rust Legion prof")

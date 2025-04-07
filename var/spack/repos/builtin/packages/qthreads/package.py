@@ -59,7 +59,7 @@ class Qthreads(AutotoolsPackage):
     variant("static", default=True, description="Build static library")
     variant(
         "stack_size",
-        default=4096,
+        default="4096",
         description="Specify number of bytes to use in a stack",
         values=is_integer,
     )

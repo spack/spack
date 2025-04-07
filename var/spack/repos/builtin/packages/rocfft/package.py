@@ -20,6 +20,7 @@ class Rocfft(CMakePackage):
 
     license("MIT")
     version("master", branch="master")
+    version("6.3.3", sha256="b2edb5c39215b98e0abc485d2b277a0b8c6f87f06e9b0770a60f5568ef52e62e")
     version("6.3.2", sha256="0511d04d2367dcac6b35bc6b449337ba37bb623b8382fb11178fc608b5435437")
     version("6.3.1", sha256="f8aa0e68d8e303725d0be8ae1d7c0113b6ca019a3b9f08572abf8a02db690662")
     version("6.3.0", sha256="afc716c95d1c80097f7a965e0c3cf1fe246c9fdf10a8fd9a303202156bd3811d")
@@ -99,6 +100,7 @@ class Rocfft(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")

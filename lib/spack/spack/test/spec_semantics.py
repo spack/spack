@@ -638,7 +638,7 @@ class TestSpecSemantics:
         a = Spec("multivalue-variant foo=bar")
         b = Spec("multivalue-variant foo=bar,baz")
         # The specs are abstract and they **could** be constrained
-        assert a.satisfies(b)
+        assert b.satisfies(a) and not a.satisfies(b)
         # An abstract spec can instead be constrained
         assert a.constrain(b)
 
@@ -1946,6 +1946,18 @@ def test_edge_equality_does_not_depend_on_virtual_order():
     assert edge1 == edge2
     assert tuple(sorted(edge1.virtuals)) == edge1.virtuals
     assert tuple(sorted(edge2.virtuals)) == edge1.virtuals
+
+
+def test_update_virtuals():
+    parent, child = Spec("parent"), Spec("child")
+    edge = DependencySpec(parent, child, depflag=0, virtuals=("mpi", "lapack"))
+    assert edge.update_virtuals("blas")
+    assert edge.virtuals == ("blas", "lapack", "mpi")
+    assert edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
+    assert not edge.update_virtuals("mpi")
+    assert not edge.update_virtuals(("c", "fortran", "mpi", "lapack"))
+    assert edge.virtuals == ("blas", "c", "fortran", "lapack", "mpi")
 
 
 def test_virtual_queries_work_for_strings_and_lists():

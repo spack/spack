@@ -59,9 +59,9 @@ class Atlas(Package):
 
     variant(
         "tune_cpu",
-        default=-1,
+        default="-1",
         multi=False,
-        description="Number of threads to tune to, " "-1 for autodetect, 0 for no threading",
+        description="Number of threads to tune to, -1 for autodetect, 0 for no threading",
     )
 
     conflicts(
