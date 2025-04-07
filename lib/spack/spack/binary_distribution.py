@@ -2614,9 +2614,47 @@ class IndexFetcher:
     def conditional_fetch(self) -> FetchIndexResult:
         raise NotImplementedError(f"{self.__class__.__name__} is abstract")
 
+    def get_index_manifest(self, manifest_response) -> BlobRecord:
+        """Read the response of the manifest request and return a BlobRecord"""
+        cache_class = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+        try:
+            result = codecs.getreader("utf-8")(manifest_response).read()
+        except (ValueError, OSError) as e:
+            raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
+
+        manifest = BuildcacheManifest.from_json(json.loads(result))
+        blob_record = manifest.get_blob_records(
+            cache_class.component_to_content_type(BuildcacheComponent.INDEX)
+        )[0]
+        return blob_record
+
+    def fetch_index_blob(
+        self, cache_entry: URLBuildcacheEntry, blob_record: BlobRecord
+    ) -> Tuple[str, str]:
+        """Fetch the index blob indicated by the BlobRecord, and return the
+        (checksum, contents) of the blob"""
+        try:
+            staged_blob_path = cache_entry.fetch_blob(blob_record)
+        except BuildcacheEntryError as e:
+            cache_entry.destroy()
+            raise FetchIndexError(
+                f"Could not fetch index blob from {cache_entry.mirror_url}"
+            ) from e
+
+        with open(staged_blob_path, encoding="utf-8") as fd:
+            blob_result = fd.read()
+
+        computed_hash = compute_hash(blob_result)
+
+        if computed_hash != blob_record.checksum:
+            cache_entry.destroy()
+            raise FetchIndexError(f"Remote index at {cache_entry.mirror_url} is invalid")
+
+        return (computed_hash, blob_result)
+
 
 class DefaultIndexFetcher(IndexFetcher):
-    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
+    """Fetcher for buildcache index, cache invalidation via manifest contents"""
 
     def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=web_util.urlopen):
         self.url = url_and_version.url
@@ -2625,7 +2663,7 @@ class DefaultIndexFetcher(IndexFetcher):
         self.urlopen = urlopen
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
 
-    def get_remote_manifest(self) -> Tuple[BlobRecord, Optional[str]]:
+    def conditional_fetch(self) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
         url_index_manifest = url_util.join(self.url, *index_components)
@@ -2634,16 +2672,21 @@ class DefaultIndexFetcher(IndexFetcher):
             response = self.urlopen(
                 urllib.request.Request(url_index_manifest, headers=self.headers)
             )
-            manifest_data = codecs.getreader("utf-8")(response).read()
         except OSError as e:
             raise FetchIndexError(
                 f"Could not read index manifest from {url_index_manifest}"
             ) from e
 
-        manifest = BuildcacheManifest.from_json(json.loads(manifest_data))
-        blob_record = manifest.get_blob_records(
-            cache_class.component_to_content_type(BuildcacheComponent.INDEX)
-        )[0]
+        index_blob_record = self.get_index_manifest(response)
+
+        # Early exit if our cache is up to date.
+        if self.local_hash and self.local_hash == index_blob_record.checksum:
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+        # Otherwise, download the index blob
+        cache_entry = cache_class(self.url)
+        computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
+        cache_entry.destroy()
 
         # For now we only handle etags on http(s), since 304 error handling
         # in s3:// is not there yet.
@@ -2654,43 +2697,22 @@ class DefaultIndexFetcher(IndexFetcher):
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
-        return (blob_record, etag)
-
-    def conditional_fetch(self) -> FetchIndexResult:
-        # Fetch the manifest, and if the hash is different, fetch the contents
-        index_blob_record, etag = self.get_remote_manifest()
-
-        # Early exit if our cache is up to date.
-        if self.local_hash and self.local_hash == index_blob_record.checksum:
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-
-        # Otherwise, download the index blob
-        cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        cache_entry = cache_class(self.url)
-
-        try:
-            staged_blob_path = cache_entry.fetch_blob(index_blob_record)
-        except BuildcacheEntryError as e:
-            raise FetchIndexError(f"Could not fetch index blob from {self.url}") from e
-
-        with open(staged_blob_path, encoding="utf-8") as fd:
-            result = fd.read()
-
-        computed_hash = compute_hash(result)
-
-        if computed_hash != index_blob_record.checksum:
-            raise FetchIndexError(
-                f"Index hash mismatch in DefaultIndexFetcher, expected "
-                f"{index_blob_record.checksum}, got {computed_hash}"
-            )
-
-        cache_entry.destroy()
-
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
 class EtagIndexFetcher(IndexFetcher):
-    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
+    """Fetcher for buildcache index, cache invalidation via ETags headers
+
+    This class differs from the DefaultIndexFetcher in the following ways: 1) It
+    is provided with an etag value on creation, rather than an index checksum
+    value. Note that since we never start out with an etag, the default fetcher
+    must have been used initially and determined that the etag approach is valid.
+    2) It provides this etag value in the 'If-None-Match' request header for the
+    index manifest. 3) It checks for special exception type and response code
+    indicating the index manifest is not modified, exiting early and returning
+    'Fresh', if encountered. 4) If it needs to actually read the manfiest, it
+    does not need to do any checks of the url scheme to determine whether an
+    etag should be included in the return value."""
 
     def __init__(self, url_and_version: MirrorURLAndVersion, etag, urlopen=web_util.urlopen):
         self.url = url_and_version.url
@@ -2699,55 +2721,37 @@ class EtagIndexFetcher(IndexFetcher):
         self.urlopen = urlopen
 
     def conditional_fetch(self) -> FetchIndexResult:
-        # Just do a conditional fetch immediately
+        # Do a conditional fetch of the index manifest (i.e. using If-None-Match header)
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
         index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
-        url = url_util.join(self.url, *index_components)
+        manifest_url = url_util.join(self.url, *index_components)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
 
         try:
-            response = self.urlopen(urllib.request.Request(url, headers=headers))
+            response = self.urlopen(urllib.request.Request(manifest_url, headers=headers))
         except urllib.error.HTTPError as e:
             if e.getcode() == 304:
-                # Not modified; that means fresh.
+                # The remote manifest has not been modified, i.e. the index we
+                # already have is the freshest there is.
                 return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-            raise FetchIndexError(f"Could not fetch index {url}", e) from e
+            raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
         except OSError as e:  # URLError, socket.timeout, etc.
-            raise FetchIndexError(f"Could not fetch index {url}", e) from e
+            raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
 
-        try:
-            result = codecs.getreader("utf-8")(response).read()
-        except (ValueError, OSError) as e:
-            raise FetchIndexError(f"Remote index {url} is invalid", e) from e
-
-        manifest = BuildcacheManifest.from_json(json.loads(result))
-        blob_record = manifest.get_blob_records(
-            cache_class.component_to_content_type(BuildcacheComponent.INDEX)
-        )[0]
+        # We need to read the index manifest and fetch the associated blob
         cache_entry = cache_class(self.url)
-
-        try:
-            staged_blob_path = cache_entry.fetch_blob(blob_record)
-        except BuildcacheEntryError as e:
-            raise FetchIndexError(f"Could not fetch index blob from {self.url}") from e
-
-        with open(staged_blob_path, encoding="utf-8") as fd:
-            blob_result = fd.read()
-
-        computed_hash = compute_hash(blob_result)
-
-        if computed_hash != blob_record.checksum:
-            raise FetchIndexError(f"Remote index at {url} is invalid")
+        computed_hash, result = self.fetch_index_blob(
+            cache_entry, self.get_index_manifest(response)
+        )
+        cache_entry.destroy()
 
         headers = response.headers
         etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
 
-        cache_entry.destroy()
-
         return FetchIndexResult(
             etag=web_util.parse_etag(etag_header_value),
             hash=computed_hash,
-            data=blob_result,
+            data=result,
             fresh=False,
         )
 
