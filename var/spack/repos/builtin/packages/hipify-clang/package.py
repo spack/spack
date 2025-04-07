@@ -19,6 +19,7 @@ class HipifyClang(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.3.3", sha256="94d32b0e02c0c34debb9a8034cb5fcd6c2ee35b67350c64690034cf94cd38ddd")
     version("6.3.2", sha256="c0da5118be8207fab6d19803417c0b8d2db5bc766279038527cbd6fa92b25c67")
     version("6.3.1", sha256="5f9d9a65545f97b18c6a0d4394dca1bcdee10737a5635b79378ea505081f9315")
     version("6.3.0", sha256="9fced04f9e36350bdbabd730c446b55a898e2f4ba82078855bcf5dea3b5e8dc8")
@@ -78,6 +79,7 @@ class HipifyClang(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
     ]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -100,6 +102,7 @@ class HipifyClang(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

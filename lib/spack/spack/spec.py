@@ -754,11 +754,17 @@ class DependencySpec:
         self.depflag = new
         return True
 
-    def update_virtuals(self, virtuals: Iterable[str]) -> bool:
+    def update_virtuals(self, virtuals: Union[str, Iterable[str]]) -> bool:
         """Update the list of provided virtuals"""
         old = self.virtuals
-        self.virtuals = tuple(sorted(set(virtuals).union(self.virtuals)))
-        return old != self.virtuals
+        if isinstance(virtuals, str):
+            union = {virtuals, *self.virtuals}
+        else:
+            union = {*virtuals, *self.virtuals}
+        if len(union) == len(old):
+            return False
+        self.virtuals = tuple(sorted(union))
+        return True
 
     def copy(self) -> "DependencySpec":
         """Return a copy of this edge"""
@@ -1041,7 +1047,7 @@ class _EdgeMap(collections.abc.Mapping):
             parent: name of the parent package
             child: name of the child package
             depflag: allowed dependency types in flag form
-            virtuals: list of virtuals on the edge
+            virtuals: list of virtuals or specific virtual on the edge
         """
         if not depflag:
             return []
@@ -1590,7 +1596,11 @@ class Spec:
         return deps[0]
 
     def edges_from_dependents(
-        self, name=None, depflag: dt.DepFlag = dt.ALL, *, virtuals: Optional[List[str]] = None
+        self,
+        name=None,
+        depflag: dt.DepFlag = dt.ALL,
+        *,
+        virtuals: Optional[Union[str, Sequence[str]]] = None,
     ) -> List[DependencySpec]:
         """Return a list of edges connecting this node in the DAG
         to parents.
@@ -1696,10 +1706,8 @@ class Spec:
             result[key] = list(group)
         return result
 
-    def _add_flag(self, name, value, propagate):
-        """Called by the parser to add a known flag.
-        Known flags currently include "arch"
-        """
+    def _add_flag(self, name: str, value: str, propagate: bool, concrete: bool) -> None:
+        """Called by the parser to add a known flag"""
 
         if propagate and name in vt.RESERVED_NAMES:
             raise UnsupportedPropagationError(
@@ -1726,14 +1734,12 @@ class Spec:
             for flag, propagation in flags_and_propagation:
                 self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
-            # FIXME:
-            # All other flags represent variants. 'foo=true' and 'foo=false'
-            # map to '+foo' and '~foo' respectively. As such they need a
-            # BoolValuedVariant instance.
             if str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
                 self.variants[name] = vt.BoolValuedVariant(name, value, propagate)
+            elif concrete:
+                self.variants[name] = vt.MultiValuedVariant(name, value, propagate)
             else:
-                self.variants[name] = vt.AbstractVariant(name, value, propagate)
+                self.variants[name] = vt.VariantBase(name, value, propagate)
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -2341,6 +2347,7 @@ class Spec:
                     [v.name for v in self.variants.values() if v.propagate], flag_names
                 )
             )
+            d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
 
         if self.external:
             d["external"] = {
@@ -3067,7 +3074,7 @@ class Spec:
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
         for v in [x for x in other.variants if x in self.variants]:
-            if not self.variants[v].compatible(other.variants[v]):
+            if not self.variants[v].intersects(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
 
         sarch, oarch = self.architecture, other.architecture
@@ -4482,7 +4489,7 @@ class VariantMap(lang.HashableMap):
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, vt.AbstractVariant):
+        if not isinstance(vspec, vt.VariantBase):
             raise TypeError(
                 "VariantMap accepts only values of variant types "
                 f"[got {type(vspec).__name__} instead]"
@@ -4592,8 +4599,7 @@ class VariantMap(lang.HashableMap):
         changed = False
         for k in other:
             if k in self:
-                # If they are not compatible raise an error
-                if not self[k].compatible(other[k]):
+                if not self[k].intersects(other[k]):
                     raise vt.UnsatisfiableVariantSpecError(self[k], other[k])
                 # If they are compatible merge them
                 changed |= self[k].constrain(other[k])
@@ -4797,6 +4803,7 @@ class SpecfileReaderBase:
             spec.architecture = ArchSpec.from_dict(node)
 
         propagated_names = node.get("propagate", [])
+        abstract_variants = set(node.get("abstract", ()))
         for name, values in node.get("parameters", {}).items():
             propagate = name in propagated_names
             if name in _valid_compiler_flags:
@@ -4805,7 +4812,7 @@ class SpecfileReaderBase:
                     spec.compiler_flags.add_flag(name, val, propagate)
             else:
                 spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
-                    name, values, propagate=propagate
+                    name, values, propagate=propagate, abstract=name in abstract_variants
                 )
 
         spec.external_path = None

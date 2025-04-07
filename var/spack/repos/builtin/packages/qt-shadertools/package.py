@@ -17,6 +17,8 @@ class QtShadertools(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.9.0", sha256="27bdda7abee92d6573e2b3ecc9113eb2f625a3ae952693d6cfc45c4062987ec9")
+    version("6.8.3", sha256="b6c6cf0006476a219f8f3494ae0f356c8ca98cdd6be43dd9b105d7bea17d0ea0")
     version("6.8.2", sha256="13d62df354ca2ca034d8a28263ee67104a6d94f5671417152556eb5eb3d64839")
     version("6.8.1", sha256="b780ae2746d98fa3fc896c8ea8cd5c17ea360bedb33948e7343946bd9b115c24")
     version("6.8.0", sha256="19a6fce3e958d8e8d6cb2c13501a4a8fa61ad9e5bc0cd0496901b34012f2362e")
