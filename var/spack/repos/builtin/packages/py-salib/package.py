@@ -24,12 +24,12 @@ class PySalib(PythonPackage):
     version(
         "1.4.4",
         sha256="50a6459088700f55261a683752818530d14ede30cece2c324ac94d4b9e288b6d",
-        url="https://files.pythonhosted.org/packages/SALib/SALib-1.4.4.tar.gz"
+        url="https://files.pythonhosted.org/packages/SALib/SALib-1.4.4.tar.gz",
     )
     version(
         "1.4.0.1",
         sha256="dbf6e865af9f3be82a79cf64889ed66d6d3b6803f0c22a242a112876789d49e7",
-        url="https://files.pythonhosted.org/packages/source/s/SALib/SALib-1.4.0.1.tar.gz"
+        url="https://files.pythonhosted.org/packages/source/s/SALib/SALib-1.4.0.1.tar.gz",
     )
 
     depends_on("py-setuptools@38.3:", type=("build", "run"))
