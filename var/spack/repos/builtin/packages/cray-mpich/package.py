@@ -37,10 +37,6 @@ class CrayMpich(MpichEnvironmentModifications, Package, CudaPackage, ROCmPackage
     version("7.7.14")
     version("7.7.13")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     depends_on("cray-pmi")
     depends_on("libfabric")
 
