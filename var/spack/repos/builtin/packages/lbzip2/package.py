@@ -14,6 +14,6 @@ class Lbzip2(AutotoolsPackage):
 
     version(
         "2.5",
-        sha256="46c75ee93cc95eedc6005625442b2b8e59a2bef3ba80987d0491f055185650e9",
-        deprecated=True
+        sha256="7be69ece83ecdc8f12b9201d838eee5cdb499f2fd68cffd2af58866076ccac43",
+        deprecated=True,
     )
