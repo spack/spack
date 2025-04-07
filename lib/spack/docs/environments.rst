@@ -1004,7 +1004,7 @@ and constraints.
 Modifying Environment Variables
 -------------------------------
 
-Spack Environments can modify environment variables when activated.  The environment can be
+Spack Environments can modify the active shell's environment variables when activated.  The environment can be
 configured to set, unset, prepend, or append using ``env_vars`` configuration in the ``spack.yaml``  or through config scopes
 file:
 
