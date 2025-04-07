@@ -48,6 +48,8 @@ class Gcc(CompilerPackage, Package):
         "fortran": os.path.join("gcc", "gfortran"),
     }
 
+    implicit_rpath_libs = ["libgcc", "libgfortran"]
+
     def install(self, spec, prefix):
         # Create the minimal compiler that will fool `spack compiler find`
         mkdirp(prefix.bin)
