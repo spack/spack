@@ -29,14 +29,14 @@ class PyTypedAst(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "wheel",
         default=False,
         sticky=True,
         description="Install from wheel (required for bootstrapping Spack)",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python@3.3:", type=("build", "link", "run"))
     depends_on("python@3.6:", when="@1.5.4:", type=("build", "link", "run"))

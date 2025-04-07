@@ -31,10 +31,6 @@ class Hdf5(CMakePackage):
 
     license("custom")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build", when="+cxx")
-    depends_on("fortran", type="build", when="+fortran")
-
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-2.0", branch="develop")
@@ -135,6 +131,10 @@ class Hdf5(CMakePackage):
         values=("default", "v116", "v114", "v112", "v110", "v18", "v16"),
         multi=False,
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build", when="+cxx")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.18:", type="build", when="@1.13:")

@@ -157,9 +157,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         extension="tar.gz",
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("gmake", type="build")
-
     variant("static", default=True, description="Build static library")
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, sticky=True, description="Enable MPI parallelism")
@@ -279,6 +276,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     depends_on("mpi", when="+mpi")
     depends_on("hipsparse", when="@4.4.0:+rocm")

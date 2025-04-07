@@ -871,8 +871,8 @@ def add_command_line_scopes(
     """
     for i, path in enumerate(command_line_scopes):
         name = f"cmd_scope_{i}"
-        scopes = ev.environment_path_scopes(name, path)
-        if scopes is None:
+        scope = ev.environment_path_scope(name, path)
+        if scope is None:
             if os.path.isdir(path):  # directory with config files
                 cfg.push_scope(
                     spack.config.DirectoryConfigScope(name, path, writable=False),
@@ -885,8 +885,7 @@ def add_command_line_scopes(
             else:
                 raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
 
-        for scope in scopes:
-            cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
+        cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
 def _main(argv=None):

@@ -22,10 +22,10 @@ class AwsOfiRccl(AutotoolsPackage):
     version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-
     variant("trace", default=False, description="Enable printing trace messages")
     variant("tests", default=False, description="Build tests")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libfabric")
     depends_on("hip")

@@ -27,9 +27,6 @@ class Wi4mpi(CMakePackage):
     version("3.2.1", sha256="0d928cb930b6cb1ae648eca241db59812ee0e5c041faf2f57728bbb6ee4e36df")
     version("3.2.0", sha256="3322f6823dbec1d58a1fcf163b2bcdd7b9cd75dc6c7f78865fc6cb0a91bf6f94")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
     variant(
         "build_type",
         default="Release",
@@ -37,6 +34,9 @@ class Wi4mpi(CMakePackage):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
     depends_on("mpi", when="@:3.5")
 
     def cmake_args(self):

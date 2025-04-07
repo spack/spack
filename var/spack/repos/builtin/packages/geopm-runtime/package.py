@@ -24,10 +24,6 @@ class GeopmRuntime(AutotoolsPackage):
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
     version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=False, when="@3.0.1", description="Create man pages with Sphinx")
     variant("overhead", default=False, description="Track time spent in GEOPM API calls")
@@ -54,6 +50,10 @@ class GeopmRuntime(AutotoolsPackage):
     conflicts("target=aarch64:", msg="Only available on x86_64", when="@3.0.1")
     conflicts("target=ppc64:", msg="Only available on x86_64", when="@3.0.1")
     conflicts("target=ppc64le:", msg="Only available on x86_64", when="@3.0.1")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Autotools dependencies
     depends_on("automake", type="build")

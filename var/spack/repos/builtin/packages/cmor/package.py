@@ -27,11 +27,11 @@ class Cmor(AutotoolsPackage):
     version("3.2.0", sha256="8d49899549dd4c08197739300d507e6fc2b4a5cfe2bfd3e6b44e8e3eaf79b132")
     version("3.1.2", sha256="ee58b6d405f081e4e0633af931b7992f1a570953b71ece17c01ab9e15889211a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("fortran", default=True, description="Enable Fortran API")
     variant("python", default=False, description="Enable PYTHON support", when="@3.4:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # older releases require another implementation providing uuid_create()
     # 3.6.1 requires libuuid(only the lib) or util-linux-uuid providing uuid_generate()

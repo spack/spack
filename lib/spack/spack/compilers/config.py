@@ -7,6 +7,7 @@ and configuring Spack to use multiple compilers.
 import os
 import re
 import sys
+import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
 import archspec.cpu
@@ -337,7 +338,15 @@ class CompilerFactory:
             pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
             pattern = re.compile(r"|".join(finder.search_patterns(pkg=pkg_cls)))
             filtered_paths = [x for x in candidate_paths if pattern.search(os.path.basename(x))]
-            detected = finder.detect_specs(pkg=pkg_cls, paths=filtered_paths)
+            try:
+                detected = finder.detect_specs(pkg=pkg_cls, paths=filtered_paths)
+            except Exception:
+                warnings.warn(
+                    f"[{__name__}] cannot detect {pkg_name} from the "
+                    f"following paths: {', '.join(filtered_paths)}"
+                )
+                continue
+
             for s in detected:
                 for key in ("flags", "environment", "extra_rpaths"):
                     if key in compiler_dict:

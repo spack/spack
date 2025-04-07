@@ -24,6 +24,8 @@ class Ldak(Package):
 
     variant("glpk", default=False, description="Use glpk instead of vendored qsopt")
 
+    depends_on("c", type="build")
+
     depends_on("zlib-api")
     depends_on("blas")
     depends_on("lapack")

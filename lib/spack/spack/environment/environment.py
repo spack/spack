@@ -97,16 +97,15 @@ def environment_name(path: Union[str, pathlib.Path]) -> str:
         return path_str
 
 
-def ensure_no_disallowed_env_config_mods(scopes: List[spack.config.ConfigScope]) -> None:
-    for scope in scopes:
-        config = scope.get_section("config")
-        if config and "environments_root" in config["config"]:
-            raise SpackEnvironmentError(
-                "Spack environments are prohibited from modifying 'config:environments_root' "
-                "because it can make the definition of the environment ill-posed. Please "
-                "remove from your environment and place it in a permanent scope such as "
-                "defaults, system, site, etc."
-            )
+def ensure_no_disallowed_env_config_mods(scope: spack.config.ConfigScope) -> None:
+    config = scope.get_section("config")
+    if config and "environments_root" in config["config"]:
+        raise SpackEnvironmentError(
+            "Spack environments are prohibited from modifying 'config:environments_root' "
+            "because it can make the definition of the environment ill-posed. Please "
+            "remove from your environment and place it in a permanent scope such as "
+            "defaults, system, site, etc."
+        )
 
 
 def default_manifest_yaml():
@@ -2717,9 +2716,9 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         self.scope_name = f"env:{self.name}"
         self.config_stage_dir = os.path.join(env_subdir_path(manifest_dir), "config")
 
-        #: Configuration scopes associated with this environment. Note that these are not
+        #: Configuration scope associated with this environment. Note that this is not
         #: invalidated by a re-read of the manifest file.
-        self._config_scopes: Optional[List[spack.config.ConfigScope]] = None
+        self._env_config_scope: Optional[spack.config.ConfigScope] = None
 
         if not self.manifest_file.exists():
             msg = f"cannot find '{manifest_name}' in {self.manifest_dir}"
@@ -2957,33 +2956,27 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         return str(self.manifest_file)
 
     @property
-    def env_config_scopes(self) -> List[spack.config.ConfigScope]:
-        """A list of all configuration scopes for the environment manifest. On the first call this
-        instantiates all the scopes, on subsequent calls it returns the cached list."""
-        if self._config_scopes is not None:
-            return self._config_scopes
-
-        scopes: List[spack.config.ConfigScope] = [
-            spack.config.SingleFileScope(
+    def env_config_scope(self) -> spack.config.ConfigScope:
+        """The configuration scope for the environment manifest"""
+        if self._env_config_scope is None:
+            self._env_config_scope = spack.config.SingleFileScope(
                 self.scope_name,
                 str(self.manifest_file),
                 spack.schema.env.schema,
                 yaml_path=[TOP_LEVEL_KEY],
             )
-        ]
-        ensure_no_disallowed_env_config_mods(scopes)
-        self._config_scopes = scopes
-        return scopes
+            ensure_no_disallowed_env_config_mods(self._env_config_scope)
+        return self._env_config_scope
 
     def prepare_config_scope(self) -> None:
-        """Add the manifest's scopes to the global configuration search path."""
-        for scope in self.env_config_scopes:
-            spack.config.CONFIG.push_scope(scope, priority=ConfigScopePriority.ENVIRONMENT)
+        """Add the manifest's scope to the global configuration search path."""
+        spack.config.CONFIG.push_scope(
+            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
+        )
 
     def deactivate_config_scope(self) -> None:
-        """Remove any of the manifest's scopes from the global config path."""
-        for scope in self.env_config_scopes:
-            spack.config.CONFIG.remove_scope(scope.name)
+        """Remove the manifest's scope from the global config path."""
+        spack.config.CONFIG.remove_scope(self.env_config_scope.name)
 
     @contextlib.contextmanager
     def use_config(self):
@@ -2994,8 +2987,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             self.deactivate_config_scope()
 
 
-def environment_path_scopes(name: str, path: str) -> Optional[List[spack.config.ConfigScope]]:
-    """Retrieve the suitably named environment path scopes
+def environment_path_scope(name: str, path: str) -> Optional[spack.config.ConfigScope]:
+    """Retrieve the suitably named environment path scope
 
     Arguments:
         name: configuration scope name
@@ -3010,11 +3003,9 @@ def environment_path_scopes(name: str, path: str) -> Optional[List[spack.config.
     else:
         return None
 
-    for scope in manifest.env_config_scopes:
-        scope.name = f"{name}:{scope.name}"
-        scope.writable = False
-
-    return manifest.env_config_scopes
+    manifest.env_config_scope.name = f"{name}:{manifest.env_config_scope.name}"
+    manifest.env_config_scope.writable = False
+    return manifest.env_config_scope
 
 
 class SpackEnvironmentError(spack.error.SpackError):
