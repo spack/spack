@@ -623,28 +623,24 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         tty.warn("Cannot copy artifacts for non-concrete specs")
         return
 
-    try:
-        package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
-        if not package_metadata_root.is_dir():
-            job_pkg = job_spec.package
+    package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    if not os.path.isdir(package_metadata_root):
+        # Fallback to using the stage directory
+        job_pkg = job_spec.package
 
-            package_metadata_root = pathlib.Path(job_pkg.stage.path)
-            archive_files = spack.builder.create(job_pkg).archive_files
-            tty.warn("Package not installed, falling back to use stage dir")
-            tty.debug(f"stage dir: {package_metadata_root}")
+        package_metadata_root = pathlib.Path(job_pkg.stage.path)
+        archive_files = spack.builder.create(job_pkg).archive_files
+        tty.warn("Package not installed, falling back to use stage dir")
+        tty.debug(f"stage dir: {package_metadata_root}")
+    else:
+        # Get the package's archived files
+        archive_files = []
+        archive_root = package_metadata_root / "archived-files"
+        if os.path.isdir(archive_root):
+            archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
         else:
-            # Get the package's archived files
-            archive_files = []
-            archive_root = package_metadata_root / "archived-files"
-            if archive_root.is_dir():
-                archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
-            else:
-                msg = "Cannot copy package archived files: archived-files must be a directory"
-                tty.warn(msg)
-
-    except spack.error.SpackError as e:
-        tty.error(f"Cannot copy logs: {str(e)}")
-        return
+            msg = f"No archived files detected at {archive_root}"
+            tty.warn(msg)
 
     # Try zipped and unzipped versions of the build log
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
