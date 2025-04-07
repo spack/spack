@@ -20,8 +20,8 @@ class ScalapackBase(CMakePackage):
 
     depends_on("mpi")
     depends_on("lapack")
-    depends_on("openblas")                                # virtuals and variants do not play well together
-    depends_on("openblas+ilp64", when="+ilp64")
+    depends_on("blas")
+    depends_on("openblas+ilp64", when="+ilp64")              # virtuals and variants do not play well together
     depends_on("cmake", when="@2.0.0:", type="build")
 
     # See: https://github.com/Reference-ScaLAPACK/scalapack/issues/9
