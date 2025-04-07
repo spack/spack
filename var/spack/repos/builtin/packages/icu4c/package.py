@@ -33,9 +33,6 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
     version("57.2", sha256="623f04b921827a041f42d52495a6f8eee6565a9b7557051ac68e099123ff28dc")
     version("57.1", sha256="ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("autotools", "msbuild", default="autotools")
     for plat in ["linux", "darwin", "freebsd"]:
         with when(f"platform={plat}"):
@@ -46,6 +43,9 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
                 multi=False,
                 description="Use the specified C++ standard when building",
             )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type="build", when="@64.1:")
     with when("build_system=autotools"):

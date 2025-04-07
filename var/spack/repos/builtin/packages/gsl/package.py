@@ -35,8 +35,6 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     version("2.0", sha256="e361f0b19199b5e6c21922e9f16adf7eca8dd860842802424906d0f83485ca2d")
     version("1.16", sha256="73bc2f51b90d2a780e6d266d43e487b3dbd78945dd0b04b14ca5980fe28d2f53")
 
-    depends_on("c", type="build")  # generated
-
     variant("external-cblas", default=False, description="Build against external blas")
     variant("shared", default=True, description="Build shared library")
     variant("pic", default=True, description="Enable position-independent code (PIC)")
@@ -47,6 +45,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     patch("gsl-2.8-cblas.patch", when="@2.8: +external-cblas")
 
     conflicts("+external-cblas", when="@:2.2")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("m4", type="build", when="+external-cblas")
     depends_on("autoconf", type="build", when="+external-cblas")

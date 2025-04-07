@@ -27,9 +27,8 @@ spack:
     - py-transformers
 
     # JAX
-    # Does not yet support Spack-installed ROCm
-    # - py-jax
-    # - py-jaxlib
+    - py-jax
+    - py-jaxlib
 
     # Keras
     - py-keras backend=tensorflow

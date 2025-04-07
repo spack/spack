@@ -687,7 +687,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build"
+        SPACK_COMPREPLY="generate rebuild-index rebuild reproduce-build verify-versions"
     fi
 }
 
@@ -700,13 +700,22 @@ _spack_ci_rebuild_index() {
 }
 
 _spack_ci_rebuild() {
-    SPACK_COMPREPLY="-h --help -t --tests --fail-fast -j --jobs"
+    SPACK_COMPREPLY="-h --help -t --tests --fail-fast --timeout -j --jobs"
 }
 
 _spack_ci_reproduce_build() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --runtime --working-dir -s --autostart --use-local-head --gpg-file --gpg-url"
+    else
+        SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_ci_verify_versions() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         SPACK_COMPREPLY=""
     fi
@@ -985,7 +994,7 @@ _spack_dev_build() {
 _spack_develop() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone -f --force"
+        SPACK_COMPREPLY="-h --help -p --path -b --build-directory --no-clone --clone -f --force -r --recursive"
     else
         _all_packages
     fi
@@ -1894,7 +1903,7 @@ _spack_test() {
 _spack_test_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --externals -x --explicit --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --clean --dirty"
+        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --externals -x --explicit --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --timeout --clean --dirty"
     else
         _installed_packages
     fi

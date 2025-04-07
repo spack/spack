@@ -25,10 +25,6 @@ class Elsi(CMakePackage, CudaPackage):
     )
     version("master", branch="master")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     generator("ninja")
 
     variant(
@@ -74,6 +70,10 @@ class Elsi(CMakePackage, CudaPackage):
     variant("dlaf", default=False, when="@2.11:", description="Enable DLA-Future support")
 
     # Basic dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("blas", type="link")
     depends_on("lapack", type="link")
     depends_on("scalapack", type="link")

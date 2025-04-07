@@ -51,9 +51,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     version("4.3.3.1", sha256="f2ee78eb310637c007f001e7c18e2d773d23f3455242bde89647137b7344c2e2")
     version("4.3.3", sha256="3f16e21bc3dfeb3973252b9addf5defb48994f84fc9c9356081f871526a680e7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     with when("build_system=cmake"):
         # TODO: document why we need to revert https://github.com/Unidata/netcdf-c/pull/1731
         #  with the following patch:
@@ -140,6 +137,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("szip", default=True, description="Enable Szip compression plugin")
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:

@@ -27,9 +27,6 @@ class Ams(CMakePackage, CudaPackage):
         submodules=False,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "faiss",
         default=False,
@@ -49,6 +46,9 @@ class Ams(CMakePackage, CudaPackage):
         default=False,
         description="Enable AMSLib verbose output (controlled by environment variable)",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("umpire")
     depends_on("mpi", when="+mpi")

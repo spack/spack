@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import os.path
 
 from spack.package import *
 from spack.pkg.builtin.llvm import LlvmDetection
@@ -58,10 +58,13 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
 
-    depends_on("c", type="build")  # generated
+    provides("c", "cxx")
+    provides("fortran")
 
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libxml2")
     depends_on("zlib-api")
@@ -114,3 +117,32 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
 
     compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     fortran_names = ["flang"]
+
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]
+
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("aocc", "clang"),
+        "cxx": os.path.join("aocc", "clang++"),
+        "fortran": os.path.join("aocc", "flang"),
+    }
+
+    implicit_rpath_libs = ["libclang"]
+    stdcxx_libs = ("-lstdc++",)
+
+    def _standard_flag(self, *, language: str, standard: str) -> str:
+        flags = {
+            "cxx": {"11": "-std=c++11", "14": "-std=c++14", "17": "-std=c++17"},
+            "c": {"99": "-std=c99", "11": "-std=c11"},
+        }
+        return flags[language][standard]

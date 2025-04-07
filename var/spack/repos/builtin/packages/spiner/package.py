@@ -38,9 +38,6 @@ class Spiner(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # todo: disable cmake default?
-    depends_on("cxx", type="build")
-
     # When overriding/overloading varaints, the last variant is always used, except for
     # "when" clauses. Therefore, call the whens FIRST then the non-whens.
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#overriding-variants
@@ -50,6 +47,9 @@ class Spiner(CMakePackage):
     variant("mpi", default=False, description="Support parallel hdf5")
 
     variant("python", default=False, description="Python, Numpy & Matplotlib Support")
+
+    depends_on("c", type="build")  # todo: disable cmake default?
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", when="@:1.5.1", type="build")
     depends_on("cmake@3.23:", when="@1.6.0:", type="build")

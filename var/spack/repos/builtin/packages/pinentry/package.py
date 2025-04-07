@@ -27,9 +27,6 @@ class Pinentry(AutotoolsPackage):
     version("1.1.1", sha256="cd12a064013ed18e2ee8475e669b9f58db1b225a0144debdb85a68cecddba57f")
     version("1.1.0", sha256="68076686fa724a290ea49cdf0d1c0c1500907d1b759a3bcbfbec0293e8f56570")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     supported_guis = [
         "curses",
         "tty",
@@ -51,6 +48,9 @@ class Pinentry(AutotoolsPackage):
         values=supported_guis,
         multi=True,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libgpg-error@1.16:")
     depends_on("libassuan@2.1.0:")

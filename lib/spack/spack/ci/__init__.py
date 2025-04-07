@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Set
+from typing import Callable, Dict, List, Optional, Set, Union
 from urllib.request import Request
 
 import llnl.path
@@ -24,7 +24,6 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
-import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -42,6 +41,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -78,6 +78,45 @@ def get_change_revisions():
         # TODO: require more thought outside of that narrow case.
         return "HEAD^", "HEAD"
     return None, None
+
+
+def get_added_versions(
+    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
+    path: str,
+    from_ref: str = "HEAD~1",
+    to_ref: str = "HEAD",
+) -> List[Union[StandardVersion, GitVersion]]:
+    """Get a list of the versions added between `from_ref` and `to_ref`.
+    Args:
+       checksums_version_dict (Dict): all package versions keyed by known checksums.
+       path (str): path to the package.py
+       from_ref (str): oldest git ref, defaults to `HEAD~1`
+       to_ref (str): newer git ref, defaults to `HEAD`
+    Returns: list of versions added between refs
+    """
+    git_exe = spack.util.git.git(required=True)
+
+    # Gather git diff
+    diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
+
+    # Store added and removed versions
+    # Removed versions are tracked here to determine when versions are moved in a file
+    # and show up as both added and removed in a git diff.
+    added_checksums = set()
+    removed_checksums = set()
+
+    # Scrape diff for modified versions and prune added versions if they show up
+    # as also removed (which means they've actually just moved in the file and
+    # we shouldn't need to rechecksum them)
+    for checksum in checksums_version_dict.keys():
+        for line in diff_lines:
+            if checksum in line:
+                if line.startswith("+"):
+                    added_checksums.add(checksum)
+                if line.startswith("-"):
+                    removed_checksums.add(checksum)
+
+    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
 
 
 def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
@@ -381,10 +420,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         args: (spack.main.SpackArgumentParser): Parsed arguments from the command
             line.
     """
-    with spack.concretize.disable_compiler_existence_check():
-        with env.write_transaction():
-            env.concretize()
-            env.write()
+    with env.write_transaction():
+        env.concretize()
+        env.write()
 
     options = collect_pipeline_options(env, args)
 
@@ -1256,35 +1294,34 @@ def display_broken_spec_messages(base_url, hashes):
         tty.msg(msg)
 
 
-def run_standalone_tests(**kwargs):
+def run_standalone_tests(
+    *,
+    cdash: Optional[CDashHandler] = None,
+    fail_fast: bool = False,
+    log_file: Optional[str] = None,
+    job_spec: Optional[spack.spec.Spec] = None,
+    repro_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Run stand-alone tests on the current spec.
 
-    Arguments:
-       kwargs (dict): dictionary of arguments used to run the tests
-
-    List of recognized keys:
-
-    * "cdash" (CDashHandler): (optional) cdash handler instance
-    * "fail_fast" (bool): (optional) terminate tests after the first failure
-    * "log_file" (str): (optional) test log file name if NOT CDash reporting
-    * "job_spec" (Spec): spec that was built
-    * "repro_dir" (str): reproduction directory
+    Args:
+        cdash: cdash handler instance
+        fail_fast: terminate tests after the first failure
+        log_file: test log file name if NOT CDash reporting
+        job_spec: spec that was built
+        repro_dir: reproduction directory
+        timeout: maximum time (in seconds) that tests are allowed to run
     """
-    cdash = kwargs.get("cdash")
-    fail_fast = kwargs.get("fail_fast")
-    log_file = kwargs.get("log_file")
-
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")
         log_file = None
 
     # Error out but do NOT terminate if there are missing required arguments.
-    job_spec = kwargs.get("job_spec")
     if not job_spec:
         tty.error("Job spec is required to run stand-alone tests")
         return
 
-    repro_dir = kwargs.get("repro_dir")
     if not repro_dir:
         tty.error("Reproduction directory is required for stand-alone tests")
         return
@@ -1292,6 +1329,9 @@ def run_standalone_tests(**kwargs):
     test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
         test_args.append("--fail-fast")
+
+    if timeout is not None:
+        test_args.extend(["--timeout", str(timeout)])
 
     if cdash:
         test_args.extend(cdash.args())

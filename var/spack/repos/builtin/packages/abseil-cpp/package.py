@@ -68,8 +68,6 @@ class AbseilCpp(CMakePackage):
     version("20181200", sha256="e2b53bfb685f5d4130b84c4f3050c81bf48c497614dc85d91dbd3ed9129bce6d")
     version("20180600", sha256="794d483dd9a19c43dc1fbbe284ce8956eb7f2600ef350dac4c602f9b4eb26e90")
 
-    depends_on("cxx", type="build")  # generated
-
     # Avoid export of testonly target absl::test_allocator in CMake builds
     patch(
         "https://github.com/abseil/abseil-cpp/commit/779a3565ac6c5b69dd1ab9183e500a27633117d5.patch?full_index=1",
@@ -87,6 +85,8 @@ class AbseilCpp(CMakePackage):
         default="14",
         description="C++ standard used during compilation",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.16:", when="@20240722:", type="build")
     depends_on("cmake@3.10:", when="@20220907:", type="build")

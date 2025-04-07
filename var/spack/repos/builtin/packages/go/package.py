@@ -38,6 +38,7 @@ class Go(Package):
 
     license("BSD-3-Clause")
 
+    version("1.24.2", sha256="9dc77ffadc16d837a1bf32d99c624cb4df0647cee7b119edd9e7b1bcc05f2e00")
     version("1.24.1", sha256="8244ebf46c65607db10222b5806aeb31c1fcf8979c1b6b12f60c677e9a3c0656")
     version("1.24.0", sha256="d14120614acb29d12bcab72bd689f257eb4be9e0b6f88a8fb7e41ac65f8556e5")
     version("1.23.7", sha256="7cfabd46b73eb4c26b19d69515dd043d7183a6559acccd5cfdb25eb6b266a458")
@@ -86,6 +87,9 @@ class Go(Package):
 
     phases = ["build", "install"]
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     def url_for_version(self, version):
         return f"https://go.dev/dl/go{version}.src.tar.gz"
 
@@ -98,8 +102,8 @@ class Go(Package):
     def setup_build_environment(self, env):
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
-        env.set("CC_FOR_TARGET", self.compiler.cc)
-        env.set("CXX_FOR_TARGET", self.compiler.cxx)
+        env.set("CC_FOR_TARGET", self["c"].cc)
+        env.set("CXX_FOR_TARGET", self["cxx"].cxx)
         env.set("GOMAXPROCS", make_jobs)
 
     def build(self, spec, prefix):
@@ -120,4 +124,4 @@ class Go(Package):
         install_tree('bin', prefix.bin)
         """
         #  Add a go command/compiler for extensions
-        module.go = self.spec["go"].command
+        module.go = self.command

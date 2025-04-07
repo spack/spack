@@ -18,6 +18,7 @@ class RocmTensile(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
+    version("6.3.3", sha256="5849fc3898e9cea05569c0ee102c13043c4df67079119572687bc42f274ae496")
     version("6.3.2", sha256="700e43a22d7e6309bf74624b18a42bb0132ef35716fccec897d3045a97759e6a")
     version("6.3.1", sha256="9882e8f949e1eb1d4b7dbd215370ecce643852dd2ce6e021d59cd49d32ba9dea")
     version("6.3.0", sha256="7ae90d1a513dc6f000a45f644b360305ef212ab3dff7b0217b6addabebf932e1")
@@ -41,8 +42,6 @@ class RocmTensile(CMakePackage):
         version("5.3.3", sha256="ecb99243edf1cd2bb5e953915a7dae7867c3cdb0cd8ed15b8618aaaeb2bd7b29")
         version("5.3.0", sha256="05c546986549154e6c7b4f57a0b3bfd5cb223d2393c206ff1702f89454c832f4")
 
-    depends_on("cxx", type="build")  # generated
-
     tensile_architecture = (
         "all",
         "gfx906:xnack-",
@@ -62,6 +61,9 @@ class RocmTensile(CMakePackage):
         multi=True,
     )
     variant("openmp", default=True, description="Enable OpenMP")
+
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3:", type="build")
     depends_on("msgpack-c@3:")
     depends_on("boost", type=("build", "link"))
@@ -89,6 +91,7 @@ class RocmTensile(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")

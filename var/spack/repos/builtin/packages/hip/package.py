@@ -25,6 +25,7 @@ class Hip(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("6.3.3", sha256="aa3a5466304d1dbee0d976b50fccb710dd12e2e1d5534793396447c0ff845e2c")
     version("6.3.2", sha256="66a4eba98bd74fc7126ce7cb4d59653b22075fe95a70412fe283dc806ae366e0")
     version("6.3.1", sha256="76f862493c4912a06e0e0b8da3917c2ba7481f1e05f2c23ffd5e05f8c44e3037")
     version("6.3.0", sha256="950bfaf108a0af44eb169646f81f564f75f49e974acd06139b77245cfd327267")
@@ -119,6 +120,7 @@ class Hip(CMakePackage):
             "6.3.0",
             "6.3.1",
             "6.3.2",
+            "6.3.3",
         ]:
             depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
             depends_on(f"comgr@{ver}", when=f"@{ver}")
@@ -146,6 +148,7 @@ class Hip(CMakePackage):
             "6.3.0",
             "6.3.1",
             "6.3.2",
+            "6.3.3",
         ]:
             depends_on(f"hipify-clang@{ver}", when=f"@{ver}")
 
@@ -167,6 +170,7 @@ class Hip(CMakePackage):
             "6.3.0",
             "6.3.1",
             "6.3.2",
+            "6.3.3",
         ]:
             depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -185,10 +189,11 @@ class Hip(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
 
     # roc-obj-ls requirements
@@ -250,6 +255,7 @@ class Hip(CMakePackage):
         )
     # Add hip-clr sources thru the below
     for d_version, d_shasum in [
+        ("6.3.3", "8e5adca8f8c2d99d4a4e49605dd6b56b7881b762ee8ce15b4a7000e3cd982fec"),
         ("6.3.2", "ec13dc4ffe212beee22171cb2825d2b16cdce103c835adddb482b9238cf4f050"),
         ("6.3.1", "bfb8a4a59e7bd958e2cd4bf6f14c6cdea601d9827ebf6dc7af053a90e963770f"),
         ("6.3.0", "829e61a5c54d0c8325d02b0191c0c8254b5740e63b8bfdb05eec9e03d48f7d2c"),
@@ -309,6 +315,7 @@ class Hip(CMakePackage):
         )
     # Add hipother sources thru the below
     for d_version, d_shasum in [
+        ("6.3.3", "95cb2aab4bd996f0bd5f38427412cd768692a11fad70b97d20e402f32b1ef03e"),
         ("6.3.2", "1623d823de49471aae3ecb1fad0e9cdddf9301a4089f1fd44f78ac2ff0c20fb2"),
         ("6.3.1", "caa69147227bf72fa7b076867f84579456ef55af63efec29914265a80602df42"),
         ("6.3.0", "a28eb1e8fe239b41e744584d45d676925ca210968ecb21bfa60678cf8e86eeb7"),
@@ -343,7 +350,7 @@ class Hip(CMakePackage):
     patch("0014-remove-compiler-rt-linkage-for-host.6.0.patch", when="@6.0")
     patch("0014-remove-compiler-rt-linkage-for-host.6.1.patch", when="@6.1")
     patch("0015-reverting-operator-mixup-fix-for-slate.patch", when="@5.6:6.0")
-    patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0:")
+    patch("0018-reverting-hipMemoryType-with-memoryType.patch", when="@6.0:6.2")
 
     # See https://github.com/ROCm/HIP/pull/3206
     patch(
@@ -499,9 +506,10 @@ class Hip(CMakePackage):
             # bin/.hipVersion file can still be parsed.
             # See also https://github.com/ROCm/HIP/issues/2223
             env.append_path(
-                "HIPCC_COMPILE_FLAGS_APPEND",
-                "--rocm-path={0}".format(paths["rocm-path"]),
-                separator=" ",
+                "HIPCC_COMPILE_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
+            )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND", f"--rocm-path={paths['rocm-path']}", separator=" "
             )
         elif self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
@@ -517,6 +525,9 @@ class Hip(CMakePackage):
                 "HIPCC_COMPILE_FLAGS_APPEND",
                 f"--gcc-toolchain={self.compiler.prefix}",
                 separator=" ",
+            )
+            env.append_path(
+                "HIPCC_LINK_FLAGS_APPEND", f"--gcc-toolchain={self.compiler.prefix}", separator=" "
             )
             # This is picked up by CMake when using HIP as a CMake language.
             env.append_path("HIPFLAGS", f"--gcc-toolchain={self.compiler.prefix}", separator=" ")
@@ -561,6 +572,13 @@ class Hip(CMakePackage):
                 '"${ROCM_PATH}/llvm"',
                 self.spec["llvm-amdgpu"].prefix,
                 "clr/hipamd/hip-config-amd.cmake",
+                string=True,
+            )
+        if self.spec.satisfies("@6.3: +rocm"):
+            filter_file(
+                '"${ROCM_PATH}/llvm"',
+                self.spec["llvm-amdgpu"].prefix,
+                "clr/hipamd/hip-config-amd.cmake.in",
                 string=True,
             )
         perl = self.spec["perl"].command
