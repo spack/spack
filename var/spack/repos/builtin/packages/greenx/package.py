@@ -7,7 +7,8 @@ from spack.package import *
 
 
 class Greenx(CMakePackage):
-    """GreenX: An open-source library that supports exascale implementations of Green's-function-based methodologies."""
+    """GreenX: An open-source library that supports exascale implementations
+    of Green's-function-based methodologies."""
 
     homepage = "https://nomad-coe.github.io/greenX"
     url = "https://github.com/nomad-coe/greenX/archive/refs/tags/v2.1.tar.gz"
