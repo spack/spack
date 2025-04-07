@@ -3212,11 +3212,13 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
+
 def get_current_cache_data():
     count, byte_size = 0, 0
-    for entry in spack.solver.asp.CONC_CACHE.cache_entries():
-        count += 1
-        byte_size += entry.stat().st_size
+    for bucket in spack.solver.asp.CONC_CACHE.cache_buckets():
+        for entry in spack.solver.asp.CONC_CACHE.cache_entries(bucket):
+            count += 1
+            byte_size += entry.stat().st_size
     return count, byte_size
 
 def extract_cache_metadata():
@@ -3975,8 +3977,8 @@ def test_concretization_cache_manifest_updating(use_concretization_cache, mutabl
 
 
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
-    """Tests to ensure we are cleaning the cache when we should be and that the manifest is updated
-    correctly and reflects the current state of the cache"""
+    """Tests to ensure we are cleaning the cache when we should be respective to the
+    number of entries allowed in the cache"""
 
     spack.config.set("config:concretization_cache:entry_limit", 2)
     spack.concretize.concretize_one("zlib")
@@ -3984,34 +3986,21 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     # cleanup should be run after the third execution
     spack.concretize.concretize_one("py-black")
 
-    real_count, real_size = get_current_cache_data()
-    manifest_count, manifest_size = extract_cache_metadata()
+    real_count, _ = get_current_cache_data()
     # ensure we only have 2 entries
     assert real_count == 2, "Concretization cache cleanup pruned incorrectly"
-    # ensure the manifest reports that
-    assert real_count == manifest_count, "Concretization cache manifest entry count incorrect. "
-    f"Expected count {real_count}, got {manifest_count}"
-    # Ensure the bytes count was updated properly
-    assert real_size == manifest_size, "Concretization cache manifest byte count incorrect. "
-    f"Expected count {real_size}, got {manifest_size}"
 
 
 def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_config):
-
+    """Tests to ensure we are cleaning the cache when we should be respective to the
+    size of the cache in bytes"""
     spack.config.set("config:concretization_cache:size_limit", 3000)
     spack.concretize.concretize_one("zlib")
     # cleanup should be run after hdf5 is concretized
     spack.concretize.concretize_one("hdf5")
 
     real_count, real_size = get_current_cache_data()
-    manifest_count, manifest_size = extract_cache_metadata()
     # ensure we have less than our byte size limit
     assert real_size < 3000, "Concretization cache cleanup did not reduce enough bytes"
     # ensure there's only one cache entry
     assert real_count == 1, "Concretization cache did not properly prune on byte limit"
-    # ensure the manifest reports that
-    assert real_size == manifest_size, "Concretization cache manifest entry count incorrect. "
-    f"Expected count {real_count}, got {manifest_count}"
-    # Ensure the manifest count entry was updated correctly
-    assert real_count == manifest_count, "Concretization cache manifest byte count incorrect. "
-    f"Expected count {real_size}, got {manifest_size}"
