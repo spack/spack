@@ -28,6 +28,8 @@ class Msmpi(Package):
 
     provides("mpi")
 
+    depends_on("c", type="build")
+
     depends_on("win-wdk")
 
     patch("ifort_compat.patch")

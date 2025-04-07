@@ -65,6 +65,7 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("libxml2")
     depends_on("zlib-api")
