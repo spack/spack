@@ -26,7 +26,7 @@ class Greenx(CMakePackage):
         default=True,
         description="Enable GMP library for multiple precision arithmetic",
     )
-    variant("minmax", default=True, description="Enable minmac time-frequency grids component")
+    variant("minmax", default=True, description="Enable minmax time-frequency grids component")
     variant("lbasis", default=False, description="Enable localized basis component")
     variant("paw", default=False, description="Enable PAW component")
 
