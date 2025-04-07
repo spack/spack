@@ -1,30 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install mopac
-#
-# You can edit this file again by typing:
-#
-#     spack edit mopac
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack.package import *
 
 
 class Mopac(CMakePackage):
-    """FIXME: Put a proper description of your package here."""
+    """MOPAC (Molecular Orbital PACkage) is a semiempirical quantum chemistry program."""
 
     homepage = "http://openmopac.net/"
     url = "https://github.com/openmopac/mopac/archive/refs/tags/v23.1.2.tar.gz"
