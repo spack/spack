@@ -1233,6 +1233,7 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
     cfg = spack.config.create()
@@ -1240,6 +1241,7 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
     cfg = spack.config.create()
@@ -1247,6 +1249,17 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" in cfg.scopes
+    assert "end-user" in cfg.scopes
+
+
+def test_end_user_config_can_be_disabled():
+    spack.config.end_user_system_scope = False
+    cfg = spack.config.create()
+    assert "defaults" in cfg.scopes
+    assert "system" in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
 
 def test_user_cache_path_is_overridable(working_env):
