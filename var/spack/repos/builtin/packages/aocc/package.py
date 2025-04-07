@@ -138,6 +138,7 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
     }
 
     implicit_rpath_libs = ["libclang"]
+    stdcxx_libs = ("-lstdc++",)
 
     def _standard_flag(self, *, language: str, standard: str) -> str:
         flags = {
