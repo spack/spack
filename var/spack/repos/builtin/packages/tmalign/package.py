@@ -28,6 +28,8 @@ class Tmalign(Package):
 
     variant("fast-math", default=False, description="Enable fast math", when="@20220412:")
 
+    depends_on("cxx", type="build")
+
     with when("@20220412:"):
         phases = ["build", "install"]
 

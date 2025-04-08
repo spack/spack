@@ -19,6 +19,8 @@ class NnC(AutotoolsPackage):
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     configure_directory = "nn"
 

@@ -16,6 +16,9 @@ class Libarchive(AutotoolsPackage):
 
     license("BSD-2-Clause AND BSD-3-Clause AND Public-Domain")
 
+    version("3.7.9", sha256="aa90732c5a6bdda52fda2ad468ac98d75be981c15dde263d7b5cf6af66fd009f")
+    version("3.7.8", sha256="a123d87b1bd8adb19e8c187da17ae2d957c7f9596e741b929e6b9ceefea5ad0f")
+    version("3.7.7", sha256="4cc540a3e9a1eebdefa1045d2e4184831100667e6d7d5b315bb1cbc951f8ddff")
     version("3.7.6", sha256="b4071807367b15b72777c2eaac80f42c8ea2d20212ab279514a19fe1f6f96ef4")
     version("3.7.5", sha256="37556113fe44d77a7988f1ef88bf86ab68f53d11e85066ffd3c70157cc5110f1")
 
@@ -131,6 +134,7 @@ class Libarchive(AutotoolsPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    depends_on("pkgconfig", type="build")
 
     depends_on("bzip2", when="compression=bz2lib")
     depends_on("lz4", when="compression=lz4")

@@ -114,6 +114,7 @@ class PyPandas(PythonPackage):
 
     variant("performance", default=True, description="Build recommended performance dependencies")
     variant("excel", when="@1.4:", default=False, description="Build with support for Excel")
+    variant("parquet", when="@2:", default=False, description="Build with support for Parquet")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -205,3 +206,6 @@ class PyPandas(PythonPackage):
             depends_on("py-xlsxwriter@3.0.3:", when="@2.1:")
             depends_on("py-xlsxwriter@1.4.3:", when="@1.5:")
             depends_on("py-xlsxwriter@1.2.2:", when="@1.4:")
+
+        with when("+parquet"):
+            depends_on("py-pyarrow@10.0.1:")

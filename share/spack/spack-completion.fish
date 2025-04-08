@@ -989,13 +989,15 @@ complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help 
 complete -c spack -n '__fish_spack_using_command ci rebuild-index' -s h -l help -d 'show this help message and exit'
 
 # spack ci rebuild
-set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests fail-fast j/jobs=
+set -g __fish_spack_optspecs_spack_ci_rebuild h/help t/tests fail-fast timeout= j/jobs=
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -f -a tests
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s t -l tests -d 'run stand-alone tests after the build'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -f -a fail_fast
 complete -c spack -n '__fish_spack_using_command ci rebuild' -l fail-fast -d 'stop stand-alone tests after the first failure'
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -f -a timeout
+complete -c spack -n '__fish_spack_using_command ci rebuild' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -f -a jobs
 complete -c spack -n '__fish_spack_using_command ci rebuild' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
@@ -2950,7 +2952,7 @@ complete -c spack -n '__fish_spack_using_command test' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command test' -s h -l help -d 'show this help message and exit'
 
 # spack test run
-set -g __fish_spack_optspecs_spack_test_run h/help alias= fail-fast fail-first externals x/explicit keep-stage log-format= log-file= cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= help-cdash clean dirty
+set -g __fish_spack_optspecs_spack_test_run h/help alias= fail-fast fail-first externals x/explicit keep-stage log-format= log-file= cdash-upload-url= cdash-build= cdash-site= cdash-track= cdash-buildstamp= help-cdash timeout= clean dirty
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 test run' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command test run' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command test run' -s h -l help -d 'show this help message and exit'
@@ -2977,6 +2979,8 @@ complete -c spack -n '__fish_spack_using_command test run' -l cdash-track -r -f 
 complete -c spack -n '__fish_spack_using_command test run' -l cdash-buildstamp -r -f -a cdash_buildstamp
 complete -c spack -n '__fish_spack_using_command test run' -l help-cdash -f -a help_cdash
 complete -c spack -n '__fish_spack_using_command test run' -l help-cdash -d 'show usage instructions for CDash reporting'
+complete -c spack -n '__fish_spack_using_command test run' -l timeout -r -f -a timeout
+complete -c spack -n '__fish_spack_using_command test run' -l timeout -r -d 'maximum time (in seconds) that tests are allowed to run'
 complete -c spack -n '__fish_spack_using_command test run' -l clean -f -a dirty
 complete -c spack -n '__fish_spack_using_command test run' -l clean -d 'unset harmful variables in the build environment (default)'
 complete -c spack -n '__fish_spack_using_command test run' -l dirty -f -a dirty

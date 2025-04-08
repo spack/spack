@@ -67,6 +67,8 @@ class HdfEos2(AutotoolsPackage):
 
     conflicts("~static", when="~shared", msg="At least one of +static or +shared must be set")
 
+    depends_on("c", type="build")
+
     # Build dependencies
     depends_on("hdf")
     # Because hdf always depends on zlib and jpeg in spack, the tests below in configure_args

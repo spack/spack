@@ -65,6 +65,7 @@ class Dray(Package, CudaPackage):
     # set to false for systems that implicitly link mpi
     variant("blt_find_mpi", default=True, description="Use BLT CMake Find MPI logic")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 

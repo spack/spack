@@ -30,6 +30,8 @@ class Sw4lite(MakefilePackage, CudaPackage):
     )
     variant("ckernel", default=False, description="C or Fortran kernel")
 
+    depends_on("cxx", type="build")
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi")

@@ -36,9 +36,11 @@ import io
 import multiprocessing
 import os
 import re
+import signal
 import sys
 import traceback
 import types
+import warnings
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
@@ -1216,15 +1218,45 @@ def _setup_pkg_and_run(
             input_pipe.close()
 
 
-def start_build_process(pkg, function, kwargs):
+class BuildProcess:
+    def __init__(self, *, target, args) -> None:
+        self.p = multiprocessing.Process(target=target, args=args)
+
+    def start(self) -> None:
+        self.p.start()
+
+    def is_alive(self) -> bool:
+        return self.p.is_alive()
+
+    def join(self, *, timeout: Optional[int] = None):
+        self.p.join(timeout=timeout)
+
+    def terminate(self):
+        # Opportunity for graceful termination
+        self.p.terminate()
+        self.p.join(timeout=1)
+
+        # If the process didn't gracefully terminate, forcefully kill
+        if self.p.is_alive():
+            # TODO (python 3.6 removal): use self.p.kill() instead, consider removing this class
+            assert isinstance(self.p.pid, int), f"unexpected value for PID: {self.p.pid}"
+            os.kill(self.p.pid, signal.SIGKILL)
+            self.p.join()
+
+    @property
+    def exitcode(self):
+        return self.p.exitcode
+
+
+def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None):
     """Create a child process to do part of a spack build.
 
     Args:
 
         pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
-        function (typing.Callable): argless function to run in the child
-            process.
+        function (typing.Callable): argless function to run in the child process.
+        timeout: maximum time allowed to finish the execution of function
 
     Usage::
 
@@ -1252,14 +1284,14 @@ def start_build_process(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
-        mflags = os.environ.get("MAKEFLAGS", False)
-        if mflags:
+        mflags = os.environ.get("MAKEFLAGS")
+        if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
             if m:
                 jobserver_fd1 = Connection(int(m.group(1)))
                 jobserver_fd2 = Connection(int(m.group(2)))
 
-        p = multiprocessing.Process(
+        p = BuildProcess(
             target=_setup_pkg_and_run,
             args=(
                 serialized_pkg,
@@ -1293,13 +1325,16 @@ def start_build_process(pkg, function, kwargs):
         typ = "exit" if p.exitcode >= 0 else "signal"
         return f"{typ} {abs(p.exitcode)}"
 
+    p.join(timeout=timeout)
+    if p.is_alive():
+        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+        p.terminate()
+        p.join()
+
     try:
         child_result = read_pipe.recv()
     except EOFError:
-        p.join()
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
-
-    p.join()
 
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
