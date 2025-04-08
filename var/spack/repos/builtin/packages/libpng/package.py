@@ -33,10 +33,10 @@ class Libpng(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    depends_on("cmake@2.4.3:", type="build", when="@1.2.57")
-    depends_on("cmake@2.8.3:", type="build", when="@1.5.30")
-    depends_on("cmake@3.1:", type="build", when="@1.6.37:1.6.39")
     depends_on("cmake@3.14:", type="build", when="@1.6.47:")
+    depends_on("cmake@3.1:", type="build", when="@1.6.37:")
+    depends_on("cmake@2.8.3:", type="build", when="@1.5.30:")
+    depends_on("cmake@2.4.3:", type="build", when="@1.2.57:")
 
     depends_on("zlib-api")
 
