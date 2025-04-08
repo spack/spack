@@ -28,8 +28,17 @@ import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.database import INDEX_JSON_FILE
+from spack.mirrors.mirror import MirrorCollection
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 
+#: The build cache layout version that this version of Spack creates.
+#: Version 3: Introduces content-addressable tarballs
+CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
+
+#: The layout version spack can current install
+SUPPORTED_LAYOUT_VERSIONS = (3, 2)
+
+#: The name of the default buildcache index manifest file
 INDEX_MANIFEST_FILE = "index.manifest.json"
 
 
@@ -41,6 +50,7 @@ class BuildcacheComponent(enum.Enum):
     INDEX = enum.auto()
     SPEC = enum.auto()
     TARBALL = enum.auto()
+    LAYOUT_JSON = enum.auto()
 
 
 class BlobRecord:
@@ -120,6 +130,10 @@ class BuildcacheManifest:
         raise NoSuchBlobException(f"Manifest has no blobs of type {content_type}")
 
 
+def check_for_layout_json(mirror_url, layout_version):
+    pass
+
+
 class URLBuildcacheEntry:
     """A class for managing URL-style buildcache entries
 
@@ -155,6 +169,7 @@ class URLBuildcacheEntry:
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "specs", INDEX_MANIFEST_FILE],
         BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "keys", "_pgp"],
         BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "specs"],
+        BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
     def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
@@ -168,6 +183,32 @@ class URLBuildcacheEntry:
     @classmethod
     def get_layout_version(cls) -> int:
         return cls.LAYOUT_VERSION
+
+    @classmethod
+    def check_layout_json_exists(cls, mirror_url: str) -> bool:
+        layout_json_url = url_util.join(
+            mirror_url, *cls.get_relative_path_components(BuildcacheComponent.LAYOUT_JSON)
+        )
+        return web_util.url_exists(layout_json_url)
+
+    @classmethod
+    def maybe_push_layout_json(cls, mirror_url: str) -> None:
+        if cls.check_layout_json_exists(mirror_url):
+            return
+
+        layout_contents = {"signing": "gpg"}
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            local_layout_path = os.path.join(tmpdir, "layout.json")
+            with open(local_layout_path, "w", encoding="utf-8") as fd:
+                fd.write(json.dumps(layout_contents))
+            remote_layout_url = url_util.join(
+                mirror_url, *cls.get_relative_path_components(BuildcacheComponent.LAYOUT_JSON)
+            )
+            web_util.push_to_url(local_layout_path, remote_layout_url, keep_original=False)
+        finally:
+            shutil.rmtree(tmpdir)
 
     @classmethod
     def get_base_url(cls, spec_url: str) -> str:
@@ -212,10 +253,10 @@ class URLBuildcacheEntry:
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
-    def get_local_spec_path(self):
+    def get_local_spec_path(self) -> str:
         return self.get_staged_blob_path(self.get_blob_record(BuildcacheComponent.SPEC))
 
-    def get_local_archive_path(self):
+    def get_local_archive_path(self) -> str:
         return self.get_staged_blob_path(self.get_blob_record(BuildcacheComponent.TARBALL))
 
     def get_blob_record(self, blob_type: BuildcacheComponent) -> BlobRecord:
@@ -407,10 +448,6 @@ class URLBuildcacheEntry:
 
     def get_archive_stage(self) -> Optional[spack.stage.Stage]:
         return self.stages[self.get_blob_record(BuildcacheComponent.TARBALL)]
-        # try:
-        #     return self.stages[self.get_blob_record(BuildcacheComponent.TARBALL)]
-        # except Exception as e:
-        #     return None
 
     def fetch_index(self, allow_unsigned: bool = False) -> str:
         """Retrieve the buildcache index and return the path to the locally staged file"""
@@ -561,6 +598,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
         BuildcacheComponent.KEYS: ["build_cache", "_pgp"],
         BuildcacheComponent.SPECS: ["build_cache"],
+        BuildcacheComponent.LAYOUT_JSON: ["build_cache", "layout.json"],
     }
 
     def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
@@ -590,6 +628,10 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     @classmethod
     def get_layout_version(cls) -> int:
         return cls.LAYOUT_VERSION
+
+    @classmethod
+    def maybe_push_layout_json(cls, mirror_url: str) -> None:
+        raise BuildcacheEntryError("spack can no longer write to v2 buildcaches")
 
     def _get_spec_url(
         self, spec: spack.spec.Spec, mirror_url: str, ext: str = ".spec.json.sig"
@@ -790,7 +832,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
             self.spec_stage = None
 
 
-def get_url_buildcache_class(layout_version: int) -> type[URLBuildcacheEntry]:
+def get_url_buildcache_class(
+    layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+) -> type[URLBuildcacheEntry]:
     if layout_version == 2:
         return URLBuildcacheEntryV2
     elif layout_version == 3:
@@ -799,6 +843,18 @@ def get_url_buildcache_class(layout_version: int) -> type[URLBuildcacheEntry]:
         raise UnknownBuildcacheLayoutError(
             f"Cannot create buildcache class for unknown layout version {layout_version}"
         )
+
+
+def check_mirrors_for_layout():
+    cache_class = get_url_buildcache_class()
+    for mirror in MirrorCollection(binary=True).values():
+        if not cache_class.check_layout_json_exists(mirror.fetch_url):
+            msg = (
+                f"Configured mirror {mirror.name} is missing layout.json and has either \n"
+                "    never been pushed or is of an old layout version. Consider running \n"
+                "    'spack buildcache migrate' or rebuilding the specs in this mirror."
+            )
+            tty.warn(msg)
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:

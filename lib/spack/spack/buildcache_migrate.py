@@ -332,6 +332,10 @@ def migrate(
     if success_count > 0:
         tty.msg("Updating index and pushing keys")
 
+        # If the layout.json doesn't yet exist on this mirror, push it
+        v3_cache_class = get_url_buildcache_class(layout_version=3)
+        v3_cache_class.maybe_push_layout_json(mirror_url)
+
         # Push the migrated mirror index
         index_tmpdir = os.path.join(tmpdir, "rebuild_index")
         os.mkdir(index_tmpdir)

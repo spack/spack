@@ -85,6 +85,8 @@ from spack.util.executable import which
 
 from .enums import InstallRecordStatus
 from .url_buildcache import (
+    CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+    SUPPORTED_LAYOUT_VERSIONS,
     BlobRecord,
     BuildcacheComponent,
     BuildcacheEntryError,
@@ -96,13 +98,6 @@ from .url_buildcache import (
     get_url_buildcache_class,
     get_valid_spec_file,
 )
-
-#: The build cache layout version that this version of Spack creates.
-#: Version 3: Introduces content-addressable tarballs
-CURRENT_BUILD_CACHE_LAYOUT_VERSION = 3
-
-#: The layout version spack can current install
-SUPPORTED_LAYOUT_VERSIONS = (3, 2)
 
 
 class BuildCacheDatabase(spack_db.Database):
@@ -1354,6 +1349,10 @@ def _url_push(
     # don't bother pushing keys / index if all failed to upload
     if not uploaded_any:
         return skipped, errors
+
+    # If the layout.json doesn't yet exist on this mirror, push it
+    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+    cache_class.maybe_push_layout_json(out_url)
 
     if signing_key:
         keys_tmpdir = os.path.join(tmpdir, "keys")
