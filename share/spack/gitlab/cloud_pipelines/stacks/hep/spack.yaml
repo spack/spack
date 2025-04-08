@@ -20,6 +20,8 @@ spack:
       require: +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python +svg +tgeo cxxstd=20
     celeritas:
       require: +geant4 +hepmc3 +root +shared cxxstd=20
+    geant4:
+      require: +opengl +qt +threads +x11
     hip:
       require: '@5.7.1 +rocm'
     rivet:
@@ -66,7 +68,8 @@ spack:
   - fjcontrib
   #- garfieldpp
   - gaudi +aida +examples +heppdt +xercesc ^gdb +debuginfod +python
-  - geant4 +opengl +qt +threads ~vtk ^[virtuals=qmake] qt
+  - geant4 ~vtk ^[virtuals=qmake] qt
+  - geant4 ~vtk ^[virtuals=qmake] qt-base
   #- genie +atmo
   - hepmc
   - hepmc3 +interfaces +protobuf +python +rootio
