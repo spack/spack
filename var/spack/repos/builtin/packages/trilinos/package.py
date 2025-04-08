@@ -381,7 +381,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
-    conflicts("+wrapper", when="~cuda~rocm")
+    conflicts("+wrapper", when="~cuda")
     conflicts("+wrapper", when="%clang")
 
     # Old trilinos fails with new CUDA (see #27180)
