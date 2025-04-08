@@ -1,0 +1,19 @@
+diff --git a/packages/stk/stk_util/stk_util/parallel/ReceiveCounter.hpp b/packages/stk/stk_util/stk_util/parallel/ReceiveCounter.hpp
+index ad1232b5bf7..daf3329969b 100644
+--- a/packages/stk/stk_util/stk_util/parallel/ReceiveCounter.hpp
++++ b/packages/stk/stk_util/stk_util/parallel/ReceiveCounter.hpp
+@@ -36,6 +36,7 @@
+ #define stk_util_parallel_ReceiveCounter_hpp
+ 
+ #include <vector>
++#include <cstddef>
+ 
+ #include "stk_util/parallel/Parallel.hpp"   // for MPI
+ 
+@@ -92,4 +93,4 @@ std::vector<int>  get_send_counts(std::vector< std::vector<T> > sendLists, size_
+ }
+ 
+ }  // namespace
+-#endif
+\ No newline at end of file
++#endif

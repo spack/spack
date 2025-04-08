@@ -559,6 +559,10 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/trilinos/Trilinos/pull/13921
     patch("16-1-0-stk-fpe-exceptions.patch", when="@=16.1.0 +stk platform=darwin")
 
+    # https://github.com/trilinos/Trilinos/issues/13916 and
+    # https://github.com/trilinos/Trilinos/pull/13921
+    patch("16-1-0-stk-size_t.patch", when="@=16.1.0 +stk")
+
     def flag_handler(self, name, flags):
         spec = self.spec
         is_cce = spec.satisfies("%cce")
