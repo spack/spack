@@ -1178,7 +1178,7 @@ def test_relative_path_components():
     v2_spec_url = "file:///home/me/mymirror/build_cache/linux-ubuntu22.04-sapphirerapids-gcc-12.3.0-gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.json.sig"
     assert URLBuildcacheEntryV2.get_base_url(v2_spec_url) == "file:///home/me/mymirror"
 
-    v3_manifest_url = "file:///home/me/mymirror/v3/specs/gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.manifest.json"
+    v3_manifest_url = "file:///home/me/mymirror/v3/manifests/gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.manifest.json"
     assert URLBuildcacheEntry.get_base_url(v3_manifest_url) == "file:///home/me/mymirror"
 
 

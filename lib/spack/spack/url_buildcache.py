@@ -158,17 +158,17 @@ class URLBuildcacheEntry:
 
     """
 
-    SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/specs/.+")
+    SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
     INDEX_VERSION = f"index-v{spack.database._DB_VERSION}"
     SPEC_VERSION = f"spec-v{spack.spec.SPECFILE_FORMAT_VERSION}"
     TARBALL_VERSION = "tarball-v1"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
-        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "specs"],
-        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "specs", INDEX_MANIFEST_FILE],
+        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests"],
+        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", INDEX_MANIFEST_FILE],
         BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "keys", "_pgp"],
-        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "specs"],
+        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
