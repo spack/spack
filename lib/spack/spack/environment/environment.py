@@ -2790,6 +2790,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             item[list_name].append(user_spec)
             break
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
@@ -2816,6 +2818,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
@@ -2841,6 +2845,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):
