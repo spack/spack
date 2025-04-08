@@ -25,6 +25,12 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=False)
     version("master", branch="master", submodules=False)
     version(
+        "0.15.1",
+        tag="v0.15.1",
+        commit="f198c8b3d5dcfd274107b4263331818e86b50c7a",
+        submodules=False,
+    )
+    version(
         "0.15.0",
         tag="v0.15.0",
         commit="aff9eea69b6d95342371aacc44b73bef785255f3",
@@ -130,7 +136,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("raja@2024.02.0:", when="@0.12.0:")
     depends_on("raja@2022.10.5:", when="@0.10.0:")
 
-    # TODO: Add an enable_pick variant
     depends_on("chai+enable_pick+raja")
     depends_on("chai@2024.07.0:", when="@0.13.2:")
     depends_on("chai@2024.02.2:", when="@0.13.1:")
