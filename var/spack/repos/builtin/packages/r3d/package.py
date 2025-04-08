@@ -40,7 +40,7 @@ class R3d(CMakePackage):
         default=False,
         description="Build shared libraries"
         )
-    
+
     variant(
         "pic", default=False, description="Produce position-independent code (for shared libs)"
     )
@@ -100,6 +100,5 @@ class R3d(CMakePackage):
             options.append("-DENABLE_UNIT_TESTS=ON")
         else:
             options.append("-DENABLE_UNIT_TESTS=OFF")
-
 
         return options
