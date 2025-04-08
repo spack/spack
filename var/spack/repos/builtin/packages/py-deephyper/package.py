@@ -24,13 +24,15 @@ class PyDeephyper(PythonPackage):
     version("0.8.1", sha256="ac27edd62ff81fcfb9b0b49f44963dadd8338be687f8f616d4cbdd6f5c68e511")
 
     # Variants for machine learning features
-    variant("jax-cpu", default=False, description="Build with JAX dependencies")
+    # exists upstream, disabled in Spack due to missing dependencies, contributions welcome
+    # variant("jax-cpu", default=False, description="Build with JAX dependencies")
     variant("torch", default=False, description="Build with PyTorch dependencies")
     
     # Variants for storage/parallel backends
     variant("mpi", default=False, description="Build with MPI dependencies")
     variant("ray", default=False, description="Build with Ray dependencies")
-    variant("redis", default=False, description="Build with Redis dependencies")
+    # exists upstream, disabled in Spack due to missing dependencies, contributions welcome
+    # variant("redis", default=False, description="Build with Redis dependencies")
 
     # Variants for developers
     variant("dev", default=False, description="Build with dev dependencies")
@@ -79,10 +81,10 @@ class PyDeephyper(PythonPackage):
     with when("+dev"), default_args(type=("build", "run")):
         depends_on("py-pytest")
 
-    # Jax for GPU is not currently available on Spack
-    with when("+jax-cpu"), default_args(type=("build", "run")):
-        depends_on("py-jax@0.4.3:", when="@0.8:")
-        #depends_on("py-numpyro@0.15.3:", when="@0.8:")
+    # # Jax for GPU is not currently available on Spack
+    # with when("+jax-cpu"), default_args(type=("build", "run")):
+    #     depends_on("py-jax@0.4.3:", when="@0.8:")
+    #     depends_on("py-numpyro@0.15.3:", when="@0.8:")
 
     with when("+torch"), default_args(type=("build", "run")):
         depends_on("py-torch@2:", when="@0.8:")
@@ -93,6 +95,6 @@ class PyDeephyper(PythonPackage):
     with when("+ray"), default_args(type=("build", "run")):
         depends_on("py-ray", when="@0.8:")
 
-    with when("+redis"), default_args(type=("build", "run")):
-        depends_on("py-redis")
-        #depends_on("redisjson")
+    # with when("+redis"), default_args(type=("build", "run")):
+    #     depends_on("py-redis")
+    #     depends_on("redisjson")
