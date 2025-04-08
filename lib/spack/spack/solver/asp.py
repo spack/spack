@@ -3201,12 +3201,13 @@ class SpackSolverSetup:
 
             # FIXME (compiler as nodes): think of using isinstance(compiler_cls, WrappedCompiler)
             # Add a dependency on the compiler wrapper
-            recorder("*").depends_on(
-                "compiler-wrapper",
-                when=f"%{compiler.name}@{compiler.versions}",
-                type="build",
-                description=f"Add the compiler wrapper when using {compiler}",
-            )
+            for language in ("c", "cxx", "fortran"):
+                recorder("*").depends_on(
+                    "compiler-wrapper",
+                    when=f"%[virtuals={language}] {compiler.name}@{compiler.versions}",
+                    type="build",
+                    description=f"Add the compiler wrapper when using {compiler} for {language}",
+                )
 
             if not using_libc_compatibility():
                 continue
@@ -3601,11 +3602,9 @@ class RuntimePropertyRecorder:
                 # (avoid adding virtuals everywhere, if a single edge needs it)
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
-        body_str = (
-            f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
-            f"  not external({node_variable}),\n"
-            f"  not runtime(Package)"
-        ).replace(f'"{node_placeholder}"', f"{node_variable}")
+        body_str = ",\n".join(f"  {x}" for x in body_clauses)
+        body_str += f",\n  not external({node_variable})"
+        body_str = body_str.replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
             body_str = body_str.replace(old, replacement)
         return body_str, node_variable
