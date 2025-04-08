@@ -10,6 +10,7 @@ import llnl.util.filesystem as fs
 
 import spack.compilers.config
 import spack.compilers.libraries
+import spack.config
 import spack.util.executable
 import spack.util.module_cmd
 
@@ -25,12 +26,35 @@ def call_compiler(exe, *args, **kwargs):
     return without_flag_output
 
 
-@pytest.fixture()
-def mock_gcc(config):
-    compilers = spack.compilers.config.all_compilers_from(configuration=config)
-    compilers.sort(key=lambda x: (x.name == "gcc", x.version))
-    # Deepcopy is used to avoid more boilerplate when changing the "extra_attributes"
-    return copy.deepcopy(compilers[-1])
+@pytest.fixture
+def mock_gcc(mutable_config):
+    # Data for a compiler if there are none available
+    _gcc_compiler_definition = {
+        "compiler": {
+            "spec": "gcc@9.0.1",
+            "paths": {
+                "cc": "/usr/bin/gcc-9",
+                "cxx": "/usr/bin/g++-9",
+                "f77": "/usr/bin/gfortran-9",
+                "fc": "/usr/bin/gfortran-9",
+            },
+            "flags": {},
+            "operating_system": "ubuntu18.04",
+            "target": "x86_64",
+            "modules": [],
+            "environment": {},
+            "extra_rpaths": [],
+        }
+    }
+
+    # Ensure have at least one gcc compiler
+    with spack.config.override("compilers", [_gcc_compiler_definition]):
+        compilers = spack.compilers.config.all_compilers()
+        assert compilers, "No compilers available"
+
+        compilers.sort(key=lambda x: (x.name == "gcc", x.version))
+        # Deepcopy is used to avoid more boilerplate when changing the "extra_attributes"
+        return copy.deepcopy(compilers[-1])
 
 
 class TestCompilerPropertyDetector:
