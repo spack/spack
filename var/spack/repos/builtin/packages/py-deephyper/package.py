@@ -16,6 +16,8 @@ class PyDeephyper(PythonPackage):
 
     maintainers("mdorier", "Deathn0t", "bretteiffert")
 
+    license("BSD-3-Clause")
+
     # Versions
     version("master", branch="master")
     version("develop", branch="develop")
