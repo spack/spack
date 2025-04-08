@@ -40,7 +40,7 @@ class PyDill(PythonPackage):
     # [this issue]: https://github.com/uqfoundation/dill/issues/566
     # [fixing PR]: https://github.com/uqfoundation/dill/pull/567
     # [this commit]: https://github.com/uqfoundation/dill/commit/23c47455da62d4cb8582d8f98f1de9fc6e0971ad
-    patch("fix-is-builtin-module.patch", when="@0.3.5:")
+    patch("fix-is-builtin-module.patch", when="@0.3.5:0.3.6")
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/d/dill/"
