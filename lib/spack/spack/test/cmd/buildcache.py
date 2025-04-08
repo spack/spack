@@ -17,6 +17,7 @@ import spack.binary_distribution
 import spack.buildcache_migrate as migrate
 import spack.cmd.buildcache
 import spack.concretize
+import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -25,7 +26,12 @@ import spack.spec
 import spack.util.url as url_util
 from spack.installer import PackageInstaller
 from spack.paths import test_path
-from spack.url_buildcache import BuildcacheComponent, URLBuildcacheEntry, get_url_buildcache_class
+from spack.url_buildcache import (
+    BuildcacheComponent,
+    URLBuildcacheEntry,
+    check_mirrors_for_layout,
+    get_url_buildcache_class,
+)
 
 buildcache = spack.main.SpackCommand("buildcache")
 install = spack.main.SpackCommand("install")
@@ -525,6 +531,23 @@ def v2_buildcache_layout(tmp_path):
         return test_mirror_path
 
     return _layout
+
+
+def test_check_mirrors_for_layout(v2_buildcache_layout, mutable_config, capsys):
+    """Check printed warning in the presence of v2 layout binary mirrors
+    and make sure the config option disables it when set to False."""
+    test_mirror_path = v2_buildcache_layout("unsigned")
+    mirror("add", "oldmirror", str(test_mirror_path))
+
+    with cfg.override("config:check_mirrors_on_startup", True):
+        check_mirrors_for_layout()
+        err = str(capsys.readouterr()[1])
+        assert all([word in err for word in ["Warning", "missing", "layout"]])
+
+    with cfg.override("config:check_mirrors_on_startup", False):
+        check_mirrors_for_layout()
+        err = str(capsys.readouterr()[1])
+        assert not err
 
 
 @pytest.mark.parametrize("signing", ["unsigned", "signed"])

@@ -986,8 +986,7 @@ def _main(argv=None):
         return 1
 
     # Check mirrors for old binary layout and warn about it
-    if spack.config.get("config:check_mirrors_on_startup"):
-        check_mirrors_for_layout()
+    check_mirrors_for_layout()
 
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]

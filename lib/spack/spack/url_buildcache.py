@@ -130,10 +130,6 @@ class BuildcacheManifest:
         raise NoSuchBlobException(f"Manifest has no blobs of type {content_type}")
 
 
-def check_for_layout_json(mirror_url, layout_version):
-    pass
-
-
 class URLBuildcacheEntry:
     """A class for managing URL-style buildcache entries
 
@@ -846,6 +842,10 @@ def get_url_buildcache_class(
 
 
 def check_mirrors_for_layout():
+    """Check configured mirrors, warning about any that are missing layout.json"""
+    if not config.get("config:check_mirrors_on_startup"):
+        return
+
     cache_class = get_url_buildcache_class()
     for mirror in MirrorCollection(binary=True).values():
         if not cache_class.check_layout_json_exists(mirror.fetch_url):
