@@ -44,6 +44,10 @@ class Fplo(MakefilePackage):
     # Sets the correct python module import order.
     patch("fedit_py.patch")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("mkl")
     depends_on("ncurses")
     depends_on("perl", type="run")

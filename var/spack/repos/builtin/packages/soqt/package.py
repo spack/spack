@@ -18,6 +18,7 @@ class Soqt(CMakePackage):
     version("1.6.2", sha256="fb483b20015ab827ba46eb090bd7be5bc2f3d0349c2f947c3089af2b7003869c")
     version("1.6.1", sha256="80289d9bd49ffe709ab85778c952573f43f1c725ea958c6d5969b2e9c77bb3ba")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("cmake@3:", type="build")
 

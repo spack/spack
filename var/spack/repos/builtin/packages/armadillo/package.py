@@ -16,6 +16,7 @@ class Armadillo(CMakePackage):
 
     license("Apache-2.0")
 
+    version("14.4.1", sha256="26ce272bfdc8246c278e6f8cfa53777a1efb14ef196e88082fee05da1a463491")
     version("14.4.0", sha256="023242fd59071d98c75fb015fd3293c921132dc39bf46d221d4b059aae8d79f4")
     version("14.2.3", sha256="fc70c3089a8d2bb7f2510588597d4b35b4323f6d4be5db5c17c6dba20ab4a9cc")
     version("14.2.2", sha256="3054c8e63db3abdf1a5c8f9fdb7e6b4ad833f9bcfb58324c0ff86de0784c70e0")

@@ -2334,6 +2334,8 @@ class SpackSolverSetup:
         if not preferred_variants:
             return
 
+        self.gen.h2(f"Package preferences: {pkg_name}")
+
         for variant_name in sorted(preferred_variants):
             variant = preferred_variants[variant_name]
 
@@ -3128,7 +3130,6 @@ class SpackSolverSetup:
         for pkg in sorted(self.pkgs):
             self.gen.h2("Package rules: %s" % pkg)
             self.pkg_rules(pkg, tests=self.tests)
-            self.gen.h2("Package preferences: %s" % pkg)
             self.preferred_variants(pkg)
 
         self.gen.h1("Special variants")

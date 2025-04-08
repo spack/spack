@@ -30,6 +30,9 @@ class Lorene(MakefilePackage):
         description="Build Bin_star solver for binary neutron star systems",
     )
 
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("blas")
     depends_on("fftw @3:", when="+fftw")
     depends_on("gsl")

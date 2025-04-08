@@ -22,6 +22,8 @@ class Pdftk(MakefilePackage):
 
     version("2.02", sha256="118f6a25fd3acaafb58824dce6f97cdc07e56050e666b90e4c4ef426ea37b8c1")
 
+    depends_on("cxx", type="build")
+
     depends_on("eclipse-gcj-parser", type="build")
 
     # Only takes effect in phases not overridden here

@@ -31,6 +31,8 @@ class Fasttree(Package):
 
     variant("openmp", default=True, description="Add openmp support to Fasttree.")
 
+    depends_on("c", type="build")
+
     def install(self, spec, prefix):
         cc = Executable(spack_cc)
         if self.spec.satisfies("+openmp"):

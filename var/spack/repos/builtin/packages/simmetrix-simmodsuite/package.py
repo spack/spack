@@ -540,6 +540,8 @@ class SimmetrixSimmodsuite(Package):
     variant("parallelmesh", default=False, description="enable parallel meshing")
     variant("paralleladapt", default=False, description="enable parallel adaptation")
 
+    depends_on("c", type="build")
+
     depends_on("mpi")
     depends_on("libtirpc", type="link")
     depends_on("gmake", type="build")
