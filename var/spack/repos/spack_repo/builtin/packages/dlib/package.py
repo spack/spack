@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.build_systems.python import *
 from spack.package import *
 
 
@@ -34,6 +35,7 @@ class Dlib(CMakePackage, CudaPackage):
     variant("webp", default=False, description="build webp image support")
     variant("blas", default=True, description="build blas image support")
     variant("lapack", default=True, description="build lapack image support")
+    variant("python", default=True, description="build python bindings suppport")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -56,6 +58,11 @@ class Dlib(CMakePackage, CudaPackage):
     # depends on the deprecated FindCUDA module dependency as of 19.24.4
     # when cuda is enabled
     depends_on("cmake@:3.26", when="+cuda")
+
+    extends("python", when="+python")
+    depends_on("python@3.7:", when="+python")
+    depends_on("py-pip", when="+python", type=("build"))
+    depends_on("py-setuptools", when="+python", type=("build"))
 
     def cmake_args(self):
         spec = self.spec
@@ -81,3 +88,14 @@ class Dlib(CMakePackage, CudaPackage):
             )
 
         return args
+
+    @run_after("build")
+    def build_python(self):
+        if self.spec.satisfies("+python"):
+            pip = self.spec["python"].command
+            pip.add_default_arg("-m", "pip")
+            env = EnvironmentModifications()
+            env.set("CMAKE_BUILD_PARALLEL_LEVEL", str(make_jobs))
+            pip.add_default_envmod(env)
+            args = PythonPipBuilder.std_args(self) + [f"--prefix={self.prefix}", "."]
+            pip(*args)
