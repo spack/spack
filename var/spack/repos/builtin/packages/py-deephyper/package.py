@@ -56,7 +56,7 @@ class PyDeephyper(PythonPackage):
         depends_on("py-cython@0.29.24:2", when="@0.4.2")
 
         depends_on("py-wheel@0.36.2", when="@:0.6")
-        
+
     # Python versions
     with default_args(type=("build", "run")):
         depends_on("python@3.10:", when="@0.9:")
