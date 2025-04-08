@@ -6,15 +6,9 @@ import itertools
 import pytest
 
 import spack.concretize
-from spack.environment.list import SpecList, SpecListParser
+from spack.environment.list import SpecListParser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
-
-DEFAULT_INPUT = ["mpileaks", "$mpis", {"matrix": [["hypre"], ["$gccs", "$clangs"]]}, "libelf"]
-
-MPI_LIST = ["zmpi@1.0", "mpich@3.0"]
-
-DEFAULT_REFERENCE = [{"gccs": ["%gcc@4.5.0"]}, {"clangs": ["%clang@3.3"]}, {"mpis": MPI_LIST}]
 
 DEFAULT_EXPANSION = [
     "mpileaks",
@@ -43,14 +37,25 @@ DEFAULT_SPECS = [
 ]
 
 
+@pytest.fixture()
+def parser_and_speclist():
+    """Default configuration of parser and user spec list for tests"""
+    parser = SpecListParser()
+    parser.parse_definitions(
+        data=[
+            {"gccs": ["%gcc@4.5.0"]},
+            {"clangs": ["%clang@3.3"]},
+            {"mpis": ["zmpi@1.0", "mpich@3.0"]},
+        ]
+    )
+    result = parser.parse_user_specs(
+        name="specs",
+        yaml_list=["mpileaks", "$mpis", {"matrix": [["hypre"], ["$gccs", "$clangs"]]}, "libelf"],
+    )
+    return parser, result
+
+
 class TestSpecList:
-
-    def test_spec_list_expansions(self):
-        speclist = SpecList(name="specs", yaml_list=DEFAULT_INPUT, expanded_list=DEFAULT_EXPANSION)
-        assert speclist.specs_as_yaml_list == DEFAULT_EXPANSION
-        assert speclist.specs_as_constraints == DEFAULT_CONSTRAINTS
-        assert speclist.specs == DEFAULT_SPECS
-
     @pytest.mark.regression("28749")
     @pytest.mark.parametrize(
         "specs,expected",
@@ -87,62 +92,45 @@ class TestSpecList:
         result = SpecListParser().parse_user_specs(name="specs", yaml_list=specs)
         assert result.specs == [Spec(x) for x in expected]
 
-    def test_spec_list_add(self):
-        parser = SpecListParser()
-        parser.parse_definitions(data=DEFAULT_REFERENCE)
-        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
+    def test_mock_spec_list(self, parser_and_speclist):
+        """Tests expected properties on the default mock spec list"""
+        parser, mock_list = parser_and_speclist
+        assert mock_list.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert mock_list.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert mock_list.specs == DEFAULT_SPECS
 
-        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
-        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
-        assert result.specs == DEFAULT_SPECS
+    def test_spec_list_add(self, parser_and_speclist):
+        parser, mock_list = parser_and_speclist
+        mock_list.add("libdwarf")
 
-        result.add("libdwarf")
+        assert mock_list.specs_as_yaml_list == DEFAULT_EXPANSION + ["libdwarf"]
+        assert mock_list.specs_as_constraints == DEFAULT_CONSTRAINTS + [[Spec("libdwarf")]]
+        assert mock_list.specs == DEFAULT_SPECS + [Spec("libdwarf")]
 
-        assert result.specs_as_yaml_list == DEFAULT_EXPANSION + ["libdwarf"]
-        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS + [[Spec("libdwarf")]]
-        assert result.specs == DEFAULT_SPECS + [Spec("libdwarf")]
+    def test_spec_list_remove(self, parser_and_speclist):
+        parser, mock_list = parser_and_speclist
+        mock_list.remove("libelf")
 
-    def test_spec_list_remove(self):
-        parser = SpecListParser()
-        parser.parse_definitions(data=DEFAULT_REFERENCE)
-        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
+        assert mock_list.specs_as_yaml_list + ["libelf"] == DEFAULT_EXPANSION
+        assert mock_list.specs_as_constraints + [[Spec("libelf")]] == DEFAULT_CONSTRAINTS
+        assert mock_list.specs + [Spec("libelf")] == DEFAULT_SPECS
 
-        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
-        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
-        assert result.specs == DEFAULT_SPECS
-
-        result.remove("libelf")
-
-        assert result.specs_as_yaml_list + ["libelf"] == DEFAULT_EXPANSION
-
-        assert result.specs_as_constraints + [[Spec("libelf")]] == DEFAULT_CONSTRAINTS
-
-        assert result.specs + [Spec("libelf")] == DEFAULT_SPECS
-
-    def test_spec_list_extension(self):
-        parser = SpecListParser()
-        parser.parse_definitions(data=DEFAULT_REFERENCE)
-        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
-
-        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
-        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
-        assert result.specs == DEFAULT_SPECS
-
-        otherlist = parser.parse_user_specs(
+    def test_spec_list_extension(self, parser_and_speclist):
+        parser, mock_list = parser_and_speclist
+        other_list = parser.parse_user_specs(
             name="specs", yaml_list=[{"matrix": [["callpath"], ["%intel@18"]]}]
         )
-        result.extend(otherlist)
+        mock_list.extend(other_list)
 
-        assert result.specs_as_yaml_list == (DEFAULT_EXPANSION + otherlist.specs_as_yaml_list)
-        assert result.specs == DEFAULT_SPECS + otherlist.specs
+        assert mock_list.specs_as_yaml_list == (DEFAULT_EXPANSION + other_list.specs_as_yaml_list)
+        assert mock_list.specs == DEFAULT_SPECS + other_list.specs
 
-    def test_spec_list_nested_matrices(self):
+    def test_spec_list_nested_matrices(self, parser_and_speclist):
+        parser, _ = parser_and_speclist
+
         inner_matrix = [{"matrix": [["zlib", "libelf"], ["%gcc", "%intel"]]}]
         outer_addition = ["+shared", "~shared"]
         outer_matrix = [{"matrix": [inner_matrix, outer_addition]}]
-
-        parser = SpecListParser()
-        parser.parse_definitions(data=DEFAULT_REFERENCE)
         result = parser.parse_user_specs(name="specs", yaml_list=outer_matrix)
 
         expected_components = itertools.product(
@@ -169,13 +157,18 @@ class TestSpecList:
         assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
         assert result.specs == DEFAULT_SPECS
 
+    @pytest.mark.regression("16841")
     def test_spec_list_matrix_exclude(self, mock_packages):
-        # Test on non-boolean variants for regression for #16841
-        matrix = [
-            {"matrix": [["multivalue-variant"], ["foo=bar", "foo=baz"]], "exclude": ["foo=bar"]}
-        ]
         parser = SpecListParser()
-        result = parser.parse_user_specs(name="specs", yaml_list=matrix)
+        result = parser.parse_user_specs(
+            name="specs",
+            yaml_list=[
+                {
+                    "matrix": [["multivalue-variant"], ["foo=bar", "foo=baz"]],
+                    "exclude": ["foo=bar"],
+                }
+            ],
+        )
         assert len(result.specs) == 1
 
     def test_spec_list_exclude_with_abstract_hashes(self, mock_packages, install_mockery):
