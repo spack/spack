@@ -6,52 +6,50 @@ import itertools
 import pytest
 
 import spack.concretize
-from spack.environment.list import SpecList
+from spack.environment.list import SpecList, SpecListParser
 from spack.installer import PackageInstaller
 from spack.spec import Spec
 
+DEFAULT_INPUT = ["mpileaks", "$mpis", {"matrix": [["hypre"], ["$gccs", "$clangs"]]}, "libelf"]
+
+MPI_LIST = ["zmpi@1.0", "mpich@3.0"]
+
+DEFAULT_REFERENCE = [{"gccs": ["%gcc@4.5.0"]}, {"clangs": ["%clang@3.3"]}, {"mpis": MPI_LIST}]
+
+DEFAULT_EXPANSION = [
+    "mpileaks",
+    "zmpi@1.0",
+    "mpich@3.0",
+    {"matrix": [["hypre"], ["%gcc@4.5.0", "%clang@3.3"]]},
+    "libelf",
+]
+
+DEFAULT_CONSTRAINTS = [
+    [Spec("mpileaks")],
+    [Spec("zmpi@1.0")],
+    [Spec("mpich@3.0")],
+    [Spec("hypre"), Spec("%gcc@4.5.0")],
+    [Spec("hypre"), Spec("%clang@3.3")],
+    [Spec("libelf")],
+]
+
+DEFAULT_SPECS = [
+    Spec("mpileaks"),
+    Spec("zmpi@1.0"),
+    Spec("mpich@3.0"),
+    Spec("hypre%gcc@4.5.0"),
+    Spec("hypre%clang@3.3"),
+    Spec("libelf"),
+]
+
 
 class TestSpecList:
-    default_input = ["mpileaks", "$mpis", {"matrix": [["hypre"], ["$gccs", "$clangs"]]}, "libelf"]
-
-    default_reference = {
-        "gccs": SpecList("gccs", ["%gcc@4.5.0"]),
-        "clangs": SpecList("clangs", ["%clang@3.3"]),
-        "mpis": SpecList("mpis", ["zmpi@1.0", "mpich@3.0"]),
-    }
-
-    default_expansion = [
-        "mpileaks",
-        "zmpi@1.0",
-        "mpich@3.0",
-        {"matrix": [["hypre"], ["%gcc@4.5.0", "%clang@3.3"]]},
-        "libelf",
-    ]
-
-    default_constraints = [
-        [Spec("mpileaks")],
-        [Spec("zmpi@1.0")],
-        [Spec("mpich@3.0")],
-        [Spec("hypre"), Spec("%gcc@4.5.0")],
-        [Spec("hypre"), Spec("%clang@3.3")],
-        [Spec("libelf")],
-    ]
-
-    default_specs = [
-        Spec("mpileaks"),
-        Spec("zmpi@1.0"),
-        Spec("mpich@3.0"),
-        Spec("hypre%gcc@4.5.0"),
-        Spec("hypre%clang@3.3"),
-        Spec("libelf"),
-    ]
 
     def test_spec_list_expansions(self):
-        speclist = SpecList("specs", self.default_input, self.default_reference)
-
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
+        speclist = SpecList(name="specs", yaml_list=DEFAULT_INPUT, expanded_list=DEFAULT_EXPANSION)
+        assert speclist.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert speclist.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert speclist.specs == DEFAULT_SPECS
 
     @pytest.mark.regression("28749")
     @pytest.mark.parametrize(
@@ -86,116 +84,99 @@ class TestSpecList:
         ],
     )
     def test_spec_list_constraint_ordering(self, specs, expected):
-        speclist = SpecList("specs", specs)
-        expected_specs = [Spec(x) for x in expected]
-        assert speclist.specs == expected_specs
+        result = SpecListParser().parse_user_specs(name="specs", yaml_list=specs)
+        assert result.specs == [Spec(x) for x in expected]
 
     def test_spec_list_add(self):
-        speclist = SpecList("specs", self.default_input, self.default_reference)
+        parser = SpecListParser()
+        parser.parse_definitions(data=DEFAULT_REFERENCE)
+        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
 
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
+        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert result.specs == DEFAULT_SPECS
 
-        speclist.add("libdwarf")
+        result.add("libdwarf")
 
-        assert speclist.specs_as_yaml_list == self.default_expansion + ["libdwarf"]
-        assert speclist.specs_as_constraints == self.default_constraints + [[Spec("libdwarf")]]
-        assert speclist.specs == self.default_specs + [Spec("libdwarf")]
+        assert result.specs_as_yaml_list == DEFAULT_EXPANSION + ["libdwarf"]
+        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS + [[Spec("libdwarf")]]
+        assert result.specs == DEFAULT_SPECS + [Spec("libdwarf")]
 
     def test_spec_list_remove(self):
-        speclist = SpecList("specs", self.default_input, self.default_reference)
+        parser = SpecListParser()
+        parser.parse_definitions(data=DEFAULT_REFERENCE)
+        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
 
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
+        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert result.specs == DEFAULT_SPECS
 
-        speclist.remove("libelf")
+        result.remove("libelf")
 
-        assert speclist.specs_as_yaml_list + ["libelf"] == self.default_expansion
+        assert result.specs_as_yaml_list + ["libelf"] == DEFAULT_EXPANSION
 
-        assert speclist.specs_as_constraints + [[Spec("libelf")]] == self.default_constraints
+        assert result.specs_as_constraints + [[Spec("libelf")]] == DEFAULT_CONSTRAINTS
 
-        assert speclist.specs + [Spec("libelf")] == self.default_specs
-
-    def test_spec_list_update_reference(self):
-        speclist = SpecList("specs", self.default_input, self.default_reference)
-
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
-
-        new_mpis = SpecList("mpis", self.default_reference["mpis"].yaml_list)
-        new_mpis.add("mpich@3.3")
-        new_reference = self.default_reference.copy()
-        new_reference["mpis"] = new_mpis
-
-        speclist.update_reference(new_reference)
-
-        expansion = list(self.default_expansion)
-        expansion.insert(3, "mpich@3.3")
-        constraints = list(self.default_constraints)
-        constraints.insert(3, [Spec("mpich@3.3")])
-        specs = list(self.default_specs)
-        specs.insert(3, Spec("mpich@3.3"))
-
-        assert speclist.specs_as_yaml_list == expansion
-        assert speclist.specs_as_constraints == constraints
-        assert speclist.specs == specs
+        assert result.specs + [Spec("libelf")] == DEFAULT_SPECS
 
     def test_spec_list_extension(self):
-        speclist = SpecList("specs", self.default_input, self.default_reference)
+        parser = SpecListParser()
+        parser.parse_definitions(data=DEFAULT_REFERENCE)
+        result = parser.parse_user_specs(name="specs", yaml_list=DEFAULT_INPUT)
 
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
+        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert result.specs == DEFAULT_SPECS
 
-        new_ref = self.default_reference.copy()
-        otherlist = SpecList("specs", ["zlib", {"matrix": [["callpath"], ["%intel@18"]]}], new_ref)
-
-        speclist.extend(otherlist)
-
-        assert speclist.specs_as_yaml_list == (
-            self.default_expansion + otherlist.specs_as_yaml_list
+        otherlist = parser.parse_user_specs(
+            name="specs", yaml_list=[{"matrix": [["callpath"], ["%intel@18"]]}]
         )
-        assert speclist.specs == self.default_specs + otherlist.specs
-        assert speclist._reference is new_ref
+        result.extend(otherlist)
+
+        assert result.specs_as_yaml_list == (DEFAULT_EXPANSION + otherlist.specs_as_yaml_list)
+        assert result.specs == DEFAULT_SPECS + otherlist.specs
 
     def test_spec_list_nested_matrices(self):
         inner_matrix = [{"matrix": [["zlib", "libelf"], ["%gcc", "%intel"]]}]
         outer_addition = ["+shared", "~shared"]
         outer_matrix = [{"matrix": [inner_matrix, outer_addition]}]
-        speclist = SpecList("specs", outer_matrix)
+
+        parser = SpecListParser()
+        parser.parse_definitions(data=DEFAULT_REFERENCE)
+        result = parser.parse_user_specs(name="specs", yaml_list=outer_matrix)
 
         expected_components = itertools.product(
             ["zlib", "libelf"], ["%gcc", "%intel"], ["+shared", "~shared"]
         )
         expected = [Spec(" ".join(combo)) for combo in expected_components]
-        assert set(speclist.specs) == set(expected)
+        assert set(result.specs) == set(expected)
 
     @pytest.mark.regression("16897")
     def test_spec_list_recursion_specs_as_constraints(self):
         input = ["mpileaks", "$mpis", {"matrix": [["hypre"], ["$%gccs", "$%clangs"]]}, "libelf"]
 
-        reference = {
-            "gccs": SpecList("gccs", ["gcc@4.5.0"]),
-            "clangs": SpecList("clangs", ["clang@3.3"]),
-            "mpis": SpecList("mpis", ["zmpi@1.0", "mpich@3.0"]),
-        }
+        definitions = [
+            {"gccs": ["gcc@4.5.0"]},
+            {"clangs": ["clang@3.3"]},
+            {"mpis": ["zmpi@1.0", "mpich@3.0"]},
+        ]
 
-        speclist = SpecList("specs", input, reference)
+        parser = SpecListParser()
+        parser.parse_definitions(data=definitions)
+        result = parser.parse_user_specs(name="specs", yaml_list=input)
 
-        assert speclist.specs_as_yaml_list == self.default_expansion
-        assert speclist.specs_as_constraints == self.default_constraints
-        assert speclist.specs == self.default_specs
+        assert result.specs_as_yaml_list == DEFAULT_EXPANSION
+        assert result.specs_as_constraints == DEFAULT_CONSTRAINTS
+        assert result.specs == DEFAULT_SPECS
 
     def test_spec_list_matrix_exclude(self, mock_packages):
         # Test on non-boolean variants for regression for #16841
         matrix = [
             {"matrix": [["multivalue-variant"], ["foo=bar", "foo=baz"]], "exclude": ["foo=bar"]}
         ]
-        speclist = SpecList("specs", matrix)
-        assert len(speclist.specs) == 1
+        parser = SpecListParser()
+        result = parser.parse_user_specs(name="specs", yaml_list=matrix)
+        assert len(result.specs) == 1
 
     def test_spec_list_exclude_with_abstract_hashes(self, mock_packages, install_mockery):
         # Put mpich in the database so it can be referred to by hash.
@@ -205,9 +186,10 @@ class TestSpecList:
 
         # Create matrix and exclude +debug, which excludes the first mpich after its abstract hash
         # is resolved.
-        speclist = SpecList(
-            "specs",
-            [
+        parser = SpecListParser()
+        result = parser.parse_user_specs(
+            name="specs",
+            yaml_list=[
                 {
                     "matrix": [
                         ["mpileaks"],
@@ -220,5 +202,5 @@ class TestSpecList:
         )
 
         # Ensure that only mpich~debug is selected, and that the assembled spec remains abstract.
-        assert len(speclist.specs) == 1
-        assert speclist.specs[0] == Spec(f"mpileaks ^callpath ^mpich/{mpich_2.dag_hash(5)}")
+        assert len(result.specs) == 1
+        assert result.specs[0] == Spec(f"mpileaks ^callpath ^mpich/{mpich_2.dag_hash(5)}")
