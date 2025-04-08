@@ -381,7 +381,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     )
     conflicts("+cuda_rdc", when="~cuda")
     conflicts("+rocm_rdc", when="~rocm")
-    conflicts("+wrapper", when="~cuda")
+    conflicts("+wrapper", when="~cuda~rocm")
     conflicts("+wrapper", when="%clang")
 
     # Old trilinos fails with new CUDA (see #27180)
@@ -418,6 +418,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # External Kokkos
     with when("@14.4: +kokkos"):
+        depends_on("kokkos~cuda", when="~cuda")
+        depends_on("kokkos~rocm", when="~rocm")
         depends_on("kokkos+wrapper", when="+wrapper")
         depends_on("kokkos~wrapper", when="~wrapper")
         depends_on("kokkos+cuda_relocatable_device_code~shared", when="+cuda_rdc")
