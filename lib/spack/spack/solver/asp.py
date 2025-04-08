@@ -3601,9 +3601,7 @@ class RuntimePropertyRecorder:
                 _, provider, virtual = clause.args
                 clause.args = "virtual_on_edge", node_placeholder, provider, virtual
         body_str = (
-            f"  {f',{os.linesep}  '.join(str(x) for x in body_clauses)},\n"
-            f"  not external({node_variable}),\n"
-            f"  not runtime(Package)"
+            f"  {',\n  '.join(str(x) for x in body_clauses)},\n  not external({node_variable})"
         ).replace(f'"{node_placeholder}"', f"{node_variable}")
         for old, replacement in when_substitutions.items():
             body_str = body_str.replace(old, replacement)
