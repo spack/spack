@@ -36,7 +36,7 @@ class Nag(Package, CompilerPackage):
         deprecated=True,
     )
 
-    depends_on("fortran", type="build")  # generated
+    depends_on("gcc languages=c", type="run", when="platform=linux")
     provides("fortran")
 
     # Licensing
