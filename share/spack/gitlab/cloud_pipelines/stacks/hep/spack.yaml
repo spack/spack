@@ -25,7 +25,7 @@ spack:
     rivet:
       require: hepmc=3
     root:
-      require: +davix +dcache +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
+      require: +arrow +davix +dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
       # note: root cxxstd=20 not concretizable within sherpa
     vecgeom:
       require: +gdml +geant4 +root +shared cxxstd=20
