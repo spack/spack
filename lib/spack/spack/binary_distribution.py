@@ -537,18 +537,7 @@ class BinaryCacheIndex:
             if not web_util.url_exists(url_util.join(mirror_url, *index_components)):
                 return False
 
-        fetcher: IndexFetcher
-
-        if scheme == "oci":
-            # TODO: Actually etag and OCI are not mutually exclusive...
-            fetcher = OCIIndexFetcher(url_and_version, cache_entry.get("index_hash", None))
-        elif cache_entry.get("etag"):
-            fetcher = EtagIndexFetcher(url_and_version, cache_entry["etag"])
-        else:
-            fetcher = DefaultIndexFetcher(
-                url_and_version, local_hash=cache_entry.get("index_hash", None)
-            )
-
+        fetcher: IndexFetcher = get_index_fetcher(scheme, url_and_version, cache_entry)
         result = fetcher.conditional_fetch()
 
         # Nothing to do
@@ -708,8 +697,10 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
+    content_type = f"index-v{spack_db._DB_VERSION}"
+
     index_blob_record = BlobRecord(
-        os.stat(index_json_path).st_size, "index-v7", "none", "sha256", index_hash
+        os.stat(index_json_path).st_size, content_type, "none", "sha256", index_hash
     )
     index_manifest = {
         "version": cache_class.get_layout_version(),
@@ -1112,6 +1103,7 @@ def _url_upload_tarball_and_specfile(
 ):
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
+
     cache_entry.push(spec, tarball, "sha256", checksum, tmpdir, signing_key)
 
 
@@ -2388,51 +2380,57 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
         tty.die("Please add a spack mirror to allow " + "download of build caches.")
 
     for mirror in mirror_collection.values():
-        fetch_url = mirror.fetch_url
-        # TODO: oci:// does not support signing.
-        if fetch_url.startswith("oci://"):
-            continue
-        keys_url = url_util.join(fetch_url, buildcache_relative_keys_url())
-        keys_index = url_util.join(keys_url, "index.json")
+        for layout_version in SUPPORTED_LAYOUT_VERSIONS:
+            fetch_url = mirror.fetch_url
+            # TODO: oci:// does not support signing.
+            if fetch_url.startswith("oci://"):
+                continue
 
-        tty.debug("Finding public keys in {0}".format(url_util.format(fetch_url)))
+            cache_class = get_url_buildcache_class(layout_version=layout_version)
 
-        try:
-            _, _, json_file = web_util.read_from_url(keys_index)
-            json_index = sjson.load(json_file)
-        except (web_util.SpackWebError, OSError, ValueError) as url_err:
-            # TODO: avoid repeated request
-            if web_util.url_exists(keys_index):
-                tty.error(
-                    f"Unable to find public keys in {url_util.format(fetch_url)},"
-                    f" caught exception attempting to read from {url_util.format(keys_index)}."
-                )
-                tty.debug(url_err)
+            keys_url = url_util.join(
+                fetch_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
+            )
+            keys_index = url_util.join(keys_url, "index.json")
 
-            continue
+            tty.debug("Finding public keys in {0}".format(url_util.format(fetch_url)))
 
-        for fingerprint, key_attributes in json_index["keys"].items():
-            link = os.path.join(keys_url, fingerprint + ".pub")
-
-            with Stage(link, name="build_cache", keep=True) as stage:
-                if os.path.exists(stage.save_filename) and force:
-                    os.remove(stage.save_filename)
-                if not os.path.exists(stage.save_filename):
-                    try:
-                        stage.fetch()
-                    except spack.error.FetchError:
-                        continue
-
-            tty.debug("Found key {0}".format(fingerprint))
-            if install:
-                if trust:
-                    spack.util.gpg.trust(stage.save_filename)
-                    tty.debug("Added this key to trusted keys.")
-                else:
-                    tty.debug(
-                        "Will not add this key to trusted keys."
-                        "Use -t to install all downloaded keys"
+            try:
+                _, _, json_file = web_util.read_from_url(keys_index)
+                json_index = sjson.load(json_file)
+            except (web_util.SpackWebError, OSError, ValueError) as url_err:
+                # TODO: avoid repeated request
+                if web_util.url_exists(keys_index):
+                    tty.error(
+                        f"Unable to find public keys in {url_util.format(fetch_url)},"
+                        f" caught exception attempting to read from {url_util.format(keys_index)}."
                     )
+                    tty.debug(url_err)
+
+                continue
+
+            for fingerprint, key_attributes in json_index["keys"].items():
+                link = os.path.join(keys_url, fingerprint + ".pub")
+
+                with Stage(link, name="build_cache", keep=True) as stage:
+                    if os.path.exists(stage.save_filename) and force:
+                        os.remove(stage.save_filename)
+                    if not os.path.exists(stage.save_filename):
+                        try:
+                            stage.fetch()
+                        except spack.error.FetchError:
+                            continue
+
+                tty.debug("Found key {0}".format(fingerprint))
+                if install:
+                    if trust:
+                        spack.util.gpg.trust(stage.save_filename)
+                        tty.debug("Added this key to trusted keys.")
+                    else:
+                        tty.debug(
+                            "Will not add this key to trusted keys."
+                            "Use -t to install all downloaded keys"
+                        )
 
 
 def _url_push_keys(
@@ -2653,6 +2651,168 @@ class IndexFetcher:
         return (computed_hash, blob_result)
 
 
+class DefaultIndexFetcherV2(IndexFetcher):
+    """Fetcher for index.json, using separate index.json.hash as cache invalidation strategy"""
+
+    def __init__(self, url, local_hash, urlopen=web_util.urlopen):
+        self.url = url
+        self.local_hash = local_hash
+        self.urlopen = urlopen
+        self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
+
+    def get_remote_hash(self):
+        # Failure to fetch index.json.hash is not fatal
+        url_index_hash = url_util.join(self.url, "build_cache", "index.json.hash")
+        try:
+            response = self.urlopen(urllib.request.Request(url_index_hash, headers=self.headers))
+            remote_hash = response.read(64)
+        except OSError:
+            return None
+
+        # Validate the hash
+        if not re.match(rb"[a-f\d]{64}$", remote_hash):
+            return None
+        return remote_hash.decode("utf-8")
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        # Do an intermediate fetch for the hash
+        # and a conditional fetch for the contents
+
+        # Early exit if our cache is up to date.
+        if self.local_hash and self.local_hash == self.get_remote_hash():
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+        # Otherwise, download index.json
+        url_index = url_util.join(self.url, "build_cache", spack_db.INDEX_JSON_FILE)
+
+        try:
+            response = self.urlopen(urllib.request.Request(url_index, headers=self.headers))
+        except OSError as e:
+            raise FetchIndexError(f"Could not fetch index from {url_index}", e) from e
+
+        try:
+            result = codecs.getreader("utf-8")(response).read()
+        except (ValueError, OSError) as e:
+            raise FetchIndexError(f"Remote index {url_index} is invalid") from e
+
+        computed_hash = compute_hash(result)
+
+        # We don't handle computed_hash != remote_hash here, which can happen
+        # when remote index.json and index.json.hash are out of sync, or if
+        # the hash algorithm changed.
+        # The most likely scenario is that we got index.json got updated
+        # while we fetched index.json.hash. Warning about an issue thus feels
+        # wrong, as it's more of an issue with race conditions in the cache
+        # invalidation strategy.
+
+        # For now we only handle etags on http(s), since 304 error handling
+        # in s3:// is not there yet.
+        if urllib.parse.urlparse(self.url).scheme not in ("http", "https"):
+            etag = None
+        else:
+            etag = web_util.parse_etag(
+                response.headers.get("Etag", None) or response.headers.get("etag", None)
+            )
+
+        return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
+
+
+class EtagIndexFetcherV2(IndexFetcher):
+    """Fetcher for index.json, using ETags headers as cache invalidation strategy"""
+
+    def __init__(self, url, etag, urlopen=web_util.urlopen):
+        self.url = url
+        self.etag = etag
+        self.urlopen = urlopen
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        # Just do a conditional fetch immediately
+        url = url_util.join(self.url, "build_cache", spack_db.INDEX_JSON_FILE)
+        headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
+
+        try:
+            response = self.urlopen(urllib.request.Request(url, headers=headers))
+        except urllib.error.HTTPError as e:
+            if e.getcode() == 304:
+                # Not modified; that means fresh.
+                return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+            raise FetchIndexError(f"Could not fetch index {url}", e) from e
+        except OSError as e:  # URLError, socket.timeout, etc.
+            raise FetchIndexError(f"Could not fetch index {url}", e) from e
+
+        try:
+            result = codecs.getreader("utf-8")(response).read()
+        except (ValueError, OSError) as e:
+            raise FetchIndexError(f"Remote index {url} is invalid", e) from e
+
+        headers = response.headers
+        etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
+        return FetchIndexResult(
+            etag=web_util.parse_etag(etag_header_value),
+            hash=compute_hash(result),
+            data=result,
+            fresh=False,
+        )
+
+
+class OCIIndexFetcher(IndexFetcher):
+    def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=None) -> None:
+        self.local_hash = local_hash
+
+        url = url_and_version.url
+
+        # Remove oci:// prefix
+        assert url.startswith("oci://")
+        self.ref = spack.oci.image.ImageReference.from_string(url[6:])
+        self.urlopen = urlopen or spack.oci.opener.urlopen
+
+    def conditional_fetch(self) -> FetchIndexResult:
+        """Download an index from an OCI registry type mirror."""
+        url_manifest = self.ref.with_tag(default_index_tag).manifest_url()
+        try:
+            response = self.urlopen(
+                urllib.request.Request(
+                    url=url_manifest,
+                    headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
+                )
+            )
+        except OSError as e:
+            raise FetchIndexError(f"Could not fetch manifest from {url_manifest}", e) from e
+
+        try:
+            manifest = json.load(response)
+        except Exception as e:
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
+
+        # Get first blob hash, which should be the index.json
+        try:
+            index_digest = spack.oci.image.Digest.from_string(manifest["layers"][0]["digest"])
+        except Exception as e:
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
+
+        # Fresh?
+        if index_digest.digest == self.local_hash:
+            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
+
+        # Otherwise fetch the blob / index.json
+        try:
+            response = self.urlopen(
+                urllib.request.Request(
+                    url=self.ref.blob_url(index_digest),
+                    headers={"Accept": "application/vnd.oci.image.layer.v1.tar+gzip"},
+                )
+            )
+            result = codecs.getreader("utf-8")(response).read()
+        except (OSError, ValueError) as e:
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
+
+        # Make sure the blob we download has the advertised hash
+        if compute_hash(result) != index_digest.digest:
+            raise FetchIndexError(f"Remote index {url_manifest} is invalid")
+
+        return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
+
+
 class DefaultIndexFetcher(IndexFetcher):
     """Fetcher for buildcache index, cache invalidation via manifest contents"""
 
@@ -2756,62 +2916,27 @@ class EtagIndexFetcher(IndexFetcher):
         )
 
 
-class OCIIndexFetcher(IndexFetcher):
-    def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=None) -> None:
-        self.local_hash = local_hash
+def get_index_fetcher(
+    scheme: str, url_and_version: MirrorURLAndVersion, cache_entry: Dict[str, str]
+) -> IndexFetcher:
+    if scheme == "oci":
+        # TODO: Actually etag and OCI are not mutually exclusive...
+        return OCIIndexFetcher(url_and_version, cache_entry.get("index_hash", None))
+    elif cache_entry.get("etag"):
+        if url_and_version.version < 3:
+            return EtagIndexFetcherV2(url_and_version.url, cache_entry["etag"])
+        else:
+            return EtagIndexFetcher(url_and_version, cache_entry["etag"])
 
-        url = url_and_version.url
-
-        # Remove oci:// prefix
-        assert url.startswith("oci://")
-        self.ref = spack.oci.image.ImageReference.from_string(url[6:])
-        self.urlopen = urlopen or spack.oci.opener.urlopen
-
-    def conditional_fetch(self) -> FetchIndexResult:
-        """Download an index from an OCI registry type mirror."""
-        url_manifest = self.ref.with_tag(default_index_tag).manifest_url()
-        try:
-            response = self.urlopen(
-                urllib.request.Request(
-                    url=url_manifest,
-                    headers={"Accept": "application/vnd.oci.image.manifest.v1+json"},
-                )
+    else:
+        if url_and_version.version < 3:
+            return DefaultIndexFetcherV2(
+                url_and_version.url, local_hash=cache_entry.get("index_hash", None)
             )
-        except OSError as e:
-            raise FetchIndexError(f"Could not fetch manifest from {url_manifest}", e) from e
-
-        try:
-            manifest = json.load(response)
-        except Exception as e:
-            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
-
-        # Get first blob hash, which should be the index.json
-        try:
-            index_digest = spack.oci.image.Digest.from_string(manifest["layers"][0]["digest"])
-        except Exception as e:
-            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
-
-        # Fresh?
-        if index_digest.digest == self.local_hash:
-            return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
-
-        # Otherwise fetch the blob / index.json
-        try:
-            response = self.urlopen(
-                urllib.request.Request(
-                    url=self.ref.blob_url(index_digest),
-                    headers={"Accept": "application/vnd.oci.image.layer.v1.tar+gzip"},
-                )
+        else:
+            return DefaultIndexFetcher(
+                url_and_version, local_hash=cache_entry.get("index_hash", None)
             )
-            result = codecs.getreader("utf-8")(response).read()
-        except (OSError, ValueError) as e:
-            raise FetchIndexError(f"Remote index {url_manifest} is invalid", e) from e
-
-        # Make sure the blob we download has the advertised hash
-        if compute_hash(result) != index_digest.digest:
-            raise FetchIndexError(f"Remote index {url_manifest} is invalid")
-
-        return FetchIndexResult(etag=None, hash=index_digest.digest, data=result, fresh=False)
 
 
 class NoOverwriteException(spack.error.SpackError):

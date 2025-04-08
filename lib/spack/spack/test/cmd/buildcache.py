@@ -527,6 +527,34 @@ def v2_buildcache_layout(tmp_path):
     return _layout
 
 
+@pytest.mark.parametrize("signing", ["unsigned", "signed"])
+def test_install_v2_layout(
+    signing,
+    capsys,
+    v2_buildcache_layout,
+    mock_packages,
+    mutable_config,
+    mutable_mock_env_path,
+    install_mockery,
+    mock_gnupghome,
+    monkeypatch,
+):
+    """Ensure we can still install from signed and unsigned v2 buildcache"""
+    test_mirror_path = v2_buildcache_layout(signing)
+    mirror("add", "my-mirror", str(test_mirror_path))
+
+    # Trust original signing key (no-op if this is the unsigned pass)
+    buildcache("keys", "--install", "--trust")
+
+    with capsys.disabled():
+        output = install("--no-check-signature", "libdwarf")
+
+    assert "Extracting libelf" in output
+    assert "libelf: Successfully installed" in output
+    assert "Extracting libdwarf" in output
+    assert "libdwarf: Successfully installed" in output
+
+
 def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
     """Make sure first unsigned migration results in usable buildcache,
     leaving the previous layout in place. Also test that a subsequent one
@@ -575,12 +603,6 @@ def test_basic_migrate_signed(
     """Test a signed migration requires a signing key, requires the public
     key originally used to sign the pkgs, fails and prints reasonable messages
     if those requirements are unmet, and eventually succeeds when they are met."""
-
-    def _keys_url():
-        return url_util.join("build_cache", "_pgp")
-
-    monkeypatch.setattr(spack.binary_distribution, "buildcache_relative_keys_url", _keys_url)
-
     test_mirror_path = v2_buildcache_layout("signed")
     mirror("add", "my-mirror", str(test_mirror_path))
 
@@ -639,7 +661,7 @@ def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable
     assert "libdwarf" in output and "libelf" in output
 
     # We should find two spec manifest files, one for each spec
-    file_list = find(test_mirror_path, "*.manifest.json")
+    file_list = find(test_mirror_path, "*.spec.manifest.json")
     assert len(file_list) == 2
     assert any(["libdwarf" in file for file in file_list])
     assert any(["libelf" in file for file in file_list])

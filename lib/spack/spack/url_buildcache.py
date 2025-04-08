@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import jsonschema
 
 import llnl.util.filesystem as fsys
+import llnl.util.tty as tty
 
 import spack.config as config
 import spack.error
@@ -144,7 +145,7 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/specs/.+")
     LAYOUT_VERSION = 3
-    INDEX_VERSION = "index-v7"
+    INDEX_VERSION = "index-v8"
     SPEC_VERSION = "spec-v6"
     TARBALL_VERSION = "tarball-v1"
     COMPONENT_PATHS = {
@@ -280,6 +281,7 @@ class URLBuildcacheEntry:
         Returns True if there is a blob present in the mirror for every
         given component type.
         """
+        print("Checking if buildcache entry exists")
         try:
             self.read_manifest(verify_signature=False)
         except BuildcacheEntryError:
@@ -289,6 +291,9 @@ class URLBuildcacheEntry:
             return False
 
         for component in components:
+            print(
+                f"  Check for blob with content-type: {self.component_to_content_type(component)}"
+            )
             component_blobs = self.manifest.get_blob_records(
                 self.component_to_content_type(component)
             )
@@ -414,6 +419,29 @@ class URLBuildcacheEntry:
 
         return self.fetch_blob(self.get_blob_record(BuildcacheComponent.INDEX))
 
+    def remove(self):
+        if self.manifest:
+            try:
+                web_util.remove_url(self.remote_manifest_url)
+            except Exception as e:
+                tty.debug(f"Failed to remove previous manfifest: {e}")
+
+            try:
+                web_util.remove_url(
+                    self.get_blob_url(self.get_blob_record(BuildcacheComponent.TARBALL))
+                )
+            except Exception as e:
+                tty.debug(f"Failed to remove previous archive: {e}")
+
+            try:
+                web_util.remove_url(
+                    self.get_blob_url(self.get_blob_record(BuildcacheComponent.SPEC))
+                )
+            except Exception as e:
+                tty.debug(f"Failed to remove previous metadata: {e}")
+
+            self.manifest = None
+
     def push(
         self,
         spec: spack.spec.Spec,
@@ -436,13 +464,8 @@ class URLBuildcacheEntry:
         tarball_content_length = os.stat(tarball_path).st_size
         compression = "gzip"
 
-        if self.manifest:
-            web_util.remove_url(self.remote_manifest_url)
-            web_util.remove_url(
-                self.get_blob_url(self.get_blob_record(BuildcacheComponent.TARBALL))
-            )
-            web_util.remove_url(self.get_blob_url(self.get_blob_record(BuildcacheComponent.SPEC)))
-            self.manifest = None
+        # Delete the previously existing version
+        self.remove()
 
         if not self.remote_manifest_url:
             self.remote_manifest_url = self.get_manifest_url(spec, self.mirror_url)
@@ -531,7 +554,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.BLOBS: ["build_cache"],
         BuildcacheComponent.INDICES: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
-        BuildcacheComponent.KEYS: ["build_cache", "keys", "_pgp"],
+        BuildcacheComponent.KEYS: ["build_cache", "_pgp"],
         BuildcacheComponent.SPECS: ["build_cache"],
     }
 
@@ -693,6 +716,13 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     def fetch_archive(self, allow_unsigned: bool = False) -> str:
         self.fetch_metadata(allow_unsigned=allow_unsigned)
 
+        # Adding this, we can avoid passing a dictionary of stages around the
+        # install logic, and in fact completely avoid fetching the metadata in
+        # the new (v3) approach.
+        if self.spec_stage:
+            self.spec_stage.destroy()
+            self.spec_stage = None
+
         self.archive_stage = spack.stage.Stage(self.remote_archive_url)
 
         # Fetch the archive file, or else cleanup and exit early
@@ -731,6 +761,9 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         self, manifest_url: Optional[str] = None, verify_signature: bool = True
     ) -> BuildcacheManifest:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
+
+    def remove(self):
+        raise BuildcacheEntryError("Spack cannot delete v2 buildcache entries")
 
     def push(
         self,

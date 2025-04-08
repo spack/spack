@@ -857,18 +857,24 @@ spack:
 
             # Test generating buildcache index while we have bin mirror
             buildcache_cmd("update-index", mirror_url)
-            with open(mirror_dir / specs_dir / INDEX_JSON_FILE, encoding="utf-8") as idx_fd:
-                index_object = json.load(idx_fd)
-                jsonschema.validate(index_object, db_idx_schema)
+
+            # Validate resulting buildcache (database) index
+            layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+                mirror_url, layout_version
+            )
+            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
+            result = index_fetcher.conditional_fetch()
+            jsonschema.validate(json.loads(result.data), db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             assert "patchelf" in buildcache_cmd("list", output=str)
+
             # Also test buildcache_spec schema
-            for file_name in os.listdir(mirror_dir / specs_dir):
-                if file_name.endswith(".spec.json.sig"):
-                    with open(mirror_dir / specs_dir / file_name, encoding="utf-8") as f:
-                        spec_dict = Spec.extract_json_from_clearsig(f.read())
-                        jsonschema.validate(spec_dict, specfile_schema)
+            cache_class = spack.binary_distribution.get_url_buildcache_class(layout_version)
+            cache_entry = cache_class(mirror_url, concrete_spec)
+            spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+            jsonschema.validate(spec_dict, specfile_schema)
 
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
@@ -1034,7 +1040,7 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
+    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch, capsys
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"
@@ -1071,9 +1077,9 @@ spack:
             buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
-            specs_dir = spack.binary_distribution.buildcache_relative_specs_path()
-            with open(mirror_dir / specs_dir / INDEX_JSON_FILE, encoding="utf-8") as f:
-                jsonschema.validate(json.load(f), db_idx_schema)
+            with capsys.disabled():
+                output = buildcache_cmd("list", "--allarch")
+                assert "callpath" in output
 
 
 def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
