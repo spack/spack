@@ -668,7 +668,7 @@ def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable
 
     # The two spec manifest files should be unsigned
     for file_path in file_list:
-        with open(file_path, "r") as fd:
+        with open(file_path, "r", encoding="utf-8") as fd:
             assert json.load(fd)
 
 

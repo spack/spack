@@ -697,10 +697,8 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
-    content_type = f"index-v{spack_db._DB_VERSION}"
-
     index_blob_record = BlobRecord(
-        os.stat(index_json_path).st_size, content_type, "none", "sha256", index_hash
+        os.stat(index_json_path).st_size, cache_class.INDEX_VERSION, "none", "sha256", index_hash
     )
     index_manifest = {
         "version": cache_class.get_layout_version(),

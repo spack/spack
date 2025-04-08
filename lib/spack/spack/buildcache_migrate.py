@@ -226,7 +226,11 @@ def _migrate_spec(
                 spec_dict["archive_size"], "tarball-v1", "gzip", algorithm, checksum
             ).to_json(),
             BlobRecord(
-                metadata_size, "spec-v6", "gzip", metadata_checksum_algo, metadata_checksum
+                metadata_size,
+                v3_cache_class.SPEC_VERSION,
+                "gzip",
+                metadata_checksum_algo,
+                metadata_checksum,
             ).to_json(),
         ],
     }

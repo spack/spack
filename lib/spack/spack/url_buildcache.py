@@ -18,6 +18,7 @@ import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
 import spack.config as config
+import spack.database
 import spack.error
 import spack.hash_types as ht
 import spack.spec
@@ -145,8 +146,8 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/specs/.+")
     LAYOUT_VERSION = 3
-    INDEX_VERSION = "index-v8"
-    SPEC_VERSION = "spec-v6"
+    INDEX_VERSION = f"index-v{spack.database._DB_VERSION}"
+    SPEC_VERSION = f"spec-v{spack.spec.SPECFILE_FORMAT_VERSION}"
     TARBALL_VERSION = "tarball-v1"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
@@ -514,7 +515,11 @@ class URLBuildcacheEntry:
 
         blobs.append(
             BlobRecord(
-                metadata_size, "spec-v6", compression, checksum_algorithm, metadata_checksum
+                metadata_size,
+                self.SPEC_VERSION,
+                compression,
+                checksum_algorithm,
+                metadata_checksum,
             )
         )
 

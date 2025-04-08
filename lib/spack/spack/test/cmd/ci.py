@@ -31,11 +31,9 @@ from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
-from spack.database import INDEX_JSON_FILE
 from spack.error import SpackError
 from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
-from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse
 
 config_cmd = spack.main.SpackCommand("config")
@@ -852,8 +850,6 @@ spack:
                 assert found_spec_job
 
             mirror_cmd("rm", "test-ci")
-
-            specs_dir = spack.binary_distribution.buildcache_relative_specs_path()
 
             # Test generating buildcache index while we have bin mirror
             buildcache_cmd("update-index", mirror_url)

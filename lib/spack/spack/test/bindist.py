@@ -1257,7 +1257,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
         nonlocal fetched
         fetched = True
 
-    @property
+    @property  # type: ignore
     def save_filename_patch(stage):
         return str(index_blob_path)
 
