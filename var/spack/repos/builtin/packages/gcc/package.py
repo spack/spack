@@ -1158,7 +1158,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             spec: spec that will inject runtime dependencies
             pkg: object used to forward information to the solver
         """
-        for language in cls.compiler_languages:
+        for language in ("c", "cxx", "fortran"):
             pkg("*").depends_on(
                 f"gcc-runtime@{spec.version}:",
                 when=f"%[virtuals={language}] {spec.name}@{spec.versions}",

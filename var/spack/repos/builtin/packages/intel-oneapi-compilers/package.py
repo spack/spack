@@ -655,7 +655,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
-        for language in cls.compiler_languages:
+        for language in ("c", "cxx", "fortran"):
             pkg("*").depends_on(
                 f"intel-oneapi-runtime@{spec.version}:",
                 when=f"%[virtuals={language}] {spec.name}@{spec.versions}",
