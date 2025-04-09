@@ -1,4 +1,4 @@
-# Copyright (C) 2024-2025 University Corporation for Atmospheric Research
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0)
 
