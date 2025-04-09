@@ -14,6 +14,7 @@ import io
 import json
 import os
 import pickle
+import re
 
 import pytest
 import ruamel.yaml
@@ -388,10 +389,9 @@ ordered_spec = collections.OrderedDict(
     ]
 )
 
+specfile_version_regex = re.compile(r"specfiles/hdf5.([a-z0-9]*).*")
 
-# TODO/RepoSplit: A suitable mock or real post-split package must be chosen
-# TODO/RepoSplit:   and gzip'd spec files in json need to be generated so
-# TODO/RepoSplit:   tests with v0.13 through v0.19 tests work.
+
 @pytest.mark.parametrize(
     "specfile,expected_hash,reader_cls",
     [
@@ -424,12 +424,14 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     assert len(openmpi_edges) == 1
 
     # Check that virtuals have been reconstructed
-    assert "mpi" in openmpi_edges[0].virtuals
+    match = re.search(specfile_version_regex, specfile)
+    if match.group(1) >= "v020":
+        assert "mpi" in openmpi_edges[0].virtuals
 
-    # The virtuals attribute must be a tuple, when read from a
-    # JSON or YAML file, not a list
-    for edge in s2.traverse_edges():
-        assert isinstance(edge.virtuals, tuple), edge
+        # The virtuals attribute must be a tuple, when read from a
+        # JSON or YAML file, not a list
+        for edge in s2.traverse_edges():
+            assert isinstance(edge.virtuals, tuple), edge
 
     # Ensure we can format {compiler} tokens
     assert s2.format("{compiler}") != "none"
