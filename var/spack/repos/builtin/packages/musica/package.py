@@ -51,9 +51,3 @@ class Musica(CMakePackage):
             self.define("MUSICA_ENABLE_INSTALL", True),
         ]
         return args
-
-    def test(self):
-        # This runs ctest in the install tree
-        with working_dir(self.prefix):
-            if "+tests" in self.spec:
-                ctest("--output-on-failure")
