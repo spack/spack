@@ -33,6 +33,7 @@ class Daos(SConsPackage):
     depends_on("boost", type="build")
     depends_on("cmocka", type="build")
     depends_on("go", type="build")
+    depends_on("pkgconfig", type="build")
     depends_on("hwloc")
     depends_on("isa-l@2.30.0:")
     depends_on("isa-l-crypto@2.23.0:")
