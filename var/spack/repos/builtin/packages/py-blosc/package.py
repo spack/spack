@@ -42,4 +42,4 @@ class PyBlosc(PythonPackage):
 
     def setup_build_environment(self, env: EnvironmentModifications):
         if self.spec.satisfies("^c-blosc"):
-            env.set("USE_SYSTEM_BLOSC", 1)
+            env.set("USE_SYSTEM_BLOSC", "1")

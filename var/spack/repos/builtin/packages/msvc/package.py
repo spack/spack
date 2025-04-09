@@ -126,8 +126,10 @@ class Msvc(Package, CompilerPackage):
             else:
                 env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
-        env.set("CC", self.cc)
-        env.set("CXX", self.cxx)
+        if self.cc:
+            env.set("CC", self.cc)
+        if self.cxx:
+            env.set("CXX", self.cxx)
         if self.fortran:
             env.set("FC", self.fortran)
             env.set("F77", self.fortran)

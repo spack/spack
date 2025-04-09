@@ -298,9 +298,9 @@ class Wrf(Package):
             env.set("PNETCDF", self.spec["parallel-netcdf"].prefix)
         # Add WRF-Chem module
         if "+chem" in self.spec:
-            env.set("WRF_CHEM", 1)
+            env.set("WRF_CHEM", "1")
         if "+netcdf_classic" in self.spec:
-            env.set("NETCDF_classic", 1)
+            env.set("NETCDF_classic", "1")
         # This gets used via the applied patch files
         env.set("NETCDFF", self.spec["netcdf-fortran"].prefix)
         env.set("PHDF5", self.spec["hdf5"].prefix)
@@ -308,7 +308,7 @@ class Wrf(Package):
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
         if self.spec.satisfies("%aocc"):
-            env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
+            env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", "1")
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
 

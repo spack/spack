@@ -106,7 +106,7 @@ class Go(Package):
         # internal Spack wrappers and fail.
         env.set("CC_FOR_TARGET", self["c"].cc)
         env.set("CXX_FOR_TARGET", self["cxx"].cxx)
-        env.set("GOMAXPROCS", make_jobs)
+        env.set("GOMAXPROCS", str(make_jobs))
 
     def build(self, spec, prefix):
         # Build script depend on bash

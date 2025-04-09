@@ -68,7 +68,7 @@ class PySmartsim(PythonPackage):
     patch("ss-0-5-0-remove-cli-build-fns.patch")
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("BUILD_JOBS", make_jobs)
+        env.set("BUILD_JOBS", str(make_jobs))
 
     @run_after("install")
     def symlink_bin_deps(self):

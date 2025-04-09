@@ -39,4 +39,4 @@ class PyBotorch(PythonPackage):
 
     def setup_build_environment(self, env: EnvironmentModifications):
         if self.spec.satisfies("@0.8.3:"):
-            env.set("ALLOW_LATEST_GPYTORCH_LINOP", True)
+            env.set("ALLOW_LATEST_GPYTORCH_LINOP", "True")

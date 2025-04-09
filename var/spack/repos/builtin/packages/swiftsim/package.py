@@ -41,7 +41,7 @@ class Swiftsim(AutotoolsPackage):
         # Needed to be able to download from the Durham gitlab repository
         tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
         tty.warn("This is needed to clone SWIFT repository")
-        env.set("GIT_SSL_NO_VERIFY", 1)
+        env.set("GIT_SSL_NO_VERIFY", "1")
 
     def configure_args(self):
         return [

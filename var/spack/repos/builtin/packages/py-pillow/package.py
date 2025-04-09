@@ -136,7 +136,7 @@ class PyPillowBase(PythonPackage):
 
     @when("@:9")
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("MAX_CONCURRENCY", make_jobs)
+        env.set("MAX_CONCURRENCY", str(make_jobs))
 
 
 class PyPillow(PyPillowBase):

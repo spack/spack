@@ -554,7 +554,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 env.set(keyword + "_" + var, "OFF")
 
         # Build in parallel to speed up build times
-        env.set("MAX_JOBS", make_jobs)
+        env.set("MAX_JOBS", str(make_jobs))
 
         # Spack logs have trouble handling colored output
         env.set("COLORIZE_OUTPUT", "OFF")
@@ -644,8 +644,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("DEBUG", "OFF")
 
         if not self.spec.satisfies("@main"):
-            env.set("PYTORCH_BUILD_VERSION", self.version)
-            env.set("PYTORCH_BUILD_NUMBER", 0)
+            env.set("PYTORCH_BUILD_VERSION", str(self.version))
+            env.set("PYTORCH_BUILD_NUMBER", str(0))
 
         # BLAS to be used by Caffe2
         # Options defined in cmake/Dependencies.cmake and cmake/Modules/FindBLAS.cmake

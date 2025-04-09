@@ -44,4 +44,4 @@ class PySphinxRtdTheme(PythonPackage):
     def setup_build_environment(self, env: EnvironmentModifications):
         # Hack to prevent usage of npm in 0.5+
         # https://github.com/readthedocs/sphinx_rtd_theme/issues/1014
-        env.set("CI", True)
+        env.set("CI", "True")

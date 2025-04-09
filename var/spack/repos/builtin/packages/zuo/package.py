@@ -22,7 +22,7 @@ class Zuo(AutotoolsPackage):
     depends_on("c", type="build")
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("ZUO_JOBS", make_jobs)
+        env.set("ZUO_JOBS", str(make_jobs))
 
     def configure_args(self):
         return [*self.enable_or_disable("big")]

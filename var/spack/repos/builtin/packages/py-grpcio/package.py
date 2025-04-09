@@ -85,11 +85,11 @@ class PyGrpcio(PythonPackage):
     patch("30522.diff", when="@1.48")  # https://github.com/grpc/grpc/issues/30372
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("GRPC_PYTHON_BUILD_WITH_CYTHON", True)
-        env.set("GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", True)
-        env.set("GRPC_PYTHON_BUILD_SYSTEM_ZLIB", True)
-        env.set("GRPC_PYTHON_BUILD_SYSTEM_CARES", True)
-        env.set("GRPC_PYTHON_BUILD_SYSTEM_RE2", True)
+        env.set("GRPC_PYTHON_BUILD_WITH_CYTHON", "True")
+        env.set("GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", "True")
+        env.set("GRPC_PYTHON_BUILD_SYSTEM_ZLIB", "True")
+        env.set("GRPC_PYTHON_BUILD_SYSTEM_CARES", "True")
+        env.set("GRPC_PYTHON_BUILD_SYSTEM_RE2", "True")
         # https://github.com/grpc/grpc/pull/24449
         env.set("GRPC_BUILD_WITH_BORING_SSL_ASM", "")
         env.set("GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS", str(make_jobs))

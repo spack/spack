@@ -60,4 +60,4 @@ class PyHuggingfaceHub(PythonPackage):
 
     def setup_run_environment(self, env: EnvironmentModifications):
         if "+hf_transfer" in self.spec:
-            env.set("HF_HUB_ENABLE_HF_TRANSFER", 1)
+            env.set("HF_HUB_ENABLE_HF_TRANSFER", "1")

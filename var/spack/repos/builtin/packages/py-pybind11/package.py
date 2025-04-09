@@ -111,7 +111,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         python_builder.install(pkg, spec, prefix)
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("PYBIND11_USE_CMAKE", 1)
+        env.set("PYBIND11_USE_CMAKE", "1")
 
     @run_after("install")
     def install_test(self):

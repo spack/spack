@@ -55,7 +55,7 @@ class PyPynucleus(PythonPackage):
     ]
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("PYNUCLEUS_BUILD_PARALLELISM", make_jobs)
+        env.set("PYNUCLEUS_BUILD_PARALLELISM", str(make_jobs))
 
     @run_before("install")
     def install_python(self):

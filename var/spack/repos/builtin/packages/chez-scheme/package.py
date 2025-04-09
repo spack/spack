@@ -42,7 +42,7 @@ class ChezScheme(AutotoolsPackage):
     conflicts("+curses", when="platform=windows")
 
     def setup_build_environment(self, env: EnvironmentModifications):
-        env.set("ZUO_JOBS", make_jobs)
+        env.set("ZUO_JOBS", str(make_jobs))
 
     def patch(self):
         true = which_string("true", required=True)

@@ -30,4 +30,4 @@ class PyAwscrt(PythonPackage):
     # On Linux, tell aws-crt-python to use libcrypto from spack (openssl)
     def setup_build_environment(self, env: EnvironmentModifications):
         with when("platform=linux"):
-            env.set("AWS_CRT_BUILD_USE_SYSTEM_LIBCRYPTO", 1)
+            env.set("AWS_CRT_BUILD_USE_SYSTEM_LIBCRYPTO", "1")
