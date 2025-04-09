@@ -90,19 +90,6 @@ class SpecList:
         self._constraints = None
         self._specs = None
 
-    def replace(self, idx: int, spec: str):
-        """Replace the existing spec at the index with the new one.
-
-        Args:
-            idx: index of the spec to replace in the speclist
-            spec: new spec
-        """
-        self.yaml_list[idx] = spec
-
-        # FIXME: invalidate cache variables when we change the list
-        self._constraints = None
-        self._specs = None
-
     def extend(self, other: "SpecList", copy_reference=True) -> None:
         self.yaml_list.extend(other.yaml_list)
         self.specs_as_yaml_list.extend(other.specs_as_yaml_list)
