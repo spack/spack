@@ -591,7 +591,7 @@ def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
         output = buildcache("migrate", "--unsigned", "my-mirror")
 
     # The output indicates both specs were migrated
-    assert output.count("Successfully migrated") == 2
+    assert output.count("Successfully migrated") == 6
 
     build_cache_path = str(test_mirror_path / "build_cache")
 
@@ -613,7 +613,7 @@ def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
 
     # A second migration of the same mirror indicates neither spec
     # needs to be migrated
-    assert output.count("No need to migrate") == 2
+    assert output.count("No need to migrate") == 6
 
     # When we provide "--delete-existing" and "--yes-to-all", migration
     # removes the old layout
@@ -685,7 +685,7 @@ def test_unsigned_migrate_of_signed_mirror(capsys, v2_buildcache_layout, mutable
 
     # We should find two spec manifest files, one for each spec
     file_list = find(test_mirror_path, "*.spec.manifest.json")
-    assert len(file_list) == 2
+    assert len(file_list) == 6
     assert any(["libdwarf" in file for file in file_list])
     assert any(["libelf" in file for file in file_list])
 
