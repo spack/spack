@@ -30,6 +30,7 @@ import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.database import INDEX_JSON_FILE
 from spack.mirrors.mirror import MirrorCollection
+from spack.schema.buildcache_spec import schema as buildcache_spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 
 #: The build cache layout version that this version of Spack creates.
@@ -1020,6 +1021,8 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
             spec_dict = json.loads(as_string)
     except Exception as e:
         raise InvalidMetadataFile(f"Could not parse {path} due to: {e}") from e
+
+    jsonschema.validate(spec_dict, buildcache_spec_schema)
 
     # Ensure this version is not too new.
     try:
