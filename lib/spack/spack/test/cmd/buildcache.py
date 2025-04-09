@@ -570,7 +570,7 @@ def test_install_v2_layout(
     buildcache("keys", "--install", "--trust")
 
     with capsys.disabled():
-        output = install("--no-check-signature", "libdwarf")
+        output = install("--fake", "--no-check-signature", "libdwarf")
 
     assert "Extracting libelf" in output
     assert "libelf: Successfully installed" in output

@@ -179,14 +179,14 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     test_path = tmpdir.join("dir_cache")
     os.makedirs(f"{test_path}")
     gpg("publish", "--rebuild-index", "-d", str(test_path))
-    assert os.path.exists(f"{test_path}/{relative_keys_path}/index.json")
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror url
     test_path = tmpdir.join("url_cache")
     os.makedirs(f"{test_path}")
     test_url = f"file://{test_path}"
     gpg("publish", "--rebuild-index", "--mirror-url", test_url)
-    assert os.path.exists(f"{test_path}/{relative_keys_path}/index.json")
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
 
     # Publish the keys using a mirror name
     test_path = tmpdir.join("named_cache")
@@ -194,4 +194,4 @@ def test_gpg(tmpdir, mutable_config, mock_gnupghome):
     mirror_url = f"file://{test_path}"
     mirror("add", "gpg", mirror_url)
     gpg("publish", "--rebuild-index", "-m", "gpg")
-    assert os.path.exists(f"{test_path}/{relative_keys_path}/index.json")
+    assert os.path.exists(f"{test_path}/{relative_keys_path}/keys.manifest.json")
