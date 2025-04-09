@@ -23,6 +23,7 @@ from llnl.util.filesystem import (
 
 import spack.error
 import spack.phase_callbacks
+import spack.spec
 from spack.build_environment import dso_suffix
 from spack.error import InstallError
 from spack.util.environment import EnvironmentModifications

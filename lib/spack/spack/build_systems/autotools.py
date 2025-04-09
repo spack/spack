@@ -16,6 +16,7 @@ import spack.error
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when

@@ -8,6 +8,7 @@ from llnl.util.filesystem import find
 import spack.builder
 import spack.package_base
 import spack.spec
+import spack.util.environment
 import spack.util.executable
 import spack.util.prefix
 from spack.directives import build_system, depends_on, extends
