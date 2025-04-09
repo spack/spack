@@ -1906,6 +1906,10 @@ class Environment:
         roots = self.concrete_roots()
         specs = specs if specs is not None else roots
 
+        # Extract reporter arguments
+        reporter = install_args.pop("reporter", None)
+        report_file = install_args.pop("report_file", None)
+
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
             *install_args.get("overwrite", ()),
@@ -1918,7 +1922,12 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        PackageInstaller([spec.package for spec in specs], **install_args).install()
+        try:
+            builder = PackageInstaller([spec.package for spec in specs], **install_args)
+            builder.install()
+        finally:
+            if reporter:
+                reporter.build_report(report_file, list(builder.reports.values()))
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""

@@ -60,6 +60,7 @@ import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
 import spack.repo
+import spack.report
 import spack.rewiring
 import spack.spec
 import spack.store
@@ -923,6 +924,9 @@ class Task:
             raise TypeError(f"{request} is not a valid build request")
         self.request = request
 
+        # Report for tracking install success/failure
+        self.record = spack.report.InstallRecord(self.pkg.spec)
+
         # Initialize the status to an active state.  The status is used to
         # ensure priority queue invariants when tasks are "removed" from the
         # queue.
@@ -1236,6 +1240,8 @@ class BuildTask(Task):
 
         Otherwise, start a process for of the requested spec and/or
         dependency represented by the BuildTask."""
+        self.record.start()
+
         if self.install_action == InstallAction.OVERWRITE:
             self.tmpdir = tempfile.mkdtemp(dir=os.path.dirname(self.pkg.prefix), prefix=".backup")
             self.backup_dir = os.path.join(self.tmpdir, "backup")
@@ -1248,6 +1254,9 @@ class BuildTask(Task):
         unsigned = install_args.get("unsigned")
         pkg, pkg_id = self.pkg, self.pkg_id
         self.start_time = self.start_time or time.time()
+
+        tests = install_args.get("tests")
+        pkg.run_tests = tests is True or tests and pkg.name in tests
 
         # Use the binary cache to install if requested,
         # save result to be handled in BuildTask.complete()
@@ -1289,12 +1298,16 @@ class BuildTask(Task):
         return self.no_op or self.success_result or self.error_result or self.process_handle.poll()
 
     def succeed(self):
+        self.record.succeed()
+
         # delete the temporary backup for an overwrite
         # see llnl.util.filesystem.restore_directory_transaction
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
     def fail(self, inner_exception):
+        self.record.fail(inner_exception)
+
         if self.install_action != InstallAction.OVERWRITE:
             raise inner_exception
 
@@ -1319,11 +1332,8 @@ class BuildTask(Task):
         ), "Can't call `complete()` before `start()` or identified no-operation task"
         install_args = self.request.install_args
         pkg = self.pkg
-        tests = install_args.get("tests")
 
         self.status = BuildStatus.INSTALLING
-
-        pkg.run_tests = tests is True or tests and pkg.name in tests
 
         # If task has been identified as a no operation,
         # return ExecuteResult.NOOP
@@ -1376,7 +1386,7 @@ class RewireTask(Task):
     """Class for representing a rewire task for a package."""
 
     def start(self):
-        pass
+        self.record.start()
 
     def poll(self):
         return True
@@ -1399,14 +1409,19 @@ class RewireTask(Task):
                 unsigned = install_args.get("unsigned")
                 _process_binary_cache_tarball(self.pkg, explicit=self.explicit, unsigned=unsigned)
                 _print_installed_pkg(self.pkg.prefix)
+                self.record.succeed()
                 return ExecuteResult.SUCCESS
             except BaseException as e:
                 tty.error(f"Failed to rewire {self.pkg.spec} from binary. {e}")
                 self.status = oldstatus
                 return ExecuteResult.MISSING_BUILD_SPEC
-        spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
-        _print_installed_pkg(self.pkg.prefix)
-        return ExecuteResult.SUCCESS
+        try:
+            spack.rewiring.rewire_node(self.pkg.spec, self.explicit)
+            _print_installed_pkg(self.pkg.prefix)
+            self.record.succeed()
+            return ExecuteResult.SUCCESS
+        except BaseException as e:
+            self.record.fail(e)
 
 
 class PackageInstaller:
@@ -1535,6 +1550,14 @@ class PackageInstaller:
 
         # Maximum number of concurrent packages to build
         self.max_active_tasks = concurrent_packages
+
+        # Reports on install success/failure
+        self.reports: Dict[str, dict] = {}
+        for build_request in self.build_requests:
+            # Skip reporting for already installed specs
+            request_record = spack.report.RequestRecord(build_request.pkg.spec)
+            request_record.skip_installed()
+            self.reports[build_request.pkg_id] = request_record
 
     def __repr__(self) -> str:
         """Returns a formal representation of the package installer."""
@@ -1923,13 +1946,18 @@ class PackageInstaller:
             task: the installation task for a package
             install_status: the installation status for the package
         """
-        rc = task.complete()
+        try:
+            rc = task.complete()
+        except BaseException:
+            self.reports[task.request.pkg_id].append_record(task.record)
+            raise
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
         elif rc == ExecuteResult.NO_OP:
             pass
         else:  # if rc == ExecuteResult.SUCCESS or rc == ExecuteResult.FAILED
             self._update_installed(task)
+            self.reports[task.request.pkg_id].append_record(task.record)
 
     def _next_is_pri0(self) -> bool:
         """
@@ -2178,6 +2206,9 @@ class PackageInstaller:
         install_status.next_pkg(pkg)
         # install_status.set_term_title(f"Processing {task.pkg.name}")
         tty.debug(f"Processing {pkg_id}: task={task}")
+
+        # Debug
+        task.record.start()
 
         # Skip the installation if the spec is not being installed locally
         # (i.e., if external or upstream) BUT flag it as installed since
