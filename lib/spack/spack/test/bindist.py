@@ -1265,7 +1265,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
     monkeypatch.setattr(spack.stage.Stage, "save_filename", save_filename_patch)
 
     def get_did_fetch():
-        nonlocal fetched
+        # nonlocal fetched
         return fetched
 
     return IndexInformation(
