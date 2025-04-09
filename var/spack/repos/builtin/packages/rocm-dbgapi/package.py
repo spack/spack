@@ -24,6 +24,7 @@ class RocmDbgapi(CMakePackage):
     license("MIT")
 
     version("master", branch="amd-master")
+    version("6.3.3", sha256="25c8e9f4a22f23004f2fc1998c284095b193591eb6143b47380455754948ab98")
     version("6.3.2", sha256="0e7cea6ae2eb737ad378787d2ef5f6cbaf9dfb483bb5e61e716601a145677adf")
     version("6.3.1", sha256="1843423c91a22cf83bef5f14cb50f55ba333047e03e75296b9f9522facde5822")
     version("6.3.0", sha256="c46ca562fbbac8673c22ee5c92d62ddf6c7dfd7faceeb66d3876cde6beda8872")
@@ -80,6 +81,7 @@ class RocmDbgapi(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", type="build", when=f"@{ver}")
@@ -103,6 +105,7 @@ class RocmDbgapi(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

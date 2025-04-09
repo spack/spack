@@ -13,6 +13,7 @@ class Spdlog(CMakePackage):
 
     license("MIT")
 
+    version("1.15.2", sha256="7a80896357f3e8e920e85e92633b14ba0f229c506e6f978578bdc35ba09e9a5d")
     version("1.15.1", sha256="25c843860f039a1600f232c6eb9e01e6627f7d030a2ae5e232bdd3c9205d26cc")
     version("1.15.0", sha256="9962648c9b4f1a7bbc76fd8d9172555bad1871fdb14ff4f842ef87949682caa5")
     version("1.14.1", sha256="1586508029a7d0670dfcb2d97575dcdc242d3868a259742b69f100801ab4e16b")

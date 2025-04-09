@@ -13,8 +13,12 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "http://www.seissol.org"
     git = "https://github.com/SeisSol/SeisSol.git"
+
     version("master", branch="master", submodules=True)
     # we cannot use the tar.gz file because it does not contains submodules
+    version(
+        "1.3.1", tag="v1.3.1", commit="9d35b989749d031132c8820b45b003ecc00e985a", submodules=True
+    )
     version(
         "1.3.0", tag="v1.3.0", commit="91377508af4412914d707b04481f8b678b1c4044", submodules=True
     )
@@ -153,8 +157,11 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts(
         "%intel",
-        when="@1.3:",
-        msg="The Intel compiler is unsupported from v1.3 onward. Please use e.g.gcc or oneapi",
+        when="@1.3.0",
+        msg=(
+            "The Intel compiler is not supported in v1.3.0. "
+            "Please use e.g. gcc, oneapi, or a newer SeisSol."
+        ),
     )
 
     variant(
@@ -195,7 +202,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("hdf5 +shared +threadsafe +hl +mpi")
 
-    depends_on("netcdf-c@4.6: +shared +mpi", when="+netcdf")
+    depends_on("netcdf-c@4.6:4.8.1 +shared +mpi", when="+netcdf")
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 

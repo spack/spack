@@ -17,7 +17,7 @@ class Mpileaks(AutotoolsPackage):
     variant(
         "stackstart",
         values=int,
-        default=0,
+        default="0",
         description="Specify the number of stack frames to truncate",
     )
 

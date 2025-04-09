@@ -20,6 +20,7 @@ class P4est(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("2.8.7", sha256="0a1e912f3529999ca6d62fee335d51f24b5650b586e95a03ef39ebf73936d7f4")
     version("2.8", sha256="6a0586e3abac06c20e31b1018f3a82a564a6a0d9ff6b7f6c772a9e6b0f0cc5e4")
     version("2.3.2", sha256="076df9e5578e0e7fcfbe12e1a0b080104001f8c986ab1d5a69ec2220050df8e6")
     version("2.3.1", sha256="be66893b039fb3f27aca3d5d00acff42c67bfad5aa09cea9253cdd628b2bdc9a")

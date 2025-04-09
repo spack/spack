@@ -37,6 +37,7 @@ class Itensor(MakefilePackage):
     variant("hdf5", default=False, description="Build rockstar with HDF5 support.")
     variant("shared", default=False, description="Also build dynamic libraries.")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("lapack")

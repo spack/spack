@@ -55,6 +55,8 @@ class Regcm(AutotoolsPackage):
         description="Build NetCDF using the high performance parallel " "NetCDF implementation.",
     )
 
+    depends_on("fortran", type="build")
+
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
     depends_on("hdf5")

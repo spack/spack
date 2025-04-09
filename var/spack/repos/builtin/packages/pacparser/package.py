@@ -25,6 +25,7 @@ class Pacparser(MakefilePackage):
     )
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("python", when="+python")
     depends_on("py-setuptools", when="+python", type=("build", "run"))

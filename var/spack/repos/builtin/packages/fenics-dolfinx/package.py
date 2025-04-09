@@ -25,7 +25,7 @@ class FenicsDolfinx(CMakePackage):
     variant(
         "partitioners",
         description="Graph partioning",
-        default=("parmetis",),
+        default="parmetis",
         values=("kahip", "parmetis", "scotch"),
         multi=True,
     )

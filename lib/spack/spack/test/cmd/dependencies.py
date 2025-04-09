@@ -38,10 +38,9 @@ MPI_DEPS = ["fake"]
         (["--transitive", "--deptype=link", "dtbuild1"], {"dtlink2"}),
     ],
 )
-def test_direct_dependencies(cli_args, expected, mock_runtimes):
+def test_direct_dependencies(cli_args, expected, mock_packages):
     out = dependencies(*cli_args)
     result = set(re.split(r"\s+", out.strip()))
-    expected.update(mock_runtimes)
     assert expected == result
 
 

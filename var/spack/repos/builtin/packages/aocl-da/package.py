@@ -52,6 +52,8 @@ class AoclDa(CMakePackage):
         when="@5.0",
     )
 
+    depends_on("c", type="build")
+
     depends_on("cmake@3.22:", type="build")
     for vers in ["5.0"]:
         with when(f"@={vers}"):

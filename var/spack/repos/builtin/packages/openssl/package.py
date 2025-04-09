@@ -82,6 +82,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
