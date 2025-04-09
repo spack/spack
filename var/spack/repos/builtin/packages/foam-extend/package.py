@@ -115,7 +115,7 @@ class FoamExtend(Package):
     # - End of definitions / setup -
     #
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         """Add environment variables to the generated module file.
         These environment variables come from running:
 
@@ -176,7 +176,9 @@ class FoamExtend(Package):
             for d in ["wmake", self.archbin]:  # bin added automatically
                 env.prepend_path("PATH", join_path(self.projectdir, d))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         """Location of the OpenFOAM project.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of

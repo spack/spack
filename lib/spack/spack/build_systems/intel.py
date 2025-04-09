@@ -1016,7 +1016,7 @@ class IntelPackage(Package):
         debug_print(result)
         return result
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -1049,7 +1049,9 @@ class IntelPackage(Package):
             env.set("F77", self.prefix.bin.ifort)
             env.set("F90", self.prefix.bin.ifort)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: spack.spec.Spec
+    ):
         # NB: This function is overwritten by 'mpi' provider packages:
         #
         # var/spack/repos/builtin/packages/intel-mpi/package.py

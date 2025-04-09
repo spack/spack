@@ -26,5 +26,5 @@ class Chrony(AutotoolsPackage):
     depends_on("ruby-asciidoctor")
     depends_on("bison", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PATH", self.prefix.sbin)

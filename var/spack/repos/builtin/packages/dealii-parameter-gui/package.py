@@ -20,5 +20,5 @@ class DealiiParameterGui(CMakePackage):
 
     depends_on("qt")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("PARAMETER_GUI_DIR", self.prefix)

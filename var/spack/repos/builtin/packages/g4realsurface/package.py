@@ -27,7 +27,7 @@ class G4realsurface(Package):
         install_path = join_path(prefix.share, "data", self.g4datasetname)
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
         install_path = join_path(self.prefix.share, "data", self.g4datasetname)
         env.set("G4REALSURFACEDATA", install_path)
 

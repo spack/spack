@@ -24,5 +24,5 @@ class PyLws(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("LWS_USE_CYTHON", 1)

@@ -88,5 +88,5 @@ class CrtmFix(Package):
         for f in fix_files:
             install(f, self.prefix.fix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("CRTM_FIX", self.prefix.fix)

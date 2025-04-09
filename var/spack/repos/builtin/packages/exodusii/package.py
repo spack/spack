@@ -138,7 +138,7 @@ class Exodusii(CMakePackage):
     depends_on("python@3.0:")
     conflicts("+shared", when="platform=windows")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     def cmake_args(self):

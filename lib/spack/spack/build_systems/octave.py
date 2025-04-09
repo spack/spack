@@ -57,7 +57,7 @@ class OctaveBuilder(BuilderWithDefaults):
             "pkg prefix %s; pkg install %s" % (prefix, self.pkg.stage.archive_file),
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: spack.util.environment.EnvironmentModifications):
         # octave does not like those environment variables to be set:
         env.unset("CC")
         env.unset("CXX")

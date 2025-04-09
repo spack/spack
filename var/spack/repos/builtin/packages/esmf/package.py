@@ -161,7 +161,7 @@ class Esmf(MakefilePackage, PythonExtension):
             os.path.join("src/addon/esmpy/pyproject.toml"),
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
 
 
@@ -193,7 +193,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 version.dotted
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         spec = self.spec
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
@@ -439,7 +439,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def check(self):
         make("check", parallel=False)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
 
     def install(self, pkg, spec, prefix):

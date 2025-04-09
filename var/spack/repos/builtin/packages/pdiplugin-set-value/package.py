@@ -42,5 +42,5 @@ class PdipluginSetValue(CMakePackage):
             "-DBUILD_CFG_VALIDATOR:BOOL=OFF",
         ]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PDI_PLUGIN_PATH", self.prefix.lib)

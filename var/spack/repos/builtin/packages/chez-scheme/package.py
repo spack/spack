@@ -41,7 +41,7 @@ class ChezScheme(AutotoolsPackage):
     conflicts("+iconv", when="platform=windows")
     conflicts("+curses", when="platform=windows")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("ZUO_JOBS", make_jobs)
 
     def patch(self):

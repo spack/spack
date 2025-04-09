@@ -41,7 +41,7 @@ class Elpa(AutotoolsPackage):
 
     build_directory = "spack-build"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         # TUTORIAL: set the following environment variables:
         #
         # CC=spec['mpi'].mpicc

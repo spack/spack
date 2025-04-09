@@ -68,7 +68,7 @@ class GoBuilder(BuilderWithDefaults):
     #: Callback names for install-time test
     install_time_test_callbacks = ["check"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: spack.util.environment.EnvironmentModifications):
         env.set("GO111MODULE", "on")
         env.set("GOTOOLCHAIN", "local")
         env.set("GOPATH", fs.join_path(self.pkg.stage.path, "go"))

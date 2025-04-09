@@ -33,5 +33,5 @@ class Mpileaks(Package):
         touch(prefix.mpileaks)
         mkdirp(prefix.man)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("FOOBAR", self.name)

@@ -201,14 +201,16 @@ Done.
                 raise RuntimeError("HDF5 Blosc plugin check failed")
         shutil.rmtree(checkdir)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
         env.append_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

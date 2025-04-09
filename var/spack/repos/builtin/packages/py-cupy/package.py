@@ -78,7 +78,7 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm")
     conflicts("+cuda cuda_arch=none")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("CUPY_NUM_BUILD_JOBS", make_jobs)
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value

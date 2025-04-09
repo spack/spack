@@ -43,5 +43,5 @@ class Cdhit(MakefilePackage):
             make_args.append("zlib=no")
         make(*make_args)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("PREFIX", self.prefix.bin)

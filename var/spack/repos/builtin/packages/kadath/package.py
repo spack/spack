@@ -61,7 +61,7 @@ class Kadath(CMakePackage):
                     join_path("codes", code, "CMakeLists.txt"),
                 )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("HOME_KADATH", self.stage.source_path)
 
     def cmake_args(self):

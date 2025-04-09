@@ -55,7 +55,7 @@ class PyCvxopt(PythonPackage):
     # depends_on('mosek@8:',  when='+mosek')
     depends_on("dsdp@5.8:", when="+dsdp")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         spec = self.spec
 
         # BLAS/LAPACK Libraries

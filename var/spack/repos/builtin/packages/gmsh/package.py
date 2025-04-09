@@ -195,5 +195,5 @@ class Gmsh(CMakePackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PYTHONPATH", self.prefix.lib)

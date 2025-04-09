@@ -236,7 +236,7 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         return modules
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         # https://github.com/horovod/horovod/blob/master/docs/install.rst#environment-variables
 
         # Build system

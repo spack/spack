@@ -96,12 +96,14 @@ class Jdk(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         """Set JAVA_HOME."""
 
         env.set("JAVA_HOME", self.home)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
@@ -117,7 +119,7 @@ class Jdk(Package):
         classpath = os.pathsep.join(class_paths)
         env.set("CLASSPATH", classpath)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
         """Set CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any

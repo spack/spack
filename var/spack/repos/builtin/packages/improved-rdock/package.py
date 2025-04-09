@@ -60,7 +60,7 @@ class ImprovedRdock(MakefilePackage):
             set_executable(shfile)
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("RBT_ROOT", self.prefix)
 
     def test_rdock(self):

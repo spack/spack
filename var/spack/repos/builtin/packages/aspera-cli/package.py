@@ -20,7 +20,7 @@ class AsperaCli(Package):
         expand=False,
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PATH", self.prefix.cli.bin)
 
     def install(self, spec, prefix):

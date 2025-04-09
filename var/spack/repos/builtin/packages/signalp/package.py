@@ -38,5 +38,5 @@ class Signalp(Package):
         install_tree("lib", prefix.lib)
         install_tree("syn", prefix.syn)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PATH", self.prefix)

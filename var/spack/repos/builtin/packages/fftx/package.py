@@ -81,11 +81,13 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
             if os.path.isdir(dir):
                 install_tree("cache_jit_files", prefix.cache_jit_files)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         env.set("FFTX_HOME", self.prefix)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
         env.set("FFTX_HOME", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.set("FFTX_HOME", self.prefix)

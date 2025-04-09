@@ -23,5 +23,5 @@ class Libuser(AutotoolsPackage):
     depends_on("linux-pam")
     depends_on("popt")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications):
         env.prepend_path("PATH", self.prefix.sbin)

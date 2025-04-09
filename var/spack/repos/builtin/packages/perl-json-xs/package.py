@@ -19,5 +19,5 @@ class PerlJsonXs(PerlPackage):
     depends_on("perl-common-sense", type=("build", "run", "test"))
     depends_on("perl-types-serialiser", type=("build", "run", "test"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications):
         env.set("PERL_CANARY_STABILITY_NOPROMPT", "1")
