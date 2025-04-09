@@ -120,7 +120,6 @@ class Adios(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail
