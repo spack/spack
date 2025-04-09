@@ -1133,6 +1133,7 @@ class ProcessHandle:
         pkg: "spack.package_base.PackageBase",
         process: multiprocessing.Process,
         read_pipe: multiprocessing.connection.Connection,
+        timeout: int,
     ):
         """
         Parameters:
@@ -1143,6 +1144,7 @@ class ProcessHandle:
         self.pkg = pkg
         self.process = process
         self.read_pipe = read_pipe
+        self.timeout = timeout
 
     def poll(self) -> bool:
         """Check if there is data available to receive from the read pipe."""
@@ -1320,6 +1322,10 @@ class BuildProcess:
             self.p.join()
 
     @property
+    def pid(self):
+        return self.p.pid
+
+    @property
     def exitcode(self):
         return self.p.exitcode
 
@@ -1403,7 +1409,7 @@ def start_build_process(
 
     # Create a ProcessHandle that the caller can use to track
     # and complete the process started by this function.
-    process_handle = ProcessHandle(pkg, p, read_pipe)
+    process_handle = ProcessHandle(pkg, p, read_pipe, timeout=timeout)
     return process_handle
 
 
@@ -1420,6 +1426,8 @@ def complete_build_process(handle: ProcessHandle):
         typ = "exit" if handle.process.exitcode >= 0 else "signal"
         return f"{typ} {abs(handle.process.exitcode)}"
 
+    p = handle.process
+    timeout = handle.timeout
     p.join(timeout=timeout)
     if p.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
