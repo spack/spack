@@ -895,20 +895,22 @@ def _url_generate_package_index(url: str, tmpdir: str):
         raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
 
 
-def generate_key_index(key_prefix: str, tmpdir: str) -> None:
+def generate_key_index(mirror_url: str, tmpdir: str) -> None:
     """Create the key index page.
 
-    Creates (or replaces) the "index.json" page at the location given in key_prefix.  This page
-    contains an entry for each key (.pub) under key_prefix.
+    Creates (or replaces) the "index.json" page at the location given in mirror_url.  This page
+    contains an entry for each key under mirror_url.
     """
 
-    tty.debug(f"Retrieving key.pub files from {url_util.format(key_prefix)} to build key index")
+    tty.debug(f"Retrieving key.pub files from {url_util.format(mirror_url)} to build key index")
+
+    key_prefix = url_util.join(mirror_url, buildcache_relative_specs_url())
 
     try:
         fingerprints = (
-            entry[:-4]
+            entry[:-18]
             for entry in web_util.list_url(key_prefix, recursive=False)
-            if entry.endswith(".pub")
+            if entry.endswith(".key.manifest.json")
         )
     except Exception as e:
         raise CannotListKeys(f"Encountered problem listing keys at {key_prefix}: {e}") from e
@@ -919,12 +921,15 @@ def generate_key_index(key_prefix: str, tmpdir: str) -> None:
     with open(target, "w", encoding="utf-8") as f:
         sjson.dump(index, f)
 
+    cache_class = get_url_buildcache_class()
+
     try:
-        web_util.push_to_url(
-            target,
-            url_util.join(key_prefix, "index.json"),
-            keep_original=False,
-            extra_args={"ContentType": "application/json"},
+        cache_class.push_local_file_as_blob(
+            local_file_path=target,
+            mirror_url=mirror_url,
+            manifest_name="keys",
+            component_type=BuildcacheComponent.KEY_INDEX,
+            compression="none",
         )
     except Exception as e:
         raise GenerateIndexError(
@@ -2443,17 +2448,24 @@ def _url_push_keys(
     for key, file in zip(keys, files):
         spack.util.gpg.export_keys(file, [key])
 
+    cache_class = get_url_buildcache_class()
+
     for mirror in mirrors:
         push_url = mirror if isinstance(mirror, str) else mirror.push_url
-        keys_url = url_util.join(push_url, buildcache_relative_keys_url())
 
         tty.debug(f"Pushing public keys to {url_util.format(push_url)}")
 
         for key, file in zip(keys, files):
-            web_util.push_to_url(file, url_util.join(keys_url, os.path.basename(file)))
+            cache_class.push_local_file_as_blob(
+                local_file_path=file,
+                mirror_url=push_url,
+                manifest_name=f"{key}.key",
+                component_type=BuildcacheComponent.KEY,
+                compression="none",
+            )
 
         if update_index:
-            generate_key_index(keys_url, tmpdir=tmpdir)
+            generate_key_index(push_url, tmpdir=tmpdir)
 
 
 def needs_rebuild(spec, mirror_url):

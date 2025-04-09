@@ -10,7 +10,7 @@ import os
 import re
 import shutil
 import tempfile
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import jsonschema
 
@@ -44,11 +44,13 @@ INDEX_MANIFEST_FILE = "index.manifest.json"
 
 class BuildcacheComponent(enum.Enum):
     SPECS = enum.auto()
+    SPEC = enum.auto()
     BLOBS = enum.auto()
     INDICES = enum.auto()
-    KEYS = enum.auto()
     INDEX = enum.auto()
-    SPEC = enum.auto()
+    KEYS = enum.auto()
+    KEY = enum.auto()
+    KEY_INDEX = enum.auto()
     TARBALL = enum.auto()
     LAYOUT_JSON = enum.auto()
 
@@ -159,11 +161,13 @@ class URLBuildcacheEntry:
     INDEX_VERSION = f"index-v{spack.database._DB_VERSION}"
     SPEC_VERSION = f"spec-v{spack.spec.SPECFILE_FORMAT_VERSION}"
     TARBALL_VERSION = "tarball-v1"
+    PUBLIC_KEY = "key-v1"
+    PUBLIC_KEY_INDEX = "key-index-v1"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
         BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", INDEX_MANIFEST_FILE],
-        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "keys", "_pgp"],
+        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "manifests"],
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
@@ -235,6 +239,10 @@ class URLBuildcacheEntry:
             return BuildcacheComponent.TARBALL
         elif content_type == cls.INDEX_VERSION:
             return BuildcacheComponent.INDEX
+        elif content_type == cls.PUBLIC_KEY:
+            return BuildcacheComponent.KEY
+        elif content_type == cls.PUBLIC_KEY_INDEX:
+            return BuildcacheComponent.KEY_INDEX
 
         raise BuildcacheEntryError(f"Unrecognized content type: {content_type}")
 
@@ -246,6 +254,10 @@ class URLBuildcacheEntry:
             return cls.TARBALL_VERSION
         elif component == BuildcacheComponent.INDEX:
             return cls.INDEX_VERSION
+        elif component == BuildcacheComponent.KEY:
+            return cls.PUBLIC_KEY
+        elif component == BuildcacheComponent.KEY_INDEX:
+            return cls.PUBLIC_KEY_INDEX
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
@@ -476,6 +488,83 @@ class URLBuildcacheEntry:
 
             self.manifest = None
 
+    @classmethod
+    def push_blob(cls, mirror_url: str, blob_path: str, record: BlobRecord) -> None:
+        blob_destination_url = url_util.join(
+            mirror_url,
+            *cls.get_relative_path_components(BuildcacheComponent.BLOBS),
+            record.checksum_alg,
+            record.checksum[:2],
+            record.checksum,
+        )
+
+        web_util.push_to_url(blob_path, blob_destination_url, keep_original=False)
+
+    @classmethod
+    def push_manifest(
+        cls,
+        mirror_url: str,
+        manifest_name: str,
+        manifest: BuildcacheManifest,
+        tmpdir: str,
+        signing_key: Optional[str] = None,
+    ) -> None:
+        # write the manifest to a temporary location
+        manifest_file_name = f"{manifest_name}.manifest.json"
+        manifest_path = os.path.join(tmpdir, manifest_file_name)
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(manifest.to_json(), f)
+
+        if signing_key:
+            manifest_path = sign_file(signing_key, manifest_path)
+
+        manifest_destination_url = url_util.join(
+            mirror_url,
+            *cls.get_relative_path_components(BuildcacheComponent.SPECS),
+            manifest_file_name,
+        )
+
+        web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
+
+    @classmethod
+    def push_local_file_as_blob(
+        cls,
+        local_file_path: str,
+        mirror_url: str,
+        manifest_name: str,
+        component_type: BuildcacheComponent,
+        compression: str = "none",
+    ) -> None:
+        cache_class = get_url_buildcache_class()
+        checksum_algo = "sha256"
+        blob_to_push = local_file_path
+        tmpdir = tempfile.mkdtemp()
+
+        try:
+            blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
+            with open(local_file_path, "r", encoding="utf-8") as fd:
+                data_bytes = fd.read().encode("utf-8")
+            data_checksum, data_size = compress_and_write_data(
+                data=data_bytes,
+                output_path=blob_to_push,
+                compression=compression,
+                checksum_algo=checksum_algo,
+            )
+            record = BlobRecord(
+                data_size,
+                cache_class.component_to_content_type(component_type),
+                compression,
+                checksum_algo,
+                data_checksum,
+            )
+            manifest = BuildcacheManifest(
+                layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
+            )
+            cls.push_blob(mirror_url, blob_to_push, record)
+            cls.push_manifest(mirror_url, manifest_name, manifest, tmpdir)
+        finally:
+            shutil.rmtree(tmpdir)
+
     def push(
         self,
         spec: spack.spec.Spec,
@@ -569,7 +658,7 @@ class URLBuildcacheEntry:
 
         # possibly sign the manifest
         if signing_key:
-            manifest_path = sign_specfile(signing_key, manifest_path)
+            manifest_path = sign_file(signing_key, manifest_path)
 
         # Push the manifest file to the remote. The remote manifest url for
         # a given concrete spec is fixed, so we don't have to recompute it,
@@ -870,6 +959,32 @@ def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
         )
 
 
+def get_compressor(compression: str = "none") -> Callable[[bytes], bytes]:
+    if compression == "none":
+        return lambda b: b
+    elif compression == "gzip":
+        return lambda b: gzip.compress(b, compresslevel=6, mtime=0)
+    else:
+        raise BuildcacheEntryError(f"Unknown compression type: {compression}")
+
+
+def compress_and_write_data(
+    data: bytes, output_path: str, compression: str, checksum_algo: str
+) -> Tuple[str, int]:
+    compressor = get_compressor(compression)
+    compressed_bytes = compressor(data)
+
+    with open(output_path, "wb") as fd:
+        fd.write(compressed_bytes)
+
+    hasher = spack.util.crypto.hash_fun_for_algo(checksum_algo)()
+    hasher.update(compressed_bytes)
+    data_checksum = hasher.hexdigest()
+    data_size = os.stat(output_path).st_size
+
+    return (data_checksum, data_size)
+
+
 def compress_and_write_spec(
     output_path: str, spec_dict: dict, checksum_algo: str
 ) -> Tuple[str, int]:
@@ -878,19 +993,12 @@ def compress_and_write_spec(
     Return the checksum (using the given algorithm) and size on disk of the file
     """
     # compress the spec dict and compute its checksum
-    metadata_checksum = ""
-    with open(output_path, "wb") as f:
-        compressed_bytes = gzip.compress(
-            json.dumps(spec_dict).encode("utf-8"), compresslevel=6, mtime=0
-        )
-        f.write(compressed_bytes)
-        hasher = spack.util.crypto.hash_fun_for_algo(checksum_algo)()
-        hasher.update(compressed_bytes)
-        metadata_checksum = hasher.hexdigest()
-
-    metadata_size = os.stat(output_path).st_size
-
-    return (metadata_checksum, metadata_size)
+    return compress_and_write_data(
+        data=json.dumps(spec_dict).encode("utf-8"),
+        output_path=output_path,
+        compression="gzip",
+        checksum_algo=checksum_algo,
+    )
 
 
 def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int]:
@@ -929,11 +1037,11 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     return spec_dict, layout_version
 
 
-def sign_specfile(key: str, specfile_path: str) -> str:
-    """sign and return the path to the signed specfile"""
-    signed_specfile_path = f"{specfile_path}.sig"
-    spack.util.gpg.sign(key, specfile_path, signed_specfile_path, clearsign=True)
-    return signed_specfile_path
+def sign_file(key: str, file_path: str) -> str:
+    """sign and return the path to the signed file"""
+    signed_file_path = f"{file_path}.sig"
+    spack.util.gpg.sign(key, file_path, signed_file_path, clearsign=True)
+    return signed_file_path
 
 
 def try_verify(specfile_path):

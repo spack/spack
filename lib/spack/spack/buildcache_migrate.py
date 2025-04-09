@@ -31,7 +31,7 @@ from .url_buildcache import (
     URLBuildcacheEntry,
     compress_and_write_spec,
     get_url_buildcache_class,
-    sign_specfile,
+    sign_file,
     try_verify,
 )
 
@@ -241,7 +241,7 @@ def _migrate_spec(
 
     # Possibly sign the manifest
     if not unsigned:
-        manifest_path = sign_specfile(signing_key, manifest_path)
+        manifest_path = sign_file(signing_key, manifest_path)
 
     v3_manifest_url = v3_cache_class.get_manifest_url(s, mirror_url)
 
