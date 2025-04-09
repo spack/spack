@@ -48,12 +48,6 @@ class Nek5000(Package):
 
     patch("add_fjfortran.patch", when="%fj")
 
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.f77:
-            msg = "Cannot build Nek5000 without a Fortran 77 compiler."
-            raise RuntimeError(msg)
-
     @run_after("install")
     def check_install(self):
         with working_dir("short_tests/eddy"):

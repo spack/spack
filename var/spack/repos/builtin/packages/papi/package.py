@@ -178,12 +178,6 @@ class Papi(AutotoolsPackage, ROCmPackage):
         return options
 
     @run_before("configure")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "PAPI requires a Fortran compiler to build"
-            raise RuntimeError(msg)
-
-    @run_before("configure")
     def component_configure(self):
         configure_script = Executable("./configure")
         if "+lmsensors" in self.spec and self.version < Version("6"):
