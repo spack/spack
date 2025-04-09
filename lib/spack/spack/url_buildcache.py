@@ -5,12 +5,13 @@
 import codecs
 import enum
 import gzip
+import io
 import json
 import os
 import re
 import shutil
 import tempfile
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type
 
 import jsonschema
 
@@ -919,7 +920,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
 def get_url_buildcache_class(
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
-) -> type[URLBuildcacheEntry]:
+) -> Type[URLBuildcacheEntry]:
     if layout_version == 2:
         return URLBuildcacheEntryV2
     elif layout_version == 3:
@@ -959,11 +960,18 @@ def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
         )
 
 
+def gzip_compressor(data: bytes) -> bytes:
+    buf = io.BytesIO()
+    with gzip.GzipFile(filename="", fileobj=buf, mode="wb", compresslevel=6, mtime=0) as fd:
+        fd.write(data)
+    return buf.getvalue()
+
+
 def get_compressor(compression: str = "none") -> Callable[[bytes], bytes]:
     if compression == "none":
         return lambda b: b
     elif compression == "gzip":
-        return lambda b: gzip.compress(b, compresslevel=6, mtime=0)
+        return gzip_compressor
     else:
         raise BuildcacheEntryError(f"Unknown compression type: {compression}")
 
