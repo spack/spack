@@ -25,8 +25,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
 
     tags = ["e4s"]
 
-    test_requires_compiler = True
-
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
@@ -278,22 +276,20 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
             env.prepend_path("PATH", spec["hpcviewer"].prefix.bin)
             env.prepend_path("MANPATH", spec["hpcviewer"].prefix.share.man)
 
-    def test_sort(self):
-        """build and run selection sort unit test"""
-        exe = "tst-sort"
-        cxx = Executable(self["cxx"].cxx)
-        cxx(self.test_suite.current_test_data_dir.join("sort.cpp"), "-o", exe)
+    def test_hpcrun_realtime(self):
+        """run a simple self-test for default monitoring parameters"""
 
         hpcrun = which("hpcrun")
-        meas = "tst-sort.m"
-        hpcrun("-e", "REALTIME@5000", "-t", "-o", meas, "./" + exe)
-
         hpcstruct = which("hpcstruct")
-        struct = "tst-sort.hpcstruct"
-        hpcstruct("-j", "4", "--time", "-o", struct, "./" + exe)
-
         hpcprof = which("hpcprof")
-        db = "tst-sort.d"
+
+        meas = "tst-hpcstruct.m"
+        hpcrun("-e", "REALTIME@5000", "-t", "-o", meas, str(hpcstruct), str(hpcprof))
+
+        struct = "hpcprof.hpcstruct"
+        hpcstruct("-j", "4", "--time", "-o", struct, str(hpcprof))
+
+        db = "tst-hpcstruct.d"
         hpcprof("-S", struct, "-o", db, meas)
 
 
