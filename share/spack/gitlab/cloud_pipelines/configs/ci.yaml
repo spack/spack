@@ -46,11 +46,15 @@ ci:
       tags: ["aws"]
       script:
       - - export BUILD_CACHE="${SPACK_BUILDCACHE_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_SPECS_URL}"
-        - export BUILD_CACHE_KEYS="${SPACK_BUILDCACHE_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_KEYS_URL}"
-        - aws s3 sync --exclude "*" --include "*spec.json*" ${BUILD_CACHE} /tmp
+        - aws s3 sync --exclude "*" --include "*spec.manifest.json" ${BUILD_CACHE} /tmp/input
         - /sign.sh
-        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${BUILD_CACHE}
-        - aws s3 cp /tmp/public_keys ${BUILD_CACHE_KEYS} --recursive --exclude "*" --include "*.pub"
+        - aws s3 sync --exclude "*" --include "*spec.manifest.json" /tmp/output ${BUILD_CACHE}
+        - |+
+          for keyfile in $( find /tmp/public_keys -type f );
+          do
+            spack gpg trust $keyfile
+          done
+        - spack gpg publish --update-index --mirror-url ${SPACK_BUILDCACHE_DESTINATION}
       id_tokens:
         GITLAB_OIDC_TOKEN:
           aud: "${OIDC_TOKEN_AUDIENCE}"
@@ -67,8 +71,8 @@ ci:
         - echo Copying environment specs from ${SPACK_COPY_ONLY_SOURCE} to ${SPACK_COPY_ONLY_DESTINATION}
         - spack buildcache sync "${SPACK_COPY_ONLY_SOURCE}" "${SPACK_COPY_ONLY_DESTINATION}"
         - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
-        - export BUILD_CACHE_KEYS="${SPACK_COPY_ONLY_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_KEYS_URL}"
-        - aws s3 cp /tmp/spack-public-binary-key.pub "${BUILD_CACHE_KEYS}/spack-public-binary-key.pub"
+        - spack gpg trust /tmp/spack-public-binary-key.pub
+        - spack gpg publish --mirror-url "${SPACK_COPY_ONLY_DESTINATION}"
         - spack buildcache update-index --keys "${SPACK_COPY_ONLY_DESTINATION}"
       when: "always"
       retry:
