@@ -1,5 +1,6 @@
 from spack.package import *
 
+
 class Musica(CMakePackage):
     """MUSICA - The multi-scale interface for chemistry and aerosols
 
@@ -52,4 +53,3 @@ class Musica(CMakePackage):
         with working_dir(self.prefix):
             if "+tests" in self.spec:
                 ctest("--output-on-failure")
-
