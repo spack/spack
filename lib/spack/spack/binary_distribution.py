@@ -25,7 +25,7 @@ import urllib.parse
 import urllib.request
 import warnings
 from contextlib import closing
-from typing import IO, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fsys
 import llnl.util.lang
@@ -904,7 +904,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
 
     tty.debug(f"Retrieving key.pub files from {url_util.format(mirror_url)} to build key index")
 
-    key_prefix = url_util.join(mirror_url, buildcache_relative_specs_url())
+    key_prefix = url_util.join(mirror_url, buildcache_relative_keys_url())
 
     try:
         fingerprints = (
@@ -2374,7 +2374,12 @@ def clear_spec_cache():
     BINARY_INDEX.clear()
 
 
-def get_keys(install=False, trust=False, force=False, mirrors=None):
+def get_keys(
+    install: bool = False,
+    trust: bool = False,
+    force: bool = False,
+    mirrors: Optional[Dict[Any, spack.mirrors.mirror.Mirror]] = None,
+):
     """Get pgp public keys available on mirror with suffix .pub"""
     mirror_collection = mirrors or spack.mirrors.mirror.MirrorCollection(binary=True)
 
@@ -2388,51 +2393,115 @@ def get_keys(install=False, trust=False, force=False, mirrors=None):
             if fetch_url.startswith("oci://"):
                 continue
 
-            cache_class = get_url_buildcache_class(layout_version=layout_version)
+            if layout_version == 2:
+                _get_keys_v2(fetch_url, install, trust, force)
+            else:
+                _get_keys(fetch_url, layout_version, install, trust, force)
 
-            keys_url = url_util.join(
-                fetch_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
+
+def _get_keys(
+    mirror_url: str,
+    layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+    install: bool = False,
+    trust: bool = False,
+    force: bool = False,
+) -> None:
+    cache_class = get_url_buildcache_class(layout_version=layout_version)
+
+    tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
+
+    keys_prefix = url_util.join(
+        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.SPECS)
+    )
+    key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
+    index_entry = cache_class(mirror_url)
+
+    try:
+        index_manifest = index_entry.read_manifest(
+            manifest_url=key_index_manifest_url, verify_signature=False
+        )
+        index_blob_path = index_entry.fetch_blob(index_manifest.data[0])
+    except BuildcacheEntryError as e:
+        tty.debug(f"Failed to fetch key index due to: {e}")
+        index_entry.destroy()
+        return
+
+    with open(index_blob_path, encoding="utf-8") as fd:
+        json_index = json.load(fd)
+    index_entry.destroy()
+
+    for fingerprint, _ in json_index["keys"].items():
+        key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
+        key_entry = cache_class(mirror_url)
+        try:
+            key_manifest = key_entry.read_manifest(
+                manifest_url=key_manifest_url, verify_signature=False
             )
-            keys_index = url_util.join(keys_url, "index.json")
+            key_blob_path = key_entry.fetch_blob(key_manifest.data[0])
+        except BuildcacheEntryError as e:
+            tty.debug(f"Failed to fetch key {fingerprint} due to: {e}")
+            key_entry.destroy()
+            continue
 
-            tty.debug("Finding public keys in {0}".format(url_util.format(fetch_url)))
+        tty.debug("Found key {0}".format(fingerprint))
+        if install:
+            if trust:
+                spack.util.gpg.trust(key_blob_path)
+                tty.debug(f"Added {fingerprint} to trusted keys.")
+            else:
+                tty.debug(
+                    "Will not add this key to trusted keys."
+                    "Use -t to install all downloaded keys"
+                )
 
-            try:
-                _, _, json_file = web_util.read_from_url(keys_index)
-                json_index = sjson.load(json_file)
-            except (web_util.SpackWebError, OSError, ValueError) as url_err:
-                # TODO: avoid repeated request
-                if web_util.url_exists(keys_index):
-                    tty.error(
-                        f"Unable to find public keys in {url_util.format(fetch_url)},"
-                        f" caught exception attempting to read from {url_util.format(keys_index)}."
-                    )
-                    tty.debug(url_err)
+        key_entry.destroy()
 
-                continue
 
-            for fingerprint, key_attributes in json_index["keys"].items():
-                link = os.path.join(keys_url, fingerprint + ".pub")
+def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
+    cache_class = get_url_buildcache_class(layout_version=2)
 
-                with Stage(link, name="build_cache", keep=True) as stage:
-                    if os.path.exists(stage.save_filename) and force:
-                        os.remove(stage.save_filename)
-                    if not os.path.exists(stage.save_filename):
-                        try:
-                            stage.fetch()
-                        except spack.error.FetchError:
-                            continue
+    keys_url = url_util.join(
+        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
+    )
+    keys_index = url_util.join(keys_url, "index.json")
 
-                tty.debug("Found key {0}".format(fingerprint))
-                if install:
-                    if trust:
-                        spack.util.gpg.trust(stage.save_filename)
-                        tty.debug("Added this key to trusted keys.")
-                    else:
-                        tty.debug(
-                            "Will not add this key to trusted keys."
-                            "Use -t to install all downloaded keys"
-                        )
+    tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
+
+    try:
+        _, _, json_file = web_util.read_from_url(keys_index)
+        json_index = sjson.load(json_file)
+    except (web_util.SpackWebError, OSError, ValueError) as url_err:
+        # TODO: avoid repeated request
+        if web_util.url_exists(keys_index):
+            tty.error(
+                f"Unable to find public keys in {url_util.format(mirror_url)},"
+                f" caught exception attempting to read from {url_util.format(keys_index)}."
+            )
+            tty.error(url_err)
+        return
+
+    for fingerprint, key_attributes in json_index["keys"].items():
+        link = os.path.join(keys_url, fingerprint + ".pub")
+
+        with Stage(link, name="build_cache", keep=True) as stage:
+            if os.path.exists(stage.save_filename) and force:
+                os.remove(stage.save_filename)
+            if not os.path.exists(stage.save_filename):
+                try:
+                    stage.fetch()
+                except spack.error.FetchError:
+                    continue
+
+        tty.debug("Found key {0}".format(fingerprint))
+        if install:
+            if trust:
+                spack.util.gpg.trust(stage.save_filename)
+                tty.debug("Added this key to trusted keys.")
+            else:
+                tty.debug(
+                    "Will not add this key to trusted keys."
+                    "Use -t to install all downloaded keys"
+                )
 
 
 def _url_push_keys(
@@ -2454,6 +2523,7 @@ def _url_push_keys(
         push_url = mirror if isinstance(mirror, str) else mirror.push_url
 
         tty.debug(f"Pushing public keys to {url_util.format(push_url)}")
+        pushed_a_key = False
 
         for key, file in zip(keys, files):
             cache_class.push_local_file_as_blob(
@@ -2463,9 +2533,13 @@ def _url_push_keys(
                 component_type=BuildcacheComponent.KEY,
                 compression="none",
             )
+            pushed_a_key = True
 
         if update_index:
             generate_key_index(push_url, tmpdir=tmpdir)
+
+        if pushed_a_key or update_index:
+            cache_class.maybe_push_layout_json(push_url)
 
 
 def needs_rebuild(spec, mirror_url):
@@ -2629,7 +2703,10 @@ class IndexFetcher:
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
 
-        manifest = BuildcacheManifest.from_json(json.loads(result))
+        manifest = BuildcacheManifest.from_json(
+            # Currently we do not sign buildcache index, but we could
+            cache_class.verify_and_extract_manifest(result, verify=False)
+        )
         blob_record = manifest.get_blob_records(
             cache_class.component_to_content_type(BuildcacheComponent.INDEX)
         )[0]

@@ -169,7 +169,7 @@ def test_update_key_index(
     uninstall("-y", s.name)
     mirror("rm", "test-mirror")
 
-    assert "index.json" in key_dir_list
+    assert "keys.manifest.json" in key_dir_list
 
 
 def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):

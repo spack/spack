@@ -764,11 +764,9 @@ def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
         bindist._url_generate_package_index(url, tmpdir)
 
     if update_keys:
-        keys_url = url_util.join(url, bindist.buildcache_relative_keys_url())
-
         try:
             with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
-                bindist.generate_key_index(keys_url, tmpdir)
+                bindist.generate_key_index(url, tmpdir)
         except bindist.CannotListKeys as e:
             # Do not error out if listing keys went wrong. This usually means that the _gpg path
             # does not exist. TODO: distinguish between this and other errors.

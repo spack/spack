@@ -173,9 +173,9 @@ class URLBuildcacheEntry:
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
-    def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
+    def __init__(self, mirror_url: str, spec: Optional[spack.spec.Spec] = None):
         """Lazily initialize the object"""
-        self.mirror_url: str = push_url_base
+        self.mirror_url: str = mirror_url
         self.spec: Optional[spack.spec.Spec] = spec
         self.manifest: Optional[BuildcacheManifest] = None
         self.remote_manifest_url: str = ""
@@ -357,7 +357,9 @@ class URLBuildcacheEntry:
 
         return True
 
-    def _maybe_verify_and_extract(self, manifest_contents: str, verify: bool = False) -> dict:
+    @classmethod
+    def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
+        """Possibly verify clearsig, then extract contents and return as json"""
         magic_string = "-----BEGIN PGP SIGNED MESSAGE-----"
         if manifest_contents.startswith(magic_string):
             if verify:
@@ -368,18 +370,14 @@ class URLBuildcacheEntry:
                     with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
                     if not try_verify(manifest_path):
-                        raise NoVerifyException(
-                            f"Signature on {self.remote_manifest_url} could not be verified"
-                        )
+                        raise NoVerifyException("Signature could not be verified")
                 finally:
                     shutil.rmtree(tmpdir)
 
             return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
         else:
             if verify:
-                raise NoVerifyException(
-                    f"Required signature was not found on {self.remote_manifest_url}"
-                )
+                raise NoVerifyException("Required signature was not found on manifest")
             return json.loads(manifest_contents)
 
     def read_manifest(
@@ -418,7 +416,7 @@ class URLBuildcacheEntry:
         if not manifest_contents:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
 
-        manifest_contents = self._maybe_verify_and_extract(
+        manifest_contents = self.verify_and_extract_manifest(
             manifest_contents, verify=verify_signature
         )
 
@@ -457,14 +455,6 @@ class URLBuildcacheEntry:
 
     def get_archive_stage(self) -> Optional[spack.stage.Stage]:
         return self.stages[self.get_blob_record(BuildcacheComponent.TARBALL)]
-
-    def fetch_index(self, allow_unsigned: bool = False) -> str:
-        """Retrieve the buildcache index and return the path to the locally staged file"""
-        if not self.manifest:
-            # Raises if problems encountered, including not being able to verify signagure
-            self.read_manifest(verify_signature=not allow_unsigned)
-
-        return self.fetch_blob(self.get_blob_record(BuildcacheComponent.INDEX))
 
     def remove(self):
         if self.manifest:
