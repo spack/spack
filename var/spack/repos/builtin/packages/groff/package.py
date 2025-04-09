@@ -92,7 +92,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     def setup_run_environment(self, env):
         if self.spec.satisfies("+x"):
             dir = join_path(self.prefix.lib, "X11", "app-defaults")
-            env.set_path("XFILESEARCHPATH", dir)
+            env.prepend_path("XFILESEARCHPATH", dir)
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
