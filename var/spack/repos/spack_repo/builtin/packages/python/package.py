@@ -52,7 +52,7 @@ def find_python_in_prefix(spec: "spack.spec.Spec", prefix: Optional[str] = None)
         Executable: the Python command
 
     """
-    if not spec.name == "python":
+    if spec.name != "python":
         raise ValueError("find_python_in_prefix() only works on Python installations.")
 
     prefix = Prefix(prefix or spec.prefix)
