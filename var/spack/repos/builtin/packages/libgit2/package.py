@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -66,8 +65,6 @@ class Libgit2(CMakePackage):
     version("0.26.1", sha256="68cd0f8ee9e0ca84dcf0f0267d0a8297471d3365622d22d3da67c57165bb0722")
     version("0.26.0", sha256="6a62393e0ceb37d02fe0d5707713f504e7acac9006ef33da1e88960bd78b6eac")
 
-    depends_on("c", type="build")  # generated
-
     # Backends
     variant(
         "https",
@@ -84,6 +81,8 @@ class Libgit2(CMakePackage):
     variant("mmap", default=True, description="Enable mmap support", when="@1.1.1:")
 
     # Build Dependencies
+    depends_on("c", type="build")  # generated
+
     depends_on("cmake@2.8:", type="build", when="@:0.28")
     depends_on("cmake@3.5:", type="build", when="@0.99:")
     depends_on("pkgconfig", type="build")

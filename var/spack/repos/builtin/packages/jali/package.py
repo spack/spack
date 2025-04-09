@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,11 +27,11 @@ class Jali(CMakePackage):
     version("1.1.0", sha256="783dfcd6a9284af83bb380ed257fa8b0757dc2f7f9196d935eb974fb6523c644")
     version("1.0.5", sha256="979170615d33a7bf20c96bd4d0285e05a2bbd901164e377a8bccbd9af9463801")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mstk", default=True, description="Enable MSTK")
 
     # dependencies
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.13:", type="build")
 
     depends_on("mpi")

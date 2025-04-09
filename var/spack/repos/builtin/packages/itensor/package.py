@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,11 +33,12 @@ class Itensor(MakefilePackage):
     version("3.0.0", sha256="1d249a3a6442188a9f7829b32238c1025457c2930566d134a785994b1f7c54a9")
     version("2.1.1", sha256="b91a67af66ed0fa7678494f3895b5d5ae7f1dc1026540689f9625f515cb7791c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("openmp", default=False, description="Enable OpenMP support.")
     variant("hdf5", default=False, description="Build rockstar with HDF5 support.")
     variant("shared", default=False, description="Also build dynamic libraries.")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     depends_on("lapack")
     depends_on("hdf5@:1.10+hl", when="+hdf5")
@@ -84,7 +84,7 @@ class Itensor(MakefilePackage):
             vinc += " -DHAVE_LAPACK_CONFIG_H"
             vinc += " -DLAPACK_COMPLEX_STRUCTURE"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
-        elif ltype == "intel-mkl":
+        elif ltype == "intel-oneapi-mkl":
             vpla = "PLATFORM=mkl"
             filter_file("#PLATFORM=lapack", vinc, mf, string=True)
 

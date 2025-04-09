@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -84,8 +83,6 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.4.0", tag="v0.4.0", commit="a8f669c1ad01d51132a4e3d9d6aa8b2cabc9eff0", submodules="True"
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=False, description="Build OpenMP backend")
     variant("omptarget", default=False, description="Build with OpenMP target support")
@@ -100,6 +97,13 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Tests to run",
     )
     variant("caliper", default=False, description="Build with support for Caliper based profiling")
+    variant(
+        "lowopttest",
+        default=False,
+        description="For developers, lowers optimization level to pass tests with some compilers",
+    )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blt")
     depends_on("blt@0.6.2:", type="build", when="@2024.07.0:")
@@ -177,7 +181,10 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         # Default entries are already defined in CachedCMakePackage, inherit them:
         entries = super().initconfig_compiler_entries()
 
-        if spec.satisfies("+rocm"):
+        if spec.satisfies("+lowopttest"):
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE", "-O1"))
+
+        if spec.satisfies("+rocm ^blt@:0.6"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         # adrienbernede-23-01
@@ -250,7 +257,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
-        entries.append(cmake_cache_option("ENABLE_OPENMP_TARGET", "+omptarget" in spec))
+        entries.append(cmake_cache_option("RAJA_ENABLE_TARGET_OPENMP", "+omptarget" in spec))
         if "+omptarget" in spec:
             if "%xl" in spec:
                 entries.append(
@@ -321,7 +328,7 @@ class RajaPerf(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
         entries.append(cmake_cache_option("ENABLE_OPENMP", "+openmp" in spec))
         entries.append(cmake_cache_option("RAJA_ENABLE_OPENMP_TASK", "+omptask" in spec))
-        entries.append(cmake_cache_option("ENABLE_SYCL", spec.satisfies("+sycl")))
+        entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
 
         # C++17
         if spec.satisfies("@2024.07.0:") and spec.satisfies("+sycl"):

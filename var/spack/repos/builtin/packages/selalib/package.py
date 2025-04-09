@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,10 +17,6 @@ class Selalib(CMakePackage):
 
     version("main", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("fmempool", default=False, description="Use memory pool")
     variant("mpi", default=True, description="Build with MPI support")
     variant("openmp", default=True, description="Build with OpenMP support")
@@ -35,6 +30,10 @@ class Selalib(CMakePackage):
         policy="one_of",
         msg="SeLaLib requires new-enough Fortran compiler",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.6.0:", type=("build"))
     depends_on("blas")

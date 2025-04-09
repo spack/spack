@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,9 +20,9 @@ class Dsqss(CMakePackage):
 
     version("2.0.3", sha256="11255dd1f1317fb4ac2d6ae95535f027d627d03f5470717cd277dd9ab94496e0")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="build mpi support")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("python", type=("build", "run"))

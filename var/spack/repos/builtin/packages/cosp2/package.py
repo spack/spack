@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,10 +20,10 @@ class Cosp2(MakefilePackage):
 
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-
     variant("double", default=True, description="Build with double precision.")
     variant("mpi", default=True, description="Build with MPI Support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 

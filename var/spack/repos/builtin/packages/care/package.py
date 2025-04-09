@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,6 +24,30 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("develop", branch="develop", submodules=False)
     version("master", branch="master", submodules=False)
+    version(
+        "0.15.1",
+        tag="v0.15.1",
+        commit="f198c8b3d5dcfd274107b4263331818e86b50c7a",
+        submodules=False,
+    )
+    version(
+        "0.15.0",
+        tag="v0.15.0",
+        commit="aff9eea69b6d95342371aacc44b73bef785255f3",
+        submodules=False,
+    )
+    version(
+        "0.14.1",
+        tag="v0.14.1",
+        commit="110c6e5766ead59b231e2b05deecd7567874e907",
+        submodules=False,
+    )
+    version(
+        "0.14.0",
+        tag="v0.14.0",
+        commit="2784188a067abac35747d58b5a5daa1b3852756b",
+        submodules=False,
+    )
     version(
         "0.13.3",
         tag="v0.13.3",
@@ -63,15 +86,12 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.2.0", tag="v0.2.0", commit="30135e03b14b1dc753634e9147dafede0663906f", submodules="True"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("mpi", default=False, description="Enable MPI support")
     variant(
         "implicit_conversions",
         default=False,
+        when="@:0.14",
         description="Enable implicit" "conversions to/from raw pointers",
     )
     variant("tests", default=False, description="Build tests")
@@ -79,6 +99,10 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("examples", default=False, description="Build examples.")
     variant("docs", default=False, description="Build documentation")
     variant("loop_fuser", default=False, description="Enable loop fusion capability")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake", type="build")
     depends_on("cmake@3.23:", type="build", when="@0.13.2:")
@@ -112,7 +136,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("raja@2024.02.0:", when="@0.12.0:")
     depends_on("raja@2022.10.5:", when="@0.10.0:")
 
-    # TODO: Add an enable_pick variant
     depends_on("chai+enable_pick+raja")
     depends_on("chai@2024.07.0:", when="@0.13.2:")
     depends_on("chai@2024.02.2:", when="@0.13.1:")
@@ -187,7 +210,7 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         compiler = self.compiler
         entries = super().initconfig_compiler_entries()
 
-        if spec.satisfies("+rocm"):
+        if spec.satisfies("+rocm ^blt@:0.6"):
             entries.insert(0, cmake_cache_path("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
         llnl_link_helpers(entries, spec, compiler)
@@ -210,12 +233,6 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+rocm"):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
-            archs = self.spec.variants["amdgpu_target"].value
-            if archs != "none":
-                arch_str = ",".join(archs)
-                entries.append(
-                    cmake_cache_string("HIP_HIPCC_FLAGS", "--amdgpu-target={0}".format(arch_str))
-                )
         else:
             entries.append(cmake_cache_option("ENABLE_HIP", False))
 
@@ -250,6 +267,13 @@ class Care(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 60))
 
         entries.append(cmake_cache_string("CMAKE_BUILD_TYPE", spec.variants["build_type"].value))
+
+        # C++14
+        if spec.satisfies("@:0.14.1"):
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14"))
+        # C++17
+        else:
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++17"))
 
         entries.append(cmake_cache_option("ENABLE_TESTS", spec.satisfies("+tests")))
         entries.append(cmake_cache_option("CARE_ENABLE_TESTS", spec.satisfies("+tests")))

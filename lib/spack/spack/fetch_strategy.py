@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,7 +25,6 @@ import copy
 import functools
 import http.client
 import os
-import os.path
 import re
 import shutil
 import urllib.error
@@ -297,8 +295,9 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        if spack.config.get("config:url_fetch_method") == "curl":
-            return self._fetch_curl(url)
+        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        if fetch_method.startswith("curl"):
+            return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
             return self._fetch_urllib(url)
 
@@ -322,23 +321,21 @@ class URLFetchStrategy(FetchStrategy):
 
         request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
 
+        if os.path.lexists(save_file):
+            os.remove(save_file)
+
         try:
             response = web_util.urlopen(request)
-        except (TimeoutError, urllib.error.URLError) as e:
+            tty.msg(f"Fetching {url}")
+            with open(save_file, "wb") as f:
+                shutil.copyfileobj(response, f)
+        except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(save_file):
                 os.remove(save_file)
             raise FailedDownloadError(e) from e
-
-        tty.msg(f"Fetching {url}")
-
-        if os.path.lexists(save_file):
-            os.remove(save_file)
-
-        with open(save_file, "wb") as f:
-            shutil.copyfileobj(response, f)
 
         # Save the redirected URL for error messages. Sometimes we're redirected to an arbitrary
         # mirror that is broken, leading to spurious download failures. In that case it's helpful
@@ -349,7 +346,7 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(str(response.headers))
 
     @_needs_stage
-    def _fetch_curl(self, url):
+    def _fetch_curl(self, url, config_args=[]):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -378,7 +375,7 @@ class URLFetchStrategy(FetchStrategy):
             timeout = self.extra_options.get("timeout")
 
         base_args = web_util.base_curl_fetch_args(url, timeout)
-        curl_args = save_args + base_args + cookie_args
+        curl_args = config_args + save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
@@ -536,23 +533,22 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
     @_needs_stage
     def fetch(self):
         file = self.stage.save_filename
-        tty.msg(f"Fetching {self.url}")
+
+        if os.path.lexists(file):
+            os.remove(file)
 
         try:
             response = self._urlopen(self.url)
-        except (TimeoutError, urllib.error.URLError) as e:
+            tty.msg(f"Fetching {self.url}")
+            with open(file, "wb") as f:
+                shutil.copyfileobj(response, f)
+        except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(file):
                 os.remove(file)
             raise FailedDownloadError(e) from e
-
-        if os.path.lexists(file):
-            os.remove(file)
-
-        with open(file, "wb") as f:
-            shutil.copyfileobj(response, f)
 
 
 class VCSFetchStrategy(FetchStrategy):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,9 +41,9 @@ class PyH5py(PythonPackage):
     version("2.5.0", sha256="9833df8a679e108b561670b245bcf9f3a827b10ccb3a5fa1341523852cfac2f6")
     version("2.4.0", sha256="faaeadf4b8ca14c054b7568842e0d12690de7d5d68af4ecce5d7b8fc104d8e60")
 
-    depends_on("c", type="build")
-
     variant("mpi", default=True, description="Build with MPI support")
+
+    depends_on("c", type="build")
 
     # Python versions
     depends_on("python@3.9:", type=("build", "run"), when="@3.12:")

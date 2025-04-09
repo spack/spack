@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,10 +23,6 @@ class Asagi(CMakePackage):
     # is preferred to satisfy internal-dependencies
     version("1.0", commit="f67250798b435c308b9a1e7516f916f7855534ec", submodules=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "link_type",
         default="shared",
@@ -37,7 +32,7 @@ class Asagi(CMakePackage):
     )
 
     variant("fortran", default=True, description="enable fortran support")
-    variant("max_dimensions", default=4, description="max. number of dimensions supported")
+    variant("max_dimensions", default="4", description="max. number of dimensions supported")
     variant("numa", default=True, description="enable NUMA support")
     variant("mpi", default=True, description="enable MPI")
     variant("threadsafe", default=True, description="enable threadsafe ASAGI-functions")
@@ -46,6 +41,10 @@ class Asagi(CMakePackage):
     variant("mpi3", default=True, description="enable MPI-3 (enables additional features)")
     variant("tests", default=False, description="compile tests")
     variant("examples", default=False, description="compile examples")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("mpi@3:", when="+mpi3")

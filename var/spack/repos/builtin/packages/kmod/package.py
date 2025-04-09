@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,16 +27,12 @@ class Kmod(AutotoolsPackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("lzma")
+    depends_on("xz")
 
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash("autogen.sh")
 
     def configure_args(self):
-        args = [
-            "--disable-manpages",
-            "--with-bashcompletiondir="
-            + join_path(self.spec["kmod"].prefix, "share", "bash-completion", "completions"),
-        ]
-        return args
+        completions = join_path(self.prefix, "share", "bash-completion", "completions")
+        return ["--disable-manpages", f"--with-bashcompletiondir={completions}"]

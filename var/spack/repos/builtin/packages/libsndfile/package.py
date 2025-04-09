@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,14 +26,14 @@ class Libsndfile(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("alsa", default=False, description="Use alsa in example programs")
     variant(
         "external-libs", default=False, description="Build with support for FLAC, Ogg and Vorbis"
     )
     variant("sqlite", default=False, description="Build with sqlite support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("alsa-lib", when="+alsa")

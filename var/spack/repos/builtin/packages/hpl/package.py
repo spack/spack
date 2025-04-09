@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,9 +22,9 @@ class Hpl(AutotoolsPackage):
     version("2.3", sha256="32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830")
     version("2.2", sha256="ac7534163a09e21a5fa763e4e16dfc119bc84043f6e6a807aba666518f8df440")
 
-    depends_on("c", type="build")  # generated
-
     variant("openmp", default=False, description="Enable OpenMP support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi@1.1:")
     depends_on("blas")
@@ -37,6 +36,24 @@ class Hpl(AutotoolsPackage):
 
     arch = "{0}-{1}".format(platform.system(), platform.processor())
     build_targets = ["arch={0}".format(arch)]
+
+    with when("@=2.3"):
+        depends_on("autoconf-archive", type="build")  # AX_PROG_CC_MPI
+        depends_on("autoconf", type="build")
+        depends_on("automake", type="build")
+        depends_on("m4", type="build")
+        depends_on("libtool", type="build")
+
+    @property
+    def force_autoreconf(self):
+        return self.version == Version("2.3")
+
+    @run_before("autoreconf", when="@=2.3")
+    def add_timer_to_libhpl(self):
+        # Add HPL_timer_walltime to libhpl.a
+        filter_file(
+            r"(pgesv/HPL_perm.c)$", r"\1 ../testing/timer/HPL_timer_walltime.c", "src/Makefile.am"
+        )
 
     @when("@:2.2")
     def autoreconf(self, spec, prefix):
@@ -105,15 +122,11 @@ class Hpl(AutotoolsPackage):
     def configure_args(self):
         filter_file(r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags, "configure")
 
-        cflags, ldflags = ["-O3"], []
+        cflags, ldflags = ["-O3", "-DHPL_PROGRESS_REPORT", "-DHPL_DETAILED_TIMING"], []
         if self.spec.satisfies("+openmp"):
             cflags.append(self.compiler.openmp_flag)
 
-        if (
-            self.spec.satisfies("^intel-mkl")
-            or self.spec.satisfies("^intel-oneapi-mkl")
-            or self.spec.satisfies("^intel-parallel-studio+mkl")
-        ):
+        if self.spec.satisfies("^intel-oneapi-mkl"):
             ldflags.append(self.spec["blas"].libs.ld_flags)
 
         if self.spec.satisfies("%aocc"):

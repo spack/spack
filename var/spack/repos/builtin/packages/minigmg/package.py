@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,8 +30,6 @@ class Minigmg(Package):
 
     version("master", sha256="1c2d27496a881f655f5e849d6a7a132625e535739f82575991c511cc2cf899ac")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "vec",
         default="ompif",
@@ -42,6 +39,8 @@ class Minigmg(Package):
     )
 
     variant("opt", default=False, description="Enable optimization flags for improved OpenMP")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi")
 

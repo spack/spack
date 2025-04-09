@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ def try_le(x, y):
     try:
         return int(x) < y
     except ValueError:
-        False
+        return False
 
 
 class LcFramework(CMakePackage, CudaPackage):
@@ -29,14 +28,14 @@ class LcFramework(CMakePackage, CudaPackage):
     version("1.2.0", commit="2d0f39a927c3487551e4f3c786c3799cada1e203")
     version("1.1.2", sha256="5ccbeaf8e2ef93894854406054210c8525055d195b39e2f141b4f81175fe2815")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("libpressio", description="build a libpressio plugin for LC", default=False)
     conflicts("+cuda", when="@:1.2.1")
     for sm in [i for i in CudaPackage.cuda_arch_values if try_le(i, 60)]:
         conflicts(
             "cuda_arch={sm}".format(sm=sm), when="+cuda", msg="cuda_arch 60 or newer is required"
         )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type=("build",))
     depends_on("libpressio@0.98.0:", when="+libpressio")

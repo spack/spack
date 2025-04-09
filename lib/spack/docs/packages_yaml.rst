@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -487,6 +486,8 @@ present. For instance with a configuration like:
 
 you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
 
+.. _package-strong-preferences:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Conflicts and strong preferences
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -556,14 +557,13 @@ preferences.
    FAQ: :ref:`Why does Spack pick particular versions and variants? <faq-concretizer-precedence>`
 
 
-Most package preferences (``compilers``, ``target`` and ``providers``)
+The ``target`` and ``providers`` preferences
 can only be set globally under the ``all`` section of ``packages.yaml``:
 
 .. code-block:: yaml
 
    packages:
      all:
-       compiler: [gcc@12.2.0, clang@12:, oneapi@2023:]
        target: [x86_64_v3]
        providers:
          mpi: [mvapich2, mpich, openmpi]

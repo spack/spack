@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,8 @@ class Bucky(MakefilePackage):
     version("1.4.4", sha256="1621fee0d42314d9aa45d0082b358d4531e7d1d1a0089c807c1b21fbdc4e4592")
 
     requires("%gcc", msg="bucky can only be compiled with GCC")
+
+    depends_on("cxx", type="build")
 
     build_directory = "src"
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,8 +20,6 @@ class Albany(CMakePackage):
 
     version("develop", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("lcm", default=True, description="Enable LCM")
     variant("aeras", default=False, description="Enable AERAS")
     variant("qcad", default=False, description="Enable QCAD")
@@ -40,6 +37,8 @@ class Albany(CMakePackage):
     variant("64bit", default=True, description="Enable 64BIT")
 
     # Add dependencies
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
     depends_on(
         "trilinos"

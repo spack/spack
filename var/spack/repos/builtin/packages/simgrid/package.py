@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,8 @@ class Simgrid(CMakePackage):
 
     license("LGPL-2.1-or-later")
 
+    version("4.0", sha256="c9f07122d43f61f1f0a21be2e42ef2cd6290abbf9b697926430f44ca2786bdea")
+    version("3.36", sha256="cfdf6b98270c59be5c112457793c540bdd6a10deece91cbdb4793fbda190b95d")
     version("3.35", sha256="b4570d3de18d319cbd2e16c5a669f90760307673c0cc9940d4d11cfc537e69a8")
     version("3.34", sha256="161f1c6c0ebb588c587aea6388114307bb31b3c6d5332fa3dc678151f1d0564d")
     version("3.32", sha256="837764eb81562f04e49dd20fbd8518d9eb1f94df00a4e4555e7ec7fa8aa341f0")
@@ -119,15 +120,15 @@ class Simgrid(CMakePackage):
 
     version("develop", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("doc", default=False, description="Build documentation")
     variant("smpi", default=True, description="SMPI provides MPI")
     variant("examples", default=False, description="Install examples")
     variant("mc", default=False, description="Model checker")
     variant("msg", default=False, description="Enables the old MSG interface")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # does not build correctly with some old compilers -> rely on packages
     depends_on("boost@:1.69.0", when="@:3.21")
@@ -139,6 +140,8 @@ class Simgrid(CMakePackage):
         msg="simgrid <= v3.23 cannot be built with gcc >= 10,"
         " please use an older release (e.g., %gcc@:9).",
     )
+
+    conflicts("+msg", when="@3.34:", msg="MSG was removed from SimGrid v3.33.")
 
     def setup_dependent_package(self, module, dep_spec):
         if self.spec.satisfies("+smpi"):

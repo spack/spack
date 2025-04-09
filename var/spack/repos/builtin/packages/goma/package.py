@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,10 +29,6 @@ class Goma(CMakePackage):
     version("7.0.0", commit="5166896f273e5853e1f32885e20f68317b24979c")
     version("release", branch="release")
     version("main", branch="main")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Problem size variants
     variant(
@@ -80,6 +75,10 @@ class Goma(CMakePackage):
     variant("suite-sparse", default=True, description="Build with UMFPACK support")
 
     # Required dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("seacas+applications")
     depends_on("trilinos+mpi+epetra+aztec+amesos+stratimikos+teko+mumps+superlu-dist+ml~exodus")

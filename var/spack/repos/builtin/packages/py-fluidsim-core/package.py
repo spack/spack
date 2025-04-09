@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,4 +23,4 @@ class PyFluidsimCore(PythonPackage):
 
     with default_args(type="run"):
         depends_on("py-fluiddyn")
-        depends_on("py-importlib_metadata", when="^python@:3.9")
+        depends_on("py-importlib-metadata", when="^python@:3.9")

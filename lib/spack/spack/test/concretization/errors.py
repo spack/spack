@@ -1,16 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
 
+import spack.concretize
 import spack.config
 import spack.solver.asp
-import spack.spec
 
 version_error_messages = [
-    "Cannot satisfy 'fftw@:1.0' and 'fftw@1.1:",
+    "Cannot satisfy",
     "        required because quantum-espresso depends on fftw@:1.0",
     "          required because quantum-espresso ^fftw@1.1: requested explicitly",
     "        required because quantum-espresso ^fftw@1.1: requested explicitly",
@@ -30,8 +29,7 @@ external_error_messages = [
 ]
 
 variant_error_messages = [
-    "'fftw' required multiple values for single-valued variant 'mpi'",
-    "    Requested '~mpi' and '+mpi'",
+    "'fftw' requires conflicting variant values '~mpi' and '+mpi'",
     "        required because quantum-espresso depends on fftw+mpi when +invino",
     "          required because quantum-espresso+invino ^fftw~mpi requested explicitly",
     "        required because quantum-espresso+invino ^fftw~mpi requested explicitly",
@@ -58,7 +56,7 @@ def test_error_messages(error_messages, config_set, spec, mock_packages, mutable
         spack.config.set(path, conf)
 
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as e:
-        _ = spack.spec.Spec(spec).concretized()
+        _ = spack.concretize.concretize_one(spec)
 
     for em in error_messages:
         assert em in str(e.value)

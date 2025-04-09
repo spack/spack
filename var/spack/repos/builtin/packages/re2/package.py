@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -49,8 +48,6 @@ class Re2(CMakePackage):
         "2020-04-01", sha256="98794bc5416326817498384a9c43cbb5a406bab8da9f84f83c39ecad43ed5cea"
     )
 
-    depends_on("cxx", type="build")
-
     variant(
         "icu",
         default=False,
@@ -59,6 +56,8 @@ class Re2(CMakePackage):
     )
     variant("shared", default=False, description="Build shared instead of static libraries")
     variant("pic", default=True, description="Enable position independent code")
+
+    depends_on("cxx", type="build")
 
     depends_on("abseil-cpp", when="@2023-09-01:")
 

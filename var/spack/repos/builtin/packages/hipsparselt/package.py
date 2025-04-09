@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,6 +21,11 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
+    version("6.3.3", sha256="6b756e20fddb37b8c1237ef8e124452c9bdd46acad8a40699d10b609d0d2ebfc")
+    version("6.3.2", sha256="a0b30b478eff822dd7fa1c116ad99dcdf14ece1c33aae04ac71b594efd4d9866")
+    version("6.3.1", sha256="403d4c0ef47f89510452a20be6cce72962f21761081fc19a7e0e27e7f0c4ccfd")
+    version("6.3.0", sha256="f67ed4900101686596add37824d0628f1e71cf6a30d827a0519b3c3657f63ac3")
+    version("6.2.4", sha256="7b007b346f89fac9214ad8541b3276105ce1cac14d6f95a8a504b5a5381c8184")
     version("6.2.1", sha256="a23287bc759442aebaccce0306f5e3938865240e13553847356c25c54214a0d4")
     version("6.2.0", sha256="a25a3ce0ed3cc616b1a4e38bfdd5e68463bb9fe791a56d1367b8a6373bb63d12")
     version("6.1.2", sha256="a5a01fec7bc6e1f4792ccd5c8eaee7b42deac315c54298a7ce5265e5551e8640")
@@ -29,8 +33,6 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     version("6.1.0", sha256="66ade6de4fd19d144cab27214352faf5b00bbe12afe59472efb441b16d090265")
     version("6.0.2", sha256="bdbceeae515f737131f0391ee3b7d2f7b655e3cf446e4303d93f083c59053587")
     version("6.0.0", sha256="cc4c7970601edbaa7f630b7ea24ae85beaeae466ef3e5ba63e11eab52465c157")
-
-    depends_on("cxx", type="build")  # generated
 
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -46,10 +48,29 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
-    for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1"]:
+    depends_on("cxx", type="build")  # generated
+
+    for ver in [
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+    ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", when=f"@{ver}", type="test")
+        depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
+
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+        depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
     depends_on("cmake@3.5:", type="build")
     depends_on("msgpack-c@3:")
@@ -68,9 +89,22 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     # for 6.1.0 release.
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.1.patch", when="@6.1")
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.2.patch", when="@6.2")
+    patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.3.patch", when="@6.3")
 
     def setup_build_environment(self, env):
         env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+asan"):
+            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+        env.set("TENSILE_ROCM_ASSEMBLER_PATH", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+        env.set(
+            "TENSILE_ROCM_OFFLOAD_BUNDLER_PATH",
+            f"{self.spec['llvm-amdgpu'].prefix}/bin/clang-offload-bundler",
+        )
+        env.set(
+            "ROCM_AGENT_ENUMERATOR_PATH",
+            f"{self.spec['rocminfo'].prefix}/bin/rocm_agent_enumerator",
+        )
+        env.set("ROCM_SMI_PATH", f"{self.spec['rocm-smi-lib'].prefix}/bin/rocm-smi")
 
     def cmake_args(self):
         args = [

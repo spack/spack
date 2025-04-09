@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,10 +31,6 @@ class Hepmc3(CMakePackage):
     version("3.1.2", sha256="4133074b3928252877982f3d4b4c6c750bb7a324eb6c7bb2afc6fa256da3ecc7")
     version("3.1.1", sha256="2fcbc9964d6f9f7776289d65f9c73033f85c15bf5f0df00c429a6a1d8b8248bb")
     version("3.1.0", sha256="cd37eed619d58369041018b8627274ad790020a4714b54ac05ad1ebc1a6e7f8a")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
     # note that version 3.0.0 is not supported
     # conflicts with cmake configuration
 
@@ -48,6 +43,10 @@ class Hepmc3(CMakePackage):
         description="Install interfaces for some Monte-Carlo Event Gens",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@2.8.9:", type="build")
     with when("+rootio"):
         depends_on("root")
@@ -57,6 +56,8 @@ class Hepmc3(CMakePackage):
 
     conflicts("%gcc@9.3.0", when="@:3.1.1")
     patch("ba38f14d8f56c16cc4105d98f6d4540c928c6150.patch", when="@3.1.2:3.2.1 %gcc@9.3.0")
+
+    extends("python", when="+python")
 
     @property
     def libs(self):

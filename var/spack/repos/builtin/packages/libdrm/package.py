@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,7 @@ class Libdrm(AutotoolsPackage, MesonPackage):
 
     license("MIT")
 
+    version("2.4.124", sha256="ac36293f61ca4aafaf4b16a2a7afff312aa4f5c37c9fbd797de9e3c0863ca379")
     version("2.4.123", sha256="a2b98567a149a74b0f50e91e825f9c0315d86e7be9b74394dae8b298caadb79e")
     version("2.4.122", sha256="d9f5079b777dffca9300ccc56b10a93588cdfbc9dde2fae111940dfb6292f251")
     version("2.4.121", sha256="909084a505d7638887f590b70791b3bbd9069c710c948f5d1f1ce6d080cdfcab")
@@ -45,9 +45,9 @@ class Libdrm(AutotoolsPackage, MesonPackage):
     version("2.4.59", sha256="ed9d03a92c2d80e6310cc350db3430620f1659ae084a07c6824cee7bc81ae8fa")
     version("2.4.33", sha256="bd2a8fecf28616f2157ca33ede691c139cc294ed2d0c4244b62ca7d22e98e5a4")
 
-    depends_on("c", type="build")
-
     variant("docs", default=False, description="Build man pages")
+
+    depends_on("c", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("libpciaccess@0.10:")

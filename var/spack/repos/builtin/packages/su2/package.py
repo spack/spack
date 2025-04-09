@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -41,10 +40,6 @@ class Su2(MesonPackage):
     # @:7 is missing few <cstdint> includes, causing a few files to fail with %gcc@13:
     conflicts("%gcc@13:", when="@:7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=False, description="Enable MPI support")
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("tecio", default=True, description="Enable TECIO support")
@@ -60,6 +55,10 @@ class Su2(MesonPackage):
         default=False,
         description="Enable the use of single precision on linear solvers and preconditioners",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("meson@0.61.1:", type=("build"))
     depends_on("python@3:", type=("build", "run"))

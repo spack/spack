@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -113,6 +112,19 @@ the original but may concretize differently in the presence of different
 explicit or default configuration settings (e.g., a different version of
 Spack or for a different user account).
 
+Environments created from a manifest will copy any included configs
+from relative paths inside the environment. Relative paths from
+outside the environment will cause errors, and absolute paths will be
+kept absolute. For example, if ``spack.yaml`` includes:
+
+.. code-block:: yaml
+
+   spack:
+     include: [./config.yaml]
+
+then the created environment will have its own copy of the file
+``config.yaml`` copied from the location in the original environment.
+
 Create an environment from a ``spack.lock`` file using:
 
 .. code-block:: console
@@ -161,7 +173,7 @@ accepts.  If an environment already exists then spack will simply activate it
 and ignore the create-specific flags.
 
 .. code-block:: console
-   
+
    $ spack env activate --create -p myenv
    # ...
    # [creates if myenv does not exist yet]
@@ -425,8 +437,8 @@ Developing Packages in a Spack Environment
 
 The ``spack develop`` command allows one to develop Spack packages in
 an environment. It requires a spec containing a concrete version, and
-will configure Spack to install the package from local source. 
-If a version is not provided from the command line interface then spack 
+will configure Spack to install the package from local source.
+If a version is not provided from the command line interface then spack
 will automatically pick the highest version the package has defined.
 This means any infinity versions (``develop``, ``main``, ``stable``) will be
 preferred in this selection process.
@@ -436,14 +448,21 @@ set, and Spack will ensure the package and its dependents are rebuilt
 any time the environment is installed if the package's local source
 code has been modified. Spack's native implementation to check for modifications
 is to check if ``mtime`` is newer than the installation.
-A custom check can be created by overriding the ``detect_dev_src_change`` method 
-in your package class. This is particularly useful for projects using custom spack repo's 
-to drive development and want to optimize performance. 
+A custom check can be created by overriding the ``detect_dev_src_change`` method
+in your package class. This is particularly useful for projects using custom spack repo's
+to drive development and want to optimize performance.
 
 Spack ensures that all instances of a
 developed package in the environment are concretized to match the
 version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
+
+When working deep in the graph it is often desirable to have multiple specs marked
+as ``develop`` so you don't have to restage and/or do full rebuilds each time you
+call ``spack install``.  The ``--recursive`` flag can be used in these scenarios
+to ensure that all the dependents of the initial spec you provide are also marked
+as develop specs.  The ``--recursive`` flag requires a pre-concretized environment
+so the graph can be traversed from the supplied spec all the way to the root specs.
 
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
@@ -454,7 +473,7 @@ Further development on ``foo`` can be tested by re-installing the environment,
 and eventually committed and pushed to the upstream git repo.
 
 If the package being developed supports out-of-source builds then users can use the
-``--build_directory`` flag to control the location and name of the build directory. 
+``--build_directory`` flag to control the location and name of the build directory.
 This is a shortcut to set the ``package_attributes:build_directory`` in the
 ``packages`` configuration (see :ref:`assigning-package-attributes`).
 The supplied location will become the build-directory for that package in all future builds.
@@ -648,34 +667,56 @@ a ``packages.yaml`` file) could contain:
      # ...
      packages:
        all:
-         compiler: [intel]
+         providers:
+           mpi: [openmpi]
      # ...
 
-This configuration sets the default compiler for all packages to
-``intel``.
+This configuration sets the default mpi provider to be openmpi.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack environments allow an ``include`` heading in their yaml
-schema. This heading pulls in external configuration files and applies
-them to the environment.
+Spack environments allow an ``include`` heading in their yaml schema.
+This heading pulls in external configuration files and applies them to
+the environment.
 
 .. code-block:: yaml
 
    spack:
      include:
-     - relative/path/to/config.yaml
-     - https://github.com/path/to/raw/config/compilers.yaml
+     - environment/relative/path/to/config.yaml
+     - path: https://github.com/path/to/raw/config/compilers.yaml
+       sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
      - /absolute/path/to/packages.yaml
+     - path: /path/to/$os/$target/environment
+       optional: true
+     - path: /path/to/os-specific/config-dir
+       when: os == "ventura"
 
-Environments can include files or URLs. File paths can be relative or
-absolute. URLs include the path to the text for individual files or
-can be the path to a directory containing configuration files.
-Spack supports ``file``, ``http``, ``https`` and ``ftp`` protocols (or
-schemes). Spack-specific, environment and user path variables may be
-used in these paths. See :ref:`config-file-variables` for more information.
+Included configuration files are required *unless* they are explicitly optional
+or the entry's condition evaluates to ``false``. Optional includes are specified
+with the ``optional`` clause and conditional with the ``when`` clause. (See
+:ref:`include-yaml` for more information on optional and conditional entries.)
+
+Files are listed using paths to individual files or directories containing them.
+Path entries may be absolute or relative to the environment or specified as 
+URLs. URLs to individual files must link to the **raw** form of the file's 
+contents (e.g., `GitHub
+<https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_ 
+or `GitLab
+<https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_) **and** include a valid sha256 for the file.
+Only the ``file``, ``ftp``, ``http`` and ``https`` protocols (or schemes) are
+supported. Spack-specific, environment and user path variables can be used.
+(See :ref:`config-file-variables` for more information.)
+
+.. warning::
+
+   Recursive includes are not currently processed in a breadth-first manner
+   so the value of a configuration option that is altered by multiple included
+   files may not be what you expect. This will be addressed in a future
+   update.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Configuration precedence

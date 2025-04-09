@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,10 @@ class PyNumpyQuaternion(PythonPackage):
         url="https://pypi.io/packages/source/n/numpy-quaternion/numpy-quaternion-2021.11.4.15.26.3.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("scipy", default=True, description="Build with scipy support")
     variant("numba", default=True, description="Build with numba support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python@3.10:", when="@2024:")
 

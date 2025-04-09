@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +16,7 @@ class Libffi(AutotoolsPackage):
 
     license("MIT")
 
+    version("3.4.7", sha256="138607dee268bdecf374adf9144c00e839e38541f75f24a1fcf18b78fda48b2d")
     version("3.4.6", sha256="b0dea9df23c863a7a50e825440f3ebffabd65df1497108e5d437747843895a4e")
     version("3.4.5", sha256="96fff4e589e3b239d888d9aa44b3ff30693c2ba1617f953925a70ddebcc102b2")
     version("3.4.4", sha256="d66c56ad259a82cf2a9dfc408b32bf5da52371500b84745f7fb8b645712df676")
@@ -36,13 +36,17 @@ class Libffi(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    patch("clang-powerpc-3.2.1.patch", when="@3.2.1%clang platform=linux")
+    patch("clang-powerpc-3.2.1.patch", when="@3.2.1 platform=linux %clang")
     # ref.: https://github.com/libffi/libffi/pull/561
     patch("powerpc-3.3.patch", when="@3.3")
     patch(
         "https://github.com/libffi/libffi/commit/ce077e5565366171aa1b4438749b0922fce887a4.patch?full_index=1",
         sha256="070b1f3aa87f2b56f83aff38afc42157e1692bfaa580276ecdbad2048b818ed7",
         when="@3.4.3:3.4.4",
+    )
+
+    conflicts(
+        "%apple-clang@17.0.0", when="@:3.4.6", msg="Newer libffi required for Apple Clang 17.0.0"
     )
 
     @property

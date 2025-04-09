@@ -1,12 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class AoclDa(CMakePackage):
@@ -53,6 +51,8 @@ class AoclDa(CMakePackage):
         sha256="65be59e99d52816cb77d3e887cd4816870576b46748b53073658caa9ca07d127",
         when="@5.0",
     )
+
+    depends_on("c", type="build")
 
     depends_on("cmake@3.22:", type="build")
     for vers in ["5.0"]:

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -47,10 +46,10 @@ class Freetype(AutotoolsPackage, CMakePackage):
     version("2.6.1", sha256="0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014")
     version("2.5.3", sha256="41217f800d3f40d78ef4eb99d6a35fd85235b64f81bc56e4812d7672fca7b806")
 
-    depends_on("c", type="build")  # generated
-
     # CMake build does not install freetype-config, which is needed by most packages
     build_system("cmake", "autotools", default="autotools")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("bzip2")
     depends_on("libpng")

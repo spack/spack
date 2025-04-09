@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,10 +47,6 @@ class Pumi(CMakePackage):
     version("2.2.0", commit="8c7e6f13943893b2bc1ece15003e4869a0e9634f")  # tag 2.2.0
     version("2.1.0", commit="840fbf6ec49a63aeaa3945f11ddb224f6055ac9f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("int64", default=False, description="Enable 64bit mesh entity ids")
     variant("shared", default=False, description="Build shared libraries")
     variant("zoltan", default=False, description="Enable Zoltan Features")
@@ -82,11 +77,7 @@ class Pumi(CMakePackage):
     depends_on("zoltan+int64", when="+zoltan+int64")
     simbase = "+base"
     simkernels = simbase + "+parasolid+acis+discrete"
-    simfull = (
-        simkernels
-        + "+abstract+adv+advmodel\
-                            +import+paralleladapt+parallelmesh"
-    )
+    simfull = simkernels + "+abstract+adv+advmodel+import+paralleladapt+parallelmesh"
     depends_on("simmetrix-simmodsuite" + simbase, when="simmodsuite=base")
     depends_on("simmetrix-simmodsuite" + simkernels, when="simmodsuite=kernels")
     depends_on("simmetrix-simmodsuite" + simfull, when="simmodsuite=full")

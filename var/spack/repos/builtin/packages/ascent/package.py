@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,8 +8,6 @@ import shutil
 import socket
 import sys
 from os import environ as env
-
-import llnl.util.tty as tty
 
 from spack.package import *
 
@@ -28,6 +25,14 @@ def cmake_cache_entry(name, value, vtype=None):
     return 'set({0} "{1}" CACHE {2} "")\n\n'.format(name, value, vtype)
 
 
+def propagate_hip_arch(package, spec=""):
+    for hip_arch in ROCmPackage.amdgpu_targets:
+        depends_on(
+            f"{package} +rocm amdgpu_target={hip_arch}",
+            when=f"{spec} +rocm amdgpu_target={hip_arch}",
+        )
+
+
 def propagate_cuda_arch(package, spec=None):
     if not spec:
         spec = ""
@@ -38,7 +43,7 @@ def propagate_cuda_arch(package, spec=None):
         )
 
 
-class Ascent(CMakePackage, CudaPackage):
+class Ascent(CMakePackage, CudaPackage, ROCmPackage):
     """Ascent is an open source many-core capable lightweight in situ
     visualization and analysis infrastructure for multi-physics HPC
     simulations."""
@@ -89,10 +94,6 @@ class Ascent(CMakePackage, CudaPackage):
     version(
         "0.6.0", tag="v0.6.0", commit="9ade37b0a9ea495e45adb25cda7498c0bf9465c5", submodules=True
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     ###########################################################################
     # package variants
@@ -151,9 +152,21 @@ class Ascent(CMakePackage, CudaPackage):
     # https://github.com/Alpine-DAV/ascent/pull/1123
     patch("ascent-find-raja-pr1123.patch", when="@0.9.0")
 
+    # patch for fix typo in coord_type
+    # https://github.com/Alpine-DAV/ascent/pull/1408
+    patch(
+        "https://github.com/Alpine-DAV/ascent/pull/1408.patch?full_index=1",
+        when="@0.9.3 %oneapi@2025:",
+        sha256="7de7f51e57f3d743c39ad80d8783a4eb482be1def51eb2d3f9259246c661f164",
+    )
+
     ##########################################################################
     # package dependencies
     ###########################################################################
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14,3.18.2:", type="build")
 
@@ -199,6 +212,8 @@ class Ascent(CMakePackage, CudaPackage):
         depends_on("raja@2024.02.1:2024.02.99", when="@0.9.3:")
         depends_on("raja+openmp", when="+openmp")
         depends_on("raja~openmp", when="~openmp")
+        depends_on("raja+rocm", when="+rocm")
+        depends_on("raja~rocm", when="~rocm")
 
     with when("+umpire"):
         depends_on("umpire")
@@ -227,11 +242,13 @@ class Ascent(CMakePackage, CudaPackage):
         depends_on("vtk-m~openmp", when="@0.9.0: ~openmp")
         depends_on("vtk-m~cuda", when="@0.9.0: ~cuda")
         depends_on("vtk-m+cuda", when="@0.9.0: +cuda")
+        depends_on("vtk-m~rocm", when="@0.9.0: ~rocm")
         depends_on("vtk-m+fpic", when="@0.8.0:")
         depends_on("vtk-m~shared+fpic", when="@0.8.0: ~shared")
-        # Ascent defaults to C++11
-        depends_on("kokkos cxxstd=11", when="+vtkh ^vtk-m +kokkos")
-        depends_on("kokkos@3.7.02", when="@0.9.3: +vtkh ^vtk-m +kokkos")
+
+        with when("+rocm"):
+            depends_on("kokkos@3.7.02:+rocm")
+            depends_on("vtk-m+kokkos+rocm")
 
         #######################
         # VTK-h
@@ -251,6 +268,10 @@ class Ascent(CMakePackage, CudaPackage):
         depends_on("vtk-m@:1.7", when="@:0.8.0")
         depends_on("vtk-m+testlib", when="@:0.8.0 +test")
 
+    propagate_hip_arch("vtk-m", "+vtkh")
+    propagate_hip_arch("kokkos", "+vtkh")
+    propagate_hip_arch("raja", "+raja")
+    propagate_hip_arch("umpire", "+umpire")
     propagate_cuda_arch("vtk-h", "@:0.8.0 +vtkh")
 
     # mfem
@@ -316,6 +337,19 @@ class Ascent(CMakePackage, CudaPackage):
         "~fides", when="@0.9: +adios2", msg="Ascent >= 0.9 assumes FIDES when building ADIOS2"
     )
 
+    conflicts("+fortran", when="+rocm")
+    conflicts("+rocm", when="@:0.9.2")
+
+    @when("+rocm")
+    def patch(self):
+        # VTK-m external interface sets -std=c++14 (VTK-m 2.2), we need
+        # to override this since Kokkos requires -std=c++17.
+        with open("src/libs/vtkh/vtkm_filters/CMakeLists.txt", "a") as f:
+            f.write(
+                """target_compile_options(vtkm_compiled_filters PUBLIC
+                $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:HIP>>:-std=c++17>)"""
+            )
+
     def setup_build_environment(self, env):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
@@ -371,11 +405,11 @@ class Ascent(CMakePackage, CudaPackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-ascent-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-ascent-{spec.dag_hash()}.cmake"
         )
-        dest_dir = spec.prefix
-        host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
+        host_config_path = os.path.abspath(join_path(self.stage.path, host_config_path))
         return host_config_path
 
     @run_before("cmake")
@@ -471,6 +505,9 @@ class Ascent(CMakePackage, CudaPackage):
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
         cxxflags = cppflags + " ".join(spec.compiler_flags["cxxflags"])
+        if spec.satisfies("%oneapi@2025:"):
+            cxxflags += "-Wno-error=missing-template-arg-list-after-template-kw "
+            cxxflags += "-Wno-missing-template-arg-list-after-template-kw"
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
         fflags = " ".join(spec.compiler_flags["fflags"])
@@ -601,6 +638,43 @@ class Ascent(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "ON"))
         else:
             cfg.write(cmake_cache_entry("ENABLE_OPENMP", "OFF"))
+
+        #######################
+        # HIP
+        #######################
+
+        cfg.write("# HIP Support\n")
+
+        if spec.satisfies("+rocm"):
+            cfg.write(cmake_cache_entry("ENABLE_HIP", "ON"))
+            cfg.write(cmake_cache_entry("KOKKOS_DIR", spec["kokkos"].prefix))
+
+            amdgpu_archs = ";".join(spec.variants["amdgpu_target"].value)
+            cfg.write(cmake_cache_path("HIP_ROOT_DIR", f"{spec['hip'].prefix}"))
+            cfg.write(cmake_cache_path("HIP_CLANG_PATH", f"{spec['llvm-amdgpu'].prefix.bin}"))
+            cfg.write(cmake_cache_string("CMAKE_HIP_ARCHITECTURES", amdgpu_archs))
+
+            clang_bindir = spec["llvm-amdgpu"].prefix.bin
+            cfg.write(cmake_cache_path("CMAKE_C_COMPILER", f"{clang_bindir}/clang", force=True))
+            cfg.write(
+                cmake_cache_path("CMAKE_CXX_COMPILER", f"{clang_bindir}/clang++", force=True)
+            )
+
+            # This is needed for Kokkos
+            kokkos_cxxstd = spec["kokkos"].variants["cxxstd"].value
+            cfg.write(cmake_cache_entry("CMAKE_CXX_STANDARD", kokkos_cxxstd))
+            cfg.write(cmake_cache_entry("CMAKE_HIP_STANDARD", kokkos_cxxstd))
+            cfg.write(cmake_cache_entry("BLT_CXX_STD", f"c++{kokkos_cxxstd}"))
+
+            # Newer ROCm > 5 versions do not autoinclude hip runtime headers.
+            cfg.write(
+                cmake_cache_entry(
+                    "CMAKE_HIP_FLAGS", f"-include {spec['hip'].prefix.include}/hip/hip_runtime.h"
+                )
+            )
+
+        else:
+            cfg.write(cmake_cache_entry("ENABLE_HIP", "OFF"))
 
         #######################
         # VTK-h (and deps)

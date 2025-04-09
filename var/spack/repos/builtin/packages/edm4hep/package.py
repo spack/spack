@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -50,8 +49,6 @@ class Edm4hep(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     _cxxstd_values = (conditional("17", when="@:0.99.0"), conditional("20", when="@0.10:"))
     variant(
         "cxxstd",
@@ -68,6 +65,8 @@ class Edm4hep(CMakePackage):
         when="@0.99.2:",
     )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.23:", type="build", when="@0.10.3:")
     depends_on("python", type="build")
@@ -77,6 +76,7 @@ class Edm4hep(CMakePackage):
     depends_on("nlohmann-json@3.10.5:", when="@:0.99.1")
     depends_on("podio@1:", when="@0.99:")
     depends_on("podio@0.15:", when="@:0.10.5")
+    depends_on("podio@:1.1", when="@:0.99.0")
     for _std in _cxxstd_values:
         for _v in _std:
             depends_on(f"podio cxxstd={_v.value}", when=f"cxxstd={_v.value}")
@@ -91,13 +91,14 @@ class Edm4hep(CMakePackage):
     # Corresponding changes in EDM4hep landed with https://github.com/key4hep/EDM4hep/pull/314
     extends("python", when="@0.10.6:")
 
+    conflicts("%clang@:16", when="@0.99.1:", msg="Incomplete consteval support in clang")
+
     def cmake_args(self):
-        args = []
-        # C++ Standard
-        args.append(self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value))
-        args.append(self.define("BUILD_TESTING", self.run_tests))
-        if self.spec.satisfies("@0.99.2: +json"):
-            args.append(self.define_from_variant("EDM4HEP_WITH_JSON", "json"))
+        args = [
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
+            self.define("BUILD_TESTING", self.run_tests),
+            self.define_from_variant("EDM4HEP_WITH_JSON", "json"),
+        ]
         return args
 
     def setup_run_environment(self, env):

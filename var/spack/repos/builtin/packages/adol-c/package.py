@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,9 +29,6 @@ class AdolC(AutotoolsPackage):
     version("2.5.1", sha256="dedb93c3bb291366d799014b04b6d1ec63ca4e7216edf16167776c07961e3b4a")
     version("2.5.0", sha256="9d51c426d831884aac8f418be410c001eb62f3a11cb8f30c66af0b842edffb96")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "advanced_branching",
         default=False,
@@ -56,6 +52,9 @@ class AdolC(AutotoolsPackage):
     variant("boost", default=False, description="Enable boost")
 
     # Build dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("automake", type="build", when="@develop")
     depends_on("autoconf", type="build", when="@develop")
     depends_on("libtool", type="build", when="@develop")
@@ -153,3 +152,8 @@ class AdolC(AutotoolsPackage):
                     join_path(source_directory, "ADOL-C", "examples", "additional_examples")
                 ):
                     Executable("./checkpointing/checkpointing")()
+
+    @property
+    def libs(self):
+        """The name of the library differs from the package name => own libs handling."""
+        return find_libraries(["libadolc"], root=self.prefix, shared=True, recursive=True)

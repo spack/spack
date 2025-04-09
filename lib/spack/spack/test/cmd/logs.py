@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,6 +13,7 @@ import pytest
 
 import spack
 import spack.cmd.logs
+import spack.concretize
 import spack.main
 import spack.spec
 from spack.main import SpackCommand
@@ -35,7 +35,7 @@ def stdout_as_buffered_text_stream():
     original_stdout = sys.stdout
 
     with tempfile.TemporaryFile(mode="w+b") as tf:
-        sys.stdout = TextIOWrapper(tf)
+        sys.stdout = TextIOWrapper(tf, encoding="utf-8")
         try:
             yield tf
         finally:
@@ -54,19 +54,19 @@ def disable_capture(capfd):
 
 
 def test_logs_cmd_errors(install_mockery, mock_fetch, mock_archive, mock_packages):
-    spec = spack.spec.Spec("libelf").concretized()
+    spec = spack.concretize.concretize_one("pkg-c")
     assert not spec.installed
 
     with pytest.raises(spack.main.SpackCommandError, match="is not installed or staged"):
-        logs("libelf")
+        logs("pkg-c")
 
     with pytest.raises(spack.main.SpackCommandError, match="Too many specs"):
-        logs("libelf mpi")
+        logs("pkg-c mpi")
 
-    install("libelf")
+    install("pkg-c")
     os.remove(spec.package.install_log_path)
     with pytest.raises(spack.main.SpackCommandError, match="No logs are available"):
-        logs("libelf")
+        logs("pkg-c")
 
 
 def _write_string_to_path(string, path):
@@ -83,7 +83,7 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
     decompress them.
     """
     cmdline_spec = spack.spec.Spec("libelf")
-    concrete_spec = cmdline_spec.concretized()
+    concrete_spec = spack.concretize.concretize_one(cmdline_spec)
 
     # Sanity check, make sure this test is checking what we want: to
     # start with
@@ -98,7 +98,7 @@ def test_dump_logs(install_mockery, mock_fetch, mock_archive, mock_packages, dis
             spack.cmd.logs._logs(cmdline_spec, concrete_spec)
             assert _rewind_collect_and_decode(redirected_stdout) == stage_log_content
 
-    install("libelf")
+    install("--fake", "libelf")
 
     # Sanity check: make sure a path is recorded, regardless of whether
     # it exists (if it does exist, we will overwrite it with content

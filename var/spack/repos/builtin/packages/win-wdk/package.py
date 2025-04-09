@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -117,10 +116,15 @@ class WinWdk(Package):
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
-        if len(installer) > 1:
+        fetch_size = len(installer)
+        if fetch_size > 1:
             raise RuntimeError(
-                "Fetch has failed, unable to determine installer path from:\n%s"
-                % "\n".join(installer)
+                "Fetch has failed, ambiguous behavior, fetch has pulled too much. "
+                "Unable to determine installer path from:\n%s" % "\n".join(installer)
+            )
+        elif fetch_size < 1:
+            raise RuntimeError(
+                "Fetch has failed, nothing was fetched from:\n%s" % "\n".join(installer)
             )
         installer = installer[0]
         os.rename(installer, os.path.join(self.stage.source_path, "wdksetup.exe"))

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,9 +37,6 @@ class Mumps(Package):
     #         url='http://pkgs.fedoraproject.org/repo/pkgs/MUMPS/MUMPS_5.0.1.tar.gz/md5/b477573fdcc87babe861f62316833db0/MUMPS_5.0.1.tar.gz')
     version("5.0.1", sha256="50355b2e67873e2239b4998a46f2bbf83f70cdad6517730ab287ae3aae9340a0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Compile MUMPS with MPI support")
     variant("scotch", default=False, description="Activate Scotch as a possible ordering library")
     variant(
@@ -66,6 +62,9 @@ class Mumps(Package):
         + "(warning: might not be supported by all multithread BLAS)",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("scotch + esmumps", when="~ptscotch+scotch")
     depends_on("scotch + esmumps ~ metis + mpi", when="+ptscotch")
     depends_on("metis@5:", when="+metis")
@@ -74,6 +73,7 @@ class Mumps(Package):
     depends_on("lapack")
     depends_on("scalapack", when="+mpi")
     depends_on("mpi", when="+mpi")
+    depends_on("gmake", type="build")
 
     patch("examples.patch", when="@5.1.1%clang^spectrum-mpi")
     patch("gfortran8.patch", when="@5.1.2")
@@ -236,7 +236,9 @@ class Mumps(Package):
         # As of version 5.2.0, MUMPS is able to take advantage
         # of the GEMMT BLAS extension. MKL and amdblis are the only
         # known BLAS implementation supported.
-        if self.spec["blas"].name in INTEL_MATH_LIBRARIES and self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("^[virtuals=blas] intel-oneapi-mkl") and self.spec.satisfies(
+            "@5.2.0:"
+        ):
             optf.append("-DGEMMT_AVAILABLE")
 
         if "@5.2.0: ^amdblis@3.0:" in self.spec:

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Set, unset or modify environment variables."""
@@ -8,7 +7,6 @@ import contextlib
 import inspect
 import json
 import os
-import os.path
 import pickle
 import re
 import shlex
@@ -185,7 +183,7 @@ def dump_environment(path: Path, environment: Optional[MutableMapping[str, str]]
     hidden_vars = {"PS1", "PWD", "OLDPWD", "TERM_SESSION_ID"}
 
     file_descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(file_descriptor, "w") as env_file:
+    with os.fdopen(file_descriptor, "w", encoding="utf-8") as env_file:
         for var, val in sorted(use_env.items()):
             env_file.write(
                 "".join(
@@ -365,6 +363,30 @@ class PrependPath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
+class RemoveFirstPath(NameValueModifier):
+    def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"RemoveFirstPath: {self.name}-{str(self.value)}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator)
+        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
+        env[self.name] = self.separator.join(directories)
+
+
+class RemoveLastPath(NameValueModifier):
+    def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"RemoveLastPath: {self.name}-{str(self.value)}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator)[::-1]
+        directories = [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        val = path_to_os_path(os.path.normpath(self.value)).pop()
+        if val in directories:
+            directories.remove(val)
+        env[self.name] = self.separator.join(directories[::-1])
+
+
 class RemovePath(NameValueModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{str(self.value)}", level=3)
@@ -536,6 +558,30 @@ class EnvironmentModifications:
         self.env_modifications.append(item)
 
     @system_env_normalize
+    def remove_first_path(self, name: str, path: str, separator: str = os.pathsep):
+        """Stores a request to remove first instance of path from a list of paths.
+
+        Args:
+            name: name of the environment variable
+            path: path to be removed
+            separator: separator for the paths (default: os.pathsep)
+        """
+        item = RemoveFirstPath(name, path, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    @system_env_normalize
+    def remove_last_path(self, name: str, path: str, separator: str = os.pathsep):
+        """Stores a request to remove last instance of path from a list of paths.
+
+        Args:
+            name: name of the environment variable
+            path: path to be removed
+            separator: separator for the paths (default: os.pathsep)
+        """
+        item = RemoveLastPath(name, path, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    @system_env_normalize
     def remove_path(self, name: str, path: str, separator: str = os.pathsep):
         """Stores a request to remove a path from a list of paths.
 
@@ -615,9 +661,9 @@ class EnvironmentModifications:
                 tty.debug("Reversing `Set` environment operation may lose the original value")
                 rev.unset(envmod.name)
             elif isinstance(envmod, AppendPath):
-                rev.remove_path(envmod.name, envmod.value)
+                rev.remove_last_path(envmod.name, envmod.value)
             elif isinstance(envmod, PrependPath):
-                rev.remove_path(envmod.name, envmod.value)
+                rev.remove_first_path(envmod.name, envmod.value)
             elif isinstance(envmod, SetPath):
                 tty.debug("Reversing `SetPath` environment operation may lose the original value")
                 rev.unset(envmod.name)

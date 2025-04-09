@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,10 +22,10 @@ class Ldc(CMakePackage):
 
     version("1.3.0", sha256="efe31a639bcb44e1f5b752da21713376d9410a01279fecc8aab8572065a3050b")
 
+    variant("shared", default=True, description="Build runtime and tooling as shared libs")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("shared", default=True, description="Build runtime and tooling as shared libs")
 
     depends_on("llvm@3.9:")
     depends_on("zlib-api")

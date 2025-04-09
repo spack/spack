@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.build_systems.cmake
@@ -38,8 +37,6 @@ class Libtree(MakefilePackage, CMakePackage):
     version("1.0.4", sha256="b15a54b6f388b8bd8636e288fcb581029f1e65353660387b0096a554ad8e9e45")
     version("1.0.3", sha256="67ce886c191d50959a5727246cdb04af38872cd811c9ed4e3822f77a8f40b20b")
 
-    depends_on("c", type="build")  # generated
-
     build_system(
         conditional("cmake", when="@:2"), conditional("makefile", when="@3:"), default="makefile"
     )
@@ -53,6 +50,8 @@ class Libtree(MakefilePackage, CMakePackage):
             )
 
         return "https://github.com/haampie/libtree/archive/refs/tags/v{0}.tar.gz".format(version)
+
+    depends_on("c", type="build")  # generated
 
     # Version 2.x and earlier (CMake)
     with when("build_system=cmake"):

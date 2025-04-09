@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,8 +25,6 @@ class Cbtf(CMakePackage):
     version("1.9.4", branch="1.9.4")
     version("1.9.3", branch="1.9.3")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
     )
@@ -38,6 +35,8 @@ class Cbtf(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo"),
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.0.2:", type="build")
 

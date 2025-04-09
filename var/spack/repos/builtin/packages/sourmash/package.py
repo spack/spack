@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,7 +28,7 @@ class Sourmash(PythonPackage):
     depends_on("py-deprecation@2.0.6:", type=("build", "run"))
     depends_on("py-cachetools@4:5", type=("build", "run"))
     depends_on("py-bitstring@3.1.9:4", type=("build", "run"))
-    depends_on("py-importlib_metadata@3.6:", when="^python@:3.9", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", when="^python@:3.9", type=("build", "run"))
 
     def install(self, spec, prefix):
         # build rust libs

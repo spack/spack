@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,21 +18,22 @@ class Molgw(MakefilePackage):
     """
 
     homepage = "https://github.com/molgw/molgw"
-    url = "https://github.com/molgw/molgw/archive/v3.3.tar.gz"
+    url = "https://github.com/molgw/molgw/archive/v3.4.tar.gz"
     git = "https://github.com/molgw/molgw.git"
 
     maintainers("bruneval")
 
     license("GPL-3.0-only")
 
+    version("3.4", sha256="b7ce298c660861713c25873d46e09713cad80b3927110a6bf747c0114b387e6b")
     version("3.3", sha256="ff1c8eb736049e52608d4554a2d435ee9d15e47c4a9934d41712962748929e81")
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("scalapack", default=False, description="Build with ScaLAPACK support")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")
@@ -86,12 +86,11 @@ class Molgw(MakefilePackage):
         flags["PREFIX"] = prefix
 
         # Set LAPACK and SCALAPACK
-        if (
-            spec["scalapack"].name in INTEL_MATH_LIBRARIES
-            or spec["lapack"].name in INTEL_MATH_LIBRARIES
-            or spec["blas"].name in INTEL_MATH_LIBRARIES
+        if spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl"
         ):
             flags["LAPACK"] = self._get_mkl_ld_flags(spec)
+            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
         else:
             flags["LAPACK"] = spec["lapack"].libs.ld_flags + " " + spec["blas"].libs.ld_flags
             if "+scalapack" in spec:
@@ -104,8 +103,6 @@ class Molgw(MakefilePackage):
             flags["FC"] = self.compiler.fc
 
         # Set FCFLAGS
-        if self.compiler.flags.get("fflags") is not None:
-            flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags")) + " "
         if "+openmp" in spec:
             flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0} ".format(self.compiler.openmp_flag)
         if "%intel" in spec or "%oneapi" in spec:
@@ -116,13 +113,6 @@ class Molgw(MakefilePackage):
         # Set CPPFLAGS
         if "+scalapack" in spec:
             flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_SCALAPACK -DHAVE_MPI "
-
-        if (
-            spec["lapack"].name in INTEL_MATH_LIBRARIES
-            or spec["scalapack"].name in INTEL_MATH_LIBRARIES
-            or spec["blas"].name in INTEL_MATH_LIBRARIES
-        ):
-            flags["CPPFLAGS"] = flags.get("CPPFLAGS", "") + " -DHAVE_MKL "
 
         # Write configuration file
         with open("my_machine.arch", "w") as f:

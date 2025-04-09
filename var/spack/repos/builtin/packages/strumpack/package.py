@@ -1,11 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
-import llnl.util.tty as tty
 
 from spack.package import *
 from spack.util.environment import set_env
@@ -56,10 +53,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     version("3.2.0", sha256="34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1")
     version("3.1.1", sha256="c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
     variant("mpi", default=True, description="Use MPI")
     variant(
@@ -74,6 +67,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("task_timers", default=False, description="Build with timers for internal routines")
     variant("slate", default=True, description="Build with SLATE support")
     variant("magma", default=False, description="Build with MAGMA support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.11:", when="@:6.2.9", type="build")
     depends_on("cmake@3.17:", when="@6.3.0:", type="build")
@@ -159,7 +156,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
 
         # Workaround for linking issue on Mac:
-        if spec.satisfies("%apple-clang +mpi"):
+        if spec.satisfies("+mpi %apple-clang"):
             args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
 
         if "+cuda" in spec:

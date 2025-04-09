@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,15 +21,15 @@ class Liggghts(MakefilePackage):
 
     version("3.8.0", sha256="9cb2e6596f584463ac2f80e3ff7b9588b7e3638c44324635b6329df87b90ab03")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI support")
     variant("jpeg", default=True, description="Enable JPEG support")
     variant("gzip", default=True, description="Enable GZIP for some input and output files")
     variant("debug", default=False, description="Builds a debug version of the executable")
     variant("profile", default=False, description="Generate profiling code")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("vtk@6.1.0:8.2.0")
     depends_on("mpi", when="+mpi")

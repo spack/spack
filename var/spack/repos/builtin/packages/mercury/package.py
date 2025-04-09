@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -30,9 +29,6 @@ class Mercury(CMakePackage):
     version("1.0.0", sha256="fb0e44d13f4652f53e21040435f91d452bc2b629b6e98dcf5292cd0bece899d4")
     version("0.9.0", sha256="40868e141cac035213fe79400f8926823fb1f5a0651fd7027cbe162b063843ef")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("bmi", default=False, description="Use BMI plugin")
     variant("mpi", default=False, description="Use MPI plugin")
     variant("ofi", default=True, when="@1.0.0:", description="Use OFI libfabric plugin")
@@ -60,12 +56,16 @@ class Mercury(CMakePackage):
         "hwloc", default=False, when="@2.2.0:", description="Use hwloc to retrieve NIC information"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@2.8.12.2:", type="build")
     depends_on("bmi", when="+bmi")
     depends_on("mpi", when="+mpi")
     with when("+ofi"):
         depends_on("libfabric@1.5:", when="@:2.0.1")
         depends_on("libfabric@1.7:", when="@2.1.0:")
+        conflicts("libfabric@2:", when="@:2.4.0")
     # openpa dependency is removed in 2.1.0
     depends_on("openpa@1.0.3:", when="@:2.0.1%gcc@:4.8")
     # We only need Boost preprocessor headers

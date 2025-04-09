@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Enumerations used throughout Spack"""
@@ -13,3 +12,13 @@ class InstallRecordStatus(enum.Flag):
     DEPRECATED = enum.auto()
     MISSING = enum.auto()
     ANY = INSTALLED | DEPRECATED | MISSING
+
+
+class ConfigScopePriority(enum.IntEnum):
+    """Priorities of the different kind of config scopes used by Spack"""
+
+    BUILTIN = 0
+    CONFIG_FILES = 1
+    CUSTOM = 2
+    ENVIRONMENT = 3
+    COMMAND_LINE = 4

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,9 +13,9 @@ class Libxsmm(MakefilePackage):
     and sparse matrix operations,
     and deep learning primitives."""
 
-    homepage = "https://github.com/hfp/libxsmm"
-    url = "https://github.com/hfp/libxsmm/archive/1.17.tar.gz"
-    git = "https://github.com/hfp/libxsmm.git"
+    homepage = "https://github.com/libxsmm/libxsmm"
+    url = "https://github.com/libxsmm/libxsmm/archive/1.17.tar.gz"
+    git = "https://github.com/libxsmm/libxsmm.git"
 
     maintainers("hfp")
 
@@ -67,10 +66,6 @@ class Libxsmm(MakefilePackage):
     version("1.4.1", sha256="c19be118694c9b4e9a61ef4205b1e1a7e0c400c07f9bce65ae430d2dc2be5fe1")
     version("1.4", sha256="cf483a370d802bd8800c06a12d14d2b4406a745c8a0b2c8722ccc992d0cd72dd")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=False, description="With shared libraries (and static libraries).")
     variant("debug", default=False, description="With call-trace (LIBXSMM_TRACE); unoptimized.")
     variant(
@@ -90,6 +85,11 @@ class Libxsmm(MakefilePackage):
         when="@1.17:",
         description="Max. JIT buffer size increased to 256 KiB",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("python", type="build")
 
     # A recent `as` is needed to compile libxmss until version 1.17

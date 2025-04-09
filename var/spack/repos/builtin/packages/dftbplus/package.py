@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -41,10 +40,6 @@ class Dftbplus(CMakePackage, MakefilePackage):
         deprecated=True,
         sha256="78f45ef0571c78cf732a5493d32830455a832fa05ebcad43098895e46ad8d220",
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant(
         "api",
@@ -133,6 +128,10 @@ class Dftbplus(CMakePackage, MakefilePackage):
         when="@:19.1",
         description="Use DftD3 dispersion library " "(if you need this dispersion model)",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.16:", type="build", when="@20.1:")
     depends_on("ninja@1.10", type="build", when="@20.1:")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,6 +22,7 @@ class Bufr(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA", "jbathegit")
 
     version("develop", branch="develop")
+    version("12.2.0", sha256="a0dad13b905f3e0311e2b50df47418660b47442dfc3843232712044b47f26a71")
     version("12.1.0", sha256="b5eae61b50d4132b2933b6e6dfc607e5392727cdc4f46ec7a94a19109d91dcf3")
     version("12.0.1", sha256="525f26238dba6511a453fc71cecc05f59e4800a603de2abbbbfb8cbb5adf5708")
     version("12.0.0", sha256="d01c02ea8e100e51fd150ff1c4a1192ca54538474acb1b7f7a36e8aeab76ee75")
@@ -31,9 +31,6 @@ class Bufr(CMakePackage):
     version("11.6.0", sha256="af4c04e0b394aa9b5f411ec5c8055888619c724768b3094727e8bb7d3ea34a54")
     version("11.5.0", sha256="d154839e29ef1fe82e58cf20232e9f8a4f0610f0e8b6a394b7ca052e58f97f43")
     version("11.4.0", sha256="946482405e675b99e8e0c221d137768f246076f5e9ba92eed6cae47fb68b7a26")
-
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
 
     # Patch to not add "-c" to ranlib flags when using llvm-ranlib on Apple systems
     patch("cmakelists-apple-llvm-ranlib.patch", when="@11.5.0:11.6.0")
@@ -49,6 +46,9 @@ class Bufr(CMakePackage):
 
     extends("python", when="+python")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("python@3:", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-numpy", type=("build", "run"), when="+python")
@@ -56,6 +56,24 @@ class Bufr(CMakePackage):
     depends_on("py-wheel", type="build", when="+python")
 
     conflicts("%oneapi@:2024.1", msg="Requires oneapi 2024.2 or later")
+
+    resource(
+        name="testfiles",
+        url="https://ftp.emc.ncep.noaa.gov/static_files/public/bufr-12.2.0.tgz",
+        sha256="0ebc27f6260dc964d38c3966fb583e3ef68279a9879fc28cd4d923e2fc2ea42c",
+        when="@12.2:",
+        expand=False,
+        placement="testfiles",
+    )
+
+    resource(
+        name="testfiles",
+        url="https://ftp.emc.ncep.noaa.gov/static_files/public/bufr-12.1.0.tgz",
+        sha256="28024963cc855b85303def23f2c2c423d21545322c1eff54416229062fed013a",
+        when="@12.1",
+        expand=False,
+        placement="testfiles",
+    )
 
     def url_for_version(self, version):
         pre = "bufr_" if version < Version("12.0.1") else ""
@@ -75,10 +93,8 @@ class Bufr(CMakePackage):
             self.define("BUILD_TESTS", self.run_tests),
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("BUILD_UTILS", "utils"),
+            self.define("TEST_FILE_DIR", join_path(self.stage.source_path, "testfiles")),
         ]
-
-        if not self.spec.satisfies("test_files=none"):
-            args.append(self.define_from_variant("TEST_FILE_DIR", "test_files"))
 
         return args
 
@@ -127,6 +143,10 @@ class Bufr(CMakePackage):
             suffixes += ["8", "d"]
         for suffix in suffixes:
             self._setup_bufr_environment(env, suffix)
+
+    @on_package_attributes(run_tests=True)
+    def setup_build_environment(self, env):
+        env.append_path("LD_LIBRARY_PATH", join_path(self.build_directory, "src"))
 
     def check(self):
         with working_dir(self.build_directory):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,9 @@ class Lorene(MakefilePackage):
         default=True,
         description="Build Bin_star solver for binary neutron star systems",
     )
+
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("blas")
     depends_on("fftw @3:", when="+fftw")

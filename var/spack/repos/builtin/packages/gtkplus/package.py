@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -52,10 +51,10 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
         deprecated=True,
     )
 
+    variant("cups", default=False, description="enable cups support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
     depends_on("meson@0.48.0:", when="build_system=meson", type="build")
@@ -88,6 +87,8 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
     depends_on("gettext", when="@3:")
     depends_on("cups", when="+cups")
     depends_on("libxfixes", when="@:2")
+
+    conflicts("%gcc@14:", when="@:3.24.35")
 
     patch("no-demos.patch", when="@2.0:2")
 

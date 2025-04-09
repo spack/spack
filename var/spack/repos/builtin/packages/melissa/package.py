@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,11 +30,11 @@ class Melissa(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("no_mpi_api", default=False, description="Enable the deprecated no-MPI API")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.7.2:", type="build")
     depends_on("libzmq@4.1.5:")

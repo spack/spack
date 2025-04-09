@@ -1,13 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import os.path
 import re
 import sys
-
-import llnl.util.tty as tty
 
 from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.package import *
@@ -34,10 +30,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
     version("pragma-clang-loop", branch="sollve/pragma-clang-loop")
     version("pragma-omp-tile", branch="sollve/pragma-omp-tile")
     version("13.0.0", branch="llvm.org/llvmorg-13.0.0")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
@@ -110,6 +102,10 @@ class LlvmDoe(CMakePackage, CudaPackage):
     extends("python", when="+python")
 
     # Build dependency
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
     depends_on("python", when="~python", type="build")

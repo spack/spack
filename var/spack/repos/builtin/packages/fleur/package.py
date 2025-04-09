@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,14 +16,11 @@ class Fleur(Package):
     license("MIT")
 
     version("develop", branch="develop")
+    version("7.2", tag="MaX-R7.2", commit="447eed3b7ec3de5fcdfbd232cd1eda4caefb51d3")
     version("5.1", tag="MaX-R5.1", commit="a482abd9511b16412c2222e2ac1b1a303acd454b")
     version("5.0", tag="MaX-R5", commit="f2df362c3dad6ef39938807ea14e4ec4cb677723")
     version("4.0", tag="MaX-R4", commit="ea0db7877451e6240124e960c5546318c9ab3953")
     version("3.1", tag="MaX-R3.1", commit="f6288a0699604ad9e11efbfcde824b96db429404")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("hdf5", default=False, description="Enable HDF5 support")
@@ -48,13 +44,17 @@ class Fleur(Package):
         values=("Debug", "Release", "RelWithDebInfo"),
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake", type="build")
     depends_on("python@3:", type="build")
     depends_on("blas")
     depends_on("lapack")
     depends_on("libxml2")
     depends_on("mpi", when="+mpi")
-    depends_on("intel-mkl", when="fft=mkl")
+    depends_on("intel-oneapi-mkl", when="fft=mkl")
     depends_on("fftw-api", when="fft=fftw")
     depends_on("scalapack", when="+scalapack")
     depends_on("libxc", when="+external_libxc")
@@ -65,6 +65,7 @@ class Fleur(Package):
     depends_on("spfft+fortran+openmp", when="+spfft+openmp")
     depends_on("elpa~openmp", when="+elpa~openmp")
     depends_on("elpa+openmp", when="+elpa+openmp")
+    depends_on("gmake", type="build")
 
     conflicts("%intel@:16.0.4", msg="ifort version <16.0 will most probably not work correctly")
     conflicts("%gcc@:6.3.0", msg="gfortran is known to work with versions newer than v6.3")
@@ -108,9 +109,9 @@ class Fleur(Package):
         options["-includedir"].append(join_path(spec["libxml2"].prefix.include, "libxml2"))
 
         if spec.satisfies("fft=mkl"):
-            options["-link"].append(spec["intel-mkl"].libs.link_flags)
-            options["-libdir"].append(spec["intel-mkl"].prefix.lib)
-            options["-includedir"].append(spec["intel-mkl"].prefix.include)
+            options["-link"].append(spec["intel-oneapi-mkl"].libs.link_flags)
+            options["-libdir"].append(spec["intel-oneapi-mkl"].prefix.lib)
+            options["-includedir"].append(spec["intel-oneapi-mkl"].prefix.include)
         if spec.satisfies("fft=fftw"):
             options["-link"].append(spec["fftw-api"].libs.link_flags)
             options["-libdir"].append(spec["fftw-api"].prefix.lib)

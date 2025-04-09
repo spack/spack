@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,21 +23,20 @@ class LlvmOpenmpOmpt(CMakePackage):
     # align-to-tr-rebased branch
     version("3.9.2b", commit="982a08bcf3df9fb5afc04ac3bada47f19cc4e3d3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # variant for building llvm-openmp-ompt as a stand alone library
     variant(
         "standalone",
         default=False,
-        description="Build llvm openmpi ompt library as a \
-                         stand alone entity.",
+        description="Build llvm openmpi ompt library as a stand alone entity.",
     )
     # variant for building libomptarget
     variant(
         "libomptarget", default=True, description="Enable building libomptarget for offloading"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@2.8:", type="build")
     depends_on("llvm", when="~standalone")

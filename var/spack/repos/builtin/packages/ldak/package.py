@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,18 +24,19 @@ class Ldak(Package):
 
     variant("glpk", default=False, description="Use glpk instead of vendored qsopt")
 
+    depends_on("c", type="build")
+
     depends_on("zlib-api")
     depends_on("blas")
     depends_on("lapack")
     depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
-    depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
     depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=blas] intel-oneapi-mkl")
     depends_on("glpk", when="+glpk")
 
     requires("target=x86_64:", when="~glpk", msg="bundled qsopt is only for x86_64")
     requires(
-        "^openblas",
-        *[f"^{intel_pkg}" for intel_pkg in INTEL_MATH_LIBRARIES],
+        "^[virtuals=lapack] openblas",
+        "^[virtuals=lapack] intel-oneapi-mkl",
         policy="one_of",
         msg="Only mkl or openblas are supported for blas/lapack with ldak",
     )

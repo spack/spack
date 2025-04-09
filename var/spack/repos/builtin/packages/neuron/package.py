@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,10 +37,6 @@ class Neuron(CMakePackage):
         "7.8.2", tag="7.8.2", commit="09b151ecb2b3984335c265932dc6ba3e4fcb318e", submodules="True"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("backtrace", default=False, description="Enable printing backtraces on failure")
     variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-unit", default=False, description="Enable legacy units")
@@ -68,6 +63,10 @@ class Neuron(CMakePackage):
     variant("caliper", default=False, description="Add Caliper support")
 
     generator("ninja")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("bison@3:", type="build")
     depends_on("flex@2.6:", type="build")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,8 +33,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
         deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -119,6 +116,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")
@@ -205,7 +205,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Note that for Power systems we want the environment to add +powerpc
     # When using a GCC compiler
-    depends_on("opencv@4.1.0: +powerpc", when="+vision %gcc arch=ppc64le:")
+    depends_on("opencv@4.1.0: +powerpc", when="+vision arch=ppc64le: %gcc")
 
     depends_on("cnpy", when="+numpy")
     depends_on("nccl", when="@0.94:0.98.2 +cuda")
@@ -411,7 +411,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # a shell, which expects :
 
         # Add support for OpenMP with external (Brew) clang
-        if spec.satisfies("%clang platform=darwin"):
+        if spec.satisfies("platform=darwin %clang"):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)

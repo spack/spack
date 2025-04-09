@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,9 +33,6 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("xsdkflags", default=False, description="enable XSDK defaults for Tasmanian")
 
     variant("openmp", default=False, description="add OpenMP support to Tasmanian")
@@ -61,6 +57,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
         values=("Debug", "Release"),
     )
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.10:", type=("build", "run"), when="@7.0:")
     depends_on("cmake@3.22:", type=("build", "run"), when="@8.0:")

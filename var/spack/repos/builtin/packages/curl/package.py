@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,9 +30,14 @@ class Curl(NMakePackage, AutotoolsPackage):
 
     license("curl")
 
-    version("8.10.1", sha256="3763cd97aae41dcf41950d23e87ae23b2edb2ce3a5b0cf678af058c391b6ae31")
+    version("8.11.1", sha256="e9773ad1dfa21aedbfe8e1ef24c9478fa780b1b3d4f763c98dd04629b5e43485")
 
     # Deprecated versions due to CVEs
+    version(
+        "8.10.1",
+        sha256="3763cd97aae41dcf41950d23e87ae23b2edb2ce3a5b0cf678af058c391b6ae31",
+        deprecated=True,
+    )
     version(
         "8.8.0",
         sha256="40d3792d38cfa244d8f692974a567e9a5f3387c547579f1124e95ea2a1020d0d",
@@ -76,9 +80,6 @@ class Curl(NMakePackage, AutotoolsPackage):
         sha256="9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8",
         deprecated=True,
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     default_tls = "openssl"
     if sys.platform == "darwin":
@@ -123,6 +124,9 @@ class Curl(NMakePackage, AutotoolsPackage):
     )
 
     conflicts("platform=linux", when="tls=secure_transport", msg="Only supported on macOS")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build", when="platform=darwin")
     depends_on("pkgconfig", type="build", when="platform=linux")
@@ -222,7 +226,11 @@ class AutotoolsBuilder(AutotoolsBuilder):
             "--without-libgsasl",
             "--without-libpsl",
             "--without-zstd",
+            "--disable-manual",
         ]
+
+        if spec.satisfies("@8.7:"):
+            args.append("--disable-docs")
 
         args += self.enable_or_disable("libs")
 

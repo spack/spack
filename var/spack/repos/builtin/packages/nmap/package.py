@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,13 +32,13 @@ class Nmap(AutotoolsPackage):
     version("6.40", sha256="491f77d8b3fb3bb38ba4e3850011fe6fb43bbe197f9382b88cb59fa4e8f7a401")
     version("6.01", sha256="77f6635b677d28b546cbef97e4ead6c2d4a5aebcaa108fe3a3c135db6448617a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("liblua", default=True, description="Enable lua (required by all of NSE)")
     variant("ncat", default=True, description="Enable ncat")
     variant("nping", default=True, description="Enable nping")
     variant("nmap-update", default=False, description="Enable nmap-update")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Release notes for 7.3: "Ensure Nmap builds with OpenSSL 3.0 using no
     # deprecated API functions."

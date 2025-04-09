@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -52,8 +51,6 @@ class Squashfs(MakefilePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("gzip", default=True, description="Enable gzip compression support")
     variant("lz4", default=False, description="Enable LZ4 compression support")
     variant("lzo", default=False, description="Enable LZO compression support")
@@ -88,6 +85,8 @@ class Squashfs(MakefilePackage):
         "squashfs~zstd default_compression=zstd",
         msg="Cannot set default compression to missing algorithm",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("zlib-api", when="+gzip")
     depends_on("lz4", when="+lz4")

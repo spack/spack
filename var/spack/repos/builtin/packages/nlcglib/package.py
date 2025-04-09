@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,8 +22,6 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     version("1.0b", sha256="086c46f06a117f267cbdf1df4ad42a8512689a9610885763f463469fb15e82dc")
     version("0.9", sha256="8d5bc6b85ee714fb3d6480f767e7f43e5e7d569116cf60e48f533a7f50a37a08")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("openmp", default=True, description="Use OpenMP")
     variant("tests", default=False, description="Build tests")
     variant(
@@ -41,9 +38,18 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
             description="Enable GPU direct. Required to support distributed wave-functions.",
         )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.21:", type="build")
     depends_on("mpi")
     depends_on("lapack")
+
+    requires(
+        "^[virtuals=lapack] openblas",
+        "^[virtuals=lapack] intel-oneapi-mkl",
+        policy="one_of",
+        msg="Only mkl or openblas are supported for blas/lapack with ldak",
+    )
 
     depends_on("kokkos~cuda~rocm", when="~cuda~rocm")
     depends_on("kokkos+openmp", when="+openmp")
@@ -82,13 +88,10 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("USE_CUDA", "cuda"),
         ]
 
-        if self.spec["blas"].name in ["intel-mkl", "intel-parallel-studio"]:
-            options += [self.define("LAPACK_VENDOR", "MKL")]
-        elif self.spec["blas"].name in ["intel-oneapi-mkl"]:
-            options += [self.define("LAPACK_VENDOR", "MKLONEAPI")]
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             mkl_mapper = {
                 "threading": {"none": "sequential", "openmp": "gnu_thread", "tbb": "tbb_thread"},
-                "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                "mpi": {"intel-oneapi-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
             }
 
             mkl_threads = mkl_mapper["threading"][
@@ -103,23 +106,20 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
 
             options.extend(
                 [
+                    self.define("LAPACK_VENDOR", "MKLONEAPI"),
                     self.define("MKL_INTERFACE", "lp64"),
                     self.define("MKL_THREADING", mkl_threads),
                     self.define("MKL_MPI", mkl_mpi),
                 ]
             )
 
-        elif self.spec["blas"].name in ["openblas"]:
-            options += [self.define("LAPACK_VENDOR", "OpenBLAS")]
         else:
-            raise Exception("blas/lapack must be either openblas or mkl.")
+            options.append(self.define("LAPACK_VENDOR", "OpenBLAS"))
 
         if "+cuda%gcc" in self.spec:
-            options += [
-                self.define(
-                    "CMAKE_CXX_COMPILER", "{0}".format(self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-                )
-            ]
+            options.append(
+                self.define("CMAKE_CXX_COMPILER", self["kokkos-nvcc-wrapper"].kokkos_cxx)
+            )
 
         if "+cuda" in self.spec:
             cuda_archs = self.spec.variants["cuda_arch"].value
@@ -127,19 +127,23 @@ class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
                 cuda_flags = " ".join(
                     ["-gencode arch=compute_{0},code=sm_{0}".format(x) for x in cuda_archs]
                 )
-                options += [self.define("CMAKE_CUDA_FLAGS", cuda_flags)]
+                options.append(self.define("CMAKE_CUDA_FLAGS", cuda_flags))
             else:
-                options += [self.define("CMAKE_CUDA_ARCHITECTURES", cuda_archs)]
+                options.append(self.define("CMAKE_CUDA_ARCHITECTURES", cuda_archs))
 
         if "^cuda+allow-unsupported-compilers" in self.spec:
-            options += [self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler")]
+            options.append(self.define("CMAKE_CUDA_FLAGS", "--allow-unsupported-compiler"))
 
         if "+rocm" in self.spec:
-            options.append(self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc))
             archs = ",".join(self.spec.variants["amdgpu_target"].value)
-            options.append("-DHIP_HCC_FLAGS=--amdgpu-target={0}".format(archs))
-            options.append(
-                "-DCMAKE_CXX_FLAGS=--amdgpu-target={0} --offload-arch={0}".format(archs)
+            options.extend(
+                [
+                    self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc),
+                    self.define("HIP_HCC_FLAGS", f"--amdgpu-target={archs}"),
+                    self.define(
+                        "CMAKE_CXX_FLAGS", f"--amdgpu-target={archs} --offload-arch={archs}"
+                    ),
+                ]
             )
 
         return options

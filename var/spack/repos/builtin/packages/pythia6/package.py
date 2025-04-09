@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import numbers
@@ -41,8 +40,6 @@ class Pythia6(CMakePackage):
         sha256="01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020",
     )
 
-    depends_on("fortran", type="build")  # generated
-
     # Root's TPythia6 interface requires extra sources to be built into
     # the Pythia6 library.
     variant("root", default=False, description="Build extra (non OEM) code to allow use by Root.")
@@ -52,7 +49,7 @@ class Pythia6(CMakePackage):
     # intended to be used with other code with different requirements.
     variant(
         "nmxhep",
-        default=4000,
+        default="4000",
         values=_is_integral,
         description="Extent of particle arrays in the /HEPEVT/ COMMON block.",
     )
@@ -133,6 +130,9 @@ class Pythia6(CMakePackage):
     # variant-based adjustments should be made.
     patch("pythia6.patch", level=0)
     patch("pythia6-root.patch", level=1, when="+root")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     def patch(self):
         # Use our provided CMakeLists.txt. The Makefile provided with

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -49,11 +48,11 @@ class Fortrilinos(CMakePackage):
     )
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("hl", default=True, description="Build high-level Trilinos wrappers")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Trilinos version dependencies
     depends_on("trilinos@14.0", when="@2.3")

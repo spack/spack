@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,7 +7,6 @@ import email.message
 import errno
 import json
 import os
-import os.path
 import re
 import shutil
 import ssl
@@ -20,7 +18,7 @@ from html.parser import HTMLParser
 from pathlib import Path, PurePosixPath
 from typing import IO, Dict, Iterable, List, Optional, Set, Tuple, Union
 from urllib.error import HTTPError, URLError
-from urllib.request import HTTPSHandler, Request, build_opener
+from urllib.request import HTTPDefaultErrorHandler, HTTPSHandler, Request, build_opener
 
 import llnl.url
 from llnl.util import lang, tty
@@ -59,7 +57,7 @@ class DetailedHTTPError(HTTPError):
         return DetailedHTTPError, (self.req, self.code, self.msg, self.hdrs, None)
 
 
-class SpackHTTPDefaultErrorHandler(urllib.request.HTTPDefaultErrorHandler):
+class SpackHTTPDefaultErrorHandler(HTTPDefaultErrorHandler):
     def http_error_default(self, req, fp, code, msg, hdrs):
         raise DetailedHTTPError(req, code, msg, hdrs, fp)
 
@@ -210,7 +208,7 @@ def read_from_url(url, accept_content_type=None):
 
     try:
         response = urlopen(request)
-    except (TimeoutError, URLError) as e:
+    except OSError as e:
         raise SpackWebError(f"Download of {url.geturl()} failed: {e.__class__.__name__}: {e}")
 
     if accept_content_type:
@@ -228,7 +226,7 @@ def read_from_url(url, accept_content_type=None):
             tty.debug(msg)
             return None, None, None
 
-    return response.geturl(), response.headers, response
+    return response.url, response.headers, response
 
 
 def push_to_url(local_file_path, remote_path, keep_original=True, extra_args=None):
@@ -390,9 +388,9 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
 
     fetch_method = spack.config.get("config:url_fetch_method")
     tty.debug("Using '{0}' to fetch {1} into {2}".format(fetch_method, url, path))
-    if fetch_method == "curl":
+    if fetch_method.startswith("curl"):
         curl_exe = curl or require_curl()
-        curl_args = ["-O"]
+        curl_args = fetch_method.split()[1:] + ["-O"]
         curl_args.extend(base_curl_fetch_args(url))
 
         # Curl automatically downloads file contents as filename
@@ -406,22 +404,16 @@ def fetch_url_text(url, curl: Optional[Executable] = None, dest_dir="."):
         try:
             _, _, response = read_from_url(url)
 
-            returncode = response.getcode()
-            if returncode and returncode != 200:
-                raise spack.error.FetchError(
-                    "Urllib failed with error code {0}".format(returncode)
-                )
-
             output = codecs.getreader("utf-8")(response).read()
             if output:
                 with working_dir(dest_dir, create=True):
-                    with open(filename, "w") as f:
+                    with open(filename, "w", encoding="utf-8") as f:
                         f.write(output)
 
                 return path
 
-        except SpackWebError as err:
-            raise spack.error.FetchError("Urllib fetch failed to verify url: {0}".format(str(err)))
+        except (SpackWebError, OSError, ValueError) as err:
+            raise spack.error.FetchError(f"Urllib fetch failed: {err}")
 
     return None
 
@@ -444,15 +436,14 @@ def url_exists(url, curl=None):
     url_result = urllib.parse.urlparse(url)
 
     # Use curl if configured to do so
-    use_curl = spack.config.get(
-        "config:url_fetch_method", "urllib"
-    ) == "curl" and url_result.scheme not in ("gs", "s3")
+    fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+    use_curl = fetch_method.startswith("curl") and url_result.scheme not in ("gs", "s3")
     if use_curl:
         curl_exe = curl or require_curl()
 
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
-        curl_args = ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
+        curl_args = fetch_method.split()[1:] + ["--stderr", "-", "-s", "-f", "-r", "0-0", url]
         if not spack.config.get("config:verify_ssl"):
             curl_args.append("-k")
         _ = curl_exe(*curl_args, fail_on_error=False, output=os.devnull)
@@ -465,7 +456,7 @@ def url_exists(url, curl=None):
             timeout=spack.config.get("config:connect_timeout", 10),
         )
         return True
-    except (TimeoutError, URLError) as e:
+    except OSError as e:
         tty.debug(f"Failure reading {url}: {e}")
         return False
 
@@ -747,7 +738,7 @@ def _spider(url: urllib.parse.ParseResult, collect_nested: bool, _visited: Set[s
                 subcalls.append(abs_link)
                 _visited.add(abs_link)
 
-    except (TimeoutError, URLError) as e:
+    except OSError as e:
         tty.debug(f"[SPIDER] Unable to read: {url}")
         tty.debug(str(e), level=2)
         if isinstance(e, URLError) and isinstance(e.reason, ssl.SSLError):

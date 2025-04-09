@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -72,10 +71,10 @@ class Lapackpp(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="5f6ab3bd3794711818a3a50198efd29571520bf455e13ffa8ba50fa8376d7d1a"
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared library")
     variant("sycl", default=False, description="Build support for the SYCL backend")
+
+    depends_on("cxx", type="build")  # generated
 
     # Match each LAPACK++ version to a specific BLAS++ version
     for lpp_ver, bpp_ver in _versions:

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,10 +26,6 @@ class Dalton(CMakePackage):
         "2018.2", tag="2018.2", commit="4aa945ecd235fbf67ed0c1609617c553ef40be89", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build_type",
         default="Release",
@@ -53,6 +48,10 @@ class Dalton(CMakePackage):
         description="Enable polarizable density embedding through the PE library",
     )
     variant("qfitlib", default=True, description="Build QFIT library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.1:", type="build")
     depends_on("blas", type="link")

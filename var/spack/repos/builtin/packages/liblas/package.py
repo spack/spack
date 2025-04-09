@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,9 +17,6 @@ class Liblas(CMakePackage):
 
     version("1.8.1", sha256="9adb4a98c63b461ed2bc82e214ae522cbd809cff578f28511122efe6c7ea4e76")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # libLAS linkage of GDAL and libgeotiff enhances spatial coordinate system
     # description and provides data reprojection support.
     # Ref.: https://liblas.org/compilation.html#optional-libraries
@@ -28,6 +24,9 @@ class Liblas(CMakePackage):
     variant("gdal", default=False, description="Build with GDAL for enhanced performance")
     variant("geotiff", default=True, description="Build with GeoTIFF for enhanced performance")
     variant("laszip", default=False, description="Build with LasZip")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@2.6:", type="build")
     depends_on("libgeotiff@1.3:", when="+geotiff")
