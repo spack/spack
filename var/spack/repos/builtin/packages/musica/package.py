@@ -17,7 +17,7 @@ class Musica(CMakePackage):
     """
 
     homepage = "https://github.com/NCAR/musica"
-    git = "https://github.com/NCAR/musica"
+    git = "https://github.com/NCAR/musica.git"
 
     maintainers("kshores", "mattldawson", "boulderdaze")
 
