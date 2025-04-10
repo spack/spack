@@ -157,10 +157,11 @@ def test_find_external_cmd_not_buildable(
             [],
             [
                 "builtin.mock.cmake",
+                "builtin.mock.cuda",  # TODO/RepoSplit: only if symlinking in
                 "builtin.mock.find-externals1",
                 "builtin.mock.gcc",
-                "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
                 "builtin.mock.mpich",
             ],
         ),
@@ -171,9 +172,10 @@ def test_find_external_cmd_not_buildable(
             ["builtin.mock.find-externals1"],
             [
                 "builtin.mock.cmake",
+                "builtin.mock.cuda",  # TODO/RepoSplit: only if symlinking in
                 "builtin.mock.gcc",
-                "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
                 "builtin.mock.mpich",
             ],
         ),
@@ -183,9 +185,10 @@ def test_find_external_cmd_not_buildable(
             ["find-externals1"],
             [
                 "builtin.mock.cmake",
+                "builtin.mock.cuda",  # TODO/RepoSplit: only if symlinking in
                 "builtin.mock.gcc",
-                "builtin.mock.llvm",
                 "builtin.mock.intel-oneapi-compilers",
+                "builtin.mock.llvm",
                 "builtin.mock.mpich",
             ],
         ),
