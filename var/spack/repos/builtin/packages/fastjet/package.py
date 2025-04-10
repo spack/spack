@@ -115,8 +115,8 @@ class Fastjet(AutotoolsPackage):
         level=0,
     )
     patch(
-        "https://gitlab.com/fastjet/fastjet/-/merge_requests/8.patch",
-        sha256="4b943c0275eda44b411478c114035508601cca8da80a10f52a38a8eea6c5558a",
+        "https://gitlab.com/fastjet/fastjet/-/merge_requests/8.diff",
+        sha256="acc00a619c449552732935ec7a3bf8b191692bfff507cd01a0130c2b9586ba32",
         level=0,
     )
 
