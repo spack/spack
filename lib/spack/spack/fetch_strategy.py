@@ -369,7 +369,7 @@ class URLFetchStrategy(FetchStrategy):
                         if last_time + 0.1 < current or not chunk:
                             last_time = current
                             print(
-                                f"\r    Downloaded: {_format_bytes(total_bytes)}. Speed: "
+                                f"\r    Fetched: {_format_bytes(total_bytes)} at "
                                 f"{_format_speed(total_bytes, current - start)}",
                                 end="",
                                 flush=True,
