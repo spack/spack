@@ -27,6 +27,8 @@ import http.client
 import os
 import re
 import shutil
+import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -219,6 +221,30 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
+def _format_speed(total_bytes: int, elapsed: float) -> str:
+    """Return a human-readable average download speed string."""
+    elapsed = 1 if elapsed <= 0 else elapsed  # avoid divide by zero
+    speed = total_bytes / elapsed
+    if speed >= 1e9:
+        return f"{speed / 1e9:6.1f} GB/s"
+    elif speed >= 1e6:
+        return f"{speed / 1e6:6.1f} MB/s"
+    elif speed >= 1e3:
+        return f"{speed / 1e3:6.1f} KB/s"
+    return f"{speed:6.1f}  B/s"
+
+
+def _format_bytes(total_bytes: int) -> str:
+    """Return a human-readable total bytes string."""
+    if total_bytes >= 1e9:
+        return f"{total_bytes / 1e9:7.2f} GB"
+    elif total_bytes >= 1e6:
+        return f"{total_bytes / 1e6:7.2f} MB"
+    elif total_bytes >= 1e3:
+        return f"{total_bytes / 1e3:7.2f} KB"
+    return f"{total_bytes:7.2f}  B"
+
+
 @fetcher
 class URLFetchStrategy(FetchStrategy):
     """URLFetchStrategy pulls source code from a URL for an archive, check the
@@ -316,7 +342,7 @@ class URLFetchStrategy(FetchStrategy):
             tty.warn(msg)
 
     @_needs_stage
-    def _fetch_urllib(self, url):
+    def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
 
         request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
@@ -327,8 +353,31 @@ class URLFetchStrategy(FetchStrategy):
         try:
             response = web_util.urlopen(request)
             tty.msg(f"Fetching {url}")
+            start = time.time()
+            last_time = 0.0
+            total_bytes = 0
+            print_progress = sys.stdout.isatty()
             with open(save_file, "wb") as f:
-                shutil.copyfileobj(response, f)
+                while True:
+                    chunk = response.read(chunk_size)
+                    if chunk:
+                        f.write(chunk)
+                    if print_progress:
+                        total_bytes += len(chunk)
+                        current = time.time()
+                        # print updates every 0.1s and at the end of download
+                        if last_time + 0.1 < current or not chunk:
+                            last_time = current
+                            print(
+                                f"\r    Downloaded: {_format_bytes(total_bytes)}. Speed: "
+                                f"{_format_speed(total_bytes, current - start)}",
+                                end="",
+                                flush=True,
+                            )
+                    if not chunk:
+                        break
+            if print_progress:
+                print()
         except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
