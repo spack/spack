@@ -472,8 +472,12 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
      imposed_constraint(ID, "depends_on", A1, A2, A3),
      internal_error("Build deps must land in exactly one duplicate").
 
+% If the parent is built, then we have a build_requirement on another node. For concrete nodes,
+% or external nodes, we don't since we are trimming their build dependencies.
 1 { build_requirement(node(X, Parent), node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1
   :- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
+     build(node(X, Parent)),
+     not external(node(X, Parent)),
      impose(ID, node(X, Parent)),
      imposed_constraint(ID,"build_requirement",Parent,_).
 
