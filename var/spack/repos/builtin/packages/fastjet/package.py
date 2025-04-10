@@ -114,6 +114,7 @@ class Fastjet(AutotoolsPackage):
         when="@3.4:3.4.1 +atlas",
         level=0,
     )
+    patch("protojet.patch", level=0)
 
     def configure_args(self):
         extra_args = []
