@@ -89,7 +89,7 @@ class Draco(CMakePackage, CudaPackage, ROCmPackage):
 
     # Hardware-specific variants
     depends_on('cuda@11.0:',  when='+cuda')
-    depends_on('rocm@5.4.3:', when='+rocm')
+    depends_on('rocm@5.5.0:', when='+rocm')
 
     conflicts("+cuda", when="@:7.6")
     # HIP support existed pre-7.18, but was not exposed via Spack recipe:
