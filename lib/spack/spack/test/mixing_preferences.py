@@ -288,11 +288,12 @@ class TestLinux(Platform):
     back_os = "debian6"
     default_os = "debian6"
 
-    def __init__(self):
-        super().__init__("linux")
+    def _init_targets(self):
         self.add_target(self.default, archspec.cpu.TARGETS[self.default])
         self.add_target(self.front_end, archspec.cpu.TARGETS[self.front_end])
 
+    def __init__(self):
+        super().__init__("linux")
         os = spack.operating_systems.OperatingSystem("debian", 6)
         self.add_operating_system(self.default_os, os)
         self.add_operating_system(self.front_os, os)
@@ -306,14 +307,15 @@ def pretend_linux(monkeypatch, tmpdir):
         return pretend_glibc
 
     monkeypatch.setattr(spack.compilers.libraries.CompilerPropertyDetector, "default_libc", give_me_a_libc)
-    with spack.platforms.use_platform(TestLinux()):
+    fake_linux = TestLinux()
+    with spack.platforms.use_platform(fake_linux):
         yield
 
 
 def set_up_compiler_cfg():
     test_cfg = """\
 packages:
-  gcc:
+  gcc::
     externals:
     - spec: "gcc@11.0.0 languages='c,c++,fortran' os=debian6 target=x86_64"
       prefix: /path1
@@ -322,7 +324,7 @@ packages:
           cc: /path1/bin/gcc
           cxx: /path1/bin/g++
           fortran: /path1/bin/gfortran
-  intel-oneapi-compilers:
+  intel-oneapi-compilers::
     externals:
     - spec: "intel-oneapi-compilers@2025.0.3 os=debian6 target=x86_64"
       prefix: /path2
@@ -376,6 +378,9 @@ def empty_database(empty_mock_store):
 
 def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_runtimes, empty_database):
     set_up_compiler_cfg()
+    # out = solve("--show=asp", "x1")
+    # with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
+    #    f.write(out)
     Spec("x1").concretized()
 
 
