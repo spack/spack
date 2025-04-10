@@ -14,6 +14,7 @@ class Runc(MakefilePackage):
 
     license("Apache-2.0")
 
+    version("1.2.6", sha256="39695adb39b0284a4fc4b184d764772d886121bf30378f9614a3abfbdc5ff11a")
     version("1.1.13", sha256="d20e76688ce0681dc687369e18b47aeffcfdac5184c978befa7ce5da35e797fe")
     version("1.1.6", sha256="548506fc1de8f0a4790d8e937eeede17db4beb79c53d66acb4f7ec3edbc31668")
     version("1.1.4", sha256="9f5972715dffb0b2371e4d678c1206cc8c4ec5eb80f2d48755d150bac49be35b")
@@ -21,6 +22,7 @@ class Runc(MakefilePackage):
 
     depends_on("c", type="build")  # generated
 
+    depends_on("go@1.23.0:", type="build", when="@1.2.6:")
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
     depends_on("pkgconfig", type="build")

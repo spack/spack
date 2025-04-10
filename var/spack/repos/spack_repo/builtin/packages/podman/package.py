@@ -14,6 +14,7 @@ class Podman(Package):
 
     license("Apache-2.0")
 
+    version("5.4.2", sha256="8da62c25956441b14d781099e803e38410a5753e5c7349bcd34615b9ca5ed4f2")
     version("4.9.3", sha256="37afc5bba2738c68dc24400893b99226c658cc9a2b22309f4d7abe7225d8c437")
     version("4.8.3", sha256="3a99b6c82644fa52929cf4143943c63d6784c84094892bc0e14197fa38a1c7fa")
     version("4.7.2", sha256="10346c5603546427bd809b4d855d1e39b660183232309128ad17a64969a0193d")
@@ -25,24 +26,63 @@ class Podman(Package):
 
     depends_on("c", type="build")  # generated
 
+    requires(
+        "@5.4.2:",
+        when="platform=darwin",
+        msg="podman for macOS is only supported on version 5.4.2 and above.",
+    )
+
+    # see https://github.com/containers/podman/issues/22121
+    REQUIRES_VENTURA_MSG = "podman for macOS requires Ventura or later"
+    requires("os=ventura", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
+    requires("os=sonoma", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
+    requires("os=sequoia", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
+
     # See <https://github.com/containers/podman/issues/16996> for the
     # respective issue and the suggested patch
     # issue was fixed as of 4.4.0
     patch("markdown-utf8.diff", when="@4:4.3.1")
 
+    # universal deps
+    depends_on("go@1.22.8:", type="build", when="@5.4.2:")
     depends_on("go", type="build")
     depends_on("go-md2man", type="build")
-    depends_on("pkgconfig", type="build")
-    depends_on("cni-plugins", type="run")
-    depends_on("conmon", type="run")
-    depends_on("runc", type="run")
-    depends_on("slirp4netns", type="run")
-    depends_on("gpgme")
-    depends_on("libassuan")
-    depends_on("libgpg-error")
-    depends_on("libseccomp")
     depends_on("gmake", type="build")
 
+    # linux deps
+    with when("platform=linux"):
+        depends_on("pkgconfig", type="build")
+        depends_on("cni-plugins", type="run")
+        depends_on("conmon", type="run")
+        depends_on("runc", type="run")
+        depends_on("slirp4netns", type="run")
+        depends_on("gpgme")
+        depends_on("libassuan")
+        depends_on("libgpg-error")
+        depends_on("libseccomp")
+
+    # macOS resources
+
+    # source: Podman Homebrew Formula
+    # Bump these resources versions to match those in the corresponding version-tagged Makefile
+    # at https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
+    #
+    # More context: https://github.com/Homebrew/homebrew-core/pull/205303
+    resource(
+        name="gvproxy",
+        git="https://github.com/containers/gvisor-tap-vsock.git",
+        tag="v0.8.4",
+        when="@5.4.2: platform=darwin",
+    )
+
+    resource(
+        name="vfkit",
+        git="https://github.com/crc-org/vfkit.git",
+        tag="v0.6.0",
+        when="@5.4.2: platform=darwin",
+    )
+
+    @when("platform=linux")
     def patch(self):
         defs = FileFilter("vendor/github.com/containers/common/pkg/config/default.go")
 
@@ -73,6 +113,29 @@ class Podman(Package):
             r"/usr", self.prefix, "vendor/github.com/containers/common/pkg/config/config.go"
         )
 
+    @when("platform=darwin")
+    def install(self, spec, prefix):
+        # for context on the dependencies, see
+        # https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
+        # via https://github.com/Homebrew/homebrew-core/blob/master/Formula/p/podman.rb
+
+        mkdirp(prefix.bin)
+        make("podman-remote")
+        make("podman-mac-helper")
+        install("bin/darwin/podman", prefix.bin)
+        install("bin/darwin/podman-mac-helper", prefix.bin)
+
+        with working_dir("gvisor-tap-vsock"):
+            make("gvproxy")
+            install("bin/gvproxy", prefix.bin)
+
+        with working_dir("vfkit"):
+            env["CGO_ENABLED"] = "1"
+            env["CGO_CFLAGS"] = "-mmacosx-version-min=11.0"
+            make("out/vfkit")
+            install("out/vfkit", prefix.bin)
+
+    @when("platform=linux")
     def install(self, spec, prefix):
         # Set default policy.json to be located in the install prefix (documented)
         env["EXTRA_LDFLAGS"] = (
