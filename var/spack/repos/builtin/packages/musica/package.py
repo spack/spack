@@ -8,12 +8,12 @@ from spack.package import *
 class Musica(CMakePackage):
     """MUSICA - The multi-scale interface for chemistry and aerosols
 
-    MUSICA is a software package designed which exposes a flexible
+    MUSICA is a software package which exposes a flexible
     API for including aerosol and gas-phase chemistry in
     many contexts across languages and platforms. It is designed to
     be used in conjunction with other software packages, such as
     climate models, to provide a comprehensive framework for
-    simulating atmospheric processes.
+    simulating atmospheric chemistry processes.
     """
 
     homepage = "https://github.com/NCAR/musica"
