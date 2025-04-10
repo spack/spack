@@ -48,6 +48,7 @@ ci:
       tags: ["aws"]
       script:
       - - export BUILD_CACHE="${SPACK_BUILDCACHE_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_SPECS_URL}"
+        - mkdir -p /tmp/input /tmp/output
         - aws s3 sync --exclude "*" --include "*spec.manifest.json" ${BUILD_CACHE} /tmp/input
         - /sign.sh
         - aws s3 sync --exclude "*" --include "*spec.manifest.json" /tmp/output ${BUILD_CACHE}
