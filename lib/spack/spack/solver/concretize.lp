@@ -474,12 +474,16 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
 
 % If the parent is built, then we have a build_requirement on another node. For concrete nodes,
 % or external nodes, we don't since we are trimming their build dependencies.
-1 { build_requirement(node(X, Parent), node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1
+1 { attr("depends_on",  node(X, Parent), node(0..Y-1, BuildDependency), "build") : max_dupes(BuildDependency, Y) } 1
   :- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
      build(node(X, Parent)),
      not external(node(X, Parent)),
      impose(ID, node(X, Parent)),
      imposed_constraint(ID,"build_requirement",Parent,_).
+
+build_requirement(node(X, Parent), node(Y, BuildDependency)) :-
+  attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build"),
+  attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)).
 
 1 { virtual_build_requirement(ParentNode, node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1
   :- attr("dependency_holds", ParentNode, Virtual, "build"),
@@ -500,7 +504,6 @@ attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
   attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
-attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
 
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
   attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
