@@ -118,10 +118,10 @@ verify by re-installing ninja:
     $ spack install ninja
     [ ... ]
     ==> Installing ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh [24/24]
-    ==> Fetching file:///home/spackuser/spack/spack-cache/v3/specs/ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh.spec.json.sig
     gpg: Signature made Thu 06 Mar 2025 10:03:38 AM MST
     gpg:                using RSA key 75BC0528114909C076E2607418010FFAD73C9B07
     gpg: Good signature from "example (GPG created for Spack) <example@example.com>" [ultimate]
+    ==> Fetching file:///home/spackuser/spack/spack-cache/blobs/sha256/f0/f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0
     ==> Fetching file:///home/spackuser/spack/spack-cache/blobs/sha256/c7/c79ac6e40dfdd01ac499b020e52e57aa91151febaea3ad183f90c0f78b64a31a
     ==> Extracting ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh from binary cache
     ==> ninja: Successfully installed ninja-1.12.1-ngldn2kpvb6lqc44oqhhow7fzg7xu7lh
@@ -349,15 +349,14 @@ which lets you get started quickly. See the following resources for more informa
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Create tarball of installed Spack package and all dependencies.
-Tarballs are checksummed and signed if gpg2 is available.
-Places them in a versioned specs directory (e.g. ``v3/specs``) that can be copied to a mirror.
+Tarballs and specfiles are compressed and checksummed, manifests are signed if gpg2 is available.
 Commands like ``spack buildcache install`` will search Spack mirrors to get the list of build caches.
 
 ==============  ========================================================================================================================
 Arguments       Description
 ==============  ========================================================================================================================
 ``<specs>``     list of partial specs or hashes with a leading ``/`` to match from installed packages and used for creating build caches
-``-d <path>``   directory in which ``v3/specs`` directory is created, defaults to ``.``
+``-d <path>``   directory in which ``v3`` and ``blobs`` directories are created, defaults to ``.``
 ``-f``          overwrite compressed tarball and spec metadata files if they already exist
 ``-k <key>``    the key to sign package with. In the case where multiple keys exist, the package will be unsigned unless ``-k`` is used.
 ``-r``          make paths in binaries relative before creating tarball
@@ -402,6 +401,6 @@ List public keys available on Spack mirror.
 =========  ==============================================
 Arguments  Description
 =========  ==============================================
-``-i``     trust the keys downloaded with prompt for each
+``-it``    trust the keys downloaded with prompt for each
 ``-y``     answer yes to all trust all keys downloaded
 =========  ==============================================
