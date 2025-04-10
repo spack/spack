@@ -2263,16 +2263,18 @@ class SpackSolverSetup:
             if pkg_name not in self.pkgs:
                 continue
 
-            self.gen.h2(f"External package: {pkg_name}")
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
+            externals = data.get("externals", [])
+            if not external_buildable or externals:
+                self.gen.h2(f"External package: {pkg_name}")
+
             if not external_buildable:
                 self.gen.fact(fn.buildable_false(pkg_name))
 
             # Read a list of all the specs for this package
-            externals = data.get("externals", [])
             candidate_specs = [
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
