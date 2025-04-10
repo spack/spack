@@ -25,6 +25,7 @@ class Gslib(Package):
     variant("mpi", default=True, description="Build with MPI")
     variant("mpiio", default=True, description="Build with MPI I/O")
     variant("blas", default=False, description="Build with BLAS")
+    variant("shared", default=False, description="Build shared libs. Disables static libs")
 
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
@@ -39,7 +40,10 @@ class Gslib(Package):
     def install(self, spec, prefix):
         src_dir = "src"
         lib_dir = "lib"
-        libname = "libgs.a"
+        if "+shared" in spec:
+            libname = "libgs.so"
+        else:
+            libname = "libgs.a"
 
         if self.spec.satisfies("@1.0.1:"):
             makefile = "Makefile"
@@ -48,6 +52,12 @@ class Gslib(Package):
 
         cc = self.compiler.cc
 
+        # Maybe this is too restrictive. Can +shared and +static be okay?
+        # If so, should add +/~ static variant.
+        if "+shared" in spec:
+            filter_file(r"SHARED.*?=.*0", "SHARED = 1", makefile)
+            filter_file(r"STATIC.*?=.*0", "STATIC = 0", makefile)
+        
         if "+mpiio" not in spec:
             filter_file(r"MPIIO.*?=.*1", "MPIIO = 0", makefile)
 
