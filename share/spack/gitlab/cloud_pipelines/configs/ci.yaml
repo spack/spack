@@ -42,7 +42,9 @@ ci:
           aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - signing-job:
-      image: { "name": "ghcr.io/spack/notary:0.0.1", "entrypoint": [""] }
+      image:
+        name: ghcr.io/spack/notary@sha256:7cfec0e1fad666dc3fcbea71e0ddfe156b6447c3cb981f7609d3b66948612331
+        entrypoint: [""]
       tags: ["aws"]
       script:
       - - export BUILD_CACHE="${SPACK_BUILDCACHE_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_SPECS_URL}"
