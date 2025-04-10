@@ -114,7 +114,11 @@ class Fastjet(AutotoolsPackage):
         when="@3.4:3.4.1 +atlas",
         level=0,
     )
-    patch("protojet.patch", level=0)
+    patch(
+        "https://gitlab.com/fastjet/fastjet/-/merge_requests/8.patch",
+        sha256="4b943c0275eda44b411478c114035508601cca8da80a10f52a38a8eea6c5558a",
+        level=0,
+    )
 
     def configure_args(self):
         extra_args = []
