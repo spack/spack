@@ -9,9 +9,12 @@ import pytest
 import spack.main
 import spack.repo
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 maintainers = spack.main.SpackCommand("maintainers")
 
 MAINTAINED_PACKAGES = [
+    "cuda",  # TODO/RepoSplit: Only needed if/when symlink to builtin dir
     "gcc-runtime",
     "maintainers-1",
     "maintainers-2",
@@ -26,20 +29,25 @@ def split(output):
     return re.split(r"\s+", output) if output else []
 
 
-def test_maintained(mock_packages):
+def test_maintained():
     out = split(maintainers("--maintained"))
     assert out == MAINTAINED_PACKAGES
 
 
-def test_unmaintained(mock_packages):
+def test_unmaintained():
     out = split(maintainers("--unmaintained"))
     assert out == sorted(set(spack.repo.all_package_names()) - set(MAINTAINED_PACKAGES))
 
 
-def test_all(mock_packages, capfd):
+def test_all(capfd):
     with capfd.disabled():
         out = split(maintainers("--all"))
     assert out == [
+        # TODO/SplitRepo: The cuda entries are only needed if symlink to builtin
+        "cuda:",
+        "Rombur,",
+        "ax3l,",
+        "pauleonix",
         "gcc-runtime:",
         "haampie",
         "maintainers-1:",
@@ -63,12 +71,19 @@ def test_all(mock_packages, capfd):
     assert out == ["maintainers-1:", "user1,", "user2"]
 
 
-def test_all_by_user(mock_packages, capfd):
+def test_all_by_user(capfd):
     with capfd.disabled():
         out = split(maintainers("--all", "--by-user"))
     assert out == [
+        # TODO/SplitRepo: The cuda entries are only needed if symlink to builtin
+        "Rombur:",
+        "cuda",
+        "ax3l:",
+        "cuda",
         "haampie:",
         "gcc-runtime",
+        "pauleonix:",
+        "cuda",
         "user0:",
         "maintainers-3",
         "user1:",
@@ -100,22 +115,22 @@ def test_all_by_user(mock_packages, capfd):
     ]
 
 
-def test_no_args(mock_packages):
+def test_no_args():
     with pytest.raises(spack.main.SpackCommandError):
         maintainers()
 
 
-def test_no_args_by_user(mock_packages):
+def test_no_args_by_user():
     with pytest.raises(spack.main.SpackCommandError):
         maintainers("--by-user")
 
 
-def test_mutex_args_fail(mock_packages):
+def test_mutex_args_fail():
     with pytest.raises(SystemExit):
         maintainers("--maintained", "--unmaintained")
 
 
-def test_maintainers_list_packages(mock_packages, capfd):
+def test_maintainers_list_packages(capfd):
     with capfd.disabled():
         out = split(maintainers("maintainers-1"))
     assert out == ["user1", "user2"]
@@ -129,13 +144,13 @@ def test_maintainers_list_packages(mock_packages, capfd):
     assert out == ["user2", "user3"]
 
 
-def test_maintainers_list_fails(mock_packages, capfd):
+def test_maintainers_list_fails(capfd):
     out = maintainers("pkg-a", fail_on_error=False)
     assert not out
     assert maintainers.returncode == 1
 
 
-def test_maintainers_list_by_user(mock_packages, capfd):
+def test_maintainers_list_by_user(capfd):
     with capfd.disabled():
         out = split(maintainers("--by-user", "user1"))
     assert out == ["maintainers-1", "maintainers-3", "py-extension1"]
