@@ -48,12 +48,13 @@ class IntelOneApiPackage(Package):
         "target=ppc64le:",
         "target=aarch64:",
         "platform=darwin",
-        "platform=windows",
     ]:
-        conflicts(c, msg="This package in only available for x86_64 and Linux")
+        conflicts(c, msg="This package in only available for x86_64 and Linux/Windows")
 
-    # Add variant to toggle environment modifications from vars.sh
-    variant("envmods", default=True, description="Toggles environment modifications")
+    # env mods are not an option on Windows AFAICT
+    for plat in ["linux", "freebsd"]:
+        # Add variant to toggle environment modifications from vars.sh
+        variant("envmods", default=True, description="Toggles environment modifications", when=f"platform={plat}")
 
     @staticmethod
     def update_description(cls):

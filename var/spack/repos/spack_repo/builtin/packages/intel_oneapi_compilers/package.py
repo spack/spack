@@ -5,6 +5,7 @@ import os
 import os.path
 import pathlib
 import platform
+import re
 import sys
 import warnings
 
@@ -13,6 +14,8 @@ from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
 
 from spack.build_environment import dso_suffix
 from spack.package import *
+
+windows = sys.platform == "win32"
 
 versions = [
     {
@@ -338,6 +341,42 @@ versions = [
     },
 ]
 
+class UnixDebugFlags:
+    DEBUG = "-debug"
+    G = "-g"
+    G0 = "-g0"
+    G1 = "-g1"
+    G2 = "-g2"
+    G3 = "-g3"
+class WindowsDebugFlags:
+    DEBUG = "/debug"
+    G = "/g"
+    G0 = "/g0"
+    G1 = "/g1"
+    G2 = "/g2"
+    G3 = "/g3"
+
+class DebugFlagsMeta(type):
+    def __getattr__(cls, attr):
+        if windows:
+            getattr(WindowsDebugFlags, attr)
+        else:
+            getattr(UnixDebugFlags, attr)
+
+class OptFlagsMeta(type):
+    def __getattr__(cls, attr):
+        if windows:
+            getattr(WindowsDebugFlags, attr)
+        else:
+            getattr(UnixDebugFlags, attr)
+
+class DebugFlags(metaclass=DebugFlagsMeta):
+    """Class abstracting platform specific debug flags"""
+
+class OptFlags(metaclass=OptFlagsMeta):
+    """Class abstracting platform specific optimization flags"""
+
+
 
 @IntelOneApiPackage.update_description
 class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
@@ -352,7 +391,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     c_names = ["icx"]
     cxx_names = ["icpx"]
     fortran_names = ["ifx"]
-    compiler_version_argument = "--version"
+    compiler_version_argument = "--version" if not windows else ""
     compiler_version_regex = (
         r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
     )
@@ -397,16 +436,25 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         }
         return flags[language][standard]
 
-    # See https://github.com/spack/spack/issues/39252
-    depends_on("patchelf@:0.17", type="build", when="@:2024.1")
-    # Add the nvidia variant
-    variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
-    conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
-    # Add the amd variant
-    variant("amd", default=False, description="Install AMD plugin for OneAPI")
-    conflicts("@:2022.2.1", when="+amd", msg="Codeplay AMD plugin requires newer release")
+    for plat in ["linux", "darwin", "freebsd"]:
+        with when(f"platform={plat}"):
+            # See https://github.com/spack/spack/issues/39252
+            depends_on("patchelf@:0.17", type="build", when="@:2024.1")
 
-    depends_on("gcc languages=c,c++", type="run")
+            # Disable the variant below for now on Windows for simplicitys sake
+            # enable once basic oneAPI functionality is stable 
+
+            # Add the nvidia variant
+            variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
+            conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
+            # Add the amd variant
+            variant("amd", default=False, description="Install AMD plugin for OneAPI")
+            conflicts("@:2022.2.1", when="+amd", msg="Codeplay AMD plugin requires newer release")
+
+            depends_on("gcc languages=c,c++", type="run")
+
+    with when("platform=windows"):
+        depends_on("msvc languages=c,c++", type="run")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -646,6 +694,19 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     def archspec_name(self):
         return "oneapi"
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Intel compilers on Windows do not have a proper version argument
+        # Errors out and prints version info with no args
+        match = re.search(
+            cls.compiler_version_regex,
+            spack.build_systems.compiler.compiler_output(
+                exe, version_argument=None, ignore_errors=1
+            ),
+        )
+        if match:
+            return match.group(1)
 
     @classmethod
     def determine_variants(cls, exes, version_str):
