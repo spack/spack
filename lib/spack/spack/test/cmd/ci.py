@@ -873,10 +873,6 @@ spack:
             ci.copy_stage_logs_to_artifacts(concrete_spec, str(logs_dir))
             assert "spack-build-out.txt.gz" in os.listdir(logs_dir)
 
-            dl_dir = scratch / "download_dir"
-            buildcache_cmd("download", "--spec-file", json_path, "--path", str(dl_dir))
-            assert len(os.listdir(dl_dir)) == 2
-
 
 def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
     def push_or_raise(*args, **kwargs):

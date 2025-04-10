@@ -693,7 +693,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a list -d
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a keys -d 'get public keys available on mirrors'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a check -d 'check specs against remote binary mirror(s) to see if any need to be rebuilt'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a download -d 'download buildcache entry from a remote mirror to local folder'
-complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a get-buildcache-name -d 'get name (prefix) of buildcache entries for this spec'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-specfile -d 'get full spec for dependencies and write them to files in the specified output directory'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
@@ -702,7 +701,7 @@ complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a 
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
 # spack buildcache push
-set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index spec-file= only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_push h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache push' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache push' -s h -l help -d 'show this help message and exit'
@@ -716,8 +715,6 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r
 complete -c spack -n '__fish_spack_using_command buildcache push' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache push' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
-complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -f -a spec_file
-complete -c spack -n '__fish_spack_using_command buildcache push' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache push' -l with-build-dependencies -f -a with_build_dependencies
@@ -736,7 +733,7 @@ complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -
 complete -c spack -n '__fish_spack_using_command buildcache push' -s j -l jobs -r -d 'explicitly set number of parallel jobs'
 
 # spack buildcache create
-set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index spec-file= only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
+set -g __fish_spack_optspecs_spack_buildcache_create h/help f/force u/unsigned signed k/key= update-index only= with-build-dependencies without-build-dependencies fail-fast base-image= t/tag= private j/jobs=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 1 buildcache create' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache create' -s h -l help -d 'show this help message and exit'
@@ -750,8 +747,6 @@ complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k 
 complete -c spack -n '__fish_spack_using_command buildcache create' -l key -s k -r -d 'key for signing'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -f -a update_index
 complete -c spack -n '__fish_spack_using_command buildcache create' -l update-index -l rebuild-index -d 'regenerate buildcache index after building package(s)'
-complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -f -a spec_file
-complete -c spack -n '__fish_spack_using_command buildcache create' -l spec-file -r -d 'create buildcache entry for spec from json or yaml file'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -f -a 'package dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l only -r -d 'select the buildcache mode. The default is to build a cache for the package along with all its dependencies. Alternatively, one can decide to build a cache for only the package or only the dependencies'
 complete -c spack -n '__fish_spack_using_command buildcache create' -l with-build-dependencies -f -a with_build_dependencies
@@ -811,7 +806,7 @@ complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force 
 complete -c spack -n '__fish_spack_using_command buildcache keys' -s f -l force -d 'force new download of keys'
 
 # spack buildcache check
-set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope= s/spec= spec-file=
+set -g __fish_spack_optspecs_spack_buildcache_check h/help m/mirror-url= o/output-file= scope=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 buildcache check' -f -k -a '(__fish_spack_specs)'
 complete -c spack -n '__fish_spack_using_command buildcache check' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache check' -s h -l help -d 'show this help message and exit'
@@ -821,39 +816,22 @@ complete -c spack -n '__fish_spack_using_command buildcache check' -s o -l outpu
 complete -c spack -n '__fish_spack_using_command buildcache check' -s o -l output-file -r -d 'file where rebuild info should be written'
 complete -c spack -n '__fish_spack_using_command buildcache check' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command buildcache check' -l scope -r -d 'configuration scope containing mirrors to check'
-complete -c spack -n '__fish_spack_using_command buildcache check' -s s -l spec -r -f -a spec
-complete -c spack -n '__fish_spack_using_command buildcache check' -s s -l spec -r -d 'check single spec instead of release specs file'
-complete -c spack -n '__fish_spack_using_command buildcache check' -l spec-file -r -f -a spec_file
-complete -c spack -n '__fish_spack_using_command buildcache check' -l spec-file -r -d 'check single spec from json or yaml file instead of release specs file'
 
 # spack buildcache download
-set -g __fish_spack_optspecs_spack_buildcache_download h/help s/spec= spec-file= p/path=
+set -g __fish_spack_optspecs_spack_buildcache_download h/help s/spec= p/path=
 complete -c spack -n '__fish_spack_using_command buildcache download' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache download' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache download' -s s -l spec -r -f -a spec
 complete -c spack -n '__fish_spack_using_command buildcache download' -s s -l spec -r -d 'download built tarball for spec from mirror'
-complete -c spack -n '__fish_spack_using_command buildcache download' -l spec-file -r -f -a spec_file
-complete -c spack -n '__fish_spack_using_command buildcache download' -l spec-file -r -d 'download built tarball for spec (from json or yaml file) from mirror'
 complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command buildcache download' -s p -l path -r -d 'path to directory where tarball should be downloaded'
 
-# spack buildcache get-buildcache-name
-set -g __fish_spack_optspecs_spack_buildcache_get_buildcache_name h/help s/spec= spec-file=
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -s s -l spec -r -f -a spec
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -s s -l spec -r -d 'spec string for which buildcache name is desired'
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -l spec-file -r -f -a spec_file
-complete -c spack -n '__fish_spack_using_command buildcache get-buildcache-name' -l spec-file -r -d 'path to spec json or yaml file for which buildcache name is desired'
-
 # spack buildcache save-specfile
-set -g __fish_spack_optspecs_spack_buildcache_save_specfile h/help root-spec= root-specfile= s/specs= specfile-dir=
+set -g __fish_spack_optspecs_spack_buildcache_save_specfile h/help root-spec= s/specs= specfile-dir=
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -l root-spec -r -f -a root_spec
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -l root-spec -r -d 'root spec of dependent spec'
-complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -l root-specfile -r -f -a root_specfile
-complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -l root-specfile -r -d 'path to json or yaml file containing root spec of dependent spec'
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -s s -l specs -r -f -a specs
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -s s -l specs -r -d 'list of dependent specs for which saved yaml is desired'
 complete -c spack -n '__fish_spack_using_command buildcache save-specfile' -l specfile-dir -r -f -a specfile_dir
