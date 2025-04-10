@@ -181,10 +181,22 @@ class KokkosKernels(CMakePackage, CudaPackage):
         multi=True,
         description="Scalars",
     )
+    variant(
+        "fortran",
+        default=True,
+        when="+blas",
+        description="Require the Fortran compiler for builds",
+    )
+    variant(
+        "fortran",
+        default=True,
+        when="+lapack",
+        description="Require the fortran compiler for builds",
+    )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
