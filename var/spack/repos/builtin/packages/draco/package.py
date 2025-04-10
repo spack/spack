@@ -131,7 +131,8 @@ class Draco(CMakePackage, CudaPackage, ROCmPackage):
         elif spec.satisfies('@7.15.0:7.17.99'):
             options.extend(['-DUSE_GPU={0}'.format('ON' if '+cuda' in spec else 'OFF')])
         else:
-			options.extend(['-DUSE_CUDA={0}'.format('ON' if '+cuda' in spec else 'OFF')])
+            options.extend(['-DUSE_CUDA={0}'.format('ON' if '+cuda' in spec else 'OFF')])
+
         # FMA option
         if '+fast_fma' in self.spec:
             options.extend(["-DDRACO_ROUNDOFF_MODE={0}".format(
