@@ -142,6 +142,7 @@ class Gcc(CompilerPackage):
 
     version("13.2.0")
     version("12.3.0")
+    #version("11.0.0")
 
     provides("c")
     provides("cxx")
@@ -381,7 +382,9 @@ def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_run
     # out = solve("--show=asp", "x1")
     # with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
     #    f.write(out)
-    Spec("x1").concretized()
+    Spec("gcc@11.0.0").concretized()
+    Spec("x1 %gcc@11.0.0").concretized()
+    #Spec("x1 ^[virtuals=c] gcc@11.0.0").concretized()
 
 
 def test_mixing_fortran(
