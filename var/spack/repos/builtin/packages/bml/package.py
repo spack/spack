@@ -45,7 +45,7 @@ class Bml(CMakePackage):
 
     variant("magma", default=False, description="Build with magma support")
     depends_on("magma", when="+magma")
-    conflicts("+magma", when="@1.1.0:", msg="Must use master branch of bml")
+    conflicts("+magma", when="@1.1.0:2.2.0", msg="Must use master branch of bml")
 
     variant(
         "cusolver",
@@ -73,12 +73,10 @@ class Bml(CMakePackage):
         # if using magma variant
         if "+magma" in self.spec:
             args.append("-DBML_MAGMA=True")
-            args.append(
-                "-DBLAS_LIBRARIES=" + str(self.spec["blas"].libs)
-            )  # cmake doesnt find lapack lib without explicilty setting it.
-            args.append(
-                "-DLAPACK_LIBRARIES=" + str(self.spec["lapack"].libs)
-            )  # cmake doesnt find lapack lib without explicilty setting it.
+
+            # cmake doesnt find lapack lib without explicilty setting it.
+            args.append("-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs)
+            args.append("-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs)
 
             # if using cusolver variant, magma required to use cusolver
             if "+cusolver" in self.spec:
