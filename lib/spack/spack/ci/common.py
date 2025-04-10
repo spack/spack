@@ -44,17 +44,35 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 _urlopen = web_util.urlopen
 
 
-def is_gzipped(path):
-    """Check if the path is a gzipped file
+def copy_gzipped(glob_or_path, dest):
+    """Copy all of the files in the source glob/path to the destination.
 
     Parameters:
-        path: path to file to test
-
-    Returns:
-        True if file is gzipped, otherwise False
+        glob_or_path: path to file to test
+        dest: destination path to copy to
     """
-    with open(path, "rb") as fd:
-        return compression.GZipFileType().matches_magic(fd)
+
+    files = glob.glob(glob_or_path)
+    if not files:
+        raise OSError("No such file or directory: '{0}'".format(glob_or_path))
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
+        )
+
+    def is_gzipped(path):
+        with open(path, "rb") as fd:
+            return compression.GZipFileType().matches_magic(fd)
+
+    for src in files:
+        if is_gzipped(src):
+            fs.copy(src, dest)
+        else:
+            # Compress and copy in one step
+            src_name = os.path.basename(src)
+            zipped = os.path.join(dest, f"{src_name}.gz")
+            with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
+                shutil.copyfileobj(fin, fout)
 
 
 def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
@@ -67,15 +85,11 @@ def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
         compress_artifacts (bool): option to compress copied artifacts using Gzip
     """
     try:
-        for s in glob.glob(src):
-            if compress_artifacts and not is_gzipped(s):
-                # Compress and copy in one step
-                src_name = os.path.basename(s)
-                zipped = os.path.join(artifacts_dir, f"{src_name}.gz")
-                with open(s, "rb") as fin, gzip.open(zipped, "wb") as fout:
-                    shutil.copyfileobj(fin, fout)
-            else:
-                fs.copy(s, artifacts_dir)
+
+        if compress_artifacts:
+            copy_gzipped(src, artifacts_dir)
+        else:
+            fs.copy(src, artifacts_dir)
     except Exception as err:
         msg = (
             f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
