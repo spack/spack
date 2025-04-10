@@ -99,7 +99,6 @@ class RocprofilerSystems(CMakePackage):
     depends_on("tau", when="+tau")
     depends_on("caliper", when="+caliper")
     depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("intel-tbb@:2020", when="%gcc@13:")
     depends_on("boost", when="%gcc@13:", type="build")
     depends_on("libiberty", when="%gcc@13:", type="build")
     depends_on("dyninst@:12", when="+rocm %gcc@:12")
@@ -163,6 +162,7 @@ class RocprofilerSystems(CMakePackage):
             )
         if spec.satisfies("%gcc@13:"):
             args.append(self.define("ROCPROFSYS_BUILD_DYNINST", True))
+            args.append(self.define("DYNINST_BUILD_TBB", True))
         else:
             args.append(self.define("ROCPROFSYS_BUILD_DYNINST", False))
         return args
