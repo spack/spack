@@ -31,7 +31,6 @@ class Genfit(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
     depends_on("c", type="build")
-    
     depends_on("root")
     depends_on("root@:6.16.00", when="@b496504a")
     depends_on("eigen")
