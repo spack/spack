@@ -17,6 +17,7 @@ class Musica(CMakePackage):
     """
 
     homepage = "https://github.com/NCAR/musica"
+    url = "https://github.com/NCAR/musica/archive/refs/tags/v0.10.1.tar.gz"
     git = "https://github.com/NCAR/musica.git"
 
     maintainers("kshores", "mattldawson", "boulderdaze")
@@ -24,7 +25,7 @@ class Musica(CMakePackage):
     license("Apache-2.0", checked_by="kshores")
 
     # Versions
-    version("0.10.1", tag="v0.10.1")
+    version("0.10.1", sha256="edefab03a676a449761997734e6c5b654b2c4f92ce8f1cc66ef63b8ae8ccccf1")
 
     # Options from CMake
     variant("mpi", default=False, description="Enable MPI support")
