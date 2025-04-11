@@ -3212,15 +3212,6 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
-
-def get_current_cache_data():
-    count, byte_size = 0, 0
-    for bucket in spack.solver.asp.CONC_CACHE.cache_buckets():
-        for entry in spack.solver.asp.CONC_CACHE.cache_entries(bucket):
-            count += 1
-            byte_size += entry.stat().st_size
-    return count, byte_size
-
 def extract_cache_metadata():
     cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
     cache = cache_root / ".cache_manifest"
@@ -3881,9 +3872,7 @@ def test_satisfies_conditional_spec(
     assert concrete_spec.satisfies(abstract_spec)
 
 
-def test_concretization_cache_roundtrip(
-    mock_packages, use_concretization_cache, monkeypatch, mutable_config
-):
+def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
     # Force determinism:
@@ -3934,6 +3923,15 @@ def test_concretization_cache_roundtrip(
         assert h == spack.concretize.concretize_one("hdf5")
 
 
+def get_current_cache_data():
+    count, byte_size = 0, 0
+    for bucket in spack.solver.asp.CONC_CACHE.cache_buckets():
+        for entry in spack.solver.asp.CONC_CACHE.cache_entries(bucket):
+            count += 1
+            byte_size += entry.stat().st_size
+    return count, byte_size
+
+
 def test_concretization_cache_manifest_metadata_extraction(
     use_concretization_cache, mutable_config
 ):
@@ -3957,23 +3955,6 @@ def test_concretization_cache_manifest_metadata_extraction(
             cache_byte_size == byte_size
         ), f"Invalid cache metadata read,"
         "byte size value was {byte_size}, but parsed {cache_byte_size}"
-
-
-def test_concretization_cache_manifest_updating(use_concretization_cache, mutable_config):
-    """Tests that the concretization cache manifest keeps proper track of all manifest entries"""
-    spack.concretize.concretize_one("zlib")
-    spack.concretize.concretize_one("hdf5")
-    spack.concretize.concretize_one("py-black")
-    parsed_count, parsed_byte_size = extract_cache_metadata()
-    count = 0
-    byte_size = 0
-    for entry in spack.solver.asp.CONC_CACHE.cache_entries():
-        count += 1
-        byte_size += entry.stat().st_size
-    assert parsed_count == count, "Concretization cache manifest entry count incorrect. "
-    f"Expected count {count}, got {parsed_count}"
-    assert parsed_byte_size == byte_size, "Concretization cache manifest byte count incorrect. "
-    f"Expected count {byte_size}, got {parsed_byte_size}"
 
 
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
