@@ -52,7 +52,7 @@ class Gslib(Package):
         else:
             makefile = "src/Makefile"
 
-        cc = self.compiler.cc
+        cc = self["c"].cc
 
         # Maybe this is too restrictive. Can +shared and +static be okay?
         # If so, should add +/~ static variant.
