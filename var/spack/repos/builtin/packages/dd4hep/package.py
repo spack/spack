@@ -74,6 +74,7 @@ class Dd4hep(CMakePackage):
     variant("utilityapps", default=True, description="Build UtilityApps subpackage.")
 
     # variants for other build options
+    variant("doc", default=False, description="Build documentation")
     variant("xercesc", default=False, description="Enable 'Detector Builders' based on XercesC")
     variant("hepmc3", default=False, description="Enable build with hepmc3")
     variant(
@@ -109,6 +110,7 @@ class Dd4hep(CMakePackage):
     depends_on("root @6.08: +gdml +geom +math +python +x +opengl", when="+utilityapps")
 
     extends("python")
+    depends_on("imagemagick", when="+doc")
     depends_on("xerces-c", when="+xercesc")
     depends_on("geant4@10.2.2:", when="+ddg4")
     depends_on("assimp@5.0.2:", when="+ddcad")
@@ -162,6 +164,7 @@ class Dd4hep(CMakePackage):
         if cxxstd == "11":
             cxxstd = "14"
         args = [
+            self.define_from_variant("BUILD_DOCS", "doc"),
             self.define_from_variant("DD4HEP_USE_EDM4HEP", "edm4hep"),
             self.define_from_variant("DD4HEP_USE_XERCESC", "xercesc"),
             self.define_from_variant("DD4HEP_USE_TBB", "tbb"),
