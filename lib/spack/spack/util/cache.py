@@ -9,8 +9,6 @@ import pathlib
 import shutil
 from typing import Dict, Union
 
-from llnl.util.filesystem import rename
-
 from spack.error import SpackError
 from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
@@ -91,10 +89,10 @@ class Cache:
         Return whether the cache file exists yet or not.
         """
         cache_path = self.cache_path(key)
-        valid = self._entry_validation(cache_path)
+        validation_result = self._entry_validation(cache_path)
         # ensure lock is created for this key
         self._get_lock(key)
-        return valid
+        return validation_result
 
     def read_transaction(self, key: Union[str, pathlib.Path]):
         """Get a read transaction on a file cache item.

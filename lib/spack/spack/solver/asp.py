@@ -732,24 +732,26 @@ class ConcretizationCache:
                     "within the concretization cache."
                 )
 
-    def _results_from_cache(self, cache_entry_buffer: IO[bytes]) -> Union[Result, None]:
+    def _read_text_cache(self, cache_path: pathlib.Path) -> Optional[str]:
+        """Processes a text encoded cache file and returns contexts if it exists"""
+        try:
+            with open(cache_path, "r") as f:
+                return f.read()
+        except FileNotFoundError:
+            return None
+
+    def _results_from_cache(self, cache_entry_file: str) -> Union[Result, None]:
         """Returns a Results object from the concretizer cache
 
         Reads the cache hit and uses `Result`'s own deserializer
         to produce a new Result object
         """
 
-        with current_file_position(cache_entry_buffer, 0):
-            cache_str = self._unzip_cache_entry(cache_entry_buffer.read())
-            # TODO: Should this be an error if None?
-            # Same for _stats_from_cache
-            if cache_str:
-                cache_entry = json.loads(cache_str)
-                result_json = cache_entry["results"]
-                return Result.from_dict(result_json)
-        return None
+        cache_entry = json.loads(cache_entry_file)
+        result_json = cache_entry["results"]
+        return Result.from_dict(result_json)
 
-    def _stats_from_cache(self, cache_entry_buffer: IO[bytes]) -> Union[List, None]:
+    def _stats_from_cache(self, cache_entry_file: str) -> Union[List, None]:
         """Returns concretization statistic from the
         concretization associated with the cache.
 
@@ -757,14 +759,11 @@ class ConcretizationCache:
         statistics covering the cached concretization run
         and returns the Python data structures
         """
-        with current_file_position(cache_entry_buffer, 0):
-            cache_str = self._unzip_cache_entry(cache_entry_buffer.read())
-            if cache_str:
-                return json.loads(cache_str)["statistics"]
-        return None
+        return json.loads(cache_entry_file)["statistics"]
 
     def _prefix_digest(self, problem: str) -> Tuple[str, str]:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
+        # compress the problem w/ gzip so we can validate checksum w/o decompressing
         prob_digest = spack.util.hash.b32_hash(problem)
         prefix = prob_digest[:2]
         return prefix, prob_digest
@@ -783,14 +782,6 @@ class ConcretizationCache:
         """Returns a Path object representing the cache entry
         corresponding to the given sha256 hash"""
         return pathlib.Path(hash[:2]) / hash
-
-    def _zip_cache_entry(self, cache_data: str):
-        """Compress cache entries via gzip"""
-        return gzip.compress(cache_data.encode("utf-8"))
-
-    def _unzip_cache_entry(self, cache_data: bytes):
-        """Decompresses cache entries, which are gzipped by default"""
-        return gzip.decompress(cache_data).decode("utf-8")
 
     def _safe_remove(self, cache_dir: pathlib.Path) -> bool:
         """Removes cache entries with handling for the case where the entry has been
@@ -818,17 +809,17 @@ class ConcretizationCache:
         Hash membership is computed based on the sha256 of the provided asp
         problem.
         """
-        bucket, entry = self._prefix_digest(problem)
-        cache_path = self.root / bucket / entry
-        self._fc.init_entry(cache_path)
-        with self._fc.write_transaction(bucket) as (old, new):
-            if old:
+        bucket, digest = self._prefix_digest(problem)
+        cache_path = self.root / bucket / digest
+        self._fc.init_entry(bucket)
+        with self._fc.write_transaction(bucket):
+            try:
+                with gzip.open(cache_path, "xb") as cache_entry:
+                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+                    cache_entry.write(json.dumps(cache_dict).encode())
+            except FileExistsError:
                 # Entry for this conc hash exists already, do not overwrite
                 tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
-                return
-            cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
-            with open(cache_path, "wb") as new_bytes:
-                new_bytes.write(self._zip_cache_entry(json.dumps(cache_dict)))
 
     def fetch(self, problem: str) -> Union[Tuple[Result, List], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
@@ -840,11 +831,26 @@ class ConcretizationCache:
         bucket, entry = self._prefix_digest(problem)
         cache_path = self.root / bucket / entry
         result, statistics = None, None
-        with self._fc.read_transaction(bucket) as f:
-            if f:
-                bytes_f = open(cache_path, "rb")
-                result = self._results_from_cache(bytes_f)
-                statistics = self._stats_from_cache(bytes_f)
+        with self._fc.read_transaction(bucket) as exists:
+            # if exists is false, then there's no chance of a hit
+            # in this bucket, as it does not exist
+            if exists:
+                cache_entry_content = None
+                try:
+                    with gzip.open(cache_path, 'rb') as f:
+                        f.peek(1)  # Try to read at least one byte
+                        f.seek(0)
+                        cache_entry_content = f.read().decode("utf-8")
+                except gzip.BadGzipFile:
+                    # Cache entry was created pre-compression
+                    # read from plaintext
+                    cache_entry_content = self._read_text_cache(cache_path)
+                except FileNotFoundError:
+                    # cache miss
+                    pass
+                if cache_entry_content:
+                    result = self._results_from_cache(cache_entry_content)
+                    statistics = self._stats_from_cache(cache_entry_content)
         if result and statistics:
             tty.debug(f"Concretization cache hit at {str(cache_path)}")
             return result, statistics
