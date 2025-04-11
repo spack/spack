@@ -500,6 +500,7 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11135
     conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
+    @when("+root7 +geom +webgui")
     def patch(self):
         filter_file(
             r"#include <sstream>",
