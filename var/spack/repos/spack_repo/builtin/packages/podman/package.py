@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+from spack.operating_systems.mac_os import macos_version
 from spack.package import *
+
+_is_macos = sys.platform == "darwin"
 
 
 class Podman(Package):
@@ -32,11 +37,8 @@ class Podman(Package):
         msg="podman for macOS is only supported on version 5.4.2 and above.",
     )
 
-    # see https://github.com/containers/podman/issues/22121
-    REQUIRES_VENTURA_MSG = "podman for macOS requires Ventura or later"
-    requires("os=ventura", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
-    requires("os=sonoma", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
-    requires("os=sequoia", when="platform=darwin", msg=REQUIRES_VENTURA_MSG)
+    if _is_macos and macos_version() < Version("13"):
+        raise InstallError("podman for macOS requires Ventura or later")
 
     # See <https://github.com/containers/podman/issues/16996> for the
     # respective issue and the suggested patch
