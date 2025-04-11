@@ -23,6 +23,12 @@ class Libcxi(AutotoolsPackage):
 
     depends_on("c", type="build")
 
+    with default_args(type="build", when="@main"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("pkgconfig")
+
     depends_on("cassini-headers")
     depends_on("cxi-driver")
 
