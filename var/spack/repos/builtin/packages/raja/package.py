@@ -25,12 +25,18 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/RAJA.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale", "adrienbernede")
+    maintainers("adrienbernede", "davidbeckingsale", "kab163")
 
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=submodules)
     version("main", branch="main", submodules=submodules)
+    version(
+        "2025.03.0",
+        tag="v2025.03.0",
+        commit="1d70abf171474d331f1409908bdf1b1c3fe19222",
+        submodules=submodules,
+    )
     version(
         "2024.07.0",
         tag="v2024.07.0",
@@ -206,6 +212,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         description="Run all the tests, including those known to fail.",
     )
 
+    variant(
+        "lowopttest",
+        default=False,
+        description="For developers, lowers optimization level to pass tests with some compilers",
+    )
+
     depends_on("cxx", type="build")  # generated
 
     depends_on("blt", type="build")
@@ -364,6 +376,9 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
 
         entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
+
+        if spec.satisfies("+lowopttest"):
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE", "-O1"))
 
         # C++17
         if spec.satisfies("@2024.07.0:") and spec.satisfies("+sycl"):

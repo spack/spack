@@ -20,8 +20,8 @@ class Rocblas(CMakePackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="73e91bd50c920b818742fa5bf9990c0676be5bfbafe321d5781607dc2ce27060")
     version("6.3.2", sha256="455cad760d926c21101594197c4456f617e5873a8f17bb3e14bd762018545a9e")
     version("6.3.1", sha256="88d2de6ce6b23a157eea8be63408350848935e4dfc3e27e5f2add78834c6d6ba")

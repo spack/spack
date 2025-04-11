@@ -41,6 +41,7 @@ class Go(Package):
     version("1.24.2", sha256="9dc77ffadc16d837a1bf32d99c624cb4df0647cee7b119edd9e7b1bcc05f2e00")
     version("1.24.1", sha256="8244ebf46c65607db10222b5806aeb31c1fcf8979c1b6b12f60c677e9a3c0656")
     version("1.24.0", sha256="d14120614acb29d12bcab72bd689f257eb4be9e0b6f88a8fb7e41ac65f8556e5")
+    version("1.23.8", sha256="0ca1f1e37ea255e3ce283af3f4e628502fb444587da987a5bb96d6c6f15930d4")
     version("1.23.7", sha256="7cfabd46b73eb4c26b19d69515dd043d7183a6559acccd5cfdb25eb6b266a458")
     version("1.23.6", sha256="039c5b04e65279daceee8a6f71e70bd05cf5b801782b6f77c6e19e2ed0511222")
     version("1.23.5", sha256="a6f3f4bbd3e6bdd626f79b668f212fbb5649daf75084fb79b678a0ae4d97423b")

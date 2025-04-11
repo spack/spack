@@ -20,7 +20,7 @@ class HsakmtRoct(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath")
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.2.4", sha256="5c71655e3a1b9d1404dc8cb64b9d2fadd27e67606aaa8aec0c325768d8c483c0")
     version("6.2.1", sha256="bba5dd8cce595d94d6a8e467dbd6de9e921f81e665ca8aac1e346e0ade7620f0")
     version("6.2.0", sha256="73df98ca2be8a887cb76554c23f148ef6556bdbccfac99f34111fa1f87fd7c5d")
