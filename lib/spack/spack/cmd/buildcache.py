@@ -702,7 +702,8 @@ def sync_fn(args):
     )
 
     tty.debug("Syncing the following specs:")
-    for s in env.all_specs():
+    specs_to_sync = [s for s in env.all_specs() if not s.external]
+    for s in specs_to_sync:
         tty.debug("  {0}{1}: {2}".format("* " if s in env.roots() else "  ", s.name, s.dag_hash()))
         cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
