@@ -37,6 +37,7 @@ class Podman(Package):
         msg="podman for macOS is only supported on version 5.4.2 and above.",
     )
 
+    # see https://github.com/containers/podman/issues/22121
     if _is_macos and macos_version() < Version("13"):
         raise InstallError("podman for macOS requires Ventura or later")
 
