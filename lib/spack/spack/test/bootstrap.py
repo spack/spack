@@ -49,6 +49,9 @@ def test_store_padding_length_is_zero_during_bootstrapping(mutable_config, tmpdi
         assert spack.config.CONFIG.get("config:install_tree:padded_length") == 512
 
 
+# TODO/RepoSplit/TBD: Why is this unit test allowed to reinitialize the actual
+# TODO/RepoSplit/TBD:   store (install_root)?
+# TODO/RepoSplit/TBD: Is mutable_config even being used here?
 @pytest.mark.regression("38963")
 def test_install_tree_customization_is_respected(mutable_config, tmp_path):
     """Tests that a custom user store is respected when we exit the bootstrapping
@@ -129,6 +132,8 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
     assert "lmod" in spack.config.get("modules:default:enable")
 
 
+# TODO/RepoSplit: No compilers => check within context fails though
+# TODO/RepoSplit:   before/after checks probably aren't as expected.
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
@@ -138,6 +143,8 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
     assert not spack.compilers.config.all_compilers(init_config=False)
 
 
+# TODO/RepoSplit: No compilers => check within context fails though
+# TODO/RepoSplit:   before/after checks probably aren't as expected.
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_environment_active(
