@@ -111,22 +111,14 @@ from .enums import InstallRecordStatus
 __all__ = [
     "CompilerSpec",
     "Spec",
-    "SpecParseError",
     "UnsupportedPropagationError",
     "DuplicateDependencyError",
-    "DuplicateCompilerSpecError",
     "UnsupportedCompilerError",
     "DuplicateArchitectureError",
-    "InconsistentSpecError",
     "InvalidDependencyError",
-    "NoProviderError",
-    "MultipleProviderError",
     "UnsatisfiableSpecNameError",
     "UnsatisfiableVersionSpecError",
-    "UnsatisfiableCompilerSpecError",
-    "UnsatisfiableCompilerFlagSpecError",
     "UnsatisfiableArchitectureSpecError",
-    "UnsatisfiableProviderSpecError",
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
@@ -5162,25 +5154,6 @@ def eval_conditional(string):
     return eval(string, valid_variables)
 
 
-class SpecParseError(spack.error.SpecError):
-    """Wrapper for ParseError for when we're parsing specs."""
-
-    def __init__(self, parse_error):
-        super().__init__(parse_error.message)
-        self.string = parse_error.string
-        self.pos = parse_error.pos
-
-    @property
-    def long_message(self):
-        return "\n".join(
-            [
-                "  Encountered when parsing spec:",
-                "    %s" % self.string,
-                "    %s^" % (" " * self.pos),
-            ]
-        )
-
-
 class InvalidVariantForSpecError(spack.error.SpecError):
     """Raised when an invalid conditional variant is specified."""
 
@@ -5198,25 +5171,12 @@ class DuplicateDependencyError(spack.error.SpecError):
     """Raised when the same dependency occurs in a spec twice."""
 
 
-class MultipleVersionError(spack.error.SpecError):
-    """Raised when version constraints occur in a spec twice."""
-
-
-class DuplicateCompilerSpecError(spack.error.SpecError):
-    """Raised when the same compiler occurs in a spec twice."""
-
-
 class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
 
 
 class DuplicateArchitectureError(spack.error.SpecError):
     """Raised when the same architecture occurs in a spec twice."""
-
-
-class InconsistentSpecError(spack.error.SpecError):
-    """Raised when two nodes in the same spec DAG have inconsistent
-    constraints."""
 
 
 class InvalidDependencyError(spack.error.SpecError):
@@ -5228,30 +5188,6 @@ class InvalidDependencyError(spack.error.SpecError):
         super().__init__(
             "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
         )
-
-
-class NoProviderError(spack.error.SpecError):
-    """Raised when there is no package that provides a particular
-    virtual dependency.
-    """
-
-    def __init__(self, vpkg):
-        super().__init__("No providers found for virtual package: '%s'" % vpkg)
-        self.vpkg = vpkg
-
-
-class MultipleProviderError(spack.error.SpecError):
-    """Raised when there is no package that provides a particular
-    virtual dependency.
-    """
-
-    def __init__(self, vpkg, providers):
-        """Takes the name of the vpkg"""
-        super().__init__(
-            "Multiple providers found for '%s': %s" % (vpkg, [str(s) for s in providers])
-        )
-        self.vpkg = vpkg
-        self.providers = providers
 
 
 class UnsatisfiableSpecNameError(spack.error.UnsatisfiableSpecError):
@@ -5268,33 +5204,11 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
         super().__init__(provided, required, "version")
 
 
-class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec compiler conflicts with package constraints."""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "compiler")
-
-
-class UnsatisfiableCompilerFlagSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec variant conflicts with package constraints."""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "compiler_flags")
-
-
 class UnsatisfiableArchitectureSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "architecture")
-
-
-class UnsatisfiableProviderSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a provider is supplied but constraints don't match
-    a vpkg requirement"""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "provider")
 
 
 # TODO: get rid of this and be more specific about particular incompatible
