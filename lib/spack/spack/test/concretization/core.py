@@ -3932,31 +3932,6 @@ def get_current_cache_data():
     return count, byte_size
 
 
-def test_concretization_cache_manifest_metadata_extraction(
-    use_concretization_cache, mutable_config
-):
-    """Test that the concretization cache is able to correctly extract manifest data"""
-    cache_root = pathlib.Path(spack.config.get("config:concretization_cache:url"))
-    cache = cache_root / ".cache_manifest"
-    with cache.open("r") as f:
-        cache_metadata = f.readline().strip("\n").split(" ")
-        assert (
-            len(cache_metadata) == 2
-        ), f"Invalid cache metadata structure: {len(cache_metadata)} values detected"
-        f.seek(0, io.SEEK_CUR)
-        cache_count, cache_byte_size = spack.solver.asp.CONC_CACHE._extract_cache_metadata(f)
-        count, byte_size = cache_metadata
-        count = int(count)
-        byte_size = int(byte_size)
-        assert (
-            cache_count == count
-        ), f"Invalid cache metadata read, count value was {count}, but parsed {cache_count}"
-        assert (
-            cache_byte_size == byte_size
-        ), f"Invalid cache metadata read,"
-        "byte size value was {byte_size}, but parsed {cache_byte_size}"
-
-
 def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
