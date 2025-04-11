@@ -190,6 +190,9 @@ class Root(CMakePackage):
     variant("arrow", default=False, description="Enable Arrow interface")
     variant("cuda", when="@6.08.00:", default=False, description="Enable CUDA support")
     variant("cudnn", when="@6.20.02:", default=False, description="Enable cuDNN support")
+    variant(
+        "daos", default=False, description="Enable RNTuple support for DAOS storage", when="@6.26:"
+    )
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -389,6 +392,7 @@ class Root(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("cuda", when="+cudnn")
     depends_on("cudnn", when="+cudnn")
+    depends_on("daos", when="+daos")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -560,6 +564,7 @@ class Root(CMakePackage):
                     variants.append("~%s" % variantname[1:])
 
         _add_variant(v, f, "cocoa", "+aqua")
+        _add_variant(v, f, "daos", "+daos")
         _add_variant(v, f, "davix", "+davix")
         _add_variant(v, f, "dcache", "+dcache")
         _add_variant(v, f, "fftw3", "+fftw")
@@ -706,6 +711,7 @@ class Root(CMakePackage):
             define_from_variant("cocoa", "aqua"),
             define("dataframe", True),
             define_from_variant("davix"),
+            define_from_variant("daos"),
             define_from_variant("dcache"),
             define_from_variant("fftw3", "fftw"),
             define_from_variant("fitsio", "fits"),

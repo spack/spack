@@ -17,7 +17,7 @@ class ComposableKernel(CMakePackage):
 
     license("MIT")
 
-    version("master", branch="develop")
+    version("master", branch="develop", deprecated=True)
     version("6.3.3", sha256="b7102efba044455416a6127af1951019fe8365a653ea7eb0b1d83bb4542c9309")
     version("6.3.2", sha256="875237fe493ff040f8f63b827cddf2ff30a8d3aa18864f87d0e35323c7d62a2d")
     version("6.3.1", sha256="3e8c8c832ca3f9ceb99ab90f654b93b7db876f08d90eda87a70bc629c854052a")

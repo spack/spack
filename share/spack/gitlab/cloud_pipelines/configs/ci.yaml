@@ -42,7 +42,7 @@ ci:
           aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - signing-job:
-      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/notary:0.0.1", "entrypoint": [""] }
       tags: ["aws"]
       script:
       - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_BUILDCACHE_DESTINATION}/build_cache /tmp
