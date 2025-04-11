@@ -194,6 +194,9 @@ else:
     required_executables = ["/usr/bin/g++", "patchelf"]
 
 
+# TODO/RepoSplit: Getting spack.store.MatchError when looking for specs in store
+# TODO/RepoSplit: with concretization errors with compiler_supports_target
+# TODO/RepoSplit:   "info: atom does not occur in any rule head: .."
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.usefixtures(
@@ -246,6 +249,9 @@ def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
     buildcache_cmd("list", "-l", "-v")
 
 
+# TODO/RepoSplit: Getting spack.store.MatchError when looking for specs in store
+# TODO/RepoSplit: with concretization errors with compiler_supports_target
+# TODO/RepoSplit:   "info: atom does not occur in any rule head: .."
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -269,6 +275,9 @@ def test_default_rpaths_install_nondefault_layout(temporary_mirror_dir):
     buildcache_cmd("install", "-uf", cspec.name)
 
 
+# TODO/RepoSplit: Getting spack.store.MatchError when looking for specs in store
+# TODO/RepoSplit: with concretization errors with compiler_supports_target
+# TODO/RepoSplit:   "info: atom does not occur in any rule head: .."
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -303,6 +312,9 @@ def test_relative_rpaths_install_default_layout(temporary_mirror_dir):
     buildcache_cmd("install", "-uf", cspec.name)
 
 
+# TODO/RepoSplit: Getting spack.store.MatchError when looking for specs in store
+# TODO/RepoSplit: with concretization errors with compiler_supports_target
+# TODO/RepoSplit:   "info: atom does not occur in any rule head: .."
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
