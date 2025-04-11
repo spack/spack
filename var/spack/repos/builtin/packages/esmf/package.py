@@ -200,7 +200,8 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     @run_before("build")
     def chmod_scripts(self):
         chmod = which("chmod")
-        chmod("+x", "scripts/libs.mvapich2f90")
+        if os.path.exists("scripts/libs.mvapich2f90"):
+            chmod("+x", "scripts/libs.mvapich2f90")
 
     def url_for_version(self, version):
         if version < Version("8.0.0"):
