@@ -81,10 +81,6 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     version("11.14.2", sha256="f22b2b0df7b88e28b992e19044ba72b845292b93cbbb3a948488199647381119")
     version("11.14.1", sha256="f10fc0a496bf49427eb6871c80816d6e26822a39177d850cc62cf1484e4eec07")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
-
     # ###################### Variants ##########################
 
     # Build options
@@ -416,8 +412,14 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # ###################### Dependencies ##########################
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     # External Kokkos
     with when("@14.4: +kokkos"):
+        depends_on("kokkos~cuda", when="~cuda")
+        depends_on("kokkos~rocm", when="~rocm")
         depends_on("kokkos+wrapper", when="+wrapper")
         depends_on("kokkos~wrapper", when="~wrapper")
         depends_on("kokkos+cuda_relocatable_device_code~shared", when="+cuda_rdc")
@@ -553,6 +555,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # https://github.com/trilinos/Trilinos/pull/11600
     patch("13.4.1-patch11600.patch", when="@13.4.1 %oneapi@2025:")
+
+    # https://github.com/trilinos/Trilinos/pull/13921
+    patch("16-1-0-stk-fpe-exceptions.patch", when="@=16.1.0 +stk platform=darwin")
+
+    # https://github.com/trilinos/Trilinos/issues/13916 and
+    # https://github.com/trilinos/Trilinos/pull/13921
+    patch("16-1-0-stk-size_t.patch", when="@=16.1.0 +stk")
 
     def flag_handler(self, name, flags):
         spec = self.spec

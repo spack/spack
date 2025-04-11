@@ -50,9 +50,6 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     version("0.168", sha256="b88d07893ba1373c7dd69a7855974706d05377766568a7d9002706d5de72c276")
     version("0.163", sha256="7c774f1eef329309f3b05e730bdac50013155d437518a2ec0e24871d312f2e23")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # Native language support from libintl.
     variant("nls", default=True, description="Enable Native Language Support.")
     variant("exeprefix", default=True, description="Add a prefix to generated executables.")
@@ -70,6 +67,9 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
         when="@0.185",
         sha256="d786d49c28d7f0c8fc27bab39ca8714e5f4d128c7f09bb18533a8ec99b38dbf8",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("bzip2", type="link")
     depends_on("xz", type="link")

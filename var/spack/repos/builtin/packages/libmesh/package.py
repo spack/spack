@@ -133,6 +133,9 @@ class Libmesh(AutotoolsPackage):
         "variant.",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("boost", when="+boost")
 
     # TODO: replace this with an explicit list of components of Boost,

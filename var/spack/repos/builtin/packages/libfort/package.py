@@ -15,14 +15,14 @@ class Libfort(CMakePackage):
 
     version("0.4.2", sha256="8f7b03f1aa526e50c9828f09490f3c844b73d5f9ca72493fe81931746f75e489")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("enable_astyle", default=False, description="Enable astyle")
     variant("enable_wchar", default=True, description="Enable wchar support")
     variant("enable_utf8", default=True, description="Enable utf8 support")
     variant("enable_testing", default=True, description="Enables building tests and examples")
     variant("shared", default=False, description="Build shared library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.0.0:", type="build")
 

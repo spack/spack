@@ -40,6 +40,19 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
             return r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
         return r"\((?:IFORT|ICC)\) ([^ ]+)"
 
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("intel", "icc"),
+        "cxx": os.path.join("intel", "icpc"),
+        "fortran": os.path.join("intel", "ifort"),
+    }
+
+    implicit_rpath_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
+
+    stdcxx_libs = ("-cxxlib",)
+
+    provides("c", "cxx")
+    provides("fortran")
+
     # Versions before 2021 are in the `intel` package
     # intel-oneapi versions before 2022 use intel@19.0.4
     for ver, oneapi_ver in {
@@ -86,6 +99,20 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         env.set("F77", bin_prefix.ifort)
         env.set("FC", bin_prefix.ifort)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        super().setup_dependent_build_environment(env, dependent_spec)
+        # Edge cases for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Always pass flags to disable deprecation warnings, since these warnings can
+        # confuse tools that parse the output of compiler commands (e.g. version checks).
+        if dependent_spec.satisfies("^[virtuals=c] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_CFLAGS", "-diag-disable=10441")
+
+        if dependent_spec.satisfies("^[virtuals=cxx] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_CXXFLAGS", "-diag-disable=10441")
+
+        if dependent_spec.satisfies("^[virtuals=fortran] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_FFLAGS", "-diag-disable=10448")
+
     def install(self, spec, prefix):
         # If we symlink top-level directories directly, files won't show up in views
         # Create real dirs and symlink files instead
@@ -108,3 +135,15 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
                 link_tree.merge(dest_path)
             else:
                 os.symlink(src_path, dest_path)
+
+    def _cc_path(self):
+        return str(self.prefix.bin.icc)
+
+    def _cxx_path(self):
+        return str(self.prefix.bin.icpc)
+
+    def _fortran_path(self):
+        return str(self.prefix.bin.ifort)
+
+    def archspec_name(self):
+        return "intel"

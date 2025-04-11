@@ -22,14 +22,14 @@ class H5utils(AutotoolsPackage):
         url="https://github.com/NanoComp/h5utils/archive/refs/tags/1.12.1.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("png", default=True, description="Enable PNG support")
     variant("vis5d", default=False, description="Enable Vis5d support")
     variant("octave", default=False, description="Enable GNU Octave support")
     variant("hdf4", default=False, description="Enable HDF4 support")
     variant("math", default=False, description="Build h5math")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Required dependencies
     depends_on("hdf5")

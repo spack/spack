@@ -37,6 +37,7 @@ class PyPyarrow(PythonPackage):
     version("0.11.0", sha256="07a6fd71c5d7440f2c42383dd2c5daa12d7f0a012f1e88288ed08a247032aead")
     version("0.9.0", sha256="7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     with default_args(type="build"):

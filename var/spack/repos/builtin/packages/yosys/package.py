@@ -28,6 +28,8 @@ class Yosys(MakefilePackage):
 
     version("master", branch="master")
 
+    version("0.52", commit="fee39a3284c90249e1d9684cf6944ffbbcbb8f90", submodules=True)
+    version("0.51", commit="c4b5190229616f7ebf8197f43990b4429de3e420", submodules=True)
     version("0.50", commit="b5170e1394f602c607e75bdbb1a2b637118f2086", submodules=True)
     version("0.49", commit="427b5a251bfb511528a177bfa92567b4b3ada3dd", submodules=True)
     version("0.48", commit="aaa5347494801e9e3870b31387da59da24233f76", submodules=True)
@@ -60,11 +62,11 @@ class Yosys(MakefilePackage):
     version("0.21", sha256="2b0e140f47d682e1069b1ca53b1fd91cbb1c1546932bd5cb95566f59a673cd8d")
     version("0.20", sha256="ee261487badf1b554616d555da8496a7c84ef21ae66a979ddd946b6949a780a4")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("abc", default=True, description="build with abc support")
     variant("ccache", default=False, description="build with ccache support")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")  # generated
 
     depends_on("automake", type="build")
     depends_on("flex")

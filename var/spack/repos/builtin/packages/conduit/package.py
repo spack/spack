@@ -69,10 +69,6 @@ class Conduit(CMakePackage):
     version("0.2.1", sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4")
     version("0.2.0", sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     maintainers("cyrush")
 
     root_cmakelists_dir = "src"
@@ -121,6 +117,10 @@ class Conduit(CMakePackage):
     ###########################################################################
     # package dependencies
     ###########################################################################
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     #######################
     # BLT
@@ -302,10 +302,11 @@ class Conduit(CMakePackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-conduit-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
-        )
 
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-conduit-{spec.dag_hash()}.cmake"
+        )
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
         return host_config_path

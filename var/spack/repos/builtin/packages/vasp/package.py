@@ -68,6 +68,10 @@ class Vasp(MakefilePackage, CudaPackage):
     variant("shmem", default=True, description="Enable use_shmem build flag")
     variant("hdf5", default=False, when="@6.2:", description="Enabled HDF5 support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("rsync", type="build")
     depends_on("blas")
     depends_on("lapack")
@@ -86,7 +90,7 @@ class Vasp(MakefilePackage, CudaPackage):
     depends_on("nccl", when="@6.3: +cuda")
     depends_on("hdf5+fortran+mpi", when="+hdf5")
     # at the very least the nvhpc mpi seems required
-    depends_on("nvhpc+mpi+lapack+blas", when="%nvhpc")
+    requires("^nvhpc+mpi+lapack+blas", when="%nvhpc")
 
     conflicts(
         "%gcc@:8", msg="GFortran before 9.x does not support all features needed to build VASP"

@@ -32,6 +32,9 @@ class Ffr(MakefilePackage):
     patch("gfortran_format_31.patch", when="@3.1.004 %gcc")
     patch("gfortran_format_30.patch", when="@3.0_000 %gcc")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("mpi")
     depends_on("metis@:4", type="link")
 

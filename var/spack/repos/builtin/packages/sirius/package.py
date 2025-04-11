@@ -34,10 +34,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
 
-    depends_on("cxx", type="build")
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
     variant("fortran", default=False, description="Build Fortran bindings")
@@ -72,6 +68,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         )
         conflicts("+tests~pugixml")
     depends_on("pugixml", when="+pugixml")
+
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
@@ -154,9 +154,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
     depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
     depends_on(
-        "intel-mkl threads=openmp", when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-mkl"
-    )
-    depends_on(
         "intel-oneapi-mkl threads=openmp",
         when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
     )
@@ -165,7 +162,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         when="+scalapack ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
     )
 
-    conflicts("intel-mkl", when="@7.6.0:")
     # MKLConfig.cmake introduced in 2021.3
     conflicts("intel-oneapi-mkl@:2021.2", when="^intel-oneapi-mkl")
 
@@ -244,7 +240,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "^cray-libsci" in spec:
             args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in INTEL_MATH_LIBRARIES:
+        if spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             args.append(self.define(cm_label + "USE_MKL", "ON"))
 
             if spec.satisfies("@7.6.0:"):
@@ -254,7 +250,11 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
                         "openmp": "gnu_thread",
                         "tbb": "tbb_thread",
                     },
-                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                    "mpi": {
+                        "intel-oneapi-mpi": "intelmpi",
+                        "mpich": "mpich",
+                        "openmpi": "openmpi",
+                    },
                 }
 
                 mkl_threads = mkl_mapper["threading"][
