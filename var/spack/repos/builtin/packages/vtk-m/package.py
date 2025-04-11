@@ -166,7 +166,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3258
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
-    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2")
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2.0")
 
     # VTK-M PR#3259
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
