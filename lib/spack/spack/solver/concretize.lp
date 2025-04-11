@@ -501,6 +501,11 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
    attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
 
+% Asking for gcc@10 %gcc@9 shouldn't give us back an external gcc@10, just because of the hack
+% we have on externals
+:- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
+   Parent == BuildDependency,
+   external(node(X, Parent)).
 
 build_requirement(node(X, Parent), node(Y, BuildDependency)) :-
   attr("depends_on", node(X, Parent), node(Y, BuildDependency), "build"),
