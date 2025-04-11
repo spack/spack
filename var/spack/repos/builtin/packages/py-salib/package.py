@@ -38,8 +38,8 @@ class PySalib(PythonPackage):
     depends_on("py-setuptools@38.3:", type="build", when="@:1.4.5")
     depends_on("py-setuptools-scm", type="build", when="@1.4.4:1.4.5")
     depends_on("py-wheel", type="build", when="@:1.4.5")
-    depends_on("hatchling@1.8.1:", type="build", when="@1.4.6:")
-    depends_on("hatch-vcs", type="build", when="@1.5.0:")
+    depends_on("py-hatchling@1.8.1:", type="build", when="@1.4.6:")
+    depends_on("py-hatch-vcs", type="build", when="@1.5.0:")
 
     depends_on("python@3.8:", type=("build", "run"), when="@1.4.6:")
     depends_on("python@3.9:", type=("build", "run"), when="@1.5.0:")
