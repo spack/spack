@@ -1287,12 +1287,8 @@ class PyclingoDriver:
             result.raise_if_unsat()
 
             if result.satisfiable and result.unsolved_specs and setup.concretize_everything:
-                unsolved_str = Result.format_unsolved(result.unsolved_specs)
-                raise InternalConcretizerError(
-                    "Internal Spack error: the solver completed but produced specs"
-                    " that do not satisfy the request. Please report a bug at "
-                    f"https://github.com/spack/spack/issues\n\t{unsolved_str}"
-                )
+                raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
+
             if conc_cache_enabled:
                 CONC_CACHE.store(problem_repr, result, self.control.statistics, test=setup.tests)
             concretization_stats = self.control.statistics
@@ -4651,13 +4647,9 @@ class Solver:
                 break
 
             if not result.specs:
-                # This is also a problem: no specs were solved for, which
-                # means we would be in a loop if we tried again
-                unsolved_str = Result.format_unsolved(result.unsolved_specs)
-                raise InternalConcretizerError(
-                    "Internal Spack error: a subset of input specs could not"
-                    f" be solved for.\n\t{unsolved_str}"
-                )
+                # This is also a problem: no specs were solved for, which means we would be in a
+                # loop if we tried again
+                raise OutputDoesNotSatisfyInputError(result.unsolved_specs)
 
             input_specs = list(x for (x, y) in result.unsolved_specs)
             for spec in result.specs:
@@ -4685,6 +4677,19 @@ class InternalConcretizerError(spack.error.UnsatisfiableSpecError):
         self.provided = None
         self.required = None
         self.constraint_type = None
+
+
+class OutputDoesNotSatisfyInputError(InternalConcretizerError):
+
+    def __init__(
+        self, input_to_output: List[Tuple[spack.spec.Spec, Optional[spack.spec.Spec]]]
+    ) -> None:
+        self.input_to_output = input_to_output
+        super().__init__(
+            "internal solver error: the solver completed but produced specs"
+            " that do not satisfy the request. Please report a bug at "
+            f"https://github.com/spack/spack/issues\n\t{Result.format_unsolved(input_to_output)}"
+        )
 
 
 class SolverError(InternalConcretizerError):
