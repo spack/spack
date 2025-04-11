@@ -57,7 +57,7 @@ class Gslib(Package):
         if "+shared" in spec:
             filter_file(r"SHARED.*?=.*0", "SHARED = 1", makefile)
             filter_file(r"STATIC.*?=.*0", "STATIC = 0", makefile)
-        
+
         if "+mpiio" not in spec:
             filter_file(r"MPIIO.*?=.*1", "MPIIO = 0", makefile)
 
