@@ -3339,6 +3339,7 @@ def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
 
 
 @pytest.mark.regression("49847")
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
 def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runtimes_on_reuse):
     """Test that we can reuse a spec when specifying build dependencies in the input"""
     pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
