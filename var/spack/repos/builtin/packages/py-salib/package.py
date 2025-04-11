@@ -34,7 +34,15 @@ class PySalib(PythonPackage):
 
     variant("distributed", default=False, description="Build with experimental distributed mode")
 
-    depends_on("py-setuptools@38.3:", type=("build", "run"))
+    depends_on("py-importlib-metadata", type="build", when="@1.4.4:1.4.5 ^python@:3.7")
+    depends_on("py-setuptools@38.3:", type="build", when="@:1.4.5")
+    depends_on("py-setuptools-scm", type="build", when="@1.4.4:1.4.5")
+    depends_on("py-wheel", type="build", when="@:1.4.5")
+    depends_on("hatchling>=1.8.1", type="build", when="@1.4.6:")
+    depends_on("hatch-vcs", type="build", when="@1.5.0:")
+
+    depends_on("python>=3.8", type=("build", "run"), when="@1.4.6:")
+    depends_on("python>=3.9", type=("build", "run"), when="@1.5.0:")
     depends_on("py-numpy@1.16.5:", type=("build", "run"))
     depends_on("py-numpy@1.20.3:", type=("build", "run"), when="@1.4.6:")
     depends_on("py-scipy@1.5.2:", type=("build", "run"))
@@ -48,6 +56,3 @@ class PySalib(PythonPackage):
     depends_on("py-pathos@0.2.5:", type=("build", "run"), when="@:1.4.5")
     depends_on("py-pathos@0.2.5:", type=("build", "run"), when="@1.4.6: +distributed")
     depends_on("py-pathos@0.3.2:", type=("build", "run"), when="@1.5.0: +distributed")
-    depends_on("py-importlib-metadata", type=("build", "run"), when="@1.4.4: ^python@:3.7")
-    depends_on("py-setuptools-scm", type=("build", "run"), when="@1.4.4:")
-    depends_on("py-wheel", type=("build", "run"), when="@1.4.4:")
