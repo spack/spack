@@ -129,6 +129,7 @@ def test_fetch_progress_disabled():
         ("Content-Length", "1234", 1234),
         ("Content-Length", "0", 0),
         ("Content-Length", "-10", 0),
+        ("Content-Length", "not a number", 0),
         ("Not-Content-Length", "1234", 0),
     ],
 )
