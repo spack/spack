@@ -1075,7 +1075,9 @@ def main(argv=None):
         return 3
 
 
-def _handle_solver_bug(e: spack.solver.asp.OutputDoesNotSatisfyInputError) -> None:
+def _handle_solver_bug(
+    e: spack.solver.asp.OutputDoesNotSatisfyInputError, out=sys.stderr, root=None
+) -> None:
     # when the solver outputs specs that do not satisfy the input and spack is used as a command
     # line tool, we dump the incorrect output specs to json so users can upload them in bug reports
     wrong_output = [(input, output) for input, output in e.input_to_output if output is not None]
@@ -1083,16 +1085,19 @@ def _handle_solver_bug(e: spack.solver.asp.OutputDoesNotSatisfyInputError) -> No
     if no_output:
         tty.error(
             "internal solver error: the following specs were not solved:\n    - "
-            + "\n    - ".join(str(s) for s in no_output)
+            + "\n    - ".join(str(s) for s in no_output),
+            stream=out,
         )
     if wrong_output:
         msg = (
             "internal solver error: the following specs were concretized, but do not satisfy the "
-            "input:\n    - " + "\n    - ".join(str(s) for s, _ in wrong_output)
+            "input:\n    - "
+            + "\n    - ".join(str(s) for s, _ in wrong_output)
+            + "\n    Please report a bug at https://github.com/spack/spack/issues"
         )
         # try to write the input/output specs to a temporary directory for bug reports
         try:
-            tmpdir = tempfile.mkdtemp(prefix="spack-asp-")
+            tmpdir = tempfile.mkdtemp(prefix="spack-asp-", dir=root)
             files = []
             for i, (input, output) in enumerate(wrong_output, start=1):
                 in_file = os.path.join(tmpdir, f"input-{i}.json")
@@ -1104,13 +1109,10 @@ def _handle_solver_bug(e: spack.solver.asp.OutputDoesNotSatisfyInputError) -> No
                 with open(out_file, "w", encoding="utf-8") as f:
                     output.to_json(f)
 
-            msg += (
-                "\n    Please report a bug at https://github.com/spack/spack/issues and attach "
-                "the following files:\n    - " + "\n    - ".join(files)
-            )
+            msg += " and attach the following files:\n    - " + "\n    - ".join(files)
         except Exception:
-            msg += "\n    Please report a bug at https://github.com/spack/spack/issues."
-        tty.error(msg)
+            msg += "."
+        tty.error(msg, stream=out)
 
 
 class SpackCommandError(Exception):
