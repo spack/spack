@@ -66,7 +66,7 @@ def test_fetch_progress_unknown_size():
     progress.advance(1000, out)
     assert progress.last_printed == 1.5
     progress.advance(50, out)
-    assert progress.last_printed == 1.5  # does not print, to early after last print
+    assert progress.last_printed == 1.5  # does not print, too early after last print
     progress.advance(2000, out)
     assert progress.last_printed == 2.0
     progress.advance(3000, out)
@@ -109,7 +109,7 @@ def test_fetch_progress_known_size():
 
 
 def test_fetch_progress_disabled():
-    """When disabled, FetchProgres shouldn't print anything when advanced"""
+    """When disabled, FetchProgress shouldn't print anything when advanced"""
 
     def get_time():
         raise RuntimeError("Should not be called")
