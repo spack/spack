@@ -2405,6 +2405,30 @@ class PackageInstaller:
 
         return None
 
+    def setup_jobserver(self) -> Tuple[str, int]:
+        """Setup FIFO implemnetation of make jobserver."""
+        # create a named FIFO pipe for make jobserver
+        fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
+        fifo_path = os.path.join(fifo_directory, "jobserver")
+
+        # create the FIFO
+        os.mkfifo(fifo_path)
+
+        # open the FIFO for reading/writing and initialize with job tokens, decided by -j
+        num_jobs = spack.config.determine_number_of_jobs(parallel=True)
+        js_tokens = b"+" * num_jobs
+        jobserver_fifo_fd = os.open(fifo_path, os.O_RDWR | os.O_NONBLOCK)
+        os.write(jobserver_fifo_fd, js_tokens)
+
+        # set MAKEFLAGS environment variable for make jobserver
+        os.environ["MAKEFLAGS"] = (
+            f"--jobserver-auth=fifo:{fifo_path} --jobserver-style=pipe -j {num_jobs}"
+        )
+
+        return fifo_directory, jobserver_fifo_fd
+
+        # TODO: Implement Windows support.
+
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
         # ensure that build processes do not permanently bork terminal settings
@@ -2423,6 +2447,9 @@ class PackageInstaller:
         failed_build_requests = []
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
+
+        # Setup FIFO jobserver for builds
+        fifo_directory, jobserver_fifo_fd = self.setup_jobserver()
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -2465,6 +2492,10 @@ class PackageInstaller:
                     task.terminate()
                 active_tasks.clear()  # they're all done now
                 raise
+
+        # Close and cleanup the jobserver FIFO
+        os.close(jobserver_fifo_fd)
+        shutil.rmtree(fifo_directory)
 
         self._clear_removed_tasks()
         if self.build_pq:
