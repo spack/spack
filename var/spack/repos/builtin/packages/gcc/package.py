@@ -442,6 +442,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             sha256="01ea668489f3f0fb2439060f6c333c4c17ef4c19c4c4e6e6aa4b8ea493e97685",
             when="@14.2.0 target=aarch64:",
         )
+        # Fix from homebrew for macOS 15.4 SDK issue https://gcc.gnu.org/bugzilla/show_bug.cgi?id=119590
+        patch(
+            "https://github.com/iains/gcc-14-branch/compare/gcc-14.2-darwin-r2..efb88ebe0a6886f816c0d037df33df6556544ad6.patch?full_index=1",
+            sha256="329dc064edbaf1482c76752fd0a0d8ce14f8762d95ac41c0e0ca4c73400d2aea",
+            when="@14.2.0 target=aarch64:",
+        )
         patch(
             "https://github.com/iains/gcc-14-branch/compare/cd0059a1976303638cea95f216de129334fc04d1..gcc-14.1-darwin-r1.patch?full_index=1",
             sha256="159cc2a1077ad5d9a3cca87880cd977b8202d8fb464a6ec7b53804475d21a682",
