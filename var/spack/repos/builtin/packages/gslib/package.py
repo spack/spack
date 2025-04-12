@@ -18,13 +18,20 @@ class Gslib(Package):
     version("1.0.5", tag="v1.0.5", commit="1de2fba1d94e27e20f3bc3af6a3a35901e223ecd")
     version("1.0.4", tag="v1.0.4", commit="00a074c15a13fdfd121ac5781ae450af809dde3b")
     version("1.0.3", tag="v1.0.3", commit="e2df99fad9480a981034fd0e4b3a7fe8f3cf9ae3")
-    version("1.0.2", tag="v1.0.2", commit="e53419c32a4a326e55e1c3e0d7de14ce665c1788")
-    version("1.0.1", tag="v1.0.1", commit="d16685f24551b7efd69e58d96dc76aec75239ea3")
-    version("1.0.0", tag="v1.0.0", commit="9533e652320a3b26a72c36487ae265b02072cd48")
+    version(
+        "1.0.2", tag="v1.0.2", commit="e53419c32a4a326e55e1c3e0d7de14ce665c1788", deprecated=True
+    )
+    version(
+        "1.0.1", tag="v1.0.1", commit="d16685f24551b7efd69e58d96dc76aec75239ea3", deprecated=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0", commit="9533e652320a3b26a72c36487ae265b02072cd48", deprecated=True
+    )
 
     variant("mpi", default=True, description="Build with MPI")
     variant("mpiio", default=True, description="Build with MPI I/O")
     variant("blas", default=False, description="Build with BLAS")
+    variant("shared", default=False, description="Build shared libs. Disables static libs")
 
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
@@ -39,14 +46,22 @@ class Gslib(Package):
     def install(self, spec, prefix):
         src_dir = "src"
         lib_dir = "lib"
-        libname = "libgs.a"
 
         if self.spec.satisfies("@1.0.1:"):
             makefile = "Makefile"
         else:
             makefile = "src/Makefile"
 
-        cc = self.compiler.cc
+        cc = self["c"].cc
+
+        # Maybe this is too restrictive. Can +shared and +static be okay?
+        # If so, should add +/~ static variant.
+        if "+shared" in spec:
+            libname = "libgs.so"
+            filter_file(r"SHARED.*?=.*0", "SHARED = 1", makefile)
+            filter_file(r"STATIC.*?=.*0", "STATIC = 0", makefile)
+        else:
+            libname = "libgs.a"
 
         if "+mpiio" not in spec:
             filter_file(r"MPIIO.*?=.*1", "MPIIO = 0", makefile)
@@ -68,16 +83,14 @@ class Gslib(Package):
         if self.spec.satisfies("@1.0.3:"):
             make(make_cmd)
             make("install", "INSTALL_ROOT=%s" % self.prefix)
-        else:
-            if self.spec.satisfies("@1.0.1:"):
-                make(make_cmd)
-                make("install")
-                install_tree(lib_dir, prefix.lib)
-            elif self.version == Version("1.0.0"):
-                with working_dir(src_dir):
-                    make(make_cmd)
-                    mkdir(prefix.lib)
-                    install(libname, prefix.lib)
-            # Should only install the headers (this will be fixed in gslib on
-            # future releases).
+        elif self.spec.satisfies("@1.0.1:"):
+            make(make_cmd)
+            make("install")
+            install_tree(lib_dir, prefix.lib)
             install_tree(src_dir, prefix.include)
+        elif self.version == Version("1.0.0"):
+            with working_dir(src_dir):
+                make(make_cmd)
+                mkdir(prefix.lib)
+                install(libname, prefix.lib)
+                install_tree(src_dir, prefix.include)
