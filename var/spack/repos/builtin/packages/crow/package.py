@@ -20,13 +20,6 @@ class Crow(CMakePackage):
     version("1.2.1.2", sha256="dc008515f64c9054250909a16bf0d9173af845d2c6d4e49ed6d3f0f32dfdc747")
     version("1.2.0", sha256="c80d0b23c6a20f8aa6fe776669dc8a9fb984046891d2f70bfc0539d16998164b")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("asio", when="asio=standalone")
-    depends_on("boost+system+date_time", when="asio=boost")
-    depends_on("openssl", when="+ssl")
-    depends_on("zlib", when="+compression")
-
     variant(
         "asio",
         default="standalone",
@@ -41,6 +34,14 @@ class Crow(CMakePackage):
     variant(
         "compression", default=False, description="Enable support for HTTP compression using zlib"
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
+    depends_on("asio", when="asio=standalone")
+    depends_on("boost+system+date_time", when="asio=boost")
+    depends_on("openssl", when="+ssl")
+    depends_on("zlib", when="+compression")
 
     def cmake_args(self):
         return [
