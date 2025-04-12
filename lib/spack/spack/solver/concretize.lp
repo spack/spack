@@ -175,11 +175,20 @@ trigger_node(TriggerID, Node, Node) :-
 
 % Since we trigger the existence of literal nodes from a condition, we need to construct the condition_set/2
 mentioned_in_literal(Root, Mentioned) :- mentioned_in_literal(TriggerID, Root, Mentioned), solve_literal(TriggerID).
-condition_set(node(min_dupe_id, Root), node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
+literal_node(Root, node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root).
 
-1 { condition_set(node(min_dupe_id, Root), node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
+1 { literal_node(Root, node(0..Y-1, Mentioned)) : max_dupes(Mentioned, Y) } 1 :-
   mentioned_in_literal(Root, Mentioned), Mentioned != Root,
   internal_error("must have exactly one condition_set for literals").
+
+1 { build_dependency_of_literal_node(LiteralNode, node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1 :-
+  literal_node(Root, LiteralNode),
+  build(LiteralNode),
+  attr("build_requirement", LiteralNode, build_requirement("node", BuildDependency)).
+
+condition_set(node(min_dupe_id, Root), LiteralNode) :- literal_node(Root, LiteralNode).
+condition_set(LiteralNode, BuildNode) :- build_dependency_of_literal_node(LiteralNode, BuildNode).
+
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
@@ -472,10 +481,35 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
      imposed_constraint(ID, "depends_on", A1, A2, A3),
      internal_error("Build deps must land in exactly one duplicate").
 
-1 { build_requirement(node(X, Parent), node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1
+% If the parent is built, then we have a build_requirement on another node. For concrete nodes,
+% or external nodes, we don't since we are trimming their build dependencies.
+1 { attr("depends_on",  node(X, Parent), node(0..Y-1, BuildDependency), "build") : max_dupes(BuildDependency, Y) } 1
   :- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
-     impose(ID, node(X, Parent)),
-     imposed_constraint(ID,"build_requirement",Parent,_).
+     build(node(X, Parent)),
+     not external(node(X, Parent)).
+
+:- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
+   concrete(ParentNode),
+   not attr("concrete_build_dependency", ParentNode, BuildDependency, _).
+
+:- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
+
+:- attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
+   not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
+
+% Asking for gcc@10 %gcc@9 shouldn't give us back an external gcc@10, just because of the hack
+% we have on externals
+:- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
+   Parent == BuildDependency,
+   external(node(X, Parent)).
+
+build_requirement(node(X, Parent), node(Y, BuildDependency)) :-
+  attr("depends_on", node(X, Parent), node(Y, BuildDependency), "build"),
+  attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)).
 
 1 { virtual_build_requirement(ParentNode, node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1
   :- attr("dependency_holds", ParentNode, Virtual, "build"),
@@ -496,7 +530,6 @@ attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
   attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
-attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
 
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
   attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
@@ -881,6 +914,12 @@ requirement_weight(node(ID, Package), Group, W) :-
   requirement_group_member(Y, Package, Group),
   requirement_policy(Package, Group, "one_of"),
   requirement_group_satisfied(node(ID, Package), Group).
+
+ { attr("build_requirement", node(ID, Package), BuildRequirement) : condition_requirement(TriggerID, "build_requirement", Package, BuildRequirement) } :-
+  pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
+  requirement_group_member(ConditionID, Package, Group),
+  activate_requirement(node(ID, Package), Group),
+  requirement_group(Package, Group).
 
 requirement_group_satisfied(node(ID, Package), X) :-
   1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } ,
