@@ -141,9 +141,9 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if spec.satisfies("+magma"):
                 makeopts += ["MAGMA_DIR=%s" % spec["magma"].prefix]
-                
+
         makeopts += ["BLAS_LIB=%s" % spec["blas"].libs]
-        
+
         return makeopts
 
     def edit(self, spec, prefix):
