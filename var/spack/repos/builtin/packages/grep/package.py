@@ -5,12 +5,12 @@
 from spack.package import *
 
 
-class Grep(AutotoolsPackage):
+class Grep(AutotoolsPackage, GNUMirrorPackage):
     """Grep searches one or more input files for lines containing a match to
     a specified pattern"""
 
     homepage = "https://www.gnu.org/software/grep/"
-    url = "https://ftp.gnu.org/gnu/grep/grep-3.3.tar.xz"
+    gnu_mirror_path = "grep/grep-3.3.tar.xz"
 
     license("GPL-3.0-or-later")
 
