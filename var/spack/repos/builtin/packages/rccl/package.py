@@ -146,8 +146,8 @@ class Rccl(CMakePackage):
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
     for ver in ["6.4.0"]:
-         depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
-         depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
+        depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
 
     depends_on("googletest@1.11.0:", type="test", when="@5.3:")
     depends_on("libdrm", when="@6.4:")
