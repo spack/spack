@@ -22,8 +22,8 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="8f645a5c9298170e71354437188eeca8272ff2b98077e9f34d1ca0fd7f27b7f8")
     version("6.3.2", sha256="6e86d4f8657e13665e37fdf3174c3a30f4c7dff2c4e2431d1be110cd7d463971")
     version("6.3.1", sha256="77a1845254d738c43a48bc52fa3e94499ed83535b5771408ff476122bc4b7b7c")
