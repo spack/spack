@@ -12,7 +12,7 @@ from llnl.util.lang import union_dicts
 
 import spack.schema
 import spack.schema.projections
-import Executable from spack.util
+from spack.util.executable import Executable
 
 #: Properties for inclusion in other schemas
 properties: Dict[str, Any] = {

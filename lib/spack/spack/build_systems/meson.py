@@ -7,9 +7,11 @@ from typing import List
 import llnl.util.filesystem as fs
 
 import spack.builder
+import spack.config
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on, variant
 from spack.multimethod import when
@@ -227,7 +229,7 @@ class MesonBuilder(BuilderWithDefaults):
             self.pkg._if_ninja_target_execute("test")
             self.pkg._if_ninja_target_execute("check")
 
-    @spack.builder.run_before("meson")
+    @spack.phase_callbacks.run_before("meson")
     def configure_compiler_cache(self):
 
         def parse_launcher(launcher):
