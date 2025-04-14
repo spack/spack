@@ -39,7 +39,5 @@ class Mdspan(CMakePackage):
         args.append("-DCMAKE_CXX_FLAGS='-Wall -Wextra -pedantic'")
         args.append("-DCMAKE_CXX_STANDARD=17")
         args.append("-DMDSPAN_CXX_STANDARD=17")
-        args.append("-DCMAKE_CXX_COMPILER=g++")
-        args.append("-DCMAKE_CXX_EXTENSIONS=OFF")
 
         return args
