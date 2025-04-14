@@ -85,12 +85,8 @@ class R3d(CMakePackage):
         if r3d_max_verts != "0":
             options.append("-DR3D_MAX_VERTS=" + r3d_max_verts)
 
-        if "+shared" in self.spec:
-            options.append("-DBUILD_SHARED_LIBS=True")
-            options.append("-DCMAKE_POSITION_INDEPENDENT_CODE=True")
-        else:
-            options.append("-DBUILD_SHARED_LIBS=False")
-            options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         if self.run_tests:
             options.append("-DENABLE_UNIT_TESTS=ON")
