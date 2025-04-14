@@ -47,9 +47,6 @@ class Postgresql(AutotoolsPackage):
     version("9.5.3", sha256="7385c01dc58acba8d7ac4e6ad42782bd7c0b59272862a3a3d5fe378d4503a0b4")
     version("9.3.4", sha256="9ee819574dfc8798a448dc23a99510d2d8924c2f8b49f8228cd77e4efc8a6621")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("client_only", default=False, description="Build and install client only.")
     variant("threadsafe", default=False, description="Build with thread safe.")
     variant(
@@ -66,6 +63,9 @@ class Postgresql(AutotoolsPackage):
     variant("xml", default=False, description="Build with XML support.")
     variant("icu", default=True, description="Build with ICU support.", when="@16:")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("icu4c", when="+icu")
     depends_on("pkgconfig", when="+icu", type="build")
     depends_on("readline", when="lineedit=readline")
@@ -75,8 +75,9 @@ class Postgresql(AutotoolsPackage):
     depends_on("perl+opcode", when="+perl")
     depends_on("python", when="+python")
     depends_on("libxml2", when="+xml")
-    depends_on("flex", when="@17:")
-    depends_on("bison", when="@17:")
+    depends_on("perl", when="@17:", type="build")
+    depends_on("flex", when="@17:", type="build")
+    depends_on("bison", when="@17:", type="build")
     depends_on("pkgconfig", when="+xml", type="build")
 
     @property

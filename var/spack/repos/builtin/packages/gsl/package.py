@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import re
 
 from spack.package import *
 
@@ -15,6 +16,10 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/gsl"
     gnu_mirror_path = "gsl/gsl-2.3.tar.gz"
+    maintainers("cessenat")
+
+    tags = ["hpc"]
+    executables = ["^gsl-config$"]
 
     license("GPL-3.0-or-later")
 
@@ -30,8 +35,6 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     version("2.0", sha256="e361f0b19199b5e6c21922e9f16adf7eca8dd860842802424906d0f83485ca2d")
     version("1.16", sha256="73bc2f51b90d2a780e6d266d43e487b3dbd78945dd0b04b14ca5980fe28d2f53")
 
-    depends_on("c", type="build")  # generated
-
     variant("external-cblas", default=False, description="Build against external blas")
     variant("shared", default=True, description="Build shared library")
     variant("pic", default=True, description="Enable position-independent code (PIC)")
@@ -42,6 +45,8 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
     patch("gsl-2.8-cblas.patch", when="@2.8: +external-cblas")
 
     conflicts("+external-cblas", when="@:2.2")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("m4", type="build", when="+external-cblas")
     depends_on("autoconf", type="build", when="+external-cblas")
@@ -70,3 +75,9 @@ class Gsl(AutotoolsPackage, GNUMirrorPackage):
         # cmake looks for GSL_ROOT_DIR to find GSL so this helps pick the spack one
         # when there are multiple installations (e.g. a system one and a spack one)
         env.set("GSL_ROOT_DIR", self.prefix)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"\s*(\d[\d\.]+)", output)
+        return match.group(1) if match else None

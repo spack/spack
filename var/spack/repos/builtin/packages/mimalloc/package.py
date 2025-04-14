@@ -107,7 +107,7 @@ class Mimalloc(CMakePackage):
         "debug_ubsan": (
             False,
             "Build with undefined-behavior sanitizer (needs clang++)",
-            "%clang build_type=Debug +use_cxx",
+            "build_type=Debug +use_cxx %clang ",
         ),
         "skip_collect_on_exit": (False, "Skip collecting memory on program exit", None),
     }

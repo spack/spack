@@ -22,6 +22,10 @@ class Ffb(MakefilePackage):
     patch("xvx.patch")
     patch("gffv3tr.patch")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("mpi")
     depends_on("blas")
     depends_on("scalapack")

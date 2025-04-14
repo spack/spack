@@ -37,8 +37,6 @@ class Jsoncpp(CMakePackage, MesonPackage):
     version("1.7.4", sha256="10dcd0677e80727e572a1e462193e51a5fde3e023b99e144b2ee1a469835f769")
     version("1.7.3", sha256="1cfcad14054039ba97c22531888796cb9369e6353f257aacaad34fda956ada53")
 
-    depends_on("cxx", type="build")  # generated
-
     # From 1.9.3 onwards CMAKE_CXX_STANDARD is finally set to 11.
     variant(
         "cxxstd",
@@ -50,6 +48,8 @@ class Jsoncpp(CMakePackage, MesonPackage):
     )
 
     build_system("cmake", conditional("meson", when="@1.9.2:"), default="cmake")
+
+    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         depends_on("cmake@3.1:", type="build")

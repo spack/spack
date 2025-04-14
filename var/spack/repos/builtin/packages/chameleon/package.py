@@ -19,10 +19,6 @@ class Chameleon(CMakePackage, CudaPackage):
     version("1.2.0", sha256="b8988ecbff19c603ae9f61441653c21bba18d040bee9bb83f7fc9077043e50b4")
     version("1.1.0", sha256="e64d0438dfaf5effb3740e53f3ab017d12744b85a138b2ef702a81df559126df")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # cmake's specific
     variant("shared", default=True, description="Build chameleon as a shared library")
 
@@ -50,6 +46,10 @@ class Chameleon(CMakePackage, CudaPackage):
     )
 
     # dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("pkgconfig", type="build")
 
     with when("runtime=starpu"):
@@ -113,15 +113,13 @@ class Chameleon(CMakePackage, CudaPackage):
                 ]
             )
 
-        if spec.satisfies("~simgrid"):
-            if spec.satisfies("^intel-mkl") or spec.satisfies("^intel-parallel-studio+mkl"):
-                if spec.satisfies("threads=none"):
-                    args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
-                else:
-                    args.extend([self.define("BLA_VENDOR", "Intel10_64lp")])
-            elif spec.satisfies("^netlib-lapack"):
-                args.extend([self.define("BLA_VENDOR", "Generic")])
-            elif spec.satisfies("^openblas"):
-                args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
+        if spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl threads=none"):
+            args.extend([self.define("BLA_VENDOR", "Intel10_64lp_seq")])
+        elif spec.satisfies("^[virtuals=blas,lapack] intel-oneapi-mkl"):
+            args.extend([self.define("BLA_VENDOR", "Intel10_64lp")])
+        elif spec.satisfies("^[virtuals=blas,lapack] netlib-lapack"):
+            args.extend([self.define("BLA_VENDOR", "Generic")])
+        elif spec.satisfies("^[virtuals=blas,lapack] openblas"):
+            args.extend([self.define("BLA_VENDOR", "OpenBLAS")])
 
         return args

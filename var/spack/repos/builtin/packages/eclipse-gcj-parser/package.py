@@ -28,6 +28,8 @@ class EclipseGcjParser(Package):
         expand=False,
     )
 
+    depends_on("c", type="build")
+
     @property
     def gcj(self):
         """Obtain Executable for the gcj included with this GCC,

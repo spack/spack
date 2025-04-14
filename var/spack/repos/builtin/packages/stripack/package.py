@@ -29,6 +29,8 @@ class Stripack(MakefilePackage):
         url="https://people.sc.fsu.edu/~jburkardt/f_src/stripack/stripack.f90",
     )
 
+    depends_on("fortran", type="build")
+
     @run_before("build")
     def run_mkmake(self):
         config = [

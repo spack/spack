@@ -28,10 +28,8 @@ class Dust(Package):
 
     @run_after("install")
     def check_install(self):
-        print("Attempt to call 'dust' with '--version'")
-        dust = Executable(join_path(self.spec["dust"].prefix.bin, "dust"))
+        dust = Executable(join_path(self.prefix.bin, "dust"))
         output = dust("--version", output=str.split)
-        print("stdout received fromm dust is '{}".format(output))
         assert "Dust " in output
 
     def test_run(self):

@@ -24,12 +24,12 @@ class Uftrace(AutotoolsPackage):
     version("master", branch="master", get_full_repo=True)
     version("0.16", sha256="dd0549f610d186b6f25fa2334a5e82b6ddc232ec6ca088dbb41b3fe66961d6bb")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")  # full demangler support with libstdc++
     variant("doc", default=False, description="Build uftrace's documentation")
     variant("python2", default=False, description="Build uftrace with python2 support")
     variant("python3", default=True, description="Build uftrace with python3 support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # full demangler support with libstdc++
     depends_on("pandoc", when="+doc", type="build")
     depends_on("capstone")
     depends_on("elfutils")

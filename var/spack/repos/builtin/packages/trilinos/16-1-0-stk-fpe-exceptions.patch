@@ -1,0 +1,122 @@
+diff --git a/packages/stk/stk_util/stk_util/util/FPExceptions.hpp b/packages/stk/stk_util/stk_util/util/FPExceptions.hpp
+index e2f94a533d0..b539aa8a7dd 100644
+--- a/packages/stk/stk_util/stk_util/util/FPExceptions.hpp
++++ b/packages/stk/stk_util/stk_util/util/FPExceptions.hpp
+@@ -14,7 +14,7 @@
+ namespace stk {
+ namespace util {
+ 
+-constexpr bool have_errno()
++inline bool have_errno()
+ {
+ #ifdef STK_HAVE_FP_ERRNO
+   return math_errhandling & MATH_ERRNO;
+@@ -23,7 +23,7 @@ constexpr bool have_errno()
+ #endif
+ }
+ 
+-constexpr bool have_errexcept()
++inline bool have_errexcept()
+ {
+ #ifdef STK_HAVE_FP_EXCEPT
+   return math_errhandling & MATH_ERREXCEPT;
+@@ -38,7 +38,7 @@ std::string get_fe_except_string(int fe_except_bitmask);
+ 
+ inline void clear_fp_errors()
+ {
+-  if constexpr (have_errexcept())
++  if (have_errexcept())
+   {
+     // experimental results show calling std::feclearexcept is *very*
+     // expensive, so dont call it unless needed.
+@@ -46,7 +46,7 @@ inline void clear_fp_errors()
+     {
+       std::feclearexcept(FE_EXCEPT_CHECKS);
+     }
+-  } else if constexpr (have_errno())
++  } else if (have_errno())
+   {
+     errno = 0;
+   }
+@@ -54,7 +54,7 @@ inline void clear_fp_errors()
+ 
+ inline void throw_or_warn_on_fp_error(const char* fname = nullptr, bool warn=false, std::ostream& os = std::cerr)
+ {
+-  if constexpr (have_errexcept())
++  if (have_errexcept())
+   {
+     int fe_except_bitmask = std::fetestexcept(FE_EXCEPT_CHECKS);
+     if (fe_except_bitmask != 0)
+@@ -68,7 +68,7 @@ inline void throw_or_warn_on_fp_error(const char* fname = nullptr, bool warn=fal
+         STK_ThrowRequireMsg(fe_except_bitmask == 0, msg);
+       }
+     }
+-  } else if constexpr (have_errno())
++  } else if (have_errno())
+   {
+     if (errno != 0)
+     {
+diff --git a/packages/stk/stk_util/stk_util/util/PairIter.hpp b/packages/stk/stk_util/stk_util/util/PairIter.hpp
+index e468dfff0af..edc9b62f1be 100644
+--- a/packages/stk/stk_util/stk_util/util/PairIter.hpp
++++ b/packages/stk/stk_util/stk_util/util/PairIter.hpp
+@@ -35,6 +35,7 @@
+ #ifndef stk_util_util_PairIter_hpp
+ #define stk_util_util_PairIter_hpp
+ 
++#include <cstddef>
+ #include <utility>
+ #include <iterator>
+ 
+diff --git a/packages/stk/stk_util/stk_util/util/ReportHandler.hpp b/packages/stk/stk_util/stk_util/util/ReportHandler.hpp
+index e7ed6ca6b23..c632361a3a6 100644
+--- a/packages/stk/stk_util/stk_util/util/ReportHandler.hpp
++++ b/packages/stk/stk_util/stk_util/util/ReportHandler.hpp
+@@ -40,7 +40,6 @@
+ #include <string>     // for operator+, allocator, string, char_traits
+ #include <type_traits>
+ 
+-#include "stk_util/diag/String.hpp"
+ #include "stk_util/stk_kokkos_macros.h"  // for STK_FUNCTION
+ 
+ #ifdef STK_ENABLE_GPU_BUT_NO_RDC
+@@ -266,7 +265,7 @@ class is_valid_throw_condition
+ 
+  public:
+   static constexpr bool value =
+-      !is_same_as_any<raw_t, sierra::String, std::string, const char*, char*>::value && !is_string_literal<T>::value;
++      !is_same_as_any<raw_t, std::string, const char*, char*>::value && !is_string_literal<T>::value;
+ };
+ template <typename T>
+ inline auto eval_test_condition(const T& val)
+diff --git a/packages/stk/stk_util/stk_util/util/concat_variable_name.cpp b/packages/stk/stk_util/stk_util/util/concat_variable_name.cpp
+index c322a06fd41..a6fecf922be 100644
+--- a/packages/stk/stk_util/stk_util/util/concat_variable_name.cpp
++++ b/packages/stk/stk_util/stk_util/util/concat_variable_name.cpp
+@@ -34,7 +34,6 @@
+ 
+ #include "stk_util/util/concat_variable_name.hpp"
+ #include <cstddef>  // for size_t
+-#include "stk_util/util/ReportHandler.hpp"
+ 
+ namespace stk {
+ namespace util {
+@@ -60,6 +59,5 @@ namespace util {
+       return false;
+     }
+   }
+-
+ }
+ }
+diff --git a/packages/stk/stk_util/stk_util/util/concat_variable_name.hpp b/packages/stk/stk_util/stk_util/util/concat_variable_name.hpp
+index 997accb9943..73eb2ae9b36 100644
+--- a/packages/stk/stk_util/stk_util/util/concat_variable_name.hpp
++++ b/packages/stk/stk_util/stk_util/util/concat_variable_name.hpp
+@@ -36,7 +36,6 @@
+ #define STK_UTIL_UTIL_CONCAT_VARIABLE_NAME_H
+ 
+ #include <string>  // for string
+-#include <vector>
+ namespace stk {
+ namespace util {
+   /*!

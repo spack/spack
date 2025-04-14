@@ -27,8 +27,6 @@ class Argobots(AutotoolsPackage):
     version("1.0.1", sha256="fa05a02d7f8f74d845647636609219ee02f6adf628ebcbf40393f829987d9036")
     version("1.0", sha256="36a0815f7bf99900a9c9c1eef61ef9b3b76aa2cfc4594a304f6c8c3296da8def")
 
-    depends_on("c", type="build")  # generated
-
     variant("perf", default=True, description="Add performance optimization flags")
     variant("valgrind", default=False, description="Enable Valgrind")
     variant("debug", default=False, description="Compiled with debugging symbols")
@@ -42,6 +40,8 @@ class Argobots(AutotoolsPackage):
     )
     variant("tool", default=False, description="Enable ABT_tool interface")
     variant("affinity", default=False, description="Enable affinity setting")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("m4", type=("build"), when="@main")
     depends_on("autoconf", type=("build"), when="@main")

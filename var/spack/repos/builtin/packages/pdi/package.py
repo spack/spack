@@ -43,6 +43,10 @@ class Pdi(CMakePackage):
     variant("fortran", default=True, description="Enable Fortran support")
     variant("python", default=True, description="Enable Python support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.16.3:", type=("build"))
     depends_on("doxygen@1.8.17:", type=("build"), when="+docs")
     depends_on("paraconf@1: +shared", type=("link", "run"))

@@ -22,6 +22,8 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.44.0", sha256="a2b71a0c5fb51a89d32cff9eca2fc7c275a7a1a81746bea8d00b4c1868af366e")
+    version("0.43.0", sha256="0d9f6b88f99270fa84094b144a35bd6075adf92b9ec5c7f7f60fceffa668c996")
     version("0.42.2", sha256="3a4a513c6539f2927e7a544f431e97456e50c71b63f8744d31e0dee3dc7fcc2e")
     version("0.42.1", sha256="ab56b257e4918ad7e26ef6a375d0ea500a4929bf6633937f0c11c06e21db56b9")
     version("0.41.0", sha256="c89baf72867031847748c157aa99f3b36755f2801df917aae66010d2112e10fe")
@@ -53,15 +55,15 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     version("0.18.0", sha256="a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae")
     version("0.17.0", sha256="5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
     variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Needs to be seen if tis is needed once we remove the default variants
     depends_on(
@@ -110,6 +112,12 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     # in the suppressions file. (This patch will be in v0.21.0)
     patch("no-valgrind.patch", when="@:0.20.0")
     patch("jobid-sign-compare-fix.patch", when="@:0.22.0")
+
+    patch(
+        "https://github.com/flux-framework/flux-sched/pull/1338.patch?full_index=1",
+        when="@0.42.2 %oneapi@2025:",
+        sha256="b46579efa70176055f88493caa3fefbfea5a5663a33d9c561b71e83046f763c5",
+    )
 
     def url_for_version(self, version):
         """

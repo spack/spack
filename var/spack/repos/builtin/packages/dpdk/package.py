@@ -49,7 +49,7 @@ class Dpdk(MakefilePackage, MesonPackage):
 
 class MesonBuilder(MesonBuilder):
     def meson_args(self):
-        return ["--warnlevel=3"]
+        return ["--warnlevel=2"]
 
 
 class MakefileBuilder(MakefileBuilder):

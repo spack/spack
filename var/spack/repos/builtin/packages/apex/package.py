@@ -66,10 +66,6 @@ class Apex(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -102,6 +98,10 @@ class Apex(CMakePackage):
     variant("examples", default=False, description="Build Examples")
 
     # Dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("cmake@3.10.0:", type="build")
     depends_on("cmake@3.20.1:", type="build", when="@2.6.2:")

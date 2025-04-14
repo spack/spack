@@ -20,9 +20,6 @@ class Pypy(Package):
         "3.10-v7.3.12", sha256="86e4e4eacc36046c6182f43018796537fe33a60e1d2a2cc6b8e7f91a5dcb3e42"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("ctypes", default=True, description="Build ctypes module")
     variant("zlib", default=True, description="Build zlib module")
     variant("bz2", default=True, description="Build bz2 module")
@@ -33,6 +30,9 @@ class Pypy(Package):
     variant("dbm", default=True, description="Build dbm module")
     variant("tkinter", default=False, description="Build tkinter module")
     variant("lzma", default=True, description="Build lzma module")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://doc.pypy.org/en/latest/build.html#install-build-time-dependencies
     depends_on("pypy-bootstrap", type="build")  # any Python 2 executable

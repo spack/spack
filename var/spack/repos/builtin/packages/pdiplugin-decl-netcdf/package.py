@@ -25,6 +25,9 @@ class PdipluginDeclNetcdf(CMakePackage):
     variant("tests", default=False, description="Build tests")
     variant("mpi", default=True, description="Enable parallel NetCDF")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3.16.3:", type=("build"))
     depends_on("netcdf-c@4.7.3:4", type=("link"))
     depends_on("netcdf-c+mpi", type=("link"), when="+mpi")

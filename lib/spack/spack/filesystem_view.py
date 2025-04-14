@@ -643,7 +643,7 @@ class YamlFilesystemView(FilesystemView):
                 specs.sort()
 
                 abbreviated = [
-                    s.cformat("{name}{@version}{%compiler}{compiler_flags}{variants}")
+                    s.cformat("{name}{@version}{compiler_flags}{variants}{%compiler}")
                     for s in specs
                 ]
 

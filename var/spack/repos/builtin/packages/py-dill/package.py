@@ -13,6 +13,9 @@ class PyDill(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("0.3.9", sha256="81aa267dddf68cbfe8029c42ca9ec6a4ab3b22371d1c450abc54422577b4512c")
+    version("0.3.8", sha256="3ebe3c479ad625c4553aca177444d89b486b1d84982eeacded644afc0cf797ca")
+    version("0.3.7", sha256="cc1c8b182eb3013e24bd475ff2e9295af86c1a38eb1aff128dac8962a9ce3c03")
     version("0.3.6", sha256="e5db55f3687856d8fbdab002ed78544e1c4559a130302693d839dfe8f93f2373")
     version("0.3.5.1", sha256="d75e41f3eff1eee599d738e76ba8f4ad98ea229db8b085318aa2b3333a208c86")
     version("0.3.4", sha256="9f9734205146b2b353ab3fec9af0070237b6ddae78452af83d2fca84d739e675")
@@ -28,6 +31,8 @@ class PyDill(PythonPackage):
     version("0.2.1", sha256="a54401bdfae419cfe1c9e0b48e9b290afccaa413d2319d9bb0fdb85c130a7923")
     version("0.2", sha256="aba8d4c81c4136310e6ce333bd6f4f3ea2d53bd367e2f69c864428f260c0308c")
 
+    depends_on("python@3.7:", when="@0.3.6:", type=("build", "run"))
+    depends_on("python@3.8:", when="@0.3.8:", type=("build", "run"))
     depends_on("py-setuptools@42:", when="@0.3.5.1:", type="build")
     depends_on("py-setuptools@0.6:", type="build")
 
@@ -37,7 +42,7 @@ class PyDill(PythonPackage):
     # [this issue]: https://github.com/uqfoundation/dill/issues/566
     # [fixing PR]: https://github.com/uqfoundation/dill/pull/567
     # [this commit]: https://github.com/uqfoundation/dill/commit/23c47455da62d4cb8582d8f98f1de9fc6e0971ad
-    patch("fix-is-builtin-module.patch", when="@0.3.5:")
+    patch("fix-is-builtin-module.patch", when="@0.3.5:0.3.6")
 
     def url_for_version(self, version):
         url = "https://pypi.io/packages/source/d/dill/"

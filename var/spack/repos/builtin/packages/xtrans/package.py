@@ -18,6 +18,7 @@ class Xtrans(AutotoolsPackage, XorgPackage):
 
     maintainers("wdconinc")
 
+    version("1.6.0", sha256="936b74c60b19c317c3f3cb1b114575032528dbdaf428740483200ea874c2ca0a")
     version("1.5.2", sha256="23031301f10fef5eaa55b438610fbd29294a70d2fa189355343bf0186bff8374")
     version("1.5.0", sha256="a806f8a92f879dcd0146f3f1153fdffe845f2fc0df9b1a26c19312b7b0a29c86")
     version("1.4.0", sha256="48ed850ce772fef1b44ca23639b0a57e38884045ed2cbb18ab137ef33ec713f9")

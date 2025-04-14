@@ -15,11 +15,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     homepage = "https://petsc.org"
     url = "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc-3.20.0.tar.gz"
     git = "https://gitlab.com/petsc/petsc.git"
-    maintainers("balay", "barrysmith", "jedbrown")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.23.0", sha256="aeebd7094f4d583fd04700e73779caa7d9a3d54742e95eff2c3dd87768a79063")
+    version("3.22.5", sha256="984dba48bd26e7b17d42c078fc4f74d59e9cbc437ee25a8635865eeca9f5dd28")
+    version("3.22.4", sha256="c32e9c606b858ff587949ddc5f28da8934b00c41ab1f6d9be5001a705bef62ee")
     version("3.22.3", sha256="88c0d465a3bd688cb17ebf06a17c06d6e9cc457fa6b9643d217389424e6bd795")
     version("3.22.2", sha256="83624de0178b42d37ca1f7f905e1093556c6919fe5accd3e9f11d00a66e11256")
     version("3.22.1", sha256="7117d3ae6827f681ed9737939d4e86896b4751e27cca941bb07e5703f19a0a7b")
@@ -169,10 +172,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
     variant("double", default=True, description="Switches between single and double precision")
@@ -291,9 +290,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             when="@3.20.2:3.20.4 ^hipsparse@6.0",
         )
 
-    # 3.8.0 has a build issue with MKL - so list this conflict explicitly
-    conflicts("^intel-mkl", when="@3.8.0")
-
     # These require +mpi
     mpi_msg = "Requires +mpi"
     conflicts("+cgns", when="~mpi", msg=mpi_msg)
@@ -333,6 +329,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     patch("xlf_fix-dup-petscfecreate.patch", when="@3.11.0")
     patch("disable-DEPRECATED_ENUM.diff", when="@3.14.1 +cuda")
     patch("revert-3.18.0-ver-format-for-dealii.patch", when="@3.18.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("diffutils", type="build")
     depends_on("gmake", type="build")

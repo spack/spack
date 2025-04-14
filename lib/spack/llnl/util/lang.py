@@ -11,6 +11,7 @@ import os
 import re
 import sys
 import traceback
+import types
 import typing
 import warnings
 from datetime import datetime, timedelta
@@ -72,7 +73,7 @@ def index_by(objects, *funcs):
     if isinstance(f, str):
         f = lambda x: getattr(x, funcs[0])
     elif isinstance(f, tuple):
-        f = lambda x: tuple(getattr(x, p) for p in funcs[0])
+        f = lambda x: tuple(getattr(x, p, None) for p in funcs[0])
 
     result = {}
     for o in objects:
@@ -707,14 +708,24 @@ class ObjectWrapper:
 
 
 class Singleton:
-    """Simple wrapper for lazily initialized singleton objects."""
+    """Wrapper for lazily initialized singleton objects."""
 
-    def __init__(self, factory):
+    def __init__(self, factory: Callable[[], object]):
         """Create a new singleton to be inited with the factory function.
 
+        Most factories will simply create the object to be initialized and
+        return it.
+
+        In some cases, e.g. when bootstrapping some global state, the singleton
+        may need to be initialized incrementally. If the factory returns a generator
+        instead of a regular object, the singleton will assign each result yielded by
+        the generator to the singleton instance. This allows methods called by
+        the factory in later stages to refer back to the singleton.
+
         Args:
-            factory (function): function taking no arguments that
-                creates the singleton instance.
+            factory (function): function taking no arguments that creates the
+                singleton instance.
+
         """
         self.factory = factory
         self._instance = None
@@ -722,7 +733,16 @@ class Singleton:
     @property
     def instance(self):
         if self._instance is None:
-            self._instance = self.factory()
+            instance = self.factory()
+
+            if isinstance(instance, types.GeneratorType):
+                # if it's a generator, assign every value
+                for value in instance:
+                    self._instance = value
+            else:
+                # if not, just assign the result like a normal singleton
+                self._instance = instance
+
         return self._instance
 
     def __getattr__(self, name):
@@ -996,11 +1016,8 @@ class GroupedExceptionHandler:
     def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            "{0} raised {1}: {2}{3}".format(
-                context,
-                exc.__class__.__name__,
-                exc,
-                "\n{0}".format("".join(tb)) if with_tracebacks else "",
+            "\n\t{0} raised {1}: {2}\n{3}".format(
+                context, exc.__class__.__name__, exc, f"\n{''.join(tb)}" if with_tracebacks else ""
             )
             for context, exc, tb in self.exceptions
         ]
