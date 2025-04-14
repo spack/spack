@@ -3893,7 +3893,7 @@ def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, m
     # monkeypatch our forced determinism setup method into solver setup
     monkeypatch.setattr(spack.solver.asp.SpackSolverSetup, "setup", _setup)
 
-    assert spack.config.get("config:concretization_cache:enable")
+    assert spack.config.get("concretizer:concretization_cache:enable")
 
     # run one standard concretization to populate the cache and the setup method
     # memoization
@@ -3935,7 +3935,7 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
     """Tests to ensure we are cleaning the cache when we should be respective to the
     number of entries allowed in the cache"""
 
-    spack.config.set("config:concretization_cache:entry_limit", 2)
+    spack.config.set("concretizer:concretization_cache:entry_limit", 2)
     spack.concretize.concretize_one("zlib")
     spack.concretize.concretize_one("hdf5")
     # cleanup should be run after the third execution
@@ -3949,13 +3949,13 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
 def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     size of the cache in bytes"""
-    spack.config.set("config:concretization_cache:size_limit", 3000)
+    spack.config.set("concretizer:concretization_cache:size_limit", 18000)
     spack.concretize.concretize_one("zlib")
     # cleanup should be run after hdf5 is concretized
     spack.concretize.concretize_one("hdf5")
 
     real_count, real_size = get_current_cache_data()
     # ensure we have less than our byte size limit
-    assert real_size < 3000, "Concretization cache cleanup did not reduce enough bytes"
+    assert real_size < 18000, "Concretization cache cleanup did not reduce enough bytes"
     # ensure there's only one cache entry
     assert real_count == 1, "Concretization cache did not properly prune on byte limit"

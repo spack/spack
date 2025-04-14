@@ -106,7 +106,7 @@ class DirectoryFileCache(Cache):
         return lambda: path.exists()
 
     def _entry_validation(self, cache_path):
-        if not cache_path.is_dir():
+        if cache_path.exists() and not cache_path.is_dir():
             raise CacheError(
                 "Entry must refer to directory (bucket) not a file. "
                 "If a File level cache is required, use FileCache"

@@ -665,8 +665,8 @@ class ConcretizationCache:
         """Prunes the concretization cache according to configured size and entry
         count limits. Cleanup is done in FIFO ordering."""
         # TODO: determine a better default
-        entry_limit = spack.config.get("config:concretization_cache:entry_limit", 1000)
-        bytes_limit = spack.config.get("config:concretization_cache:size_limit", 3e8)
+        entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
+        bytes_limit = spack.config.get("concretizer:concretization_cache:size_limit", 3e8)
         # lock the entire buildcache as we're removing a lot of data from the
         # manifest and cache itself
         entry_count, bytes_count = 0, 0
@@ -1127,7 +1127,7 @@ class PyclingoDriver:
                 problem_repr += "\n" + f.read()
 
         result = None
-        conc_cache_enabled = spack.config.get("config:concretization_cache:enable", False)
+        conc_cache_enabled = spack.config.get("concretizer:concretization_cache:enable", False)
         if conc_cache_enabled:
             result, concretization_stats = CONC_CACHE.fetch(problem_repr)
 
