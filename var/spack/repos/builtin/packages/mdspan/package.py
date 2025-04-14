@@ -21,6 +21,9 @@ class Mdspan(CMakePackage):
     variant("examples", default=True, description="Enable examples")
     variant("tests", default=False, description="Enable tests")
     variant("benchmarks", default=False, description="Enable benchmarks")
+    variant(
+        "cxxstd", default="17", values=["14", "17", "20"], multi=False, description="C++ standard"
+    )
 
     depends_on("benchmark", when="+benchmarks")
     depends_on("googletest@main", when="+tests")
@@ -31,9 +34,8 @@ class Mdspan(CMakePackage):
             self.define_from_variant("MDSPAN_USE_SYSTEM_GTEST", "tests"),
             self.define_from_variant("MDSPAN_ENABLE_BENCHMARKS", "benchmarks"),
             self.define_from_variant("MDSPAN_ENABLE_EXAMPLES", "examples"),
+            self.define_from_variant("MDSPAN_CXX_STANDARD", "cxxstd"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
         ]
-
-        args.append("-DCMAKE_CXX_STANDARD=17")
-        args.append("-DMDSPAN_CXX_STANDARD=17")
 
         return args
