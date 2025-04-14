@@ -26,7 +26,7 @@ class Mdspan(CMakePackage):
     )
 
     depends_on("benchmark", when="+benchmarks")
-    depends_on("googletest@main", when="+tests")
+    depends_on("googletest@1.14:1", when="+tests")
 
     def cmake_args(self):
         args = [
