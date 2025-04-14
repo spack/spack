@@ -90,11 +90,15 @@ packages:
     buildable: false
   fujitsu-ssl2:
     buildable: false
+  glibc:
+    buildable: false
   hpcx-mpi:
     buildable: false
   iconv:
     prefer: [libiconv]
   mpt:
+    buildable: false
+  musl:
     buildable: false
   spectrum-mpi:
     buildable: false
