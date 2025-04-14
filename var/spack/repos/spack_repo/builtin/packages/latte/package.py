@@ -27,17 +27,19 @@ class Latte(CMakePackage):
 
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("interface", default=False, description="Build with interfacing to use with sedacs")
-    variant("mpi", default=True, description="Build with mpi")
-    variant("progress", default=False, description="Use progress for fast solvers")
-    variant("shared", default=True, description="Build shared libs")
-
     depends_on("cmake@3.1:", type="build")
     depends_on("blas")
     depends_on("lapack")
+
+    variant("interface", default=False, description="Build with interfacing to use with sedacs")
+
+    variant("mpi", default=True, description="Build with mpi")
     depends_on("mpi", when="+mpi")
+
+    variant("progress", default=False, description="Use progress for fast solvers")
     depends_on("qmd-progress", when="+progress")
+
+    variant("shared", default=True, description="Build shared libs")
 
     root_cmakelists_dir = "cmake"
 
@@ -57,11 +59,10 @@ class Latte(CMakePackage):
 
         if self.spec.satisfies("+interface"):
             options.append("-DMAKELIB=ON")
-            
-        blas_list = ";".join(self.spec["blas"].libs)
-        lapack_list = ";".join(self.spec["lapack"].libs)
-        options.append("-DBLAS_LIBRARIES={0}".format(blas_list))
-        options.append("-DLAPACK_LIBRARIES={0}".format(lapack_list))
+
+        # specify blas/lapack libs
+        options.append("-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs)
+        options.append("-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs)
 
         # flag needed to remove gfortran max line length constraint
         options.append("-DCMAKE_Fortran_FLAGS=-ffree-line-length-none")
