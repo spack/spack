@@ -58,6 +58,7 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
+from spack.util.compression import GZipFileType
 from spack.util.file_cache import DirectoryFileCache
 
 from .core import (
@@ -719,14 +720,6 @@ class ConcretizationCache:
                     "within the concretization cache."
                 )
 
-    def _read_text_cache(self, cache_path: pathlib.Path) -> Optional[str]:
-        """Processes a text encoded cache file and returns contexts if it exists"""
-        try:
-            with open(cache_path, "r") as f:
-                return f.read()
-        except FileNotFoundError:
-            return None
-
     def _results_from_cache(self, cache_entry_file: str) -> Union[Result, None]:
         """Returns a Results object from the concretizer cache
 
@@ -801,7 +794,7 @@ class ConcretizationCache:
         self._fc.init_entry(bucket)
         with self._fc.write_transaction(bucket):
             try:
-                with gzip.open(cache_path, "xb") as cache_entry:
+                with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
                     cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
                     cache_entry.write(json.dumps(cache_dict).encode())
             except FileExistsError:
@@ -824,17 +817,22 @@ class ConcretizationCache:
             if exists:
                 cache_entry_content = None
                 try:
-                    with gzip.open(cache_path, "rb") as f:
+                    with gzip.open(cache_path, "rb", compresslevel=6) as f:
                         f.peek(1)  # Try to read at least one byte
                         f.seek(0)
                         cache_entry_content = f.read().decode("utf-8")
-                except gzip.BadGzipFile:
-                    # Cache entry was created pre-compression
-                    # read from plaintext
-                    cache_entry_content = self._read_text_cache(cache_path)
                 except FileNotFoundError:
                     # cache miss
                     pass
+                except OSError:
+                    # Cache may have been created pre compression
+                    # check if gzip, and if so, read from plaintext
+                    # otherwise re raise
+                    with open(cache_path, "rb") as f:
+                        if GZipFileType().matches_magic(f):
+                            cache_entry_content = f.read().decode()
+                        else:
+                            raise
                 if cache_entry_content:
                     result = self._results_from_cache(cache_entry_content)
                     statistics = self._stats_from_cache(cache_entry_content)
