@@ -122,7 +122,7 @@ class Cache:
             raise CacheError(f"Insufficient permissions to write to file cache at {path}")
 
         return WriteTransaction(
-            self._get_lock(key), acquire=lambda: self._acquire_write_fn(path)  # type: ignore
+            self._get_lock(key), acquire=self._acquire_write_fn(path)  # type: ignore
         )
 
     def mtime(self, key: Union[str, pathlib.Path]) -> float:
