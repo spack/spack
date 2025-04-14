@@ -25,10 +25,6 @@ class Compadre(CMakePackage):
     version("1.4.1", sha256="2e1e7d8e30953f76b6dc3a4c86ec8103d4b29447194cb5d5abb74b8e4099bdd9")
     version("1.3.0", sha256="f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "debug",
         default="0",
@@ -36,6 +32,10 @@ class Compadre(CMakePackage):
         multi=False,
         description="Debugging level 0) release 1) debug 2) extreme debugging",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.10:", type="build", when="@:1.4")
     depends_on("cmake@3.16:", type="build", when="@1.5:")
@@ -66,7 +66,7 @@ class Compadre(CMakePackage):
             [
                 "-DKokkosCore_PREFIX={0}".format(kokkos.prefix),
                 "-DKokkosKernels_PREFIX={0}".format(kokkos_kernels.prefix),
-                "-DCMAKE_CXX_COMPILER:STRING={0}".format(spec["kokkos"].kokkos_cxx),
+                "-DCMAKE_CXX_COMPILER:STRING={0}".format(self["kokkos"].kokkos_cxx),
                 # Compadre_USE_PYTHON is OFF by default
                 "-DCompadre_USE_PYTHON=OFF",
             ]

@@ -18,14 +18,11 @@ class Serialbox(CMakePackage):
 
     license("BSD-2-Clause")
 
+    version("2.6.2", sha256="d1b4c79078e3b1d4a45b7b024eb647d21873498ac666e41a5ee8b8e13c95a7ac")
     version("2.6.1", sha256="b795ce576e8c4fd137e48e502b07b136079c595c82c660cfa2e284b0ef873342")
     version("2.6.0", sha256="9199f8637afbd7f2b3c5ba932d1c63e9e14d553a0cafe6c29107df0e04ee9fae")
     version("2.5.4", sha256="f4aee8ef284f58e6847968fe4620e222ac7019d805bbbb26c199e4b6a5094fee")
     version("2.5.3", sha256="696499b3f43978238c3bcc8f9de50bce2630c07971c47c9e03af0324652b2d5d")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("c", default=True, description="enable C interface")
     variant("python", default=False, description="enable Python interface")
@@ -42,6 +39,10 @@ class Serialbox(CMakePackage):
         default=True,
         description="use std::experimental::filesystem (no dependency on " "compiled boost libs)",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.12:", type="build")
 
@@ -61,10 +62,10 @@ class Serialbox(CMakePackage):
     patch("ppser_py3.patch", when="@2.2.0:")
 
     # NAG patches:
-    patch("nag/interface.patch", when="@2.0.1:%nag+fortran")
-    patch("nag/examples.patch", when="@2.3.1:%nag+fortran+examples")
-    patch("nag/ftg.patch", when="@2.3.1:%nag+ftg")
-    patch("nag/bool_getters.patch", when="@2.3.1:%nag@7.1:+fortran")
+    patch("nag/interface.patch", when="@2.0.1:+fortran%nag")
+    patch("nag/examples.patch", when="@2.3.1:+fortran+examples%nag")
+    patch("nag/ftg.patch", when="@2.3.1:+ftg%nag")
+    patch("nag/bool_getters.patch", when="@2.3.1:+fortran%nag@7.1:")
 
     # Add missing include directives
     # (part of https://github.com/GridTools/serialbox/pull/259):
@@ -143,7 +144,7 @@ class Serialbox(CMakePackage):
             # undefined reference to
             #     `std::experimental::filesystem::v1::__cxx11::path::
             #         _M_find_extension[abi:cxx11]() const'
-            if self.spec.satisfies("%intel@:19.0.1+std-filesystem"):
+            if self.spec.satisfies("+std-filesystem%intel@:19.0.1"):
                 cmake_flags.append("-D_GLIBCXX_USE_CXX11_ABI=0")
 
         return flags, None, (cmake_flags or None)

@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import os
 import sys
 import tempfile
 
@@ -46,6 +45,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     license("Apache-2.0")
     maintainers("adamjstewart", "aweits")
 
+    version(
+        "2.18.0-rocm-enhanced",
+        sha256="85f44bed166927b2e22db28f5c4e4538da22221fedd9c2f47c763c52a0e40814",
+        url="https://github.com/ROCm/tensorflow-upstream/archive/refs/tags/v2.18.0-rocm-enhanced.tar.gz",
+    )
     version("2.18.0", sha256="d7876f4bb0235cac60eb6316392a7c48676729860da1ab659fb440379ad5186d")
     version("2.17.1", sha256="2d3cfb48510f92f3a52fb05b820481c6f066a342a9f5296fe26d72c4ea757700")
     version("2.17.0", sha256="9cc4d5773b8ee910079baaecb4086d0c28939f024dd74b33fc5e64779b6533dc")
@@ -183,9 +187,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
     variant("gcp", default=False, description="Build with Google Cloud Platform support")
@@ -218,6 +219,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         default=sys.platform.startswith("linux"),
         description="Build kernels into separate shared objects",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     extends("python")
 
@@ -440,11 +444,25 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("platform=darwin target=aarch64:", when="@:2.4")
     # https://github.com/tensorflow/tensorflow/pull/39225
     conflicts("target=aarch64:", when="@:2.2")
-    conflicts(
-        "~rocm",
-        when="@2.7.4-rocm-enhanced,2.11.0-rocm-enhanced,2.14-rocm-enhanced,2.16.1-rocm-enhanced",
-    )
-    conflicts("+rocm", when="@:2.7.4-a,2.7.4.0:2.11.0-a,2.11.0.0:2.14-a,2.14-z:2.16.1-a,2.16.1-z:")
+
+    rocm_versions = [
+        "2.7.4-rocm-enhanced",
+        "2.11.0-rocm-enhanced",
+        "2.14-rocm-enhanced",
+        "2.16.1-rocm-enhanced",
+        "2.18.0-rocm-enhanced",
+    ]
+    rocm_conflicts = [
+        ":2.7.4-a",
+        "2.7.4.0:2.11.0-a",
+        "2.11.0.0:2.14-a",
+        "2.14-z:2.16.1-a",
+        "2.16.1-z:2.18.0-a",
+        "2.18.0-z:",
+    ]
+    conflicts("~rocm", when=f"@{','.join(rocm_versions)}")
+    conflicts("+rocm", when=f"@{','.join(rocm_conflicts)}")
+
     # wheel 0.40 upgrades vendored packaging, trips over tensorflow-io-gcs-filesystem identifier
     conflicts("^py-wheel@0.40:", when="@2.11:2.13")
 
@@ -455,6 +473,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("%gcc@:11", when="@2.17:")
     conflicts("%gcc@:9.3.0", when="@2.9:")
     conflicts("%gcc@:7.3.0")
+    # https://github.com/tensorflow/tensorflow/issues/76908
+    conflicts("%clang@:15", when="@2.18:")
+    # https://github.com/tensorflow/tensorflow/issues/62416
+    conflicts("%clang@17:", when="@:2.14")
 
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.
@@ -463,6 +485,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
+    )
+
+    # can set an upper bound if/when
+    # https://github.com/tensorflow/tensorflow/pull/89032 is merged
+    patch(
+        "allow-empty-config-environment-variables.patch",
+        sha256="e061875c2ca9c157a7837d02afdd25205817def3460745523d5089bbeaa77d29",
+        when="@1.4.0:",
     )
 
     # Version 2.10 produces an error related to cuBLAS:
@@ -491,6 +521,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # protobuf definitions.
     patch("0008-Fix-protobuf-errors-when-using-system-protobuf.patch", when="@2.5:2.6")
 
+    # remove unnecessary symbol ignores that cause errors with new compilers
+    # https://github.com/tensorflow/tensorflow/issues/62416
+    patch(
+        "https://raw.githubusercontent.com/getsolus/packages/dfc56ba57a8af8233a635e309b499ff5d27992f4/packages/t/tensorflow/files/fix-clang-18.diff",
+        sha256="10d730b59284843d6c9ba92668b068582e51d5cdfc7ccfe8e26791ad0f41d4ac",
+        when="@2.15",
+    )
+
     # see https://github.com/tensorflow/tensorflow/issues/62490
     # and https://github.com/abseil/abseil-cpp/issues/1665
     patch("absl_neon.patch", when="@2.16.1:2.17 target=aarch64:")
@@ -510,13 +548,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     patch(
         "https://github.com/ROCm/tensorflow-upstream/commit/f4f4e8698b90755b0b5ea2d9da1933b0b988b111.patch?full_index=1",
         sha256="a4c0fd62a0af3ba113c8933fa531dd17fa6667e507202a144715cd87fbdaf476",
-        when="@2.16.1-rocm-enhanced: +rocm",
+        when="@2.16.1-rocm-enhanced +rocm",
     )
     patch(
         "https://github.com/ROCm/tensorflow-upstream/commit/8b7fcccb2914078737689347540cb79ace579bbb.patch?full_index=1",
         sha256="75a61a79ce3aae51fda920f677f4dc045374b20e25628626eb37ca19c3a3b4c4",
         when="@2.16.1-rocm-enhanced +rocm",
     )
+    patch("set_jit_true.patch", when="@2.18.0-rocm-enhanced +rocm")
     phases = ["configure", "build", "install"]
 
     def flag_handler(self, name, flags):
@@ -725,6 +764,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         # Do you want to use Clang to build TensorFlow?
         if "%clang" in spec:
             env.set("TF_NEED_CLANG", "1")
+            env.set("CLANG_COMPILER_PATH", spack_cc)
         else:
             env.set("TF_NEED_CLANG", "0")
 
@@ -796,7 +836,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
-        if spec.satisfies("@2.17:"):
+        if spec.satisfies("@2.17:") and ("patchelf" in spec):
             filter_file(
                 "patchelf",
                 spec["patchelf"].prefix.bin.patchelf,
@@ -850,17 +890,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
             with open(".tf_configure.bazelrc", mode="a") as f:
                 f.write('build --action_env LD_LIBRARY_PATH="' + slibs + '"')
 
-        if spec.satisfies("@2.16.1-rocm-enhanced +rocm"):
-            if os.path.exists(spec["llvm-amdgpu"].prefix.bin.clang):
-                filter_file(
-                    "/usr/lib/llvm-17/bin/clang", spec["llvm-amdgpu"].prefix.bin.clang, ".bazelrc"
-                )
-            else:
-                filter_file(
-                    "/usr/lib/llvm-17/bin/clang",
-                    spec["llvm-amdgpu"].prefix.llvm.bin.clang,
-                    ".bazelrc",
-                )
+        if spec.satisfies("+rocm"):
+            before = r"/usr/lib/llvm-\d+/bin/clang"
+            after = spec["llvm-amdgpu"].prefix.bin.clang
+            filter_file(before, after, ".bazelrc")
 
         filter_file("build:opt --copt=-march=native", "", ".tf_configure.bazelrc")
         filter_file("build:opt --host_copt=-march=native", "", ".tf_configure.bazelrc")
@@ -938,6 +971,11 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
         args.append("--config=v2")
 
+        if self.spec.satisfies("@2.18.0-rocm-enhanced: +rocm"):
+            buildpath = join_path(
+                self.stage.source_path, "bazel-bin/tensorflow/tools/pip_package/wheel_house/"
+            )
+            args.append(f"--repo_env=OUTPUT_PATH={buildpath}")
         # https://github.com/tensorflow/tensorflow/issues/63298
         if self.spec.satisfies("@2.17:"):
             args.append("//tensorflow/tools/pip_package:wheel")

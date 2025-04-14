@@ -24,6 +24,7 @@ class QuantumEspresso(CMakePackage, Package):
     license("GPL-2.0-only")
 
     version("develop", branch="develop")
+    version("7.4.1", sha256="6ef9c53dbf0add2a5bf5ad2a372c0bff935ad56c4472baa001003e4f932cab97")
     version("7.4", sha256="b15dcfe25f4fbf15ccd34c1194021e90996393478226e601d876f7dea481d104")
     version("7.3.1", sha256="2c58b8fadfe4177de5a8b69eba447db5e623420b070dea6fd26c1533b081d844")
     version("7.3", sha256="edc2a0f3315c69966df4f82ec86ab9f682187bc9430ef6d2bacad5f27f08972c")
@@ -79,13 +80,13 @@ class QuantumEspresso(CMakePackage, Package):
     # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
-        depends_on("amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
-        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
-        depends_on("amdblis threads=openmp", when="^[virtuals=blas] amdblis")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
-        depends_on("armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
-        depends_on("acfl threads=openmp", when="^[virtuals=blas] acfl")
+        requires("^fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        requires("^amdfftw+openmp", when="^[virtuals=fftw-api] amdfftw")
+        requires("^openblas threads=openmp", when="^[virtuals=blas] openblas")
+        requires("^amdblis threads=openmp", when="^[virtuals=blas] amdblis")
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas] intel-oneapi-mkl")
+        requires("^armpl-gcc threads=openmp", when="^[virtuals=blas] armpl-gcc")
+        requires("^acfl threads=openmp", when="^[virtuals=blas] acfl")
 
     # Add Cuda Fortran support
     # depends on NVHPC compiler, not directly on CUDA toolkit
@@ -124,7 +125,7 @@ class QuantumEspresso(CMakePackage, Package):
     with when("+mpi"):
         depends_on("mpi")
         variant("scalapack", default=True, description="Enables scalapack support")
-        with when("%nvhpc+cuda"):
+        with when("+cuda%nvhpc"):
             # add mpi_gpu_aware variant, False by default
             variant("mpigpu", default=False, description="Enables GPU-aware MPI operations")
 
@@ -249,9 +250,8 @@ class QuantumEspresso(CMakePackage, Package):
     depends_on("m4", type="build")
 
     # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
-    for _intel_pkg in INTEL_MATH_LIBRARIES:
-        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
-        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+    requires("^[virtuals=fftw-api] intel-oneapi-mkl", when="^[virtuals=lapack] intel-oneapi-mkl")
+    requires("^[virtuals=lapack] intel-oneapi-mkl", when="^[virtuals=fftw-api] intel-oneapi-mkl")
 
     # CONFLICTS SECTION
     # Omitted for now due to concretizer bug
@@ -291,7 +291,7 @@ class QuantumEspresso(CMakePackage, Package):
 
     # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
     conflicts(
-        "@5.3:", when="%gcc@8 target=a64fx", msg="Internal compiler error with gcc8 and a64fx"
+        "@5.3:", when="target=a64fx %gcc@8", msg="Internal compiler error with gcc8 and a64fx"
     )
 
     conflicts("@6.5:", when="+environ", msg="6.4.x is the latest QE series supported by Environ")
@@ -537,7 +537,7 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         # you need to pass it in the FFTW_INCLUDE and FFT_LIBS directory.
         # QE supports an internal FFTW2, but only an external FFTW3 interface.
 
-        is_using_intel_libraries = spec["lapack"].name in INTEL_MATH_LIBRARIES
+        is_using_intel_libraries = spec["lapack"].name == "intel-oneapi-mkl"
         if is_using_intel_libraries:
             # A seperate FFT library is not needed when linking against MKL
             options.append("FFTW_INCLUDE={0}".format(join_path(env["MKLROOT"], "include/fftw")))
@@ -585,9 +585,9 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
 
         if "+scalapack" in spec:
             if is_using_intel_libraries:
-                if "^openmpi" in spec:
+                if "^[virtuals=mpi] openmpi" in spec:
                     scalapack_option = "yes"
-                else:  # mpich, intel-mpi
+                else:  # mpich
                     scalapack_option = "intel"
             else:
                 scalapack_option = "yes"

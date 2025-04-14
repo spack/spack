@@ -40,8 +40,6 @@ class Aml(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     # Generate possible variants.
     #############################
 
@@ -64,6 +62,7 @@ class Aml(AutotoolsPackage):
 
     # Dependencies management
     #########################
+    depends_on("c", type="build")  # generated
 
     # aml always depends on libnuma
     depends_on("numactl")

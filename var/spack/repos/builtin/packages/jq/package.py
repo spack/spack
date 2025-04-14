@@ -36,7 +36,7 @@ class Jq(AutotoolsPackage):
     @run_after("install")
     @on_package_attributes(run_tests=True)
     def install_test(self):
-        jq = self.spec["jq"].command
+        jq = self.command
         f = os.path.join(os.path.dirname(__file__), "input.json")
 
         assert jq(".bar", input=f, output=str) == "2\n"

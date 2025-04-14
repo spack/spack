@@ -20,6 +20,7 @@ class Easi(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.5.2", tag="v1.5.2", commit="0d87b1a7db31e453d52c7213cb9b31bda88cbf40")
     version("1.5.1", tag="v1.5.1", commit="d12f3371ed26c7371e4efcc11e3cd468063ffdda")
     version("1.5.0", tag="v1.5.0", commit="391698ab0072f66280d08441974c2bdb04a65ce0")
     version("1.4.0", tag="v1.4.0", commit="0d8fcf936574d93ddbd1d9222d46a93d4b119231")
@@ -28,6 +29,7 @@ class Easi(CMakePackage):
     version("1.1.2", tag="v1.1.2", commit="4c87ef3b3dca9415d116ef102cb8de750ef7e1a0")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build", when="@1.5.0: jit=lua")
     depends_on("fortran", type="build")  # generated
 
     variant("python", default=True, description="Install python bindings")

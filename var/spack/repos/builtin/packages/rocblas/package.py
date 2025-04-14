@@ -20,8 +20,10 @@ class Rocblas(CMakePackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
+    version("6.3.3", sha256="73e91bd50c920b818742fa5bf9990c0676be5bfbafe321d5781607dc2ce27060")
+    version("6.3.2", sha256="455cad760d926c21101594197c4456f617e5873a8f17bb3e14bd762018545a9e")
     version("6.3.1", sha256="88d2de6ce6b23a157eea8be63408350848935e4dfc3e27e5f2add78834c6d6ba")
     version("6.3.0", sha256="051f53bb69a9aba55a0c66c32688bf6af80e29e4a6b56b380b3c427e7a6aff9d")
     version("6.2.4", sha256="8bacf74e3499c445f1bb0a8048df1ef3ce6f72388739b1823b5784fd1e8aa22a")
@@ -44,10 +46,6 @@ class Rocblas(CMakePackage):
         version("5.3.3", sha256="62a3b5f415bd8e0dcd0d68233d379f1a928ec0349977c32b4eea72ae5004e805")
         version("5.3.0", sha256="8ea7269604cba949a6ea84b78dc92a44fa890427db88334da6358813f6512e34")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -67,6 +65,10 @@ class Rocblas(CMakePackage):
     # https://github.com/ROCm/HIP/issues/2678
     # https://github.com/ROCm/hipamd/blob/rocm-5.2.x/include/hip/amd_detail/host_defines.h#L50
     conflicts("%gcc@12", when="@5.2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.16.8:", type="build")
 
@@ -88,10 +90,12 @@ class Rocblas(CMakePackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-openmp-extras@{ver}", type="test", when=f"@{ver}")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"rocm-smi-lib@{ver}", type="test", when=f"@{ver}")
 
     depends_on("rocm-cmake@master", type="build", when="@master:")
@@ -117,13 +121,15 @@ class Rocblas(CMakePackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="build", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", type="build", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
     depends_on("python@3.6:", type="build")
 
@@ -160,6 +166,8 @@ class Rocblas(CMakePackage):
         ("@6.2.4", "81ae9537671627fe541332c0a5d953bfd6af71d6"),
         ("@6.3.0", "aca95d1743c243dd0dd0c8b924608bc915ce1ae7"),
         ("@6.3.1", "aca95d1743c243dd0dd0c8b924608bc915ce1ae7"),
+        ("@6.3.2", "aca95d1743c243dd0dd0c8b924608bc915ce1ae7"),
+        ("@6.3.3", "aca95d1743c243dd0dd0c8b924608bc915ce1ae7"),
     ]:
         resource(
             name="Tensile",
@@ -250,7 +258,7 @@ class Rocblas(CMakePackage):
         if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
             args.append(self.define("__skip_rocmclang", "ON"))
 
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")

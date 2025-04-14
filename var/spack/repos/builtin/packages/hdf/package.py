@@ -24,10 +24,6 @@ class Hdf(AutotoolsPackage):
     version("4.2.12", sha256="dd419c55e85d1a0e13f3ea5ed35d00710033ccb16c85df088eb7925d486e040c")
     version("4.2.11", sha256="c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("szip", default=False, description="Enable szip support")
     variant(
         "external-xdr", default=sys.platform != "darwin", description="Use an external XDR backend"
@@ -37,6 +33,10 @@ class Hdf(AutotoolsPackage):
     variant("java", default=False, description="Enable Java JNI interface")
     variant("shared", default=False, description="Enable shared library")
     variant("pic", default=True, description="Produce position-independent code")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("zlib-api")
     depends_on("jpeg")
@@ -153,10 +153,15 @@ class Hdf(AutotoolsPackage):
                 self.spec.satisfies("@:4.2.15 %apple-clang")
                 or self.spec.satisfies("%clang@16:")
                 or self.spec.satisfies("%oneapi")
+                or self.spec.satisfies("%gcc@14:")
             ):
                 flags.append("-Wno-error=implicit-function-declaration")
 
-            if self.spec.satisfies("%clang@16:") or self.spec.satisfies("%apple-clang@15:"):
+            if (
+                self.spec.satisfies("%clang@16:")
+                or self.spec.satisfies("%apple-clang@15:")
+                or self.spec.satisfies("%gcc@14:")
+            ):
                 flags.append("-Wno-error=implicit-int")
 
         return flags, None, None

@@ -19,8 +19,6 @@ class ScineSerenity(CMakePackage):
     version("master", branch="master")
     version("1.0.1", sha256="e2e5cc265a68ccab05f1bc934b957ca07c4f1c6004e662684023da451da69299")
 
-    depends_on("cxx", type="build")  # generated
-
     resource(
         name="dev",
         url="https://github.com/qcscine/development-utils/archive/refs/tags/5.0.1.tar.gz",
@@ -29,6 +27,8 @@ class ScineSerenity(CMakePackage):
     )
 
     variant("python", default=False, description="Build Python extension module")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("python@3.6:", when="+python", type=("build", "run"))

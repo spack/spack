@@ -16,7 +16,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers("ryandanehy", "cameronrutherford", "pelesh")
+    maintainers("nychiang", "cnpetra", "pelesh")
 
     license("BSD-3-Clause")
 
@@ -72,10 +72,15 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
+    variant(
+        "axom",
+        default=False,
+        description="Enable/Disable AXOM to use Sidre for scalable checkpointing",
+    )
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -94,6 +99,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -151,6 +161,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
 
+    depends_on("axom", when="+axom")
+
     conflicts(
         "+shared",
         when="+cuda+raja ^raja@:0.14",
@@ -202,6 +214,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_MPI", "mpi"),
                 self.define_from_variant("HIOP_DEEPCHECKS", "deepchecking"),
                 self.define_from_variant("HIOP_USE_CUDA", "cuda"),
+                self.define_from_variant("HIOP_USE_AXOM", "axom"),
                 self.define_from_variant("HIOP_USE_HIP", "rocm"),
                 self.define_from_variant("HIOP_USE_RAJA", "raja"),
                 self.define_from_variant("HIOP_USE_UMPIRE", "raja"),
@@ -270,6 +283,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+sparse"):
             args.append(self.define("HIOP_COINHSL_DIR", spec["coinhsl"].prefix))
+
+        if spec.satisfies("+axom"):
+            args.append(self.define("AXOM_DIR", spec["axom"].prefix))
 
         return args
 

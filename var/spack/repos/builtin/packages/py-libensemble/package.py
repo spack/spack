@@ -11,7 +11,7 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    pypi = "libensemble/libensemble-1.4.3.tar.gz"
+    pypi = "libensemble/libensemble-1.5.0.tar.gz"
     git = "https://github.com/Libensemble/libensemble.git"
     maintainers("shuds13", "jlnav")
 
@@ -20,6 +20,7 @@ class PyLibensemble(PythonPackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("1.5.0", sha256="7541829ac412d64152eaea204ba6e3e94640a206f3605a8357b519e932e86065")
     version("1.4.3", sha256="d30fd5ec93ae78a8e931765fd773b0693fde8b43130aca547c931230225c0f63")
     version("1.4.2", sha256="d283935594333793112f65cec1070137e0a87e31cd2bf1baec4a1261ac06ab63")
     version("1.4.1", sha256="fd39d5c4010f9cb1728af1666d0f10d0da7dd43c12e411badcbc53aab42ab183")
@@ -51,9 +52,6 @@ class PyLibensemble(PythonPackage):
     version("0.2.0", sha256="ecac7275d4d0f4a5e497e5c9ef2cd998da82b2c020a0fb87546eeea262f495ff")
     version("0.1.0", sha256="0b27c59ae80f7af8b1bee92fcf2eb6c9a8fd3494bf2eb6b3ea17a7c03d3726bb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Install with MPI")  # Optional communications method
 
     # The following variants are for optional built-in generators
@@ -63,6 +61,9 @@ class PyLibensemble(PythonPackage):
     variant("mpmath", default=False, description="Install with mpmath")
     variant("deap", default=False, description="Install with DEAP")
     variant("tasmanian", default=False, description="Install with tasmanian")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("py-numpy@1.21:", when="@1:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))

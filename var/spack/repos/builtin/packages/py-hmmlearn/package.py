@@ -16,12 +16,15 @@ class PyHmmlearn(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("0.3.3", sha256="1d3c5dc4c5257e0c238dc1fe5387700b8cb987eab808edb3e0c73829f1cc44ec")
     version("0.3.0", sha256="d13a91ea3695df881465e3d36132d7eef4e84d483f4ba538a4b46e24b5ea100f")
 
     depends_on("cxx", type="build")  # generated
 
-    depends_on("py-setuptools", type="build")
-    depends_on("py-setuptools-scm@3.3:", type="build")
+    depends_on("py-setuptools@62:", when="@0.3.3:", type="build")
+    depends_on("py-setuptools", when="@:0.3.2", type="build")
+    depends_on("py-setuptools-scm@6.2:", when="@0.3.3:", type="build")
+    depends_on("py-setuptools-scm@3.3:", when="@:0.3.2", type="build")
     depends_on("py-pybind11@2.6:", type="build")
 
     depends_on("py-numpy@1.10:", type=("build", "run"))

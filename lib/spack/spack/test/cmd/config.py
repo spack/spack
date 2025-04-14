@@ -213,7 +213,7 @@ def test_config_add_update_dict(mutable_empty_config):
 
 def test_config_with_c_argument(mutable_empty_config):
     # I don't know how to add a spack argument to a Spack Command, so we test this way
-    config_file = "config:install_root:root:/path/to/config.yaml"
+    config_file = "config:install_tree:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()
     args = parser.parse_args(["-c", config_file])
     assert config_file in args.config_vars
@@ -221,7 +221,7 @@ def test_config_with_c_argument(mutable_empty_config):
     # Add the path to the config
     config("add", args.config_vars[0], scope="command_line")
     output = config("get", "config")
-    assert "config:\n  install_root:\n    root: /path/to/config.yaml" in output
+    assert "config:\n  install_tree:\n    root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
@@ -335,7 +335,7 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
 
 
 def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
-    config("add", "packages:all:compiler:[gcc]")
+    config("add", "packages:all:require:['%gcc']")
 
     # contents to add to file
     contents = """spack:
@@ -357,7 +357,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     expected = """packages:
   all:
     target: [x86_64]
-    compiler: [gcc]
+    require: ['%gcc']
 """
 
     assert expected == output
@@ -606,7 +606,6 @@ def test_config_prefer_upstream(
     packages = syaml.load(open(cfg_file, encoding="utf-8"))["packages"]
 
     # Make sure only the non-default variants are set.
-    assert packages["all"] == {"compiler": ["gcc@=10.2.1"]}
     assert packages["boost"] == {"variants": "+debug +graph", "version": ["1.63.0"]}
     assert packages["dependency-install"] == {"version": ["2.0"]}
     # Ensure that neither variant gets listed for hdf5, since they conflict

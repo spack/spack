@@ -21,6 +21,7 @@ class Xproto(AutotoolsPackage, XorgPackage):
     version("7.0.31", sha256="6d755eaae27b45c5cc75529a12855fed5de5969b367ed05003944cf901ed43c7")
     version("7.0.29", sha256="628243b3a0fa9b65eda804810ab7238cb88af92fe89efdbc858f25ee5e93a324")
 
+    depends_on("c", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 

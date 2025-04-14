@@ -51,14 +51,14 @@ class Zlib(MakefilePackage, Package):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("makefile", conditional("generic", when="platform=windows"), default="makefile")
 
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enables the build of shared libraries.")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     conflicts("build_system=makefile", when="platform=windows")
 
@@ -84,7 +84,12 @@ class Zlib(MakefilePackage, Package):
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries(["libz"], root=self.prefix, recursive=True, shared=shared)
+        libnames = ["libz"]
+        if self.spec.satisfies("platform=windows"):
+            libnames.append("zdll" if shared else "zlib")
+        return find_libraries(
+            libnames, root=self.prefix, recursive=True, shared=shared, runtime=False
+        )
 
 
 class SetupEnvironment:

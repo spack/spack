@@ -127,6 +127,9 @@ class Flamemaster(CMakePackage):
     variant("eglib", default=False, description="Build with EG lib")
     variant("sundials", default=True, description="with sundials")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("cmake@3.12", type="build")

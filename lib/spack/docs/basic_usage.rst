@@ -1291,55 +1291,61 @@ based on site policies.
 Variants
 ^^^^^^^^
 
-Variants are named options associated with a particular package. They are
-optional, as each package must provide default values for each variant it
-makes available. Variants can be specified using
-a flexible parameter syntax ``name=<value>``. For example,
-``spack install mercury debug=True`` will install mercury built with debug
-flags. The names of particular variants available for a package depend on
+Variants are named options associated with a particular package and are
+typically used to enable or disable certain features at build time. They
+are optional, as each package must provide default values for each variant
+it makes available.
+
+The names of variants available for a particular package depend on
 what was provided by the package author. ``spack info <package>`` will
 provide information on what build variants are available.
 
-For compatibility with earlier versions, variants which happen to be
-boolean in nature can be specified by a syntax that represents turning
-options on and off. For example, in the previous spec we could have
-supplied ``mercury +debug`` with the same effect of enabling the debug
-compile time option for the libelf package.
+There are different types of variants:
 
-Depending on the package a variant may have any default value.  For
-``mercury`` here, ``debug`` is ``False`` by default, and we turned it on
-with ``debug=True`` or ``+debug``.  If a variant is ``True`` by default
-you can turn it off by either adding ``-name`` or ``~name`` to the spec.
+1. Boolean variants. Typically used to enable or disable a feature at
+   compile time. For example, a package might have a ``debug`` variant that
+   can be explicitly enabled with ``+debug`` and disabled with ``~debug``.
+2. Single-valued variants. Often used to set defaults. For example, a package
+   might have a ``compression`` variant that determines the default
+   compression algorithm, which users could set to ``compression=gzip`` or
+   ``compression=zstd``.
+3. Multi-valued variants. A package might have a ``fabrics`` variant that
+   determines which network fabrics to support. Users could set this to
+   ``fabrics=verbs,ofi`` to enable both InfiniBand verbs and OpenFabrics
+   interfaces. The values are separated by commas.
 
-There are two syntaxes here because, depending on context, ``~`` and
-``-`` may mean different things.  In most shells, the following will
-result in the shell performing home directory substitution:
+   The meaning of ``fabrics=verbs,ofi`` is to enable *at least* the specified
+   fabrics, but other fabrics may be enabled as well. If the intent is to
+   enable *only* the specified fabrics, then the ``fabrics:=verbs,ofi``
+   syntax should be used with the ``:=`` operator.
 
-.. code-block:: sh
+.. note::
 
-   mpileaks ~debug   # shell may try to substitute this!
-   mpileaks~debug    # use this instead
+   In certain shells, the the ``~`` character is expanded to the home
+   directory. To avoid these issues, avoid whitespace between the package
+   name and the variant:
 
-If there is a user called ``debug``, the ``~`` will be incorrectly
-expanded.  In this situation, you would want to write ``libelf
--debug``.  However, ``-`` can be ambiguous when included after a
-package name without spaces:
+   .. code-block:: sh
 
-.. code-block:: sh
+      mpileaks ~debug   # shell may try to substitute this!
+      mpileaks~debug    # use this instead
 
-   mpileaks-debug     # wrong!
-   mpileaks -debug    # right
+   Alternatively, you can use the ``-`` character to disable a variant,
+   but be aware that this requires a space between the package name and
+   the variant:
 
-Spack allows the ``-`` character to be part of package names, so the
-above will be interpreted as a request for the ``mpileaks-debug``
-package, not a request for ``mpileaks`` built without ``debug``
-options.  In this scenario, you should write ``mpileaks~debug`` to
-avoid ambiguity.
+   .. code-block:: sh
 
-When spack normalizes specs, it prints them out with no spaces boolean
-variants using the backwards compatibility syntax and uses only ``~``
-for disabled boolean variants.  The ``-`` and spaces on the command
-line are provided for convenience and legibility.
+      mpileaks-debug     # wrong: refers to a package named "mpileaks-debug"
+      mpileaks -debug    # right: refers to a package named mpileaks with debug disabled
+
+   As a last resort, ``debug=False`` can also be used to disable a boolean variant.
+
+
+
+"""""""""""""""""""""""""""""""""""
+Variant propagation to dependencies
+"""""""""""""""""""""""""""""""""""
 
 Spack allows variants to propagate their value to the package's
 dependency by using ``++``, ``--``, and ``~~`` for boolean variants.
@@ -1409,27 +1415,29 @@ that executables will run without the need to set ``LD_LIBRARY_PATH``.
 
 .. code-block:: yaml
 
-  compilers:
-    - compiler:
-        spec: gcc@4.9.3
-        paths:
-          cc: /opt/gcc/bin/gcc
-          c++: /opt/gcc/bin/g++
-          f77: /opt/gcc/bin/gfortran
-          fc: /opt/gcc/bin/gfortran
-        environment:
-          unset:
-            - BAD_VARIABLE
-          set:
-            GOOD_VARIABLE_NUM: 1
-            GOOD_VARIABLE_STR: good
-          prepend_path:
-            PATH: /path/to/binutils
-          append_path:
-            LD_LIBRARY_PATH: /opt/gcc/lib
-        extra_rpaths:
-        - /path/to/some/compiler/runtime/directory
-        - /path/to/some/other/compiler/runtime/directory
+  packages:
+    gcc:
+      externals:
+      - spec: gcc@4.9.3
+        prefix: /opt/gcc
+        extra_attributes:
+          compilers:
+            c: /opt/gcc/bin/gcc
+            cxx: /opt/gcc/bin/g++
+            fortran: /opt/gcc/bin/gfortran
+          environment:
+            unset:
+              - BAD_VARIABLE
+            set:
+              GOOD_VARIABLE_NUM: 1
+              GOOD_VARIABLE_STR: good
+            prepend_path:
+              PATH: /path/to/binutils
+            append_path:
+              LD_LIBRARY_PATH: /opt/gcc/lib
+          extra_rpaths:
+          - /path/to/some/compiler/runtime/directory
+          - /path/to/some/other/compiler/runtime/directory
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -1761,19 +1769,24 @@ Verifying installations
 The ``spack verify`` command can be used to verify the validity of
 Spack-installed packages any time after installation.
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack verify manifest``
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 At installation time, Spack creates a manifest of every file in the
 installation prefix. For links, Spack tracks the mode, ownership, and
 destination. For directories, Spack tracks the mode, and
 ownership. For files, Spack tracks the mode, ownership, modification
-time, hash, and size. The Spack verify command will check, for every
-file in each package, whether any of those attributes have changed. It
-will also check for newly added files or deleted files from the
-installation prefix. Spack can either check all installed packages
+time, hash, and size. The ``spack verify manifest`` command will check,
+for every file in each package, whether any of those attributes have
+changed. It will also check for newly added files or deleted files from
+the installation prefix. Spack can either check all installed packages
 using the `-a,--all` or accept specs listed on the command line to
 verify.
 
-The ``spack verify`` command can also verify for individual files that
-they haven't been altered since installation time. If the given file
+The ``spack verify manifest`` command can also verify for individual files
+that they haven't been altered since installation time. If the given file
 is not in a Spack installation prefix, Spack will report that it is
 not owned by any package. To check individual files instead of specs,
 use the ``-f,--files`` option.
@@ -1787,6 +1800,22 @@ The ``spack verify`` command also accepts the ``-l,--local`` option to
 check only local packages (as opposed to those used transparently from
 ``upstream`` spack instances) and the ``-j,--json`` option to output
 machine-readable json data for any errors.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack verify libraries``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``spack verify libraries`` command can be used to verify that packages
+do not have accidental system dependencies. This command scans the install
+prefixes of packages for executables and shared libraries, and resolves
+their needed libraries in their RPATHs. When needed libraries cannot be
+located, an error is reported. This typically indicates that a package
+was linked against a system library, instead of a library provided by
+a Spack package.
+
+This verification can also be enabled as a post-install hook by setting
+``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
+in :ref:`config.yaml <config-yaml>`.
 
 -----------------------
 Filesystem requirements

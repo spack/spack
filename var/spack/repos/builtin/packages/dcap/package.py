@@ -25,7 +25,10 @@ class Dcap(AutotoolsPackage):
     depends_on("m4", type="build")
 
     depends_on("openssl")
+    depends_on("libxcrypt")
     depends_on("zlib-api")
+
+    depends_on("cunit", type="test")
 
     variant("plugins", default=True, description="Build plugins")
 

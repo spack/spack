@@ -32,13 +32,13 @@ class Dlb(AutotoolsPackage):
     version("3.0.1", sha256="04f8a7aa269d02fc8561d0a61d64786aa18850367ce4f95d086ca12ab3eb7d24")
     version("3.0", sha256="e3fc1d51e9ded6d4d40d37f8568da4c4d72d1a8996bdeff2dfbbd86c9b96e36a")
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("debug", default=False, description="Build additional debug libraries")
     variant("mpi", default=True, description="Build MPI libraries")
     variant("hwloc", default=True, description="Enable HWLOC support")
     variant("papi", default=True, description="Enable PAPI support")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("mpi", when="+mpi")
     depends_on("hwloc", when="+hwloc")

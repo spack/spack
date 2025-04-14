@@ -35,10 +35,10 @@ class Libxslt(AutotoolsPackage):
     version("1.1.28", sha256="5fc7151a57b89c03d7b825df5a0fae0a8d5f05674c0e7cf2937ecec4d54a028c")
     version("1.1.26", sha256="55dd52b42861f8a02989d701ef716d6280bfa02971e967c285016f99c66e3db1")
 
-    depends_on("c", type="build")
-
     variant("crypto", default=True, description="Build libexslt with crypto support")
     variant("python", default=False, description="Build Python bindings")
+
+    depends_on("c", type="build")
 
     depends_on("pkgconfig@0.9.0:", type="build")
     depends_on("iconv")

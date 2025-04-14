@@ -30,9 +30,9 @@ class Gmake(Package, GNUMirrorPackage):
         sha256="fc42139fb0d4b4291929788ebaf77e2a4de7eaca95e31f3634ef7d4932051f69",
     )
 
-    depends_on("c", type="build")
-
     variant("guile", default=False, description="Support GNU Guile for embedded scripting")
+
+    depends_on("c", type="build")
 
     with when("+guile"):
         depends_on("guile@:2.0", when="@:4.2")
@@ -99,3 +99,11 @@ class Gmake(Package, GNUMirrorPackage):
             self.spec.prefix.bin.make,
             jobs=determine_number_of_jobs(parallel=dspec.package.parallel),
         )
+
+    @property
+    def libs(self):
+        return LibraryList([])
+
+    @property
+    def headers(self):
+        return HeaderList([])

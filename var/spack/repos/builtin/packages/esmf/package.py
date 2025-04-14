@@ -7,7 +7,6 @@ import sys
 
 import spack.build_systems.makefile
 import spack.build_systems.python
-import spack.compiler
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
@@ -69,10 +68,6 @@ class Esmf(MakefilePackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Build with MPI support")
     variant("external-lapack", default=False, description="Build with external LAPACK library")
     variant("netcdf", default=True, description="Build with NetCDF support")
@@ -104,6 +99,10 @@ class Esmf(MakefilePackage, PythonExtension):
     # The way python is handled here is only avialable >=8.4.0
     # https://github.com/esmf-org/esmf/releases/tag/v8.4.0
     variant("python", default=False, description="Build python bindings", when="@8.4.0:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")
@@ -139,23 +138,9 @@ class Esmf(MakefilePackage, PythonExtension):
 
     conflicts("%aocc", when="@:8.3")
 
-    # Make esmf build with newer intel versions
-    patch("intel.patch", when="@:7.0 %intel@17:")
-    # Make esmf build with newer gcc versions
-    # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
-    patch("gcc.patch", when="@:7.0 %gcc@6:")
-
-    # Fix undefined reference errors with mvapich2
-    # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
-    patch("mvapich2.patch", when="@:7.0")
-
     # explicit type cast of variables from long to int
     patch("longtoint.patch", when="@:8.3.2 %cce@14:")
     patch("longtoint.patch", when="@:8.3.2 %oneapi@2022:")
-
-    # Allow different directories for creation and
-    # installation of dynamic libraries on OSX:
-    patch("darwin_dylib_install_name.patch", when="platform=darwin @:7.0")
 
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
@@ -195,13 +180,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     # other systems where the logic in setup_build_environment
     # below sets the compilers to the MPI wrappers.
     filter_compiler_wrappers("esmf.mk", relative_root="lib")
-
-    # Make script from mvapich2.patch executable
-    @when("@:7.0")
-    @run_before("build")
-    def chmod_scripts(self):
-        chmod = which("chmod")
-        chmod("+x", "scripts/libs.mvapich2f90")
 
     def url_for_version(self, version):
         if version < Version("8.0.0"):
@@ -259,29 +237,16 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         # ESMF_COMPILER must be set to select which Fortran and
         # C++ compilers are being used to build the ESMF library.
 
-        if self.pkg.compiler.name == "gcc":
+        if spec["fortran"].name == "gcc" and spec["c"].name == "gcc":
+            gfortran_major_version = int(spec["fortran"].version[0])
             env.set("ESMF_COMPILER", "gfortran")
-            with self.pkg.compiler.compiler_environment():
-                gfortran_major_version = int(
-                    spack.compiler.get_compiler_version_output(
-                        self.pkg.compiler.fc, "-dumpversion"
-                    ).split(".")[0]
-                )
         elif self.pkg.compiler.name == "intel" or self.pkg.compiler.name == "oneapi":
             env.set("ESMF_COMPILER", "intel")
-        elif self.pkg.compiler.name in ["clang", "apple-clang"]:
-            if "flang" in self.pkg.compiler.fc:
-                env.set("ESMF_COMPILER", "llvm")
-            elif "gfortran" in self.pkg.compiler.fc:
-                env.set("ESMF_COMPILER", "gfortranclang")
-                with self.pkg.compiler.compiler_environment():
-                    gfortran_major_version = int(
-                        spack.compiler.get_compiler_version_output(
-                            self.pkg.compiler.fc, "-dumpversion"
-                        ).split(".")[0]
-                    )
-            else:
-                raise InstallError("Unsupported C/C++/Fortran compiler combination")
+        elif spec["fortran"].name == "gcc" and spec["c"].name in ["clang", "apple-clang"]:
+            gfortran_major_version = int(spec["fortran"].version[0])
+            env.set("ESMF_COMPILER", "gfortranclang")
+        elif spec["fortran"].name == "llvm":
+            env.set("ESMF_COMPILER", "llvm")
         elif self.pkg.compiler.name == "nag":
             env.set("ESMF_COMPILER", "nag")
         elif self.pkg.compiler.name == "nvhpc":
@@ -357,11 +322,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "^[virtuals=mpi] hpcx-mpi"
             ):
                 env.set("ESMF_COMM", "openmpi")
-            elif (
-                spec.satisfies("^[virtuals=mpi] intel-parallel-studio+mpi")
-                or spec.satisfies("^[virtuals=mpi] intel-mpi")
-                or spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi")
-            ):
+            elif spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
                 env.set("ESMF_COMM", "intelmpi")
             elif spec.satisfies("^[virtuals=mpi] mpt"):
                 # MPT is the HPE (SGI) variant of mpich

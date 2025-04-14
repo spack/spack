@@ -18,6 +18,8 @@ class DialignTx(MakefilePackage):
 
     build_directory = "source"
 
+    depends_on("c", type="build")
+
     conflicts("%gcc@6:")
 
     def edit(self, spec, prefix):

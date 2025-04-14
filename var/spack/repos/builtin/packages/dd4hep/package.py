@@ -25,6 +25,7 @@ class Dd4hep(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")
+    version("1.31", sha256="9c06a1b4462fc1b51161404889c74b37350162d0b0ac2154db27e3f102670bd1")
     version("1.30", sha256="02de46151e945eff58cffd84b4b86d35051f4436608199c3efb4d2e1183889fe")
     version("1.29", sha256="435d25a7ef093d8bf660f288b5a89b98556b4c1c293c55b93bf641fb4cba77e9")
     version("1.28", sha256="b28d671eda0154073873a044a384486e66f1f200065deca99537aa84f07328ad")
@@ -45,8 +46,6 @@ class Dd4hep(CMakePackage):
     version("1.18", sha256="1e909a42b969dfd966224fa8ab1eca5aa05136baf3c00a140f2f6d812b497152")
     version("1.17", sha256="036a9908aaf1e13eaf5f2f43b6f5f4a8bdda8183ddc5befa77a4448dbb485826")
     version("1.16.1", sha256="c8b1312aa88283986f89cc008d317b3476027fd146fdb586f9f1fbbb47763f1a")
-
-    depends_on("cxx", type="build")  # generated
 
     generator("ninja")
 
@@ -72,6 +71,7 @@ class Dd4hep(CMakePackage):
     variant("utilityapps", default=True, description="Build UtilityApps subpackage.")
 
     # variants for other build options
+    variant("doc", default=False, description="Build documentation")
     variant("xercesc", default=False, description="Enable 'Detector Builders' based on XercesC")
     variant("hepmc3", default=False, description="Enable build with hepmc3")
     variant(
@@ -91,24 +91,46 @@ class Dd4hep(CMakePackage):
         " some places in addtion to the debug build type",
     )
 
+    _cxxstd_values = ("14", "17", "20")
+    variant(
+        "cxxstd",
+        default="20",
+        values=_cxxstd_values,
+        multi=False,
+        description="Use the specified C++ standard when building.",
+    )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake @3.12:", type="build")
     depends_on("cmake @3.14:", type="build", when="@1.26:")
+
+    for _std in _cxxstd_values:
+        for _pkg in ["boost", "root"]:
+            depends_on(f"{_pkg} cxxstd={_std}", when=f"cxxstd={_std}")
+
     depends_on("boost @1.49:")
-    depends_on("boost +iostreams", when="+ddg4")
     depends_on("boost +system +filesystem", when="%gcc@:7")
     depends_on("root @6.08: +gdml +math +python")
     depends_on("root @6.12.2: +root7", when="@1.26:")  # DDCoreGraphics needs ROOT::ROOTHistDraw
+
     with when("+ddeve"):
-        depends_on("root @6.08: +x +opengl")
+        depends_on("root @6.08: +geom +opengl +x")
         depends_on("root @:6.27", when="@:1.23")
         conflicts("^root ~webgui", when="^root@6.28:")
         # For DD4hep >= 1.24, DDEve_Interface needs ROOT::ROOTGeomViewer only if ROOT >= 6.27
         requires("^root +root7 +webgui", when="@1.24: ^root @6.27:")
-    depends_on("root @6.08: +gdml +math +python +x +opengl", when="+utilityapps")
+    depends_on("root @6.08: +gdml +geom +math +python +x +opengl", when="+utilityapps")
 
-    extends("python")
+    with when("+ddg4"):
+        depends_on("boost +iostreams")
+        depends_on("geant4@10.2.2:")
+        for _std in _cxxstd_values:
+            depends_on(f"geant4 cxxstd={_std}", when=f"cxxstd={_std}")
+
+    depends_on("imagemagick", when="+doc")
     depends_on("xerces-c", when="+xercesc")
-    depends_on("geant4@10.2.2:", when="+ddg4")
     depends_on("assimp@5.0.2:", when="+ddcad")
     depends_on("hepmc3", when="+hepmc3")
     depends_on("hepmc3@3.2.6:", when="+hepmc3-gz")
@@ -118,13 +140,22 @@ class Dd4hep(CMakePackage):
     depends_on("tbb", when="+tbb")
     depends_on("intel-tbb@:2020.3", when="+tbb @:1.23")
     depends_on("lcio", when="+lcio")
-    depends_on("edm4hep", when="+edm4hep")
-    depends_on("podio", when="+edm4hep")
-    depends_on("podio@:0.16.03", when="@:1.23 +edm4hep")
-    depends_on("podio@0.16:", when="@1.24: +edm4hep")
-    depends_on("podio@0.16.3:", when="@1.26: +edm4hep")
-    depends_on("podio@:0", when="@:1.29 +edm4hep")
     depends_on("py-pytest", type=("build", "test"))
+    with when("+edm4hep"):
+        # Packages with cxxstd: note they only support 17 and onward
+        for _std in ["17", "20"]:
+            for _pkg in ["edm4hep", "podio"]:
+                depends_on(f"{_pkg} cxxstd={_std}", when=f"cxxstd={_std}")
+
+        # Specific version requirements
+        depends_on("edm4hep@0.10.5:", when="@1.31:")
+        depends_on("podio@:0.16.03", when="@:1.23")
+        depends_on("podio@:0", when="@:1.29")
+        depends_on("podio@0.16:", when="@1.24:")
+        depends_on("podio@0.16.3:", when="@1.26:")
+        depends_on("podio@0.16.7:", when="@1.31:")
+
+    extends("python")
 
     # See https://github.com/AIDASoft/DD4hep/pull/771 and https://github.com/AIDASoft/DD4hep/pull/876
     conflicts(
@@ -133,12 +164,6 @@ class Dd4hep(CMakePackage):
         msg="cmake version with buggy FindPython breaks dd4hep cmake config",
     )
     conflicts("~ddrec+dddetectors", msg="Need to enable +ddrec to build +dddetectors.")
-
-    # Geant4 needs to be (at least) the same version as DD4hep, but we don't
-    # have a very good handle on that at this stage, because we make that
-    # dependent on roots cxxstd. However, cxxstd=11 will never work
-    # See https://github.com/AIDASoft/DD4hep/pull/1191
-    conflicts("^geant4 cxxstd=11", when="+ddg4")
 
     # See https://github.com/AIDASoft/DD4hep/issues/1210
     conflicts("^root@6.31.1:", when="@:1.27")
@@ -152,11 +177,8 @@ class Dd4hep(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        cxxstd = spec["root"].variants["cxxstd"].value
-        # root can be built with cxxstd=11, but dd4hep requires 14
-        if cxxstd == "11":
-            cxxstd = "14"
         args = [
+            self.define_from_variant("BUILD_DOCS", "doc"),
             self.define_from_variant("DD4HEP_USE_EDM4HEP", "edm4hep"),
             self.define_from_variant("DD4HEP_USE_XERCESC", "xercesc"),
             self.define_from_variant("DD4HEP_USE_TBB", "tbb"),
@@ -165,6 +187,7 @@ class Dd4hep(CMakePackage):
             self.define_from_variant("DD4HEP_USE_HEPMC3", "hepmc3"),
             self.define_from_variant("DD4HEP_USE_GEANT4_UNITS", "geant4units"),
             self.define_from_variant("DD4HEP_BUILD_DEBUG", "debug"),
+            self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
             # DD4hep@1.26: with hepmc3@3.2.6: allows compressed hepmc3 files
             self.define(
                 "DD4HEP_HEPMC3_COMPRESSION_SUPPORT", self.spec.satisfies("@1.26: ^hepmc3@3.2.6:")
@@ -173,7 +196,6 @@ class Dd4hep(CMakePackage):
             # However, with spack it is preferrable to have a proper external
             # dependency, so we disable it.
             self.define("DD4HEP_LOAD_ASSIMP", False),
-            self.define("CMAKE_CXX_STANDARD", cxxstd),
             self.define("BUILD_TESTING", self.run_tests),
             self.define("BOOST_ROOT", spec["boost"].prefix),
             self.define("Boost_NO_BOOST_CMAKE", True),

@@ -36,13 +36,14 @@ class Conduit(CMakePackage):
     git = "https://github.com/LLNL/conduit.git"
     tags = ["radiuss", "e4s"]
 
-    license("Apache-2.0")
+    license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
     version("master", branch="develop", submodules=True)
     # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version("0.9.3", sha256="2968fa8df6e6c43800c019a008ef064ee9995dc2ff448b72dc5017c188a2e6d4")
     version("0.9.2", sha256="45d5a4eccd0fc978d153d29c440c53c483b8f29dfcf78ddcc9aa15c59b257177")
     version("0.9.1", sha256="a3f1168738dcf72f8ebf83299850301aaf56e803f40618fc1230a755d0d05363")
     version("0.9.0", sha256="844e012400ab820967eef6cec15e1aa9a68cb05119d0c1f292d3c01630111a58")
@@ -67,10 +68,6 @@ class Conduit(CMakePackage):
     # note: checksums on github automatic release source tars changed ~9/17
     version("0.2.1", sha256="796576b9c69717c52f0035542c260eb7567aa351ee892d3fbe3521c38f1520c4")
     version("0.2.0", sha256="31eff8dbc654a4b235cfcbc326a319e1752728684296721535c7ca1c9b463061")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     maintainers("cyrush")
 
@@ -120,6 +117,10 @@ class Conduit(CMakePackage):
     ###########################################################################
     # package dependencies
     ###########################################################################
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     #######################
     # BLT
@@ -301,10 +302,11 @@ class Conduit(CMakePackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-conduit-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
-        )
 
+        compiler_str = f"{self['c'].name}-{self['c'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}" f"-conduit-{spec.dag_hash()}.cmake"
+        )
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))
         return host_config_path
@@ -424,8 +426,6 @@ class Conduit(CMakePackage):
         cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", linkerflags))
         if spec.satisfies("+shared"):
             cfg.write(cmake_cache_entry("CMAKE_SHARED_LINKER_FLAGS", linkerflags))
-        else:
-            cfg.write(cmake_cache_entry("CMAKE_STATIC_LINKER_FLAGS", linkerflags))
 
         #######################
         # BLT

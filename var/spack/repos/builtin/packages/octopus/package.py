@@ -42,10 +42,6 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     version("develop", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # To compile Octopus 15 with gcc, we need at least gcc 11.3:
     conflicts(
         "%gcc@:11.2",
@@ -89,6 +85,10 @@ class Octopus(AutotoolsPackage, CudaPackage):
         description="Compile with PNFFT - Parallel Nonequispaced FFT library",
     )
     variant("debug", default=False, description="Compile with debug flags")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build", when="@develop")
     depends_on("automake", type="build", when="@develop")
@@ -181,7 +181,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
         if "^fftw" in spec:
             args.append("--with-fftw-prefix=%s" % spec["fftw"].prefix)
-        elif spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
+        elif spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
             # As of version 10.0, Octopus depends on fftw-api instead
             # of FFTW. If FFTW is not in the dependency tree, then
             # it ought to be MKL as it is currently the only providers

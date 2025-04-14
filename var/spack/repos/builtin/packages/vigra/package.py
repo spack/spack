@@ -22,9 +22,6 @@ class Vigra(CMakePackage):
     version("master", branch="master")
     version("1.11.1", sha256="a5564e1083f6af6a885431c1ee718bad77d11f117198b277557f8558fa461aaf")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("png", default=False, description="Include support for PNG images")
     variant("jpeg", default=False, description="Include support for JPEG images")
     variant("tiff", default=False, description="Include support for TIFF images")
@@ -33,6 +30,9 @@ class Vigra(CMakePackage):
     variant("fftw", default=False, description="Include support for Fourier Transforms")
     variant("python", default=False, description="Generate Python bindings and doc")
     variant("cxxdoc", default=False, description="Generate C++ documentation")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libtiff", when="+tiff")
     depends_on("libpng", when="+png")

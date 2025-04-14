@@ -37,10 +37,6 @@ class OpenspeedshopUtils(CMakePackage):
     version("2.4.2", branch="2.4.2")
     version("2.4.1", branch="2.4.1")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
     )
@@ -79,6 +75,10 @@ class OpenspeedshopUtils(CMakePackage):
         default=False,
         description="Build mpi collector for mpich2 MPI when variant is enabled.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.0.2:", type="build")
 
@@ -291,10 +291,7 @@ class OpenspeedshopUtils(CMakePackage):
 
         # Find openspeedshop library path
         oss_libdir = find_libraries(
-            "libopenss-framework",
-            root=self.spec["openspeedshop-utils"].prefix,
-            shared=True,
-            recursive=True,
+            "libopenss-framework", root=self.prefix, shared=True, recursive=True
         )
         env.prepend_path("LD_LIBRARY_PATH", os.path.dirname(oss_libdir.joined()))
 

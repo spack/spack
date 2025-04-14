@@ -27,8 +27,10 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
+    version("6.3.3", sha256="529263f9abe5b7485bbabedc3993630abaa0d5fd547c4add0993d1cb0d71e226")
+    version("6.3.2", sha256="885c999da8e4aa0b4cb9584bc0fc0d6a8c8d56f5e7ee6d211c608003eff22aa7")
     version("6.3.1", sha256="793074ebaa4a3b16dc6e4d2a54ecbb259f1e0ec7fdcd7f885da622a1d1478b76")
     version("6.3.0", sha256="a0443f0b894cedd5af59af4fadcb3c38daa728ca32c13b9741fb19e2d828a089")
     version("6.2.4", sha256="4dc564498361cb1bac17dcfeaf0f2b9c85320797c75b05ee33160a133f5f4a15")
@@ -50,10 +52,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         version("5.4.0", sha256="d53d81c55b458ba5e6ea0ec6bd24bcc79ab06789730391da82d8c33b936339d9")
         version("5.3.3", sha256="f5a487a1c7225ab748996ac4d837ac7ab26b43618c4ed97a124f8fac1d67786e")
         version("5.3.0", sha256="6e920a59ddeefd52c9a6d164c33bc097726529e1ede3c417c711697956655b15")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -79,6 +77,10 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
     depends_on("suite-sparse", type="build")
@@ -109,6 +111,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
         "6.2.4",
         "6.3.0",
         "6.3.1",
+        "6.3.2",
+        "6.3.3",
         "master",
         "develop",
     ]:
@@ -162,7 +166,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
                 )
 
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
         if self.spec.satisfies("@5.3.0:"):
             args.append(self.define("CMAKE_INSTALL_LIBDIR", "lib"))

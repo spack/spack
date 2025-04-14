@@ -24,6 +24,7 @@ class Fastjet(AutotoolsPackage):
 
     license("GPL-2.0-only")
 
+    version("3.4.3", sha256="cc175471bfab8656b8c6183a8e5e9ad05d5f7506e46f3212a9a8230905b8f6a3")
     version("3.4.2", sha256="b3d33155b55ce43f420cd6d99b525acf7bdc2593a7bb7ea898a9ddb3d8ca38e3")
     version("3.4.1", sha256="05608c6ff213f06dd9de723813d6b4dccd51e661ac13098f74bfc9eeaf1cb5aa")
     version("3.4.0", sha256="ee07c8747c8ead86d88de4a9e4e8d1e9e7d7614973f5631ba8297f7a02478b91")
@@ -59,6 +60,7 @@ class Fastjet(AutotoolsPackage):
     version("2.3.0", sha256="e452fe4a9716627bcdb726cfb0917f46a7ac31f6006330a6ccc1abc43d9c2d53")
     # older version use .tar instead of .tar.gz extension, to be added
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build", when="plugins=all")
     depends_on("fortran", type="build", when="plugins=pxcone")
@@ -111,6 +113,12 @@ class Fastjet(AutotoolsPackage):
         sha256="1c7eed1d825f2013116778366a2d27b850c46a2848389174f78829fa24cd1c45",
         when="@3.4:3.4.1 +atlas",
         level=0,
+    )
+    patch(
+        "https://gitlab.com/fastjet/fastjet/-/merge_requests/8.diff",
+        sha256="acc00a619c449552732935ec7a3bf8b191692bfff507cd01a0130c2b9586ba32",
+        level=1,
+        when="@2.4.0:3.4.3",
     )
 
     def configure_args(self):

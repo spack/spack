@@ -54,10 +54,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     version("0.16.3", tag="v0.16.3", commit="30a2148784478415dc31d65a6aa08d237f364b42")
     version("0.16.2", tag="v0.16.2", commit="217774652eeccfcd60aa6e268dfd6b766d71b768")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     # https://github.com/horovod/horovod/blob/master/docs/install.rst
     variant(
         "frameworks",
@@ -82,6 +78,10 @@ class PyHorovod(PythonPackage, CudaPackage):
     )
     variant("cuda", default=True, description="Build with CUDA")
     variant("rocm", default=False, description="Build with ROCm")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Build dependencies
     depends_on("cmake@3.13:", type="build", when="@0.24:")

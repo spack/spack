@@ -53,9 +53,6 @@ class Lvarray(CMakePackage, CudaPackage):
         "0.1.0", tag="v0.1.0", commit="0bf5f7d077de4a08f58db24baed207f9dba95f6e", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build Shared Libs")
     variant("umpire", default=False, description="Build Umpire support")
     variant("chai", default=False, description="Build Chai support")
@@ -66,6 +63,9 @@ class Lvarray(CMakePackage, CudaPackage):
     variant("examples", default=False, description="Build examples")
     variant("docs", default=False, description="Build docs")
     variant("addr2line", default=True, description="Build support for addr2line.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blt", when="@0.2.0:", type="build")
 
@@ -121,12 +121,9 @@ class Lvarray(CMakePackage, CudaPackage):
             var = "-".join([var, "cuda"])
 
         hostname = socket.gethostname().rstrip("1234567890")
-        host_config_path = "%s-%s-%s%s.cmake" % (
-            hostname,
-            self._get_sys_type(spec),
-            spec.compiler,
-            var,
-        )
+        c_compiler = self["c"]
+        compiler_str = f"{c_compiler.name}-{c_compiler.version}"
+        host_config_path = f"{hostname}-{self._get_sys_type(spec)}-{compiler_str}{var}.cmake"
 
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
@@ -215,7 +212,7 @@ class Lvarray(CMakePackage, CudaPackage):
             debug_flags = "-O0 -g"
             cfg.write(cmake_cache_string("CMAKE_CXX_FLAGS_DEBUG", debug_flags))
 
-            if spec.satisfies("%clang arch=linux-rhel7-ppc64le"):
+            if spec.satisfies("arch=linux-rhel7-ppc64le%clang"):
                 cfg.write(cmake_cache_entry("CMAKE_EXE_LINKER_FLAGS", "-Wl,--no-toc-optimize"))
 
             if spec.satisfies("+cuda"):

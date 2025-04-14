@@ -19,6 +19,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
     maintainers("pghysels")
 
+    version("7.0.7", sha256="02084471d2ca525f8a59b4bb8c607eb5cca452d6a38cf5c89f5f92f7edc1a5b5")
+    version("7.0.6", sha256="b44acd0d2f53de4b578fa3a88944cccc45c4d2961cd8cefa9b9a1d5431de8e2b")
     version("7.0.4", sha256="8ef4719d6a3356e9c4ca7fefd7e2ac40deb69779a5c116f44da75d13b3d2c2c3")
     version("7.0.3", sha256="5b5351f0ffd6fcae9ae7eafeccaa5a25602845b9ffd1afb104db932dd4d4f3c5")
     version("7.0.1", sha256="0618e9bc33c02172ea7351600fce4fccd32fe00b3359c4aabb5e415f17c06fed")
@@ -35,10 +37,6 @@ class Scotch(CMakePackage, MakefilePackage):
     version("6.0.3", sha256="6461cc9f28319a9dbe6cc10e28c0cbe90b4b25e205723c3edcde9a3ff974d6d8")
     version("6.0.0", sha256="8206127d038bda868dda5c5a7f60ef8224f2e368298fbb01bf13fa250e378dd4")
     version("5.1.10b", sha256="54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
 
     build_system(conditional("cmake", when="@7:"), "makefile", default="cmake")
     variant("threads", default=True, description="use POSIX Pthreads within Scotch and PT-Scotch")
@@ -62,6 +60,10 @@ class Scotch(CMakePackage, MakefilePackage):
         when="@7.0.1",
         description="Link error handling library to libscotch/libptscotch",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Does not build with flex 2.6.[23]
     depends_on("flex@:2.6.1,2.6.4:", type="build")
@@ -121,8 +123,8 @@ class Scotch(CMakePackage, MakefilePackage):
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+
     def cmake_args(self):
-        spec = self.spec
         args = [
             self.define_from_variant("BUILD_LIBSCOTCHMETIS", "metis"),
             self.define_from_variant("INSTALL_METIS_HEADERS", "metis"),
@@ -133,10 +135,21 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("MPI_THREAD_MULTIPLE", "mpi_thread"),
         ]
 
-        if "+int64" in spec:
+        if self.pkg.version > Version("7.0.4"):
+            args.append(self.define("ENABLE_TESTS", self.pkg.run_tests))
+
+        if "+int64" in self.spec:
             args.append("-DINTSIZE=64")
+        elif self.is_64bit():
+            c_flags = []
+            c_flags.append("-DIDXSIZE64")
+            c_flags.append("-DINTSIZE32")
+            args.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))
 
         return args
+
+    def is_64bit(self):
+        return "64" in str(self.pkg.spec.target.family)
 
     @when("+noarch")
     def setup_build_environment(self, env):
@@ -150,12 +163,17 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         makefile_inc = []
         cflags = ["-O3", "-DCOMMON_RANDOM_FIXED_SEED", "-DSCOTCH_DETERMINISTIC", "-DSCOTCH_RENAME"]
 
+        # SCOTCH_Num typedef: size of integers in arguments
+        # SCOTCH_Idx typedef: indices for addressing
         if "+int64" in self.spec:
-            # SCOTCH_Num typedef: size of integers in arguments
             cflags.append("-DINTSIZE64")
-            cflags.append("-DIDXSIZE64")  # SCOTCH_Idx typedef: indices for addressing
+            cflags.append("-DIDXSIZE64")
+        elif self.is_64bit():
+            cflags.append("-DINTSIZE32")
+            cflags.append("-DIDXSIZE64")
         else:
-            cflags.append("-DIDXSIZE32")  # SCOTCH_Idx typedef: indices for addressing
+            cflags.append("-DINTSIZE32")
+            cflags.append("-DIDXSIZE32")
 
         if self.spec.satisfies("platform=darwin"):
             cflags.extend(["-Drestrict=__restrict"])
@@ -165,6 +183,14 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             # vendored dependency. Prefix its internal symbols so they won't
             # conflict with another installation.
             cflags.append("-DSCOTCH_METIS_PREFIX")
+
+        if self.spec.satisfies("+mpi"):
+            cflags.append("-DSCOTCH_PTHREAD_MPI")
+            if self.spec.satisfies("@7.0:"):
+                cflags.append("-DSCOTCH_MPI_ASYNC_COLL")
+
+        if self.spec.satisfies("platform=linux"):
+            cflags.append("-DCOMMON_PTHREAD_AFFINITY_LINUX")
 
         # Library Build Type #
         if "+shared" in self.spec:
@@ -252,15 +278,25 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 "MV        = mv",
                 "CP        = cp",
                 "CFLAGS    = %s" % " ".join(cflags),
-                "LEX       = %s -Pscotchyy -olex.yy.c" % flex_path,
-                "YACC      = %s -pscotchyy -y -b y" % bison_path,
                 "prefix    = %s" % self.prefix,
             ]
         )
+        if self.spec.satisfies("@7.0:"):
+            makefile_inc.extend(["FLEX       = %s" % flex_path, "BISON      = %s" % bison_path])
+        else:
+            makefile_inc.extend(
+                [
+                    "LEX       = %s -Pscotchyy -olex.yy.c" % flex_path,
+                    "YACC      = %s -pscotchyy -y -b y" % bison_path,
+                ]
+            )
 
         with working_dir("src"):
             with open("Makefile.inc", "w") as fh:
                 fh.write("\n".join(makefile_inc))
+
+    def is_64bit(self):
+        return "64" in str(self.pkg.spec.target.family)
 
     @property
     def build_targets(self):

@@ -28,6 +28,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    version("4.6.00", sha256="be72cf7fc6ef6b99c614f29b945960013a2aaa23859bfe1a560d8d9aa526ec9c")
     version("4.5.01", sha256="52d003ffbbe05f30c89966e4009c017efb1662b02b2b73190670d3418719564c")
     version("4.5.00", sha256="cbfb742feeb9e649db9eca0394e6ca9a22aa017a1e6aab8576990772a0e3135b")
     version("4.4.01", sha256="3413f0cb39912128d91424ebd92e8832009e7eeaf6fa8da58e99b0d37860d972")
@@ -202,6 +203,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "zen": "ZEN",
         "zen2": "ZEN2",
         "zen3": "ZEN3",
+        "zen4": "ZEN4",
         "steamroller": "KAVERI",
         "excavator": "CARIZO",
         "power7": "POWER7",
@@ -269,16 +271,26 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
     }
+    amdgpu_apu_arch_map = {"gfx942": "amd_gfx942_apu"}
     amd_support_conflict_msg = (
         "{0} is not supported; "
         "Kokkos supports the following AMD GPU targets: " + ", ".join(amdgpu_arch_map.keys())
     )
+    amd_apu_support_conflict_msg = (
+        "{0} is not supported; "
+        "Kokkos supports the following AMD GPU targets with unified memory: "
+        + ", ".join(amdgpu_apu_arch_map.keys())
+    )
     for arch in ROCmPackage.amdgpu_targets:
         if arch not in amdgpu_arch_map:
             conflicts(
-                "+rocm",
-                when="amdgpu_target={0}".format(arch),
-                msg=amd_support_conflict_msg.format(arch),
+                "+rocm", when=f"amdgpu_target={arch}", msg=amd_support_conflict_msg.format(arch)
+            )
+        if arch not in amdgpu_apu_arch_map:
+            conflicts(
+                "+rocm+apu",
+                when=f"amdgpu_target={arch}",
+                msg=amd_apu_support_conflict_msg.format(arch),
             )
 
     intel_gpu_arches = (
@@ -296,6 +308,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         values=("none",) + intel_gpu_arches,
         description="Intel GPU architecture",
     )
+    variant("apu", default=False, description="Enable APU support", when="@4.5: +rocm")
 
     for dev, (dflt, desc) in devices_variants.items():
         variant(dev, default=dflt, description=desc)
@@ -408,11 +421,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             if option:
                 spack_options.append(option)
 
-    def setup_dependent_package(self, module, dependent_spec):
-        try:
-            self.spec.kokkos_cxx = self.spec["kokkos-nvcc-wrapper"].kokkos_cxx
-        except Exception:
-            self.spec.kokkos_cxx = spack_cxx
+    @property
+    def kokkos_cxx(self) -> str:
+        if self.spec.satisfies("+wrapper"):
+            return self["kokkos-nvcc-wrapper"].kokkos_cxx
+        # Assumes build-time globals have been set already
+        return spack_cxx
 
     def cmake_args(self):
         spec = self.spec
@@ -453,7 +467,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             for amdgpu_target in spec.variants["amdgpu_target"].value:
                 if amdgpu_target != "none":
                     if amdgpu_target in self.amdgpu_arch_map:
-                        spack_microarches.append(self.amdgpu_arch_map[amdgpu_target])
+                        if spec.satisfies("+apu") and amdgpu_target in self.amdgpu_apu_arch_map:
+                            spack_microarches.append(self.amdgpu_apu_arch_map[amdgpu_target])
+                        else:
+                            spack_microarches.append(self.amdgpu_arch_map[amdgpu_target])
                     else:
                         # Note that conflict declarations should prevent
                         # choosing an unsupported AMD GPU target
@@ -474,9 +491,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                 options.append(self.define(tpl + "_DIR", spec[tpl].prefix))
 
         if self.spec.satisfies("+wrapper"):
-            options.append(
-                self.define("CMAKE_CXX_COMPILER", self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-            )
+            options.append(self.define("CMAKE_CXX_COMPILER", self.kokkos_cxx))
         elif "+rocm" in self.spec:
             if "+cmake_lang" in self.spec:
                 options.append(

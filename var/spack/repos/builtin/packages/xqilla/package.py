@@ -16,9 +16,6 @@ class Xqilla(AutotoolsPackage, SourceforgePackage):
 
     version("2.3.3", sha256="8f76b9b4f966f315acc2a8e104e426d8a76ba4ea3441b0ecfdd1e39195674fd6")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("debug", default=False, description="Build a debugging version.")
     variant("shared", default=True, description="Build shared libraries.")
 
@@ -33,6 +30,9 @@ class Xqilla(AutotoolsPackage, SourceforgePackage):
         sha256="52e5f03012fe9ae5b0f90d04eff042fb2082aa8f366a47d9e6be0d452de87b73",
         when="%gcc@11:",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("xerces-c")
 

@@ -74,7 +74,7 @@ class Camx(MakefilePackage):
             makefile.filter("-mcmodel=medium", "-mcmodel=large")
 
         # Support Intel MPI.
-        if spec["mpi"].name == "intel-mpi":
+        if spec["mpi"].name == "intel-oneapi-mpi":
             makefile.filter(
                 "else ifneq (, $(findstring $(MPI),openmpi openMPI OPENMPI))",
                 """else ifneq (, $(findstring $(MPI),intel-mpi intel impi))

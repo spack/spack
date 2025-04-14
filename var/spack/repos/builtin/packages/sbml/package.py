@@ -24,9 +24,6 @@ class Sbml(CMakePackage):
     version("5.10.2", sha256="83f32a143cf657672b1050f5f79d3591c418fc59570d180fb1f39b103f4e5286")
     version("5.10.0", sha256="2cd8b37018ce8b1df869c8c182803addbce6d451512ae25a7f527b49981f0966")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     def url_for_version(self, version):
         url = "https://downloads.sourceforge.net/project/sbml/libsbml/{0}/stable/libSBML-{1}-core-plus-packages-src.tar.gz".format(
             version, version
@@ -58,6 +55,9 @@ class Sbml(CMakePackage):
     depends_on("mono", when="+mono")
 
     variant("cpp", default=False, description="All c++ includes should be under a namespace")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("swig@2:", type="build")
     depends_on("cmake", type="build")

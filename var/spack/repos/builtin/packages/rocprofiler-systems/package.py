@@ -16,8 +16,22 @@ class RocprofilerSystems(CMakePackage):
 
     license("MIT")
 
-    version("amd-mainline", branch="amd-mainline", submodules=True)
-    version("amd-staging", branch="amd-staging", submodules=True)
+    version("amd-mainline", branch="amd-mainline", submodules=True, deprecated=True)
+    version("amd-staging", branch="amd-staging", submodules=True, deprecated=True)
+    version(
+        "6.3.3",
+        git="https://github.com/ROCm/rocprofiler-systems",
+        tag="rocm-6.3.3",
+        commit="f03ef1dd9a4e984e3e72056352532e6149e742fc",
+        submodules=True,
+    )
+    version(
+        "6.3.2",
+        git="https://github.com/ROCm/rocprofiler-systems",
+        tag="rocm-6.3.2",
+        commit="2fd5fbbef941ff219a1ecef702f8cfaae6e8e5ba",
+        submodules=True,
+    )
     version(
         "6.3.1",
         git="https://github.com/ROCm/rocprofiler-systems",
@@ -33,10 +47,6 @@ class RocprofilerSystems(CMakePackage):
         commit="71a5e271b5e07efd2948fb6e7b451db5e8e40cb8",
         submodules=True,
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant(
         "rocm",
@@ -83,6 +93,10 @@ class RocprofilerSystems(CMakePackage):
 
     extends("python", when="+python")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # hard dependencies
     depends_on("cmake@3.16:", type="build")
     depends_on("dyninst@11.0.1:", type=("build", "run"))
@@ -92,7 +106,7 @@ class RocprofilerSystems(CMakePackage):
     depends_on("tau", when="+tau")
     depends_on("caliper", when="+caliper")
     depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("dyninst@12", when="+rocm")
+    depends_on("dyninst@12:", when="+rocm")
     depends_on("m4", when="+rocm")
     depends_on("texinfo", when="+rocm")
     depends_on("libunwind", when="+rocm")
@@ -100,11 +114,13 @@ class RocprofilerSystems(CMakePackage):
     depends_on("automake", when="+rocm")
     depends_on("libtool", when="+rocm")
     with when("+rocm"):
-        for ver in ["6.3.0", "6.3.1"]:
+        for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
             depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
             depends_on(f"hip@{ver}", when=f"@{ver}")
             depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
             depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
+
+            patch("add_cstdint.patch", when="%gcc@13:")
 
     def cmake_args(self):
         spec = self.spec
@@ -113,7 +129,6 @@ class RocprofilerSystems(CMakePackage):
             self.define("SPACK_BUILD", True),
             self.define("ROCPROFSYS_BUILD_PAPI", False),
             self.define("ROCPROFSYS_BUILD_PYTHON", True),
-            self.define("ROCPROFSYS_BUILD_DYNINST", False),
             self.define("ROCPROFSYS_BUILD_LIBUNWIND", False),
             self.define("ROCPROFSYS_BUILD_STATIC_LIBGCC", False),
             self.define("ROCPROFSYS_BUILD_STATIC_LIBSTDCXX", False),
@@ -150,6 +165,11 @@ class RocprofilerSystems(CMakePackage):
             args.append(
                 self.define("libunwind_INCLUDE_DIR", self.spec["libunwind"].prefix.include)
             )
+        if spec.satisfies("%gcc@13:"):
+            self.define("ROCPROFSYS_BUILD_DYNINST", True),
+            self.define("DYNINST_BUILD_TBB", True),
+        else:
+            self.define("ROCPROFSYS_BUILD_DYNINST", False),
         return args
 
     def flag_handler(self, name, flags):

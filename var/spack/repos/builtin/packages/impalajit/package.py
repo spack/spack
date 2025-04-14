@@ -26,13 +26,14 @@ class Impalajit(CMakePackage):
     version("llvm", git="https://github.com/ravil-mobile/ImpalaJIT.git", branch="dev")
     version("llvm-1.0.0", git="https://github.com/ravil-mobile/ImpalaJIT.git", tag="v1.0.0")
 
+    maintainers("ravil-mobile", "Thomas-Ulrich")
+
+    variant("shared", default=True, description="build as a shared library")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    maintainers("ravil-mobile", "Thomas-Ulrich")
-
-    variant("shared", default=True, description="build as a shared library")
     depends_on("cmake", type="build")
     depends_on("pkgconfig", type="build", when="@main")
     depends_on("llvm@10.0.0:11.1.0", when="@llvm")

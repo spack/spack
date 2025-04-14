@@ -19,6 +19,8 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
 
     license("Unicode-TOU")
 
+    version("76.1", sha256="dfacb46bfe4747410472ce3e1144bf28a102feeaa4e3875bac9b4c6cf30f4f3e")
+    version("75.1", sha256="cb968df3e4d2e87e8b11c49a5d01c787bd13b9545280fc6642f826527618caef")
     version("74.2", sha256="68db082212a96d6f53e35d60f47d38b962e9f9d207a74cfac78029ae8ff5e08c")
     version("67.1", sha256="94a80cd6f251a53bd2a997f6f1b5ac6653fe791dfab66e1eb0227740fb86d5dc")
     version("66.1", sha256="52a3f2209ab95559c1cf0a14f24338001f389615bf00e2585ef3dbc43ecf0a2e")
@@ -31,25 +33,28 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
     version("57.2", sha256="623f04b921827a041f42d52495a6f8eee6565a9b7557051ac68e099123ff28dc")
     version("57.1", sha256="ff8c67cb65949b1e7808f2359f2b80f722697048e90e7cfc382ec1fe229e9581")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("autotools", "msbuild", default="autotools")
     for plat in ["linux", "darwin", "freebsd"]:
         with when(f"platform={plat}"):
             variant(
                 "cxxstd",
                 default="11",
-                values=("11", "14", "17"),
+                values=(conditional("11", "14", when="@:74"), "17"),
                 multi=False,
                 description="Use the specified C++ standard when building",
             )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type="build", when="@64.1:")
     with when("build_system=autotools"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
+
+    with when("build_system=msbuild"):
+        patch("ICU4C_NMAKE_NO_DOUBLE_QUOTE_VARS.patch", when="@64.1:")
 
     conflicts(
         "%intel@:16",
@@ -70,7 +75,7 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         return url.format(version.dashed, version.underscored)
 
     def flag_handler(self, name, flags):
-        if name == "cxxflags":
+        if name == "cxxflags" and not self.spec.platform == "windows":
             # Control of the C++ Standard is via adding the required "-std"
             # flag to CXXFLAGS in env
             flags.append(getattr(self.compiler, f"cxx{self.spec.variants['cxxstd'].value}_flag"))
@@ -123,7 +128,7 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
         solution_path = pathlib.Path(self.pkg.stage.source_path)
-        if self.spec.satsifies("@:67"):
+        if self.spec.satisfies("@:67"):
             solution_path = solution_path / "icu"
         solution_path = solution_path / "source" / "allinone"
         return str(solution_path)

@@ -30,12 +30,14 @@ class Cmake(Package):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.31.6", sha256="653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0")
     version("3.31.5", sha256="66fb53a145648be56b46fa9e8ccade3a4d0dfc92e401e52ce76bdad1fea43d27")
     version("3.31.4", sha256="a6130bfe75f5ba5c73e672e34359f7c0a1931521957e8393a5c2922c8b0f7f25")
     version("3.31.3", sha256="fac45bc6d410b49b3113ab866074888d6c9e9dc81a141874446eb239ac38cb87")
     version("3.31.2", sha256="42abb3f48f37dbd739cdfeb19d3712db0c5935ed5c2aef6c340f9ae9114238a2")
     version("3.31.1", sha256="c4fc2a9bd0cd5f899ccb2fb81ec422e175090bc0de5d90e906dd453b53065719")
     version("3.31.0", sha256="300b71db6d69dcc1ab7c5aae61cbc1aa2778a3e00cbd918bc720203e311468c3")
+    version("3.30.8", sha256="10434223a40531b4d6bd77f8ffc471f1714029f4e6d2c83c499187a940276720")
     version("3.30.7", sha256="470e44d9c7caa3bd869ef953071b84f565b5d378d0a9eccbbbcd72031f21b9de")
     version("3.30.6", sha256="a7aa25cdd8545156fe0fec95ebbd53cb2b5173a8717e227f6e8a755185c168cf")
     version("3.30.5", sha256="9f55e1a40508f2f29b7e065fa08c29f82c402fa0402da839fffe64a25755a86d")
@@ -76,9 +78,6 @@ class Cmake(Package):
     version("3.1.0", sha256="8bdc3fa3f2da81bc10c772a6b64cc9052acc2901d42e1e1b2588b40df224aad9")
     version("3.0.2", sha256="6b4ea61eadbbd9bec0ccb383c29d1f4496eacc121ef7acf37c7a24777805693e")
     version("2.8.10.2", sha256="ce524fb39da06ee6d47534bbcec6e0b50422e18b62abc4781a4ba72ea2910eb1")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     variant(
         "build_type",
@@ -124,10 +123,13 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/9623
     patch("mr-9623.patch", when="@3.22.0:3.30")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("ninja", when="platform=windows")
-    depends_on("gmake", when="platform=linux")
-    depends_on("gmake", when="platform=darwin")
-    depends_on("gmake", when="platform=freebsd")
+    depends_on("gmake", type=("build", "run"), when="platform=linux")
+    depends_on("gmake", type=("build", "run"), when="platform=darwin")
+    depends_on("gmake", type=("build", "run"), when="platform=freebsd")
 
     depends_on("qt", when="+qtgui")
     # Qt depends on libmng, which is a CMake package;
@@ -139,7 +141,7 @@ class Cmake(Package):
 
     # See https://gitlab.kitware.com/cmake/cmake/-/issues/21135
     conflicts(
-        "%gcc platform=darwin",
+        "platform=darwin %gcc",
         when="@:3.17",
         msg="CMake <3.18 does not compile with GCC on macOS, "
         "please use %apple-clang or a newer CMake release. "
@@ -242,16 +244,6 @@ class Cmake(Package):
         output = Executable(exe)("--version", output=str, error=str)
         match = re.search(r"cmake.*version\s+(\S+)", output)
         return match.group(1) if match else None
-
-    def flag_handler(self, name, flags):
-        if name == "cxxflags" and self.compiler.name == "fj":
-            cxx11plus_flags = (self.compiler.cxx11_flag, self.compiler.cxx14_flag)
-            cxxpre11_flags = self.compiler.cxx98_flag
-            if any(f in flags for f in cxxpre11_flags):
-                raise ValueError("cannot build cmake pre-c++11 standard")
-            elif not any(f in flags for f in cxx11plus_flags):
-                flags.append(self.compiler.cxx11_flag)
-        return (flags, None, None)
 
     def bootstrap_args(self):
         spec = self.spec
@@ -362,6 +354,15 @@ class Cmake(Package):
                 filter_file("mpcc_r)", "mpcc_r mpifcc)", f, string=True)
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
                 filter_file("mpifc)", "mpifc mpifrt)", f, string=True)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # CMake 4.0.0 breaks compatibility with CMake projects requiring a CMake
+        # < 3.5. However, many projects that specify a minimum requirement for
+        # versions older than 3.5 are actually compatible with newer CMake
+        # and do not use CMake 3.4 or older features. This allows those
+        # projects to use a newer CMake
+        if self.spec.satisfies("@4:"):
+            env.set("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before cmake packages's install() methods."""

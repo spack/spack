@@ -8,17 +8,20 @@ from spack.package import *
 class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package."""
 
-    homepage = "https://gitlab.com/petsc/petsc4py"
+    homepage = "https://petsc.org/release/petsc4py"
     url = (
         "https://web.cels.anl.gov/projects/petsc/download/release-snapshots/petsc4py-3.20.0.tar.gz"
     )
     git = "https://gitlab.com/petsc/petsc.git"
 
-    maintainers("balay")
+    maintainers("balay", "jczhang07", "joseeroman")
 
     license("BSD-2-Clause")
 
     version("main", branch="main")
+    version("3.23.0", sha256="3be542580763419750cdc67dc6515bae338320dbb53403f0af7ab5c8a948bf4e")
+    version("3.22.5", sha256="058478cdba163e162d17ad14a8f71d519049a7c84807cd33a14c7f852988ec2e")
+    version("3.22.4", sha256="c7bd4dee211bc651217ae2732c56afacd8ac349320049cdfaa2131d7621e6d09")
     version("3.22.3", sha256="7ed43cd027f82033e70f53c99fb530713dab743869d0c0827d22bbd5fb651c43")
     version("3.22.2", sha256="6c56f62ae8819069062436d362a2cc7e44f700026eed72a903c3803afbe59fc3")
     version("3.22.1", sha256="a7fd321458b72356e46c4bc5bd93d173c9c2f91018cf21f614a631fe2aa6466a")
@@ -88,12 +91,15 @@ class PyPetsc4py(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Activates MPI support")
 
+    # Hack to fix https://github.com/spack/spack/issues/21451, where Petsc4Py expects LDSHARED
+    # to start with the same executable as get_config_var("CC")
+    patch("ldshared_319.patch", when="@3.19:")
     patch("ldshared.patch", when="@:3.18")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("py-cython@3:", when="@3.20:", type="build")
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
@@ -107,6 +113,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
     for ver in [
+        "3.23",
         "3.22",
         "3.21",
         "3.20",

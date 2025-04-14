@@ -54,10 +54,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Configuration variants
     variant(
         "build_type",
@@ -127,6 +123,10 @@ class Dealii(CMakePackage, CudaPackage):
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
     variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -388,12 +388,16 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check that the combination of variants makes sense
     # 64-bit BLAS:
-    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
-        conflicts(
-            "^{0}+ilp64".format(_package),
-            when="@:8.5.1",
-            msg="64bit BLAS is only supported from 9.0.0",
-        )
+    conflicts(
+        "^[virtuals=lapack] openblas+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
+    conflicts(
+        "^[virtuals=lapack] intel-oneapi-mkl+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
 
     # MPI requirements:
     for _package in [
@@ -505,10 +509,8 @@ class Dealii(CMakePackage, CudaPackage):
         # 64 bit indices
         options.append(self.define_from_variant("DEAL_II_WITH_64BIT_INDICES", "int64"))
 
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             options.append(self.define("LAPACK_WITH_64BIT_BLAS_INDICES", True))
 
@@ -552,7 +554,7 @@ class Dealii(CMakePackage, CudaPackage):
                 )
             # Make sure we use the same compiler that Trilinos uses
             if spec.satisfies("+trilinos"):
-                options.extend([self.define("CMAKE_CXX_COMPILER", spec["trilinos"].kokkos_cxx)])
+                options.extend([self.define("CMAKE_CXX_COMPILER", self["trilinos"].kokkos_cxx)])
 
         # Complex support
         options.append(self.define_from_variant("DEAL_II_WITH_COMPLEX_VALUES", "complex"))
@@ -570,20 +572,9 @@ class Dealii(CMakePackage, CudaPackage):
             options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
         else:
             options.append(self.define_from_variant("DEAL_II_WITH_THREADS", "threads"))
+
         if spec.satisfies("+threads"):
-            if spec.satisfies("^intel-parallel-studio+tbb"):
-                # deal.II/cmake will have hard time picking up TBB from Intel.
-                tbb_ver = ".".join(("%s" % spec["tbb"].version).split(".")[1:])
-                options.extend(
-                    [
-                        self.define("TBB_FOUND", True),
-                        self.define("TBB_VERSION", tbb_ver),
-                        self.define("TBB_INCLUDE_DIRS", ";".join(spec["tbb"].headers.directories)),
-                        self.define("TBB_LIBRARIES", spec["tbb"].libs.joined(";")),
-                    ]
-                )
-            else:
-                options.append(self.define("TBB_DIR", spec["tbb"].prefix))
+            options.append(self.define("TBB_DIR", spec["tbb"].prefix))
 
         # Optional dependencies for which library names are the same as CMake
         # variables:
@@ -685,7 +676,7 @@ class Dealii(CMakePackage, CudaPackage):
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
-        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS_CXX"]))
 
         # platform introspection - needs to be disabled in some environments
         if spec.satisfies("+platform-introspection"):
