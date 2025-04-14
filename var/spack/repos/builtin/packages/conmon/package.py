@@ -14,6 +14,7 @@ class Conmon(MakefilePackage):
 
     license("Apache-2.0")
 
+    version("2.1.13", sha256="350992cb2fe4a69c0caddcade67be20462b21b4078dae00750e8da1774926d60")
     version("2.1.12", sha256="842f0b5614281f7e35eec2a4e35f9f7b9834819aa58ecdad8d0ff6a84f6796a6")
     version("2.1.7", sha256="7d0f9a2f7cb8a76c51990128ac837aaf0cc89950b6ef9972e94417aa9cf901fe")
     version("2.1.5", sha256="ee3179ee2b9a9107acec00eb546062cf7deb847f135a3b81503d22b0d226b3ed")
