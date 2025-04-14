@@ -2266,3 +2266,9 @@ def _noop(*args, **kwargs):
 def no_compilers_init(monkeypatch):
     """Disables automatic compiler initialization"""
     monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture
+def disable_end_user_config(monkeypatch):
+    """Emulates --disable-end-user-config to Spack executable"""
+    monkeypatch.setattr(spack.config, "end_user_system_scope", False)

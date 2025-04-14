@@ -1252,8 +1252,7 @@ def test_local_config_can_be_disabled(working_env):
     assert "end-user" in cfg.scopes
 
 
-def test_end_user_config_can_be_disabled():
-    spack.config.end_user_system_scope = False
+def test_end_user_config_can_be_disabled(disable_end_user_config):
     cfg = spack.config.create()
     assert "defaults" in cfg.scopes
     assert "system" in cfg.scopes
