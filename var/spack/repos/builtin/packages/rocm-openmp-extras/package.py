@@ -370,6 +370,7 @@ class RocmOpenmpExtras(Package):
     )
     patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1")
     patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:")
+    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.4.patch", when="@6.4:")
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
@@ -398,7 +399,10 @@ class RocmOpenmpExtras(Package):
 
     def patch(self):
         src = self.stage.source_path
-        libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
+        if self.spec.satisfies("@6.4:"):
+            libomptarget = "{0}/rocm-openmp-extras/llvm-project/offload"
+        else:
+            libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
         flang = "{0}/rocm-openmp-extras/flang/"
 
         plugin = "/plugins/amdgpu/CMakeLists.txt"
