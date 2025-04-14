@@ -80,7 +80,7 @@ class Fmt(CMakePackage):
     conflicts("cxxstd=17", when="@9.0.0%intel")
     conflicts("cxxstd=17", when="@9.0.0%nvhpc")
     # clang-21 requires fmt-11.1.0 (https://github.com/fmtlib/fmt/pull/4187)
-    conflicts("%llvm@21:", when="@:11.0")
+    conflicts("%[virtuals=cxx] llvm@21:", when="@:11.0")
 
     # Use CMAKE_CXX_STANDARD to define C++ flag, as in later versions
     patch("fmt-use-cmake-cxx-standard_3.0.0.patch", when="@3.0.0")
