@@ -21,25 +21,12 @@ import types
 import typing
 import warnings
 from contextlib import contextmanager
-from typing import (
-    IO,
-    Callable,
-    Dict,
-    Iterator,
-    List,
-    NamedTuple,
-    Optional,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
 
 import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import current_file_position
 from llnl.util.lang import elide_list
 
 import spack
@@ -65,6 +52,7 @@ import spack.util.hash
 import spack.util.libc
 import spack.util.module_cmd as md
 import spack.util.path
+import spack.util.timer
 import spack.variant as vt
 import spack.version as vn
 import spack.version.git_ref_lookup
@@ -680,14 +668,13 @@ class ConcretizationCache:
         bytes_limit = spack.config.get("config:concretization_cache:size_limit", 3e8)
         # lock the entire buildcache as we're removing a lot of data from the
         # manifest and cache itself
-        entry_count, bytes_count = 0,0
+        entry_count, bytes_count = 0, 0
         rm_reg: List[pathlib.Path] = []
         for bucket in self.cache_buckets():
             with self._fc.read_transaction(bucket) as f:
                 if not f:
                     raise RuntimeError(
-                        "Attempting to clean non existent cache bucket"
-                        f" {bucket.name}"
+                        "Attempting to clean non existent cache bucket" f" {bucket.name}"
                     )
                 # advance new beyond metadata entry
                 for entry in self.cache_entries(bucket):
@@ -720,7 +707,7 @@ class ConcretizationCache:
             if bucket.is_dir():
                 yield bucket
 
-    def cache_entries(self, bucket:pathlib.Path):
+    def cache_entries(self, bucket: pathlib.Path):
         """Generator producing cache entries within a bucket"""
         for cache_entry in bucket.iterdir():
             if not cache_entry.is_dir():
@@ -837,7 +824,7 @@ class ConcretizationCache:
             if exists:
                 cache_entry_content = None
                 try:
-                    with gzip.open(cache_path, 'rb') as f:
+                    with gzip.open(cache_path, "rb") as f:
                         f.peek(1)  # Try to read at least one byte
                         f.seek(0)
                         cache_entry_content = f.read().decode("utf-8")

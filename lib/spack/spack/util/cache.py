@@ -20,6 +20,7 @@ class Cache:
       paths, so that there can be some hierarchy in the cache.
 
     """
+
     def __init__(self, root: Union[str, pathlib.Path], timeout=120):
         """Create a cache object.
 
@@ -69,13 +70,13 @@ class Cache:
         """Validates a given potential cache key"""
         raise NotImplementedError("Must be implemented by subclass")
 
-    def _rm_cache_entry(self, cache_path:pathlib.Path):
+    def _rm_cache_entry(self, cache_path: pathlib.Path):
         """Removes a cache entry"""
         raise NotImplementedError("Must be implemented by subclass")
 
     def _acquire_read_fn(self, path: pathlib.Path):
         """Returns a function pointer to be used as a callback when acquiring
-         a read lock during a read transaction """
+        a read lock during a read transaction"""
         raise NotImplementedError("Must be implemented by subclass")
 
     def _acquire_write_fn(self, path: pathlib.Path):

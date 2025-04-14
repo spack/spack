@@ -64,6 +64,7 @@ class FileCache(Cache):
     - The FileCache handles locking cache files for reading and writing, so
       client code need not manage locks for cache entries.
     """
+
     def _acquire_read_fn(self, path):
         return lambda: ReadContextManager(path)
 
@@ -97,6 +98,7 @@ class FileCache(Cache):
 
 class DirectoryFileCache(Cache):
     """This class manages cached data on a per directory level"""
+
     def _acquire_read_fn(self, path):
         return lambda: path.exists()
 
@@ -105,7 +107,10 @@ class DirectoryFileCache(Cache):
 
     def _entry_validation(self, cache_path):
         if not cache_path.is_dir():
-            raise CacheError("Entry must refer to directory (bucket) not a file. If a File level cache is required, use FileCache")
+            raise CacheError(
+                "Entry must refer to directory (bucket) not a file. "
+                "If a File level cache is required, use FileCache"
+            )
         cache_path.mkdir(parents=True, exist_ok=True)
         if not os.access(cache_path, os.R_OK | os.W_OK):
             raise CacheError(f"Cannot read/write from cache bucket {cache_path}")
@@ -113,5 +118,3 @@ class DirectoryFileCache(Cache):
 
     def _rm_cache_entry(self, cache_path):
         shutil.rmtree(cache_path)
-
-
