@@ -26,15 +26,12 @@ class Mdspan(CMakePackage):
     depends_on("googletest@main", when="+tests")
 
     def cmake_args(self):
-        args = []
-
-        if self.spec.satisfies("+tests"):
-            args.append("-DMDSPAN_ENABLE_TESTS=ON")
-            args.append("-DMDSPAN_USE_SYSTEM_GTEST=ON")
-        if self.spec.satisfies("+benchmarks"):
-            args.append("-DMDSPAN_ENABLE_BENCHMARKS=ON")
-        if self.spec.satisfies("+examples"):
-            args.append("-DMDSPAN_ENABLE_EXAMPLES=ON")
+        args = [
+            self.define_from_variant("MDSPAN_ENABLE_TESTS", "tests"),
+            self.define_from_variant("MDSPAN_USE_SYSTEM_GTEST", "tests"),
+            self.define_from_variant("MDSPAN_ENABLE_BENCHMARKS", "benchmarks"),
+            self.define_from_variant("MDSPAN_ENABLE_EXAMPLES", "examples"),
+        ]
 
         args.append("-DCMAKE_CXX_STANDARD=17")
         args.append("-DMDSPAN_CXX_STANDARD=17")
