@@ -886,14 +886,17 @@ class DevelopStage(LockableStagingDir):
 
     @staticmethod
     def _rm_stage_path(stage_path):
-        """Called on any stage path. Returns whether the stage was
-        a DevelopStage. It does this because it needs to delete things
-        in a particular order: when symlinks are updated in the dev_path
-        they are only removed if the target stage path no longer exists,
-        so the stage path needs to be gone then; we need to make sure to
-        figure out where the dev_path is though before we do that, and
-        since we do it without constructing a DevelopStage object, we
-        need to read the symlink inside of the stage path.
+        """Delete everything in a stage path, first check if the stage
+        path contains a reference to a `dev_path` (i.e. if the stage is
+        for a `spack develop`ed package).
+
+        Note this is a path-oriented deletion method: it does not
+        require the instantiation of a stage object.
+
+        When interacting with the stage as a path (rather than as a
+        `Stage` object) this method should always be used.
+
+        Returns whether the stage was a DevelopStage.
         """
         if not os.path.exists(stage_path):
             return False
@@ -901,9 +904,15 @@ class DevelopStage(LockableStagingDir):
         dev_path_link = DevelopStage._dev_path_link(stage_path)
 
         if os.path.exists(dev_path_link):
+            # We are here if the link exists, even if the target
+            # of the link does not exist
             dev_path = llnl.util.symlink.readlink(dev_path_link)
         else:
             return False
+
+        # TODO: right now we always destroy the stage path, but
+        # it would be useful to add an option to not destroy
+        # stages that have existing dev_paths
 
         try:
             # Destroy all files, but do not follow symlinks
