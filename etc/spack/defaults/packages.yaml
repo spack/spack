@@ -92,6 +92,8 @@ packages:
     buildable: false
   hpcx-mpi:
     buildable: false
+  iconv:
+    prefer: [libiconv]
   mpt:
     buildable: false
   spectrum-mpi:
