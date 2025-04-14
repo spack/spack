@@ -36,7 +36,6 @@ class Mdspan(CMakePackage):
         if self.spec.satisfies("+examples"):
             args.append("-DMDSPAN_ENABLE_EXAMPLES=ON")
 
-        args.append("-DCMAKE_CXX_FLAGS='-Wall -Wextra -pedantic'")
         args.append("-DCMAKE_CXX_STANDARD=17")
         args.append("-DMDSPAN_CXX_STANDARD=17")
 
