@@ -68,12 +68,6 @@ class Nektools(Package):
     depends_on("libxt", when="+postnek")
     depends_on("visit", when="+visit")
 
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.f77:
-            msg = "Cannot build Nek5000 without a Fortran 77 compiler."
-            raise RuntimeError(msg)
-
     def install(self, spec, prefix):
         tools_dir = "tools"
         bin_dir = "bin"

@@ -516,12 +516,6 @@ class Hdf5(CMakePackage):
         # LD_LIBRARY_PATH.
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
-    @run_before("cmake")
-    def fortran_check(self):
-        if self.spec.satisfies("+fortran") and not self.compiler.fc:
-            msg = "cannot build a Fortran variant without a Fortran compiler"
-            raise RuntimeError(msg)
-
     def cmake_args(self):
         spec = self.spec
 
