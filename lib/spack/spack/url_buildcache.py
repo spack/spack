@@ -167,10 +167,19 @@ class URLBuildcacheEntry:
     PUBLIC_KEY_INDEX = "key-index-v1"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
-        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests"],
-        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", INDEX_MANIFEST_FILE],
-        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "manifests"],
-        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "manifests"],
+        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests", "index"],
+        BuildcacheComponent.INDEX: [
+            f"v{LAYOUT_VERSION}",
+            "manifests",
+            "index",
+            INDEX_MANIFEST_FILE,
+        ],
+        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "manifests", "key"],
+        BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
+        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
+        BuildcacheComponent.SPEC: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
+        BuildcacheComponent.KEY_INDEX: [f"v{LAYOUT_VERSION}", "manifests", "key"],
+        BuildcacheComponent.TARBALL: ["blobs"],
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
@@ -231,7 +240,9 @@ class URLBuildcacheEntry:
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
         path_components = cls.get_relative_path_components(BuildcacheComponent.SPECS)
-        return url_util.join(mirror_url, *path_components, cls.get_manifest_filename(spec))
+        return url_util.join(
+            mirror_url, *path_components, spec.name, cls.get_manifest_filename(spec)
+        )
 
     @classmethod
     def content_type_to_component(cls, content_type: str) -> BuildcacheComponent:
@@ -499,6 +510,7 @@ class URLBuildcacheEntry:
         manifest_name: str,
         manifest: BuildcacheManifest,
         tmpdir: str,
+        component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
     ) -> None:
         # write the manifest to a temporary location
@@ -511,9 +523,7 @@ class URLBuildcacheEntry:
             manifest_path = sign_file(signing_key, manifest_path)
 
         manifest_destination_url = url_util.join(
-            mirror_url,
-            *cls.get_relative_path_components(BuildcacheComponent.SPECS),
-            manifest_file_name,
+            mirror_url, *cls.get_relative_path_components(component_type), manifest_file_name
         )
 
         web_util.push_to_url(manifest_path, manifest_destination_url, keep_original=False)
@@ -553,7 +563,9 @@ class URLBuildcacheEntry:
                 layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
             )
             cls.push_blob(mirror_url, blob_to_push, record)
-            cls.push_manifest(mirror_url, manifest_name, manifest, tmpdir)
+            cls.push_manifest(
+                mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
+            )
         finally:
             shutil.rmtree(tmpdir)
 

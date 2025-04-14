@@ -724,7 +724,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     # Push the index manifest
     web_util.push_to_url(
         manifest_path,
-        url_util.join(cache_prefix, buildcache_relative_specs_url(), "index.manifest.json"),
+        url_util.join(cache_prefix, buildcache_relative_index_url()),
         keep_original=False,
         extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
     )
@@ -829,7 +829,7 @@ def _specs_from_cache_fallback(url: str):
         url_to_list = url_util.join(url, buildcache_relative_specs_url())
         file_list = [
             url_util.join(url_to_list, entry)
-            for entry in web_util.list_url(url_to_list)
+            for entry in web_util.list_url(url_to_list, recursive=True)
             if entry.endswith("spec.manifest.json")
         ]
         read_fn = url_read_method
@@ -2411,7 +2411,7 @@ def _get_keys(
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
 
     keys_prefix = url_util.join(
-        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.SPECS)
+        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
     )
     key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
     index_entry = cache_class(mirror_url)

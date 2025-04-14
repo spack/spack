@@ -185,9 +185,10 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     # Install and generate build cache index
     PackageInstaller([s.package], fake=True, explicit=True).install()
 
+    assert s.name is not None
     manifest_file = URLBuildcacheEntry.get_manifest_filename(s)
     specs_dirs = os.path.join(
-        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPECS)
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPECS), s.name
     )
 
     assert not (mirror_dir / specs_dirs / manifest_file).exists()
@@ -326,10 +327,11 @@ def test_buildcache_create_install(
         layout_version=spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
     )
     cache_entry = cache_class(mirror_url, spec)
-
+    assert spec.name is not None
     manifest_path = os.path.join(
         str(tmpdir),
         *cache_class.get_relative_path_components(BuildcacheComponent.SPECS),
+        spec.name,
         cache_class.get_manifest_filename(spec),
     )
 

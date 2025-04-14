@@ -445,7 +445,9 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
 
     # Remove dependency from cache
     libelf_files = glob.glob(
-        os.path.join(mirror_dir.join(bindist.buildcache_relative_specs_path()).strpath, "*libelf*")
+        os.path.join(
+            mirror_dir.join(bindist.buildcache_relative_specs_path()).strpath, "libelf", "*libelf*"
+        )
     )
     os.remove(*libelf_files)
 
@@ -1210,8 +1212,6 @@ class IndexInformation(NamedTuple):
 
 @pytest.fixture
 def mock_index(tmp_path, monkeypatch) -> IndexInformation:
-    print("hmmmm, i did get here")
-
     mirror_root = tmp_path / "mymirror"
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
