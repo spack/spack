@@ -147,13 +147,13 @@ class Zoltan(AutotoolsPackage):
             else:
                 config_args.append("--with-id-type=uint")
 
-        if "+scotch" in spec:
+        if spec.satisfies("+scotch"):
             scotch_prefix = spec["scotch"].prefix
             config_args.extend(
                 [
                     "--with-scotch",
-                    "--with-scotch-incdir={0}".format(scotch_prefix.include),
-                    "--with-scotch-libdir={0}".format(scotch_prefix.lib),
+                    f"--with-scotch-incdir={scotch_prefix.include}",
+                    f"--with-scotch-libdir={scotch_prefix.lib}",
                 ]
             )
 
