@@ -489,6 +489,13 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # https://github.com/tensorflow/tensorflow/issues/62416
     conflicts("%clang@17:", when="@:2.14")
 
+    # https://github.com/spack/spack/issues/49958
+    patch(
+        "https://github.com/tensorflow/tensorflow/pull/90563.patch?full_index=1",
+        sha256="78b858380521f4624fd95bfa32fd038cdd8168b783c2a13502c4169431517618",
+        when="@2.19:",
+    )
+
     # Fix build error with GCC 13
     # https://github.com/tensorflow/tensorflow/issues/84977
     patch(
