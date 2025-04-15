@@ -76,6 +76,12 @@ class Rocdecode(CMakePackage):
         if self.spec.satisfies("@6.3.0:"):
             args.append(self.define("LIBVA_INCLUDE_DIR", self.spec["libva"].prefix.include))
         if self.spec.satisfies("@6.4.0:"):
-            args.append(self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang"))
-            args.append(self.define("CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"))
+            args.append(
+                self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang")
+            )
+            args.append(
+                self.define(
+                    "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                )
+            )
         return args
