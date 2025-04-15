@@ -3949,13 +3949,13 @@ def test_concretization_cache_count_cleanup(use_concretization_cache, mutable_co
 def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we are cleaning the cache when we should be respective to the
     size of the cache in bytes"""
-    spack.config.set("concretizer:concretization_cache:size_limit", 18000)
+    spack.config.set("concretizer:concretization_cache:size_limit", 1000)
     spack.concretize.concretize_one("zlib")
     # cleanup should be run after hdf5 is concretized
     spack.concretize.concretize_one("hdf5")
-
     real_count, real_size = get_current_cache_data()
     # ensure we have less than our byte size limit
-    assert real_size < 18000, "Concretization cache cleanup did not reduce enough bytes"
-    # ensure there's only one cache entry
-    assert real_count == 1, "Concretization cache did not properly prune on byte limit"
+    assert real_size < 1000, "Concretization cache cleanup did not reduce enough bytes"
+    # ensure there's fewer cache entries
+    # 1000 is an absurdly low cache size, all entries should be pruned
+    assert real_count == 0, "Concretization cache did not properly prune on byte limit"
