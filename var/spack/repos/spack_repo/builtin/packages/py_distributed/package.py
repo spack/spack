@@ -51,7 +51,7 @@ class PyDistributed(PythonPackage):
     # require 0.29, which makes it fail to concretize. Since Versioneer 0.29 doesn't
     # break anything with 0.28, it should be safe to keep this aligned
     # https://github.com/python-versioneer/python-versioneer/releases/tag/0.29
-    depends_on("py-versioneer@0.29+toml", type="build", when="@2023.4.1:")
+    depends_on("py-versioneer@0.28: +toml", type="build", when="@2023.4.1:")
 
     # In Spack py-dask+distributed depends on py-distributed, not the other way around.
     # Hence, no need for depends_on("py-dask", ...)
