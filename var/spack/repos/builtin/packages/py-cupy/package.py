@@ -38,7 +38,9 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("python@3.8:", when="@12:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-cython@0.29.22:2", type="build", when="@:13.3.0")
-    depends_on("py-cython@3:3.0.10,3.0.12:", type="build", when="@13.4.0:")  # 3.0.11 broken likely because of cython#6335, fixed in 3.0.12
+    depends_on(
+        "py-cython@3:3.0.10,3.0.12:", type="build", when="@13.4.0:"
+    )  # 3.0.11 broken likely because of cython#6335, fixed in 3.0.12
     depends_on("py-fastrlock@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.20:1.25", when="@:11", type=("build", "run"))
     depends_on("py-numpy@1.20:1.26", when="@12:", type=("build", "run"))
