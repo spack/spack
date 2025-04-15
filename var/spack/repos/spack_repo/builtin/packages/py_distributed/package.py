@@ -89,7 +89,6 @@ class PyDistributed(PythonPackage):
 
     depends_on("py-urllib3@1.24.3:", type=("build", "run"), when="@2023.4.1:")
     depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
-    
 
     def patch(self):
         if self.spec.satisfies("@:2023.3"):
