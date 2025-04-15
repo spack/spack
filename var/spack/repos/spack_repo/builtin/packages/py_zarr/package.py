@@ -53,7 +53,7 @@ class PyZarr(PythonPackage):
         depends_on("py-packaging@22:", type=("build", "run"))
         # numpy@2: in 2.18.0
         # https://github.com/zarr-developers/zarr-python/issues/1818
-        depends_on("py-numpy@1.25:2", type=("build", "run"))
+        depends_on("py-numpy@1.25:", type=("build", "run"))
         depends_on("py-numcodecs@0.14:", type=("build", "run"))
         depends_on("py-typing-extensions@4.9:", type=("build", "run"))
         depends_on("py-donfig@0.8:", type=("build", "run"))
