@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,14 +16,45 @@ class Libarchive(AutotoolsPackage):
 
     license("BSD-2-Clause AND BSD-3-Clause AND Public-Domain")
 
-    version("3.7.4", sha256="7875d49596286055b52439ed42f044bd8ad426aa4cc5aabd96bfe7abb971d5e8")
-    version("3.7.3", sha256="f27a97bc22ceb996e72502df47dc19f99f9a0f09181ae909f09f3c9eb17b67e2")
-    version("3.7.2", sha256="df404eb7222cf30b4f8f93828677890a2986b66ff8bf39dac32a804e96ddf104")
-    version("3.7.1", sha256="5d24e40819768f74daf846b99837fc53a3a9dcdf3ce1c2003fe0596db850f0f0")
-    version("3.7.0", sha256="d937886a14b48c4287c4d343644feb294a14b31b7926ba9a4f1777123ce7c2cc")
-    version("3.6.2", sha256="ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3")
+    version("3.7.9", sha256="aa90732c5a6bdda52fda2ad468ac98d75be981c15dde263d7b5cf6af66fd009f")
+    version("3.7.8", sha256="a123d87b1bd8adb19e8c187da17ae2d957c7f9596e741b929e6b9ceefea5ad0f")
+    version("3.7.7", sha256="4cc540a3e9a1eebdefa1045d2e4184831100667e6d7d5b315bb1cbc951f8ddff")
+    version("3.7.6", sha256="b4071807367b15b72777c2eaac80f42c8ea2d20212ab279514a19fe1f6f96ef4")
+    version("3.7.5", sha256="37556113fe44d77a7988f1ef88bf86ab68f53d11e85066ffd3c70157cc5110f1")
 
     # Deprecated versions
+    # https://nvd.nist.gov/vuln/detail/CVE-2024-48957
+    version(
+        "3.7.4",
+        sha256="7875d49596286055b52439ed42f044bd8ad426aa4cc5aabd96bfe7abb971d5e8",
+        deprecated=True,
+    )
+    version(
+        "3.7.3",
+        sha256="f27a97bc22ceb996e72502df47dc19f99f9a0f09181ae909f09f3c9eb17b67e2",
+        deprecated=True,
+    )
+    version(
+        "3.7.2",
+        sha256="df404eb7222cf30b4f8f93828677890a2986b66ff8bf39dac32a804e96ddf104",
+        deprecated=True,
+    )
+    version(
+        "3.7.1",
+        sha256="5d24e40819768f74daf846b99837fc53a3a9dcdf3ce1c2003fe0596db850f0f0",
+        deprecated=True,
+    )
+    version(
+        "3.7.0",
+        sha256="d937886a14b48c4287c4d343644feb294a14b31b7926ba9a4f1777123ce7c2cc",
+        deprecated=True,
+    )
+    version(
+        "3.6.2",
+        sha256="ba6d02f15ba04aba9c23fd5f236bb234eab9d5209e95d1c4df85c44d5f19b9b3",
+        deprecated=True,
+    )
+
     # https://nvd.nist.gov/vuln/detail/CVE-2021-31566
     version(
         "3.5.2",
@@ -67,9 +97,6 @@ class Libarchive(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "libs",
         default="static,shared",
@@ -105,6 +132,10 @@ class Libarchive(AutotoolsPackage):
     )
     variant("iconv", default=True, description="Support iconv")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("pkgconfig", type="build")
+
     depends_on("bzip2", when="compression=bz2lib")
     depends_on("lz4", when="compression=lz4")
     depends_on("lzo", when="compression=lzo2")
@@ -136,7 +167,7 @@ class Libarchive(AutotoolsPackage):
         args += self.with_or_without("xar")
         args += self.enable_or_disable("programs")
 
-        if "+iconv" in spec:
+        if spec.satisfies("+iconv"):
             if spec["iconv"].name == "libiconv":
                 args.append(f"--with-libiconv-prefix={spec['iconv'].prefix}")
             else:

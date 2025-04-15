@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -24,8 +23,6 @@ class Halide(CMakePackage, PythonExtension):
     version("16.0.0", sha256="a0cccee762681ea697124b8172dd65595856d0fa5bd4d1af7933046b4a085b04")
     version("15.0.0", sha256="6680424f80c5731a85d977c06327096afe5af31da3667e91d4d36a25fabdda15")
     version("14.0.0", sha256="f9fc9765217cbd10e3a3e3883a60fc8f2dbbeaac634b45c789577a8a87999a01")
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
     variant(
         "build_type",
         default="Release",
@@ -63,6 +60,8 @@ class Halide(CMakePackage, PythonExtension):
     )
     variant("sharedllvm", default=False, description="Link to the shared version of LLVM.")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.22:", type="build")
     depends_on("llvm+clang+lld build_type=Release", type=("link", "run"))
     depends_on("llvm@14.0.0:14", type=("link", "run"), when="@14.0.0:14")
@@ -118,7 +117,7 @@ class Halide(CMakePackage, PythonExtension):
         for target in llvm_targets:
             args += [self.define("TARGET_{0}".format(target[0]), target[1])]
 
-        if "+python" in spec:
+        if spec.satisfies("+python"):
             args += [
                 self.define("PYBIND11_USE_FETCHCONTENT", False),
                 self.define("Halide_INSTALL_PYTHONDIR", python_platlib),

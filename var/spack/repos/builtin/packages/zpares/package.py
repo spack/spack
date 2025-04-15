@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,8 @@ class Zpares(MakefilePackage):
 
     variant("mpi", default=False, description="Activates MPI support")
     variant("mumps", default=False, description="Activates MUMPS support")
+
+    depends_on("fortran", type="build")
 
     depends_on("mumps+mpi", when="+mumps+mpi")
     depends_on("mumps~mpi", when="+mumps~mpi")

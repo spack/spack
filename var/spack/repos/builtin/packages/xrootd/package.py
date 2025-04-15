@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,6 +22,7 @@ class Xrootd(CMakePackage):
 
     license("LGPL-3.0-only")
 
+    version("5.7.1", sha256="c28c9dc0a2f5d0134e803981be8b1e8b1c9a6ec13b49f5fa3040889b439f4041")
     version("5.7.0", sha256="214599bba98bc69875b82ac74f2d4b9ac8a554a1024119d8a9802b3d8b9986f8")
     version("5.6.9", sha256="44196167fbcf030d113e3749dfdecab934c43ec15e38e77481e29aac191ca3a8")
     version("5.6.8", sha256="19268fd9f0307d936da3598a5eb8471328e059c58f60d91d1ce7305ca0d57528")
@@ -66,9 +66,6 @@ class Xrootd(CMakePackage):
     version("4.4.1", sha256="3c295dbf750de086c04befc0d3c7045fd3976611c2e75987c1477baca37eb549")
     version("4.4.0", sha256="f066e7488390c0bc50938d23f6582fb154466204209ca92681f0aa06340e77c8")
     version("4.3.0", sha256="d34865772d975b5d58ad80bb05312bf49aaf124d5431e54dc8618c05a0870e3c")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("davix", default=True, description="Build with Davix")
     variant(
@@ -136,6 +133,9 @@ class Xrootd(CMakePackage):
     conflicts("cxxstd=17", when="@5 ~client_only")
     conflicts("cxxstd=20", when="@5 ~client_only")
     conflicts("^scitokens-cpp", when="@:5.5.2 +client_only")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("bzip2")
     depends_on("cmake@2.6:", type="build", when="@3.1.0:")
@@ -259,7 +259,7 @@ class Xrootd(CMakePackage):
         else:
             # The user has selected a (new?) legal value that we've
             # forgotten to deal with here.
-            tty.die(
+            raise InstallError(
                 "INTERNAL ERROR: cannot accommodate unexpected variant ",
                 "cxxstd={0}".format(self.spec.variants["cxxstd"].value),
             )

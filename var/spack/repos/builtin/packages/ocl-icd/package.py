@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,7 @@ class OclIcd(AutotoolsPackage):
 
     license("BSD-2-Clause")
 
+    version("2.3.2", sha256="ec47d7dcd961ea06695b067e8b7edb82e420ddce03e0081a908c62fd0b8535c5")
     version("2.3.1", sha256="a32b67c2d52ffbaf490be9fc18b46428ab807ab11eff7664d7ff75e06cfafd6d")
     version("2.3.0", sha256="469f592ccd9b0547fb7212b17e1553b203d178634c20d3416640c0209e3ddd50")
     version("2.2.14", sha256="46df23608605ad548e80b11f4ba0e590cef6397a079d2f19adf707a7c2fbfe1b")
@@ -31,13 +31,13 @@ class OclIcd(AutotoolsPackage):
     version("2.2.4", sha256="92853137ffff393cc74f829357fdd80ac46a82b46c970e80195db86164cca316")
     version("2.2.3", sha256="46b8355d90f8cc240555e4e077f223c47b950abeadf3e1af52d6e68d2efc2ff3")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "headers",
         default=False,
         description="Install also OpenCL headers to use this as OpenCL provider",
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

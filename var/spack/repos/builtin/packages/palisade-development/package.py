@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,15 +38,15 @@ class PalisadeDevelopment(CMakePackage):
     )
     version("master", branch="master", preferred=True, submodules=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared library.")
     variant("static", default=True, description="Build static library.")
     variant("with_be2", default=True, description="Build with backend 2.")
     variant("with_be4", default=True, description="Build with backend 4.")
     variant("with_intel_hexl", default=False, description="Use Intel HEXL.")
     variant("with_ntl", default=False, description="Build NTL.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf")
     depends_on("hwloc", when="%clang")

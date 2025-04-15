@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,15 +10,15 @@ from spack.package import *
 class Rstudio(CMakePackage):
     """RStudio is an integrated development environment (IDE) for R."""
 
-    homepage = "www.rstudio.com/products/rstudio/"
+    homepage = "https://www.rstudio.com/products/rstudio/"
     url = "https://github.com/rstudio/rstudio/archive/refs/tags/v1.4.1717.tar.gz"
 
     version("1.4.1717", sha256="3af234180fd7cef451aef40faac2c7b52860f14a322244c1c7aede029814d261")
 
+    variant("notebook", default=False, description="Enable notebook support.")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("notebook", default=False, description="Enable notebook support.")
 
     depends_on("r@3.0.1:", type=("build", "run"))
     depends_on("cmake@3.4.3:", type="build")
@@ -30,7 +29,7 @@ class Rstudio(CMakePackage):
     depends_on("patchelf@0.9:")
     depends_on("yaml-cpp@:0.6.3")  # find_package fails with newest version
     depends_on("node-js")
-    depends_on("yarn")
+    depends_on("yarn@1")
     depends_on("pandoc@2.11.4:")
     depends_on("icu4c")
     depends_on("soci~static+boost+postgresql+sqlite")

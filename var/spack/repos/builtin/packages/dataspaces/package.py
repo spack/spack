@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -34,6 +33,8 @@ class Dataspaces(AutotoolsPackage):
     )
     variant("ptag", default="250", description="Cray UGNI protection tag", values=is_string)
     variant("mpi", default=True, description="Use MPI for collective communication")
+
+    depends_on("c", type="build")
 
     depends_on("m4", type="build")
     depends_on("automake", type="build")

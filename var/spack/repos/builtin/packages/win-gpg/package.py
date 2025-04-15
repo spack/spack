@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -23,6 +22,8 @@ class WinGpg(Package):
     executables = ["^gpg$"]
 
     version("2.4.5", sha256="249ab87bd06abea3140054089bad44d9a5d1531413590576da609142db2673ec")
+
+    depends_on("c", type="build")
 
     @classmethod
     def determine_version(cls, exe):

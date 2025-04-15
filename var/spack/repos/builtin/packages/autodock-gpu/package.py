@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,8 +21,6 @@ class AutodockGpu(MakefilePackage, CudaPackage):
 
     version("develop", branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "device",
         default="cuda",
@@ -33,6 +30,8 @@ class AutodockGpu(MakefilePackage, CudaPackage):
     )
     variant("overlap", default=False, description="Overlap CPU and GPU operations")
     variant("cuda", default=True, description="Build with CUDA")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cuda")
 

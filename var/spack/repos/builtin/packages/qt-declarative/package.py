@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,12 @@ class QtDeclarative(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.9.0", sha256="b6ef116dba80badf1cf36efc111e164edc4dd7e47c568d5d35165c6e8bca2c5d")
+    version("6.8.3", sha256="e5e0d67236bf0a436f0dda6363c7a31085c9a8147f92f817c3fa817186a5a151")
+    version("6.8.2", sha256="1c29e98fac88f6d3b8a790248f4e6ad80439fe6e791116339d080e064ad8ae91")
+    version("6.8.1", sha256="c3f41f5de5b2f02aa31bc5668f617f65d9adb3fb1939679b2a57a73a98c36ed6")
+    version("6.8.0", sha256="d28e15cec7754ee16588deace17ee83d75e2613f4751a79dd60c277721f7480f")
+    version("6.7.3", sha256="f39fa4e7e3b4011e52fc55fbde5f41e61815bffea432869abc9b90aa4de07613")
     version("6.7.2", sha256="3b91d1b75f22221f39b93647d73c9fe7fc4b9c8d45ff0cec402626eab15d8dd8")
     version("6.7.1", sha256="fdf4099cbced3ce56e5151122ae1eb924886492f9fc2eb6a353d60a23e8fde14")
     version("6.7.0", sha256="dc3fec16cbe0f706b2b6114e5dbb884269543f2d679a0a3a63b4f686156adf73")
@@ -37,8 +42,8 @@ class QtDeclarative(QtPackage):
     version("6.2.4", sha256="cd939d99c37e7723268804b9516e32f8dd64b985d847469c78b66b5f4481c548")
     version("6.2.3", sha256="eda82abfe685a6ab5664e4268954622ccd05cc9ec8fb16eaa453c54900591baf")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Testing requires +network
     depends_on("qt-base +network", type="test")

@@ -1,15 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.util.environment import set_env
-from spack.util.executable import ProcessError
 
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
@@ -36,6 +32,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")
+    version("8.0.0", sha256="11cc8645d622a16510b39a20efc64f34862b41976152d17f9fbf3e91f899766c")
     version("7.2.0", sha256="6988c00c3213f13e53d75fb474102358f4fecf07a4b4304b7123d86fdc784639")
     version("7.1.3", sha256="c951f38ee7af20da3ff46429e38fcebd57fb6f12619b2c56040d6da5096abcb0")
     version("7.1.2", sha256="262a0193fa1682d0eaa90363f739e0be7a778d5deeb80e4d4ae12446082a39cc")
@@ -56,10 +53,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     version("3.2.0", sha256="34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1")
     version("3.1.1", sha256="c1c3446ee023f7b24baa97b24907735e89ce4ae9f5ef516645dfe390165d1778")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
     variant("mpi", default=True, description="Use MPI")
     variant(
@@ -75,6 +68,10 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     variant("slate", default=True, description="Build with SLATE support")
     variant("magma", default=False, description="Build with MAGMA support")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.11:", when="@:6.2.9", type="build")
     depends_on("cmake@3.17:", when="@6.3.0:", type="build")
     depends_on("mpi", when="+mpi")
@@ -86,9 +83,11 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("parmetis", when="+parmetis")
     depends_on("scotch~metis", when="+scotch")
     depends_on("scotch~metis+mpi", when="+scotch+mpi")
+    depends_on("scotch@7.0.4:", when="@8.0.0: +scotch")
     depends_on("butterflypack@1.1.0", when="@3.3.0:3.9 +butterflypack+mpi")
     depends_on("butterflypack@1.2.0:", when="@4.0.0: +butterflypack+mpi")
     depends_on("butterflypack@2.1.0:", when="@6.3.0: +butterflypack+mpi")
+    depends_on("butterflypack@3.2.0:", when="@8.0.0: +butterflypack+mpi")
     depends_on("cuda", when="@4.0.0: +cuda")
     depends_on("zfp@0.5.5", when="@:7.0.1 +zfp")
     depends_on("zfp", when="@7.0.2: +zfp")
@@ -157,7 +156,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             args.extend([self.define_from_variant("STRUMPACK_C_INTERFACE", "c_interface")])
 
         # Workaround for linking issue on Mac:
-        if spec.satisfies("%apple-clang +mpi"):
+        if spec.satisfies("+mpi %apple-clang"):
             args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
 
         if "+cuda" in spec:
@@ -223,7 +222,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             )
 
         with working_dir(test_dir):
-            opts = self.builder.std_cmake_args + self.cmake_args() + ["."]
+            opts = self.std_cmake_args + self.cmake_args() + ["."]
             cmake = self.spec["cmake"].command
             cmake(*opts)
 

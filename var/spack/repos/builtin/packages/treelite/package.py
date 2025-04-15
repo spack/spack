@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -17,11 +17,11 @@ class Treelite(CMakePackage):
 
     version("0.93", sha256="7d347372f7fdc069904afe93e69ed0bf696ba42d271fe2f8bf6835d2ab2f45d5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("protobuf", default=False, description="Build with protobuf")
     variant("python", default=True, description="Build with python support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("protobuf", when="+protobuf")
     depends_on("python@3.6:", when="+python", type=("build", "run"))
@@ -50,5 +50,4 @@ class Treelite(CMakePackage):
     def python_install(self):
         if "+python" in self.spec:
             with working_dir("python"):
-                args = std_pip_args + ["--prefix=" + self.prefix, "."]
-                pip(*args)
+                pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")

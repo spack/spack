@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -7,6 +6,8 @@ import re
 import sys
 from tempfile import NamedTemporaryFile
 
+import spack.build_systems.autotools
+import spack.build_systems.nmake
 import spack.platforms
 from spack.package import *
 
@@ -55,7 +56,6 @@ class Sqlite(AutotoolsPackage, NMakePackage):
     version("3.27.0", sha256="dbfb0fb4fc32569fa427d3658e888f5e3b84a0952f706ccab1fd7c62a54f10f0")
     version("3.26.0", sha256="5daa6a3fb7d1e8c767cd59c4ded8da6e4b00c61d3b466d0685e35c4dd6d7bf5d")
 
-    depends_on("c", type="build")  # generated
     # All versions prior to 3.26.0 are vulnerable to Magellan when FTS
     # is enabled, see https://blade.tencent.com/magellan/index_en.html
 
@@ -89,6 +89,9 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         when=f"{function_condition}",
     )
     variant("rtree", default=True, description="Build with Rtree module")
+
+    depends_on("c", type="build")  # generated
+
     depends_on("zlib-api")
     depends_on("tcl", when="platform=windows")
 
@@ -218,7 +221,8 @@ class Sqlite(AutotoolsPackage, NMakePackage):
 
     @property
     def libs(self):
-        return find_libraries("libsqlite3", root=self.prefix.lib)
+        prefix = "lib" if sys.platform != "win32" else ""
+        return find_libraries(f"{prefix}sqlite3", root=self.prefix.lib, runtime=False)
 
     def test_example(self):
         """check example table dump"""

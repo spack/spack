@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,6 +27,8 @@ class Aragorn(Package):
         sha256="16e5283d890ff74e52e885c9c34b1c2ba2de72770631122e9178079cd06ea8d2",
         expand=False,
     )
+
+    depends_on("c", type="build")
 
     # fix checksum error
     def url_for_version(self, version):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,10 +15,12 @@ class Eckit(CMakePackage):
     git = "https://github.com/ecmwf/eckit.git"
     url = "https://github.com/ecmwf/eckit/archive/refs/tags/1.16.0.tar.gz"
 
-    maintainers("skosukhin", "climbfuji", "victoria-cherkas", "dominichofer")
+    maintainers("skosukhin", "climbfuji", "victoria-cherkas")
 
     license("Apache-2.0")
 
+    version("1.28.3", sha256="24b2b8d9869849a646aa3fd9d95e4181a92358cd837d95b22e25d718a6ad7738")
+    version("1.28.2", sha256="d122db8bb5bcaadf3256a24f0f90d9bcedad35ef8f25e7eccd8c93c506dbdd24")
     version("1.27.0", sha256="499f3f8c9aec8d3f42369e3ceedc98b2b09ac04993cfd38dfdf7d38931703fe7")
     version("1.25.2", sha256="a611d26d50a9f2133b75100567a890eb0e0a48a96669b8c8475baf9d6f359397")
     version("1.24.5", sha256="2fd74e04c20a59f9e13635828d9da880e18f8a2cb7fd3bfd0201e07071d6ec41")
@@ -31,9 +32,6 @@ class Eckit(CMakePackage):
     version("1.19.0", sha256="a5fef36b4058f2f0aac8daf5bcc9740565f68da7357ddd242de3a5eed4765cc7")
     version("1.16.3", sha256="d2aae7d8030e2ce39e5d04e36dd6aa739f3c8dfffe32c61c2a3127c36b573485")
     version("1.16.0", sha256="9e09161ea6955df693d3c9ac70131985eaf7cf24a9fa4d6263661c6814ebbaf1")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -68,6 +66,9 @@ class Eckit(CMakePackage):
     )
     variant("aio", default=True, description="Enable asynchronous IO")
     variant("fismahigh", default=False, description="Apply patching for FISMA-high compliance")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Build issues with cmake 3.20, not sure about 3.21
     depends_on("cmake@3.12:3.19,3.22:", type="build")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -28,8 +27,6 @@ class Fxt(AutotoolsPackage):
     version("0.3.4", sha256="fcd35a5278ac0f10eba12fed4fa436dce79559897fde5b8176d5eee9081970f7")
     version("0.3.3", sha256="3f6fea5211cc242a54496e6242365c99522a5039916789cdbe25a58d05d6a626")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "moreparams",
         default=False,
@@ -37,6 +34,8 @@ class Fxt(AutotoolsPackage):
     )
 
     variant("static", default=False, description="Compile as a static library")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gawk", type="build")
     depends_on("autoconf", type="build")
@@ -58,8 +57,7 @@ class Fxt(AutotoolsPackage):
                 subprocess.check_call("./autogen.sh")
             else:
                 raise RuntimeError(
-                    "Neither configure nor autogen.sh script exist.\
-                FxT Cannot configure."
+                    "Neither configure nor autogen.sh script exist. FxT Cannot configure."
                 )
 
     def configure_args(self):

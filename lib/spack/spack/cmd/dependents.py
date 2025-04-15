@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -94,7 +93,7 @@ def dependents(parser, args):
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        format_string = "{name}{@version}{%compiler}{/hash:7}"
+        format_string = "{name}{@version}{/hash:7}{%compiler}"
         if sys.stdout.isatty():
             tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,13 +34,13 @@ class Thrift(Package):
     version("0.10.0", sha256="2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b")
     version("0.9.3", sha256="b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("pic", default=True, description="Build position independent code")
     variant("c", default=True, description="Build support for C-family languages")
     variant("java", default=False, description="Build support for java")
     variant("python", default=True, description="Build support for python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
@@ -65,6 +64,7 @@ class Thrift(Package):
     depends_on("ant", when="+java")
 
     extends("python", when="+python")
+    depends_on("python@:3.11.9", when="+python")
     depends_on("py-setuptools", type=("build", "run"), when="+python")
     depends_on("py-six@1.7.2:", type=("build", "run"), when="@0.10.0:+python")
     depends_on("py-tornado", type=("build", "run"), when="+python")
@@ -72,6 +72,7 @@ class Thrift(Package):
     depends_on("py-zope-interface", type=("build", "run"), when="+python")
     depends_on("py-pure-sasl", type=("build", "run"), when="+python")
     depends_on("scons", type=("build", "run"), when="+python")
+    depends_on("gmake", type="build")
 
     patch(
         "https://github.com/apache/thrift/pull/2511.patch?full_index=1",

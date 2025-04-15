@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,10 +25,10 @@ class Mruby(Package):
     version("2.1.1", sha256="bb27397ee9cb7e0ddf4ff51caf5b0a193d636b7a3c52399684c8c383b41c362a")
     version("2.1.0", sha256="d6733742a07e553c52ab71df08b0604b3b571768bbc0c2729fbf0389d1bb5d13")
 
+    variant("cxx_exception", description="Enable C++ exceptions", default=False, when="@3.1.0:")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cxx_exception", description="Enable C++ exceptions", default=False, when="@3.1.0:")
 
     depends_on("ruby@3.0.0:", type=("build"))
     depends_on("bison", type=("build"))

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,11 +14,12 @@ from llnl.util import lang, tty
 from llnl.util.tty import colify
 
 import spack.cmd
+import spack.config
 import spack.environment as ev
 import spack.install_test
-import spack.package_base
 import spack.repo
 import spack.report
+import spack.store
 from spack.cmd.common import arguments
 
 description = "run spack's tests for an install"
@@ -64,6 +64,12 @@ def setup_parser(subparser):
     arguments.add_cdash_args(run_parser, False)
     run_parser.add_argument(
         "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
+    )
+    run_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
     )
 
     cd_group = run_parser.add_mutually_exclusive_group()
@@ -164,7 +170,7 @@ def test_run(args):
     if args.fail_fast:
         spack.config.set("config:fail_fast", True, scope="command_line")
 
-    explicit = args.explicit or any
+    explicit = args.explicit or None
     explicit_str = "explicitly " if args.explicit else ""
 
     # Get specs to test
@@ -176,24 +182,23 @@ def test_run(args):
     for spec in specs:
         matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
-            tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
-            """
-            TODO: Need to write out a log message and/or CDASH Testing
-              output that package not installed IF continue to process
-              these issues here.
+            tty.warn(f"No {explicit_str}installed packages match spec {spec}")
 
-            if args.log_format:
-                # Proceed with the spec assuming the test process
-                # to ensure report package as skipped (e.g., for CI)
-                specs_to_test.append(spec)
-            """
+            # TODO: Need to write out a log message and/or CDASH Testing
+            #   output that package not installed IF continue to process
+            #   these issues here.
+
+            # if args.log_format:
+            #     # Proceed with the spec assuming the test process
+            #     # to ensure report package as skipped (e.g., for CI)
+            #     specs_to_test.append(spec)
 
         specs_to_test.extend(matching)
 
     # test_stage_dir
     test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
     test_suite.ensure_stage()
-    tty.msg("Spack test %s" % test_suite.name)
+    tty.msg(f"Spack test {test_suite.name}")
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
@@ -205,6 +210,7 @@ def test_run(args):
             dirty=args.dirty,
             fail_first=args.fail_first,
             externals=args.externals,
+            timeout=args.timeout,
         )
 
 
@@ -253,7 +259,9 @@ def test_list(args):
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.STORE.db.query(hashes=hashes)
-    specs = list(filter(lambda s: has_test_and_tags(s.package_class), specs))
+    specs = list(
+        filter(lambda s: has_test_and_tags(spack.repo.PATH.get_pkg_class(s.fullname)), specs)
+    )
 
     spack.cmd.display_specs(specs, long=True)
 
@@ -345,7 +353,7 @@ def _report_suite_results(test_suite, args, constraints):
         tty.msg("{0} for test suite '{1}'{2}:".format(results_desc, test_suite.name, matching))
 
         results = {}
-        with open(test_suite.results_file, "r") as f:
+        with open(test_suite.results_file, "r", encoding="utf-8") as f:
             for line in f:
                 pkg_id, status = line.split()
                 results[pkg_id] = status
@@ -370,7 +378,7 @@ def _report_suite_results(test_suite, args, constraints):
                     spec = test_specs[pkg_id]
                     log_file = test_suite.log_file_for_spec(spec)
                     if os.path.isfile(log_file):
-                        with open(log_file, "r") as f:
+                        with open(log_file, "r", encoding="utf-8") as f:
                             msg += "\n{0}".format("".join(f.readlines()))
                 tty.msg(msg)
 

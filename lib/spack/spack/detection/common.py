@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Define a common data structure to represent external packages and a
@@ -16,7 +15,6 @@ detection mechanisms.
 import glob
 import itertools
 import os
-import os.path
 import pathlib
 import re
 import sys
@@ -25,8 +23,11 @@ from typing import Dict, List, Optional, Set, Tuple, Union
 import llnl.util.tty
 
 import spack.config
+import spack.error
 import spack.operating_systems.windows_os as winOs
+import spack.schema
 import spack.spec
+import spack.util.environment
 import spack.util.spack_yaml
 import spack.util.windows_registry
 
@@ -223,8 +224,9 @@ def update_configuration(
             pkg_config["buildable"] = False
         pkg_to_cfg[package_name] = pkg_config
 
+    scope = scope or spack.config.default_modify_scope()
     pkgs_cfg = spack.config.get("packages", scope=scope)
-    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
+    pkgs_cfg = spack.schema.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set("packages", pkgs_cfg, scope=scope)
 
     return all_new_specs
@@ -244,7 +246,7 @@ def set_virtuals_nonbuildable(virtuals: Set[str], scope: Optional[str] = None) -
     # Update the provided scope
     spack.config.set(
         "packages",
-        spack.config.merge_yaml(spack.config.get("packages", scope=scope), new_config),
+        spack.schema.merge_yaml(spack.config.get("packages", scope=scope), new_config),
         scope=scope,
     )
 
@@ -309,7 +311,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_bin_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit bin directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base
@@ -324,7 +326,7 @@ class WindowsKitExternalPaths:
 
     @staticmethod
     def find_windows_kit_lib_paths(
-        kit_base: Union[Optional[str], Optional[list]] = None
+        kit_base: Union[Optional[str], Optional[list]] = None,
     ) -> List[str]:
         """Returns Windows kit lib directory per version"""
         kit_base = WindowsKitExternalPaths.find_windows_kit_roots() if not kit_base else kit_base

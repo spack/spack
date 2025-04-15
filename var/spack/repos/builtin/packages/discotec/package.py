@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,8 +19,6 @@ class Discotec(CMakePackage):
 
     version("main", branch="main")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("compression", default=False, description="Write sparse grid files compressed")
     variant("ft", default=False, description="DisCoTec with algorithm-based fault tolerance")
     variant("gene", default=False, description="Build for GENE (as task library)")
@@ -31,6 +28,8 @@ class Discotec(CMakePackage):
     variant("timing", default=True, description="With high-res timers")
     variant("selalib", default=False, description="Build selalib example")
     variant("vtk", default=False, description="Build with VTK support")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost +test +serialization +filesystem +system +program_options +date_time")
     depends_on("cmake@3.24.2:", type="build")

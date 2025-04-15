@@ -1,5 +1,4 @@
-# Copyright 2013-2023 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,9 +23,9 @@ class BackwardCpp(CMakePackage):
     version("1.2", sha256="0a44fdad126cf2c53f93c33fd6418abaf99672048c98a5a57e2a2e43a38d5f84")
     version("1.1", sha256="36139e98b8b6a8ff84b28c50fd6443054ccee93cf63231fdd1db0036093553c4")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("dwarf", default=False, description="Use libdwarf/libelf to read debug info")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libdwarf", when="+dwarf")
 

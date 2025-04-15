@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,9 @@ class Srilm(MakefilePackage):
     variant("openmp", default=False, description="Enable OpenMP")
     variant("pic", default=False, description="Build position independent code")
     variant("liblbfgs", default=False, description="Enable libLBFGS")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("iconv")
     depends_on("liblbfgs", when="+liblbfgs")

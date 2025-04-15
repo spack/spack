@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -44,10 +43,6 @@ class Charmpp(Package):
     version("6.6.1", sha256="2aa16fd3015dce0a0932ab5253578a72ddbcb889bc0d23584c42b28446915467")
     version("6.6.0", sha256="c916010f2d4cc2c6bd30ea19764839d0298fb56d1696d8ff08d9fa9a61dfb1c9")
     version("6.5.1", sha256="68aa43e2a6e476e116a7e80e385c25c6ac6497807348025505ba8bfa256ed34a")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Support OpenMPI; see
     # <https://github.com/UIUC-PPL/charm/issues/1206>
@@ -115,6 +110,10 @@ class Charmpp(Package):
     variant("production", default=True, description="Build charm++ with all optimizations")
     variant("tracing", default=False, description="Enable tracing modules")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Versions 7.0.0+ use CMake by default when it's available. It's more
     # robust.
     depends_on("cmake@3.4:", when="@7.0.0:", type="build")
@@ -141,6 +140,7 @@ class Charmpp(Package):
     # Git versions of Charm++ require automake and autoconf
     depends_on("automake", when="@develop")
     depends_on("autoconf", when="@develop")
+    depends_on("gmake", type="build")
 
     conflicts("~tracing", "+papi")
 
@@ -276,12 +276,10 @@ class Charmpp(Package):
     #            build-target=LIBS backend={0}'.format(b))
 
     def install(self, spec, prefix):
-        if not ("backend=mpi" in self.spec) or not ("backend=netlrts" in self.spec):
+        if "backend=mpi" not in self.spec or "backend=netlrts" not in self.spec:
             if self.spec.satisfies("+pthreads"):
                 raise InstallError(
-                    "The pthreads option is only\
-                                    available on the Netlrts and MPI \
-                                    network layers."
+                    "The pthreads option is only available on the Netlrts and MPI network layers."
                 )
 
         if (
@@ -291,10 +289,8 @@ class Charmpp(Package):
         ):
             if self.spec.satisfies("pmi=none"):
                 raise InstallError(
-                    "The UCX/OFI/GNI backends need \
-                                    PMI to run. Please add pmi=... \
-                                    Note that PMIx is the preferred \
-                                    option."
+                    "The UCX/OFI/GNI backends need PMI to run. Please add pmi=... "
+                    "Note that PMIx is the preferred option."
                 )
 
         if (
@@ -304,10 +300,8 @@ class Charmpp(Package):
         ):
             if self.spec.satisfies("^openmpi"):
                 raise InstallError(
-                    "To use any process management \
-                                    interface other than PMIx, \
-                                    a non OpenMPI based MPI must be \
-                                    present on the system"
+                    "To use any process management interface other than PMIx, "
+                    "a non OpenMPI based MPI must be present on the system"
                 )
 
         target = spec.variants["build-target"].value
@@ -374,6 +368,13 @@ class Charmpp(Package):
         if spec.satisfies("+tracing"):
             options.append("--enable-tracing")
 
+        # charmpp build was failing with clang based compilers for -DNETWORK=mpi as discussed in
+        # https://github.com/charmplusplus/charm/issues/3645
+        # Fix was suggested in https://github.com/charmplusplus/charm/pull/3646 and the same has
+        # been implemented in v8.0.0
+        if self.spec.satisfies("@8.0.0: %aocc"):
+            options.append("--disable-fortran")
+
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the
         # install directory. Maybe we could set up a symbolic link
@@ -395,7 +396,7 @@ class Charmpp(Package):
                         copy(filepath, tmppath)
                         os.remove(filepath)
                         os.rename(tmppath, filepath)
-                    except (IOError, OSError):
+                    except OSError:
                         pass
 
         tmp_path = join_path(builddir, "tmp")

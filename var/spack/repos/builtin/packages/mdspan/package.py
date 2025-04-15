@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,6 +12,8 @@ class Mdspan(CMakePackage):
     homepage = "https://github.com/kokkos/mdspan/tree/stable"
     url = "https://github.com/kokkos/mdspan/archive/refs/tags/mdspan-0.6.0.zip"
     git = "https://github.com/kokkos/mdspan.git"
+
+    maintainers("tpadioleau", "nmm0")
 
     version("stable", branch="stable")
     version("0.6.0", sha256="d6b7b9d4f472106df1d28729bd8383a8a7ea7938adf9f82d3be9c151344830d9")
@@ -30,7 +31,7 @@ class Mdspan(CMakePackage):
         if self.spec.satisfies("+tests"):
             args.append("-DMDSPAN_ENABLE_TESTS=ON")
             args.append("-DMDSPAN_USE_SYSTEM_GTEST=ON")
-        if self.spec.satisfies("+bencmarks"):
+        if self.spec.satisfies("+benchmarks"):
             args.append("-DMDSPAN_ENABLE_BENCHMARKS=ON")
         if self.spec.satisfies("+examples"):
             args.append("-DMDSPAN_ENABLE_EXAMPLES=ON")

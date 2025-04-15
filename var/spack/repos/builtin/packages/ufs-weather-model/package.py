@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,9 +31,6 @@ class UfsWeatherModel(CMakePackage):
         commit="5bea16b6d41d810dc2e45cba0fa3841f45ea7c7a",
         submodules=True,
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("mpi", default=True, description="Enable MPI")
     variant(
@@ -110,6 +106,9 @@ class UfsWeatherModel(CMakePackage):
     variant("mom6solo", default=False, description="Build MOM6 solo executable", when="@develop")
 
     variant("app", default="ATM", description="UFS application", when="@develop")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("bacio")
     depends_on("mpi", when="+mpi")

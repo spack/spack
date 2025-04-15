@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,9 +22,6 @@ class Cosmomc(Package):
     version("2016.11", sha256="b83edbf043ff83a4dde9bc14c56a09737dbc41ffe247a8e9c9a26892ed8745ba")
     version("2016.06", sha256="23fa23eef40846c17d3740be63a7fefde13880cbb81545a44d14034277d9ffc0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     def url_for_version(self, version):
         names = {"2016.11": "Nov2016", "2016.06": "June2016"}
         return "https://github.com/cmbant/CosmoMC/archive/%s.tar.gz" % names[str(version)]
@@ -36,6 +32,9 @@ class Cosmomc(Package):
 
     extends("python", when="+python")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi", when="+mpi")
     depends_on("planck-likelihood", when="+planck")
     depends_on("py-matplotlib", type=("build", "run"), when="+python")
@@ -44,6 +43,7 @@ class Cosmomc(Package):
     depends_on("py-scipy", type=("build", "run"), when="+python")
     depends_on("py-six", type=("build", "run"), when="+python")
     depends_on("python @2.7:2,3.4:", type=("build", "run"), when="+python")
+    depends_on("gmake", type="build")
 
     patch("Makefile.patch")
     patch("errorstop.patch")
@@ -169,7 +169,7 @@ class Cosmomc(Package):
         os.environ.pop("CLIKPATH", "")
         os.environ.pop("PLANCKLIKE", "")
 
-        exe = spec["cosmomc"].command.path
+        exe = self.command.path
         args = []
         if spec.satisfies("+mpi"):
             # Add mpirun prefix

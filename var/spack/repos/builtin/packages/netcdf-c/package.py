@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,6 @@ import sys
 
 from llnl.util.lang import dedupe
 
-import spack.builder
 from spack.build_systems import autotools, cmake
 from spack.package import *
 from spack.util.environment import filter_system_paths
@@ -52,9 +50,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     version("4.4.0", sha256="09b78b152d3fd373bee4b5738dc05c7b2f5315fe34aa2d94ee9256661119112f")
     version("4.3.3.1", sha256="f2ee78eb310637c007f001e7c18e2d773d23f3455242bde89647137b7344c2e2")
     version("4.3.3", sha256="3f16e21bc3dfeb3973252b9addf5defb48994f84fc9c9356081f871526a680e7")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         # TODO: document why we need to revert https://github.com/Unidata/netcdf-c/pull/1731
@@ -142,6 +137,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("szip", default=True, description="Enable Szip compression plugin")
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:
@@ -291,7 +289,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
 
     def flag_handler(self, name, flags):
-        if self.builder.build_system == "autotools":
+        if self.spec.satisfies("build_system=autotools"):
             if name == "cflags":
                 if "+pic" in self.spec:
                     flags.append(self.compiler.cc_pic_flag)
@@ -305,7 +303,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         return find_libraries("libnetcdf", root=self.prefix, shared=shared, recursive=True)
 
 
-class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
+class AnyBuilder(BaseBuilder):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
@@ -329,7 +327,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
     filter_compiler_wrappers("nc-config", relative_root="bin")
 
 
-class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
+class CMakeBuilder(AnyBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         base_cmake_args = [
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
@@ -376,7 +374,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         filter_file(f"hdf5_hl-{config}", "hdf5_hl", *files, ignore_absent=True)
 
 
-class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
+class AutotoolsBuilder(AnyBuilder, autotools.AutotoolsBuilder):
     @property
     def force_autoreconf(self):
         return any(self.spec.satisfies(s) for s in self.pkg._force_autoreconf_when)

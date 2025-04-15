@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,8 +33,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
         deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -119,6 +116,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")
@@ -205,7 +205,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Note that for Power systems we want the environment to add +powerpc
     # When using a GCC compiler
-    depends_on("opencv@4.1.0: +powerpc", when="+vision %gcc arch=ppc64le:")
+    depends_on("opencv@4.1.0: +powerpc", when="+vision arch=ppc64le: %gcc")
 
     depends_on("cnpy", when="+numpy")
     depends_on("nccl", when="@0.94:0.98.2 +cuda")
@@ -226,7 +226,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("python@3: +shared", type=("build", "run"), when="+pfe")
     extends("python", when="+pfe")
     depends_on("py-setuptools", type="build", when="+pfe")
-    depends_on("py-protobuf+cpp@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
+    depends_on("py-protobuf@3.10.0:4.21.12", type=("build", "run"), when="+pfe")
 
     depends_on("protobuf@3.10.0:3.21.12")
     depends_on("zlib-api", when="^protobuf@3.11.0:")
@@ -266,7 +266,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     @property
     def libs(self):
-        shared = True if "+shared" in self.spec else False
+        shared = True if self.spec.satisfies("+shared") else False
         return find_libraries("liblbann", root=self.prefix, shared=shared, recursive=True)
 
     @property
@@ -286,7 +286,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_compiler_entries()
         entries.append(cmake_cache_string("CMAKE_CXX_STANDARD", "17"))
-        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", "+shared" in spec))
+        entries.append(cmake_cache_option("BUILD_SHARED_LIBS", spec.satisfies("+shared")))
         if not spec.satisfies("^cmake@3.23.0"):
             # There is a bug with using Ninja generator in this version
             # of CMake
@@ -298,7 +298,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_string("CMAKE_SHARED_LINKER_FLAGS", linker_flags))
 
         # Use lld high performance linker
-        if "+lld" in spec:
+        if spec.satisfies("+lld"):
             entries.append(
                 cmake_cache_string(
                     "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=lld".format(linker_flags)
@@ -311,7 +311,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             )
 
         # Use gold high performance linker
-        if "+gold" in spec:
+        if spec.satisfies("+gold"):
             entries.append(
                 cmake_cache_string(
                     "CMAKE_EXE_LINKER_FLAGS", "{0} -fuse-ld=gold".format(linker_flags)
@@ -340,7 +340,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         spec = self.spec
         entries = super().initconfig_hardware_entries()
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             if self.spec.satisfies("%clang"):
                 for flag in self.spec.compiler_flags["cxxflags"]:
                     if "gcc-toolchain" in flag:
@@ -393,7 +393,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append(cmake_cache_option("LBANN_WITH_ALUMINUM", True))
         entries.append(cmake_cache_option("LBANN_WITH_CONDUIT", True))
         entries.append(cmake_cache_option("LBANN_WITH_HWLOC", True))
-        entries.append(cmake_cache_option("LBANN_WITH_ROCTRACER", "+rocm +distconv" in spec))
+        entries.append(
+            cmake_cache_option("LBANN_WITH_ROCTRACER", spec.satisfies("+rocm +distconv"))
+        )
         entries.append(cmake_cache_option("LBANN_WITH_TBINF", False))
         entries.append(
             cmake_cache_string("LBANN_DATATYPE", "{0}".format(spec.variants["dtype"].value))
@@ -409,7 +411,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
             # a shell, which expects :
 
         # Add support for OpenMP with external (Brew) clang
-        if spec.satisfies("%clang platform=darwin"):
+        if spec.satisfies("platform=darwin %clang"):
             clang = self.compiler.cc
             clang_bin = os.path.dirname(clang)
             clang_root = os.path.dirname(clang_bin)

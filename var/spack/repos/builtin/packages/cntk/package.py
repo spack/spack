@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,14 +21,14 @@ class Cntk(Package):
     version("master", branch="master")
     version("2.0", sha256="3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("opencv", default=False, description="Enable OpenCV support.")
     variant("kaldi", default=False, description="Enable Kaldi support.")
     variant("asgd", default=True, description="Enable DataParallelASGD powered by Multiverso.")
     variant("1bitsgd", default=False, description="Enable 1bitsgd support.")
     variant("cuda", default=False, description="Enable CUDA support.")
     variant("debug", default=False, description="Debug build.")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libzip")
     depends_on("openblas")
@@ -49,6 +48,7 @@ class Cntk(Package):
     depends_on("nccl", when="+cuda")
     depends_on("cntk1bitsgd@c8b77d", when="+1bitsgd")
     depends_on("multiverso@143187", when="+asgd")
+    depends_on("gmake", type="build")
 
     # Patch CNTN's build process to use libs installed outside CNTK source tree
     # multiverso, kaldi, openfst

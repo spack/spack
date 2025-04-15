@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -52,14 +51,14 @@ class Zlib(MakefilePackage, Package):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("makefile", conditional("generic", when="platform=windows"), default="makefile")
 
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enables the build of shared libraries.")
     variant("optimize", default=True, description="Enable -O2 for a more optimized lib")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     conflicts("build_system=makefile", when="platform=windows")
 
@@ -85,7 +84,12 @@ class Zlib(MakefilePackage, Package):
     @property
     def libs(self):
         shared = "+shared" in self.spec
-        return find_libraries(["libz"], root=self.prefix, recursive=True, shared=shared)
+        libnames = ["libz"]
+        if self.spec.satisfies("platform=windows"):
+            libnames.append("zdll" if shared else "zlib")
+        return find_libraries(
+            libnames, root=self.prefix, recursive=True, shared=shared, runtime=False
+        )
 
 
 class SetupEnvironment:
@@ -115,7 +119,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
             # script but patch the makefile for all the aforementioned compilers, given the
             # importance of the package, we try to be conservative for now and do the patching only
             # for compilers that will not produce a correct shared library otherwise.
-            if self.spec.compiler.name in ["nvhpc"]:
+            if self.spec.satisfies("%nvhpc"):
                 if "~pic" in self.spec:
                     # In this case, we should build the static library without PIC, therefore we
                     # don't append the respective compiler flag to CFLAGS in the build environment.

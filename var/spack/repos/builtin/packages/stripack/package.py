@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,6 +28,8 @@ class Stripack(MakefilePackage):
         expand=False,
         url="https://people.sc.fsu.edu/~jburkardt/f_src/stripack/stripack.f90",
     )
+
+    depends_on("fortran", type="build")
 
     @run_before("build")
     def run_mkmake(self):
@@ -69,7 +70,7 @@ class Stripack(MakefilePackage):
             fflags += ["-qrealsize=8"]
         elif satisfies("%fj"):
             fflags += ["-CcdRR8"]
-        elif satisfies("%pgi") or satisfies("%nvhpc"):
+        elif satisfies("%nvhpc"):
             fflags += ["-r8"]
         fflags += [self.compiler.fc_pic_flag]
         make("all", "FFLAGS={0}".format(" ".join(fflags)))

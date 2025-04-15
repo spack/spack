@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,9 +21,9 @@ class Clapack(MakefilePackage):
 
     version("3.2.1", sha256="6dc4c382164beec8aaed8fd2acc36ad24232c406eda6db462bd4c41d5e455fac")
 
-    depends_on("c", type="build")  # generated
-
     variant("external-blas", default=True, description="Build with external BLAS (ATLAS here).")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("atlas", when="+external-blas")
 

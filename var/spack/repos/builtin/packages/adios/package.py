@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,10 +26,6 @@ class Adios(AutotoolsPackage):
     version("1.11.0", sha256="e89d14ccbe7181777225e0ba6c272c0941539b8ccd440e72ed5a9457441dae83")
     version("1.10.0", sha256="6713069259ee7bfd4d03f47640bf841874e9114bab24e7b0c58e310c42a0ec48")
     version("1.9.0", sha256="23b2bb70540d51ab0855af0b205ca484fd1bd963c39580c29e3133f9e6fffd46")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Builds a shared version of the library")
 
@@ -60,6 +55,10 @@ class Adios(AutotoolsPackage):
         values=any_combination_of("flexpath", "dataspaces"),
         description="Enable dataspaces and/or flexpath staging transports",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -108,19 +107,6 @@ class Adios(AutotoolsPackage):
         sha256="aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05",
     )
 
-    def validate(self, spec):
-        """Checks if incompatible variants have been activated at the same time
-
-        Args:
-            spec: spec of the package
-
-        Raises:
-            RuntimeError: in case of inconsistencies
-        """
-        if "+fortran" in spec and not self.compiler.fc:
-            msg = "cannot build a fortran variant without a fortran compiler"
-            raise RuntimeError(msg)
-
     def with_or_without_hdf5(self, activated):
         if activated:
             return f"--with-phdf5={self.spec['hdf5'].prefix}"
@@ -129,12 +115,11 @@ class Adios(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         # https://github.com/ornladios/ADIOS/issues/206
-        if self.spec.satisfies("%gcc@10: +fortran"):
+        if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FCFLAGS", "-fallow-argument-mismatch")
 
     def configure_args(self):
         spec = self.spec
-        self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail

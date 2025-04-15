@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,6 +22,8 @@ class Openfdtd(MakefilePackage):
     version("2.3.0", sha256="10ac70f2ed7160da87dd9222a5a17ca7b72365ee886235359afc48c4fb7b4be4")
 
     variant("mpi", default=False, description="Build with MPI Support")
+
+    depends_on("c", type="build")
 
     depends_on("mpi", when="+mpi")
 

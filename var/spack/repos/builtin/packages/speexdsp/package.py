@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,17 +41,17 @@ class Speexdsp(AutotoolsPackage):
 
     def configure_args(self):
         args = []
-
-        if "intel-mkl" in self.spec:
+        if self.spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
             # get the blas libs explicitly to avoid scalapack getting returned
             args.extend(
                 [
                     "--with-fft=proprietary-intel-mkl",
-                    "CPPFLAGS={0}".format(self.spec["intel-mkl"].headers.cpp_flags),
-                    "LDFLAGS={0}".format(self.spec["blas"].libs.ld_flags),
+                    f"CPPFLAGS={self.spec['intel-oneapi-mkl'].headers.cpp_flags}",
+                    f"LDFLAGS={self.spec['intel-oneapi-mkl'].libs.ld_flags}",
                 ]
             )
-        elif "fftw" in self.spec:
+
+        elif self.spec.satisfies("^[virtuals=fftw-api] fftw"):
             args.append("--with-fft=gpl-fftw3")
 
         return args

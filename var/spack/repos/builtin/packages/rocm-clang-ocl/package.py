@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,7 +18,7 @@ class RocmClangOcl(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.1.2", sha256="cc9942539b5e50b97fa0d2425ba93aae7223635fecba869d8f43b2c26f9482ae")
     version("6.1.1", sha256="21b8a6d521a8e584e18851d27b5ef328a63ea7ee9eb3cc52508b9bfcf975e119")
     version("6.1.0", sha256="c983adad49ab5850307db1282f8bc957b9870d4ce37db8fbb43c52db6c90d0ed")
@@ -90,6 +89,6 @@ class RocmClangOcl(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir):
             cmake = self.spec["cmake"].command
-            cmake("-DCMAKE_PREFIX_PATH=" + self.spec["rocm-clang-ocl"].prefix, ".")
+            cmake(f"-DCMAKE_PREFIX_PATH={self.prefix}", ".")
             make = which("make")
             make()

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,10 +25,6 @@ class HypreCmake(CMakePackage, CudaPackage):
     version("develop", branch="master")
     version("2.22.0", sha256="2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "shared",
         default=(sys.platform != "darwin"),
@@ -45,6 +40,10 @@ class HypreCmake(CMakePackage, CudaPackage):
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
     variant("unified_memory", default=False, description="Use unified memory")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("blas")
@@ -82,7 +81,7 @@ class HypreCmake(CMakePackage, CudaPackage):
         return args
 
     def setup_build_environment(self, env):
-        if "+cuda" in self.spec:
+        if self.spec.satisfies("+cuda"):
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
             cuda_arch = self.spec.variants["cuda_arch"].value
@@ -90,7 +89,7 @@ class HypreCmake(CMakePackage, CudaPackage):
                 arch_sorted = list(sorted(cuda_arch, reverse=True))
                 env.set("HYPRE_CUDA_SM", arch_sorted[0])
             # In CUDA builds hypre currently doesn't handle flags correctly
-            env.append_flags("CXXFLAGS", "-O2" if "~debug" in self.spec else "-g")
+            env.append_flags("CXXFLAGS", "-O2" if self.spec.satisfies("~debug") else "-g")
 
     extra_install_tests = join_path("src", "examples")
 
@@ -152,6 +151,6 @@ class HypreCmake(CMakePackage, CudaPackage):
         """Export the hypre library.
         Sample usage: spec['hypre'].libs.ld_flags
         """
-        is_shared = "+shared" in self.spec
+        is_shared = self.spec.satisfies("+shared")
         libs = find_libraries("libHYPRE", root=self.prefix, shared=is_shared, recursive=True)
         return libs or None

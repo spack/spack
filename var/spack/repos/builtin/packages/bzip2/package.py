@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,8 +27,6 @@ class Bzip2(Package, SourcewarePackage):
     version("1.0.7", sha256="e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b")
     version("1.0.6", sha256="a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "shared",
         default=(sys.platform != "win32"),
@@ -47,6 +44,8 @@ class Bzip2(Package, SourcewarePackage):
 
     if sys.platform != "win32":
         depends_on("diffutils", type="build")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gmake", type="build", when="platform=linux")
     depends_on("gmake", type="build", when="platform=darwin")
@@ -78,13 +77,16 @@ class Bzip2(Package, SourcewarePackage):
                 filter_file(r"-O2 ", "-O0 ", makefile)
                 filter_file(r"-Ox ", "-O0 ", makefile)
 
+        if self.spec.satisfies("platform=windows"):
+            return
+
         # bzip2 comes with two separate Makefiles for static and dynamic builds
         # Tell both to use Spack's compiler wrapper instead of GCC
         filter_file(r"^CC=gcc", "CC={0}".format(spack_cc), "Makefile")
         filter_file(r"^CC=gcc", "CC={0}".format(spack_cc), "Makefile-libbz2_so")
 
         # The Makefiles use GCC flags that are incompatible with PGI
-        if self.spec.satisfies("%pgi") or self.spec.satisfies("%nvhpc@:20.11"):
+        if self.spec.satisfies("%nvhpc@:20.11"):
             filter_file("-Wall -Winline", "-Minform=inform", "Makefile")
             filter_file("-Wall -Winline", "-Minform=inform", "Makefile-libbz2_so")
 
@@ -171,7 +173,7 @@ class Bzip2(Package, SourcewarePackage):
     @run_after("install")
     def install_pkgconfig(self):
         # Add pkgconfig file after installation
-        libdir = self.spec["bzip2"].libs.directories[0]
+        libdir = self.libs.directories[0]
         pkg_path = join_path(self.prefix.lib, "pkgconfig")
         mkdirp(pkg_path)
 

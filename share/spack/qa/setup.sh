@@ -1,7 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,6 @@ if [[ "$COVERAGE" == "true" ]]; then
     bashcov=$(realpath ${QA_DIR}/bashcov)
 
     # instrument scripts requiring shell coverage
-    sed -i "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
     if [ "$(uname -o)" != "Darwin" ]; then
         # On darwin, #! interpreters must be binaries, so no sbang for bashcov
         sed -i "s@#\!/bin/sh@#\!${bashcov}@"   "$SPACK_ROOT/bin/sbang"

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
@@ -7,12 +6,12 @@ import re
 from spack.package import *
 
 
-class Which(AutotoolsPackage):
+class Which(AutotoolsPackage, GNUMirrorPackage):
     """GNU which - is a utility that is used to find which executable (or
     alias or shell function) is executed when entered on the shell prompt."""
 
     homepage = "https://savannah.gnu.org/projects/which/"
-    url = "https://ftp.gnu.org/gnu/which/which-2.21.tar.gz"
+    gnu_mirror_path = "which/which-2.21.tar.gz"
 
     license("GPL-3.0")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,13 +15,15 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     list_url = "https://github.com/electronic-structure/SIRIUS/releases"
     git = "https://github.com/electronic-structure/SIRIUS.git"
 
-    maintainers("simonpintarelli", "haampie", "dev-zero", "AdhocMan", "toxa81")
+    maintainers("simonpintarelli", "haampie", "dev-zero", "AdhocMan", "toxa81", "RMeli")
 
     license("BSD-2-Clause")
 
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("7.6.2", sha256="1ba92942aa39b49771677cc8bf1c94a0b4350eb45bf3009318a6c2350b46a276")
+    version("7.6.1", sha256="16a114dc17e28697750585820e69718a96e6929f88406d266c75cf9a7cdbdaaa")
     version("7.6.0", sha256="e424206fecb35bb2082b5c87f0865a9536040e984b88b041e6f7d531f8a65b20")
     version("7.5.2", sha256="9ae01935578532c84f1d0d673dbbcdd490e26be22efa6c4acf7129f9dc1a0c60")
     version("7.5.1", sha256="aadfa7976e90a109aeb1677042454388a8d1a50d75834d59c86c8aef06bc12e4")
@@ -32,59 +33,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("7.3.2", sha256="a256508de6b344345c295ad8642dbb260c4753cd87cc3dd192605c33542955d7")
     version("7.3.1", sha256="8bf9848b8ebf0b43797fd359adf8c84f00822de4eb677e3049f22baa72735e98")
     version("7.3.0", sha256="69b5cf356adbe181be6c919032859c4e0160901ff42a885d7e7ea0f38cc772e2")
-    version(
-        "7.2.7",
-        sha256="929bf7f131a4847624858b9c4295532c24b0c06f6dcef5453c0dfc33fb78eb03",
-        deprecated=True,
-    )
-    version(
-        "7.2.6",
-        sha256="e751fd46cdc7c481ab23b0839d3f27fb00b75dc61dc22a650c92fe8e35336e3a",
-        deprecated=True,
-    )
-    version(
-        "7.2.5",
-        sha256="794e03d4da91025f77542d3d593d87a8c74e980394f658a0210a4fd91c011f22",
-        deprecated=True,
-    )
-    version(
-        "7.2.4",
-        sha256="aeed0e83b80c3a79a9469e7f3fe10d80ad331795e38dbc3c49cb0308e2bd084d",
-        deprecated=True,
-    )
-    version(
-        "7.2.3",
-        sha256="6c10f0e87e50fcc7cdb4d1b2d35e91dba6144de8f111e36c7d08912e5942a906",
-        deprecated=True,
-    )
-    version(
-        "7.2.1",
-        sha256="01bf6c9893ff471473e13351ca7fdc2ed6c1f4b1bb7afa151909ea7cd6fa0de7",
-        deprecated=True,
-    )
-    version(
-        "7.2.0",
-        sha256="537800459db8a7553d7aa251c19f3a31f911930194b068bc5bca2dfb2c9b71db",
-        deprecated=True,
-    )
-    version(
-        "7.0.2",
-        sha256="ee613607ce3be0b2c3f69b560b2415ce1b0e015179002aa90739430dbfaa0389",
-        deprecated=True,
-    )
-    version(
-        "7.0.1",
-        sha256="cca11433f86e7f4921f7956d6589f27bf0fd5539f3e8f96e66a3a6f274888595",
-        deprecated=True,
-    )
-    version(
-        "7.0.0",
-        sha256="da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99",
-        deprecated=True,
-    )
-
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build shared libraries")
     variant("openmp", default=True, description="Build with OpenMP support")
@@ -121,6 +69,10 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         conflicts("+tests~pugixml")
     depends_on("pugixml", when="+pugixml")
 
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("cmake@3.23:", type="build")
     depends_on("mpi")
     depends_on("gsl")
@@ -129,6 +81,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fftw-api@3")
     depends_on("libxc@3.0.0:")
     depends_on("libxc@4.0.0:", when="@7.2.0:")
+    depends_on("libxc@:7", when="@:7.5")
     depends_on("spglib")
     depends_on("hdf5+hl")
     depends_on("pkgconfig", type="build")
@@ -162,6 +115,13 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         # spla removed the openmp option in 1.6.0
         conflicts("^spla@:1.5~openmp", when="+openmp")
 
+    patch("libxc7.patch", when="@7.6.0:7.6.1")
+    patch(
+        "https://github.com/electronic-structure/SIRIUS/commit/dd07010f7b49f31b7e3bb1b4e47f3d9ac3a0c0b4.patch?full_index=1",
+        sha256="dd680f8c47a0fc29097cae5cd1e72dfdbcf95f93089f73fb3f2fe9e750125d6f",
+        when="@7.6.0:7.6.1 +pugixml",
+    )
+
     depends_on("nlcglib", when="+nlcglib")
     depends_on("nlcglib+rocm", when="+nlcglib+rocm")
     depends_on("nlcglib+cuda", when="+nlcglib+cuda")
@@ -194,9 +154,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
     depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
     depends_on(
-        "intel-mkl threads=openmp", when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-mkl"
-    )
-    depends_on(
         "intel-oneapi-mkl threads=openmp",
         when="+openmp ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
     )
@@ -205,7 +162,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         when="+scalapack ^[virtuals=blas,lapack,fftw-api] intel-oneapi-mkl",
     )
 
-    conflicts("intel-mkl", when="@develop")  # TODO: Change to @7.5.3
     # MKLConfig.cmake introduced in 2021.3
     conflicts("intel-oneapi-mkl@:2021.2", when="^intel-oneapi-mkl")
 
@@ -224,7 +180,6 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("umpire+cuda~device_alloc", when="+cuda")
         depends_on("umpire+rocm~device_alloc", when="+rocm")
 
-    patch("mpi_datatypes.patch", when="@:7.2.6")
     patch("fj.patch", when="@7.3.2: %fj")
 
     def cmake_args(self):
@@ -285,17 +240,21 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
         if "^cray-libsci" in spec:
             args.append(self.define(cm_label + "USE_CRAY_LIBSCI", "ON"))
 
-        if spec["blas"].name in INTEL_MATH_LIBRARIES:
+        if spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             args.append(self.define(cm_label + "USE_MKL", "ON"))
 
-            if spec.satisfies("@develop"):  # TODO: Change to @7.5.3:
+            if spec.satisfies("@7.6.0:"):
                 mkl_mapper = {
                     "threading": {
                         "none": "sequential",
                         "openmp": "gnu_thread",
                         "tbb": "tbb_thread",
                     },
-                    "mpi": {"intel-mpi": "intelmpi", "mpich": "mpich", "openmpi": "openmpi"},
+                    "mpi": {
+                        "intel-oneapi-mpi": "intelmpi",
+                        "mpich": "mpich",
+                        "openmpi": "openmpi",
+                    },
                 }
 
                 mkl_threads = mkl_mapper["threading"][

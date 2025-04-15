@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,8 @@ class Bioawk(MakefilePackage):
     url = "https://github.com/lh3/bioawk/archive/v1.0.zip"
 
     version("1.0", sha256="316a6561dda41e8327b85106db3704e94e23d7a89870392d19ef8559f7859e2d")
+
+    depends_on("c", type="build")
 
     depends_on("zlib-api")
     depends_on("bison", type=("build"))

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,13 +18,13 @@ class AprUtil(AutotoolsPackage):
     version("1.6.0", sha256="483ef4d59e6ac9a36c7d3fd87ad7b9db7ad8ae29c06b9dd8ff22dda1cc416389")
     version("1.5.4", sha256="976a12a59bc286d634a21d7be0841cc74289ea9077aa1af46be19d1a6e844c19")
 
-    depends_on("c", type="build")  # generated
-
     variant("crypto", default=True, description="Enable crypto support")
     variant("gdbm", default=False, description="Enable GDBM support")
     variant("pgsql", default=False, description="Enable PostgreSQL support")
     variant("sqlite", default=False, description="Enable sqlite DBD driver")
     variant("odbc", default=False, description="Enalbe ODBC support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("apr")
     depends_on("expat")
@@ -37,6 +36,7 @@ class AprUtil(AutotoolsPackage):
     depends_on("sqlite", when="+sqlite")
     depends_on("unixodbc", when="+odbc")
     depends_on("pkgconfig", type="build", when="+crypto ^openssl~shared")
+    depends_on("libxcrypt", when="platform=linux")
 
     @property
     def libs(self):

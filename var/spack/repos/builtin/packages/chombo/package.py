@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,10 +24,6 @@ class Chombo(MakefilePackage):
     version("3.2", commit="71d856c2f469e96755a606db1e5151067da0f54a")
     version("develop", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI parallel support")
     variant("hdf5", default=True, description="Enable HDF5 support")
     variant(
@@ -41,6 +36,10 @@ class Chombo(MakefilePackage):
 
     patch("hdf5-16api.patch", when="@3.2", level=0)
     patch("Make.defs.local.template.patch", when="@3.2", level=0)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")

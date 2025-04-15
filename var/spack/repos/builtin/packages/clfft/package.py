@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,10 +16,10 @@ class Clfft(CMakePackage):
 
     version("2.12.2", sha256="e7348c146ad48c6a3e6997b7702202ad3ee3b5df99edf7ef00bbacc21e897b12")
 
+    variant("client", default=True, description="build client and callback client")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("client", default=True, description="build client and callback client")
 
     depends_on("opencl@1.2:")
     depends_on("boost@1.33.0:", when="+client")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,6 +15,12 @@ class QtQuick3d(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.9.0", sha256="49c743ca41528787fb26057e603854c115a85efb3edb56977e49bf81ba3fada0")
+    version("6.8.3", sha256="7a6d2087a5112b1d1bfe7455ae023418a2d5f6ef6d3d8de8ccdcef979a7cdd17")
+    version("6.8.2", sha256="2901927d84fa3e55cd598575fa8a47dd97c770ed3c1893af9c9ee2aa167b7433")
+    version("6.8.1", sha256="67878e0ecb9e8b760567364afd3c1b90d8c65087d8f676e9df51cad95df1bf21")
+    version("6.8.0", sha256="3fc965c7c867e21d894e5394ec1c3f7626ecb895e335115661133ac499a14408")
+    version("6.7.3", sha256="3e68f3a9a330e7b9a92ddf5b8d7a0874a107ea77636c788f598de65e327eb4a0")
     version("6.7.2", sha256="67021658cb10bfa6d969c4219d599ab2f4775d08fb4ae56da17fbec305088b55")
     version("6.7.1", sha256="c889b70305da7595df87c3bd062474787b722ab216bc2e6226e33fae3ec3459d")
     version("6.7.0", sha256="3adb7cc458c21a4642e7138cc0ca12934cd7075633d06c46c689f65718c8ba73")
@@ -37,7 +42,8 @@ class QtQuick3d(QtPackage):
     version("6.2.4", sha256="7292ed4373a92913c6811f2faa5191f0426f84bd93a3f6eb7d54b62626b56db5")
     version("6.2.3", sha256="35d06edbdd83b7d781b70e0bada18911fa9b774b6403589d5b21813a73584d80")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("qt-base +network", when="@6.3.0:")
 

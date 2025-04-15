@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -44,9 +43,6 @@ class Vacuumms(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("test", default=True, description="enable CMake testing")
     variant("tiff", default=False, description="Build TIFF utilities")
     variant("cuda", default=False, description="Build CUDA applications and utilities")
@@ -59,6 +55,9 @@ class Vacuumms(CMakePackage):
         multi=False,
         when="+voronoi",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("voropp", type=("link", "run"), when="+voronoi")
     depends_on("libtiff", type=("link", "run"), when="+tiff")
