@@ -223,7 +223,11 @@ def _migrate_spec(
         "version": v3_cache_class.get_layout_version(),
         "data": [
             BlobRecord(
-                spec_dict["archive_size"], "tarball-v1", "gzip", algorithm, checksum
+                spec_dict["archive_size"],
+                v3_cache_class.TARBALL_VERSION,
+                "gzip",
+                algorithm,
+                checksum,
             ).to_json(),
             BlobRecord(
                 metadata_size,
@@ -237,7 +241,11 @@ def _migrate_spec(
 
     manifest_path = os.path.join(tmpdir, f"{s.dag_hash()}.manifest.json")
     with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(manifest, f)
+        json.dump(manifest, f, indent=0, separators=(",", ":"))
+        # Note: when using gpg clear sign, we need to avoid long lines (19995
+        # chars). If lines are longer, they are truncated without error. So,
+        # here we still add newlines, but no indent, so save on file size and
+        # line length.
 
     # Possibly sign the manifest
     if not unsigned:

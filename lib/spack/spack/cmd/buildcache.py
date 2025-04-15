@@ -800,7 +800,7 @@ def migrate_fn(args):
     mirror should be fast, consider a workflow where you perform a default migration,
     (i.e. preserve the existing layout rather than deleting it) then evaluate the
     state of the migrated mirror by attempting to install from it, and finally
-    running the migration again with --delete-exising."""
+    running the migration again with --delete-existing."""
     target_mirror = args.mirror
     unsigned = args.unsigned
     assert isinstance(target_mirror, spack.mirrors.mirror.Mirror)
@@ -815,7 +815,7 @@ def migrate_fn(args):
             "    where you perform a default migration (i.e. preserve the existing \n"
             "    layout rather than deleting it), then evaluate the state of the \n"
             "    migrated mirror by attempting to install from it, and finally, \n"
-            "    run the migration again with --delete-exising."
+            "    run the migration again with --delete-existing."
         )
         tty.warn(msg)
         proceed = tty.get_yes_or_no("Do you want to proceed?", default=False)

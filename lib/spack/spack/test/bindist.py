@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import filecmp
 import glob
+import gzip
 import io
 import json
 import os
@@ -52,8 +53,10 @@ from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
     BuildcacheComponent,
+    BuildcacheEntryError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
+    compression_writer,
     get_url_buildcache_class,
     get_valid_spec_file,
 )
@@ -587,6 +590,59 @@ def test_text_relocate_if_needed(install_mockery, temporary_store, mock_fetch, t
     assert join_path("bin", "exe") in manifest["relocate_textfiles"]
     assert join_path("bin", "otherexe") not in manifest["relocate_textfiles"]
     assert join_path("bin", "secretexe") not in manifest["relocate_textfiles"]
+
+
+def test_compression_writer(tmp_path):
+    text = "This is some text. We might or might not like to compress it as we write."
+    checksum_algo = "sha256"
+
+    # Write the data using gzip compression
+    compressed_output_path = str(tmp_path / "compressed_text")
+    with compression_writer(compressed_output_path, "gzip", checksum_algo) as (
+        compressor,
+        checker,
+    ):
+        compressor.write(text.encode("utf-8"))
+
+    compressed_size = checker.length
+    compressed_checksum = checker.hexdigest()
+
+    with open(compressed_output_path, "rb") as f:
+        binary_content = f.read()
+
+    assert bindist.compute_hash(binary_content) == compressed_checksum
+    assert os.stat(compressed_output_path).st_size == compressed_size
+    assert binary_content[:2] == b"\x1f\x8b"
+    decompressed_content = gzip.decompress(binary_content).decode("utf-8")
+
+    assert decompressed_content == text
+
+    # Write the data without compression
+    uncompressed_output_path = str(tmp_path / "uncompressed_text")
+    with compression_writer(uncompressed_output_path, "none", checksum_algo) as (
+        compressor,
+        checker,
+    ):
+        compressor.write(text.encode("utf-8"))
+
+    uncompressed_size = checker.length
+    uncompressed_checksum = checker.hexdigest()
+
+    with open(uncompressed_output_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert bindist.compute_hash(content) == uncompressed_checksum
+    assert os.stat(uncompressed_output_path).st_size == uncompressed_size
+    assert content == text
+
+    # Make sure we raise if requesting unknown compression type
+    nocare_output_path = str(tmp_path / "wontwrite")
+    with pytest.raises(BuildcacheEntryError, match="Unknown compression type"):
+        with compression_writer(nocare_output_path, "gsip", checksum_algo) as (
+            compressor,
+            checker,
+        ):
+            compressor.write(text)
 
 
 def test_v2_etag_fetching_304():
@@ -1142,32 +1198,6 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     assert not os.path.exists(local_tarball_path)
 
 
-def test_validate_buildcache_manifest():
-    """Make sure schema validates as expected"""
-
-    manifest_data = {
-        "version": 3,
-        "data": [
-            {
-                "content-length": 34343434,
-                "content-type": "tarball-v1",
-                "compression": "gzip",
-                "checksum-algorithm": "sha256",
-                "checksum": "e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12",
-            },
-            {
-                "content-length": 123,
-                "content-type": "spec-v6",
-                "compression": "gzip",
-                "checksum-algorithm": "sha256",
-                "checksum": "f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0",
-            },
-        ],
-    }
-
-    jsonschema.validate(manifest_data, buildcache_manifest_schema)
-
-
 def test_relative_path_components():
     blobs_v3 = URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS)
     assert len(blobs_v3) == 1
@@ -1234,7 +1264,11 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
         fd.write(index_json)
 
     index_blob_record = bindist.BlobRecord(
-        os.stat(index_blob_path).st_size, "index-v8", "none", "sha256", index_json_hash
+        os.stat(index_blob_path).st_size,
+        cache_class.INDEX_VERSION,
+        "none",
+        "sha256",
+        index_json_hash,
     )
 
     index_manifest = {

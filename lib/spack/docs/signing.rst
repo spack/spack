@@ -246,7 +246,7 @@ If a user has trusted the public key associated with the private key
 used to sign the above manifest file, the signature can be verified with
 gpg, as follows::
 
-  $ gpg –-verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
+  $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
 The manifest points to both the compressed tar file as well as the compressed
 spec metadata file, and contains the checksum of each. This checksum

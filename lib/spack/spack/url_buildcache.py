@@ -11,7 +11,8 @@ import os
 import re
 import shutil
 import tempfile
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type
+from contextlib import closing, contextmanager
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 import jsonschema
 
@@ -32,6 +33,8 @@ from spack.database import INDEX_JSON_FILE
 from spack.mirrors.mirror import MirrorCollection
 from spack.schema.buildcache_spec import schema as buildcache_spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
+from spack.util.archive import ChecksumWriter
+from spack.util.crypto import hash_fun_for_algo
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -61,13 +64,13 @@ class BlobRecord:
     def __init__(
         self,
         content_length: int,
-        content_type: str,
+        media_type: str,
         compression_alg: str,
         checksum_alg: str,
         checksum: str,
     ) -> None:
         self.content_length = content_length
-        self.content_type = content_type
+        self.media_type = media_type
         self.compression_alg = compression_alg
         self.checksum_alg = checksum_alg
         self.checksum = checksum
@@ -75,19 +78,19 @@ class BlobRecord:
     @classmethod
     def from_json(cls, json_object):
         return BlobRecord(
-            json_object["content-length"],
-            json_object["content-type"],
+            json_object["contentLength"],
+            json_object["mediaType"],
             json_object["compression"],
-            json_object["checksum-algorithm"],
+            json_object["checksumAlgorithm"],
             json_object["checksum"],
         )
 
     def to_json(self):
         return {
-            "content-length": self.content_length,
-            "content-type": self.content_type,
+            "contentLength": self.content_length,
+            "mediaType": self.media_type,
             "compression": self.compression_alg,
-            "checksum-algorithm": self.checksum_alg,
+            "checksumAlgorithm": self.checksum_alg,
             "checksum": self.checksum,
         }
 
@@ -99,7 +102,7 @@ class BuildcacheManifest:
             self.data: List[BlobRecord] = [
                 BlobRecord(
                     rec.content_length,
-                    rec.content_type,
+                    rec.media_type,
                     rec.compression_alg,
                     rec.checksum_alg,
                     rec.checksum,
@@ -120,18 +123,18 @@ class BuildcacheManifest:
             data=[BlobRecord.from_json(blob_json) for blob_json in manifest_json["data"]],
         )
 
-    def get_blob_records(self, content_type: str) -> List[BlobRecord]:
+    def get_blob_records(self, media_type: str) -> List[BlobRecord]:
         matches: List[BlobRecord] = []
 
         for record in self.data:
-            if record.content_type == content_type:
+            if record.media_type == media_type:
                 # matches.append(BlobRecord.from_json(record.to_json()))
                 matches.append(record)
 
         if matches:
             return matches
 
-        raise NoSuchBlobException(f"Manifest has no blobs of type {content_type}")
+        raise NoSuchBlobException(f"Manifest has no blobs of type {media_type}")
 
 
 class URLBuildcacheEntry:
@@ -160,11 +163,11 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
-    INDEX_VERSION = f"index-v{spack.database._DB_VERSION}"
-    SPEC_VERSION = f"spec-v{spack.spec.SPECFILE_FORMAT_VERSION}"
-    TARBALL_VERSION = "tarball-v1"
-    PUBLIC_KEY = "key-v1"
-    PUBLIC_KEY_INDEX = "key-index-v1"
+    INDEX_VERSION = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
+    SPEC_VERSION = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
+    TARBALL_VERSION = "application/vnd.spack.install.v1.tar+gzip"
+    PUBLIC_KEY = "application/pgp-keys"
+    PUBLIC_KEY_INDEX = "application/vnd.spack.keyindex.v1+json"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
         BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests", "index"],
@@ -245,22 +248,22 @@ class URLBuildcacheEntry:
         )
 
     @classmethod
-    def content_type_to_component(cls, content_type: str) -> BuildcacheComponent:
-        if content_type == cls.SPEC_VERSION:
+    def media_type_to_component(cls, media_type: str) -> BuildcacheComponent:
+        if media_type == cls.SPEC_VERSION:
             return BuildcacheComponent.SPEC
-        elif content_type == cls.TARBALL_VERSION:
+        elif media_type == cls.TARBALL_VERSION:
             return BuildcacheComponent.TARBALL
-        elif content_type == cls.INDEX_VERSION:
+        elif media_type == cls.INDEX_VERSION:
             return BuildcacheComponent.INDEX
-        elif content_type == cls.PUBLIC_KEY:
+        elif media_type == cls.PUBLIC_KEY:
             return BuildcacheComponent.KEY
-        elif content_type == cls.PUBLIC_KEY_INDEX:
+        elif media_type == cls.PUBLIC_KEY_INDEX:
             return BuildcacheComponent.KEY_INDEX
 
-        raise BuildcacheEntryError(f"Unrecognized content type: {content_type}")
+        raise BuildcacheEntryError(f"Unrecognized content type: {media_type}")
 
     @classmethod
-    def component_to_content_type(cls, component: BuildcacheComponent) -> str:
+    def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         if component == BuildcacheComponent.SPEC:
             return cls.SPEC_VERSION
         elif component == BuildcacheComponent.TARBALL:
@@ -285,7 +288,7 @@ class URLBuildcacheEntry:
         if not self.manifest:
             raise BuildcacheEntryError("Read manifest before accessing blob records")
 
-        records = self.manifest.get_blob_records(self.component_to_content_type(blob_type))
+        records = self.manifest.get_blob_records(self.component_to_media_type(blob_type))
 
         if len(records) == 0:
             raise BuildcacheEntryError(f"Manifest has no blob record of type {blob_type}")
@@ -344,7 +347,6 @@ class URLBuildcacheEntry:
         Returns True if there is a blob present in the mirror for every
         given component type.
         """
-        print("Checking if buildcache entry exists")
         try:
             self.read_manifest(verify_signature=False)
         except BuildcacheEntryError:
@@ -354,11 +356,8 @@ class URLBuildcacheEntry:
             return False
 
         for component in components:
-            print(
-                f"  Check for blob with content-type: {self.component_to_content_type(component)}"
-            )
             component_blobs = self.manifest.get_blob_records(
-                self.component_to_content_type(component)
+                self.component_to_media_type(component)
             )
 
             if len(component_blobs) == 0:
@@ -517,7 +516,11 @@ class URLBuildcacheEntry:
         manifest_file_name = f"{manifest_name}.manifest.json"
         manifest_path = os.path.join(tmpdir, manifest_file_name)
         with open(manifest_path, "w", encoding="utf-8") as f:
-            json.dump(manifest.to_json(), f)
+            json.dump(manifest.to_json(), f, indent=0, separators=(",", ":"))
+            # Note: when using gpg clear sign, we need to avoid long lines (19995
+            # chars). If lines are longer, they are truncated without error. So,
+            # here we still add newlines, but no indent, so save on file size and
+            # line length.
 
         if signing_key:
             manifest_path = sign_file(signing_key, manifest_path)
@@ -544,20 +547,20 @@ class URLBuildcacheEntry:
 
         try:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
-            with open(local_file_path, "r", encoding="utf-8") as fd:
-                data_bytes = fd.read().encode("utf-8")
-            data_checksum, data_size = compress_and_write_data(
-                data=data_bytes,
-                output_path=blob_to_push,
-                compression=compression,
-                checksum_algo=checksum_algo,
-            )
+
+            with compression_writer(blob_to_push, compression, checksum_algo) as (
+                compressor,
+                checker,
+            ):
+                with open(local_file_path, "r", encoding="utf-8") as fd:
+                    compressor.write(fd.read().encode("utf-8"))
+
             record = BlobRecord(
-                data_size,
-                cache_class.component_to_content_type(component_type),
+                checker.length,
+                cache_class.component_to_media_type(component_type),
                 compression,
                 checksum_algo,
-                data_checksum,
+                checker.hexdigest(),
             )
             manifest = BuildcacheManifest(
                 layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION, data=[record]
@@ -614,7 +617,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                "tarball-v1",
+                self.TARBALL_VERSION,
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -658,7 +661,11 @@ class URLBuildcacheEntry:
         # write the manifest to a temporary location
         manifest_path = os.path.join(tmpdir, f"{spec.dag_hash()}.manifest.json")
         with open(manifest_path, "w", encoding="utf-8") as f:
-            json.dump(manifest, f)
+            json.dump(manifest, f, indent=0, separators=(",", ":"))
+            # Note: when using gpg clear sign, we need to avoid long lines (19995
+            # chars). If lines are longer, they are truncated without error. So,
+            # here we still add newlines, but no indent, so save on file size and
+            # line length.
 
         # possibly sign the manifest
         if signing_key:
@@ -952,9 +959,7 @@ def check_mirrors_for_layout():
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
     """Compute the checksum of the given file and raise if invalid"""
-    local_checksum = spack.util.crypto.checksum(
-        spack.util.crypto.hash_fun_for_algo(checksum_algorithm), file_path
-    )
+    local_checksum = spack.util.crypto.checksum(hash_fun_for_algo(checksum_algorithm), file_path)
 
     if local_checksum != expected_checksum:
         size, contents = fsys.filesummary(file_path)
@@ -963,37 +968,31 @@ def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
         )
 
 
-def gzip_compressor(data: bytes) -> bytes:
-    buf = io.BytesIO()
-    with gzip.GzipFile(filename="", fileobj=buf, mode="wb", compresslevel=6, mtime=0) as fd:
-        fd.write(data)
-    return buf.getvalue()
-
-
-def get_compressor(compression: str = "none") -> Callable[[bytes], bytes]:
-    if compression == "none":
-        return lambda b: b
-    elif compression == "gzip":
-        return gzip_compressor
+def _get_compressor(compression: str, writable: io.IOBase) -> io.IOBase:
+    if compression == "gzip":
+        return gzip.GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=writable)
+    elif compression == "none":
+        return writable
     else:
         raise BuildcacheEntryError(f"Unknown compression type: {compression}")
 
 
-def compress_and_write_data(
-    data: bytes, output_path: str, compression: str, checksum_algo: str
-) -> Tuple[str, int]:
-    compressor = get_compressor(compression)
-    compressed_bytes = compressor(data)
+@contextmanager
+def compression_writer(output_path: str, compression: str, checksum_algo: str):
+    """Create and return a writer capable of writing compressed data. Available
+    options for compression are "gzip" or "none", checksum_algo is used to pick
+    the checksum algorithm used by the ChecksumWriter.
 
-    with open(output_path, "wb") as fd:
-        fd.write(compressed_bytes)
-
-    hasher = spack.util.crypto.hash_fun_for_algo(checksum_algo)()
-    hasher.update(compressed_bytes)
-    data_checksum = hasher.hexdigest()
-    data_size = os.stat(output_path).st_size
-
-    return (data_checksum, data_size)
+    Yields a tuple containing:
+        io.IOBase: writer that can compress as it writes
+        ChecksumWriter: provides checksum and length of written data
+    """
+    with open(output_path, "wb") as writer, ChecksumWriter(
+        fileobj=writer, algorithm=hash_fun_for_algo(checksum_algo)
+    ) as checksum_writer, closing(
+        _get_compressor(compression, checksum_writer)
+    ) as compress_writer:
+        yield compress_writer, checksum_writer
 
 
 def compress_and_write_spec(
@@ -1003,13 +1002,10 @@ def compress_and_write_spec(
 
     Return the checksum (using the given algorithm) and size on disk of the file
     """
-    # compress the spec dict and compute its checksum
-    return compress_and_write_data(
-        data=json.dumps(spec_dict).encode("utf-8"),
-        output_path=output_path,
-        compression="gzip",
-        checksum_algo=checksum_algo,
-    )
+    with compression_writer(output_path, "gzip", "sha256") as (compressor, checker):
+        compressor.write(json.dumps(spec_dict).encode("utf-8"))
+
+    return checker.hexdigest(), checker.length
 
 
 def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int]:
@@ -1018,8 +1014,8 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     try:
         with open(path, "rb") as f:
             binary_content = f.read()
-    except OSError:
-        raise InvalidMetadataFile(f"No such file: {path}")
+    except OSError as e:
+        raise InvalidMetadataFile(f"No such file: {path}") from e
 
     # Decompress spec file if necessary
     if binary_content[:2] == b"\x1f\x8b":

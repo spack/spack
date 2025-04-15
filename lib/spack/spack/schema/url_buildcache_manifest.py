@@ -16,17 +16,17 @@ properties: Dict[str, Any] = {
         "items": {
             "type": "object",
             "required": [
-                "content-length",
-                "content-type",
+                "contentLength",
+                "mediaType",
                 "compression",
-                "checksum-algorithm",
+                "checksumAlgorithm",
                 "checksum",
             ],
             "properties": {
-                "content-length": {"type": "integer"},
-                "content-type": {"type": "string"},
+                "contentLength": {"type": "integer"},
+                "mediaType": {"type": "string"},
                 "compression": {"type": "string"},
-                "checksum-algorithm": {"type": "string"},
+                "checksumAlgorithm": {"type": "string"},
                 "checksum": {"type": "string"},
             },
             "additionalProperties": True,
