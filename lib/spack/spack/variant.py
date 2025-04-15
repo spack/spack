@@ -196,7 +196,7 @@ class Variant:
 
     def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
         """Factory that creates a variant holding the value(s) passed."""
-        return VariantValue(self.name, value, self.variant_type)
+        return VariantValue(self.variant_type, self.name, value)
 
     @property
     def variant_type(self) -> VariantType:
@@ -261,11 +261,14 @@ class VariantValue:
     type: VariantType
     _values: ValueType
 
+    slots = ("name", "propagate", "concrete", "type", "_values")
+
     def __init__(
         self,
+        type: VariantType,
         name: str,
         value: ValueType,
-        type: VariantType,
+        *,
         propagate: bool = False,
         concrete: bool = False,
     ) -> None:
@@ -285,36 +288,36 @@ class VariantValue:
         """Reconstruct a variant from a node dict."""
         if isinstance(value, list):
             return VariantValue(
-                name, tuple(value), VariantType.MULTI, propagate=propagate, concrete=not abstract
+                VariantType.MULTI, name, tuple(value), propagate=propagate, concrete=not abstract
             )
 
         # todo: is this necessary? not literal true / false in json/yaml?
         elif str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
             return VariantValue(
-                name, (str(value).upper() == "TRUE",), VariantType.BOOL, propagate=propagate
+                VariantType.BOOL, name, (str(value).upper() == "TRUE",), propagate=propagate
             )
 
-        return VariantValue(name, (value,), VariantType.SINGLE, propagate=propagate)
+        return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
 
     @staticmethod
     def from_string_or_bool(
         name: str, value: Union[str, bool], *, propagate: bool = False, concrete: bool = False
     ) -> "VariantValue":
         if value is True or value is False:
-            return VariantValue(name, (value,), VariantType.BOOL, propagate=propagate)
+            return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
         elif value.upper() in ("TRUE", "FALSE"):
             return VariantValue(
-                name, (value.upper() == "TRUE",), VariantType.BOOL, propagate=propagate
+                VariantType.BOOL, name, (value.upper() == "TRUE",), propagate=propagate
             )
 
         elif value == "*":
-            return VariantValue(name, (), VariantType.MULTI, propagate=propagate)
+            return VariantValue(VariantType.MULTI, name, (), propagate=propagate)
 
         return VariantValue(
+            VariantType.MULTI,
             name,
             tuple(value.split(",")),
-            VariantType.MULTI,
             propagate=propagate,
             concrete=concrete,
         )
@@ -323,11 +326,11 @@ class VariantValue:
     def from_concretizer(name: str, value: str, type: str) -> "VariantValue":
         """Reconstruct a variant from concretizer output."""
         if type == "bool":
-            return VariantValue(name, (value == "True",), VariantType.BOOL)
+            return VariantValue(VariantType.BOOL, name, (value == "True",))
         elif type == "multi":
-            return VariantValue(name, (value,), VariantType.MULTI, concrete=True)
+            return VariantValue(VariantType.MULTI, name, (value,), concrete=True)
         else:
-            return VariantValue(name, (value,), VariantType.SINGLE)
+            return VariantValue(VariantType.SINGLE, name, (value,))
 
     def yaml_entry(self) -> Tuple[str, SerializedValueType]:
         """Returns a (key, value) tuple suitable to be an entry in a yaml dict.
@@ -373,7 +376,9 @@ class VariantValue:
         yield from (str(v) for v in self.values)
 
     def copy(self) -> "VariantValue":
-        return type(self)(self.name, self.values, self.type, self.propagate, self.concrete)
+        return VariantValue(
+            self.type, self.name, self.values, propagate=self.propagate, concrete=self.concrete
+        )
 
     def satisfies(self, other: "VariantValue") -> bool:
         """The lhs satisfies the rhs if all possible concretizations of lhs are also
@@ -455,23 +460,23 @@ class VariantValue:
 
     def __repr__(self):
         return (
-            f"VariantValue({self.name!r}, {self.values!r}, {self.type!r}, "
+            f"VariantValue({self.type!r}, {self.name!r}, {self.values!r}, "
             f"propagate={self.propagate!r}, concrete={self.concrete!r})"
         )
 
 
 def MultiValuedVariant(name: str, value: ValueType, propagate: bool = False) -> VariantValue:
-    return VariantValue(name, value, VariantType.MULTI, propagate=propagate, concrete=True)
+    return VariantValue(VariantType.MULTI, name, value, propagate=propagate, concrete=True)
 
 
 def SingleValuedVariant(
     name: str, value: Union[bool, str], propagate: bool = False
 ) -> VariantValue:
-    return VariantValue(name, (value,), VariantType.SINGLE, propagate=propagate)
+    return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
 
 
 def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> VariantValue:
-    return VariantValue(name, (value,), VariantType.BOOL, propagate=propagate)
+    return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply

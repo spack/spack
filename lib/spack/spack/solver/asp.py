@@ -1774,7 +1774,7 @@ class SpackSolverSetup:
             # make a spec indicating whether the variant has this conditional value
             variant_has_value = spack.spec.Spec()
             variant_has_value.variants[name] = vt.VariantValue(
-                name, (value.value,), vt.VariantType.MULTI
+                vt.VariantType.MULTI, name, (value.value,)
             )
 
             if value.when:
