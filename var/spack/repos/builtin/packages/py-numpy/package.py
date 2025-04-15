@@ -183,6 +183,13 @@ class PyNumpy(PythonPackage):
         depends_on("py-setuptools@:63", when="@:1.25")
         depends_on("py-setuptools@:59", when="@:1.22.1")
 
+    # https://github.com/spack/spack/issues/49983
+    patch(
+        "https://github.com/numpy/numpy/pull/28713.patch?full_index=1",
+        sha256="e80ed84d31a03ecdebcaa4acd9f725298633b8f2c254beb30e0d44c039921783",
+        when="@2.0:2.2",
+    )
+
     # Add Fujitsu Fortran compiler
     patch("add_fj_compiler.patch", when="@1.19.3:1.19.5%fj")
     patch("add_fj_compiler2.patch", when="@1.19.0:1.19.2%fj")
