@@ -10,9 +10,8 @@ from spack.package import *
 
 
 class Iwyu(CMakePackage):
-    """include-what-you-use: A tool for use with clang to analyze #includes in
-    C and C++ source files
-    """
+    """Include-what-you-use: A tool for use with clang to analyze #includes in
+    C and C++ source files."""
 
     homepage = "https://include-what-you-use.org"
     url = "https://include-what-you-use.org/downloads/include-what-you-use-0.13.src.tar.gz"
@@ -23,6 +22,8 @@ class Iwyu(CMakePackage):
     tags = ["build-tools"]
 
     executables = ["^include-what-you-use$"]
+
+    sanity_check_is_file = ["bin/include-what-you-use"]
 
     version("0.24", sha256="a23421ceff601d3ea215e8fa9292bfa8ca39eb1ac2098dbbedfc6cfe65541c10")
     version("0.23", sha256="0004d5a9169717acf2f481248a5bfc15c7d55ddc2b9cdc7f461b06e93d49c73f")
@@ -39,11 +40,11 @@ class Iwyu(CMakePackage):
     version("0.12", sha256="a5892fb0abccb820c394e4e245c00ef30fc94e4ae58a048b23f94047c0816025")
     version("0.11", sha256="2d2877726c4aed9518cbb37673ffbc2b7da9c239bf8fe29432da35c1c0ec367a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    # Build dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
-    patch("iwyu-013-cmake.patch", when="@0.13:0.14")
-
+    # Required dependencies
     depends_on("llvm+clang@20", when="@0.24")
     depends_on("llvm+clang@19", when="@0.23")
     depends_on("llvm+clang@18", when="@0.22")
@@ -62,7 +63,9 @@ class Iwyu(CMakePackage):
     # iwyu uses X86AsmParser so must have the x86 target on non-x86 arch
     _arches = set(str(x.family) for x in archspec.cpu.TARGETS.values())
     for _arch in _arches - set(["x86", "x86_64"]):
-        depends_on("llvm targets=x86", when="arch={0}:".format(_arch))
+        depends_on("llvm targets=x86", when=f"arch={_arch}:")
+
+    patch("iwyu-013-cmake.patch", when="@0.13:0.14")
 
     @classmethod
     def determine_version(cls, exe):
