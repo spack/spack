@@ -23,6 +23,14 @@ class Xsd(MakefilePackage):
     depends_on("xerces-c")
     depends_on("libtool", type="build")
 
+    variant(
+        "cxxstd",
+        default="14",
+        values=("98", "11", "14"),
+        multi=False,
+        description="Use the specified C++ standard when building",
+    )
+
     patch(
         "https://git.codesynthesis.com/cgit/libxsd-frontend/libxsd-frontend/patch/?id=5029f8665190879285787a9dcdaf5f997cadd2e2",
         sha256="d57e0aed8784d2b947983209b6513c81ac593c9936c3d7b809b4cd60d4c28607",
@@ -35,6 +43,8 @@ class Xsd(MakefilePackage):
     def setup_build_environment(self, env):
         xercesc_lib_flags = self.spec["xerces-c"].libs.search_flags
         env.append_flags("LDFLAGS", xercesc_lib_flags)
+        cxxstdflag = "cxx{0}_flag".format(self.spec.variants["cxxstd"].value)
+        env.append_flags("CXXFLAGS", getattr(self.compiler, cxxstdflag))
 
     def url_for_version(self, version):
         url = "https://www.codesynthesis.com/download/xsd/{0}/xsd-{1}+dep.tar.bz2"

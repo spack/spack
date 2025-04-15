@@ -37,9 +37,11 @@ class Psblas(AutotoolsPackage):
 
     # Variants:
     # LPK/IPK: Integer precision variants
-    variant("LPK", default=8, values=int, description="Length in bytes for long integers (8 or 4)")
     variant(
-        "IPK", default=4, values=int, description="Length in bytes for short integers (8 or 4)"
+        "LPK", default="8", values=int, description="Length in bytes for long integers (8 or 4)"
+    )
+    variant(
+        "IPK", default="4", values=int, description="Length in bytes for short integers (8 or 4)"
     )
     # MPI
     variant("mpi", default=True, description="Activates MPI support")

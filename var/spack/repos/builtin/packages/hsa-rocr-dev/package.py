@@ -22,7 +22,8 @@ class HsaRocrDev(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
     libraries = ["libhsa-runtime64"]
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
+    version("6.3.3", sha256="aa2e30d3d68707d6df4840e954bb08cc13cd312cec1a98a64d97adbe07262f50")
     version("6.3.2", sha256="aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074")
     version("6.3.1", sha256="547ceeeda9a41cdffa21e57809dc5834f94938a0a2809c283aebcbcf01901df0")
     version("6.3.0", sha256="8fd6bcd6a5afd0ae5a59e33b786a525f575183d38c34049c2dab6b9270a1ca3b")
@@ -46,12 +47,12 @@ class HsaRocrDev(CMakePackage):
         version("5.3.3", sha256="aca88d90f169f35bd65ce3366b8670c7cdbe3abc0a2056eab805d0192cfd7130")
         version("5.3.0", sha256="b51dbedbe73390e0be748b92158839c82d7fa0e514fede60aa7696dc498facf0")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=True, description="Build shared or static library")
     variant("image", default=True, description="build with or without image support")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3:", type="build")
     depends_on("pkgconfig", type="build")
@@ -108,6 +109,7 @@ class HsaRocrDev(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
     ]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -132,6 +134,7 @@ class HsaRocrDev(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

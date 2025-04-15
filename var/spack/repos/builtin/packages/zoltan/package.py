@@ -27,10 +27,6 @@ class Zoltan(AutotoolsPackage):
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch("notparallel.patch", when="@3.8")
 
     variant("debug", default=False, description="Builds a debug version of the library.")
@@ -40,6 +36,11 @@ class Zoltan(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support.")
     variant("parmetis", default=False, description="Enable ParMETIS support.")
     variant("int64", default=False, description="Enable 64bit indices.")
+    variant("scotch", default=False, description="Enable PT-Scotch support.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 
@@ -47,6 +48,7 @@ class Zoltan(AutotoolsPackage):
     depends_on("parmetis@4:", when="+parmetis")
     depends_on("metis+int64", when="+parmetis+int64")
     depends_on("metis", when="+parmetis")
+    depends_on("scotch", when="+scotch")
 
     depends_on("perl@:5.21", type="build", when="@:3.6")
     depends_on("autoconf", type="build")
@@ -144,6 +146,16 @@ class Zoltan(AutotoolsPackage):
                 config_args.append("--with-id-type=ulong")
             else:
                 config_args.append("--with-id-type=uint")
+
+        if spec.satisfies("+scotch"):
+            scotch_prefix = spec["scotch"].prefix
+            config_args.extend(
+                [
+                    "--with-scotch",
+                    f"--with-scotch-incdir={scotch_prefix.include}",
+                    f"--with-scotch-libdir={scotch_prefix.lib}",
+                ]
+            )
 
         if "+mpi" in spec:
             config_args.extend(

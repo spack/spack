@@ -56,9 +56,6 @@ class Qt(Package):
     version("4.8.5", sha256="eb728f8268831dc4373be6403b7dd5d5dde03c169ad6882f9a8cb560df6aa138")
     version("3.3.8b", sha256="1b7a1ff62ec5a9cb7a388e2ba28fda6f960b27f27999482ebeceeadb72ac9f6e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("debug", default=False, description="Build debug version.")
     variant("dbus", default=False, description="Build with D-Bus support.")
     variant("doc", default=False, description="Build QDoc and documentation.")
@@ -195,6 +192,9 @@ class Qt(Package):
     conflicts("%gcc@10:", when="@5.9:5.12.6 +opengl")
     conflicts("%gcc@11:", when="@5.8")
     conflicts("%apple-clang@13:", when="@:5.13")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Build-only dependencies
     for plat in ["linux", "darwin", "freebsd"]:

@@ -15,6 +15,9 @@ class Xabclib(MakefilePackage):
 
     version("1.03", sha256="9d200f40f1db87abc26cfe75a22db3a6d972988a28fc0ce8421a0c88cc574d1a")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     def edit(self, spec, prefix):
         cc = [spack_cc, "-O3", self.compiler.openmp_flag]
         fc = [spack_fc, "-O3", self.compiler.openmp_flag]

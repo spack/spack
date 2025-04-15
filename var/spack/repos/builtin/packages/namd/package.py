@@ -99,6 +99,9 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     # Handle change in python-config for python@3.8:
     patch("namd-python38.patch", when="interface=python ^python@3.8:")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("charmpp@7.0.0:", when="@3.0:")
     depends_on("charmpp@6.10.1:6", when="@2.14:2")
     depends_on("charmpp@6.8.2", when="@2.13")

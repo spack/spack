@@ -57,6 +57,9 @@ class Xios(Package):
 
     patch("earcut_missing_include_2.6.patch", when="@2.6:")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("netcdf-c+mpi")
     depends_on("netcdf-fortran")
     depends_on("hdf5+mpi")

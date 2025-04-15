@@ -51,10 +51,6 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
     version("3.5.0", sha256="50f7a3e3aec2e08e732a487919262238f8504c3ef927246ec3495617dde81239")
     version("3.4.0", sha256="69e9fa08bacb2475e636da05a6c222b17c67f1ebeab3793762062248dd9d842f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant("mpi", default=True, description="Activates MPI support")
     variant("icb", default=False, when="@3.6:", description="Activates iso_c_binding support")
@@ -70,6 +66,10 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
 
     patch("xlf.patch", when="@3.7.0%xl", level=0)
     patch("xlf.patch", when="@3.7.0%xl_r", level=0)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")

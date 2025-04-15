@@ -31,9 +31,6 @@ class BdwGc(AutotoolsPackage):
         url="http://www.hboehm.info/gc/gc_source/gc-7.4.4.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("libatomic-ops", default=True, description="Use external libatomic-ops")
     variant(
         "threads",
@@ -42,6 +39,9 @@ class BdwGc(AutotoolsPackage):
         multi=False,
         description="Multithreading support",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libatomic-ops", when="+libatomic-ops")
 

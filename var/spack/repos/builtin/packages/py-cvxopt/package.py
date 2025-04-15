@@ -16,8 +16,6 @@ class PyCvxopt(PythonPackage):
 
     version("1.2.5", sha256="94ec8c36bd6628a11de9014346692daeeef99b3b7bae28cef30c7490bbcb2d72")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "gsl",
         default=False,
@@ -40,6 +38,8 @@ class PyCvxopt(PythonPackage):
         default=False,
         description="Enable support for the semidefinite programming solver DSDP",
     )
+
+    depends_on("c", type="build")  # generated
 
     # Required dependencies
     depends_on("python@2.7:", type=("build", "link", "run"))

@@ -22,9 +22,6 @@ class Evtgen(CMakePackage):
     version("02.02.00", sha256="0c626e51cb17e799ad0ffd0beea5cb94d7ac8a5f8777b746aa1944dd26071ecf")
     version("02.00.00", sha256="02372308e1261b8369d10538a3aa65fe60728ab343fcb64b224dac7313deb719")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("pythia8", default=True, description="Build with pythia8")
     variant("tauola", default=False, description="Build with tauola")
     variant("photos", default=False, description="Build with photos")
@@ -32,6 +29,9 @@ class Evtgen(CMakePackage):
     variant("hepmc3", default=False, description="Link with hepmc3 (instead of hepmc)")
 
     patch("evtgen-2.0.0.patch", when="@02.00.00 ^pythia8@8.304:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("hepmc", when="~hepmc3")
     depends_on("hepmc3", when="+hepmc3")

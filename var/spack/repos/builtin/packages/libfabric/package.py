@@ -22,6 +22,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     license("GPL-2.0-or-later")
 
     version("main", branch="main")
+    version("2.1.0", sha256="97df312779e2d937246d2f46385b700e0958ed796d6fed7aae77e2d18923e19f")
+    version("2.0.0", sha256="1a8e40f1f331d6ee2e9ace518c0088a78c8a838968f8601c2b77fd012a7bf0f5")
     version("1.22.0", sha256="485e6cafa66c9e4f6aa688d2c9526e274c47fda3a783cf1dd8f7c69a07e2d5fe")
     version("1.21.1", sha256="54befa6697352f3179c79c4a79225ae71694f29eefad5d0d5a14b5444ff986dd")
     version("1.21.0", sha256="0c1b7b830d9147f661e5d7f359250b85b5a9885c330464cd3b5e5d35b86551c7")
@@ -64,12 +66,11 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     version("1.5.0", sha256="88a8ad6772f11d83e5b6f7152a908ffcb237af273a74a1bd1cb4202f577f1f23")
     version("1.4.2", sha256="5d027d7e4e34cb62508803e51d6bd2f477932ad68948996429df2bfff37ca2a5")
 
-    depends_on("c", type="build")  # generated
-
     fabrics = (
         "cxi",
         "efa",
         "gni",
+        "lnx",
         "mlx",
         "mrail",
         "opx",
@@ -117,6 +118,8 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     # https://github.com/ofiwg/libfabric/pull/7665
     patch("nvhpc-symver.patch", when="@1.6.0:1.14.0 %nvhpc")
 
+    depends_on("c", type="build")  # generated
+
     depends_on("rdma-core", when="fabrics=verbs")
     depends_on("rdma-core", when="@1.10.0: fabrics=efa")
     depends_on("opa-psm2", when="fabrics=psm2")
@@ -128,6 +131,7 @@ class Libfabric(AutotoolsPackage, CudaPackage):
     depends_on("liburing@2.1:", when="+uring")
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("libcxi", when="fabrics=cxi")
+    depends_on("xpmem", when="fabrics=xpmem")
 
     depends_on("m4", when="@main", type="build")
     depends_on("autoconf", when="@main", type="build")
@@ -138,6 +142,7 @@ class Libfabric(AutotoolsPackage, CudaPackage):
 
     conflicts("@1.9.0", when="platform=darwin", msg="This distribution is missing critical files")
     conflicts("fabrics=opx", when="@:1.14.99")
+    conflicts("fabrics=lnx", when="@:1")
     conflicts(
         "fabrics=opx",
         when="@1.20.0",
@@ -210,6 +215,9 @@ class Libfabric(AutotoolsPackage, CudaPackage):
             args.append(f"--with-cassini-headers={self.spec['cassini-headers'].prefix.include}")
             args.append(f"--with-cxi-uapi-headers={self.spec['cxi-driver'].prefix.include}")
             args.append(f"--enable-cxi={self.spec['libcxi'].prefix}")
+
+        if self.spec.satisfies("fabrics=xpmem"):
+            args.append(f"--enable-xpmem={self.spec['xpmem'].prefix}")
 
         return args
 
