@@ -192,7 +192,8 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
     provides("mkl")
-    provides("lapack", "blas")
+    provides("lapack")
+    provides("blas")
 
     @run_after("install")
     def fixup_installation(self):
