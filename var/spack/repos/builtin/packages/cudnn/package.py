@@ -343,7 +343,7 @@ class Cudnn(Package):
                 .replace("aarch64", "aarch64sbsa")
             )
         else:
-            sys_key.replace("aarch64", "sbsa")
+            sys_key = sys_key.replace("aarch64", "sbsa")
 
         if version >= Version("8.3.1"):
             # NOTE: upload layout changed for 8.3.1, they include a 10.2
