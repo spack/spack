@@ -34,6 +34,7 @@ Calls to each of these functions are triggered by the ``run`` method of
 the decorator object, that will forward the keyword arguments passed
 as input.
 """
+
 import ast
 import collections
 import collections.abc
@@ -445,7 +446,7 @@ def _check_patch_urls(pkgs, error_cls):
     )
     github_pull_commits_re = (
         r"^https?://(?:patch-diff\.)?github(?:usercontent)?\.com/"
-        r".+/.+/pull/\d+/commits/[a-fA-F0-9]+\.(?:patch|diff)"
+        r".+/.+/pull/\d+(/commits/[a-fA-F0-9]+)?\.(?:patch|diff)"
     )
     # Only .diff URLs have stable/full hashes:
     # https://forum.gitlab.com/t/patches-with-full-index/29313
@@ -463,13 +464,10 @@ def _check_patch_urls(pkgs, error_cls):
                     continue
 
                 if re.match(github_pull_commits_re, patch.url):
-                    url = re.sub(r"/pull/\d+/commits/", r"/commit/", patch.url)
-                    url = re.sub(r"^(.*)(?<!full_index=1)$", r"\1?full_index=1", url)
                     errors.append(
                         error_cls(
                             f"patch URL in package {pkg_cls.name} "
-                            + "must not be a pull request commit; "
-                            + f"instead use {url}",
+                            + "must not come from a pull request. ",
                             [patch.url],
                         )
                     )
