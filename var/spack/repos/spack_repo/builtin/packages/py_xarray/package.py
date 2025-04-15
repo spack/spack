@@ -75,7 +75,6 @@ class PyXarray(PythonPackage):
     depends_on("py-numpy@:1", when="@:2024.05.0", type=("build", "run"))
     depends_on("py-numpy@1.23:", when="@2024.7.0:", type=("build", "run"))
 
-
     depends_on("py-pandas@0.15.0:", when="@0.9.1", type=("build", "run"))
     depends_on("py-pandas@0.19.2:", when="@0.11:0.13", type=("build", "run"))
     depends_on("py-pandas@0.24:", when="@0.14.0", type=("build", "run"))

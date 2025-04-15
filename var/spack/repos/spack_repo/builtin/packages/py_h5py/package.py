@@ -69,10 +69,10 @@ class PyH5py(PythonPackage):
 
     # Build and runtime dependencies
     depends_on("py-numpy@2:3", type=("build", "run"), when="@3.11: ^python@3.9:")
-     
+
     # until 3.11.0, uses "oldest-supported-numpy" and doesn't support numpy2
     # https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
-    # pre-3.11 is numpy@1 only 
+    # pre-3.11 is numpy@1 only
     # https://github.com/h5py/h5py/issues/2353
     depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.10 ^python@3.9:")
     depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")

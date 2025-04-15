@@ -29,7 +29,7 @@ class PyPydap(PythonPackage):
     depends_on("py-beautifulsoup4", type=("build", "run"))
 
     depends_on("py-requests", type="build", when="@3.5.5:")
-    depends_on("py-requests-cache", type="build", when="@3.5.5:")  
+    depends_on("py-requests-cache", type="build", when="@3.5.5:")
     depends_on("py-scipy", type="build", when="@3.5.5:")
     depends_on("py-lxml", type="build", when="@3.5.5:")
 
