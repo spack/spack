@@ -46,10 +46,10 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "jonas-eschle")
 
-    # version("0.5.3", sha256="1094581a30ec069965f4e3e67d60262570cc3dd016adc62073bc24347b14270c")
-    # version("0.5.2", sha256="8e9de1e012dd65fc4a9eec8af4aa2bf6782767130a5d8e1c1e342b7d658280fe")
-    # version("0.5.1", sha256="e74b1209517682075933f757d646b73040d09fe39ee3e9e4cd398407dd0902d2")
-    # version("0.5.0", sha256="04cc2eeb2e7ce1916674cea03a7d75a59d583ddb779d5104e103a2798a283ce9")
+    version("0.5.3", sha256="1094581a30ec069965f4e3e67d60262570cc3dd016adc62073bc24347b14270c")
+    version("0.5.2", sha256="8e9de1e012dd65fc4a9eec8af4aa2bf6782767130a5d8e1c1e342b7d658280fe")
+    version("0.5.1", sha256="e74b1209517682075933f757d646b73040d09fe39ee3e9e4cd398407dd0902d2")
+    version("0.5.0", sha256="04cc2eeb2e7ce1916674cea03a7d75a59d583ddb779d5104e103a2798a283ce9")
     version("0.4.38", sha256="ca1e63c488d505b9c92e81499e8b06cc1977319c50d64a0e58adbd2dae1a625c")
     version("0.4.37", sha256="17a8444a931f26edda8ccbc921ab71c6bf46857287b1db186deebd357e526870")
     version("0.4.36", sha256="442bfdf491b509995aa160361e23a9db488d5b97c87e6648cc733501b06eda77")
@@ -181,12 +181,6 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     # Fails to build with freshly released CUDA (#48708).
     conflicts("^cuda@12.8:", when="@:0.4.31")
-
-    # external CUDA is not supported https://github.com/jax-ml/jax/issues/23689
-    conflicts("+cuda", when="@0.4.32:")
-
-    # aarch64 is not supported https://github.com/jax-ml/jax/issues/25598
-    conflicts("target=aarch64:", when="@0.4.32:")
 
     resource(
         name="xla",
