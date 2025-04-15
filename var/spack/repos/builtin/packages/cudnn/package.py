@@ -12,65 +12,79 @@ _versions = {
     # cuDNN 9.2.0
     "9.2.0.82-12": {
         "Linux-x86_64": "1362b4d437e37e92c9814c3b4065db5106c2e03268e22275a5869e968cee7aa8",
+        "Linux-aarch64": "24cc2a0308dfe412c02c7d41d4b07ec12dacb021ebf8c719de38eb77d22f68c1",
     },
     "9.2.0.82-11": {
         "Linux-x86_64": "99dcb3fa2bf7eed7f35b0f8e58e7d1f04d9a52e01e382efc1de16fed230d3b26",
+        "Linux-aarch64": "62973737acc11c20f0640e63248a8d988b53b6aad219cf17eaff63a05970853d",
     },
     # cuDNN 8.9.7
     "8.9.7.29-12": {
         "Linux-x86_64": "475333625c7e42a7af3ca0b2f7506a106e30c93b1aa0081cd9c13efb6e21e3bb",
         "Linux-ppc64le": "8574d291b299f9cc0134304473c9933bd098cc717e8d0876f4aba9f9eebe1b76",
+        "Linux-aarch64": "e98b7c80010785e5d5ca01ee4ce9b5b0c8c73587ea6f8648be34d3f8d1d47bd1",
     },
     "8.9.7.29-11": {
         "Linux-x86_64": "a3e2509028cecda0117ce5a0f42106346e82e86d390f4bb9475afc976c77402e",
         "Linux-ppc64le": "f23fd7d59f9d4f743fa926f317dab0d37f6ea21edb2726ceb607bea45b0f9f36",
+        "Linux-aarch64": "91c37cfb458f541419e98510f13aaf5975c0232c613e18b776385490074eea17",
     },
     # cuDNN 8.9.5
     "8.9.5.30-12": {
         "Linux-x86_64": "2a2eb89a2ab51071151c6082f1e816c702167a711a9372f9f73a7b5c4b06e01a",
         "Linux-ppc64le": "38388ec3c99c6646aaf5c707985cd35e25c67f653d780c4081c2df5557ab665f",
+        "Linux-aarch64": "0491f7b02f55c22077eb678bf314c1f917524bd507cf5b658239bf98a47233a1",
     },
     "8.9.5.30-11": {
         "Linux-x86_64": "bbe10e3c08cd7e4aea1012213781e4fe270e1c908263444f567cafefb2cc6525",
         "Linux-ppc64le": "d678f8b2903b95de7eeaef38890c5674705864ea049b2b63e90565f2c0ea682f",
+        "Linux-aarch64": "50e3d38cb70a53bb059da0aefc60e1460729c6988e2697200c43b80d218e556c",
     },
     # cuDNN 8.9.0
     "8.9.0.131-12": {
         "Linux-x86_64": "477631002be61022b60961cba0a501271507a93f81d6b08384bc320cb8706c98",
         "Linux-ppc64le": "ff239e4cbbf21fa18104b62a887686e2197f820ad58817d62e509c735a331829",
+        "Linux-aarch64": "fab70f4fb3b933ff502200a1d954d2c6fc205ff9c9b1d271ea4c41e980a66596",
     },
     "8.9.0.131-11": {
         "Linux-x86_64": "3cb82c50723f14b41d43523f222cd52cc9d50b3ad67c380f4be51bd1133daa2d",
         "Linux-ppc64le": "18778de490550c5b584e96560208e5e37678397037946e10a1c2824174c69725",
+        "Linux-aarch64": "3e50e31833718a9d755c0ae8f126e9f0f62213d9d2b0a545a6bc2dcafda2386f",
     },
     # cuDNN 8.8.1
     "8.8.1.3-12": {
         "Linux-x86_64": "79d77a769c7e7175abc7b5c2ed5c494148c0618a864138722c887f95c623777c",
         "Linux-ppc64le": "b0e89021a846952cad8cfc674edce2883f6e344ebd47a2394f706b1136715bc7",
+        "Linux-aarch64": "9e3977aa1b9d06eb860b582ac8933630675a0243029c259bfec5bb5699867d20",
     },
     "8.8.1.3-11": {
         "Linux-x86_64": "af7584cae0cc5524b5913ef08c29ba6154113c60eb0a37a0590a91b515a8a8f9",
         "Linux-ppc64le": "d086003d09d5388aa42142f07483a773aa74b602478b0933e24fc63f56f1658f",
+        "Linux-aarch64": "3b35aaf9a4249886d938d996498c85a19cde9b74657685f2272ec6553e863359",
     },
     # cuDNN 8.7.0
     "8.7.0.84-11.8": {
         "Linux-x86_64": "976c4cba7233c97ae74006afab5172976300ba40f5b250a21f8cf71f59c9f76d",
         "Linux-ppc64le": "0433d6d8b6841298e049e8a542750aa330a6e046a52ad95fae0c2f75dabe5575",
+        "Linux-aarch64": "cf967f78dbf6c075243cc83aa18759e370db3754aa15b12a0a14e8bf67a3a9d4",
     },
     # cuDNN 8.6.0
     "8.6.0.163-11.8": {
         "Linux-x86_64": "bbc396df47294c657edc09c600674d608cb1bfc80b82dcf4547060c21711159e",
         "Linux-ppc64le": "c8a25e7e3df1bb9c4e18a4f24dd5f25cfd4bbe8b7054e34008e53b2be4f58a80",
+        "Linux-aarch64": "a0202278d3cbd4f3adc3f7816bff6071621cb042b0903698b477acac8928ac06",
     },
     # cuDNN 8.5.0
     "8.5.0.96-11.7": {
         "Linux-x86_64": "5454a6fd94f008728caae9adad993c4e85ef36302e26bce43bea7d458a5e7b6d",
         "Linux-ppc64le": "00373c3d5e0b536a5557d0d0eb50706777f213a222b4030e1b71b1bec43d205f",
+        "Linux-aarch64": "86780abbecd4634e7363fad1d000ae23b7905a5f8383bddbf7332c6934791dde",
     },
     # cuDNN 8.4.0
     "8.4.0.27-11.6": {
         "Linux-x86_64": "d19bdafd9800c79d29e6f6fffa9f9e2c10d1132d6c2ff10b1593e057e74dd050",
         "Linux-ppc64le": "7ef72353331cf42b357f53cb4a4971fb07e2f0b2ae66e03d54933df52de411c8",
+        "Linux-aarch64": "3972ab37b6f0271274931f69c5675c3b61d16f8f5a2dedd422a5efd7b0f358e5",
     },
     "8.4.0.27-10.2": {
         "Linux-x86_64": "14c5e3ca4258271996d1fd959c42d17c582ce4d9aff451f84524469e784fd154"
@@ -79,6 +93,7 @@ _versions = {
     "8.3.3.40-11.5": {
         "Linux-x86_64": "eabe96c75cf03ea4f5379894d914f1f8ae14ceab121989e84b0836d927fb7731",
         "Linux-ppc64le": "eaedc8dea675767f9445c11d96e6b472110d2fed728db4179153ca7da6503083",
+        "Linux-aarch64": "83b1d21b0f6495dfdc2316e6d53489db8ab1b752e4e4d21caca0a08fb2136cdc",
     },
     "8.3.3.40-10.2": {
         "Linux-x86_64": "d8554f2b32e6295d5fc8f3ac25e68f94058b018c801dab9c143e36812f8926ab"
@@ -87,11 +102,13 @@ _versions = {
     "8.3.2.44-11.5": {
         "Linux-x86_64": "5500953c08c5e5d1dddcfda234f9efbddcdbe43a53b26dc0a82c723fa170c457",
         "Linux-ppc64le": "0581bce48023a3ee71c3a819aaefcabe693eca18b61e2521dc5f8e6e71567b1b",
+        "Linux-aarch64": "7eb8c96bfeec98e8aa7cea1e95633d2a9481fc99040eb0311d31bf137a7aa6ea",
     },
     # cuDNN 8.3.1
     "8.3.1.22-11.5": {
         "Linux-x86_64": "f5ff3c69b6a8a9454289b42eca1dd41c3527f70fcf49428eb80502bcf6b02f6e",
         "Linux-ppc64le": "1d2419a20ee193dc6a3a0ba87e79f408286d3d317c9831cbc1f0b7a268c100b0",
+        "Linux-aarch64": "ff23a881366c0ee79b973a8921c6dd400628a321557550ad4e0a26a21caad263",
     },
     # cuDNN 8.2.4
     "8.2.4.15-11.4": {
