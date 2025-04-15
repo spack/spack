@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 import re
 
 from spack.package import *
@@ -10,13 +9,11 @@ from spack.package import *
 
 class Zoltan(AutotoolsPackage):
     """The Zoltan library is a toolkit of parallel combinatorial algorithms
-    for parallel, unstructured, and/or adaptive scientific
-    applications.  Zoltan's largest component is a suite of dynamic
-    load-balancing and partitioning algorithms that increase
-    applications' parallel performance by reducing idle time.  Zoltan
-    also has graph coloring and graph ordering algorithms, which are
-    useful in task schedulers and parallel preconditioners.
-
+    for parallel, unstructured, and/or adaptive scientific applications.
+    Zoltan's largest component is a suite of dynamic load-balancing and
+    partitioning algorithms that increase applications' parallel performance
+    by reducing idle time. Zoltan also has graph coloring and graph ordering
+    algorithms, which are useful in task schedulers and parallel preconditioners.
     """
 
     homepage = "https://sandialabs.github.io/Zoltan/"
@@ -27,35 +24,32 @@ class Zoltan(AutotoolsPackage):
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")
 
-    patch("notparallel.patch", when="@3.8")
-
     variant("debug", default=False, description="Builds a debug version of the library.")
     variant("shared", default=True, description="Builds a shared version of the library.")
-
     variant("fortran", default=True, description="Enable Fortran support.")
     variant("mpi", default=True, description="Enable MPI support.")
     variant("parmetis", default=False, description="Enable ParMETIS support.")
     variant("int64", default=False, description="Enable 64bit indices.")
     variant("scotch", default=False, description="Enable PT-Scotch support.")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
-    depends_on("mpi", when="+mpi")
-
-    depends_on("parmetis@4: +int64", when="+parmetis+int64")
-    depends_on("parmetis@4:", when="+parmetis")
-    depends_on("metis+int64", when="+parmetis+int64")
-    depends_on("metis", when="+parmetis")
-    depends_on("scotch", when="+scotch")
-
-    depends_on("perl@:5.21", type="build", when="@:3.6")
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on("m4", type="build")
+    depends_on("perl@:5.21", type="build", when="@:3.6")
+
+    depends_on("mpi", when="+mpi")
+    depends_on("metis", when="+parmetis")
+    depends_on("metis+int64", when="+parmetis+int64")
+    depends_on("parmetis@4:", when="+parmetis")
+    depends_on("parmetis@4: +int64", when="+parmetis+int64")
+    depends_on("scotch", when="+scotch")
 
     conflicts("+parmetis", when="~mpi")
+
+    patch("notparallel.patch", when="@3.8")
 
     build_directory = "spack-build"
 
@@ -74,7 +68,7 @@ class Zoltan(AutotoolsPackage):
                 ).format(self.version)
             )
         if spec.satisfies("@:3.6"):
-            zoltan_path = "Zoltan_v{0}".format(self.version)
+            zoltan_path = f"Zoltan_v{self.version}"
             return zoltan_path
         return "."
 
@@ -101,17 +95,20 @@ class Zoltan(AutotoolsPackage):
             self.get_config_flag("f90interface", "fortran"),
             self.get_config_flag("mpi", "mpi"),
         ]
-        config_cflags = ["-O0" if "+debug" in spec else "-O3", "-g" if "+debug" in spec else ""]
+        config_cflags = [
+            "-O0" if spec.satisfies("+debug") else "-O3",
+            "-g" if spec.satisfies("+debug") else "",
+        ]
 
         config_ldflags = []
         config_libs = []
         config_incdirs = []
 
-        # PGI runtime libraries
         # NVHPC runtime libraries
-        if "%nvhpc" in spec:
+        if spec.satisfies("%nvhpc"):
             config_ldflags.append("-fortranlibs")
-        if "+shared" in spec:
+
+        if spec.satisfies("+shared"):
             config_args.extend(["RANLIB=echo", "--with-ar=$(CXX) -shared $(LDFLAGS) -o"])
             config_cflags.append(self.compiler.cc_pic_flag)
             if spec.satisfies("%gcc"):
@@ -122,27 +119,27 @@ class Zoltan(AutotoolsPackage):
             if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
                 config_libs.append("-lifcore")
 
-        if "+int64" in spec:
+        if spec.satisfies("+int64"):
             config_args.append("--with-id-type=ulong")
 
-        if "+parmetis" in spec:
+        if spec.satisfies("+parmetis"):
             parmetis_prefix = spec["parmetis"].prefix
             config_args.extend(
                 [
                     "--with-parmetis",
-                    "--with-parmetis-libdir={0}".format(parmetis_prefix.lib),
-                    "--with-parmetis-incdir={0}".format(parmetis_prefix.include),
+                    f"--with-parmetis-libdir={parmetis_prefix.lib}",
+                    f"--with-parmetis-incdir={parmetis_prefix.include}",
                 ]
             )
-            config_ldflags.append("-L{0}".format(spec["metis"].prefix.lib))
-            config_incdirs.append("-I{0}".format(spec["metis"].prefix.include))
+            config_ldflags.append(f"-L{spec['metis'].prefix.lib}")
+            config_incdirs.append(f"-I{spec['metis'].prefix.include}")
             config_libs.append("-lparmetis")
             config_libs.append("-lmetis")
             # Although appending to config_libs _should_ suffice, it does not
             # Add them to ldflags as well
             config_ldflags.append("-lparmetis")
             config_ldflags.append("-lmetis")
-            if "+int64" in spec["metis"]:
+            if spec["metis"].satisfies("+int64"):
                 config_args.append("--with-id-type=ulong")
             else:
                 config_args.append("--with-id-type=uint")
@@ -157,12 +154,12 @@ class Zoltan(AutotoolsPackage):
                 ]
             )
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             config_args.extend(
                 [
-                    "CC={0}".format(spec["mpi"].mpicc),
-                    "CXX={0}".format(spec["mpi"].mpicxx),
-                    "--with-mpi={0}".format(spec["mpi"].prefix),
+                    f"CC={spec['mpi'].mpicc}",
+                    f"CXX={spec['mpi'].mpicxx}",
+                    f"--with-mpi={spec['mpi'].prefix}",
                     # NOTE: Zoltan assumes that it's linking against an MPI library
                     # that can be found with '-lmpi' which isn't the case for many
                     # MPI packages. We rely on the MPI-wrappers to automatically
@@ -171,8 +168,8 @@ class Zoltan(AutotoolsPackage):
                     "--with-mpi-libs= ",
                 ]
             )
-            if "+fortran" in spec:
-                config_args.extend(["FC={0}".format(spec["mpi"].mpifc)])
+            if spec.satisfies("+fortran"):
+                config_args.extend([f"FC={spec['mpi'].mpifc}"])
 
         config_fcflags = config_cflags[:]
         config_cxxflags = config_cflags[:]
@@ -184,29 +181,28 @@ class Zoltan(AutotoolsPackage):
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
         if config_cflags:
-            config_args.append("--with-cflags={0}".format(" ".join(config_cflags)))
+            config_args.append(f"--with-cflags={' '.join(config_cflags)}")
         if config_cxxflags:
-            config_args.append("--with-cxxflags={0}".format(" ".join(config_cxxflags)))
+            config_args.append(f"--with-cxxflags={' '.join(config_cxxflags)}")
         if config_fcflags:
-            config_args.append("--with-fcflags={0}".format(" ".join(config_fcflags)))
+            config_args.append(f"--with-fcflags={' '.join(config_fcflags)}")
         if config_ldflags:
-            config_args.append("--with-ldflags={0}".format(" ".join(config_ldflags)))
+            config_args.append(f"--with-ldflags={' '.join(config_ldflags)}")
         if config_libs:
-            config_args.append("--with-libs={0}".format(" ".join(config_libs)))
+            config_args.append(f"--with-libs={' '.join(config_libs)}")
         if config_incdirs:
-            config_args.append("--with-incdirs={0}".format(" ".join(config_incdirs)))
+            config_args.append(f"--with-incdirs={' '.join(config_incdirs)}")
         return config_args
+
+    def get_config_flag(self, flag_name, flag_variant):
+        flag_pre = "en" if self.spec.satisfies(f"+{flag_variant}") else "dis"
+        return f"--{flag_pre}able-{flag_name}"
 
     # NOTE: Unfortunately, Zoltan doesn't provide any configuration
     # options for the extension of the output library files, so this
     # script must change these extensions as a post-processing step.
-    @run_after("install")
+    @run_after("install", when="+shared")
     def solib_install(self):
-        if "+shared" in self.spec:
-            for lib_path in find(self.spec.prefix.lib, "lib*.a"):
-                lib_shared_name = re.sub(r"\.a$", ".{0}".format(dso_suffix), lib_path)
-                move(lib_path, lib_shared_name)
-
-    def get_config_flag(self, flag_name, flag_variant):
-        flag_pre = "en" if "+{0}".format(flag_variant) in self.spec else "dis"
-        return "--{0}able-{1}".format(flag_pre, flag_name)
+        for lib_path in find(self.spec.prefix.lib, "lib*.a"):
+            lib_shared_name = re.sub(r"\.a$", f".{dso_suffix}", lib_path)
+            move(lib_path, lib_shared_name)
