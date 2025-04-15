@@ -70,9 +70,10 @@ class PyXarray(PythonPackage):
     depends_on("py-numpy@1.17:", when="@0.18:", type=("build", "run"))
     depends_on("py-numpy@1.18:", when="@0.20:", type=("build", "run"))
     depends_on("py-numpy@1.21:", when="@2023.7.0:", type=("build", "run"))
-
+    # numpy@2 starts with v2024.06.0
     # https://github.com/pydata/xarray/releases/tag/v2024.06.0
-    depends_on("py-numpy@1.23:2", when="@2024.7.0:", type=("build", "run"))
+    depends_on("py-numpy@:1", when="@:2024.05.0", type=("build", "run"))
+    depends_on("py-numpy@1.23:", when="@2024.7.0:", type=("build", "run"))
 
 
     depends_on("py-pandas@0.15.0:", when="@0.9.1", type=("build", "run"))
