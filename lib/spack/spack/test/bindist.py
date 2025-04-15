@@ -19,7 +19,6 @@ import urllib.response
 from pathlib import Path, PurePath
 from typing import Any, Callable, Dict, NamedTuple, Optional
 
-import jsonschema
 import pytest
 
 from llnl.util.filesystem import copy_tree, join_path
@@ -48,7 +47,6 @@ from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
 from spack.paths import test_path
-from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.spec import Spec
 from spack.url_buildcache import (
     INDEX_MANIFEST_FILE,
