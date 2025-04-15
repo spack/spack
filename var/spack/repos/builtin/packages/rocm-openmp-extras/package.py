@@ -369,7 +369,7 @@ class RocmOpenmpExtras(Package):
         when="@6.1",
     )
     patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1")
-    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:")
+    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:6.3")
     patch("0001-Avoid-duplicate-registration-on-cuda-env-6.4.patch", when="@6.4:")
 
     def setup_run_environment(self, env):
