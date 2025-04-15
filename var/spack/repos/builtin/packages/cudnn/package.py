@@ -44,7 +44,7 @@ _versions = {
     "8.9.0.131-12": {
         "Linux-x86_64": "477631002be61022b60961cba0a501271507a93f81d6b08384bc320cb8706c98",
         "Linux-ppc64le": "ff239e4cbbf21fa18104b62a887686e2197f820ad58817d62e509c735a331829",
-        "Linux-aarch64": "fab70f4fb3b933ff502200a1d954d2c6fc205ff9c9b1d271ea4c41e980a66596",
+        "Linux-aarch64": "0f09605e282dcf7f66eb3957c394c197e8b8a4d41635a880e217fc8d37342e0f",
     },
     "8.9.0.131-11": {
         "Linux-x86_64": "3cb82c50723f14b41d43523f222cd52cc9d50b3ad67c380f4be51bd1133daa2d",
@@ -342,7 +342,7 @@ class Cudnn(Package):
                 .replace("darwin", "osx")
                 .replace("aarch64", "aarch64sbsa")
             )
-        elif version < Version("8.9.0"):
+        else:
             sys_key = sys_key.replace("aarch64", "sbsa")
 
         if version >= Version("8.3.1"):
