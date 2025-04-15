@@ -36,5 +36,5 @@ class Genometools(MakefilePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.set("CPATH", self.prefix.include.genometools)

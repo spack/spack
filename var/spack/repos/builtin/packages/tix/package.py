@@ -94,7 +94,7 @@ class Tix(AutotoolsPackage):
     def libs(self):
         return find_libraries(["libTix{0}".format(self.version)], root=self.prefix, recursive=True)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set TIX_LIBRARY to the directory containing Tix.tcl.
 
         For further info, see:
@@ -107,7 +107,7 @@ class Tix(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Set TIX_LIBRARY to the directory containing Tix.tcl.
 
         For further info, see:

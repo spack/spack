@@ -143,7 +143,7 @@ class CompilerWrapper(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         if sys.platform == "win32":
             return
 

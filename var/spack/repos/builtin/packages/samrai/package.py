@@ -124,6 +124,6 @@ class Samrai(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         if self.spec.satisfies("@3.12:"):
             env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)

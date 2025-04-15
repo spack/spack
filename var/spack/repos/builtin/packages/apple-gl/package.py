@@ -11,7 +11,7 @@ class AppleGlBase(BundlePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # we try to setup a build environment with enough hints
         # for the build system to pick up on the Apple framework version
         # of OpenGL.

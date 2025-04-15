@@ -575,12 +575,12 @@ class SimmetrixSimmodsuite(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)

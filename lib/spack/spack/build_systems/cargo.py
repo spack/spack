@@ -87,7 +87,9 @@ class CargoBuilder(BuilderWithDefaults):
         """Argument for ``cargo test`` during check phase"""
         return []
 
-    def setup_build_environment(self, env: spack.util.environment.EnvironmentModifications):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         env.set("CARGO_HOME", self.stage.path)
 
     def build(

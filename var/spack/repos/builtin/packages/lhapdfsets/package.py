@@ -66,10 +66,10 @@ class Lhapdfsets(BundlePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
 
     @classmethod

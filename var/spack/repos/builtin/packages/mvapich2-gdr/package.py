@@ -146,7 +146,7 @@ class Mvapich2Gdr(MpichEnvironmentModifications, AutotoolsPackage):
             )
         return opts
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "pmi_version=pmi1" in self.spec:
             env.set("SLURM_MPI_TYPE", "pmi1")
         if "pmi_version=pmi2" in self.spec:
@@ -160,7 +160,7 @@ class Mvapich2Gdr(MpichEnvironmentModifications, AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         self.setup_mpi_wrapper_variables(env)
         MpichEnvironmentModifications.setup_dependent_build_environment(self, env, dependent_spec)
 

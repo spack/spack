@@ -444,7 +444,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     def compiler_search_prefix(self):
         return self._llvm_bin
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -472,7 +472,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         super().setup_dependent_build_environment(env, dependent_spec)
         # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
         # It is located in the same directory as the driver. Error message:

@@ -207,7 +207,7 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
 
         return (flags, None, None)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MPI_ROOT", self.prefix)
         # Because MPI functions as a compiler, we need to treat it as one and
         # add its compiler paths to the run environment.
@@ -215,7 +215,7 @@ class Mvapich(MpichEnvironmentModifications, AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         self.setup_mpi_wrapper_variables(env)
         MpichEnvironmentModifications.setup_dependent_build_environment(self, env, dependent_spec)
 

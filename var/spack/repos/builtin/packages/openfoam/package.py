@@ -474,11 +474,11 @@ class Openfoam(Package):
         for d in ["wmake", self.archbin]:  # bin added automatically
             env.prepend_path("PATH", join_path(self.projectdir, d))
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Sets the build environment (prior to unpacking the sources)."""
         pass
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Sets the run environment (post-installation).
         The environment comes from running:
 
@@ -516,9 +516,9 @@ class Openfoam(Package):
                         "FOAM_RUN",
                         "(FOAM|WM)_.*USER_.*",
                     ],
-                    whitelist=[  # Whitelist these
-                        "MPI_ARCH_PATH"  # Can be required for compilation
-                    ],
+                    whitelist=[
+                        "MPI_ARCH_PATH"
+                    ],  # Whitelist these  # Can be required for compilation
                 )
 
                 env.extend(mods)
@@ -533,7 +533,7 @@ class Openfoam(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Use full OpenFOAM environment when building.
         Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
         masking the normal OpenFOAM cleanup of previous versions.
@@ -541,7 +541,9 @@ class Openfoam(Package):
         self.setup_run_environment(env)
         env.set("FOAM_PROJECT_DIR", self.projectdir)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Use full OpenFOAM environment when running.
         Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
         masking the normal OpenFOAM cleanup of previous versions.

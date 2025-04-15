@@ -43,7 +43,7 @@ class Cub(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.set("CUB_DIR", self.prefix.include.cub.cmake)
 
     def install(self, spec, prefix):

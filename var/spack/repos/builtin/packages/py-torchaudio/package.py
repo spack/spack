@@ -156,7 +156,7 @@ class PyTorchaudio(PythonPackage):
                 flags.append("-Wl,-ld_classic")
         return (flags, None, None)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # tools/setup_helpers/extension.py
         env.set("BUILD_SOX", "0")
 

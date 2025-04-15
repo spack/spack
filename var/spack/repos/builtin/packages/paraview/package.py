@@ -416,7 +416,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
@@ -453,7 +453,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
         return flags, None, None
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib

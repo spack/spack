@@ -1047,7 +1047,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.cc and self.spec.satisfies("languages=c"):
             env.set("CC", self.cc)
 

@@ -143,7 +143,7 @@ class Podio(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:0.99"):
             # After 0.99 podio installs its python bindings into a more standard place
             env.prepend_path("PYTHONPATH", self.prefix.python)
@@ -159,7 +159,7 @@ class Podio(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         if self.spec.satisfies("@:0.99"):
             env.prepend_path("PYTHONPATH", self.prefix.python)
 

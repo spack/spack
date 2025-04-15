@@ -62,7 +62,7 @@ class Toybox(MakefilePackage):
         when="@=0.7.4",
     )
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NOSTRIP", "1")
 
         if not self.spec.satisfies("@=0.8.9"):

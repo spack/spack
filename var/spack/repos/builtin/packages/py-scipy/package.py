@@ -244,7 +244,7 @@ class PyScipy(PythonPackage):
                     f.write("[config_fc]\n")
                     f.write("fcompiler = intelem\n")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/scipy/scipy/issues/9080
         env.set("F90", spack_fc)
 

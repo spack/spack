@@ -718,7 +718,7 @@ class Cuda(Package):
         match = re.search(r"Cuda compilation tools, release .*?, V(\S+)", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:8.0.61"):
             # Perl 5.26 removed current directory from module search path,
             # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
@@ -731,7 +731,7 @@ class Cuda(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         if "cxx" in dependent_spec:
             env.set("CUDAHOSTCXX", dependent_spec["cxx"].package.cxx)
         env.set("CUDA_HOME", self.prefix)
@@ -745,7 +745,7 @@ class Cuda(Package):
             cmake_prefix_paths.append(cub_path)
         return cmake_prefix_paths
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 

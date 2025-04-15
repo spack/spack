@@ -63,7 +63,7 @@ class Enzyme(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # Get the LLVMEnzyme and ClangEnzyme lib paths
         llvm, clang = self.libs
 

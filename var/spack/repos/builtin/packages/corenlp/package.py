@@ -65,7 +65,7 @@ class Corenlp(Package):
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
         filter_file("^java", java, script, **kwargs)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         class_paths = []
         class_paths.extend(find(prefix.lib, "*.jar"))
         classpath = os.pathsep.join(class_paths)

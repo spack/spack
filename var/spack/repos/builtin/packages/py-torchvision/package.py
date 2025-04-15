@@ -173,7 +173,7 @@ class PyTorchvision(PythonPackage):
                 flags.append("-Wl,-ld_classic")
         return (flags, None, None)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The only documentation on building is what is found in setup.py and:
         # https://github.com/pytorch/vision/blob/main/CONTRIBUTING.md#development-installation
 

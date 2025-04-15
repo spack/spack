@@ -515,7 +515,7 @@ class Python(Package):
                 string=True,
             )
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # TODO: Python has incomplete support for Python modules with mixed
@@ -1266,7 +1266,7 @@ print(json.dumps(config))
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
@@ -1337,7 +1337,9 @@ print(json.dumps(config))
             if config_link != new_link and sys.platform != "win32":
                 env.set(link_var, new_link)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """

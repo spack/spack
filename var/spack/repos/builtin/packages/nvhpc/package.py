@@ -519,7 +519,7 @@ class Nvhpc(Package, CompilerPackage):
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NVHPC_SILENT", "true")
         env.set("NVHPC_ACCEPT_EULA", "accept")
         env.set("NVHPC_INSTALL_DIR", self.prefix)
@@ -558,7 +558,7 @@ class Nvhpc(Package, CompilerPackage):
         # Update localrc to use Spack gcc
         makelocalrc(*makelocalrc_args)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )
@@ -588,7 +588,7 @@ class Nvhpc(Package, CompilerPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )

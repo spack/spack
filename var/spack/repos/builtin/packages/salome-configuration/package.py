@@ -34,7 +34,7 @@ class SalomeConfiguration(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.set("CONFIGURATION_ROOT_DIR", self.prefix)
 
     def install(self, spec, prefix):

@@ -84,7 +84,7 @@ class Sos(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # Enable the osh wrappers to use spack wrappers when inside spack
         # with env variables
         env.set("SHMEM_CC", spack_cc)

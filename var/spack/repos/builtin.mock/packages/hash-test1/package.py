@@ -29,7 +29,7 @@ class HashTest1(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         pass
 
     @when("@:1.4")

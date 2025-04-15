@@ -101,7 +101,7 @@ class PyPyarrow(PythonPackage):
 
     # Starting with pyarrow 17+, backend support is built if arrow was built with it
     @when("@:16")
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PYARROW_WITH_PARQUET", str(self.spec.satisfies("^arrow+parquet")))
         env.set("PYARROW_WITH_CUDA", str(self.spec.satisfies("^arrow+cuda")))
         env.set("PYARROW_WITH_ORC", str(self.spec.satisfies("^arrow+orc")))

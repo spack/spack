@@ -128,7 +128,7 @@ class Roms(MakefilePackage):
         if "+debug" in self.spec:
             makefile.filter(r"\sUSE_DEBUG\s[?]=.*", "USE_DEBUG = on")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         netcdf_include = spec["netcdf-fortran"].prefix.include

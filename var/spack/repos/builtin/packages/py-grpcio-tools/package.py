@@ -37,7 +37,7 @@ class PyGrpcioTools(PythonPackage):
     depends_on("c-ares")
     depends_on("re2+shared")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GRPC_PYTHON_BUILD_WITH_CYTHON", "True")
         env.set("GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", "True")
         env.set("GRPC_PYTHON_BUILD_SYSTEM_ZLIB", "True")

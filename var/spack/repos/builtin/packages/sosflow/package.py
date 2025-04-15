@@ -24,12 +24,12 @@ class Sosflow(CMakePackage):
     depends_on("pkgconfig")
     depends_on("mpi")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SOS_HOST_KNOWN_AS", "SPACK-SOS-BUILD")
         env.set("SOS_HOST_NODE_NAME", "SPACK-SOS-NODE")
         env.set("SOS_HOST_DETAILED", "SPACK-SOS-DETAILED")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SOS_ROOT", self.spec.prefix)
         env.set("SOS_BUILD_DIR", self.spec.prefix)
         env.set("SOS_CMD_PORT", "22500")

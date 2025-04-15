@@ -68,7 +68,7 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
                 filter_file(r"mpirun -np", "srun -n", "nrspre")
                 filter_file(r"mpirun -np", "srun -n", "nrsbmpi")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The 'env' is included in the Spack generated module files.
         spec = self.spec
         env.set("OCCA_CXX", self.compiler.cxx)
@@ -99,7 +99,7 @@ class SetupEnvironment:
             # Run-time CUDA compiler:
             s_env.set("OCCA_CUDA_COMPILER", join_path(cuda_dir, "bin", "nvcc"))
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # The environment variable CXX is automatically set to the Spack
         # compiler wrapper.
@@ -138,7 +138,7 @@ class SetupEnvironment:
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
         self._setup_runtime_flags(env)

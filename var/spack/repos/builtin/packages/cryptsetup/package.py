@@ -60,10 +60,12 @@ class Cryptsetup(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Prepend the sbin directory to PATH."""
         env.prepend_path("PATH", self.prefix.sbin)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Prepend the sbin directory to PATH."""
         env.prepend_path("PATH", self.prefix.sbin)

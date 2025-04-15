@@ -48,5 +48,5 @@ class Armcimpi(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.set("ARMCIMPI_DIR", self.prefix)

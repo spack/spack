@@ -326,7 +326,7 @@ class Vasp(MakefilePackage, CudaPackage):
 
         os.rename(make_include, "makefile.include")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda %nvhpc"):
             env.set("NVHPC_CUDA_HOME", self.spec["cuda"].prefix)
 

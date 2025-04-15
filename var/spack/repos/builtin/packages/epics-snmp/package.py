@@ -34,5 +34,5 @@ class EpicsSnmp(MakefilePackage):
         makefile = FileFilter("snmpApp/src/Makefile")
         makefile.filter("USR_CPPFLAGS", "USR_CPPFLAGS += `net-snmp-config --cflags`\nUSR_CPPFLAGS")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix.bin, os.environ["EPICS_HOST_ARCH"]))

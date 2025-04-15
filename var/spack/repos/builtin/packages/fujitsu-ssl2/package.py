@@ -124,7 +124,7 @@ class FujitsuSsl2(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         path = self.prefix.include
         env.append_flags("fcc_ENV", "-idirafter " + path)
         env.append_flags("FCC_ENV", "-idirafter " + path)

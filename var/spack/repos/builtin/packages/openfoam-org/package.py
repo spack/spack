@@ -185,7 +185,7 @@ class OpenfoamOrg(Package):
             settings["label-size"] = False
         return settings
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         bashrc = self.prefix.etc.bashrc
         try:
             env.extend(EnvironmentModifications.from_sourcing_file(bashrc, clean=True))
@@ -195,7 +195,7 @@ class OpenfoamOrg(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
@@ -203,7 +203,9 @@ class OpenfoamOrg(Package):
         """
         env.set("FOAM_PROJECT_DIR", self.projectdir)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of

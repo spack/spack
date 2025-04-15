@@ -57,7 +57,7 @@ class Gsoap(AutotoolsPackage, SourceforgePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.prepend_path("PKG_CONFIG_PATH", "%s/lib/ldconfig" % self.prefix)
 
     def flag_handler(self, name, flags):

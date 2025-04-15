@@ -118,7 +118,7 @@ class GoBootstrap(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Set GOROOT_BOOTSTRAP: When using an external compiler, get its GOROOT env"""
         if self.spec.external:
             # Use the go compiler added by ``spack external find go-bootstrap``:

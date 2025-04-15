@@ -21,7 +21,7 @@ class Zuo(AutotoolsPackage):
 
     depends_on("c", type="build")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("ZUO_JOBS", str(make_jobs))
 
     def configure_args(self):

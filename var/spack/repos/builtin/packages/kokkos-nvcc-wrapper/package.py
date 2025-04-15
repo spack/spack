@@ -153,7 +153,7 @@ class KokkosNvccWrapper(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         wrapper = join_path(self.prefix.bin, "nvcc_wrapper")
         env.set("CUDA_ROOT", dependent_spec["cuda"].prefix)
         env.set("NVCC_WRAPPER_DEFAULT_COMPILER", self.compiler.cxx)

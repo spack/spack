@@ -25,7 +25,7 @@ class HashTest2(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         pass
 
     def install(self, spec, prefix):

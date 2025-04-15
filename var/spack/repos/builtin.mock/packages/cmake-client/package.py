@@ -69,7 +69,7 @@ class CmakeClient(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         check(
             from_cmake == "from_cmake",

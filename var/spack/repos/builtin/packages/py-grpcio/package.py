@@ -84,7 +84,7 @@ class PyGrpcio(PythonPackage):
 
     patch("30522.diff", when="@1.48")  # https://github.com/grpc/grpc/issues/30372
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GRPC_PYTHON_BUILD_WITH_CYTHON", "True")
         env.set("GRPC_PYTHON_BUILD_SYSTEM_OPENSSL", "True")
         env.set("GRPC_PYTHON_BUILD_SYSTEM_ZLIB", "True")

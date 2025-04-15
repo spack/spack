@@ -156,13 +156,15 @@ class LuaImplPackage(MakefilePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(env, dependent_spec)
 
         env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
         env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # For run time environment set only the path for dependent_spec and
         # prepend it to LUAPATH
         lua_patterns, lua_cpatterns = self._setup_dependent_env_helper(env, dependent_spec)
@@ -171,7 +173,7 @@ class LuaImplPackage(MakefilePackage):
             env.prepend_path("LUA_PATH", ";".join(lua_patterns), separator=";")
             env.prepend_path("LUA_CPATH", ";".join(lua_cpatterns), separator=";")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "LUA_PATH", os.path.join(self.spec.prefix, self.lua_share_dir, "?.lua"), separator=";"
         )

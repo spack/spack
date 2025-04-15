@@ -37,6 +37,6 @@ class PyBotorch(PythonPackage):
     depends_on("py-linear-operator@0.4.0:", when="@0.8.4:", type=("build", "run"))
     depends_on("py-linear-operator@0.3.0:", when="@0.8.3:", type=("build", "run"))
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.8.3:"):
             env.set("ALLOW_LATEST_GPYTORCH_LINOP", "True")

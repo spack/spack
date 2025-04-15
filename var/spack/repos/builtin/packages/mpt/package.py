@@ -35,14 +35,14 @@ class Mpt(BundlePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # use the Spack compiler wrappers under MPI
         dependent_module = dependent_spec.package.module
         env.set("MPICC_CC", dependent_module.spack_cc)
         env.set("MPICXX_CXX", dependent_module.spack_cxx)
         env.set("MPIF90_F90", dependent_module.spack_fc)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI is both runtime and compiler, we have to setup the mpi
         # compilers as part of the run environment.
         env.set("MPICC", self.prefix.bin.mpicc)

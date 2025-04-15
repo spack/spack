@@ -26,6 +26,6 @@ class Cinch(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.prepend_path("CMAKE_PREFIX_PATH", self.prefix)
         env.set("CINCH_SOURCE_DIR", self.prefix)

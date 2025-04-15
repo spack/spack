@@ -127,7 +127,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
                 return os.path.dirname(result)
         raise RuntimeError("Cannot locate tk.tcl")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set TK_LIBRARY to the directory containing tk.tcl.
 
         For further info, see:
@@ -140,7 +140,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Set TK_LIBRARY to the directory containing tk.tcl.
 
         For further info, see:

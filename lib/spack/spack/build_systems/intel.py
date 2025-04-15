@@ -1017,7 +1017,7 @@ class IntelPackage(Package):
         debug_print(result)
         return result
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -1052,7 +1052,7 @@ class IntelPackage(Package):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: spack.spec.Spec
-    ):
+    ) -> None:
         # NB: This function is overwritten by 'mpi' provider packages:
         #
         # var/spack/repos/builtin/packages/intel-mpi/package.py
@@ -1064,7 +1064,12 @@ class IntelPackage(Package):
         # Handle everything in a callback version.
         self._setup_dependent_env_callback(env, dependent_spec)
 
-    def _setup_dependent_env_callback(self, env, dependent_spec, compilers_of_client={}):
+    def _setup_dependent_env_callback(
+        self,
+        env: EnvironmentModifications,
+        dependent_spec: spack.spec.Spec,
+        compilers_of_client={},
+    ) -> None:
         # Expected to be called from a client's
         # setup_dependent_build_environment(),
         # with args extended to convey the client's compilers as needed.

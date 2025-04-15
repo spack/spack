@@ -144,7 +144,7 @@ class PyCartopy(PythonPackage):
             name = "Cartopy"
         return url.format(name, version)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed for `spack install --test=root py-cartopy`
         library_dirs = []
         for dep in self.spec.dependencies(deptype="link"):
@@ -163,5 +163,7 @@ class PyCartopy(PythonPackage):
     setup_run_environment = setup_build_environment
 
     # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_build_environment(env)

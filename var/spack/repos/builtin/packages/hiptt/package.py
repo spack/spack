@@ -26,7 +26,7 @@ class Hiptt(MakefilePackage, ROCmPackage):
     # To enable this package add it to the LD_LIBRARY_PATH
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         hiptt_home = self.prefix
         env.prepend_path("cuTT_ROOT", hiptt_home)
         env.prepend_path("cuTT_LIBRARY", hiptt_home.lib)

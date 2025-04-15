@@ -91,7 +91,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -118,7 +118,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
             join_path(self.prefix.bin, "libtoolize"), join_path(self.prefix.bin, "glibtoolize")
         )
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Wrapper until spack has a real implementation of setup_test_environment()"""
         if self.run_tests:
             self.setup_test_environment(env)

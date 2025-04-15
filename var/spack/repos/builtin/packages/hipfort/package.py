@@ -75,7 +75,7 @@ class Hipfort(CMakePackage):
     ]:
         depends_on(f"hip@{ver}", type="build", when=f"@{ver}")
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):

@@ -99,7 +99,7 @@ class Msvc(Package, CompilerPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         self.init_msvc()
         # Set the build environment variables for spack. Just using
         # subprocess.call() doesn't work since that operates in its own

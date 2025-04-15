@@ -93,7 +93,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage):
         exe = ".exe" if is_windows else ""
         return Executable(os.path.realpath(self.prefix.bin.join(f"tclsh{self._tcl_name}{exe}")))
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set TCL_LIBRARY to the directory containing init.tcl.
 
         For further info see:
@@ -104,7 +104,9 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage):
         # python will not be able to find Tcl unless TCL_LIBRARY is set.
         env.set("TCL_LIBRARY", find_script_dir(self.spec))
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
 
@@ -140,7 +142,7 @@ class AnyBuilder(BaseBuilder):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Set TCL_LIBRARY to the directory containing init.tcl.
         Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
@@ -187,7 +189,7 @@ class AutotoolsBuilder(AnyBuilder, spack.build_systems.autotools.AutotoolsBuilde
     # if TCL is present on the system this may be set to the system's
     # existing TCL so ensure it is unset
     # https://wiki.tcl-lang.org/page/TCL%5FLIBRARY
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("TCL_LIBRARY", "")
 
     def install(self, pkg, spec, prefix):

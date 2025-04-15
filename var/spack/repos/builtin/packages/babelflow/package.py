@@ -30,7 +30,7 @@ class Babelflow(CMakePackage):
 
     # Fix missing implicit includes
     @when("%gcc@7:")
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", "-include limits")
 
     def cmake_args(self):

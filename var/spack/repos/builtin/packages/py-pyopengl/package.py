@@ -27,7 +27,7 @@ class PyPyopengl(PythonPackage):
     depends_on("glu", when="+glu", type="link")
     depends_on("freeglut+shared", when="+glut", type="link")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # PyOpenGL uses ctypes.cdll (or similar), which searches LD_LIBRARY_PATH
         lib_dirs = self.spec["gl"].libs.directories
         if "^glx" in self.spec:

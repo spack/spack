@@ -281,12 +281,12 @@ class Wrf(Package):
     )
     phases = ["configure", "build", "install"]
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WRF_HOME", self.prefix)
         env.append_path("PATH", self.prefix.main)
         env.append_path("PATH", self.prefix.tools)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # From 4.5.2 the split-netcdf patches are not needed,
         # just tell the build system where netcdf and netcdf-c are:
         if self.spec.satisfies("@4.5.2:"):

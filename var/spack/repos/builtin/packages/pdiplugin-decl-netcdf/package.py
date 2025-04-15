@@ -46,5 +46,5 @@ class PdipluginDeclNetcdf(CMakePackage):
             "-DBUILD_CFG_VALIDATOR:BOOL=OFF",
         ]
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PDI_PLUGIN_PATH", self.prefix.lib)

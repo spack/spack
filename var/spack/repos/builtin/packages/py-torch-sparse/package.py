@@ -43,7 +43,7 @@ class PyTorchSparse(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.6.9:"):
             if "+cuda" in self.spec["py-torch"]:
                 env.set("FORCE_CUDA", "1")

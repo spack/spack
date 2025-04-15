@@ -48,11 +48,11 @@ class Samurai(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         include_path = self.spec.prefix.include
         env.append_path("CXXFLAGS", f"-I{include_path}")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec.prefix.include)
 
     def cmake_args(self):

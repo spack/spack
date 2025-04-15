@@ -199,7 +199,7 @@ class MvapichPlus(AutotoolsPackage, CudaPackage, ROCmPackage):
                 flags.append("-fallow-argument-mismatch")
         return (None, flags, None)
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # mvapich2 configure fails when F90 and F90FLAGS are set
         env.unset("F90")
         env.unset("F90FLAGS")
@@ -226,7 +226,7 @@ class MvapichPlus(AutotoolsPackage, CudaPackage, ROCmPackage):
             env.set("CUDA_HOME", self.spec["hip"].prefix)
             env.set("CUDA_ROOT", self.spec["hip"].prefix)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MPI_ROOT", self.prefix)
 
         # Because MPI functions as a compiler, we need to treat it as one and
@@ -235,7 +235,7 @@ class MvapichPlus(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         self.setup_compiler_environment(env)
 
         # use the Spack compiler wrappers under MPI

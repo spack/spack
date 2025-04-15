@@ -25,7 +25,7 @@ class Activeharmony(MakefilePackage):
 
     cflags = ["-O3", "-fPIC"]
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CFLAGS", " ".join(self.cflags))
 
     @when("@:4.5")

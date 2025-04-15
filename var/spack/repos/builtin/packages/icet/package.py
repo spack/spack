@@ -32,6 +32,6 @@ class Icet(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         """Work-around for ill-placed CMake modules"""
         env.prepend_path("CMAKE_PREFIX_PATH", self.prefix.lib)

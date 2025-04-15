@@ -524,7 +524,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             )
             env.set("TORCH_CUDA_ARCH_LIST", ";".join(torch_cuda_arch))
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set environment variables used to control the build.
 
         PyTorch's ``setup.py`` is a thin wrapper around ``cmake``.
@@ -705,7 +705,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         else:
             env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.torch_cuda_arch_list(env)
 
     @run_before("install")

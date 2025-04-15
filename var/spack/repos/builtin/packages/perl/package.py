@@ -485,10 +485,12 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -507,7 +509,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return

@@ -36,5 +36,5 @@ class EpicsCaGateway(MakefilePackage):
             release_file.write("EPICS_BASE = " + env["EPICS_BASE"] + "\n")
             release_file.write("PCAS = " + spec["epics-pcas"].prefix)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix.bin, os.environ["EPICS_HOST_ARCH"]))

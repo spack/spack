@@ -18,7 +18,7 @@ class MpichEnvironmentModifications(spack.package_base.PackageBase):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         dependent_module = dependent_spec.package.module
         for var_name, attr_name in (
             ("MPICH_CC", "spack_cc"),
@@ -30,11 +30,11 @@ class MpichEnvironmentModifications(spack.package_base.PackageBase):
             if hasattr(dependent_module, attr_name):
                 env.set(var_name, getattr(dependent_module, attr_name))
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("F90")
         env.unset("F90FLAGS")
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_mpi_wrapper_variables(env)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -495,7 +495,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         return flags, None, None
 
-    def setup_build_environment(self, env: EnvironmentModifications):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         MpichEnvironmentModifications.setup_build_environment(self, env)
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])

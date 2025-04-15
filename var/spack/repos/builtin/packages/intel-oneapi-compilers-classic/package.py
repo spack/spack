@@ -81,7 +81,7 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         oneapi_version = self.spec["intel-oneapi-compilers"].version
         return self.spec["intel-oneapi-compilers"].prefix.compiler.join(str(oneapi_version))
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -101,7 +101,7 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         super().setup_dependent_build_environment(env, dependent_spec)
         # Edge cases for Intel's oneAPI compilers when using the legacy classic compilers:
         # Always pass flags to disable deprecation warnings, since these warnings can

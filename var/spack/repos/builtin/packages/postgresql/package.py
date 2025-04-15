@@ -123,7 +123,7 @@ class Postgresql(AutotoolsPackage):
         else:
             super().install(spec, prefix)
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         if spec.satisfies("+perl"):
@@ -135,7 +135,7 @@ class Postgresql(AutotoolsPackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         spec = self.spec
 
         if spec.satisfies("+perl"):
@@ -145,7 +145,9 @@ class Postgresql(AutotoolsPackage):
         if spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 
-    def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spec = self.spec
 
         if spec.satisfies("+perl"):

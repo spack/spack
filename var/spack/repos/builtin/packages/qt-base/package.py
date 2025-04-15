@@ -117,7 +117,7 @@ class QtPackage(CMakePackage):
         with open(qt_module_pri, "w") as file:
             file.write("\n".join(defs))
 
-    def setup_run_environment(self, env: EnvironmentModifications):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("QMAKEPATH", self.prefix)
         if os.path.exists(self.prefix.mkspecs.modules):
             env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
@@ -126,7 +126,7 @@ class QtPackage(CMakePackage):
 
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
-    ):
+    ) -> None:
         # Qt components typically install cmake config files in a single prefix,
         # so we have to point dependencies to the cmake config files.
         env.prepend_path("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", self.spec.prefix)
