@@ -574,12 +574,10 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
     module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
     module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
     module.ninja = DeprecatedExecutable(pkg.name, "ninja", "ninja")
-    # TODO: johnwparent: add package or builder support to define these build tools
-    # for now there is no entrypoint for builders to define these on their
-    # own
+
     if sys.platform == "win32":
-        module.nmake = Executable("nmake")
-        module.msbuild = Executable("msbuild")
+        module.nmake = DeprecatedExecutable(pkg.name, "nmake", "msvc")
+        module.msbuild = DeprecatedExecutable(pkg.name, "msbuild", "msvc")
         # analog to configure for win32
         module.cscript = Executable("cscript")
 
