@@ -24,7 +24,7 @@ class PyDaskExpr(PythonPackage):
     # require 0.29, which makes it fail to concretize. Since Versioneer 0.29 doesn't
     # break anything with 0.28, it should be safe to keep this aligned
     # https://github.com/python-versioneer/python-versioneer/releases/tag/0.29
-    depends_on("py-versioneer@0.29+toml", type="build")
+    depends_on("py-versioneer@0.28: +toml", type="build")
 
     # Can't do circular run-time dependencies yet?
     # depends_on("py-dask@2024.7.1", type="run")
