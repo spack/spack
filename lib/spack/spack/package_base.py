@@ -701,10 +701,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     _verbose = None
 
     #: Package homepage where users can find more information about the package
-    homepage: Optional[str] = None
+    homepage: Union[Optional[str], classproperty[Optional[str]]] = None
 
     #: Default list URL (place to find available versions)
-    list_url: Optional[str] = None
+    list_url: Union[Optional[str], classproperty[Optional[str]]] = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0

@@ -15,7 +15,7 @@ import types
 import typing
 import warnings
 from datetime import datetime, timedelta
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import Any, Callable, Dict, Generic, Iterable, List, Mapping, Optional, Tuple, TypeVar
 
 # Ignore emacs backups when listing modules
 ignore_modules = r"^\.#|~$"
@@ -1047,16 +1047,19 @@ class GroupedExceptionForwarder:
         return True
 
 
-class classproperty:
+ClassPropertyType = TypeVar("ClassPropertyType")
+
+
+class classproperty(Generic[ClassPropertyType]):
     """Non-data descriptor to evaluate a class-level property. The function that performs
-    the evaluation is injected at creation time and take an instance (could be None) and
-    an owner (i.e. the class that originated the instance)
+    the evaluation is injected at creation time and takes an owner (i.e., the class that
+    originated the instance).
     """
 
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
 
 
