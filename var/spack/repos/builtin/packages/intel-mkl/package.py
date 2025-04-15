@@ -175,7 +175,8 @@ class IntelMkl(IntelPackage):
         multi=False,
     )
 
-    provides("blas", "lapack")
+    provides("blas")
+    provides("lapack")
     provides("lapack@3.9.0", when="@2020.4")
     provides("lapack@3.7.0", when="@11.3")
     provides("scalapack")
