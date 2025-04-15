@@ -342,8 +342,8 @@ class Cudnn(Package):
                 .replace("darwin", "osx")
                 .replace("aarch64", "aarch64sbsa")
             )
-        elif version < Version("8.9.0"):
-            sys_key = sys_key.replace("aarch64", "sbsa")
+        else:
+            sys_key.replace("aarch64", "sbsa")
 
         if version >= Version("8.3.1"):
             # NOTE: upload layout changed for 8.3.1, they include a 10.2
