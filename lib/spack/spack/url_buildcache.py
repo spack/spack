@@ -48,6 +48,8 @@ INDEX_MANIFEST_FILE = "index.manifest.json"
 
 
 class BuildcacheComponent(enum.Enum):
+    """Enumeration of the kinds of things that live in a URL buildcache"""
+
     SPECS = enum.auto()
     SPEC = enum.auto()
     BLOBS = enum.auto()
@@ -61,6 +63,8 @@ class BuildcacheComponent(enum.Enum):
 
 
 class BlobRecord:
+    """Class to describe a single data element (blob) from a manifest"""
+
     def __init__(
         self,
         content_length: int,
@@ -96,6 +100,10 @@ class BlobRecord:
 
 
 class BuildcacheManifest:
+    """A class to represent a buildcache manifest, which consists of a version
+    number and an array of data blobs, each of which is represented by a
+    BlobRecord."""
+
     def __init__(self, layout_version: int, data: Optional[List[BlobRecord]] = None):
         self.version: int = layout_version
         if data:
@@ -124,6 +132,7 @@ class BuildcacheManifest:
         )
 
     def get_blob_records(self, media_type: str) -> List[BlobRecord]:
+        """Return any blob records from the manifest matching the given media type"""
         matches: List[BlobRecord] = []
 
         for record in self.data:
@@ -158,6 +167,12 @@ class URLBuildcacheEntry:
 
         fetch_metadata()
         fetch_archive()
+
+    This class also provides generic manifest and blob management api, and it
+    can be used to fetch and push other kinds of buildcache entries aside from
+    just binary packages.  It can be used to work with public keys, buildcache
+    indices, and any other type of data represented as a manifest which refers
+    to blobs of data.
 
     """
 
@@ -196,10 +211,12 @@ class URLBuildcacheEntry:
 
     @classmethod
     def get_layout_version(cls) -> int:
+        """Returns the layout version of this class"""
         return cls.LAYOUT_VERSION
 
     @classmethod
     def check_layout_json_exists(cls, mirror_url: str) -> bool:
+        """Return True if layout.json exists in the expected location, False otherwise"""
         layout_json_url = url_util.join(
             mirror_url, *cls.get_relative_path_components(BuildcacheComponent.LAYOUT_JSON)
         )
@@ -207,6 +224,8 @@ class URLBuildcacheEntry:
 
     @classmethod
     def maybe_push_layout_json(cls, mirror_url: str) -> None:
+        """This function does nothing if layout.json already exists, otherwise it
+        pushes layout.json to the expected location in the mirror"""
         if cls.check_layout_json_exists(mirror_url):
             return
 
@@ -225,23 +244,31 @@ class URLBuildcacheEntry:
             shutil.rmtree(tmpdir)
 
     @classmethod
-    def get_base_url(cls, spec_url: str) -> str:
-        rematch = cls.SPEC_URL_REGEX.search(spec_url)
+    def get_base_url(cls, manifest_url: str) -> str:
+        """Given any manifest url (i.e. one containing 'v3/manifests/') return the
+        base part of the url"""
+        rematch = cls.SPEC_URL_REGEX.search(manifest_url)
         if not rematch:
-            raise BuildcacheEntryError(f"Unable to parse spec url: {spec_url}")
+            raise BuildcacheEntryError(f"Unable to parse spec url: {manifest_url}")
         return rematch.group(1)
 
     @classmethod
     def get_relative_path_components(cls, component: BuildcacheComponent) -> List[str]:
+        """Given any type of buildcache component, return its relative location within
+        a mirror as a list path elements"""
         return cls.COMPONENT_PATHS[component]
 
     @classmethod
     def get_manifest_filename(cls, spec: spack.spec.Spec) -> str:
+        """Given a concrete spec, compute and return the name (i.e. basename) of
+        the manifest file representing it"""
         spec_formatted = spec.format_path("{name}-{version}-{hash}")
         return f"{spec_formatted}.spec.manifest.json"
 
     @classmethod
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
+        """Given a concrete spec and a base url, return the full url where the
+        spec manifest should be found"""
         path_components = cls.get_relative_path_components(BuildcacheComponent.SPECS)
         return url_util.join(
             mirror_url, *path_components, spec.name, cls.get_manifest_filename(spec)
@@ -249,6 +276,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def media_type_to_component(cls, media_type: str) -> BuildcacheComponent:
+        """Mapping from media types to buildcache components"""
         if media_type == cls.SPEC_VERSION:
             return BuildcacheComponent.SPEC
         elif media_type == cls.TARBALL_VERSION:
@@ -264,6 +292,7 @@ class URLBuildcacheEntry:
 
     @classmethod
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
+        """Mapping from buildcache component to media type"""
         if component == BuildcacheComponent.SPEC:
             return cls.SPEC_VERSION
         elif component == BuildcacheComponent.TARBALL:
@@ -278,13 +307,16 @@ class URLBuildcacheEntry:
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
     def get_local_spec_path(self) -> str:
+        """Convenience method to return the local path of a fetched spec file"""
         return self.get_staged_blob_path(self.get_blob_record(BuildcacheComponent.SPEC))
 
     def get_local_archive_path(self) -> str:
+        """Convenience method to return the local path of a fetched tarball"""
         return self.get_staged_blob_path(self.get_blob_record(BuildcacheComponent.TARBALL))
 
     def get_blob_record(self, blob_type: BuildcacheComponent) -> BlobRecord:
-        """Return the first blob record of the given type"""
+        """Return the first blob record of the given type. Assumes the manifest has
+        already been fetched."""
         if not self.manifest:
             raise BuildcacheEntryError("Read manifest before accessing blob records")
 
@@ -296,11 +328,14 @@ class URLBuildcacheEntry:
         return records[0]
 
     def check_blob_exists(self, record: BlobRecord) -> bool:
+        """Return True if the blob given by record exists on the mirror, False otherwise"""
         blob_url = self.get_blob_url(record)
         return web_util.url_exists(blob_url)
 
     @classmethod
     def get_blob_path_components(cls, record: BlobRecord) -> List[str]:
+        """Given a BlobRecord, return the relative path of the blob within a mirror
+        as a list of path components"""
         return [
             *cls.get_relative_path_components(BuildcacheComponent.BLOBS),
             record.checksum_alg,
@@ -309,10 +344,11 @@ class URLBuildcacheEntry:
         ]
 
     def get_blob_url(self, record: BlobRecord) -> str:
+        """Return the full url of the blob given by record"""
         return url_util.join(self.mirror_url, *self.get_blob_path_components(record))
 
     def fetch_blob(self, record: BlobRecord) -> str:
-        """Given a blob record, find associated blob in manifest and stage it
+        """Given a blob record, find associated blob in the manifest and stage it
 
         Returns the local path to the staged blob
         """
@@ -336,6 +372,7 @@ class URLBuildcacheEntry:
         return self.get_staged_blob_path(record)
 
     def get_staged_blob_path(self, record: BlobRecord) -> str:
+        """Convenience method to return the local path of a staged blob"""
         if record not in self.stages:
             raise BuildcacheEntryError(f"Blob not staged: {record}")
 
@@ -468,6 +505,8 @@ class URLBuildcacheEntry:
         return self.stages[self.get_blob_record(BuildcacheComponent.TARBALL)]
 
     def remove(self):
+        """Remove a binary package (spec file and tarball) and the associated
+        manifest from the mirror."""
         if self.manifest:
             try:
                 web_util.remove_url(self.remote_manifest_url)
@@ -492,6 +531,8 @@ class URLBuildcacheEntry:
 
     @classmethod
     def push_blob(cls, mirror_url: str, blob_path: str, record: BlobRecord) -> None:
+        """Push the blob_path file to mirror as a blob represented by the given
+        record"""
         blob_destination_url = url_util.join(
             mirror_url,
             *cls.get_relative_path_components(BuildcacheComponent.BLOBS),
@@ -512,6 +553,11 @@ class URLBuildcacheEntry:
         component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
         signing_key: Optional[str] = None,
     ) -> None:
+        """Given a BuildcacheManifest, push it to the mirror using the given manifest
+        name.  The component_type is used to indicate what type of thing the manifest
+        represents, so it can be placed in the correct relative path within the mirror.
+        If a signing_key is provided, it will be used to clearsign the manifest before
+        pushing it."""
         # write the manifest to a temporary location
         manifest_file_name = f"{manifest_name}.manifest.json"
         manifest_path = os.path.join(tmpdir, manifest_file_name)
@@ -540,6 +586,10 @@ class URLBuildcacheEntry:
         component_type: BuildcacheComponent,
         compression: str = "none",
     ) -> None:
+        """Convenience method to push a local file to a mirror as a blob.  Both manifest
+        and blob are pushed as a component of the given component_type.  If compression
+        is 'gzip' the blob will be compressed before pushing, otherwise it will be pushed
+        uncompressed."""
         cache_class = get_url_buildcache_class()
         checksum_algo = "sha256"
         blob_to_push = local_file_path
@@ -572,7 +622,7 @@ class URLBuildcacheEntry:
         finally:
             shutil.rmtree(tmpdir)
 
-    def push(
+    def push_binary_package(
         self,
         spec: spack.spec.Spec,
         tarball_path: str,
@@ -581,7 +631,7 @@ class URLBuildcacheEntry:
         tmpdir: str,
         signing_key: Optional[str],
     ) -> None:
-        """Push tarball, specfile, and manifest to the remote mirror
+        """Convenience method to push tarball, specfile, and manifest to the remote mirror
 
         Pushing should only be done after checking for the pre-existence of a
         buildcache entry for this spec, and represents a force push if one is
@@ -685,6 +735,13 @@ class URLBuildcacheEntry:
 
 
 class URLBuildcacheEntryV2(URLBuildcacheEntry):
+    """This class exists to provide read-only support for reading older buildcache
+    layouts in a way that is transparent to binary_distribution code responsible for
+    downloading and extracting binary packages.  Since support for layout v2 is
+    read-only, and since v2 did not have support for manifests and blobs, many class
+    and instance methods are overridden simply to raise, hopefully making the intended
+    use and limitations of the class clear to developers."""
+
     SPEC_URL_REGEX = re.compile(r"(.+)/build_cache/.+")
     LAYOUT_VERSION = 2
     # Uses the same SPEC_VERSION and TARBALL_VERSION as v3
@@ -693,7 +750,11 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.INDICES: ["build_cache"],
         BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
         BuildcacheComponent.KEYS: ["build_cache", "_pgp"],
+        BuildcacheComponent.KEY: ["build_cache", "_pgp"],
         BuildcacheComponent.SPECS: ["build_cache"],
+        BuildcacheComponent.SPEC: ["build_cache"],
+        BuildcacheComponent.KEY_INDEX: ["build_cache", "_pgp"],
+        BuildcacheComponent.TARBALL: ["build_cache"],
         BuildcacheComponent.LAYOUT_JSON: ["build_cache", "layout.json"],
     }
 
@@ -908,7 +969,57 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     def remove(self):
         raise BuildcacheEntryError("Spack cannot delete v2 buildcache entries")
 
-    def push(
+    def get_blob_record(self, blob_type: BuildcacheComponent) -> BlobRecord:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    def check_blob_exists(self, record: BlobRecord) -> bool:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    @classmethod
+    def get_blob_path_components(cls, record: BlobRecord) -> List[str]:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    def get_blob_url(self, record: BlobRecord) -> str:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    def fetch_blob(self, record: BlobRecord) -> str:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    def get_staged_blob_path(self, record: BlobRecord) -> str:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    @classmethod
+    def verify_and_extract_manifest(cls, manifest_contents: str, verify: bool = False) -> dict:
+        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
+
+    @classmethod
+    def push_blob(cls, mirror_url: str, blob_path: str, record: BlobRecord) -> None:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    @classmethod
+    def push_manifest(
+        cls,
+        mirror_url: str,
+        manifest_name: str,
+        manifest: BuildcacheManifest,
+        tmpdir: str,
+        component_type: BuildcacheComponent = BuildcacheComponent.SPEC,
+        signing_key: Optional[str] = None,
+    ) -> None:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    @classmethod
+    def push_local_file_as_blob(
+        cls,
+        local_file_path: str,
+        mirror_url: str,
+        manifest_name: str,
+        component_type: BuildcacheComponent,
+        compression: str = "none",
+    ) -> None:
+        raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
+
+    def push_binary_package(
         self,
         spec: spack.spec.Spec,
         tarball_path: str,
@@ -931,6 +1042,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 def get_url_buildcache_class(
     layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION,
 ) -> Type[URLBuildcacheEntry]:
+    """Given a layout version, return the class responsible for managing access
+    to buildcache entries of that version"""
     if layout_version == 2:
         return URLBuildcacheEntryV2
     elif layout_version == 3:
@@ -984,7 +1097,7 @@ def compression_writer(output_path: str, compression: str, checksum_algo: str):
     the checksum algorithm used by the ChecksumWriter.
 
     Yields a tuple containing:
-        io.IOBase: writer that can compress as it writes
+        io.IOBase: writer that can compress (or not) as it writes
         ChecksumWriter: provides checksum and length of written data
     """
     with open(output_path, "wb") as writer, ChecksumWriter(
@@ -1074,6 +1187,12 @@ def try_verify(specfile_path):
 
 
 class MirrorURLAndVersion:
+    """Simple class to hold a mirror url and a buildcache layout version
+
+    This class is used by BinaryCacheIndex to produce a key used to keep
+    track of downloaded/processed buildcache index files from remote mirrors
+    in some layout version."""
+
     url: str
     version: int
 
@@ -1099,6 +1218,9 @@ class MirrorURLAndVersion:
 
 
 class MirrorForSpec:
+    """Simple holder for a mirror (represented by a url and a layout version) and
+    an associated concrete spec"""
+
     url_and_version: MirrorURLAndVersion
     spec: spack.spec.Spec
 
@@ -1108,6 +1230,8 @@ class MirrorForSpec:
 
 
 class InvalidMetadataFile(spack.error.SpackError):
+    """Raised when spack encounters a spec file it cannot understand or process"""
+
     pass
 
 
@@ -1124,9 +1248,7 @@ class NoSuchBlobException(spack.error.SpackError):
 
 
 class NoVerifyException(BuildcacheEntryError):
-    """
-    Raised if file fails signature verification.
-    """
+    """Raised if file fails signature verification"""
 
     pass
 

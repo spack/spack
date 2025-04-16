@@ -1102,7 +1102,7 @@ def _url_upload_tarball_and_specfile(
     tarball = os.path.join(tmpdir, f"{spec.dag_hash()}.tar.gz")
     checksum, _ = create_tarball(spec, tarball)
 
-    cache_entry.push(spec, tarball, "sha256", checksum, tmpdir, signing_key)
+    cache_entry.push_binary_package(spec, tarball, "sha256", checksum, tmpdir, signing_key)
 
 
 class Uploader:
