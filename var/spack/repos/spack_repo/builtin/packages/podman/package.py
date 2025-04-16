@@ -64,26 +64,10 @@ class Podman(Package):
         depends_on("libgpg-error")
         depends_on("libseccomp")
 
-    # macOS resources
-
-    # source: Podman Homebrew Formula
-    # Bump these resources versions to match those in the corresponding version-tagged Makefile
-    # at https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
-    #
-    # More context: https://github.com/Homebrew/homebrew-core/pull/205303
-    resource(
-        name="gvproxy",
-        git="https://github.com/containers/gvisor-tap-vsock.git",
-        tag="v0.8.4",
-        when="@5.4.2: platform=darwin",
-    )
-
-    resource(
-        name="vfkit",
-        git="https://github.com/crc-org/vfkit.git",
-        tag="v0.6.0",
-        when="@5.4.2: platform=darwin",
-    )
+    with when("platform=darwin"):
+        # TODO explain why this is so strict
+        depends_on("gvproxy@0.8.4", type="run", when="@5.4.2")
+        depends_on("vfkit@0.6.0", type="run", when="@5.4.2")
 
     @when("platform=linux")
     def patch(self):
@@ -116,6 +100,28 @@ class Podman(Package):
             r"/usr", self.prefix, "vendor/github.com/containers/common/pkg/config/config.go"
         )
 
+    # macOS resources
+
+    # source: Podman Homebrew Formula
+    # Bump these resources versions to match those in the corresponding version-tagged Makefile
+    # at https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
+    #
+    # More context: https://github.com/Homebrew/homebrew-core/pull/205303
+
+    @when("platform=darwin")
+    def setup_build_environment(self, env):
+        helper_dirs = [
+            self.spec["gvproxy"].prefix.bin,
+            self.spec["vfkit"].prefix.bin
+        ]
+
+        #env.set("HELPER_BINARIES_DIR", ",".join(helper_dirs))
+        help = " ".join(helper_dirs)
+
+        #env.set("EXTRA_LDFLAGS", f"'-X \"github.com/containers/common/pkg/config.additionalHelperBinariesDir={help}\"'")
+        env.set("EXTRA_LDFLAGS", f'-X github.com/containers/common/pkg/config.additionalHelperBinariesDir="{help}"')
+
+
     @when("platform=darwin")
     def install(self, spec, prefix):
         # for context on the dependencies, see
@@ -128,15 +134,13 @@ class Podman(Package):
         install("bin/darwin/podman", prefix.bin)
         install("bin/darwin/podman-mac-helper", prefix.bin)
 
-        with working_dir("gvisor-tap-vsock"):
-            make("gvproxy")
-            install("bin/gvproxy", prefix.bin)
+    @run_after("install")
+    @when("platform=darwin")
+    def set_config(self):
+        config_dir = join_path(self.prefix, "usr", "share", "containers")
+        mkdirp(config_dir)
 
-        with working_dir("vfkit"):
-            env["CGO_ENABLED"] = "1"
-            env["CGO_CFLAGS"] = "-mmacosx-version-min=11.0"
-            make("out/vfkit")
-            install("out/vfkit", prefix.bin)
+
 
     @when("platform=linux")
     def install(self, spec, prefix):
