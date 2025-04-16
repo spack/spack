@@ -149,12 +149,12 @@ def _getfqdn():
     return socket.getfqdn()
 
 
-def reader(version: vn.ConcreteVersion) -> Type["spack.spec.SpecfileReaderBase"]:
+def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
     reader_cls = {
-        vn.Version("5"): spack.spec.SpecfileV1,
-        vn.Version("6"): spack.spec.SpecfileV3,
-        vn.Version("7"): spack.spec.SpecfileV4,
-        vn.Version("8"): spack.spec.SpecfileV5,
+        vn.StandardVersion.from_string("5"): spack.spec.SpecfileV1,
+        vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
+        vn.StandardVersion.from_string("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("8"): spack.spec.SpecfileV5,
     }
     return reader_cls[version]
 
@@ -824,7 +824,7 @@ class Database:
         db = fdata["database"]
         check("version" in db, "no 'version' in JSON DB.")
 
-        self.db_version = vn.Version(db["version"])
+        self.db_version = vn.StandardVersion.from_string(db["version"])
         if self.db_version > _DB_VERSION:
             raise InvalidDatabaseVersionError(self, _DB_VERSION, self.db_version)
         elif self.db_version < _DB_VERSION:
