@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,10 +23,6 @@ class Cloverleaf(MakefilePackage):
     version("master", branch="master", submodules=True)
     version("1.1", sha256="de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build",
         default="ref",
@@ -36,6 +31,10 @@ class Cloverleaf(MakefilePackage):
     )
     variant("ieee", default=False, description="Build with IEEE standards")
     variant("debug", default=False, description="Build with DEBUG flags")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="build=cuda")
     depends_on("mpi", when="build=mpi_only")
@@ -96,10 +95,6 @@ class Cloverleaf(MakefilePackage):
             targets.append("CFLAGS_INTEL=")
         elif self.spec.satisfies("%aocc"):
             targets.append("COMPILER=AOCC")
-        elif self.spec.satisfies("%pgi"):
-            targets.append("COMPILER=PGI")
-            targets.append("FLAGS_PGI=")
-            targets.append("CFLAGS_PGI=")
         elif self.spec.satisfies("%xl"):
             targets.append("COMPILER=XLF")
             targets.append("FLAGS_XLF=")

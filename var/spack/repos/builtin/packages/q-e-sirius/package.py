@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # adapted from official quantum espresso package
@@ -27,10 +26,6 @@ class QESirius(CMakePackage):
         submodules=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, description="Enables OpenMP support")
     variant("libxc", default=False, description="Support functionals through libxc")
     variant("sirius_apps", default=False, description="Build SIRIUS standalone binaries")
@@ -43,6 +38,10 @@ class QESirius(CMakePackage):
         values=("parallel", "serial", "none"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("sirius +fortran")
     depends_on("sirius +apps", when="+sirius_apps")
@@ -59,8 +58,6 @@ class QESirius(CMakePackage):
     depends_on("git", type="build")
     depends_on("pkgconfig", type="build")
 
-    conflicts("~scalapack", when="+elpa", msg="ELPA requires SCALAPACK support")
-
     variant("scalapack", default=True, description="Enables scalapack support")
 
     with when("+scalapack"):
@@ -72,9 +69,9 @@ class QESirius(CMakePackage):
     depends_on("hdf5@1.8.16:+fortran+hl~mpi", when="hdf5=serial")
 
     with when("+openmp"):
-        depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
-        depends_on("openblas threads=openmp", when="^[virtuals=blas] openblas")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=blas] intel-mkl")
+        requires("^fftw+openmp", when="^[virtuals=fftw-api] fftw")
+        requires("^openblas threads=openmp", when="^[virtuals=blas] openblas")
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas] intel-oneapi-mkl")
 
     def cmake_args(self):
         args = [
@@ -95,7 +92,7 @@ class QESirius(CMakePackage):
         # Work around spack issue #19970 where spack sets
         # rpaths for MKL just during make, but cmake removes
         # them during make install.
-        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.append("-DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON")
         spec = self.spec
         args.append(self.define("BLAS_LIBRARIES", spec["blas"].libs.joined(";")))

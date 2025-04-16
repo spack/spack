@@ -1,14 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 
 from spack.package import *
 
 
-class Freeipmi(AutotoolsPackage):
+class Freeipmi(AutotoolsPackage, GNUMirrorPackage):
     """FreeIPMI provides in-band and out-of-band IPMI software based on the IPMI
     v1.5/2.0 specification. The IPMI specification defines a set of interfaces
     for platform management and is implemented by a number vendors for system
@@ -21,7 +19,7 @@ class Freeipmi(AutotoolsPackage):
     info."""
 
     homepage = "https://www.gnu.org/software/freeipmi/"
-    url = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
+    gnu_mirror_path = "freeipmi/freeipmi-1.6.4.tar.gz"
 
     license("GPL-3.0-or-later")
 
@@ -37,13 +35,8 @@ class Freeipmi(AutotoolsPackage):
     def configure_args(self):
         # FIXME: If root checking of root installation is added fix this:
         # Discussed in issue  #4432
-        tty.warn(
-            "Requires 'root' for bmc-watchdog.service installation to" " /lib/systemd/system/ !"
-        )
-
-        args = [
-            "--prefix={0}".format(prefix),
-            "--with-systemdsystemunitdir=" + self.spec["freeipmi"].prefix.lib.systemd.system,
+        tty.warn("Requires 'root' for bmc-watchdog.service installation to /lib/systemd/system/")
+        return [
+            f"--prefix={self.prefix}",
+            f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}",
         ]
-
-        return args

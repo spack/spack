@@ -1,15 +1,79 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import os.path
+import pathlib
 import platform
+import warnings
 
 from spack.build_environment import dso_suffix
 from spack.package import *
 
 versions = [
+    {
+        "version": "2025.1.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh",
+            "sha256": "53489afcc9534e30ad807e94b158abfccf6a7eb3658f59655122d92fbad8fa72",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/577ebc28-d0f6-492b-9a43-b04354ce99da/intel-fortran-compiler-2025.1.0.601_offline.sh",
+            "sha256": "27016329dede8369679f22b4e9f67936837ce7972a1ef4f5c76ee87d7c963c81",
+        },
+    },
+    {
+        "version": "2025.0.4",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/84c039b6-2b7d-4544-a745-3fcf8afd643f/intel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh",
+            "sha256": "0537c6e462fe74063cb0b9209a0fd5c0ca3a29b4520d43d382ae27fb3f98b375",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ad42ee3b-7a2f-41cb-b902-689f651920da/intel-fortran-compiler-2025.0.4.21_offline.sh",
+            "sha256": "ad453f1dd68111e7cf7053d6f86fa26d982bd9ab61982cbb6dbe5195fb6feedb",
+        },
+    },
+    {
+        "version": "2025.0.3",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/1cac4f39-2032-4aa9-86d7-e4f3e40e4277/intel-dpcpp-cpp-compiler-2025.0.3.9_offline.sh",
+            "sha256": "0ca834002b9091dc9988da6798a2eb36ebc5933d8d523ed0fa78a55744c88823",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fafa2df1-4bb1-43f7-87c6-3c82f1bdc712/intel-fortran-compiler-2025.0.3.9_offline.sh",
+            "sha256": "1ad813cf6495ded730646d6c4fd065dcc840875fdea28fcc6bac2cafb8d22c8d",
+        },
+    },
+    {
+        "version": "2025.0.1",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/4fd7c6b0-853f-458a-a8ec-421ab50a80a6/intel-dpcpp-cpp-compiler-2025.0.1.46_offline.sh",
+            "sha256": "1595397566b59a5c8f81e2c235b6bedd2405dc70309b5bf00ed75827d0f12449",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/7ba31291-8a27-426f-88d5-8c2d65316655/intel-fortran-compiler-2025.0.1.41_offline.sh",
+            "sha256": "aa54f019ad8db79f716f880c72784dc117d64e525e4c3b62717bd9d18a6c9060",
+        },
+    },
+    {
+        "version": "2025.0.0",
+        "cpp": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ac92f2bb-4818-4e53-a432-f8b34d502f23/intel-dpcpp-cpp-compiler-2025.0.0.740_offline.sh",
+            "sha256": "04fadf63789acee731895e631db63f65a98b8279db3d0f48bdf0d81e6103bdd8",
+        },
+        "ftn": {
+            "url": "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/69f79888-2d6c-4b20-999e-e99d72af68d4/intel-fortran-compiler-2025.0.0.723_offline.sh",
+            "sha256": "2be6d607ce84f35921228595b118fbc516d28587cbc4e6dcf6b7219e5cd1a9a9",
+        },
+        "nvidia-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.0.0&filters[]=12.0&filters[]=linux",
+            "sha256": "264a43d2e07c08eb31d6483fb1c289a6b148709e48e9a250efc1b1e9a527feb6",
+        },
+        "amd-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2025.0.0&filters[]=6.1.0&filters[]=linux",
+            "sha256": "2c5a147e82f0e995b9c0457b53967cc066d5741d675cb64cb9eba8e3c791a064",
+        },
+    },
     {
         "version": "2024.2.1",
         "cpp": {
@@ -23,6 +87,10 @@ versions = [
         "nvidia-plugin": {
             "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux",
             "sha256": "2c377027c650291ccd8267cbf75bd3d00c7b11998cc59d5668a02a0cbc2c015f",
+        },
+        "amd-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.1&filters[]=6.1.0&filters[]=linux",
+            "sha256": "fbeb64f959f907cbf3469f4e154b2af6d8ff46fe4fc667c811e04f3872a13823",
         },
     },
     {
@@ -38,6 +106,10 @@ versions = [
         "nvidia-plugin": {
             "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.0&filters[]=12.0&filters[]=linux",
             "sha256": "0622df0054364b01e91e7ed72a33cb3281e281db5b0e86579f516b1cc5336b0f",
+        },
+        "amd-plugin": {
+            "url": "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.0&filters[]=6.1.0&filters[]=linux",
+            "sha256": "d1e9d30fa92f3ef606f054d8cbd7c338b3e46f6a9f8472736e29e8ccd9e50688",
         },
     },
     {
@@ -270,15 +342,56 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         r"(?:(?:oneAPI DPC\+\+(?:\/C\+\+)? Compiler)|(?:\(IFORT\))|(?:\(IFX\))) (\S+)"
     )
 
+    debug_flags = ["-debug", "-g", "-g0", "-g1", "-g2", "-g3"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os"]
+
+    openmp_flag = "-fiopenmp"
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("oneapi", "icx"),
+        "cxx": os.path.join("oneapi", "icpx"),
+        "fortran": os.path.join("oneapi", "ifx"),
+    }
+
+    implicit_rpath_libs = [
+        "libirc",
+        "libifcore",
+        "libifcoremt",
+        "libirng",
+        "libsvml",
+        "libintlc",
+        "libimf",
+        "libsycl",
+        "libOpenCL",
+    ]
+
+    stdcxx_libs = ("-cxxlib",)
+
+    provides("c", "cxx")
+    provides("fortran")
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {
+                "11": "-std=c++11",
+                "14": "-std=c++14",
+                "17": "-std=c++17",
+                "20": "-std=c++20",
+            },
+            "c": {"99": "-std=c99", "11": "-std=c1x"},
+        }
+        return flags[language][standard]
+
     # See https://github.com/spack/spack/issues/39252
     depends_on("patchelf@:0.17", type="build", when="@:2024.1")
     # Add the nvidia variant
     variant("nvidia", default=False, description="Install NVIDIA plugin for OneAPI")
     conflicts("@:2022.2.1", when="+nvidia", msg="Codeplay NVIDIA plugin requires newer release")
-    # TODO: effectively gcc is a direct dependency of intel-oneapi-compilers, but we
-    # cannot express that properly. For now, add conflicts for non-gcc compilers
-    # instead.
-    requires("%gcc", msg="intel-oneapi-compilers must be installed with %gcc")
+    # Add the amd variant
+    variant("amd", default=False, description="Install AMD plugin for OneAPI")
+    conflicts("@:2022.2.1", when="+amd", msg="Codeplay AMD plugin requires newer release")
+
+    depends_on("gcc languages=c,c++", type="run")
 
     for v in versions:
         version(v["version"], expand=False, **v["cpp"])
@@ -297,6 +410,14 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
                 when="@{0}".format(v["version"]),
                 expand=False,
                 **v["nvidia-plugin"],
+            )
+        if "amd-plugin" in v:
+            resource(
+                name="amd-plugin-installer",
+                placement="amd-plugin-installer",
+                when="@{0}".format(v["version"]),
+                expand=False,
+                **v["amd-plugin"],
             )
 
     @property
@@ -336,10 +457,43 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         """
         super().setup_run_environment(env)
 
+        # umf is packaged with compiler and not available as a standalone
+        if "~envmods" not in self.spec and self.spec.satisfies("@2025:"):
+            env.extend(
+                EnvironmentModifications.from_sourcing_file(
+                    self.prefix.umf.latest.env.join("vars.sh"), *self.env_script_args
+                )
+            )
+
         env.set("CC", self._llvm_bin.icx)
         env.set("CXX", self._llvm_bin.icpx)
         env.set("F77", self._llvm_bin.ifx)
         env.set("FC", self._llvm_bin.ifx)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        super().setup_dependent_build_environment(env, dependent_spec)
+        # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
+        # It is located in the same directory as the driver. Error message:
+        #   clang++: error: unable to execute command:
+        #   Executable "sycl-post-link" doesn't exist!
+        # also ensures that shared objects and libraries required by the compiler,
+        # e.g. libonnx, can be found succesfully
+        # due to a fix, this is no longer required for OneAPI versions >= 2024.2
+        bin_dir = os.path.dirname(self.cxx)
+        lib_dir = os.path.join(os.path.dirname(bin_dir), "lib")
+        if self.cxx and self.spec.satisfies("%oneapi@:2024.1"):
+            env.prepend_path("PATH", bin_dir)
+            env.prepend_path("LD_LIBRARY_PATH", lib_dir)
+
+        # 2024 release bumped the libsycl version because of an ABI
+        # change, 2024 compilers are required.  You will see this
+        # error:
+        #
+        # /usr/bin/ld: warning: libsycl.so.7, needed by ...., not found
+        if self.spec.satisfies("%oneapi@:2023"):
+            for c in ["dnn"]:
+                if self.spec.satisfies(f"^intel-oneapi-{c}@2024:"):
+                    warnings.warn(f"intel-oneapi-{c}@2024 SYCL APIs requires %oneapi@2024:")
 
     def install(self, spec, prefix):
         # Copy instead of install to speed up debugging
@@ -363,12 +517,15 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             if nvidia_script:
                 if platform.system() == "Linux":
                     bash = Executable("bash")
-                    # Installer writes files in ~/intel set HOME so it goes to prefix
-                    bash.add_default_env("HOME", prefix)
-                    # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
-                    bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
                     # For NVIDIA plugin installer
                     bash(nvidia_script[0], "-y", "--install-dir", self.prefix)
+        if self.spec.satisfies("+amd"):
+            amd_script = find("amd-plugin-installer", "*")
+            if amd_script:
+                if platform.system() == "Linux":
+                    bash = Executable("bash")
+                    # For AMD plugin installer
+                    bash(amd_script[0], "-y", "--install-dir", self.prefix)
 
     @run_after("install")
     def inject_rpaths(self):
@@ -433,9 +590,9 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             common_flags = ["-Wl,-rpath,{}".format(d) for d in self._ld_library_path()]
 
         # Make sure that underlying clang gets the right GCC toolchain by default
-        llvm_flags = ["--gcc-toolchain={}".format(self.compiler.prefix)]
-        classic_flags = ["-gcc-name={}".format(self.compiler.cc)]
-        classic_flags.append("-gxx-name={}".format(self.compiler.cxx))
+        gcc = self.spec["gcc"].package
+        llvm_flags = [f"--gcc-toolchain={gcc.prefix}"]
+        classic_flags = [f"-gcc-name={gcc.cc}", f"-gxx-name={gcc.cxx}"]
 
         # Older versions trigger -Wunused-command-line-argument warnings whenever
         # linker flags are passed in preprocessor (-E) or compilation mode (-c).
@@ -446,7 +603,11 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             llvm_flags.append("-Wno-unused-command-line-argument")
 
         self.write_config_file(common_flags + llvm_flags, self._llvm_bin, ["icx", "icpx"])
-        self.write_config_file(common_flags + classic_flags, self._llvm_bin, ["ifx"])
+        self.write_config_file(
+            common_flags + (llvm_flags if self.spec.satisfies("@2022.1.0:") else classic_flags),
+            self._llvm_bin,
+            ["ifx"],
+        )
         self.write_config_file(common_flags + classic_flags, self._classic_bin, ["ifort"])
         self.write_config_file(common_flags + classic_flags, self._classic_bin, ["icc", "icpc"])
 
@@ -466,30 +627,67 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
             if find(p, "*." + dso_suffix, recursive=False):
                 yield p
 
+    def archspec_name(self):
+        return "oneapi"
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variant, extra_attributes = super().determine_variants(exes, version_str)
+
+        bin_dirs = {pathlib.Path(x).parent for x in exes}
+        if len(bin_dirs) != 1:
+            dirs = ", ".join([str(x) for x in sorted(bin_dirs)])
+            raise RuntimeError(f"executables found in multiple dirs: {dirs}")
+        bin_dir = bin_dirs.pop()
+
+        # Some sites symlink the bindir to the top level of the prefix
+        if "compiler" in bin_dir.parts:
+            # Normal installation
+            prefix_parts = bin_dir.parts[: bin_dir.parts.index("compiler")]
+        else:
+            # Executables from top level bin dir as symlinks
+            prefix_parts = bin_dir.parts[:-1]
+
+        computed_prefix = pathlib.Path(*prefix_parts)
+        extra_attributes["prefix"] = str(computed_prefix)
+
+        return variant, extra_attributes
+
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
-        pkg("*").depends_on(
-            "intel-oneapi-runtime",
-            when="%oneapi",
-            type="link",
-            description="If any package uses %oneapi, it depends on intel-oneapi-runtime",
-        )
-        pkg("*").depends_on(
-            f"intel-oneapi-runtime@{str(spec.version)}:",
-            when=f"%{str(spec)}",
-            type="link",
-            description=f"If any package uses %{str(spec)}, "
-            f"it depends on intel-oneapi-runtime@{str(spec.version)}:",
-        )
+        for language in ("c", "cxx", "fortran"):
+            pkg("*").depends_on(
+                f"intel-oneapi-runtime@{spec.version}:",
+                when=f"%[virtuals={language}] {spec.name}@{spec.versions}",
+                type="link",
+                description="Inject intel-oneapi-runtime when oneapi is used as "
+                f"a {language} compiler",
+            )
 
         for fortran_virtual in ("fortran-rt", "libifcore@5"):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%{str(spec)}",
-                languages=["fortran"],
+                when=f"%[virtuals=fortran] {spec.name}@{spec.versions}",
                 type="link",
-                description=f"Add a dependency on 'libifcore' for nodes compiled with "
-                f"{str(spec)} and using the 'fortran' language",
+                description="Add a dependency on 'libifcore' for nodes compiled with "
+                f"{spec.name}@{spec.versions} and using the 'fortran' language",
             )
         # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
-        pkg("intel-oneapi-runtime").requires(f"@={str(spec.version)}", when=f"%{str(spec)}")
+        pkg("intel-oneapi-runtime").requires(
+            f"@{spec.versions}", when=f"%{spec.name}@{spec.versions}"
+        )
+
+        # If a node used %intel-oneapi-runtime@X.Y its dependencies must use @:X.Y
+        # (technically @:X is broader than ... <= @=X but this should work in practice)
+        pkg("*").propagate(
+            f"intel-oneapi-compilers@:{spec.version}", when=f"%{spec.name}@{spec.versions}"
+        )
+
+    def _cc_path(self):
+        return str(self._llvm_bin.icx)
+
+    def _cxx_path(self):
+        return str(self._llvm_bin.icpx)
+
+    def _fortran_path(self):
+        return str(self._llvm_bin.ifx)

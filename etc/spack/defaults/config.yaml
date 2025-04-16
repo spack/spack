@@ -19,7 +19,7 @@ config:
   install_tree:
     root: $spack/opt/spack
     projections:
-      all: "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+      all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
     # default is False (do not pad)
     # if padded_length is True, Spack will pad as close to the system max path
@@ -90,10 +90,9 @@ config:
   misc_cache: $user_cache_path/cache
 
 
-  # Timeout in seconds used for downloading sources etc. This only applies
-  # to the connection phase and can be increased for slow connections or
-  # servers. 0 means no timeout.
-  connect_timeout: 10
+  # Abort downloads after this many seconds if not data is received.
+  # Setting this to 0 will disable the timeout.
+  connect_timeout: 30
 
 
   # If this is false, tools like curl that use SSL will not verify
@@ -113,12 +112,6 @@ config:
   # gpg key they are using, and may not want to see repeated warnings that it
   # is self-signed or something of the sort.
   suppress_gpg_warnings: false
-
-
-  # If set to true, Spack will attempt to build any compiler on the spec
-  # that is not already available. If set to False, Spack will only use
-  # compilers already configured in compilers.yaml
-  install_missing_compilers: false
 
 
   # If set to true, Spack will always check checksums after downloading
@@ -199,6 +192,12 @@ config:
     # binaries to avoid runtime search. This can improve startup time of
     # executables with many dependencies, in particular on slow filesystems.
     bind: false
+
+    # Controls the handling of missing dynamic libraries after installation.
+    # Options are ignore (default), warn, or error. If set to error, the
+    # installation fails if installed binaries reference dynamic libraries that
+    # are not found in their specified rpaths.
+    missing_library_policy: ignore
 
 
   # Set to 'false' to allow installation on filesystems that doesn't allow setgid bit

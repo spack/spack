@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,8 +23,6 @@ class Hipace(CMakePackage):
     version("23.05", sha256="33a15cfeada3ca16c2a3af1538caa7ff731df13b48b884045a0fe7974382fcd1")
     version("21.09", sha256="5d27824fe6aac47ce26ca69759140ab4d7844f9042e436c343c03ea4852825f1")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "compute",
         default="noacc",
@@ -42,6 +39,8 @@ class Hipace(CMakePackage):
         multi=False,
         description="Floating point precision (single/double)",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.18.0:", type="build", when="@23.05:")
     depends_on("cmake@3.15.0:", type="build")

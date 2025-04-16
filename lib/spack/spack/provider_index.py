@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Classes and functions to manage providers of virtual dependencies"""
@@ -241,8 +240,8 @@ class ProviderIndex(_IndexBase):
         index.providers = _transform(
             providers,
             lambda vpkg, plist: (
-                spack.spec.SpecfileV4.from_node_dict(vpkg),
-                set(spack.spec.SpecfileV4.from_node_dict(p) for p in plist),
+                spack.spec.SpecfileLatest.from_node_dict(vpkg),
+                set(spack.spec.SpecfileLatest.from_node_dict(p) for p in plist),
             ),
         )
         return index

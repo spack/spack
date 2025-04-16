@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,8 +38,6 @@ import glob
 import os
 import re
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
@@ -49,7 +46,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -85,9 +81,6 @@ class OpenfoamOrg(Package):
         url="http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("int64", default=False, description="Compile with 64-bit label")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
@@ -102,6 +95,9 @@ class OpenfoamOrg(Package):
         values=("sp", "dp", conditional("lp", when="@6:")),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi")
     depends_on("zlib-api")

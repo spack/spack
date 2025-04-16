@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,6 +32,8 @@ class Examinimd(MakefilePackage):
     # TODO: Set up cuda variant when test machine available
 
     conflicts("+openmp", when="+pthreads")
+
+    depends_on("cxx", type="build")
 
     depends_on("kokkos-legacy")
     depends_on("mpi", when="+mpi")

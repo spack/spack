@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -43,10 +42,8 @@ class OphidiaAnalyticsFramework(AutotoolsPackage):
     def configure_args(self):
         args = [
             "--enable-parallel-netcdf",
-            "--with-web-server-path={0}/html".format(
-                self.spec["ophidia-analytics-framework"].prefix
-            ),
+            f"--with-web-server-path={self.prefix}/html",
             "--with-web-server-url=http://127.0.0.1/ophidia",
-            "--with-ophidiaio-server-path={0}".format(self.spec["ophidia-io-server"].prefix),
+            f"--with-ophidiaio-server-path={self.spec['ophidia-io-server'].prefix}",
         ]
         return args

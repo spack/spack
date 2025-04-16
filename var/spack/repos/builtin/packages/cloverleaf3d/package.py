@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,13 +24,13 @@ class Cloverleaf3d(MakefilePackage):
 
     version("1.0", sha256="78d591728c61bdfd6175b3930df7652e09ed04fbcd01b3fc86fb2aa0f237a8ef")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("opencl", default=False, description="Enable OpenCL Support")
 
     variant("openacc", default=False, description="Enable OpenACC Support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
 
@@ -67,10 +66,6 @@ class Cloverleaf3d(MakefilePackage):
             targets.append("COMPILER=INTEL")
             targets.append("FLAGS_INTEL=")
             targets.append("CFLAGS_INTEL=")
-        elif self.spec.satisfies("%pgi"):
-            targets.append("COMPILER=PGI")
-            targets.append("FLAGS_PGI=")
-            targets.append("CFLAGS_PGI=")
         elif self.spec.satisfies("%xl"):
             targets.append("COMPILER=XLF")
             targets.append("FLAGS_XLF=")

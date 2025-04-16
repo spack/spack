@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,9 +22,6 @@ class Julea(MesonPackage):
 
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("hdf5", default=True, description="Enable HDF5 support")
     variant("leveldb", default=True, description="Enable LevelDB support")
     variant("lmdb", default=True, description="Enable LMDB support")
@@ -33,6 +29,9 @@ class Julea(MesonPackage):
     variant("mongodb", default=True, description="Enable MongoDB support")
     variant("rocksdb", default=True, description="Enable RocksDB support")
     variant("sqlite", default=True, description="Enable SQLite support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
 

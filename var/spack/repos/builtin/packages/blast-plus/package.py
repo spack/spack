@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,9 +25,6 @@ class BlastPlus(AutotoolsPackage):
     version("2.6.0", sha256="0510e1d607d0fb4389eca50d434d5a0be787423b6850b3a4f315abc2ef19c996")
     version("2.2.30", sha256="26f72d51c81b9497f33b7274109565c36692572faef4d72377f79b7e59910e40")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # homebrew sez: Fixed upstream in future version > 2.6
     # But this bug sez that it will be fixed in 2.6
     #    https://github.com/Homebrew/homebrew-science/pull/4740
@@ -51,6 +47,9 @@ class BlastPlus(AutotoolsPackage):
 
     # No...
     # depends_on :mysql => :optional
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cpio", type="build")
 

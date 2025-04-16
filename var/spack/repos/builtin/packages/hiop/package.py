@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,11 +16,14 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/hiop"
     git = "https://github.com/LLNL/hiop.git"
-    maintainers("ryandanehy", "cameronrutherford", "pelesh")
+    maintainers("nychiang", "cnpetra", "pelesh")
 
     license("BSD-3-Clause")
 
     # Most recent tagged snapshot is the preferred version when profiling.
+    version(
+        "1.1.0", tag="v1.1.0", commit="7ccfa86a71fdb670ae690199ac676f3c1365799a", submodules=True
+    )
     version(
         "1.0.3", tag="v1.0.3", commit="6161396d9b562c39e7e6fe686ab46a2ec7927482", submodules=True
     )
@@ -70,10 +72,15 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
+    variant(
+        "axom",
+        default=False,
+        description="Enable/Disable AXOM to use Sidre for scalable checkpointing",
+    )
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -92,6 +99,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -149,6 +161,8 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
 
+    depends_on("axom", when="+axom")
+
     conflicts(
         "+shared",
         when="+cuda+raja ^raja@:0.14",
@@ -178,7 +192,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         args = []
         spec = self.spec
 
-        use_gpu = "+cuda" in spec or "+rocm" in spec
+        use_gpu = spec.satisfies("+cuda") or spec.satisfies("+rocm")
 
         if use_gpu:
             args.extend(
@@ -200,6 +214,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_MPI", "mpi"),
                 self.define_from_variant("HIOP_DEEPCHECKS", "deepchecking"),
                 self.define_from_variant("HIOP_USE_CUDA", "cuda"),
+                self.define_from_variant("HIOP_USE_AXOM", "axom"),
                 self.define_from_variant("HIOP_USE_HIP", "rocm"),
                 self.define_from_variant("HIOP_USE_RAJA", "raja"),
                 self.define_from_variant("HIOP_USE_UMPIRE", "raja"),
@@ -218,7 +233,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # args.append(
         #     self.define('HIOP_CTEST_LAUNCH_COMMAND', 'srun -t 10:00'))
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.extend(
                 [
                     self.define("MPI_HOME", spec["mpi"].prefix),
@@ -237,7 +252,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
             #     self.define('MPI_Fortran_LINK_FLAGS',
             #         '-L/path/to/libfabric/lib64/ -lfabric'))
 
-        if "+cuda" in spec:
+        if spec.satisfies("+cuda"):
             cuda_arch_list = spec.variants["cuda_arch"].value
             if cuda_arch_list[0] != "none":
                 args.append(self.define("CMAKE_CUDA_ARCHITECTURES", cuda_arch_list))
@@ -250,7 +265,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # args.append(
         #     self.define('HIP_CLANG_INCLUDE_PATH',
         #         '/opt/rocm-X.Y.Z/llvm/lib/clang/14.0.0/include/'))
-        if "+rocm" in spec:
+        if spec.satisfies("+rocm"):
             args.append(self.define("CMAKE_CXX_COMPILER", spec["hip"].hipcc))
 
             rocm_arch_list = spec.variants["amdgpu_target"].value
@@ -258,7 +273,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(self.define("GPU_TARGETS", rocm_arch_list))
                 args.append(self.define("AMDGPU_TARGETS", rocm_arch_list))
 
-        if "+kron" in spec:
+        if spec.satisfies("+kron"):
             args.append(self.define("HIOP_UMFPACK_DIR", spec["suite-sparse"].prefix))
 
         # Unconditionally disable strumpack, even when +sparse. This may be
@@ -266,8 +281,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         # fully supported in spack at the moment.
         args.append(self.define("HIOP_USE_STRUMPACK", False))
 
-        if "+sparse" in spec:
+        if spec.satisfies("+sparse"):
             args.append(self.define("HIOP_COINHSL_DIR", spec["coinhsl"].prefix))
+
+        if spec.satisfies("+axom"):
+            args.append(self.define("AXOM_DIR", spec["axom"].prefix))
 
         return args
 

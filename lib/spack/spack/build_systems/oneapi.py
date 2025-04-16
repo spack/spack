@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Common utilities for managing intel oneapi packages."""
@@ -15,7 +14,7 @@ from llnl.util.link_tree import LinkTree
 import spack.util.path
 from spack.build_environment import dso_suffix
 from spack.directives import conflicts, license, redistribute, variant
-from spack.package_base import InstallError
+from spack.error import InstallError
 from spack.util.environment import EnvironmentModifications
 from spack.util.executable import Executable
 
@@ -31,6 +30,9 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute(source=False, binary=False)
+
+    # contains precompiled binaries without rpaths
+    unresolved_libraries = ["*"]
 
     for c in [
         "target=ppc64:",
@@ -140,7 +142,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         # Only if environment modifications are desired (default is +envmods)
-        if "~envmods" not in self.spec:
+        if "+envmods" in self.spec:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(
                     self.component_prefix.env.join("vars.sh"), *self.env_script_args
@@ -255,7 +257,7 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
         return find_libraries("*", root=self.component_prefix.lib, recursive=not self.v2_layout)
 
 
-class IntelOneApiLibraryPackageWithSdk(IntelOneApiPackage):
+class IntelOneApiLibraryPackageWithSdk(IntelOneApiLibraryPackage):
     """Base class for Intel oneAPI library packages with SDK components.
 
     Contains some convenient default implementations for libraries
@@ -309,4 +311,4 @@ class IntelOneApiStaticLibraryList:
 
 
 #: Tuple of Intel math libraries, exported to packages
-INTEL_MATH_LIBRARIES = ("intel-mkl", "intel-oneapi-mkl", "intel-parallel-studio")
+INTEL_MATH_LIBRARIES = ("intel-oneapi-mkl",)

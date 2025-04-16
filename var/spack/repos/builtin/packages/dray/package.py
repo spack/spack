@@ -1,13 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import socket
 
-import llnl.util.tty as tty
-
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
@@ -57,9 +55,6 @@ class Dray(Package, CudaPackage):
         version("0.1.1", sha256="e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c")
         version("0.1.0", sha256="8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, description="Build OpenMP backend")
     variant("shared", default=True, description="Build as shared libs")
     variant("test", default=True, description="Build unit tests")
@@ -69,6 +64,10 @@ class Dray(Package, CudaPackage):
     variant("mpi", default=True, description="Enable MPI compiler")
     # set to false for systems that implicitly link mpi
     variant("blt_find_mpi", default=True, description="Use BLT CMake Find MPI logic")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 
@@ -109,6 +108,7 @@ class Dray(Package, CudaPackage):
     depends_on("mfem+conduit~threadsafe")
     depends_on("mfem+shared", when="+shared")
     depends_on("mfem~shared", when="~shared")
+    depends_on("gmake", type="build")
 
     def setup_build_environment(self, env):
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
@@ -120,7 +120,12 @@ class Dray(Package, CudaPackage):
         with working_dir("spack-build", create=True):
             host_cfg_fname = self.create_host_config(spec, prefix)
             print("Configuring Devil Ray...")
-            cmake(*std_cmake_args, "-C", host_cfg_fname, "../src")
+            cmake(
+                *CMakeBuilder.std_args(self, generator="Unix Makefiles"),
+                "-C",
+                host_cfg_fname,
+                "../src",
+            )
             print("Building Devil Ray...")
             make()
             # run unit tests if requested

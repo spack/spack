@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -50,9 +49,6 @@ class Mysql(CMakePackage):
     version("5.6.43", sha256="1c95800bf0e1b7a19a37d37fbc5023af85c6bc0b41532433b3a886263a1673ef")
     version("5.5.62", sha256="b1e7853bc1f04aabf6771e0ad947f35ac8d237f4b35d0706d1095c9526ff99d7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("client_only", default=False, description="Build and install client only.")
     variant(
         "cxxstd",
@@ -69,6 +65,9 @@ class Mysql(CMakePackage):
     conflicts("cxxstd=17", when="@8.0.0:~client_only")
 
     provides("mysql-client")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://dev.mysql.com/doc/refman/8.0/en/source-installation.html
     # https://dev.mysql.com/doc/refman/8.0/en/source-configuration-options.html
@@ -226,3 +225,12 @@ class Mysql(CMakePackage):
 
         if "python" in self.spec and self.spec.satisfies("@:7"):
             self._fix_dtrace_shebang(env)
+
+    @run_before("install")
+    def fixup_mysqlconfig(self):
+        if not self.spec.satisfies("platform=windows"):
+            # mysql uses spack libz but exports -lzlib to its dependencies. Fix that:
+            with working_dir(self.build_directory):
+                for config in ("scripts/mysql_config", "scripts/mysqlclient.pc"):
+                    if os.path.exists(config):
+                        filter_file(" -lzlib ", " -lz ", config)

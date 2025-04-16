@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,6 @@ class Zoltan(AutotoolsPackage):
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch("notparallel.patch", when="@3.8")
 
     variant("debug", default=False, description="Builds a debug version of the library.")
@@ -41,6 +36,11 @@ class Zoltan(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support.")
     variant("parmetis", default=False, description="Enable ParMETIS support.")
     variant("int64", default=False, description="Enable 64bit indices.")
+    variant("scotch", default=False, description="Enable PT-Scotch support.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 
@@ -48,6 +48,7 @@ class Zoltan(AutotoolsPackage):
     depends_on("parmetis@4:", when="+parmetis")
     depends_on("metis+int64", when="+parmetis+int64")
     depends_on("metis", when="+parmetis")
+    depends_on("scotch", when="+scotch")
 
     depends_on("perl@:5.21", type="build", when="@:3.6")
     depends_on("autoconf", type="build")
@@ -88,6 +89,11 @@ class Zoltan(AutotoolsPackage):
         with working_dir(self.configure_directory):
             autoreconf("-ivf")
 
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies("%gcc@14:") and name == "cflags":
+            flags.append("-Wno-error=incompatible-pointer-types")
+        return self.build_system_flags(name, flags)
+
     def configure_args(self):
         spec = self.spec
 
@@ -102,8 +108,6 @@ class Zoltan(AutotoolsPackage):
         config_incdirs = []
 
         # PGI runtime libraries
-        if "%pgi" in spec:
-            config_ldflags.append("-pgf90libs")
         # NVHPC runtime libraries
         if "%nvhpc" in spec:
             config_ldflags.append("-fortranlibs")
@@ -115,7 +119,7 @@ class Zoltan(AutotoolsPackage):
                 # Although adding to config_libs _should_ suffice, it does not
                 # Add to ldflags as well
                 config_ldflags.append("-lgfortran")
-            if spec.satisfies("%intel"):
+            if spec.satisfies("%intel") or spec.satisfies("%oneapi"):
                 config_libs.append("-lifcore")
 
         if "+int64" in spec:
@@ -143,6 +147,16 @@ class Zoltan(AutotoolsPackage):
             else:
                 config_args.append("--with-id-type=uint")
 
+        if spec.satisfies("+scotch"):
+            scotch_prefix = spec["scotch"].prefix
+            config_args.extend(
+                [
+                    "--with-scotch",
+                    f"--with-scotch-incdir={scotch_prefix.include}",
+                    f"--with-scotch-libdir={scotch_prefix.lib}",
+                ]
+            )
+
         if "+mpi" in spec:
             config_args.extend(
                 [
@@ -163,7 +177,7 @@ class Zoltan(AutotoolsPackage):
         config_fcflags = config_cflags[:]
         config_cxxflags = config_cflags[:]
 
-        if spec.satisfies("%gcc@10:+fortran"):
+        if spec.satisfies("+fortran%gcc@10:"):
             config_fcflags.append("-fallow-argument-mismatch")
 
         # NOTE: Early versions of Zoltan come packaged with a few embedded

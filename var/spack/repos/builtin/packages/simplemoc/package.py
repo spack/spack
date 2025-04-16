@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,11 +19,11 @@ class Simplemoc(MakefilePackage):
 
     version("4", sha256="a39906014fdb234c43bf26e1919bdc8a13097788812e0b353a492b8e568816a6")
 
-    depends_on("c", type="build")  # generated
-
     tags = ["proxy-app"]
 
     variant("mpi", default=True, description="Build with MPI support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 

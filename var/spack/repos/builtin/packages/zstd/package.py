@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,6 +23,7 @@ class Zstd(CMakePackage, MakefilePackage):
     license("BSD-3-Clause OR GPL-2.0-or-later")
 
     version("develop", branch="dev")
+    version("1.5.7", sha256="37d7284556b20954e56e1ca85b80226768902e2edabd3b649e9e72c0c9012ee3")
     version("1.5.6", sha256="30f35f71c1203369dc979ecde0400ffea93c27391bfd2ac5a9715d2173d92ff7")
     version("1.5.5", sha256="98e9c3d949d1b924e28e01eccb7deed865eefebf25c2f21c702e5cd5b63b85e1")
     version("1.5.4", sha256="35ad983197f8f8eb0c963877bf8be50490a0b3df54b4edeb8399ba8a8b2f60a4")
@@ -41,9 +41,6 @@ class Zstd(CMakePackage, MakefilePackage):
     version("1.3.0", sha256="0fdba643b438b7cbce700dcc0e7b3e3da6d829088c63757a5984930e2f70b348")
     version("1.1.2", sha256="980b8febb0118e22f6ed70d23b5b3e600995dbf7489c1f6d6122c1411cdda8d8")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("programs", default=False, description="Build executables")
     variant(
         "libs",
@@ -58,6 +55,9 @@ class Zstd(CMakePackage, MakefilePackage):
         values=any_combination_of("zlib", "lz4", "lzma"),
         description="Enable support for additional compression methods in programs",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build", when="build_system=cmake @1.5.6:")
 

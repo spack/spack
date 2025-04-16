@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,9 +27,6 @@ class Pgplot(MakefilePackage):
         sha256="a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Replace hard-coded compilers and options by tokens, so that Spack can
     # edit the file more easily
     patch("g77_gcc.conf.patch")
@@ -47,6 +43,9 @@ class Pgplot(MakefilePackage):
     variant("X", default=False, description="Build with X11 support.")
     variant("png", default=True, description="Enable driver for Portable Network Graphics file.")
     variant("ps", default=True, description="Enable driver for PostScript files.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("libx11", when="+X")
     depends_on("libpng", when="+png")

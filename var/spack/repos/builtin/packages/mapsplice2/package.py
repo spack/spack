@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,9 @@ class Mapsplice2(MakefilePackage):
 
     patch("Makefile.patch")
     patch("mapsplice_ebwt.patch")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("bowtie")
     depends_on("ncurses", type="link")

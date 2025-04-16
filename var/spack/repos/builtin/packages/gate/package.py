@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,9 +30,6 @@ class Gate(CMakePackage):
     version("9.1", sha256="aaab874198500b81d45b27cc6d6a51e72cca9519910b893a5c85c8e6d3ffa4fc")
     version("9.0", sha256="8354f392facc0b7ae2ddf0eed61cc43136195b198ba399df25e874886b8b69cb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("rtk", default=False, description="build support for the Reconstruction Toolkit")
     variant(
         "default_platform",
@@ -42,6 +38,9 @@ class Gate(CMakePackage):
         values=("SGE", "condor", "openPBS", "openmosix", "slurm", "xgrid"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("geant4@:10.6~threads", when="@9.0")  # Gate needs a non-threaded geant4
     depends_on("geant4@:10.7~threads", when="@9.1")  # Gate needs a non-threaded geant4

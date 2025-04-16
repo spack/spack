@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -13,6 +12,8 @@ class CrayLibsci(Package):
     homepage = "https://docs.nersc.gov/development/libraries/libsci/"
     has_code = False  # Skip attempts to fetch source that is not available
 
+    version("23.02.1.1")
+    version("22.11.1.2")
     version("21.08.1.2")
     version("20.06.1")
     version("20.03.1")
@@ -61,7 +62,10 @@ class CrayLibsci(Package):
     @property
     def blas_libs(self):
         shared = True if "+shared" in self.spec else False
-        compiler = self.spec.compiler.name
+
+        candidates = [name for name in self.canonical_names.values() if name in self.prefix]
+        if len(candidates) != 1:
+            raise RuntimeError("cannot determine libsci libraries")
 
         lib = []
         if self.spec.satisfies("+openmp") and self.spec.satisfies("+mpi"):
@@ -75,7 +79,7 @@ class CrayLibsci(Package):
 
         libname = []
         for lib_fmt in lib:
-            libname.append(lib_fmt.format(self.canonical_names[compiler].lower()))
+            libname.append(lib_fmt.format(candidates[0].lower()))
 
         return find_libraries(libname, root=self.prefix.lib, shared=shared, recursive=False)
 

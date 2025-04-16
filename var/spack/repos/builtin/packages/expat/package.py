@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,9 +15,21 @@ class Expat(AutotoolsPackage, CMakePackage):
     url = "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.bz2"
 
     license("MIT")
-
-    version("2.6.3", sha256="b8baef92f328eebcf731f4d18103951c61fa8c8ec21d5ff4202fb6f2198aeb2d")
-    # deprecate all releases before 2.6.3 because of security issues
+    version("2.7.1", sha256="45c98ae1e9b5127325d25186cf8c511fa814078e9efeae7987a574b482b79b3d")
+    version("2.7.0", sha256="10f3e94896cd7f44de566cafa2e0e1f35e8df06d119b38d117c0e72d74a4b4b7")
+    # deprecate all releases before 2.7.0 because of security issues
+    # CVE-2024-8176  (fixed in 2.7.0)
+    version(
+        "2.6.4",
+        sha256="8dc480b796163d4436e6f1352e71800a774f73dbae213f1860b60607d2a83ada",
+        deprecated=True,
+    )
+    # CVE-2024-50602 (fixed in 2.6.4)
+    version(
+        "2.6.3",
+        sha256="b8baef92f328eebcf731f4d18103951c61fa8c8ec21d5ff4202fb6f2198aeb2d",
+        deprecated=True,
+    )
     # CVE-2024-45490 (fixed in 2.6.3)
     # CVE-2024-45491 (fixed in 2.6.3)
     # CVE-2024-45492 (fixed in 2.6.3)
@@ -147,9 +158,6 @@ class Expat(AutotoolsPackage, CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system("autotools", "cmake", default="autotools")
 
     # Version 2.2.2 introduced a requirement for a high quality
@@ -172,6 +180,9 @@ class Expat(AutotoolsPackage, CMakePackage):
         description="Build expat as shared if true, static if false",
         when="build_system=cmake",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libbsd", when="@2.2.1:+libbsd")
 

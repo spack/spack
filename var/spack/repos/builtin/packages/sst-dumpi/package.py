@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -14,11 +13,11 @@ class SstDumpi(AutotoolsPackage):
     information, and PAPI counters.
     """
 
-    homepage = "http://sst.sandia.gov/about_dumpi.html"
+    homepage = "https://github.com/sstsimulator/sst-dumpi"
     url = "https://github.com/sstsimulator/sst-dumpi/archive/refs/tags/v13.0.0_Final.tar.gz"
     git = "https://github.com/sstsimulator/sst-dumpi.git"
 
-    maintainers("berquist", "jpkenny", "calewis")
+    maintainers("berquist", "jmlapre")
 
     license("BSD-3-Clause")
 

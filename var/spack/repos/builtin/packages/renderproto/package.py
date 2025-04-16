@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,5 +16,6 @@ class Renderproto(AutotoolsPackage, XorgPackage):
 
     version("0.11.1", sha256="a0a4be3cad9381ae28279ba5582e679491fc2bec9aab8a65993108bf8dbce5fe")
 
+    depends_on("c", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

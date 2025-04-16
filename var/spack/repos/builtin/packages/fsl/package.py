@@ -1,13 +1,12 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 import os
 
+import spack.util.environment
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class Fsl(Package, CudaPackage):
@@ -26,6 +25,9 @@ class Fsl(Package, CudaPackage):
     version("6.0.5", sha256="df12b0b1161a26470ddf04e4c5d5d81580a04493890226207667ed8fd2b4b83f")
     version("6.0.4", sha256="58b88f38e080b05d70724d57342f58e1baf56e2bd3b98506a72b4446cad5033e")
     version("5.0.10", sha256="ca183e489320de0e502a7ba63230a7f55098917a519e8c738b005d526e700842")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("python", type=("build", "run"))
     depends_on("expat")
