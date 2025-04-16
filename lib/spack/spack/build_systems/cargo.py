@@ -30,7 +30,7 @@ class CargoPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("cargo")
-class CargoBuilder(BuilderWithDefaults):
+class CargoBuilder(BuilderWithDefaults[CargoPackage]):
     """The Cargo builder encodes the most common way of building software with
     a rust Cargo.toml file. It has two phases that can be overridden, if need be:
 

@@ -32,7 +32,7 @@ class WafPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("waf")
-class WafBuilder(BuilderWithDefaults):
+class WafBuilder(BuilderWithDefaults[WafPackage]):
     """The WAF builder provides the following phases that can be overridden:
 
     * configure

@@ -33,7 +33,7 @@ class GoPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("go")
-class GoBuilder(BuilderWithDefaults):
+class GoBuilder(BuilderWithDefaults[GoPackage]):
     """The Go builder encodes the most common way of building software with
     a golang go.mod file. It has two phases that can be overridden, if need be:
 

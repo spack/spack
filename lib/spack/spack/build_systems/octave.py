@@ -31,7 +31,7 @@ class OctavePackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("octave")
-class OctaveBuilder(BuilderWithDefaults):
+class OctaveBuilder(BuilderWithDefaults[OctavePackage]):
     """The octave builder provides the following phases that can be overridden:
 
     1. :py:meth:`~.OctaveBuilder.install`

@@ -428,7 +428,7 @@ class PythonPackage(PythonExtension):
 
 
 @spack.builder.builder("python_pip")
-class PythonPipBuilder(BuilderWithDefaults):
+class PythonPipBuilder(BuilderWithDefaults[PythonPackage]):
     phases = ("install",)
 
     #: Names associated with package methods in the old build-system format

@@ -27,7 +27,7 @@ class NMakePackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("nmake")
-class NMakeBuilder(BuilderWithDefaults):
+class NMakeBuilder(BuilderWithDefaults[NMakePackage]):
     """The NMake builder encodes the most common way of building software with
     Mircosoft's NMake tool. It has two phases that can be overridden, if need be:
 

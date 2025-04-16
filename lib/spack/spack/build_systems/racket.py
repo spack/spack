@@ -18,6 +18,8 @@ from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
 
+from ._checks import BuilderWithDefaults
+
 
 def _homepage(cls: "RacketPackage") -> Optional[str]:
     if cls.racket_name:
@@ -47,7 +49,7 @@ class RacketPackage(PackageBase):
 
 
 @spack.builder.builder("racket")
-class RacketBuilder(spack.builder.Builder):
+class RacketBuilder(BuilderWithDefaults[RacketPackage]):
     """The Racket builder provides an ``install`` phase that can be overridden."""
 
     phases = ("install",)

@@ -106,7 +106,7 @@ class SIPPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("sip")
-class SIPBuilder(BuilderWithDefaults):
+class SIPBuilder(BuilderWithDefaults[SIPPackage]):
     """The SIP builder provides the following phases that can be overridden:
 
     * configure

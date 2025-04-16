@@ -30,7 +30,7 @@ class SConsPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("scons")
-class SConsBuilder(BuilderWithDefaults):
+class SConsBuilder(BuilderWithDefaults[SConsPackage]):
     """The Scons builder provides the following phases that can be overridden:
 
     1. :py:meth:`~.SConsBuilder.build`

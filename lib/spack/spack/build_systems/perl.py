@@ -89,7 +89,7 @@ class PerlPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("perl")
-class PerlBuilder(BuilderWithDefaults):
+class PerlBuilder(BuilderWithDefaults[PerlPackage]):
     """The perl builder provides four phases that can be overridden, if required:
 
         1. :py:meth:`~.PerlBuilder.configure`

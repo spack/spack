@@ -38,7 +38,7 @@ class MakefilePackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("makefile")
-class MakefileBuilder(BuilderWithDefaults):
+class MakefileBuilder(BuilderWithDefaults[MakefilePackage]):
     """The Makefile builder encodes the most common way of building software with
     Makefiles. It has three phases that can be overridden, if need be:
 

@@ -79,7 +79,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("autotools")
-class AutotoolsBuilder(BuilderWithDefaults):
+class AutotoolsBuilder(BuilderWithDefaults[AutotoolsPackage]):
     """The autotools builder encodes the default way of installing software built
     with autotools. It has four phases that can be overridden, if need be:
 

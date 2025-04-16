@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import List
+from typing import Generic, List
 
 import llnl.util.lang
 
@@ -127,7 +127,7 @@ def execute_install_time_tests(builder: spack.builder.Builder):
     builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
 
 
-class BuilderWithDefaults(spack.builder.Builder):
+class BuilderWithDefaults(Generic[spack.builder.B], spack.builder.Builder[spack.builder.B]):
     """Base class for all specific builders with common callbacks registered."""
 
     # Check that self.prefix is there after installation

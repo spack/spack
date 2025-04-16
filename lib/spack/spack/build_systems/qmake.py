@@ -33,7 +33,7 @@ class QMakePackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("qmake")
-class QMakeBuilder(BuilderWithDefaults):
+class QMakeBuilder(BuilderWithDefaults[QMakePackage]):
     """The qmake builder provides three phases that can be overridden:
 
     1. :py:meth:`~.QMakeBuilder.qmake`

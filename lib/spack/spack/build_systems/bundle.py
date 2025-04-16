@@ -5,6 +5,8 @@ import spack.builder
 import spack.directives
 import spack.package_base
 
+from ._checks import BuilderWithDefaults
+
 
 class BundlePackage(spack.package_base.PackageBase):
     """General purpose bundle, or no-code, package class."""
@@ -23,7 +25,7 @@ class BundlePackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("bundle")
-class BundleBuilder(spack.builder.Builder):
+class BundleBuilder(BuilderWithDefaults[BundlePackage]):
     phases = ("install",)
 
     def install(self, pkg, spec, prefix):

@@ -35,7 +35,7 @@ class MavenPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("maven")
-class MavenBuilder(BuilderWithDefaults):
+class MavenBuilder(BuilderWithDefaults[MavenPackage]):
     """The Maven builder encodes the default way to build software with Maven.
     It has two phases that can be overridden, if need be:
 

@@ -29,7 +29,7 @@ class RubyPackage(spack.package_base.PackageBase):
 
 
 @spack.builder.builder("ruby")
-class RubyBuilder(BuilderWithDefaults):
+class RubyBuilder(BuilderWithDefaults[RubyPackage]):
     """The Ruby builder provides two phases that can be overridden if required:
 
     #. :py:meth:`~.RubyBuilder.build`
