@@ -56,5 +56,4 @@ class TreeSitter(MakefilePackage):
         # but GLIBC provides them according to some defines that changed over time.
         #   https://www.sourceware.org/glibc/wiki/Release/2.20#Deprecation_of__BSD_SOURCE_and__SVID_SOURCE_feature_macros
         if spec.satisfies("@0.25: ^glibc@:2.19"):
-            makefile = FileFilter("Makefile")
-            makefile.filter("-D_DEFAULT_SOURCE", "-D_BSD_SOURCE")
+            filter_file("-D_DEFAULT_SOURCE", "-D_BSD_SOURCE", "Makefile")
