@@ -20,6 +20,8 @@ class Libcerf(AutotoolsPackage, CMakePackage):
 
     license("MIT")
 
+    maintainers("white238")
+
     version("2.4", sha256="080b30ae564c3dabe3b89264522adaf5647ec754021572bee54929697b276cdc")
     version("2.3", sha256="cceefee46e84ce88d075103390b4f9d04c34e4bc3b96d733292c36836d4f7065")
     version(
