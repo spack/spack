@@ -71,7 +71,6 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
 
     # Viskores uses the default Kokkos backend
     depends_on("kokkos", when="+kokkos")
-    depends_on("kokkos@3.7:3.9", when="@2.0 +kokkos")
     # Viskores native CUDA and Kokkos CUDA backends are not compatible
     depends_on("kokkos ~cuda", when="+kokkos +cuda +cuda_native")
     depends_on("kokkos +cuda", when="+kokkos +cuda ~cuda_native")
@@ -196,8 +195,15 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
         with working_dir(testdir, create=True):
             cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
             ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
+
+            mpi_home = str()
+            if "+mpi" in self.spec:
+                mpi_home = self.spec["mpi"].prefix
             cmake(
                 self.prefix.share.doc.Viskores.examples.smoke_test,
+                f"-DCMAKE_C_COMPILER={self.compiler.cc}",
+                f"-DCMAKE_CXX_COMPILER={self.compiler.cxx}",
+                f"-DMPI_HOME={mpi_home}",
                 f"-DViskores_ROOT={self.prefix}",
             )
             cmake("--build", ".")
