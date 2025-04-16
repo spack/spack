@@ -26,6 +26,7 @@ class PyGidgetlab(PythonPackage):
     variant(
         "aiohttp", default=False, description="Enable aiohttp functionality through dependency."
     )
+    depends_on("python@:3.12", type=("build", "run"), when="@:1")
 
     depends_on("py-setuptools@60:", type=("build", "run"), when="@2.0.0:")
     depends_on("py-setuptools@45:", type=("build", "run"))
