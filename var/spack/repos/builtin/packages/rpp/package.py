@@ -215,5 +215,9 @@ class Rpp(CMakePackage):
                 )
             )
             if self.spec.satisfies("@6.4:"):
-                args.append(self.define("CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"))
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                    )
+                )
         return args
