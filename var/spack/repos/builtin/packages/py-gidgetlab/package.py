@@ -28,8 +28,8 @@ class PyGidgetlab(PythonPackage):
     )
 
     depends_on("py-setuptools@60:", type=("build", "run"), when="@2.0.0:")
-    depends_on("py-setuptools-scm@8.0:", type="build", when="@2.0.0:")
     depends_on("py-setuptools@45:", type=("build", "run"))
+    depends_on("py-setuptools-scm@8.0:", type="build", when="@2.0.0:")
     depends_on("py-setuptools-scm@6.2:", type="build")
 
     depends_on("py-aiohttp", type=("build", "run"), when="+aiohttp")
