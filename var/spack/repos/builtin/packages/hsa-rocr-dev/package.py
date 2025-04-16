@@ -141,6 +141,9 @@ class HsaRocrDev(CMakePackage):
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+        depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
+
     patch("0002-Remove-explicit-RPATH-again.patch", when="@3.7.0:5.6")
 
     @property
@@ -207,5 +210,7 @@ class HsaRocrDev(CMakePackage):
             args.append(self.define("ROCM_PATCH_VERSION", "60300"))
         if self.spec.satisfies("@5.7.0:"):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
-
+        if self.spec.satisfies("@6.3.2:"):
+            args.append(self.define("SHARED_LIBS", "ON"))
+            args.append(self.define("BUILD_SHARED_LIBS", "ON"))
         return args

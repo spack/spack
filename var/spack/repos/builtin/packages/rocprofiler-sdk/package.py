@@ -66,3 +66,6 @@ class RocprofilerSdk(CMakePackage):
         depends_on(f"aqlprofile@{ver}", when=f"@{ver}")
         depends_on(f"rccl@{ver}", when=f"@{ver}")
         depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
+
+    def setup_run_environment(self, env):
+       env.prepend_path("LD_LIBRARY_PATH", self.spec["aqlprofile"].prefix.lib)
