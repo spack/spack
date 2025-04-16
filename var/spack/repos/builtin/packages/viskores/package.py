@@ -35,15 +35,15 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
         preferred=True,
     )
 
-    variant("shared", default=False, description="build shared libs")
+    variant("shared", default=True, description="build shared libs")
     variant("doubleprecision", default=True, description="enable double precision")
-    variant("logging", default=False, description="build logging support")
-    variant("mpi", default=False, description="build mpi support")
+    variant("logging", default=True, description="build logging support")
+    variant("mpi", default=True, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
     variant("64bitids", default=False, description="enable 64 bits ids")
     variant("testlib", default=False, description="build test library")
     variant("fpic", default=False, description="build fpic support")
-    variant("examples", default=True, description="Install builtin examples")
+    variant("examples", default=False, description="Install builtin examples")
 
     # Device variants
     # CudaPackage provides cuda variant
@@ -99,9 +99,6 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
     # but that is not currently possible since when clauses are stacked, not overwritten.
     conflicts("+rocm", when="+cuda")
     conflicts("+rocm", when="~kokkos", msg="Viskores does not support HIP without Kokkos")
-    conflicts(
-        "+rocm", when="+virtuals", msg="Viskores does not support virtual functions with ROCm"
-    )
 
     # Viskores uses the Kokkos SYCL backend.
     # If Kokkos provides multiple backends, the SYCL backend may or
@@ -144,7 +141,6 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("Viskores_ENABLE_TBB", "tbb"),
                 self.define_from_variant("Viskores_ENABLE_TESTING_LIBRARY", "testlib"),
                 self.define_from_variant("Viskores_INSTALL_EXAMPLES", "examples"),
-                self.define_from_variant("Viskores_NO_DEPRECATED_VIRTUAL", "virtuals"),
                 self.define_from_variant("Viskores_USE_64BIT_IDS", "64bitids"),
                 self.define_from_variant("Viskores_USE_DOUBLE_PRECISION", "doubleprecision"),
                 self.define(
