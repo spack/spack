@@ -126,8 +126,6 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         return os.path.join(self.spec.prefix.bin, "flang")
 
     compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
-    c_names = ["clang"]
-    cxx_names = ["clang++"]
     fortran_names = ["flang"]
 
     debug_flags = [
