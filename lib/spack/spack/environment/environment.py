@@ -31,7 +31,6 @@ import spack.paths
 import spack.repo
 import spack.schema.env
 import spack.spec
-import spack.spec_list
 import spack.store
 import spack.user_environment as uenv
 import spack.util.environment
@@ -44,10 +43,10 @@ from spack import traverse
 from spack.installer import PackageInstaller
 from spack.schema.env import TOP_LEVEL_KEY
 from spack.spec import Spec
-from spack.spec_list import SpecList
 from spack.util.path import substitute_path_variables
 
 from ..enums import ConfigScopePriority
+from .list import SpecList, SpecListError, SpecListParser
 
 SpecPair = spack.concretize.SpecPair
 
@@ -932,8 +931,10 @@ class Environment:
         self.new_specs: List[Spec] = []
         self.views: Dict[str, ViewDescriptor] = {}
 
+        #: Parser for spec lists
+        self._spec_lists_parser = SpecListParser()
         #: Specs from "spack.yaml"
-        self.spec_lists: Dict[str, SpecList] = {user_speclist_name: SpecList()}
+        self.spec_lists: Dict[str, SpecList] = {}
         #: User specs from the last concretization
         self.concretized_user_specs: List[Spec] = []
         #: Roots associated with the last concretization, in order
@@ -1001,26 +1002,6 @@ class Environment:
         """Get a write lock context manager for use in a `with` block."""
         return lk.WriteTransaction(self.txlock, acquire=self._re_read)
 
-    def _process_definition(self, entry):
-        """Process a single spec definition item."""
-        when_string = entry.get("when")
-        if when_string is not None:
-            when = spack.spec.eval_conditional(when_string)
-            assert len([x for x in entry if x != "when"]) == 1
-        else:
-            when = True
-            assert len(entry) == 1
-
-        if when:
-            for name, spec_list in entry.items():
-                if name == "when":
-                    continue
-                user_specs = SpecList(name, spec_list, self.spec_lists.copy())
-                if name in self.spec_lists:
-                    self.spec_lists[name].extend(user_specs)
-                else:
-                    self.spec_lists[name] = user_specs
-
     def _process_view(self, env_view: Optional[Union[bool, str, Dict]]):
         """Process view option(s), which can be boolean, string, or None.
 
@@ -1082,21 +1063,24 @@ class Environment:
 
     def _construct_state_from_manifest(self):
         """Set up user specs and views from the manifest file."""
-        self.spec_lists = collections.OrderedDict()
         self.views = {}
+        self._sync_speclists()
+        self._process_view(spack.config.get("view", True))
+        self._process_concrete_includes()
 
-        for item in spack.config.get("definitions", []):
-            self._process_definition(item)
+    def _sync_speclists(self):
+        self.spec_lists = {}
+        self.spec_lists.update(
+            self._spec_lists_parser.parse_definitions(
+                data=spack.config.CONFIG.get("definitions", [])
+            )
+        )
 
         env_configuration = self.manifest[TOP_LEVEL_KEY]
         spec_list = env_configuration.get(user_speclist_name, [])
-        user_specs = SpecList(
-            user_speclist_name, [s for s in spec_list if s], self.spec_lists.copy()
+        self.spec_lists[user_speclist_name] = self._spec_lists_parser.parse_user_specs(
+            name=user_speclist_name, yaml_list=spec_list
         )
-        self.spec_lists[user_speclist_name] = user_specs
-
-        self._process_view(spack.config.get("view", True))
-        self._process_concrete_includes()
 
     def all_concretized_user_specs(self) -> List[Spec]:
         """Returns all of the concretized user specs of the environment and
@@ -1167,9 +1151,7 @@ class Environment:
             re_read: If ``True``, do not clear ``new_specs``. This value cannot be read from yaml,
                 and needs to be maintained when re-reading an existing environment.
         """
-        self.spec_lists = collections.OrderedDict()
-        self.spec_lists[user_speclist_name] = SpecList()
-
+        self.spec_lists = {}
         self._dev_specs = {}
         self.concretized_order = []  # roots of last concretize, in order
         self.concretized_user_specs = []  # user specs from last concretize
@@ -1276,22 +1258,6 @@ class Environment:
         """Remove this environment from Spack entirely."""
         shutil.rmtree(self.path)
 
-    def update_stale_references(self, from_list=None):
-        """Iterate over spec lists updating references."""
-        if not from_list:
-            from_list = next(iter(self.spec_lists.keys()))
-        index = list(self.spec_lists.keys()).index(from_list)
-
-        # spec_lists is an OrderedDict to ensure lists read from the manifest
-        # are maintainted in order, hence, all list entries after the modified
-        # list may refer to the modified list requiring stale references to be
-        # updated.
-        for i, (name, speclist) in enumerate(
-            list(self.spec_lists.items())[index + 1 :], index + 1
-        ):
-            new_reference = dict((n, self.spec_lists[n]) for n in list(self.spec_lists.keys())[:i])
-            speclist.update_reference(new_reference)
-
     def add(self, user_spec, list_name=user_speclist_name):
         """Add a single user_spec (non-concretized) to the Environment
 
@@ -1311,18 +1277,17 @@ class Environment:
             elif not spack.repo.PATH.exists(spec.name) and not spec.abstract_hash:
                 virtuals = spack.repo.PATH.provider_index.providers.keys()
                 if spec.name not in virtuals:
-                    msg = "no such package: %s" % spec.name
-                    raise SpackEnvironmentError(msg)
+                    raise SpackEnvironmentError(f"no such package: {spec.name}")
 
         list_to_change = self.spec_lists[list_name]
         existing = str(spec) in list_to_change.yaml_list
         if not existing:
             list_to_change.add(str(spec))
-            self.update_stale_references(list_name)
             if list_name == user_speclist_name:
                 self.manifest.add_user_spec(str(user_spec))
             else:
                 self.manifest.add_definition(str(user_spec), list_name=list_name)
+            self._sync_speclists()
 
         return bool(not existing)
 
@@ -1366,18 +1331,17 @@ class Environment:
                 "There are no specs named {0} in {1}".format(match_spec.name, list_name)
             )
         elif len(matches) > 1 and not allow_changing_multiple_specs:
-            raise ValueError("{0} matches multiple specs".format(str(match_spec)))
+            raise ValueError(f"{str(match_spec)} matches multiple specs")
 
         for idx, spec in matches:
             override_spec = Spec.override(spec, change_spec)
-            self.spec_lists[list_name].replace(idx, str(override_spec))
             if list_name == user_speclist_name:
                 self.manifest.override_user_spec(str(override_spec), idx=idx)
             else:
                 self.manifest.override_definition(
                     str(spec), override=str(override_spec), list_name=list_name
                 )
-        self.update_stale_references(from_list=list_name)
+        self._sync_speclists()
 
     def remove(self, query_spec, list_name=user_speclist_name, force=False):
         """Remove specs from an environment that match a query_spec"""
@@ -1405,22 +1369,17 @@ class Environment:
             raise SpackEnvironmentError(f"{err_msg_header}, no spec matches")
 
         old_specs = set(self.user_specs)
-        new_specs = set()
+
+        # Remove specs from the appropriate spec list
         for spec in matches:
             if spec not in list_to_change:
                 continue
             try:
                 list_to_change.remove(spec)
-                self.update_stale_references(list_name)
-                new_specs = set(self.user_specs)
-            except spack.spec_list.SpecListError as e:
-                # define new specs list
-                new_specs = set(self.user_specs)
+            except SpecListError as e:
                 msg = str(e)
                 if force:
                     msg += " It will be removed from the concrete specs."
-                    # Mock new specs, so we can remove this spec from concrete spec lists
-                    new_specs.remove(spec)
                 tty.warn(msg)
             else:
                 if list_name == user_speclist_name:
@@ -1428,7 +1387,11 @@ class Environment:
                 else:
                     self.manifest.remove_definition(str(spec), list_name=list_name)
 
-        # If force, update stale concretized specs
+        # Recompute "definitions" and user specs
+        self._sync_speclists()
+        new_specs = set(self.user_specs)
+
+        # If 'force', update stale concretized specs
         for spec in old_specs - new_specs:
             if force and spec in self.concretized_user_specs:
                 i = self.concretized_user_specs.index(spec)
@@ -2827,6 +2790,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             item[list_name].append(user_spec)
             break
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def remove_definition(self, user_spec: str, list_name: str) -> None:
@@ -2853,6 +2818,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def override_definition(self, user_spec: str, *, override: str, list_name: str) -> None:
@@ -2878,6 +2845,8 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             except ValueError:
                 pass
 
+        # "definitions" can be remote, so we need to update the global config too
+        spack.config.CONFIG.set("definitions", defs, scope=self.scope_name)
         self.changed = True
 
     def _iterate_on_definitions(self, definitions, *, list_name, err_msg):

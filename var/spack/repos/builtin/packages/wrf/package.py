@@ -424,12 +424,6 @@ class Wrf(Package):
             )
             config.filter("^CC_TOOLS(.*?)=([^#\n\r]*)(.*)$", r"CC_TOOLS\1=\2 -fpermissive \3")
 
-    @run_before("configure")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "cannot build WRF without a Fortran compiler"
-            raise RuntimeError(msg)
-
     def configure(self, spec, prefix):
         # Remove broken default options...
         self.do_configure_fixup()

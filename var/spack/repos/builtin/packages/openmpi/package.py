@@ -1013,14 +1013,6 @@ with '-Wl,-commons,use_dylibs' and without
             return "--without-tm"
         return f"--with-tm={self.spec['pbs'].prefix}"
 
-    @run_before("autoreconf")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) and (self.compiler.fc is None):
-            raise InstallError("OpenMPI requires both C and Fortran compilers!")
-
     @when("@main")
     def autoreconf(self, spec, prefix):
         perl = which("perl")
