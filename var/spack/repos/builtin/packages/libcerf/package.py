@@ -11,9 +11,7 @@ from spack.package import *
 class Libcerf(AutotoolsPackage, CMakePackage):
     """A self-contained C library providing complex error functions, based
     on Faddeeva's plasma dispersion function w(z). Also provides Dawson's
-    integral and Voigt's convolution of a Gaussian and a Lorentzian
-
-    """
+    integral and Voigt's convolution of a Gaussian and a Lorentzian"""
 
     homepage = "https://jugit.fz-juelich.de/mlz/libcerf/"
     url = "https://jugit.fz-juelich.de/mlz/libcerf/-/archive/v2.4/libcerf-v2.4.tar.gz"
