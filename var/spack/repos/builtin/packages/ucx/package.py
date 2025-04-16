@@ -198,10 +198,17 @@ class Ucx(AutotoolsPackage, CudaPackage):
         args += self.with_or_without("gdrcopy", activation_value="prefix")
         args += self.with_or_without("ib-hw-tm", variant="ib_hw_tm")
         args += self.with_or_without("knem", activation_value="prefix")
-        args += self.with_or_without("mlx5-dv", variant="mlx5_dv")
         args += self.with_or_without("rc")
         args += self.with_or_without("ud")
         args += self.with_or_without("xpmem", activation_value="prefix")
+
+        # mlx5_dv
+        # UCX <= 1.17: --with-mlx5-dv
+        # UCX >= 1.18: --with-mlx5
+        if spec.satisfies("@:1.17"):
+            args += self.with_or_without("mlx5-dv", variant="mlx5_dv")
+        else:
+            args += self.with_or_without("mlx5", variant="mlx5_dv")
 
         # Virtual filesystem as of UCX 1.11
         if "+vfs" in spec:
