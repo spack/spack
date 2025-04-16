@@ -635,23 +635,6 @@ class ConcretizationCache:
     Serializes solver result objects and statistics to json and stores
     at a given endpoint in a cache associated by the sha256 of the
     asp problem and the involved control files.
-
-
-    Cache layout:
-    ```
-    Cache root       Buckets        Entries
-        |        (entry_hash[:2])  (files named by hash)
-        |
-        |-------| - bucket1
-                |        |------| - entry
-                |               | - entry
-                | - bucket2
-                |        |------| - entry
-                |
-                | - bucket3
-                         |------| - entry
-                                | - entry
-    ```
     """
 
     def __init__(self, root: Union[str, None] = None):
