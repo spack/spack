@@ -8,14 +8,14 @@ import os
 import re
 import shutil
 import stat
-from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
 import archspec
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 from llnl.util.filesystem import HeaderList, LibraryList, join_path
-from llnl.util.lang import classproperty, match_predicate
+from llnl.util.lang import ClassProperty, classproperty, match_predicate
 
 import spack.builder
 import spack.config
@@ -372,9 +372,9 @@ class PythonPackage(PythonExtension):
 
     py_namespace: Optional[str] = None
 
-    homepage: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_homepage)
-    url: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_url)
-    list_url: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_list_url)
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
+    url: ClassProperty[Optional[str]] = classproperty(_url)
+    list_url: ClassProperty[Optional[str]] = classproperty(_list_url)
 
     @property
     def python_spec(self) -> Spec:

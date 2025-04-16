@@ -15,7 +15,19 @@ import types
 import typing
 import warnings
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Generic, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 # Ignore emacs backups when listing modules
 ignore_modules = r"^\.#|~$"
@@ -1061,6 +1073,12 @@ class classproperty(Generic[ClassPropertyType]):
 
     def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
+
+
+#: A type alias that represents either a classproperty descriptor or a constant value of the same
+#: type. This allows derived classes to override a computed class-level property with a constant
+#: value while retaining type compatibility.
+ClassProperty = Union[ClassPropertyType, classproperty[ClassPropertyType]]
 
 
 class DeprecatedProperty:

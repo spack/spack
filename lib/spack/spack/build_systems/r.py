@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from typing import Optional, Tuple, Union
+from typing import Optional, Tuple
 
 from llnl.util.filesystem import mkdirp
-from llnl.util.lang import classproperty
+from llnl.util.lang import ClassProperty, classproperty
 
 from spack.directives import extends
 
@@ -103,7 +103,7 @@ class RPackage(Package):
 
     extends("r")
 
-    homepage: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_homepage)
-    url: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_url)
-    list_url: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_list_url)
-    git: Union[Optional[str], classproperty[Optional[str]]] = classproperty(_git)
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
+    url: ClassProperty[Optional[str]] = classproperty(_url)
+    list_url: ClassProperty[Optional[str]] = classproperty(_list_url)
+    git: ClassProperty[Optional[str]] = classproperty(_git)
