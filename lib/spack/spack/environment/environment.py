@@ -1605,23 +1605,6 @@ class Environment:
 
         # Unify the specs objects, so we get correct references to all parents
         self._read_lockfile_dict(self._to_lockfile_dict())
-
-        # Re-attach information on test dependencies
-        if tests:
-            # This is slow, but the information on test dependency is lost
-            # after unification or when reading from a lockfile.
-            for h in self.specs_by_hash:
-                current_spec, computed_spec = self.specs_by_hash[h], by_hash[h]
-                for node in computed_spec.traverse():
-                    test_edges = node.edges_to_dependencies(depflag=dt.TEST)
-                    for current_edge in test_edges:
-                        test_dependency = current_edge.spec
-                        if test_dependency in current_spec[node.name]:
-                            continue
-                        current_spec[node.name].add_dependency_edge(
-                            test_dependency.copy(), depflag=dt.TEST, virtuals=current_edge.virtuals
-                        )
-
         return concretized_specs
 
     @property
