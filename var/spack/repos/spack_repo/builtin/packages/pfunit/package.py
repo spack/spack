@@ -120,7 +120,10 @@ class Pfunit(CMakePackage):
     depends_on("m4", when="@4.1.5:", type="build")
     depends_on("fargparse@1.8.0:", when="@4.10.0:")
     depends_on("fargparse", when="@4:")
-    depends_on("cmake@3.12:", type="build")
+
+    depends_on("cmake@3.12:3", type="build", when="@:4.11")
+    depends_on("cmake@3.12:", type="build", when="@4.12")
+    depends_on("cmake@3.24:", type="build", when="@4.13:")
 
     # CMake 3.25.0 has an issue with pFUnit
     # https://gitlab.kitware.com/cmake/cmake/-/issues/24203

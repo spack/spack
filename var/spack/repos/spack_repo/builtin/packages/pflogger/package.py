@@ -74,7 +74,8 @@ class Pflogger(CMakePackage):
         msg="pFlogger only works with the Fujitsu compiler from version 1.13.0 onwards",
     )
 
-    depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.12:3", type="build", when="@:1.16")
+    depends_on("cmake@3.24:", type="build", when="@1.17:")
 
     def cmake_args(self):
         spec = self.spec

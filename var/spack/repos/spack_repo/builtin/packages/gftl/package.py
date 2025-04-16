@@ -60,7 +60,9 @@ class Gftl(CMakePackage):
 
     depends_on("fortran", type="build")
 
-    depends_on("cmake@3.12:", type="build")
+    depends_on("cmake@3.12:3", type="build", when="@:1.15")
+    depends_on("cmake@3.24:", type="build", when="@1.16:")
+
     depends_on("m4", type="build")
 
     # gftl only works with the Fujitsu compiler from 1.12 onwards

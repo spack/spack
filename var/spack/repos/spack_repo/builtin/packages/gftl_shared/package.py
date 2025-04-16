@@ -45,7 +45,10 @@ class GftlShared(CMakePackage):
     depends_on("fortran", type="build")
 
     depends_on("m4", type=("build", "run"))
-    depends_on("cmake@3.12:", type="build")
+
+    depends_on("cmake@3.12:3", type="build", when=":@1.10")
+    depends_on("cmake@3.24:", type="build", when="@1.11:")
+
     depends_on("gftl")
 
     # gftl-shared only works with the Fujitsu compiler from 1.8.0 onwards
