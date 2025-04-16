@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import abc
 import collections
 import collections.abc
 import copy
@@ -213,7 +214,8 @@ def buildsystem_name(pkg: spack.package_base.PackageBase) -> str:
 class BuilderMeta(
     spack.phase_callbacks.PhaseCallbacksMeta,
     spack.multimethod.MultiMethodMeta,
-    type(collections.abc.Sequence),  # type: ignore
+    abc.ABCMeta,
+    type(Generic),
 ):
     pass
 
