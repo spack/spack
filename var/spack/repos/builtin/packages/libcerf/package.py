@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
 from spack.build_systems.autotools import AutotoolsBuilder
 from spack.build_systems.cmake import CMakeBuilder
+from spack.package import *
+
 
 class Libcerf(AutotoolsPackage, CMakePackage):
     """A self-contained C library providing complex error functions, based
@@ -21,16 +22,17 @@ class Libcerf(AutotoolsPackage, CMakePackage):
 
     version("2.4", sha256="080b30ae564c3dabe3b89264522adaf5647ec754021572bee54929697b276cdc")
     version("2.3", sha256="cceefee46e84ce88d075103390b4f9d04c34e4bc3b96d733292c36836d4f7065")
-    version("1.3", sha256="d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859",
-            url="https://sourceforge.net/projects/libcerf/files/libcerf-1.3.tgz")
+    version(
+        "1.3",
+        sha256="d7059e923d3f370c89fb4d19ed4f827d381bc3f0e36da5595a04aeaaf3e6a859",
+        url="https://sourceforge.net/projects/libcerf/files/libcerf-1.3.tgz",
+    )
 
     variant("cpp", default=False, when="@2:", description="Compile source as C++")
 
     # Build system
     build_system(
-        conditional("cmake", when="@2:"),
-        conditional("autotools", when="@=1.3"),
-        default="cmake",
+        conditional("cmake", when="@2:"), conditional("autotools", when="@=1.3"), default="cmake"
     )
 
     depends_on("c", type="build")
