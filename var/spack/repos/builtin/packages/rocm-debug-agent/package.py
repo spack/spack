@@ -128,7 +128,7 @@ class RocmDebugAgent(CMakePackage):
 
     # https://github.com/ROCm/rocr_debug_agent/pull/4
     patch("0001-Drop-overly-strict-Werror-flag.patch")
-    patch("0002-add-hip-architecture.patch")
+    patch("0002-add-hip-architecture.patch", when="@:6.3")
 
     @classmethod
     def determine_version(cls, lib):
