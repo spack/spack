@@ -33,6 +33,7 @@ class Go(Package):
 
     extendable = True
     executables = ["^go$"]
+    unresolved_libraries = ["libtiff.so.*"]  # go/src/debug/elf/testdata/libtiffxx.so_
 
     maintainers("alecbcs")
 
