@@ -71,6 +71,9 @@ ci:
         - export SPACK_COPY_ONLY_SOURCE=${SPACK_BUILDCACHE_SOURCE//SPACK_REPLACE_VERSION/${SPACK_REPLACE_VERSION}}
       script:
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        # TODO: remove this when we stop getting windows config includes added to the environment
+        - spack config add 'config:build_stage:["$tempdir/$user/spack-stage", "$user_cache_path/stage"]'
+        - spack config blame config
         - echo Copying environment specs from ${SPACK_COPY_ONLY_SOURCE} to ${SPACK_COPY_ONLY_DESTINATION}
         - spack buildcache sync "${SPACK_COPY_ONLY_SOURCE}" "${SPACK_COPY_ONLY_DESTINATION}"
         - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
