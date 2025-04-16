@@ -18,7 +18,7 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
     applied to a variety of algorithms across many different processor
     architectures."""
 
-    homepage = "https://m.vtk.org://github.com/Viskores/viskores"
+    homepage = "https://github.com/Viskores/viskores"
     maintainers("kmorel", "vicentebolea")
 
     url = "https://github.com/Viskores/Viskores/archive/refs/tags/v1.0.0.tar.gz"
