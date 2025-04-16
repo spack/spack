@@ -17,6 +17,7 @@ class PyH5netcdf(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("1.6.1", sha256="7ef4ecd811374d94d29ac5e7f7db71ff59b55ef8eeefbe4ccc2c316853d31894")
     version("1.3.0", sha256="a171c027daeb34b24c24a3b6304195b8eabbb6f10c748256ed3cfe19806383cf")
     version("0.10.0", sha256="fc1cfec33bb9f730c412f87fcbc259167fd7620635679ccfc6e31971730dbd60")
 
