@@ -360,6 +360,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
     options.artifacts_root = args.artifacts_root
     options.output_file = args.output_file
     options.prune_up_to_date = args.prune_dag
+    options.prune_unaffected = args.prune_unaffected
     options.prune_external = args.prune_externals
     options.check_index_only = args.index_only
 
@@ -380,7 +381,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
                 "ignoring it."
             )
 
-    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", None)
+    spack_prune_untouched = os.environ.get("SPACK_PRUNE_UNTOUCHED", options.prune_unaffected)
     options.prune_untouched = (
         spack_prune_untouched is not None and spack_prune_untouched.lower() == "true"
     )
@@ -486,7 +487,14 @@ def generate_pipeline(env: ev.Environment, args) -> None:
                 for s in affected_specs:
                     tty.debug(f"  {PipelineDag.key(s)}")
 
-                pruning_filters.append(create_unaffected_pruner(affected_specs))
+                # If specs changed, but none of the packages were affected,
+                # rebuild everything that has changed.
+                if affected_specs:
+                    pruning_filters.append(create_unaffected_pruner(affected_specs))
+                else:
+                    tty.warn(
+                        "Disabling unaffected package pruning as no package changes were dectected"
+                    )
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:

@@ -72,6 +72,10 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "path to the file where generated jobs file should be written. "
         "default is .gitlab-ci.yml in the root of the repository",
     )
+    generate.add_argument(
+        "--enable-pruning"
+        default=["up-to-date", "unaffected", "externals"]
+    )
     prune_dag_group = generate.add_mutually_exclusive_group()
     prune_dag_group.add_argument(
         "--prune-dag",
@@ -85,6 +89,23 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--no-prune-dag",
         action="store_false",
         dest="prune_dag",
+        default=True,
+        help="process up-to-date specs\n\n"
+        "generate jobs for specs even when they are up-to-date on the mirror",
+    )
+    prune_unaffected_group = generate.add_mutually_exclusive_group()
+    prune_unaffected_group.add_argument(
+        "--prune-unaffected",
+        action="store_true",
+        dest="prune_unaffected",
+        default=True,
+        help="skip up-to-date specs\n\n"
+        "do not generate jobs for specs that are up-to-date on the mirror",
+    )
+    prune_unaffected_group.add_argument(
+        "--no-prune-unaffected",
+        action="store_false",
+        dest="prune_unaffected",
         default=True,
         help="process up-to-date specs\n\n"
         "generate jobs for specs even when they are up-to-date on the mirror",
