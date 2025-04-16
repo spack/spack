@@ -26,20 +26,14 @@ class Nekbone(Package):
         extension=".tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Variants
     variant("mpi", default=True, description="Build with MPI")
 
     # dependencies
-    depends_on("mpi", when="+mpi")
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "Nekbone can not be built without a Fortran compiler."
-            raise RuntimeError(msg)
+    depends_on("mpi", when="+mpi")
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

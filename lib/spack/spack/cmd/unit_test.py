@@ -17,6 +17,7 @@ except ImportError:
     pytest = None  # type: ignore
 
 import llnl.util.filesystem
+import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
@@ -236,6 +237,12 @@ def unit_test(parser, args, unknown_args):
         pytest_root = spack.extensions.load_extension(args.extension)
 
     if args.numprocesses is not None and args.numprocesses > 1:
+        try:
+            import xdist  # noqa: F401
+        except ImportError:
+            tty.error("parallel unit-test requires pytest-xdist module")
+            return 1
+
         pytest_args.extend(
             [
                 "--dist",

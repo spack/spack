@@ -92,10 +92,12 @@ class Crtm(CMakePackage):
     # https://github.com/JCSDA/spack-stack/issues/1088
     patch("v3.1.0-skylabv8.installprefix.patch", when="@v3.1.0-skylabv8")
 
-    @when("@2.4.0.1")
     def patch(self):
-        if self.compiler.name in ["gcc", "clang", "apple-clang"]:
-            # Line lengths in RSS_Emissivity_Model.f90 are too long for gfortran default limit
-            filter_file(
-                "-fbacktrace", "-fbacktrace -ffree-line-length-none", "libsrc/CMakeLists.txt"
-            )
+        if self.spec.satisfies("@2.4.0.1"):
+            if self.compiler.name in ["gcc", "clang", "apple-clang"]:
+                # Line lengths in RSS_Emissivity_Model.f90 are too long for gfortran default limit
+                filter_file(
+                    "-fbacktrace", "-fbacktrace -ffree-line-length-none", "libsrc/CMakeLists.txt"
+                )
+        if not self.run_tests:
+            filter_file(r"add_subdirectory\(test\)", "# disable testing", "CMakeLists.txt")

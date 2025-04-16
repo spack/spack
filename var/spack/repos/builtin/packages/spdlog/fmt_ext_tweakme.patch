@@ -1,0 +1,14 @@
+diff a/include/spdlog/tweakme.h b/include/spdlog/tweakme.h
+--- a/include/spdlog/tweakme.h
++++ b/include/spdlog/tweakme.h
+@@ -78,7 +78,9 @@
+ // In this case spdlog will try to include <fmt/format.h> so set your -I flag
+ // accordingly.
+ //
+-// #define SPDLOG_FMT_EXTERNAL
++#ifndef SPDLOG_FMT_EXTERNAL
++#define SPDLOG_FMT_EXTERNAL
++#endif
+ ///////////////////////////////////////////////////////////////////////////////
+ 
+ ///////////////////////////////////////////////////////////////////////////////

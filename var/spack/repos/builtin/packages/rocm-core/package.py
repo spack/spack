@@ -19,6 +19,7 @@ class RocmCore(CMakePackage):
     libraries = ["librocm-core"]
 
     license("MIT")
+    version("6.3.3", sha256="d2a3900424dea1dcc0e303c288d2c07e1345c2d5348398449998e8007fe7fd44")
     version("6.3.2", sha256="3243f661e5e995341e81127a6096ac80169b8481826ebadc02e24020f1ff985d")
     version("6.3.1", sha256="f8196f3aafe03bd93ae2947162f34098fd08ddbad4eb3deaf92acd434b480304")
     version("6.3.0", sha256="4fa981335426195028dd6b3a05228a2ebe8e601023a1e99130bba1b14bf60178")
@@ -45,7 +46,18 @@ class RocmCore(CMakePackage):
 
     depends_on("cxx", type="build")  # generated
 
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in [
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+    ]:
         depends_on("llvm-amdgpu", when=f"@{ver}+asan")
 
     def setup_build_environment(self, env):

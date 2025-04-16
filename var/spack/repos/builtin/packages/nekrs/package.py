@@ -41,10 +41,6 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
     version("23.0", sha256="2cb4ded69551b9614036e1a9d5ac54c8535826eae8f8b6a00ddb89043b2c392a")
     version("21.0", tag="v21.0", commit="bcd890bf3f9fb4d91224c83aeda75c33570f1eaa")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("opencl", default=False, description="Activates support for OpenCL")
 
     # Conflicts:
@@ -55,6 +51,10 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
     #     conflicts('^' + pkg, msg=(pkg + " is built into nekRS"))
 
     # Dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("git")
     depends_on("cmake")

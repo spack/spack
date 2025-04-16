@@ -114,6 +114,9 @@ class Openblas(CMakePackage, MakefilePackage):
     # https://github.com/OpenMathLib/OpenBLAS/pull/4328
     patch("xcode15-fortran.patch", when="@0.3.25 %apple-clang@15:")
 
+    # https://github.com/OpenMathLib/OpenBLAS/issues/5202
+    patch("openblas-0.3.29-darwin-aarch64.patch", when="@0.3.29 platform=darwin")
+
     # https://github.com/xianyi/OpenBLAS/pull/2519/files
     patch("ifort-msvc.patch", when="%msvc")
 
@@ -141,7 +144,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/OpenMathLib/OpenBLAS/pull/1098
-    patch("power8.patch", when="@0.2.18:0.2.19 %gcc@7.1.0: target=power8")
+    patch("power8.patch", when="@0.2.18:0.2.19 target=power8 %gcc@7.1.0:")
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/OpenMathLib/OpenBLAS/pull/982
@@ -293,20 +296,6 @@ class Openblas(CMakePackage, MakefilePackage):
     def parallel(self):
         # unclear whether setting `-j N` externally was supported before 0.3
         return self.spec.version >= Version("0.3.0")
-
-    @run_before("edit")
-    def check_compilers(self):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on Blas/Lapack need C or/and Fortran symbols. For now
-        # require both.
-        # As of 08/2022 (0.3.21), we can build purely with a C compiler using
-        # a f2c translated LAPACK version
-        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
-        if self.compiler.fc is None and "~fortran" not in self.spec:
-            raise InstallError(
-                self.compiler.cc
-                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
-            )
 
     @property
     def headers(self):

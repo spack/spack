@@ -20,8 +20,13 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     tags = ["e4s"]
 
-    version("2.3.1", tag="v2.3.1", commit="6c04b9b21790533e457764bd7f8f26757db1552f")
-    version("2.3.0", tag="v2.3.0", commit="90bc8267fceb02060e54646f73b45d4252aef491")
+    version("2.3.2", tag="v2.3.2", commit="736fc74248777a00dbd41f1a66ae49e615c8a514")
+    version(
+        "2.3.1", tag="v2.3.1", commit="6c04b9b21790533e457764bd7f8f26757db1552f", deprecated=True
+    )
+    version(
+        "2.3.0", tag="v2.3.0", commit="90bc8267fceb02060e54646f73b45d4252aef491", deprecated=True
+    )
     version("2.2.1", tag="v2.2.1", commit="84b5b232aebab40610f57387778db80f6c8c84c5")
     version("2.2.0", tag="v2.2.0", commit="dd531ac16c5df124d76e385c6ebe9b9589c2d3ad")
     version(
@@ -50,8 +55,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
         description="Set Caliper Profiling Detail",
         multi=False,
     )
-    variant("kokkos", default=False, description="Enable Kokkos Support", when="@:2.3.1")
-    variant("openmp", default=False, description="Enable OpenMP Support", when="@:2.3.1")
+    variant("kokkos", default=False, description="Enable Kokkos Support", when="@:2.3")
+    variant("openmp", default=False, description="Enable OpenMP Support", when="@:2.3")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -62,8 +67,8 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("graphviz", when="+graphviz")
     depends_on("hdf5+hl+mpi", when="+hdf5")
-    depends_on("metis@5.1.0:")
-    depends_on("parmetis@4.0.3:")
+    depends_on("metis@5.1.0:", when="@:2.3.1")
+    depends_on("parmetis@4.0.3:", when="@:2.3.1")
     depends_on("boost@1.70.0: cxxstd=17 +program_options +stacktrace")
 
     depends_on("cmake@3.15:")
@@ -78,7 +83,7 @@ class Flecsi(CMakePackage, CudaPackage, ROCmPackage):
     requires("^kokkos +cuda_constexpr +cuda_lambda", when="^kokkos +cuda")
     depends_on("kokkos +rocm", when="+kokkos +rocm")
     depends_on("kokkos +openmp", when="+kokkos +openmp")
-    requires("+openmp", when="@:2.3.1 ^kokkos +openmp")
+    requires("+openmp", when="@:2.3 ^kokkos +openmp")
     depends_on("legion@cr-20210122", when="backend=legion @2.0:2.1.0")
     depends_on("legion@cr-20230307", when="backend=legion @2.2.0:2.2.1")
     depends_on("legion@24.03.0:", when="backend=legion @2.2.2:")

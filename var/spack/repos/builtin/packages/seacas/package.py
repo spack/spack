@@ -35,6 +35,9 @@ class Seacas(CMakePackage):
     # ###################### Versions ##########################
     version("master", branch="master")
     version(
+        "2025-03-13", sha256="406aff5b8908d6a3bf6687d825905990101caa9cf8c1213a508938eed2134d6d"
+    )
+    version(
         "2025-02-27", sha256="224468d6215b4f4b15511ee7a29f755cdd9e7be18c08dfece9d9991e68185cfc"
     )
     version(
@@ -149,10 +152,6 @@ class Seacas(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
-
     # ###################### Variants ##########################
     # Package options
     # The I/O libraries (exodus, IOSS) are always built
@@ -234,6 +233,10 @@ class Seacas(CMakePackage):
         "Sometimes needed when building static libraries on some systems.",
     )
     # ###################### Dependencies ##########################
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.22:", when="@2023-10-24:", type="build")
     depends_on("cmake@3.17:", when="@:2023-05-30", type="build")
     depends_on("mpi", when="+mpi")

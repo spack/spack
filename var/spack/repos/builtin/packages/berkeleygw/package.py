@@ -46,10 +46,6 @@ class Berkeleygw(MakefilePackage):
         expand=False,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # For parallel computing support, enable +mpi. It uses MPI and ScaLAPACK
     # which are inter-dependent in the berkeleygw code(they need each other):
     # https://github.com/spack/spack/pull/33948#issuecomment-1323805817
@@ -60,6 +56,10 @@ class Berkeleygw(MakefilePackage):
     variant("hdf5", default=True, description="Builds with HDF5 support")
     variant("debug", default=False, description="Builds with DEBUG flag")
     variant("verbose", default=False, description="Builds with VERBOSE flag")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")
@@ -78,12 +78,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp",
-            when="^[virtuals=fftw-api] intel-parallel-studio",
-        )
 
     with when("~openmp"):
         depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
@@ -92,11 +87,7 @@ class Berkeleygw(MakefilePackage):
         depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
-        )
 
     # in order to run the installed python scripts
     depends_on("python", type=("build", "run"), when="+python")

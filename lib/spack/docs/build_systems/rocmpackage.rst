@@ -12,8 +12,7 @@ The ``ROCmPackage`` is not a build system but a helper package. Like ``CudaPacka
 it provides standard variants, dependencies, and conflicts to facilitate building
 packages using GPUs though for AMD in this case.
 
-You can find the source for this package (and suggestions for setting up your
-``compilers.yaml`` and ``packages.yaml`` files) at
+You can find the source for this package (and suggestions for setting up your ``packages.yaml`` file) at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/rocm.py>`__.
 
 ^^^^^^^^

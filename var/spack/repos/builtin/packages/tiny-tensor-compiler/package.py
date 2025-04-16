@@ -20,15 +20,15 @@ class TinyTensorCompiler(CMakePackage):
 
     version("0.3.1", sha256="e512b92f9ef8f21362ea4a8f2655338769bc7fcf9de543e3dc7db86b696695b3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Shared library")
     variant("level_zero", default=False, description="Build tinytc_ze (Level Zero runtime)")
     variant("opencl", default=True, description="Build tintc_cl (OpenCL runtime)")
     variant("sycl", default=False, description="Build tinytc_sycl (SYCL runtime)")
 
     requires("+opencl +level_zero", when="+sycl")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.23.0:", type="build")
     depends_on("double-batched-fft-library ~sycl ~level_zero ~opencl@0.5.1:", type="link")

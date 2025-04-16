@@ -20,11 +20,11 @@ class Parflow(CMakePackage):
     version("3.9.0", sha256="0ac610208baf973ac07ca93187ec289ba3f6e904d3f01d721ee96a2ace0f5e48")
     version("3.8.0", sha256="5ad01457bb03265d1e221090450e3bac5a680d6290db7e3872c295ce6d6aaa08")
 
+    variant("mpi", default=True, description="Enable MPI support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("mpi", default=True, description="Enable MPI support")
 
     # Using explicit versions to keep builds consistent
     depends_on("tcl@8.6.11")

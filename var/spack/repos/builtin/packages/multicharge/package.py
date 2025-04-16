@@ -19,6 +19,7 @@ class Multicharge(CMakePackage, MesonPackage):
 
     build_system("cmake", "meson", default="meson")
 
+    version("main", branch="main")
     version("0.3.1", sha256="180541714c26804a2d66edd892c8cd4cb40a21acbaf7edb24aaf04d580368b97")
     version("0.3.0", sha256="e8f6615d445264798b12d2854e25c93938373dc149bb79e6eddd23fc4309749d")
 
