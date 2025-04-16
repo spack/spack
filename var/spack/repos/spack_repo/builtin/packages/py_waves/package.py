@@ -58,7 +58,6 @@ class PyWaves(PythonPackage):
     depends_on("py-networkx", type=("run", "test"))
     depends_on("py-numpy", type=("run", "test"))
     depends_on("py-pyyaml", type=("run", "test"))
-    # SALib 1.4.6 is required for sobol sampler. Most up-to-date version of SALib is 1.4.4.
     depends_on("py-salib@1.4.6:", type=("run", "test"), when="@:0.12.9")
     depends_on("py-salib@1:", type=("run", "test"), when="@:0.12.8")
     depends_on("py-scipy@1.7:", type=("run", "test"))
