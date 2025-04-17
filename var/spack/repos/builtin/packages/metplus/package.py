@@ -15,7 +15,7 @@ class Metplus(Package):
     url = "https://github.com/dtcenter/METplus/archive/refs/tags/v4.1.0.tar.gz"
     git = "https://github.com/dtcenter/METplus"
 
-    maintainers("AlexanderRichert-NOAA")
+    maintainers("AlexanderRichert-NOAA", "climbfuji")
 
     version("develop", branch="develop")
     version("6.0.0", sha256="e9358aede2fd2abecd81806227de7b165d68fdf2fc9defcbba24df229461b155")

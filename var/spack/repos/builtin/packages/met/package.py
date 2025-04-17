@@ -16,7 +16,7 @@ class Met(AutotoolsPackage):
     url = "https://github.com/dtcenter/MET/archive/refs/tags/v11.0.1.tar.gz"
     git = "https://github.com/dtcenter/MET"
 
-    maintainers("AlexanderRichert-NOAA")
+    maintainers("AlexanderRichert-NOAA", "climbfuji")
 
     version("develop", branch="develop")
     version("12.0.1", sha256="ef396a99ca6c2248855848cd194f9ceaf3b051fb5e8c01a0b0b2a00110b1fcfb")
@@ -67,10 +67,8 @@ class Met(AutotoolsPackage):
     patch("openmp_shape_patch.patch", when="@10.1.0")
 
     # https://github.com/JCSDA/spack-stack/issues/615
-    # TODO(srherbener) Apple clang 14.x is getting pickier! When these updates are
-    # merged into the MET code base, the following two patches can be removed.
-    patch("apple-clang-string-cast-operator.patch", when="@10.1.1: %apple-clang@14:")
-    patch("apple-clang-no-register.patch", when="@10.1.1: %apple-clang@14:")
+    patch("apple-clang-string-cast-operator.patch", when="@10.1.1:11.0 %apple-clang@14:")
+    patch("apple-clang-no-register.patch", when="@10.1.1:11.0 %apple-clang@14:")
 
     def url_for_version(self, version):
         if version < Version("11"):
