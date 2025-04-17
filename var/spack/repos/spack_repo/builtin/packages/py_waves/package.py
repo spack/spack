@@ -106,16 +106,18 @@ class PyWaves(PythonPackage):
                     "--no-warn-script-location",
                     "--no-index",
                     f"--prefix={prefix}",
-                    # TODO: Figure out how to override the positional '.' of the spack install options
-                    # to use the py-build output path instead of overriding the entire default install
-                    # function Will require the follow on documentation installation logic to be a
-                    # ``@run_after("install")`` function.
+                    # TODO: Figure out how to override the positional '.' of the spack install
+                    # options to use the py-build output path instead of overriding the entire
+                    # default install function Will require the follow on documentation
+                    # installation logic to be a ``@run_after("install")`` function.
                     f"dist/waves-{self.version}.tar.gz",
                 )
                 scons = which("scons")
                 scons("html", "man")
 
-                site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+                site_packages_directory = list(
+                    pathlib.Path(self.prefix).rglob("**/site-packages")
+                )[0]
                 python_package_documentation = python.copy()
                 python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
                 python_package_documentation("package_documentation.py")
