@@ -16,6 +16,8 @@ class Blat(Package):
     version("37", sha256="88ee2b272d42ab77687c61d200b11f1d58443951069feb7e10226a2509f84cf2")
     version("35", sha256="06d9bcf114ec4a4b21fef0540a0532556b6602322a5a2b33f159dc939ae53620")
 
+    depends_on("c", type="build")
+
     depends_on("libpng")
     depends_on("uuid", when="@37:")
     depends_on("mysql-client", when="@37:")

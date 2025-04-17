@@ -31,7 +31,7 @@ class G2c(CMakePackage):
     variant("pic", default=True, description="Build with position-independent-code")
     variant(
         "libs",
-        default=("shared", "static"),
+        default="shared,static",
         values=("shared", "static"),
         multi=True,
         description="Build shared libs, static libs or both",

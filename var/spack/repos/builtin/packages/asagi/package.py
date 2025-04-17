@@ -32,7 +32,7 @@ class Asagi(CMakePackage):
     )
 
     variant("fortran", default=True, description="enable fortran support")
-    variant("max_dimensions", default=4, description="max. number of dimensions supported")
+    variant("max_dimensions", default="4", description="max. number of dimensions supported")
     variant("numa", default=True, description="enable NUMA support")
     variant("mpi", default=True, description="enable MPI")
     variant("threadsafe", default=True, description="enable threadsafe ASAGI-functions")

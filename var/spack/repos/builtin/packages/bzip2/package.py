@@ -131,7 +131,6 @@ class Bzip2(Package, SourcewarePackage):
         # Build the static library and everything else
         if self.spec.satisfies("platform=windows"):
             # Build step
-            nmake = Executable("nmake.exe")
             nmake("-f", "makefile.msc")
             # Install step
             mkdirp(self.prefix.include)

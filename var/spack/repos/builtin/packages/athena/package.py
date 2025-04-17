@@ -85,7 +85,7 @@ class Athena(AutotoolsPackage):
         description="Equation of state",
         values=["adiabatic", "isothermal"],
     )
-    variant("nscalars", default=0, description="Number of advected scalars")
+    variant("nscalars", default="0", description="Number of advected scalars")
     variant(
         "gravity",
         default="none",

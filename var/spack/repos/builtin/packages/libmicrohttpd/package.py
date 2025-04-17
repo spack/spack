@@ -5,13 +5,13 @@
 from spack.package import *
 
 
-class Libmicrohttpd(AutotoolsPackage):
+class Libmicrohttpd(AutotoolsPackage, GNUMirrorPackage):
     """GNU libmicrohttpd is a small C library that is supposed to make
     it easy to run an HTTP server as part of another application.
     """
 
     homepage = "https://www.gnu.org/software/libmicrohttpd/"
-    url = "https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-0.9.71.tar.gz"
+    gnu_mirror_path = "libmicrohttpd/libmicrohttpd-0.9.71.tar.gz"
 
     maintainers("hainest")
 

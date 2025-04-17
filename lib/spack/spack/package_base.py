@@ -1821,7 +1821,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
 
-    def do_test(self, dirty=False, externals=False):
+    def do_test(self, *, dirty=False, externals=False, timeout: Optional[int] = None):
         if self.test_requires_compiler and not any(
             lang in self.spec for lang in ("c", "cxx", "fortran")
         ):
@@ -1839,7 +1839,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             "verbose": tty.is_verbose(),
         }
 
-        self.tester.stand_alone_tests(kwargs)
+        self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.

@@ -20,47 +20,19 @@ class H5zZfp(CMakePackage):
     version("1.1.0", sha256="48a81e69d1f3b61d9a1eb07e868164fadf3b88690ec930efd849f5889681a893")
 
     variant("fortran", default=True, description="Enable Fortran support")
+    variant("tests", default=False, description="Build tests")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
-    depends_on("hdf5+fortran", when="+fortran")
-    depends_on("hdf5", when="~fortran")
-    depends_on("mpi", when="^hdf5+mpi")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+    depends_on("hdf5")
     depends_on("zfp bsws=8")
+    depends_on("hdf5+fortran", when="+fortran")
+    depends_on("mpi", when="^hdf5+mpi")
 
-    @property
-    def make_defs(self):
-        cc = spack_cc
-        fc = spack_fc
-        if self.spec.satisfies("^hdf5+mpi"):
-            cc = self.spec["mpi"].mpicc
-            fc = self.spec["mpi"].mpifc
-        make_defs = [
-            "PREFIX=%s" % prefix,
-            "CC=%s" % cc,
-            "HDF5_HOME=%s" % self.spec["hdf5"].prefix,
-            "ZFP_HOME=%s" % self.spec["zfp"].prefix,
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("FORTRAN_INTERFACE", "fortran"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
 
-        if self.spec.satisfies("+fortran") and fc:
-            make_defs += ["FC=%s" % fc]
-        else:
-            make_defs += ["FC="]
-
-        return make_defs
-
-    @property
-    def build_targets(self):
-        targets = ["all"]
-        return self.make_defs + targets
-
-    @property
-    def install_targets(self):
-        make_args = ["install"]
-        return make_args + self.make_defs
-
-    @run_after("build")
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
-        make("check", *self.make_defs, parallel=False)
+        return args

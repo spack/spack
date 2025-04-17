@@ -18,8 +18,8 @@ class Omnitrace(CMakePackage):
 
     license("MIT")
 
-    version("amd-mainline", branch="amd-mainline", submodules=True)
-    version("amd-staging", branch="amd-staging", submodules=True)
+    version("amd-mainline", branch="amd-mainline", submodules=True, deprecated=True)
+    version("amd-staging", branch="amd-staging", submodules=True, deprecated=True)
     version(
         "rocm-6.3.0",
         git="https://github.com/ROCm/rocprofiler-systems",

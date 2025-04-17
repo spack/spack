@@ -29,6 +29,7 @@ class Xtensor(CMakePackage):
     variant("xsimd", default=True, description="Enable SIMD intrinsics")
     variant("tbb", default=True, description="Enable TBB parallelization")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("xtl", when="@develop")

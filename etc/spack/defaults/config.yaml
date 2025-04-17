@@ -90,10 +90,9 @@ config:
   misc_cache: $user_cache_path/cache
 
 
-  # Timeout in seconds used for downloading sources etc. This only applies
-  # to the connection phase and can be increased for slow connections or
-  # servers. 0 means no timeout.
-  connect_timeout: 10
+  # Abort downloads after this many seconds if not data is received.
+  # Setting this to 0 will disable the timeout.
+  connect_timeout: 30
 
 
   # If this is false, tools like curl that use SSL will not verify

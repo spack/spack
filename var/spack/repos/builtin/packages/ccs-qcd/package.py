@@ -41,7 +41,7 @@ class CcsQcd(MakefilePackage):
 
     variant(
         "class",
-        default=1,
+        default="1",
         values=class_validator,
         description="This miniapp has five problem classes, for which the"
         " first three are relatively small problems just for testing"

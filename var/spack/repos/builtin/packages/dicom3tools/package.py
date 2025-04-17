@@ -26,6 +26,7 @@ class Dicom3tools(MakefilePackage):
         description="default UID Root assignment",
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("bzip2", type="build")
