@@ -1,16 +1,3 @@
---- a/include/netCDF4.pxi
-+++ b/include/netCDF4.pxi
-@@ -4,8 +4,8 @@
-     ctypedef long ptrdiff_t
- 
- # hdf5 version info.
--cdef extern from "H5public.h":
--    ctypedef int herr_t
-+ctypedef int herr_t
-+cdef extern from *:
-     int H5get_libversion( unsigned int *majnum, unsigned int *minnum, unsigned int *relnum ) nogil
-  
- cdef extern from *:
 --- a/setup.py
 +++ b/setup.py
 @@ -392,7 +392,7 @@
