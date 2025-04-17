@@ -88,6 +88,8 @@ packages:
     buildable: false
   essl:
     buildable: false
+  fj:
+    buildable: false
   fujitsu-mpi:
     buildable: false
   fujitsu-ssl2:
