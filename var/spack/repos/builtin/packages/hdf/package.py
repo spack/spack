@@ -96,7 +96,7 @@ class Hdf(AutotoolsPackage):
         sha256="49733dd6143be7b30a28d386701df64a72507974274f7e4c0a9e74205510ea72",
         when="@4.2.15:",
     )
-    # https://github.com/NOAA-EMC/spack-stack/issues/317
+    # https://github.com/jcsda/spack-stack/issues/317
     patch("hdfi_h_apple_m1.patch", when="@4.2.15: target=aarch64: platform=darwin")
 
     @property
@@ -160,6 +160,7 @@ class Hdf(AutotoolsPackage):
             if (
                 self.spec.satisfies("%clang@16:")
                 or self.spec.satisfies("%apple-clang@15:")
+                or self.spec.satisfies("%oneapi")
                 or self.spec.satisfies("%gcc@14:")
             ):
                 flags.append("-Wno-error=implicit-int")
@@ -217,6 +218,15 @@ class Hdf(AutotoolsPackage):
     def cached_tests_work_dir(self):
         """The working directory for cached test sources."""
         return join_path(self.test_suite.current_test_cache_dir, self.extra_install_tests)
+
+    @run_after("install")
+    def remove_ncgen_ncdump(self):
+        """Remove binaries ncdump and ncgen. These get built and
+        installed even if the netCDF API is turned off (known bug)."""
+        if self.spec.satisfies("~netcdf"):
+            exes_to_remove = ["ncdump", "ncgen"]
+            for exe in exes_to_remove:
+                os.remove(os.path.join(self.prefix.bin, exe))
 
     @run_after("install")
     def setup_build_tests(self):
