@@ -41,7 +41,7 @@ class FenicsDolfinx(CMakePackage):
 
     variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
-    variant("petsc", default=True, description="PETSc support")
+    variant("petsc", default=False, description="PETSc support")
 
     depends_on("petsc", when="+slepc")
     depends_on("cmake@3.21:", when="@0.9:", type="build")
