@@ -64,6 +64,7 @@ class G2c(CMakePackage):
     depends_on("openjpeg", when="+openjpeg")
     depends_on("libxml2@2.9:", when="+build_v2_api")
 
+    conflicts("+utils ~build_v2_api", msg="+utils requires G2C API")
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
     def cmake_args(self):
