@@ -287,33 +287,9 @@ def specify(spec):
     return spack.spec.Spec(spec)
 
 
-def remove_facts(
-    *to_be_removed: str,
-) -> Callable[[spack.spec.Spec, List[AspFunction]], List[AspFunction]]:
-    """Returns a transformation function that removes facts from the input list of facts."""
-
-    def _remove(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-        return list(filter(lambda x: x.args[0] not in to_be_removed, facts))
-
-    return _remove
-
-
-def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-    build_deps = {x.args[2]: x.args[1] for x in facts if x.args[0] == "depends_on"}
-    result = []
-    for x in facts:
-        current_name = x.args[1]
-        if current_name in build_deps:
-            x.name = "build_requirement"
-            result.append(fn.attr("build_requirement", build_deps[current_name], x))
-            continue
-
-        if x.args[0] == "depends_on":
-            continue
-
-        result.append(x)
-
-    return result
+def remove_node(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
+    """Transformation that removes all "node" and "virtual_node" from the input list of facts."""
+    return list(filter(lambda x: x.args[0] not in ("node", "virtual_node"), facts))
 
 
 def all_libcs() -> Set[spack.spec.Spec]:
@@ -1908,7 +1884,7 @@ class SpackSolverSetup:
 
         if not context:
             context = ConditionContext()
-            context.transform_imposed = remove_facts("node", "virtual_node")
+            context.transform_imposed = remove_node
 
         if imposed_spec:
             imposed_name = imposed_spec.name or imposed_name
@@ -2008,7 +1984,7 @@ class SpackSolverSetup:
                     return requirements + [fn.attr("track_dependencies", input_spec.name)]
 
                 def dependency_holds(input_spec, requirements):
-                    result = remove_facts("node", "virtual_node")(input_spec, requirements) + [
+                    result = remove_node(input_spec, requirements) + [
                         fn.attr(
                             "dependency_holds", pkg.name, input_spec.name, dt.flag_to_string(t)
                         )
@@ -2198,10 +2174,7 @@ class SpackSolverSetup:
                         pkg_name, ConstraintOrigin.REQUIRE
                     )
                     if not virtual:
-                        context.transform_required = remove_build_deps
-                        context.transform_imposed = remove_facts(
-                            "node", "virtual_node", "depends_on"
-                        )
+                        context.transform_imposed = remove_node
                     # else: for virtuals we want to emit "node" and
                     # "virtual_node" in imposed specs
 
@@ -2263,18 +2236,16 @@ class SpackSolverSetup:
             if pkg_name not in self.pkgs:
                 continue
 
+            self.gen.h2(f"External package: {pkg_name}")
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact, unless we can
             # reuse an already installed spec.
             external_buildable = data.get("buildable", True)
-            externals = data.get("externals", [])
-            if not external_buildable or externals:
-                self.gen.h2(f"External package: {pkg_name}")
-
             if not external_buildable:
                 self.gen.fact(fn.buildable_false(pkg_name))
 
             # Read a list of all the specs for this package
+            externals = data.get("externals", [])
             candidate_specs = [
                 spack.spec.parse_with_version_concrete(x["spec"]) for x in externals
             ]
@@ -2605,16 +2576,6 @@ class SpackSolverSetup:
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.depflag != dt.BUILD:
                         clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
-                    elif not concrete_build_deps and dspec.depflag:
-                        clauses.append(
-                            fn.attr(
-                                "concrete_build_dependency", spec.name, dep.name, dep.dag_hash()
-                            )
-                        )
-                        for virtual_name in dspec.virtuals:
-                            clauses.append(
-                                fn.attr("virtual_on_build_edge", spec.name, dep.name, virtual_name)
-                            )
 
                 # if the spec is abstract, descend into dependencies.
                 # if it's concrete, then the hashes above take care of dependency
@@ -3308,13 +3269,15 @@ class SpackSolverSetup:
                     # These facts are needed to compute the "condition_set" of the root
                     pkg_name = clause.args[1]
                     self.gen.fact(fn.mentioned_in_literal(trigger_id, root_name, pkg_name))
+                elif clause_name == "depends_on":
+                    pkg_name = clause.args[2]
+                    self.gen.fact(fn.mentioned_in_literal(trigger_id, root_name, pkg_name))
 
             requirements.append(
                 fn.attr(
                     "virtual_root" if spack.repo.PATH.is_virtual(spec.name) else "root", spec.name
                 )
             )
-            requirements = [x for x in requirements if x.args[0] != "depends_on"]
             cache[imposed_spec_key] = (effect_id, requirements)
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
 
