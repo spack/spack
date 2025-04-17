@@ -43,6 +43,8 @@ class Hipblaslt(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
+    depends_on("python@3.7:")
+    depends_on("python@3.8:", when="@6.4:")
 
     for ver in [
         "6.0.0",
@@ -78,6 +80,7 @@ class Hipblaslt(CMakePackage):
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
     depends_on("py-pyyaml", type="test")
+    depends_on("python-venv", when="@6.4:")
 
     # Sets the proper for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories
@@ -139,4 +142,6 @@ class Hipblaslt(CMakePackage):
             args.append(
                 self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
             )
+        if self.spec.satisfies("@6.4:"):
+            args.append(self.define("Python_ROOT", self.spec["python"].prefix.bin))
         return args
