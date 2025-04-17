@@ -189,6 +189,8 @@ literal_node(Root, node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root)
 condition_set(node(min_dupe_id, Root), LiteralNode) :- literal_node(Root, LiteralNode).
 condition_set(LiteralNode, BuildNode) :- build_dependency_of_literal_node(LiteralNode, BuildNode).
 
+:- build_dependency_of_literal_node(LiteralNode, BuildNode),
+   not attr("depends_on", LiteralNode, BuildNode, "build").
 
 % Discriminate between "roots" that have been explicitly requested, and roots that are deduced from "virtual roots"
 explicitly_requested_root(node(min_dupe_id, Package)) :-
