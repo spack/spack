@@ -1,0 +1,12 @@
+diff --git a/library/CMakeLists.txt b/library/CMakeLists.txt
+index aac8506..345147f 100644
+--- a/library/CMakeLists.txt
++++ b/library/CMakeLists.txt
+@@ -123,6 +123,7 @@ target_include_directories(hipsparselt
+                            PUBLIC  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/library/include>
+                                    $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>
+                                    $<BUILD_INTERFACE:${HIP_INCLUDE_DIRS}>
++                                   $<BUILD_INTERFACE:${HIPSPARSE_INCLUDE_DIRS}>
+                                    $<INSTALL_INTERFACE:include>
+ )
+ 
