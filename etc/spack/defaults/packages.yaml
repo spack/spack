@@ -72,6 +72,8 @@ packages:
     permissions:
       read: world
       write: user
+  cce:
+    buildable: false
   cray-fftw:
     buildable: false
   cray-libsci:
