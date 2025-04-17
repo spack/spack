@@ -207,7 +207,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     variant("fms", default=False, when="@4.3.0:", description="Enable FMS I/O support")
     variant("ginkgo", default=False, when="@4.3.0:", description="Enable Ginkgo support")
     variant("hiop", default=False, when="@4.4.0:", description="Enable HiOp support")
-    # TODO: SIMD, ADIOS2, MKL CPardiso, Axom/Sidre
+    variant("mkl-cpardiso", default=False, description="Enable MKL CPardiso support")
+    # TODO: SIMD, ADIOS2, Axom/Sidre
     variant(
         "timer",
         default="auto",
@@ -490,6 +491,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         depends_on("hypre precision=single", when="+mpi")
         depends_on("petsc~double", when="+petsc")
         depends_on("mumps+float", when="+mumps")
+
+    depends_on("mkl", when="+mkl-cpardiso")
 
     patch("mfem_ppc_build.patch", when="@3.2:3.3.0 arch=ppc64le")
     patch("mfem-3.4.patch", when="@3.4.0")
@@ -1170,6 +1173,17 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 "MUMPS_LIB=%s" % ld_flags_from_library_list(mumps.libs),
             ]
 
+        if "+mkl-cpardiso" in spec:
+            mpi_wrapper_lib ="mkl_blacs_intelmpi_lp64"
+            if "^openmpi" in spec:
+              mpi_wrapper_lib ="mkl_blacs_openmpi_lp64"
+
+            options += [
+                f"MKL_CPARDISO_DIR={spec['mkl'].prefix}",
+                f"MKL_LIBRARY_DIR=lib/intel64",
+                f"MKL_MPI_WRAPPER_LIB={mpi_wrapper_lib}"
+            ]
+
         return options
 
     def configure(self, spec, prefix):
@@ -1185,9 +1199,10 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         # Running 'make check' or 'make test' may fail if MFEM_MPIEXEC or
         # MFEM_MPIEXEC_NP are not set appropriately.
         if not self.run_tests:
-            # check we can build ex1 (~mpi) or ex1p (+mpi).
-            make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
-            # make('check', parallel=False)
+            if "+examples" in self.spec:
+                # check we can build ex1 (~mpi) or ex1p (+mpi).
+                make("-C", "examples", "ex1p" if ("+mpi" in self.spec) else "ex1", parallel=False)
+                # make('check', parallel=False)
         else:
             make("all")
             make("test", parallel=False)
