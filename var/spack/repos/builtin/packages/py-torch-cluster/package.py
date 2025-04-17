@@ -21,6 +21,8 @@ class PyTorchCluster(PythonPackage):
     depends_on("cxx", type="build")
 
     depends_on("python", type=("build", "link", "run"))
+    # https://setuptools.pypa.io/en/latest/history.html#v77-0-0
+    depends_on("py-setuptools@:76", type="build", when="@:1.6.3")
     depends_on("py-setuptools", type="build")
     depends_on("py-scipy", type=("build", "run"))
 

@@ -59,6 +59,7 @@ class Mpitrampoline(CMakePackage):
     version("1.0.1", sha256="4ce91b99fb6d2dab481b5e477b6b6a0709add48cf0f287afbbb440fdf3232500")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
     depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build a shared version of the library")

@@ -45,13 +45,13 @@ class Tioga(CMakePackage):
     )
     version("master", branch="master")
 
-    depends_on("cxx", type="build")
-
     variant("shared", default=sys.platform != "darwin", description="Build shared libraries")
     variant("pic", default=True, description="Position independent code")
     variant("nodegid", default=True, description="Enable support for global Node IDs")
     variant("timers", default=False, description="Enable timers")
     variant("stats", default=False, description="Enable output of holecut stats")
+
+    depends_on("cxx", type="build")
 
     depends_on("mpi")
 

@@ -69,9 +69,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", deprecated=True
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     is_darwin = sys.platform == "darwin"
 
     # All options are defined in CMakeLists.txt.
@@ -151,6 +148,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Based on PyPI wheel availability
     with default_args(type=("build", "link", "run")):
         depends_on("python@3.9:3.13", when="@2.5:")

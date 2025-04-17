@@ -52,7 +52,7 @@ class Msvc(Package, CompilerPackage):
     # compiler wrappers
     compiler_wrapper_link_paths = {"c": "", "cxx": "", "fortran": ""}
 
-    provides("c", "cxx")
+    provides("c", "cxx", "fortran")
     requires("platform=windows", msg="MSVC is only supported on Windows")
 
     @classmethod
@@ -90,6 +90,13 @@ class Msvc(Package, CompilerPackage):
             extras["compilers"]["fortran"] = fortran_compiler
         return spec, extras
 
+    def setup_dependent_package(self, module, dependent_spec):
+        """Populates dependent module with tooling available from VS"""
+        # We want these to resolve to the paths set by MSVC's VCVARs
+        # so no paths
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.init_msvc()
         # Set the build environment variables for spack. Just using
@@ -119,6 +126,9 @@ class Msvc(Package, CompilerPackage):
 
         env.set("CC", self.cc)
         env.set("CXX", self.cxx)
+        if self.fortran:
+            env.set("FC", self.fortran)
+            env.set("F77", self.fortran)
 
     def init_msvc(self):
         # To use the MSVC compilers, VCVARS must be invoked

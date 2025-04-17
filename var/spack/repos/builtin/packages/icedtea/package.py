@@ -26,15 +26,15 @@ class Icedtea(AutotoolsPackage):
     version("3.5.0", sha256="2c92e18fa70edaf73517fcf91bc2a7cc2ec2aa8ffdf22bb974fa6f9bc3065f30")
     version("3.4.0", sha256="2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("X", default=False, description="Build with GUI support.")
     variant(
         "shenandoah",
         default=False,
         description="Build with the shenandoah gc. Only for version 3+",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("gmake", type="build")

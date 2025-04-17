@@ -16,6 +16,8 @@ class PyZopeInterface(PythonPackage):
 
     license("ZPL-2.1", checked_by="wdconinc")
 
+    version("7.2", sha256="8b49f1a3d1ee4cdaf5b32d2e738362c7f5e40ac8b46dd7d1a65e82a4872728fe")
+    version("7.1.1", sha256="4284d664ef0ff7b709836d4de7b13d80873dc5faeffc073abdb280058bfac5e3")
     version("7.0.3", sha256="cd2690d4b08ec9eaf47a85914fe513062b20da78d10d6d789a792c0b20307fb1")
     version("7.0.2", sha256="f1146bb27a411d0d40cc0e88182a6b0e979d68ab526c8e5ae9e27c06506ed017")
     version("7.0.1", sha256="f0f5fda7cbf890371a59ab1d06512da4f2c89a6ea194e595808123c863c38eff")
@@ -37,4 +39,5 @@ class PyZopeInterface(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"), when="@7:")
 
     depends_on("py-setuptools", type=("build", "run"))
+    depends_on("py-setuptools@:73", type=("build", "run"), when="@7.1:")
     depends_on("py-setuptools@:45", type=("build", "run"), when="@4.5.0")

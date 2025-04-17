@@ -22,13 +22,13 @@ class Plsm(CMakePackage, CudaPackage):
     version("2.0.0", sha256="833e63134101e1574de383e3d6d50fcee60ef7f9e69394d5b4c722e2a6317017")
     version("1.1.1", sha256="e40e2d5d3339b303a0056bcec0882b3040e69b38ddef4c3154a6e8ce3d83ebb8")
 
-    depends_on("cxx", type="build")
-
     variant("int64", default=True, description="Use 64-bit indices")
     variant("openmp", default=False, description="Activates OpenMP backend")
 
     conflicts("+cuda", when="cuda_arch=none")
     conflicts("+openmp", when="+cuda", msg="Can't use both OpenMP and CUDA")
+
+    depends_on("cxx", type="build")
 
     depends_on("kokkos")
     depends_on("kokkos +openmp", when="+openmp")

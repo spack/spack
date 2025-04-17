@@ -53,9 +53,6 @@ class Lvarray(CMakePackage, CudaPackage):
         "0.1.0", tag="v0.1.0", commit="0bf5f7d077de4a08f58db24baed207f9dba95f6e", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build Shared Libs")
     variant("umpire", default=False, description="Build Umpire support")
     variant("chai", default=False, description="Build Chai support")
@@ -66,6 +63,9 @@ class Lvarray(CMakePackage, CudaPackage):
     variant("examples", default=False, description="Build examples")
     variant("docs", default=False, description="Build docs")
     variant("addr2line", default=True, description="Build support for addr2line.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blt", when="@0.2.0:", type="build")
 

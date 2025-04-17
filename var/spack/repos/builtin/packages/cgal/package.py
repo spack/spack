@@ -33,9 +33,6 @@ class Cgal(CMakePackage):
     version("4.7", sha256="50bd0a1cad7a8957b09012f831eebaf7d670e2a3467e8f365ec0c71fa5436369")
     version("4.6.3", sha256="e338027b8767c0a7a6e4fd8679182d1b83b5b1a0da0a1fe4546e7c0ca094fc21")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # @5: is header only and doesn't build shared libs
     variant(
         "shared", default=True, description="Enables the build of shared libraries", when="@:4.14"
@@ -71,6 +68,9 @@ class Cgal(CMakePackage):
     # not depend on gmp & mpfr.
     # More details here https://github.com/CGAL/cgal/issues/8606
     variant("gmp", default=True, description="Enable the GMP backend", when="@6:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Upper bound follows CGAL's @6: CMakeLists.txt
     depends_on("cmake@3.12:3.29", type="build", when="@6:")

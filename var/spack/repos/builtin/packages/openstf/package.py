@@ -22,6 +22,8 @@ class Openstf(MakefilePackage):
 
     variant("mpi", default=False, description="Build with MPI Support")
 
+    depends_on("c", type="build")
+
     depends_on("mpi", when="+mpi")
 
     def edit(self, spec, prefix):

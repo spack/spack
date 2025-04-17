@@ -14,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Set, Union
+from typing import Callable, Dict, List, Optional, Set, Union
 from urllib.request import Request
 
 import llnl.path
@@ -1294,35 +1294,34 @@ def display_broken_spec_messages(base_url, hashes):
         tty.msg(msg)
 
 
-def run_standalone_tests(**kwargs):
+def run_standalone_tests(
+    *,
+    cdash: Optional[CDashHandler] = None,
+    fail_fast: bool = False,
+    log_file: Optional[str] = None,
+    job_spec: Optional[spack.spec.Spec] = None,
+    repro_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Run stand-alone tests on the current spec.
 
-    Arguments:
-       kwargs (dict): dictionary of arguments used to run the tests
-
-    List of recognized keys:
-
-    * "cdash" (CDashHandler): (optional) cdash handler instance
-    * "fail_fast" (bool): (optional) terminate tests after the first failure
-    * "log_file" (str): (optional) test log file name if NOT CDash reporting
-    * "job_spec" (Spec): spec that was built
-    * "repro_dir" (str): reproduction directory
+    Args:
+        cdash: cdash handler instance
+        fail_fast: terminate tests after the first failure
+        log_file: test log file name if NOT CDash reporting
+        job_spec: spec that was built
+        repro_dir: reproduction directory
+        timeout: maximum time (in seconds) that tests are allowed to run
     """
-    cdash = kwargs.get("cdash")
-    fail_fast = kwargs.get("fail_fast")
-    log_file = kwargs.get("log_file")
-
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")
         log_file = None
 
     # Error out but do NOT terminate if there are missing required arguments.
-    job_spec = kwargs.get("job_spec")
     if not job_spec:
         tty.error("Job spec is required to run stand-alone tests")
         return
 
-    repro_dir = kwargs.get("repro_dir")
     if not repro_dir:
         tty.error("Reproduction directory is required for stand-alone tests")
         return
@@ -1330,6 +1329,9 @@ def run_standalone_tests(**kwargs):
     test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
         test_args.append("--fail-fast")
+
+    if timeout is not None:
+        test_args.extend(["--timeout", str(timeout)])
 
     if cdash:
         test_args.extend(cdash.args())

@@ -68,9 +68,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     sanity_check_is_dir = ["bin", join_path("lib", "chapel"), join_path("share", "chapel")]
     sanity_check_is_file = [join_path("bin", "chpl")]
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
     patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
     patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
@@ -520,6 +517,8 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
         )
 
     # Add dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("doxygen@1.8.17:", when="+chpldoc")
 
@@ -566,26 +565,6 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("python@3.7:")
     depends_on("cmake@3.16:")
     depends_on("cmake@3.20:", when="llvm=bundled")
-
-    # ensure we can map the spack compiler name to one of the ones we recognize
-    requires(
-        "%aocc",
-        "%apple-clang",
-        "%arm",
-        "%clang",
-        "%cce",
-        "%cray-prgenv-cray",
-        "%cray-prgenv-gnu",
-        "%cray-prgenv-intel",
-        "%cray-prgenv-pgi",
-        "%dpcpp",
-        "%gcc",
-        "%intel",
-        "%llvm",
-        "%oneapi",
-        "%rocmcc",
-        policy="one_of",
-    )
 
     def unset_chpl_env_vars(self, env):
         # Clean the environment from any pre-set CHPL_ variables that affect the build

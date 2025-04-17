@@ -65,15 +65,15 @@ class PyPyomo(PythonPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("cython", default=False, description="Enable cythonization of Pyomo.")
     variant("tests", default=False, description="Install testing dependencies.", when="@6.1:")
     variant(
         "docs", default=False, description="Install docs generation dependencies.", when="@6.1:"
     )
     variant("optional", default=False, description="Install optional dependencies.", when="@6.1:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     ############################
     # UPDATE THESE AS REQUIRED

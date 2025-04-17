@@ -41,10 +41,6 @@ class Spack(Package):
     version("0.16.1", sha256="8d893036b24d9ee0feee41ac33dd66e4fc68d392918f346f8a7a36a69c567567")
     version("0.16.0", sha256="064b2532c70916c7684d4c7c973416ac32dd2ea15f5c392654c75258bfc8c6c2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("development_tools", default=False, description="Build development dependencies")
     variant(
         "fetchers",
@@ -67,6 +63,10 @@ class Spack(Package):
 
     # This should be read as "require at least curl", not "require curl".
     requires("fetchers=curl", when="@:0.16", msg="Curl is required for Spack < 0.17")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Python
     depends_on("python@2.6.0:2.7,3.5:", type="run")

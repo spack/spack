@@ -37,10 +37,10 @@ class Cppcheck(CMakePackage):
             return f"https://downloads.sourceforge.net/project/cppcheck/cppcheck/{version}/cppcheck-{version}.tar.bz2"
         return f"https://github.com/danmar/cppcheck/archive/{version}.tar.gz"
 
+    variant("rules", default=False, description="Enable rules (requires PCRE)")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-
-    variant("rules", default=False, description="Enable rules (requires PCRE)")
 
     depends_on("pcre", when="+rules", type="build")
     depends_on("py-pygments", type="run")

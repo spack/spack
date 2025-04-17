@@ -1831,10 +1831,7 @@ class TestConcretize:
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
         monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
 
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError,
-            match="a subset of input specs could not be solved for",
-        ):
+        with pytest.raises(spack.solver.asp.OutputDoesNotSatisfyInputError):
             list(solver.solve_in_rounds(specs))
 
     def test_coconcretize_reuse_and_virtuals(self):
