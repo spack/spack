@@ -10,7 +10,6 @@ import enum
 import functools
 import inspect
 import itertools
-import re
 from typing import Any, Callable, Collection, Iterable, List, Optional, Tuple, Type, Union
 
 import llnl.util.lang as lang
@@ -33,24 +32,22 @@ RESERVED_NAMES = {
     "target",
 }
 
-special_variant_values = [None, "none", "*"]
 
-
-class VariantType(enum.Enum):
+class VariantType(enum.IntEnum):
     """Enum representing the three concrete variant types."""
 
-    MULTI = "multi"
-    BOOL = "bool"
-    SINGLE = "single"
+    BOOL = 1
+    SINGLE = 2
+    MULTI = 3
 
     @property
-    def variant_class(self) -> Type:
-        if self is self.MULTI:
-            return MultiValuedVariant
-        elif self is self.BOOL:
-            return BoolValuedVariant
-        else:
-            return SingleValuedVariant
+    def string(self) -> str:
+        """Convert the variant type to a string."""
+        if self == VariantType.BOOL:
+            return "bool"
+        elif self == VariantType.SINGLE:
+            return "single"
+        return "multi"
 
 
 class Variant:
@@ -134,7 +131,7 @@ class Variant:
         self.sticky = sticky
         self.precedence = precedence
 
-    def validate_or_raise(self, vspec: "VariantBase", pkg_name: str):
+    def validate_or_raise(self, vspec: "VariantValue", pkg_name: str):
         """Validate a variant spec against this package variant. Raises an
         exception if any error is found.
 
@@ -156,7 +153,7 @@ class Variant:
             raise InconsistentValidationError(vspec, self)
 
         # If the value is exclusive there must be at most one
-        value = vspec.value_as_tuple
+        value = vspec.values
         if not self.multi and len(value) != 1:
             raise MultipleValuesInExclusiveVariantError(vspec, pkg_name)
 
@@ -191,27 +188,15 @@ class Variant:
         v = docstring if docstring else ""
         return v
 
-    def make_default(self):
-        """Factory that creates a variant holding the default value.
+    def make_default(self) -> "VariantValue":
+        """Factory that creates a variant holding the default value(s)."""
+        variant = VariantValue.from_string_or_bool(self.name, self.default)
+        variant.type = self.variant_type
+        return variant
 
-        Returns:
-            MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
-                instance of the proper variant
-        """
-        return self.make_variant(self.default)
-
-    def make_variant(self, value: Union[str, bool]) -> "VariantBase":
-        """Factory that creates a variant holding the value passed as
-        a parameter.
-
-        Args:
-            value: value that will be hold by the variant
-
-        Returns:
-            MultiValuedVariant or SingleValuedVariant or BoolValuedVariant:
-                instance of the proper variant
-        """
-        return self.variant_type.variant_class(self.name, value)
+    def make_variant(self, *value: Union[str, bool]) -> "VariantValue":
+        """Factory that creates a variant holding the value(s) passed."""
+        return VariantValue(self.variant_type, self.name, value)
 
     @property
     def variant_type(self) -> VariantType:
@@ -254,116 +239,148 @@ def _flatten(values) -> Collection:
 
 
 #: Type for value of a variant
-ValueType = Union[str, bool, Tuple[Union[str, bool], ...]]
+ValueType = Tuple[Union[bool, str], ...]
 
 #: Type of variant value when output for JSON, YAML, etc.
 SerializedValueType = Union[str, bool, List[Union[str, bool]]]
 
 
 @lang.lazy_lexicographic_ordering
-class VariantBase:
-    """A BaseVariant corresponds to a spec string of the form ``foo=bar`` or ``foo=bar,baz``.
-    It is a constraint on the spec and abstract in the sense that it must have **at least** these
-    values -- concretization may add more values."""
+class VariantValue:
+    """A VariantValue is a key-value pair that represents a variant. It can have zero or more
+    values. Values have set semantics, so they are unordered and unique. The variant type can
+    be narrowed from multi to single to boolean, this limits the number of values that can be
+    stored in the variant. Multi-valued variants can either be concrete or abstract: abstract
+    means that the variant takes at least the values specified, but may take more when concretized.
+    Concrete means that the variant takes exactly the values specified. Lastly, a variant can be
+    marked as propagating, which means that it should be propagated to dependencies."""
 
     name: str
     propagate: bool
-    _value: ValueType
-    _original_value: Any
+    concrete: bool
+    type: VariantType
+    _values: ValueType
 
-    def __init__(self, name: str, value: ValueType, propagate: bool = False) -> None:
+    slots = ("name", "propagate", "concrete", "type", "_values")
+
+    def __init__(
+        self,
+        type: VariantType,
+        name: str,
+        value: ValueType,
+        *,
+        propagate: bool = False,
+        concrete: bool = False,
+    ) -> None:
         self.name = name
+        self.type = type
         self.propagate = propagate
-        self.concrete = False
+        # only multi-valued variants can be abstract
+        self.concrete = concrete or type in (VariantType.BOOL, VariantType.SINGLE)
 
         # Invokes property setter
-        self.value = value
+        self.set(*value)
 
     @staticmethod
     def from_node_dict(
         name: str, value: Union[str, List[str]], *, propagate: bool = False, abstract: bool = False
-    ) -> "VariantBase":
+    ) -> "VariantValue":
         """Reconstruct a variant from a node dict."""
         if isinstance(value, list):
-            constructor = VariantBase if abstract else MultiValuedVariant
-            mvar = constructor(name, (), propagate=propagate)
-            mvar._value = tuple(value)
-            mvar._original_value = mvar._value
-            return mvar
+            return VariantValue(
+                VariantType.MULTI, name, tuple(value), propagate=propagate, concrete=not abstract
+            )
 
+        # todo: is this necessary? not literal true / false in json/yaml?
         elif str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
-            return BoolValuedVariant(name, value, propagate=propagate)
+            return VariantValue(
+                VariantType.BOOL, name, (str(value).upper() == "TRUE",), propagate=propagate
+            )
 
-        return SingleValuedVariant(name, value, propagate=propagate)
+        return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
+
+    @staticmethod
+    def from_string_or_bool(
+        name: str, value: Union[str, bool], *, propagate: bool = False, concrete: bool = False
+    ) -> "VariantValue":
+        if value is True or value is False:
+            return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
+
+        elif value.upper() in ("TRUE", "FALSE"):
+            return VariantValue(
+                VariantType.BOOL, name, (value.upper() == "TRUE",), propagate=propagate
+            )
+
+        elif value == "*":
+            return VariantValue(VariantType.MULTI, name, (), propagate=propagate)
+
+        return VariantValue(
+            VariantType.MULTI,
+            name,
+            tuple(value.split(",")),
+            propagate=propagate,
+            concrete=concrete,
+        )
+
+    @staticmethod
+    def from_concretizer(name: str, value: str, type: str) -> "VariantValue":
+        """Reconstruct a variant from concretizer output."""
+        if type == "bool":
+            return VariantValue(VariantType.BOOL, name, (value == "True",))
+        elif type == "multi":
+            return VariantValue(VariantType.MULTI, name, (value,), concrete=True)
+        else:
+            return VariantValue(VariantType.SINGLE, name, (value,))
 
     def yaml_entry(self) -> Tuple[str, SerializedValueType]:
-        """Returns a key, value tuple suitable to be an entry in a yaml dict.
+        """Returns a (key, value) tuple suitable to be an entry in a yaml dict.
 
         Returns:
             tuple: (name, value_representation)
         """
-        return self.name, list(self.value_as_tuple)
+        if self.type == VariantType.MULTI:
+            return self.name, list(self.values)
+        return self.name, self.values[0]
 
     @property
-    def value_as_tuple(self) -> Tuple[Union[bool, str], ...]:
-        """Getter for self.value that always returns a Tuple (even for single valued variants).
-
-        This makes it easy to iterate over possible values.
-        """
-        if isinstance(self._value, (bool, str)):
-            return (self._value,)
-        return self._value
+    def values(self) -> ValueType:
+        return self._values
 
     @property
-    def value(self) -> ValueType:
-        """Returns a tuple of strings containing the values stored in
-        the variant.
+    def value(self) -> Union[ValueType, bool, str]:
+        return self._values[0] if self.type != VariantType.MULTI else self._values
 
-        Returns:
-            tuple: values stored in the variant
-        """
-        return self._value
+    def set(self, *value: Union[bool, str]) -> None:
+        """Set the value(s) of the variant."""
+        if len(value) > 1:
+            value = tuple(sorted(set(value)))
 
-    @value.setter
-    def value(self, value: ValueType) -> None:
-        self._value_setter(value)
+        if self.type != VariantType.MULTI:
+            if len(value) != 1:
+                raise MultipleValuesInExclusiveVariantError(self)
+            unwrapped = value[0]
+            if self.type == VariantType.BOOL and unwrapped not in (True, False):
+                raise ValueError(
+                    f"cannot set a boolean variant to a value that is not a boolean: {unwrapped}"
+                )
 
-    def _value_setter(self, value: ValueType) -> None:
-        # Store the original value
-        self._original_value = value
+        if "*" in value:
+            raise InvalidVariantValueError("cannot use reserved value '*'")
 
-        if value == "*":
-            self._value = ()
-            return
-
-        if not isinstance(value, (tuple, list)):
-            # Store a tuple of CSV string representations
-            # Tuple is necessary here instead of list because the
-            # values need to be hashed
-            value = tuple(re.split(r"\s*,\s*", str(value)))
-
-        for val in special_variant_values:
-            if val in value and len(value) > 1:
-                msg = "'%s' cannot be combined with other variant" % val
-                msg += " values."
-                raise InvalidVariantValueCombinationError(msg)
-
-        # With multi-value variants it is necessary
-        # to remove duplicates and give an order
-        # to a set
-        self._value = tuple(sorted(set(value)))
+        self._values = value
 
     def _cmp_iter(self) -> Iterable:
         yield self.name
         yield self.propagate
-        yield from (str(v) for v in self.value_as_tuple)
+        yield self.concrete
+        yield from (str(v) for v in self.values)
 
-    def copy(self) -> "VariantBase":
-        variant = type(self)(self.name, self._original_value, self.propagate)
-        variant.concrete = self.concrete
-        return variant
+    def copy(self) -> "VariantValue":
+        return VariantValue(
+            self.type, self.name, self.values, propagate=self.propagate, concrete=self.concrete
+        )
 
-    def satisfies(self, other: "VariantBase") -> bool:
+    def satisfies(self, other: "VariantValue") -> bool:
         """The lhs satisfies the rhs if all possible concretizations of lhs are also
         possible concretizations of rhs."""
         if self.name != other.name:
@@ -376,138 +393,90 @@ class VariantBase:
             if self.name == "patches":
                 return all(
                     isinstance(v, str)
-                    and any(isinstance(w, str) and w.startswith(v) for w in self.value_as_tuple)
-                    for v in other.value_as_tuple
+                    and any(isinstance(w, str) and w.startswith(v) for w in self.values)
+                    for v in other.values
                 )
-            return all(v in self for v in other.value_as_tuple)
+            return all(v in self for v in other.values)
         if self.concrete:
             # both concrete: they must be equal
-            return self.value_as_tuple == other.value_as_tuple
+            return self.values == other.values
         return False
 
-    def intersects(self, other: "VariantBase") -> bool:
+    def intersects(self, other: "VariantValue") -> bool:
         """True iff there exists a concretization that satisfies both lhs and rhs."""
         if self.name != other.name:
             return False
         if self.concrete:
             if other.concrete:
-                return self.value_as_tuple == other.value_as_tuple
-            return all(v in self for v in other.value_as_tuple)
+                return self.values == other.values
+            return all(v in self for v in other.values)
         if other.concrete:
-            return all(v in other for v in self.value_as_tuple)
+            return all(v in other for v in self.values)
         # both abstract: the union is a valid concretization of both
         return True
 
-    def constrain(self, other: "VariantBase") -> bool:
+    def constrain(self, other: "VariantValue") -> bool:
         """Constrain self with other if they intersect. Returns true iff self was changed."""
         if not self.intersects(other):
             raise UnsatisfiableVariantSpecError(self, other)
-        old_value = self.value
-        values = list(sorted({*self.value_as_tuple, *other.value_as_tuple}))
-        self._value_setter(",".join(str(v) for v in values))
-        changed = old_value != self.value
+        old_values = self.values
+        self.set(*self.values, *other.values)
+        changed = old_values != self.values
         if self.propagate and not other.propagate:
             self.propagate = False
             changed = True
         if not self.concrete and other.concrete:
             self.concrete = True
             changed = True
+        if self.type > other.type:
+            self.type = other.type
+            changed = True
         return changed
 
-    def __contains__(self, item: Union[str, bool]) -> bool:
-        return item in self.value_as_tuple
+    def append(self, value: Union[str, bool]) -> None:
+        self.set(*self.values, value)
 
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({repr(self.name)}, {repr(self._original_value)})"
+    def __contains__(self, item: Union[str, bool]) -> bool:
+        return item in self.values
 
     def __str__(self) -> str:
-        concrete = ":" if self.concrete else ""
+        # boolean variants are printed +foo or ~foo
+        if self.type == VariantType.BOOL:
+            sigil = "+" if self.value else "~"
+            if self.propagate:
+                sigil *= 2
+            return f"{sigil}{self.name}"
+
+        # concrete multi-valued foo:=bar,baz
+        concrete = ":" if self.type == VariantType.MULTI and self.concrete else ""
         delim = "==" if self.propagate else "="
-        values_tuple = self.value_as_tuple
-        if values_tuple:
-            value_str = ",".join(str(v) for v in values_tuple)
-        else:
+        if not self.values:
             value_str = "*"
+        elif self.name == "patches" and self.concrete:
+            value_str = ",".join(str(x)[:7] for x in self.values)
+        else:
+            value_str = ",".join(str(x) for x in self.values)
         return f"{self.name}{concrete}{delim}{spack.spec_parser.quote_if_needed(value_str)}"
 
-
-class MultiValuedVariant(VariantBase):
-    def __init__(self, name, value, propagate=False):
-        super().__init__(name, value, propagate)
-        self.concrete = True
-
-    def append(self, value: Union[str, bool]) -> None:
-        """Add another value to this multi-valued variant."""
-        self._value = tuple(sorted((value,) + self.value_as_tuple))
-        self._original_value = ",".join(str(v) for v in self._value)
-
-    def __str__(self) -> str:
-        # Special-case patches to not print the full 64 character sha256
-        if self.name == "patches":
-            values_str = ",".join(str(x)[:7] for x in self.value_as_tuple)
-        else:
-            values_str = ",".join(str(x) for x in self.value_as_tuple)
-
-        delim = "==" if self.propagate else "="
-        return f"{self.name}:{delim}{spack.spec_parser.quote_if_needed(values_str)}"
+    def __repr__(self):
+        return (
+            f"VariantValue({self.type!r}, {self.name!r}, {self.values!r}, "
+            f"propagate={self.propagate!r}, concrete={self.concrete!r})"
+        )
 
 
-class SingleValuedVariant(VariantBase):
-    def __init__(self, name, value, propagate=False):
-        super().__init__(name, value, propagate)
-        self.concrete = True
-
-    def _value_setter(self, value: ValueType) -> None:
-        # Treat the value as a multi-valued variant
-        super()._value_setter(value)
-
-        # Then check if there's only a single value
-        values = self.value_as_tuple
-        if len(values) != 1:
-            raise MultipleValuesInExclusiveVariantError(self)
-
-        self._value = values[0]
-
-    def __contains__(self, item: ValueType) -> bool:
-        return item == self.value
-
-    def yaml_entry(self) -> Tuple[str, SerializedValueType]:
-        assert isinstance(self.value, (bool, str))
-        return self.name, self.value
-
-    def __str__(self) -> str:
-        delim = "==" if self.propagate else "="
-        return f"{self.name}{delim}{spack.spec_parser.quote_if_needed(str(self.value))}"
+def MultiValuedVariant(name: str, value: ValueType, propagate: bool = False) -> VariantValue:
+    return VariantValue(VariantType.MULTI, name, value, propagate=propagate, concrete=True)
 
 
-class BoolValuedVariant(SingleValuedVariant):
-    def __init__(self, name, value, propagate=False):
-        super().__init__(name, value, propagate)
-        self.concrete = True
+def SingleValuedVariant(
+    name: str, value: Union[bool, str], propagate: bool = False
+) -> VariantValue:
+    return VariantValue(VariantType.SINGLE, name, (value,), propagate=propagate)
 
-    def _value_setter(self, value: ValueType) -> None:
-        # Check the string representation of the value and turn
-        # it to a boolean
-        if str(value).upper() == "TRUE":
-            self._original_value = value
-            self._value = True
-        elif str(value).upper() == "FALSE":
-            self._original_value = value
-            self._value = False
-        else:
-            raise ValueError(
-                f'cannot construct a BoolValuedVariant for "{self.name}" from '
-                "a value that does not represent a bool"
-            )
 
-    def __contains__(self, item: ValueType) -> bool:
-        return item is self.value
-
-    def __str__(self) -> str:
-        sigil = "+" if self.value else "~"
-        if self.propagate:
-            sigil *= 2
-        return f"{sigil}{self.name}"
+def BoolValuedVariant(name: str, value: bool, propagate: bool = False) -> VariantValue:
+    return VariantValue(VariantType.BOOL, name, (value,), propagate=propagate)
 
 
 # The class below inherit from Sequence to disguise as a tuple and comply
@@ -714,7 +683,7 @@ class ConditionalValue:
 
 def prevalidate_variant_value(
     pkg_cls: "Type[spack.package_base.PackageBase]",
-    variant: VariantBase,
+    variant: VariantValue,
     spec: Optional["spack.spec.Spec"] = None,
     strict: bool = False,
 ) -> List[Variant]:
@@ -735,8 +704,8 @@ def prevalidate_variant_value(
         list of variant definitions that will accept the given value. List will be empty
         only if the variant is a reserved variant.
     """
-    # don't validate wildcards or variants with reserved names
-    if variant.value == ("*",) or variant.name in RESERVED_NAMES or variant.propagate:
+    # do not validate non-user variants or optional variants
+    if variant.name in RESERVED_NAMES or variant.propagate:
         return []
 
     # raise if there is no definition at all
@@ -819,15 +788,11 @@ class MultipleValuesInExclusiveVariantError(spack.error.SpecError, ValueError):
     only one.
     """
 
-    def __init__(self, variant: VariantBase, pkg_name: Optional[str] = None):
+    def __init__(self, variant: VariantValue, pkg_name: Optional[str] = None):
         pkg_info = "" if pkg_name is None else f" in package '{pkg_name}'"
         msg = f"multiple values are not allowed for variant '{variant.name}'{pkg_info}"
 
         super().__init__(msg.format(variant, pkg_info))
-
-
-class InvalidVariantValueCombinationError(spack.error.SpecError):
-    """Raised when a variant has values '*' or 'none' with other values."""
 
 
 class InvalidVariantValueError(spack.error.SpecError):

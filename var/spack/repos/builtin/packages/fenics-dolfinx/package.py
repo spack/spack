@@ -30,6 +30,7 @@ class FenicsDolfinx(CMakePackage):
         multi=True,
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     # Graph partitioner dependencies

@@ -1257,7 +1257,7 @@ def _prev_version(v: StandardVersion) -> StandardVersion:
     return StandardVersion("", (release, prerelease), separators)
 
 
-def Version(string: Union[str, int]) -> ConcreteVersion:
+def Version(string: Union[str, int]) -> Union[StandardVersion, GitVersion]:
     if not isinstance(string, (str, int)):
         raise TypeError(f"Cannot construct a version from {type(string)}")
     string = str(string)

@@ -49,6 +49,9 @@ class Libpng(CMakePackage):
     )
     variant("pic", default=False, description="PIC")
 
+    # Tries but fails to include fp.h, removed in libpng 1.6.45
+    conflicts("@:1.6.44", when="%apple-clang@17:")
+
     @property
     def libs(self):
         # v1.2 does not have a version-less symlink
