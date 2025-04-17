@@ -17,6 +17,8 @@ class Ip(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("5.3.0", sha256="17dfcb52bab58d3f1bcbbdda5e76430020d963097139e1ba240bfc5fb5c5a5d1")
+    version("5.2.0", sha256="2f7b44abcf24e448855f57d107db55d3d58cbc271164ba083491d0c07a7ea3d0")
     version("5.1.0", sha256="5279f11f4c12db68ece74cec392b7a2a6b5166bc505877289f34cc3149779619")
     version("5.0.0", sha256="54b2987bd4f94adc1f7595d2a384e646019c22d163bcd30840a916a6abd7df71")
     version("4.4.0", sha256="858d9201ce0bc4d16b83581ef94a4a0262f498ed1ea1b0535de2e575da7a8b8c")
