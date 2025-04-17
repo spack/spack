@@ -30,9 +30,9 @@ class FenicsDolfinx(CMakePackage):
         multi=True,
     )
 
+    # HDF5 dependency requires C in CMake
     depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
-    depends_on("c", type="build")  # HDF5 dependency requires C in CMake
 
     # Graph partitioner dependencies
     depends_on("kahip@3.12:", when="partitioners=kahip")
