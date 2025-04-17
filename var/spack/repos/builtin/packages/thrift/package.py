@@ -71,7 +71,7 @@ class Thrift(CMakePackage, AutotoolsPackage):
     depends_on("glib@2:", when="+c_glib")
     depends_on("openssl", when="+openssl")
     depends_on("libevent@2:", when="+libevent")
-    depends_on("qt5", when="+qt5")
+    depends_on("qt@5", when="+qt5")
     depends_on("zlib-api@1.2.3:", when="+zlib")
 
     with when("+java"):
