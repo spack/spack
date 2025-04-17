@@ -84,36 +84,41 @@ class PyWaves(PythonPackage):
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            python("-m", "build", "--no-isolation")
-            python(
-                # Using the spack default python package install options
-                "-m",
-                "pip",
-                "-vvv",
-                "--no-input",
-                "--no-cache-dir",
-                "--disable-pip-version-check",
-                "install",
-                "--no-deps",
-                "--ignore-installed",
-                "--no-build-isolation",
-                "--no-warn-script-location",
-                "--no-index",
-                f"--prefix={prefix}",
-                # TODO: Figure out how to override the positional '.' of the spack install options
-                # to use the py-build output path instead of overriding the entire default install
-                # function Will require the follow on documentation installation logic to be a
-                # ``@run_after("install")`` function.
-                f"dist/waves-{self.version}.tar.gz",
-            )
-            scons = which("scons")
-            scons("html", "man")
+        if self.spec.satisfies("@0.12.10:"):
+            with working_dir(self.build_directory):
+                scons = which("scons")
+                scons("install", f"--prefix={self.prefix}")
+        else:
+            with working_dir(self.build_directory):
+                python("-m", "build", "--no-isolation")
+                python(
+                    # Using the spack default python package install options
+                    "-m",
+                    "pip",
+                    "-vvv",
+                    "--no-input",
+                    "--no-cache-dir",
+                    "--disable-pip-version-check",
+                    "install",
+                    "--no-deps",
+                    "--ignore-installed",
+                    "--no-build-isolation",
+                    "--no-warn-script-location",
+                    "--no-index",
+                    f"--prefix={prefix}",
+                    # TODO: Figure out how to override the positional '.' of the spack install options
+                    # to use the py-build output path instead of overriding the entire default install
+                    # function Will require the follow on documentation installation logic to be a
+                    # ``@run_after("install")`` function.
+                    f"dist/waves-{self.version}.tar.gz",
+                )
+                scons = which("scons")
+                scons("html", "man")
 
-            site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
-            python_package_documentation = python.copy()
-            python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
-            python_package_documentation("package_documentation.py")
+                site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
+                python_package_documentation = python.copy()
+                python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
+                python_package_documentation("package_documentation.py")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)
