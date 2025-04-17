@@ -430,8 +430,23 @@ trigger_and_effect(Package, TriggerID, EffectID)
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
+
+% Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- trigger_and_effect(Package, TriggerID, EffectID),
+  :- pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     not subcondition(ConditionID, _),
+     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     not do_not_impose(EffectID, node(X, Package)).
+
+% Effects of subconditions hold if the trigger holds and the
+% primary condition holds
+impose(EffectID, node(X, Package))
+  :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
+     subcondition(SubconditionID, ConditionID),
+     condition_holds(ConditionID, node(X, Package)),
+     trigger_and_effect(Package, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
@@ -637,6 +652,16 @@ virtual_condition_holds(node(Y, A2), Virtual)
      attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual),
      not build(node(X, A1)).
 
+% Simplified virtual information for conditionl requirements in
+% conditional dependencies
+% Most specs track virtuals on edges
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_edge", PackageNode, _, Virtual).
+
+% Reused specs don't track a real edge to build-only deps
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_build_edge", PackageNode, _, Virtual).
+
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
@@ -652,6 +677,7 @@ virtual_condition_holds(node(Y, A2), Virtual)
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
+#defined subcondition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.

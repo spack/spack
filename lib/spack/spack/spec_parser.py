@@ -506,10 +506,10 @@ class EdgeAttributeParser:
                     name = name[:-1]
                 value = value.strip("'\" ").split(",")
                 attributes[name] = value
-                if name not in ("deptypes", "virtuals"):
+                if name not in ("deptypes", "virtuals", "when"):
                     msg = (
                         "the only edge attributes that are currently accepted "
-                        'are "deptypes" and "virtuals"'
+                        'are "deptypes", "virtuals", and "when"'
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
@@ -523,6 +523,11 @@ class EdgeAttributeParser:
         if "deptypes" in attributes:
             deptype_string = attributes.pop("deptypes")
             attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
+
+        # Turn "when" into a spec
+        if "when" in attributes:
+            attributes["when"] = spack.spec.Spec(attributes["when"][0])
+
         return attributes
 
 

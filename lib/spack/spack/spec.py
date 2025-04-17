@@ -721,7 +721,7 @@ class DependencySpec:
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "depflag", "virtuals", "direct"
+    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when"
 
     def __init__(
         self,
@@ -731,12 +731,14 @@ class DependencySpec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
+        self.when = when or Spec()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -767,6 +769,7 @@ class DependencySpec:
             depflag=self.depflag,
             virtuals=self.virtuals,
             direct=self.direct,
+            when=self.when,
         )
 
     def _cmp_iter(self):
@@ -778,10 +781,13 @@ class DependencySpec:
     def __str__(self) -> str:
         parent = self.parent.name if self.parent else None
         child = self.spec.name if self.spec else None
-        return f"{parent} {self.depflag}[virtuals={','.join(self.virtuals)}] --> {child}"
+        virtuals_string = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
+        when_string = f"when={self.when}" if self.when != Spec() else ""
+        edge_attrs = filter((virtuals_string, when_string), lambda x: bool(x))
+        return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
 
     def flip(self) -> "DependencySpec":
-        """Flip the dependency, and drop virtual information"""
+        """Flip the dependency, and drop virtual and conditional information"""
         return DependencySpec(
             parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
@@ -1737,7 +1743,13 @@ class Spec:
                     setattr(self.architecture, new_attr, new_value)
 
     def _add_dependency(
-        self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...], direct: bool = False
+        self,
+        spec: "Spec",
+        *,
+        depflag: dt.DepFlag,
+        virtuals: Tuple[str, ...],
+        direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         """Called by the parser to add another spec as a dependency.
 
@@ -1745,20 +1757,25 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals on this edge
             direct: if True denotes a direct dependency (associated with the % sigil)
+            when: if non-None, condition under which dependency holds
         """
         if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals, direct=direct)
+            self.add_dependency_edge(
+                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            )
             return
 
         # Keep the intersection of constraints when a dependency is added multiple times with
         # the same deptype. Add a new dependency if it is added with a compatible deptype
-        # (for example, a build-only dependency is compatible with a link-only dependenyc).
+        # (for example, a build-only dependency is compatible with a link-only dependency).
         # The only restrictions, currently, are that we cannot add edges with overlapping
         # dependency types and we cannot add multiple edges that have link/run dependency types.
         # See ``spack.deptypes.compatible``.
         orig = self._dependencies[spec.name]
         try:
-            dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
+            dspec = next(
+                dspec for dspec in orig if depflag == dspec.depflag and when == dspec.when
+            )
         except StopIteration:
             # Error if we have overlapping or incompatible deptypes
             if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig):
@@ -1770,7 +1787,9 @@ class Spec:
                     f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
                 )
 
-            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals, direct=direct)
+            self.add_dependency_edge(
+                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            )
             return
 
         try:
@@ -1788,6 +1807,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         """Add a dependency edge to this spec.
 
@@ -1796,12 +1816,16 @@ class Spec:
             deptypes: dependency types for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
+            when: if non-None, condition under which dependency holds
         """
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
+
+            if edge.when != when:
+                continue
 
             # If the dependency is to an existing spec, we can update dependency
             # types. If it is to a new object, check deptype compatibility.
@@ -1826,7 +1850,7 @@ class Spec:
                 raise spack.error.SpecError(msg, "\n".join(details))
 
         for edge in selected:
-            if id(dependency_spec) == id(edge.spec):
+            if id(dependency_spec) == id(edge.spec) and edge.when == when:
                 # If we are here, it means the edge object was previously added to
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
@@ -1835,7 +1859,7 @@ class Spec:
                 return
 
         edge = DependencySpec(
-            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct
+            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
         )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
