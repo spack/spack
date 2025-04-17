@@ -74,7 +74,7 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on("re2+shared", when="+python")
     depends_on("snappy~shared", when="+snappy @9:")
     depends_on("snappy~shared", when="@8:")
-    depends_on("thrift+pic", when="+parquet")
+    depends_on("thrift@0.11:+cpp", when="+parquet")
     depends_on("utf8proc@2.7.0: +shared", when="+compute")
     depends_on("utf8proc@2.7.0: +shared", when="+gandiva")
     depends_on("utf8proc@2.7.0: +shared", when="+python")

@@ -364,7 +364,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("openjpeg", when="+openjpeg")
     depends_on("openssl", when="+openssl")
     depends_on("oracle-instant-client", when="+oracle")
-    depends_on("parquet-cpp", when="+parquet")
+    depends_on("arrow", when="+parquet")
     # depends_on('pcidsk', when='+pcidsk')
     depends_on("pcre2", when="@3.5:+pcre2")
     depends_on("pcre", when="@:3.4+pcre2")
