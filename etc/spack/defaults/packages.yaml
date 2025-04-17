@@ -106,3 +106,5 @@ packages:
     buildable: false
   spectrum-mpi:
     buildable: false
+  xl:
+    buildable: false
