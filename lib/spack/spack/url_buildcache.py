@@ -293,13 +293,13 @@ class URLBuildcacheEntry:
     @classmethod
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Mapping from buildcache component to media type"""
-        if component == BuildcacheComponent.SPEC:
+        if component == BuildcacheComponent.SPEC or component == BuildcacheComponent.SPECS:
             return cls.SPEC_VERSION
         elif component == BuildcacheComponent.TARBALL:
             return cls.TARBALL_VERSION
-        elif component == BuildcacheComponent.INDEX:
+        elif component == BuildcacheComponent.INDEX or component == BuildcacheComponent.INDICES:
             return cls.INDEX_VERSION
-        elif component == BuildcacheComponent.KEY:
+        elif component == BuildcacheComponent.KEY or component == BuildcacheComponent.KEYS:
             return cls.PUBLIC_KEY
         elif component == BuildcacheComponent.KEY_INDEX:
             return cls.PUBLIC_KEY_INDEX

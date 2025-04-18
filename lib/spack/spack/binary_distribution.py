@@ -685,48 +685,9 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     with open(index_json_path, "w", encoding="utf-8") as f:
         db._write_to_file(f)
 
-    # Read the index back in and compute its hash
-    with open(index_json_path, encoding="utf-8") as f:
-        index_string = f.read()
-        index_hash = compute_hash(index_string)
-
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-
-    index_blob_record = BlobRecord(
-        os.stat(index_json_path).st_size, cache_class.INDEX_VERSION, "none", "sha256", index_hash
-    )
-    index_manifest = {
-        "version": cache_class.get_layout_version(),
-        "data": [index_blob_record.to_json()],
-    }
-
-    index_blob_url = url_util.join(
-        cache_prefix,
-        *cache_class.get_relative_path_components(BuildcacheComponent.BLOBS),
-        "sha256",
-        index_hash[:2],
-        index_hash,
-    )
-
-    # Push the index blob itself
-    web_util.push_to_url(
-        index_json_path,
-        index_blob_url,
-        keep_original=False,
-        extra_args={"ContentType": "application/json", "CacheControl": "no-cache"},
-    )
-
-    # write the manifest to a temporary location
-    manifest_path = os.path.join(temp_dir, "index.manifest.json")
-    with open(manifest_path, "w", encoding="utf-8") as f:
-        json.dump(index_manifest, f)
-
-    # Push the index manifest
-    web_util.push_to_url(
-        manifest_path,
-        url_util.join(cache_prefix, buildcache_relative_index_url()),
-        keep_original=False,
-        extra_args={"ContentType": "text/plain", "CacheControl": "no-cache"},
+    cache_class.push_local_file_as_blob(
+        index_json_path, cache_prefix, "index", BuildcacheComponent.INDICES
     )
 
 
