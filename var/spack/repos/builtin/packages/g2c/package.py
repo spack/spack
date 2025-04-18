@@ -41,19 +41,19 @@ class G2c(CMakePackage):
         "pthreads",
         default=False,
         description="Turn on thread-safety with pthreads",
-        when="@develop",
+        when="@2:",
     )
     variant(
         "utils",
         default=True,
         description="Build and install some utility programs",
-        when="@develop",
+        when="@2:",
     )
     variant(
         "build_v2_api",
-        default=False,
+        default=True,
         description="Build new g2c API, experimental until 2.0.0 release",
-        when="@develop",
+        when="@2:",
     )
 
     depends_on("c", type="build")
