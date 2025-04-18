@@ -79,6 +79,31 @@ class CompilerAdaptor:
             result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
         return result
 
+    def _one_compiler(self, for_name) -> spack.spec.Spec:
+        unique_compilers = list(lang.dedupe(self.compilers.values()))
+        if len(unique_compilers) > 1:
+            raise ValueError(
+                f"Property {for_name} is language-specific and the package has"
+                " more than 1 compiler"
+            )
+        return unique_compilers[0]
+
+    @property
+    def opt_flags(self) -> List[str]:
+        compiler_pkg = self._one_compiler("opt_flags").package
+        return getattr(compiler_pkg, "opt_flags", [])
+
+    @property
+    def debug_flags(self) -> List[str]:
+        compiler_pkg = self._one_compiler("debug_flags").package
+        return getattr(compiler_pkg, "debug_flags", [])
+
+    def opt_flags_for_language(self, lang: str) -> List[str]:
+        return getattr(self.compilers[Languages(lang)].package, "opt_flags", [])
+
+    def debug_flags_for_language(self, lang: str) -> List[str]:
+        return getattr(self.compilers[Languages(lang)].package, "debug_flags", [])
+
     @property
     def openmp_flag(self) -> str:
         return next(iter(self.compilers.values())).package.openmp_flag
