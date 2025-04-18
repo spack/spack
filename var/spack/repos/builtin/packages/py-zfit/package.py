@@ -56,18 +56,18 @@ class PyZfit(PythonPackage):
         depends_on("py-tensorflow")
         depends_on("py-tensorflow-probability")
 
-        depends_on("py-tensorflow@2.16.2:2.19", type=("run"), when="@0.25.0:")
-        depends_on("py-tensorflow-probability@0.25:0.26", type=("run"), when="@0.25.0:")
+        depends_on("py-tensorflow@2.16.2:2.19", when="@0.25.0:")
+        depends_on("py-tensorflow-probability@0.25:0.26", when="@0.25.0:")
 
-        depends_on("py-tensorflow@2.16.2:2.18", type=("run"), when="@0.24.3:")
-        depends_on("py-tensorflow@2.18", type=("run"), when="@0.24:0.24.2")
-        depends_on("py-tensorflow-probability@0.25", type=("run"), when="@0.24:")
+        depends_on("py-tensorflow@2.16.2:2.18", when="@0.24.3:")
+        depends_on("py-tensorflow@2.18", when="@0.24:0.24.2")
+        depends_on("py-tensorflow-probability@0.25", when="@0.24:")
 
-        depends_on("py-tensorflow@2.16", type=("run"), when="@0.20:")
-        depends_on("py-tensorflow-probability@0.24", type=("run"), when="@0.20:")
+        depends_on("py-tensorflow@2.16", when="@0.20:")
+        depends_on("py-tensorflow-probability@0.24", when="@0.20:")
 
-        depends_on("py-tensorflow@2.15", type=("run"), when="@0.18")
-        depends_on("py-tensorflow-probability@0.23", type=("run"), when="@0.18")
+        depends_on("py-tensorflow@2.15", when="@0.18")
+        depends_on("py-tensorflow-probability@0.23", when="@0.18")
 
         depends_on("py-tensorflow@2.13", when="@0.15:0.17")
         depends_on("py-tensorflow-probability@0.21", when="@0.16:0.17")
