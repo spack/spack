@@ -38,16 +38,10 @@ class G2c(CMakePackage):
         when="@1.7:",
     )
     variant(
-        "pthreads",
-        default=False,
-        description="Turn on thread-safety with pthreads",
-        when="@2:",
+        "pthreads", default=False, description="Turn on thread-safety with pthreads", when="@2:"
     )
     variant(
-        "utils",
-        default=True,
-        description="Build and install some utility programs",
-        when="@2:",
+        "utils", default=True, description="Build and install some utility programs", when="@2:"
     )
     variant(
         "build_v2_api",
