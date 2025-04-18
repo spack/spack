@@ -140,7 +140,7 @@ class CompilerAdaptor:
     @property
     def c23_flag(self) -> str:
         return self.compilers[Languages.C].package.standard_flag(
-            language=Languages.C.value, standard="17"
+            language=Languages.C.value, standard="23"
         )
 
     @property

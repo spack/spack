@@ -93,6 +93,14 @@ class Edm4hep(CMakePackage):
 
     conflicts("%clang@:16", when="@0.99.1:", msg="Incomplete consteval support in clang")
 
+    # Fix missing nljson import
+    # NOTE that downstream packages (dd4hep) may fail for 0.99 and before
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/key4hep/EDM4hep/pull/379.patch?full_index=1",
+        when="@0.99.1",
+        sha256="c4be2f27c7bda4d033f92fee14e48ddf59fbe606d208e8288d9bdb3dec5ad5c2",
+    )
+
     def cmake_args(self):
         args = [
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),

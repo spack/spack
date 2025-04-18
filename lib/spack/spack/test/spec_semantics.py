@@ -973,13 +973,10 @@ class TestSpecSemantics:
         with pytest.raises(SpecFormatStringError):
             spec.format(fmt_str)
 
-    def test_combination_of_wildcard_or_none(self):
-        # Test that using 'none' and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
-            Spec("multivalue-variant foo=none,bar")
-
-        # Test that using wildcard and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
+    def test_wildcard_is_invalid_variant_value(self):
+        """The spec string x=* is parsed as a multi-valued variant with values the empty set.
+        That excludes * as a literal variant value."""
+        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot use reserved value"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):

@@ -378,11 +378,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 11.3-12.2 and 13
     requires(
-        "@11.3,12.2,13.1:",
+        "@11.3:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
+        msg="Only GCC 11.3+ support aarch64-darwin",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -438,8 +437,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
         # aarch64-darwin support from Iain Sandoe's branch
         patch(
-            "https://github.com/iains/gcc-14-branch/compare/04696df09633baf97cdbbdd6e9929b9d472161d3..gcc-14.2-darwin-r2.patch?full_index=1",
-            sha256="01ea668489f3f0fb2439060f6c333c4c17ef4c19c4c4e6e6aa4b8ea493e97685",
+            "https://github.com/iains/gcc-14-branch/compare/04696df09633baf97cdbbdd6e9929b9d472161d3..a495b2dded281beeafec91074e4e82a5a3df8104.patch?full_index=1",
+            sha256="838cf070bec5468340018bf003f714f6340c562b878f3244303d2b7ba9949ccd",
             when="@14.2.0 target=aarch64:",
         )
         patch(
@@ -449,8 +448,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         )
 
         patch(
-            "https://github.com/iains/gcc-13-branch/compare/b71f1de6e9cf7181a288c0f39f9b1ef6580cf5c8..gcc-13.3-darwin-r1.patch?full_index=1",
-            sha256="d957520afc286ac46aa3c4bf9b64618d02ca0bf1466f32321b5d6beec6a396eb",
+            "https://github.com/iains/gcc-13-branch/compare/b71f1de6e9cf7181a288c0f39f9b1ef6580cf5c8..7808d253bf53c6c6ce63f04a66601b595e2bae08.patch?full_index=1",
+            sha256="e7d4415e66ba09dd65b102a842e62e6f9ba6b41da878e08235e59a3fc53058eb",
             when="@13.3.0 target=aarch64:",
         )
         patch(
@@ -465,8 +464,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         )
 
         patch(
-            "https://github.com/iains/gcc-12-branch/compare/2bada4bc59bed4be34fab463bdb3c3ebfd2b41bb..gcc-12.4-darwin-r0.patch?full_index=1",
-            sha256="e242adf240a62ed3005da75a9e304bda980b84ce497f124b4bddc819ee821e2a",
+            "https://github.com/iains/gcc-12-branch/compare/2bada4bc59bed4be34fab463bdb3c3ebfd2b41bb..99533d94172ed7a24c0e54c4ea97e6ae2260409e.patch?full_index=1",
+            sha256="4f59c671b34cc24b57eaa528592a5188f18716cd3cd63c4601fbbda92d397ce2",
             when="@12.4.0 target=aarch64:",
         )
         patch(

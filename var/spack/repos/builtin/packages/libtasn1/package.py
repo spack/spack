@@ -5,11 +5,11 @@
 from spack.package import *
 
 
-class Libtasn1(Package):
+class Libtasn1(Package, GNUMirrorPackage):
     """ASN.1 structure parser library."""
 
     homepage = "https://www.gnu.org/software/libtasn1/"
-    url = "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.13.tar.gz"
+    gnu_mirror_path = "libtasn1/libtasn1-4.13.tar.gz"
 
     license("LGPL-2.1-or-later")
 

@@ -32,15 +32,6 @@ class Pnmpi(CMakePackage):
     depends_on("doxygen")
     depends_on("mpi")
 
-    @run_before("cmake")
-    def check_fortran(self):
-        is_no_fortran_compiler = not self.compiler.f77 and not self.compiler.fc
-        if self.spec.satisfies("+fortran"):
-            if is_no_fortran_compiler:
-                raise InstallError(
-                    "pnmpi+fortran requires Fortran compiler " "but no Fortran compiler found!"
-                )
-
     def cmake_args(self):
         args = []
         spec = self.spec

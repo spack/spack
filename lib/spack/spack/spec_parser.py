@@ -62,7 +62,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple
+from typing import Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -369,7 +369,7 @@ class SpecNodeParser:
             """Raise a spec parsing error with token context."""
             raise SpecParsingError(string, self.ctx.current_token, self.literal_str) from cause
 
-        def add_flag(name: str, value: str, propagate: bool, concrete: bool):
+        def add_flag(name: str, value: Union[str, bool], propagate: bool, concrete: bool):
             """Wrapper around ``Spec._add_flag()`` that adds parser context to errors raised."""
             try:
                 initial_spec._add_flag(name, value, propagate, concrete)

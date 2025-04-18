@@ -1755,15 +1755,17 @@ class SpackSolverSetup:
             pkg_fact(fn.variant_condition(name, vid, cond_id))
 
         # record type so we can construct the variant when we read it back in
-        self.gen.fact(fn.variant_type(vid, variant_def.variant_type.value))
+        self.gen.fact(fn.variant_type(vid, variant_def.variant_type.string))
 
         if variant_def.sticky:
             pkg_fact(fn.variant_sticky(vid))
 
         # define defaults for this variant definition
-        defaults = variant_def.make_default().value if variant_def.multi else [variant_def.default]
-        for val in sorted(defaults):
-            pkg_fact(fn.variant_default_value_from_package_py(vid, val))
+        if variant_def.multi:
+            for val in sorted(variant_def.make_default().values):
+                pkg_fact(fn.variant_default_value_from_package_py(vid, val))
+        else:
+            pkg_fact(fn.variant_default_value_from_package_py(vid, variant_def.default))
 
         # define possible values for this variant definition
         values = variant_def.values
@@ -1791,7 +1793,9 @@ class SpackSolverSetup:
 
             # make a spec indicating whether the variant has this conditional value
             variant_has_value = spack.spec.Spec()
-            variant_has_value.variants[name] = vt.VariantBase(name, value.value)
+            variant_has_value.variants[name] = vt.VariantValue(
+                vt.VariantType.MULTI, name, (value.value,)
+            )
 
             if value.when:
                 # the conditional value is always "possible", but it imposes its when condition as
@@ -2373,7 +2377,7 @@ class SpackSolverSetup:
                 )
                 continue
 
-            for value in variant.value_as_tuple:
+            for value in variant.values:
                 for variant_def in variant_defs:
                     self.variant_values_from_specs.add((pkg_name, id(variant_def), value))
                 self.gen.fact(
@@ -2491,7 +2495,7 @@ class SpackSolverSetup:
             if variant.value == ("*",):
                 continue
 
-            for value in variant.value_as_tuple:
+            for value in variant.values:
                 # ensure that the value *can* be valid for the spec
                 if spec.name and not spec.concrete and not spack.repo.PATH.is_virtual(spec.name):
                     variant_defs = vt.prevalidate_variant_value(
@@ -3828,13 +3832,13 @@ class SpecBuilder:
     def node_target(self, node, target):
         self._arch(node).target = target
 
-    def variant_selected(self, node, name, value, variant_type, variant_id):
+    def variant_selected(self, node, name: str, value: str, variant_type: str, variant_id):
         spec = self._specs[node]
         variant = spec.variants.get(name)
         if not variant:
-            spec.variants[name] = vt.VariantType(variant_type).variant_class(name, value)
+            spec.variants[name] = vt.VariantValue.from_concretizer(name, value, variant_type)
         else:
-            assert variant_type == vt.VariantType.MULTI.value, (
+            assert variant_type == "multi", (
                 f"Can't have multiple values for single-valued variant: "
                 f"{node}, {name}, {value}, {variant_type}, {variant_id}"
             )
@@ -4213,10 +4217,10 @@ def _inject_patches_variant(root: spack.spec.Spec) -> None:
             continue
 
         patches = list(spec_to_patches[id(spec)])
-        variant: vt.MultiValuedVariant = spec.variants.setdefault(
+        variant: vt.VariantValue = spec.variants.setdefault(
             "patches", vt.MultiValuedVariant("patches", ())
         )
-        variant.value = tuple(p.sha256 for p in patches)
+        variant.set(*(p.sha256 for p in patches))
         # FIXME: Monkey patches variant to store patches order
         ordered_hashes = [(*p.ordering_key, p.sha256) for p in patches if p.ordering_key]
         ordered_hashes.sort()
