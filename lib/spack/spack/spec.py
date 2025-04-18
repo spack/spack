@@ -3958,6 +3958,8 @@ class Spec:
                     except AttributeError:
                         if part == "compiler":
                             return "none"
+                        elif part == "specfile_version":
+                            return f"v{current.original_spec_format()}"
 
                         raise SpecFormatStringError(
                             f"Attempted to format attribute {attribute}. "
