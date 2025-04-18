@@ -129,6 +129,7 @@ class Legion(CMakePackage, ROCmPackage):
     depends_on("hip@5.1:", when="+rocm")
     depends_on("hdf5", when="+hdf5")
     depends_on("hwloc", when="+hwloc")
+    depends_on("libfabric", when="network=gasnet conduit=ofi-slingshot11")
 
     # cuda-centric
     cuda_arch_list = CudaPackage.cuda_arch_values
@@ -150,8 +151,10 @@ class Legion(CMakePackage, ROCmPackage):
     patch("hip-offload-arch.patch", when="@23.03.0 +rocm")
 
     def patch(self):
-        if self.spec.satisfies(
-            "network=gasnet conduit=ofi-slingshot11 ^[virtuals=mpi] cray-mpich+wrappers"
+        if self.spec.satisfies("network=gasnet conduit=ofi-slingshot11") and (
+            self.spec.satisfies("^[virtuals=mpi] cray-mpich+wrappers")
+            or self.spec.satisfies("^[virtuals=mpi] mpich netmod=ofi ^libfabric fabrics=cxi")
+            or self.spec.satisfies("^[virtuals=mpi] openmpi fabrics=ofi ^libfabric fabrics=cxi")
         ):
             filter_file(
                 r"--with-mpi-cc=cc",

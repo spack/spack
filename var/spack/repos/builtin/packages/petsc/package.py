@@ -314,12 +314,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     filter_compiler_wrappers("petscvariables", "reconfigure*.py", relative_root="lib/petsc/conf")
     filter_compiler_wrappers("petsc.pc", "PETSc.pc", relative_root="lib/pkgconfig")
 
-    @run_before("configure")
-    def check_fortran_compiler(self):
-        # Raise error if +fortran and there isn't a fortran compiler!
-        if "+fortran" in self.spec and self.compiler.fc is None:
-            raise InstallError("+fortran requires a fortran compiler!")
-
     # temporary workaround Clang 8.1.0 with XCode 8.3 on macOS, see
     # https://bitbucket.org/petsc/petsc/commits/4f290403fdd060d09d5cb07345cbfd52670e3cbc
     # the patch is an adaptation of the original commit to 3.7.5

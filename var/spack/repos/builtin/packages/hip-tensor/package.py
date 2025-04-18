@@ -15,7 +15,7 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     maintainers("srekolam", "afzpatel")
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="2f4e34c5a96004e24fcdf70f9157f1079ab177a78f6dbf96ea8290f668257c23")
     version("6.3.2", sha256="094db6d759eb32e9d15c36fce7f5b5d46ba81416953a8d9435b2fb9c161d8c83")
     version("6.3.1", sha256="142401331526e6da3fa172cce283f1c053056cb59cf431264443da76cee2f168")

@@ -26,6 +26,7 @@ class PyPillowBase(PythonPackage):
         "jpeg2000",
         "imagequant",
         "xcb",
+        "avif",
     )
     variant("zlib", default=True, description="Compressed PNG functionality")
     variant("jpeg", default=True, description="JPEG functionality")
@@ -38,6 +39,7 @@ class PyPillowBase(PythonPackage):
     variant("jpeg2000", default=False, description="JPEG 2000 functionality")
     variant("imagequant", when="@3.3:", default=False, description="Improved color quantization")
     variant("xcb", when="@7.1:", default=False, description="X11 screengrab support")
+    variant("avif", when="@11.2:", default=False, description="Support for the AVIF format")
 
     # Required dependencies
     # https://pillow.readthedocs.io/en/stable/installation/python-support.html
@@ -56,6 +58,7 @@ class PyPillowBase(PythonPackage):
     # pyproject.toml
     with default_args(type="build"):
         depends_on("py-pip@22.1:", when="@10:")
+        depends_on("py-setuptools@77:", when="@11.2:")
         depends_on("py-setuptools@67.8:", when="@10:")
         depends_on("py-setuptools")
 
@@ -72,6 +75,7 @@ class PyPillowBase(PythonPackage):
     depends_on("openjpeg", when="+jpeg2000")
     depends_on("libimagequant", when="+imagequant")
     depends_on("libxcb", when="+xcb")
+    depends_on("libavif", when="+avif")
 
     patch(
         "https://github.com/python-pillow/Pillow/commit/1c11d4581c5705dfa21bc5a4f3b6980c556978bf.patch?full_index=1",
@@ -104,12 +108,12 @@ class PyPillowBase(PythonPackage):
         if self.version >= Version("11"):
             setup.filter(
                 "library_dirs: list[str] = []",
-                "library_dirs = {0}".format(library_dirs),
+                "library_dirs: list[str] = {0}".format(library_dirs),
                 string=True,
             )
             setup.filter(
                 "include_dirs: list[str] = []",
-                "include_dirs = {0}".format(include_dirs),
+                "include_dirs: list[str] = {0}".format(include_dirs),
                 string=True,
             )
         else:
@@ -148,6 +152,7 @@ class PyPillow(PyPillowBase):
     homepage = "https://python-pillow.org/"
     pypi = "pillow/pillow-10.2.0.tar.gz"
 
+    version("11.2.1", sha256="a64dd61998416367b7ef979b73d3a85853ba9bec4c2925f74e588879a58716b6")
     version("11.1.0", sha256="368da70808b36d73b4b390a8ffac11069f8a5c85f29eff1f1b01bcf3ef5b2a20")
     version("11.0.0", sha256="72bacbaf24ac003fea9bff9837d1eedb6088758d41e100c1552930151f677739")
     version("10.4.0", sha256="166c1cd4d24309b30d61f79f4a9114b7b2313d7450912277855ff5dfd7cd4a06")
@@ -190,6 +195,7 @@ class PyPillow(PyPillowBase):
     depends_on("c", type="build")
 
     for ver in [
+        "11.2.1",
         "11.1.0",
         "11.0.0",
         "10.4.0",

@@ -18,6 +18,16 @@ class TreeSitter(MakefilePackage):
 
     license("MIT")
 
+    version("0.25.3", sha256="862fac52653bc7bc9d2cd0630483e6bdf3d02bcd23da956ca32663c4798a93e3")
+    version("0.25.2", sha256="26791f69182192fef179cd58501c3226011158823557a86fe42682cb4a138523")
+    version("0.25.1", sha256="99a2446075c2edf60e82755c48415d5f6e40f2d9aacb3423c6ca56809b70fe59")
+    version("0.25.0", sha256="3729e98e54a41a4c03f4f6c0be580d14ed88c113d75acf15397b16e05cf91129")
+    version("0.24.7", sha256="7cbc13c974d6abe978cafc9da12d1e79e07e365c42af75e43ec1b5cdc03ed447")
+    version("0.24.6", sha256="03c7ee1e6f9f4f3821fd4af0ae06e1da60433b304a73ff92ee9694933009121a")
+    version("0.24.5", sha256="b5ac48acf5a04fd82ccd4246ad46354d9c434be26c9606233917549711e4252c")
+    version("0.24.4", sha256="d704832a6bfaac8b3cbca3b5d773cad613183ba8c04166638af2c6e5dfb9e2d2")
+    version("0.24.3", sha256="0a8d0cf8e09caba22ed0d8439f7fa1e3d8453800038e43ccad1f34ef29537da1")
+    version("0.24.2", sha256="199da041ac7ef62bccdda9b7bec28aafa073f7eea2677680aa7992d503c9cc64")
     version("0.22.6", sha256="e2b687f74358ab6404730b7fb1a1ced7ddb3780202d37595ecd7b20a8f41861f")
     version("0.22.5", sha256="6bc22ca7e0f81d77773462d922cf40b44bfd090d92abac75cb37dbae516c2417")
     version("0.22.4", sha256="919b750da9af1260cd989498bc84c63391b72ee2aa2ec20fc84882544eb7a229")
@@ -40,3 +50,10 @@ class TreeSitter(MakefilePackage):
 
     def edit(self, spec, prefix):
         env["PREFIX"] = prefix
+
+        # Starting from 0.25.0 endianness is taken into account using system headers
+        #   https://github.com/tree-sitter/tree-sitter/pull/3740
+        # but GLIBC provides them according to some defines that changed over time.
+        #   https://www.sourceware.org/glibc/wiki/Release/2.20#Deprecation_of__BSD_SOURCE_and__SVID_SOURCE_feature_macros
+        if spec.satisfies("@0.25: ^glibc@:2.19"):
+            filter_file("-D_DEFAULT_SOURCE", "-D_BSD_SOURCE", "Makefile")

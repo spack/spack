@@ -271,16 +271,26 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "gfx1030": "navi1030",
         "gfx1100": "navi1100",
     }
+    amdgpu_apu_arch_map = {"gfx942": "amd_gfx942_apu"}
     amd_support_conflict_msg = (
         "{0} is not supported; "
         "Kokkos supports the following AMD GPU targets: " + ", ".join(amdgpu_arch_map.keys())
     )
+    amd_apu_support_conflict_msg = (
+        "{0} is not supported; "
+        "Kokkos supports the following AMD GPU targets with unified memory: "
+        + ", ".join(amdgpu_apu_arch_map.keys())
+    )
     for arch in ROCmPackage.amdgpu_targets:
         if arch not in amdgpu_arch_map:
             conflicts(
-                "+rocm",
-                when="amdgpu_target={0}".format(arch),
-                msg=amd_support_conflict_msg.format(arch),
+                "+rocm", when=f"amdgpu_target={arch}", msg=amd_support_conflict_msg.format(arch)
+            )
+        if arch not in amdgpu_apu_arch_map:
+            conflicts(
+                "+rocm+apu",
+                when=f"amdgpu_target={arch}",
+                msg=amd_apu_support_conflict_msg.format(arch),
             )
 
     intel_gpu_arches = (
@@ -298,6 +308,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         values=("none",) + intel_gpu_arches,
         description="Intel GPU architecture",
     )
+    variant("apu", default=False, description="Enable APU support", when="@4.5: +rocm")
 
     for dev, (dflt, desc) in devices_variants.items():
         variant(dev, default=dflt, description=desc)
@@ -456,7 +467,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             for amdgpu_target in spec.variants["amdgpu_target"].value:
                 if amdgpu_target != "none":
                     if amdgpu_target in self.amdgpu_arch_map:
-                        spack_microarches.append(self.amdgpu_arch_map[amdgpu_target])
+                        if spec.satisfies("+apu") and amdgpu_target in self.amdgpu_apu_arch_map:
+                            spack_microarches.append(self.amdgpu_apu_arch_map[amdgpu_target])
+                        else:
+                            spack_microarches.append(self.amdgpu_arch_map[amdgpu_target])
                     else:
                         # Note that conflict declarations should prevent
                         # choosing an unsupported AMD GPU target

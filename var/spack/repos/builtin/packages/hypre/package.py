@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import sys
 
 from spack.package import *
 
@@ -56,15 +55,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     version("2.10.1", sha256="a4a9df645ebdc11e86221b794b276d1e17974887ead161d5050aaf0b43bb183a")
     version("2.10.0b", sha256="b55dbdc692afe5a00490d1ea1c38dd908dae244f7bdd7faaf711680059824c11")
 
-    # Versions 2.13.0 and later can be patched to build shared
-    # libraries on Darwin; the patch for this capability does not
-    # apply to version 2.12.1 and earlier due to changes in the build system
-    # between versions 2.12.1 and 2.13.0.
-    variant(
-        "shared",
-        default=(sys.platform != "darwin"),
-        description="Build shared library (disables static library)",
-    )
+    variant("shared", default=True, description="Build shared library (disables static library)")
     # Use internal SuperLU routines for FEI - version 2.12.1 and below
     variant("internal-superlu", default=False, description="Use internal SuperLU routines")
     variant(
@@ -118,9 +109,11 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     def patch(self):  # fix sequential compilation in 'src/seq_mv'
         filter_file("\tmake", "\t$(MAKE)", "src/seq_mv/Makefile")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build", when="+cuda")
+    depends_on("cxx", type="build", when="+rocm")
+    depends_on("cxx", type="build", when="+sycl")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("mpi", when="+mpi")
     depends_on("blas", when="+lapack")

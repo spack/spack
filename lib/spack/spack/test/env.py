@@ -20,7 +20,7 @@ from spack.environment.environment import (
     SpackEnvironmentViewError,
     _error_on_nonempty_view_dir,
 )
-from spack.spec_list import UndefinedReferenceError
+from spack.environment.list import UndefinedReferenceError
 
 pytestmark = pytest.mark.not_on_windows("Envs are not supported on windows")
 
@@ -107,7 +107,8 @@ def test_env_change_spec_in_definition(tmp_path, mock_packages, mutable_mock_env
 
     assert any(x.intersects("mpileaks@2.1%gcc") for x in e.user_specs)
 
-    e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
+    with e:
+        e.change_existing_spec(spack.spec.Spec("mpileaks@2.2"), list_name="desired_specs")
     e.write()
 
     # Ensure changed specs are in memory
@@ -776,10 +777,8 @@ def test_env_with_include_def_missing(mutable_mock_env_path, mock_packages):
 """
     )
 
-    e = ev.Environment(env_path)
-    with e:
-        with pytest.raises(UndefinedReferenceError, match=r"which does not appear"):
-            e.concretize()
+    with pytest.raises(UndefinedReferenceError, match=r"which is not defined"):
+        _ = ev.Environment(env_path)
 
 
 @pytest.mark.regression("41292")

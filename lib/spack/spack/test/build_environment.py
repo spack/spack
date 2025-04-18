@@ -1,9 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
+import multiprocessing
 import os
 import posixpath
 import sys
+from typing import Dict, Optional, Tuple
 
 import pytest
 
@@ -828,3 +831,88 @@ def test_extra_rpaths_is_set(
         assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
     else:
         assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
+
+
+class _TestProcess:
+    calls: Dict[str, int] = collections.defaultdict(int)
+    terminated = False
+    runtime = 0
+
+    def __init__(self, *, target, args):
+        self.alive = None
+        self.exitcode = 0
+        self._reset()
+
+    def start(self):
+        self.calls["start"] += 1
+        self.alive = True
+
+    def is_alive(self):
+        self.calls["is_alive"] += 1
+        return self.alive
+
+    def join(self, timeout: Optional[int] = None):
+        self.calls["join"] += 1
+        if timeout is not None and timeout > self.runtime:
+            self.alive = False
+
+    def terminate(self):
+        self.calls["terminate"] += 1
+        self._set_terminated()
+        self.alive = False
+
+    @classmethod
+    def _set_terminated(cls):
+        cls.terminated = True
+
+    @classmethod
+    def _reset(cls):
+        cls.calls.clear()
+        cls.terminated = False
+
+
+class _TestPipe:
+    def close(self):
+        pass
+
+    def recv(self):
+        if _TestProcess.terminated is True:
+            return 1
+        return 0
+
+
+def _pipe_fn(*, duplex: bool = False) -> Tuple[_TestPipe, _TestPipe]:
+    return _TestPipe(), _TestPipe()
+
+
+@pytest.fixture()
+def mock_build_process(monkeypatch):
+    monkeypatch.setattr(spack.build_environment, "BuildProcess", _TestProcess)
+    monkeypatch.setattr(multiprocessing, "Pipe", _pipe_fn)
+
+    def _factory(*, runtime: int):
+        _TestProcess.runtime = runtime
+
+    return _factory
+
+
+@pytest.mark.parametrize(
+    "runtime,timeout,expected_result,expected_calls",
+    [
+        # execution time < timeout
+        (2, 5, 0, {"start": 1, "join": 1, "is_alive": 1}),
+        # execution time > timeout
+        (5, 2, 1, {"start": 1, "join": 2, "is_alive": 1, "terminate": 1}),
+    ],
+)
+def test_build_process_timeout(
+    mock_build_process, runtime, timeout, expected_result, expected_calls
+):
+    """Tests that we make the correct function calls in different timeout scenarios."""
+    mock_build_process(runtime=runtime)
+    result = spack.build_environment.start_build_process(
+        pkg=None, function=None, kwargs={}, timeout=timeout
+    )
+
+    assert result == expected_result
+    assert _TestProcess.calls == expected_calls

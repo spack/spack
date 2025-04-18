@@ -24,7 +24,7 @@ class Hip(CMakePackage):
 
     license("MIT")
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="aa3a5466304d1dbee0d976b50fccb710dd12e2e1d5534793396447c0ff845e2c")
     version("6.3.2", sha256="66a4eba98bd74fc7126ce7cb4d59653b22075fe95a70412fe283dc806ae366e0")
     version("6.3.1", sha256="76f862493c4912a06e0e0b8da3917c2ba7481f1e05f2c23ffd5e05f8c44e3037")

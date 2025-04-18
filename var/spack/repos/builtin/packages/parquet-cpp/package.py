@@ -18,6 +18,7 @@ class ParquetCpp(CMakePackage):
 
     depends_on("arrow")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     # TODO: replace this with an explicit list of components of Boost,

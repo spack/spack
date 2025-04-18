@@ -138,23 +138,9 @@ class Esmf(MakefilePackage, PythonExtension):
 
     conflicts("%aocc", when="@:8.3")
 
-    # Make esmf build with newer intel versions
-    patch("intel.patch", when="@:7.0 %intel@17:")
-    # Make esmf build with newer gcc versions
-    # https://sourceforge.net/p/esmf/esmf/ci/3706bf758012daebadef83d6575c477aeff9c89b/
-    patch("gcc.patch", when="@:7.0 %gcc@6:")
-
-    # Fix undefined reference errors with mvapich2
-    # https://sourceforge.net/p/esmf/esmf/ci/34de0ccf556ba75d35c9687dae5d9f666a1b2a18/
-    patch("mvapich2.patch", when="@:7.0")
-
     # explicit type cast of variables from long to int
     patch("longtoint.patch", when="@:8.3.2 %cce@14:")
     patch("longtoint.patch", when="@:8.3.2 %oneapi@2022:")
-
-    # Allow different directories for creation and
-    # installation of dynamic libraries on OSX:
-    patch("darwin_dylib_install_name.patch", when="platform=darwin @:7.0")
 
     # Missing include file for newer gcc compilers
     # https://trac.macports.org/ticket/57493
@@ -194,13 +180,6 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     # other systems where the logic in setup_build_environment
     # below sets the compilers to the MPI wrappers.
     filter_compiler_wrappers("esmf.mk", relative_root="lib")
-
-    # Make script from mvapich2.patch executable
-    @when("@:7.0")
-    @run_before("build")
-    def chmod_scripts(self):
-        chmod = which("chmod")
-        chmod("+x", "scripts/libs.mvapich2f90")
 
     def url_for_version(self, version):
         if version < Version("8.0.0"):
