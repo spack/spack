@@ -65,7 +65,9 @@ class Podman(Package):
         depends_on("libseccomp")
 
     with when("platform=darwin"):
-        # TODO explain why this is so strict
+        # for context on the dependencies (strictness of version constraints), see
+        # https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
+        # via https://github.com/Homebrew/homebrew-core/blob/master/Formula/p/podman.rb
         depends_on("gvproxy@0.8.4", type="run", when="@5.4.2")
         depends_on("vfkit@0.6.0", type="run", when="@5.4.2")
 
@@ -100,47 +102,37 @@ class Podman(Package):
             r"/usr", self.prefix, "vendor/github.com/containers/common/pkg/config/config.go"
         )
 
-    # macOS resources
-
-    # source: Podman Homebrew Formula
-    # Bump these resources versions to match those in the corresponding version-tagged Makefile
-    # at https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
-    #
-    # More context: https://github.com/Homebrew/homebrew-core/pull/205303
-
-    @when("platform=darwin")
-    def setup_build_environment(self, env):
-        helper_dirs = [
-            self.spec["gvproxy"].prefix.bin,
-            self.spec["vfkit"].prefix.bin
-        ]
-
-        #env.set("HELPER_BINARIES_DIR", ",".join(helper_dirs))
-        help = " ".join(helper_dirs)
-
-        #env.set("EXTRA_LDFLAGS", f"'-X \"github.com/containers/common/pkg/config.additionalHelperBinariesDir={help}\"'")
-        env.set("EXTRA_LDFLAGS", f'-X github.com/containers/common/pkg/config.additionalHelperBinariesDir="{help}"')
-
-
     @when("platform=darwin")
     def install(self, spec, prefix):
-        # for context on the dependencies, see
-        # https://github.com/containers/podman/blob/#{version}/contrib/pkginstaller/Makefile
-        # via https://github.com/Homebrew/homebrew-core/blob/master/Formula/p/podman.rb
-
+        # macos-specific installation
+        # ported from the homebrew formula
         mkdirp(prefix.bin)
         make("podman-remote")
         make("podman-mac-helper")
         install("bin/darwin/podman", prefix.bin)
         install("bin/darwin/podman-mac-helper", prefix.bin)
 
-    @run_after("install")
+        # podman requires its runtime deps to be in a configured directory
+        # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
+        # we choose the user-friendly option of CONTAINERS_CONF_OVERRIDE, which respects
+        # existing configurations set by the user
+        helper_dirs = ", ".join(
+            f'"{x}"' for x in [self.spec["gvproxy"].prefix.bin, self.spec["vfkit"].prefix.bin]
+        )
+
+        config = f"""
+        [engine]
+
+        helper_binaries_dir=[{helper_dirs}]
+        """
+
+        with open(join_path(self.prefix, "containers.conf"), "w") as f:
+            f.write(config)
+
     @when("platform=darwin")
-    def set_config(self):
-        config_dir = join_path(self.prefix, "usr", "share", "containers")
-        mkdirp(config_dir)
-
-
+    def setup_run_environment(self, env):
+        # needs to be set any time a user loads the package
+        env.set("CONTAINERS_CONF_OVERRIDE", join_path(self.prefix, "containers.conf"))
 
     @when("platform=linux")
     def install(self, spec, prefix):

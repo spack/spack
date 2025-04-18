@@ -13,7 +13,7 @@ class Vfkit(MakefilePackage):
     version("0.6.0", sha256="4efaf318729101076d3bf821baf88e5f5bf89374684b35b2674c824a76feafdf")
 
     depends_on("go@1.23.0:", type="build")
-    
+
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         env["CGO_ENABLED"] = "1"
