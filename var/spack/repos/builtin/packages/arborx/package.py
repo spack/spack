@@ -42,7 +42,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "cxxstd",
         default="20",
-        values=("14", "17", "2a", "2b"),
+        values=("14", "17", "20", "23"),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
