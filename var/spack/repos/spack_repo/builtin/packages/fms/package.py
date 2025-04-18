@@ -71,6 +71,8 @@ class Fms(CMakePackage):
     )
 
     variant("shared", description="Build shared libraries", when="@2024.02:", default=False)
+    # To build a shared/dynamic library, both `pic` and `shared` are required:
+    requires("+pic", when="+shared", msg="The +shared variant requires +pic")
     # What the following patch is providing is available in version 2024.03
     # and newer so it is only needed to 2024.02
     patch(
