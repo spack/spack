@@ -176,34 +176,23 @@ community without needing deep familiarity with GnuPG or Public Key
 Infrastructure.
 
 
-.. _build_cache_format:
+.. _build_cache_signing:
 
-------------------
-Build Cache Format
-------------------
+-------------------
+Build Cache Signing
+-------------------
 
-A binary package consists of a manifest json file along with at least two
-other files stored as content-addressed blobs.  These files include a spec
-metadata file which unambiguously defines the built package, as well as the
-installation directory of the package stored as a compressed archive file.
+For an in-depth description of the layout of a binary mirror, see
+the :ref:`documentation<build_cache_layout>` covering binary caches. The
+key takeaway from that discussion that applies here is that the entry point
+to a binary package is it's manifest.  The manifest refers unambiguously to the
+spec metadata and compressed archive, which are stored as content-addressed
+blobs.
+
 The manifest files can either be signed or unsigned, but are always given
-a name ending with ``.spec.manifest.json`` regardless. An unsigned
-manifest is simply a json file describing the associated "heavy" data blobs
-associated with the binary package, and if a manifest is signed, that json
-file is simply wrapped in a gpg cleartext signature. Built package manifest
-files are named to indicate the package name and version, as well as the
-hash of the concrete spec. For example::
-
-  gcc-runtime-12.3.0-qyu2lvgt3nxh7izxycugdbgf5gsdpkjt.spec.manifest.json
-
-would contain the concrete spec and binary metadata for a binary package
-of ``gcc-runtime@12.3.0``. The id of the built package is defined to be
-the DAG hash of the concrete spec, and exists in the name of the file
-as well. The id distinguishes a particular built package from all
-other built packages with the same package name and version. Below is an
-example of a signed binary package manifest file. Such a file would live
-in the versioned manifests directory of a binary mirror, for example
-``v3/manifests/``::
+a name ending with ``.spec.manifest.json`` regardless. The difference between
+signed and unsigned manifests is simply that the signed version is wrapped in
+a gpg cleartext signature, as illustrated below::
 
   -----BEGIN PGP SIGNED MESSAGE-----
   Hash: SHA512
@@ -212,17 +201,17 @@ in the versioned manifests directory of a binary mirror, for example
     "version": 3,
     "data": [
       {
-        "content-length": 10731083,
-        "content-type": "tarball-v1",
+        "contentLength": 10731083,
+        "mediaType": "application/vnd.spack.install.v1.tar+gzip",
         "compression": "gzip",
-        "checksum-algorithm": "sha256",
+        "checksumAlgorithm": "sha256",
         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
       },
       {
-        "content-length": 1000,
-        "content-type": "spec-v5",
+        "contentLength": 1000,
+        "mediaType": "application/vnd.spack.buildcache_spec.v3+json",
         "compression": "gzip",
-        "checksum-algorithm": "sha256",
+        "checksumAlgorithm": "sha256",
         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
       }
     ]
@@ -248,54 +237,11 @@ gpg, as follows::
 
   $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
-The manifest points to both the compressed tar file as well as the compressed
-spec metadata file, and contains the checksum of each. This checksum
-is also used as the address of the associated file, and hence, must be
-known in order to locate the tarball or spec file within the mirror.  Once the
-tarball is downloaded, the checksum should be computed locally and compared to the
-checksum in the manifest to ensure the contents have not changed since the
-binary package was signed. Spack stores all data files (including compressed
-tar files, spec metadata, indices, public keys, etc) within a ``blobs/<hash-algorithm>/``
-directory, using the first two characters of the checksum as a sub-directory
-to reduce the number files in a single folder.  Here is a depiction of the
-organization of binary mirror contents::
-
-  mirror_directory/
-    v3/
-      layout.json
-      manifests/
-        gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
-        gmake-4.4.1-lpr4j77rcgkg5536tmiuzwzlcjsiomph.spec.manifest.json
-        compiler-wrapper-1.0-s7ieuyievp57vwhthczhaq2ogowf3ohe.spec.manifest.json
-        index.manifest.json
-        75BC0528114909C076E2607418010FFAD73C9B07.key.manifest.json
-        keys.manifest.json
-    blobs/
-      sha256/
-        e7/
-          e79acbb06f79c8c5d5aeaf415266d10fe32675f498a60f048299653083534a12
-        f0/
-          f08eb62661ad159d2d258890127fc6053f5302a2f490c1c7f7bd677721010ee0
-        2a/
-          2a21836d206ccf0df780ab0be63fdf76d24501375306a35daa6683c409b7922f
-        ...
-
-Files within the ``manifests`` directory are given an extension corresponding to
-the type of data they reference. Spec manifests end in ``.spec.manifest.json``,
-buildcache index manifests are named ``index.manifest.json``, public key
-manifests end with ``.key.manifest.json``, and finally public key indices are
-named ``keys.manifest.json``.
-
-Every manifest contains a ``data`` array, each element of which refers to an
-associated file stored a content-addressed blob.  Considering the example spec
-manifest shown above, the compressed installation archive can be found by
-picking out the data blob with content type ``tarball-v1``, then looking in
-the blobs directory under ``blobs/sha256/0f/`` for the file named with the
-complete checksum value.
-
-This is in contrast to previous versions of spack, where the compressed tarball
-had a ``.spack`` extension, and was found in a path named after the details of
-the concrete spec.
+When attempting to install a binary package that has been signed, spack will
+attempt to verify the signature with one of the trusted keys in its keyring,
+and will fail if unable to do so.  While not recommended, it is possible to
+force installation of a signed package without verification by providing the
+``--no-check-signature`` argument to ``spack install ...``.
 
 .. _internal_implementation:
 
