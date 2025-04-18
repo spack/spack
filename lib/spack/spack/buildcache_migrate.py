@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import codecs
-import datetime
 import json
 import os
 import pathlib
@@ -86,7 +85,7 @@ def _migrate_spec(
     # Check if the spec file exists in the new location and exit early if so
 
     v3_cache_class = get_url_buildcache_class(layout_version=3)
-    v3_cache_entry = v3_cache_class(mirror_url, s)
+    v3_cache_entry = v3_cache_class(mirror_url, s, allow_unsigned=unsigned)
     exists = v3_cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     v3_cache_entry.destroy()
 
@@ -139,13 +138,16 @@ def _migrate_spec(
         with open(local_signed_pre_verify, encoding="utf-8") as fd:
             spec_dict = spack.spec.Spec.extract_json_from_clearsig(fd.read())
 
-    # Read out the bits needed to rename and position the archive
-    algorithm = spec_dict["binary_cache_checksum"]["hash_algorithm"]
-    checksum = spec_dict["binary_cache_checksum"]["hash"]
+    # Read out and remove the bits needed to rename and position the archive
+    bcc = spec_dict.pop("binary_cache_checksum", None)
+    if not bcc:
+        msg = "Cannot migrate a spec that does not have 'binary_cache_checksum'"
+        return MigrateSpecResult(False, msg)
 
-    # Add fields new to v3 and update layout version
-    spec_dict["archive_timestamp"] = datetime.datetime.now().astimezone().isoformat()
-    spec_dict["archive_compression"] = "gzip"
+    algorithm = bcc["hash_algorithm"]
+    checksum = bcc["hash"]
+
+    # Update layout version
     spec_dict["buildcache_layout_version"] = 3
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
@@ -224,18 +226,18 @@ def _migrate_spec(
         "data": [
             BlobRecord(
                 spec_dict["archive_size"],
-                v3_cache_class.TARBALL_VERSION,
+                v3_cache_class.TARBALL_MEDIATYPE,
                 "gzip",
                 algorithm,
                 checksum,
-            ).to_json(),
+            ).to_dict(),
             BlobRecord(
                 metadata_size,
-                v3_cache_class.SPEC_VERSION,
+                v3_cache_class.BUILDCACHE_SPEC_MEDIATYPE,
                 "gzip",
                 metadata_checksum_algo,
                 metadata_checksum,
-            ).to_json(),
+            ).to_dict(),
         ],
     }
 

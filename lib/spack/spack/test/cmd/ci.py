@@ -868,8 +868,8 @@ spack:
 
             # Also test buildcache_spec schema
             cache_class = spack.binary_distribution.get_url_buildcache_class(layout_version)
-            cache_entry = cache_class(mirror_url, concrete_spec)
-            spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+            cache_entry = cache_class(mirror_url, concrete_spec, allow_unsigned=True)
+            spec_dict = cache_entry.fetch_metadata()
             jsonschema.validate(spec_dict, specfile_schema)
 
             logs_dir = scratch / "logs_dir"

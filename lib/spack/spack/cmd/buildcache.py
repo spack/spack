@@ -581,8 +581,8 @@ def save_specfile_fn(args):
 def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str):
     """Download buildcache entry and copy it to the destination_url"""
     try:
-        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
-        cache_entry.fetch_archive(allow_unsigned=True)
+        spec_dict = cache_entry.fetch_metadata()
+        cache_entry.fetch_archive()
     except bindist.BuildcacheEntryError as e:
         tty.warn(f"Failed to retrieve buildcache for copying due to {e}")
         cache_entry.destroy()
@@ -708,8 +708,8 @@ def sync_fn(args):
         cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(src_mirror_url, s)
-        src_cache_entry.read_manifest(verify_signature=False)
+        src_cache_entry = cache_class(src_mirror_url, s, allow_unsigned=True)
+        src_cache_entry.read_manifest()
         copy_buildcache_entry(src_cache_entry, dest_mirror_url)
 
 
@@ -733,8 +733,10 @@ def manifest_copy(
         cache_class = get_url_buildcache_class(
             layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
         )
-        src_cache_entry = cache_class(cache_class.get_base_url(copy_obj["src"]))
-        src_cache_entry.read_manifest(manifest_url=copy_obj["src"], verify_signature=False)
+        src_cache_entry = cache_class(
+            cache_class.get_base_url(copy_obj["src"]), allow_unsigned=True
+        )
+        src_cache_entry.read_manifest(manifest_url=copy_obj["src"])
         if dest_mirror:
             destination_url = dest_mirror.push_url
         else:

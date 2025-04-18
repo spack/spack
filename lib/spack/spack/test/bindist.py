@@ -1177,11 +1177,11 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
 
     cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    build_cache = cache_class(mirror_url, s)
+    build_cache = cache_class(mirror_url, s, allow_unsigned=True)
 
-    manifest = build_cache.read_manifest(verify_signature=False)
-    spec_dict = build_cache.fetch_metadata(allow_unsigned=True)
-    local_tarball_path = build_cache.fetch_archive(allow_unsigned=True)
+    manifest = build_cache.read_manifest()
+    spec_dict = build_cache.fetch_metadata()
+    local_tarball_path = build_cache.fetch_archive()
 
     assert "spec" in spec_dict
 
@@ -1263,7 +1263,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
 
     index_blob_record = bindist.BlobRecord(
         os.stat(index_blob_path).st_size,
-        cache_class.INDEX_VERSION,
+        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
         "none",
         "sha256",
         index_json_hash,
@@ -1271,7 +1271,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
 
     index_manifest = {
         "version": cache_class.get_layout_version(),
-        "data": [index_blob_record.to_json()],
+        "data": [index_blob_record.to_dict()],
     }
 
     manifest_json_path = os.path.join(

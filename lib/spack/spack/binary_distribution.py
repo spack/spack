@@ -687,7 +687,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_class.push_local_file_as_blob(
-        index_json_path, cache_prefix, "index", BuildcacheComponent.INDICES
+        index_json_path, cache_prefix, "index", BuildcacheComponent.INDICES, compression="none"
     )
 
 
@@ -731,9 +731,9 @@ def _specs_from_cache_aws_cli(cache_prefix):
 
     def file_read_method(manifest_path):
         cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(cache_prefix)
-        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}", verify_signature=False)
-        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+        cache_entry = cache_class(cache_prefix, allow_unsigned=True)
+        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
+        spec_dict = cache_entry.fetch_metadata()
         cache_entry.destroy()
         return spec_dict
 
@@ -744,7 +744,7 @@ def _specs_from_cache_aws_cli(cache_prefix):
         "--exclude",
         "*",
         "--include",
-        "*.manifest.json",
+        "*.spec.manifest.json",
         cache_prefix,
         tmpspecsdir,
     ]
@@ -780,9 +780,9 @@ def _specs_from_cache_fallback(url: str):
 
     def url_read_method(manifest_url):
         cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(url)
-        cache_entry.read_manifest(manifest_url, verify_signature=False)
-        spec_dict = cache_entry.fetch_metadata(allow_unsigned=True)
+        cache_entry = cache_class(url, allow_unsigned=True)
+        cache_entry.read_manifest(manifest_url)
+        spec_dict = cache_entry.fetch_metadata()
         cache_entry.destroy()
         return spec_dict
 
@@ -1043,10 +1043,12 @@ def _do_create_tarball(
     return tar_gz_checksum.hexdigest(), tar_checksum.hexdigest()
 
 
-def _exists_in_buildcache(spec: spack.spec.Spec, out_url: str) -> URLBuildcacheEntry:
+def _exists_in_buildcache(
+    spec: spack.spec.Spec, out_url: str, allow_unsigned: bool = False
+) -> URLBuildcacheEntry:
     """creates and returns (after checking existence) a URLBuildcacheEntry"""
     cache_type = get_url_buildcache_class(CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry = cache_type(out_url, spec)
+    cache_entry = cache_type(out_url, spec, allow_unsigned=allow_unsigned)
     return cache_entry
 
 
@@ -1260,7 +1262,12 @@ def _url_push(
     skipped: List[spack.spec.Spec] = []
     errors: List[Tuple[spack.spec.Spec, BaseException]] = []
 
-    exists_futures = [executor.submit(_exists_in_buildcache, spec, out_url) for spec in specs]
+    exists_futures = [
+        executor.submit(
+            _exists_in_buildcache, spec, out_url, allow_unsigned=False if signing_key else True
+        )
+        for spec in specs
+    ]
 
     cache_entries = {
         spec.dag_hash(): exists_future.result()
@@ -1791,8 +1798,6 @@ def download_tarball(
         (if required), and its checksum validated. Otherwise, return the stage
         containing the downloaded tarball.
     """
-    # import pdb
-    # pdb.set_trace()
     configured_mirrors: Iterable[spack.mirrors.mirror.Mirror] = (
         spack.mirrors.mirror.MirrorCollection(binary=True).values()
     )
@@ -1896,10 +1901,10 @@ def download_tarball(
             return tarball_stage
         else:
             cache_type = get_url_buildcache_class(layout_version=layout_version)
-            cache_entry = cache_type(fetch_url, spec)
+            cache_entry = cache_type(fetch_url, spec, allow_unsigned=currently_unsigned)
 
             try:
-                cache_entry.fetch_archive(allow_unsigned=currently_unsigned)
+                cache_entry.fetch_archive()
             except Exception as e:
                 tty.debug(
                     f"Encountered error attempting to fetch archive for "
@@ -2375,12 +2380,10 @@ def _get_keys(
         mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
     )
     key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
-    index_entry = cache_class(mirror_url)
+    index_entry = cache_class(mirror_url, allow_unsigned=True)
 
     try:
-        index_manifest = index_entry.read_manifest(
-            manifest_url=key_index_manifest_url, verify_signature=False
-        )
+        index_manifest = index_entry.read_manifest(manifest_url=key_index_manifest_url)
         index_blob_path = index_entry.fetch_blob(index_manifest.data[0])
     except BuildcacheEntryError as e:
         tty.debug(f"Failed to fetch key index due to: {e}")
@@ -2393,11 +2396,9 @@ def _get_keys(
 
     for fingerprint, _ in json_index["keys"].items():
         key_manifest_url = url_util.join(keys_prefix, f"{fingerprint}.key.manifest.json")
-        key_entry = cache_class(mirror_url)
+        key_entry = cache_class(mirror_url, allow_unsigned=True)
         try:
-            key_manifest = key_entry.read_manifest(
-                manifest_url=key_manifest_url, verify_signature=False
-            )
+            key_manifest = key_entry.read_manifest(manifest_url=key_manifest_url)
             key_blob_path = key_entry.fetch_blob(key_manifest.data[0])
         except BuildcacheEntryError as e:
             tty.debug(f"Failed to fetch key {fingerprint} due to: {e}")
@@ -2518,7 +2519,7 @@ def needs_rebuild(spec, mirror_url):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-    cache_entry = cache_class(mirror_url, spec)
+    cache_entry = cache_class(mirror_url, spec, allow_unsigned=True)
     exists = cache_entry.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
     return not exists
 
@@ -2593,11 +2594,11 @@ def download_single_spec(
 
     for url in urls:
         cache_class = get_url_buildcache_class(layout_version=layout_version)
-        cache_entry = cache_class(url, concrete_spec)
+        cache_entry = cache_class(url, concrete_spec, allow_unsigned=True)
 
         try:
             cache_entry.fetch_metadata()
-            cache_entry.fetch_archive(allow_unsigned=True)
+            cache_entry.fetch_archive()
         except BuildcacheEntryError as e:
             tty.warn(f"Error downloading {concrete_spec.name}/{concrete_spec.dag_hash()[:7]}: {e}")
             cache_entry.destroy()
@@ -2664,7 +2665,7 @@ class IndexFetcher:
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {manifest_response.url} is invalid", e) from e
 
-        manifest = BuildcacheManifest.from_json(
+        manifest = BuildcacheManifest.from_dict(
             # Currently we do not sign buildcache index, but we could
             cache_class.verify_and_extract_manifest(result, verify=False)
         )
@@ -2891,7 +2892,7 @@ class DefaultIndexFetcher(IndexFetcher):
             return FetchIndexResult(etag=None, hash=None, data=None, fresh=True)
 
         # Otherwise, download the index blob
-        cache_entry = cache_class(self.url)
+        cache_entry = cache_class(self.url, allow_unsigned=True)
         computed_hash, result = self.fetch_index_blob(cache_entry, index_blob_record)
         cache_entry.destroy()
 
@@ -2946,7 +2947,7 @@ class EtagIndexFetcher(IndexFetcher):
             raise FetchIndexError(f"Could not fetch index manifest {manifest_url}", e) from e
 
         # We need to read the index manifest and fetch the associated blob
-        cache_entry = cache_class(self.url)
+        cache_entry = cache_class(self.url, allow_unsigned=True)
         computed_hash, result = self.fetch_index_blob(
             cache_entry, self.get_index_manifest(response)
         )

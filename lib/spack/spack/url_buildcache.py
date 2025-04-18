@@ -48,17 +48,30 @@ INDEX_MANIFEST_FILE = "index.manifest.json"
 
 
 class BuildcacheComponent(enum.Enum):
-    """Enumeration of the kinds of things that live in a URL buildcache"""
+    """Enumeration of the kinds of things that live in a URL buildcache
 
+    These enums serve two purposes: They allow different buildcache layout
+    versions to specify different relative location of these entities, and
+    some of them (usually the singular versions) can be mapped to and from
+    the different media types.
+    """
+
+    # metadata file for a binary package
     SPECS = enum.auto()
     SPEC = enum.auto()
+    # things that live in the blobs directory
     BLOBS = enum.auto()
+    # binary mirror index
     INDICES = enum.auto()
     INDEX = enum.auto()
+    # public key used for verifying signed binary packages
     KEYS = enum.auto()
     KEY = enum.auto()
+    # index of all public keys found in the mirror
     KEY_INDEX = enum.auto()
+    # compressed archive of spec installation directory
     TARBALL = enum.auto()
+    # binary mirror descriptor file
     LAYOUT_JSON = enum.auto()
 
 
@@ -80,16 +93,16 @@ class BlobRecord:
         self.checksum = checksum
 
     @classmethod
-    def from_json(cls, json_object):
+    def from_dict(cls, record_dict):
         return BlobRecord(
-            json_object["contentLength"],
-            json_object["mediaType"],
-            json_object["compression"],
-            json_object["checksumAlgorithm"],
-            json_object["checksum"],
+            record_dict["contentLength"],
+            record_dict["mediaType"],
+            record_dict["compression"],
+            record_dict["checksumAlgorithm"],
+            record_dict["checksum"],
         )
 
-    def to_json(self):
+    def to_dict(self):
         return {
             "contentLength": self.content_length,
             "mediaType": self.media_type,
@@ -120,15 +133,15 @@ class BuildcacheManifest:
         else:
             self.data = []
 
-    def to_json(self):
-        return {"version": self.version, "data": [rec.to_json() for rec in self.data]}
+    def to_dict(self):
+        return {"version": self.version, "data": [rec.to_dict() for rec in self.data]}
 
     @classmethod
-    def from_json(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
+    def from_dict(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
         jsonschema.validate(manifest_json, buildcache_manifest_schema)
         return BuildcacheManifest(
             layout_version=manifest_json["version"],
-            data=[BlobRecord.from_json(blob_json) for blob_json in manifest_json["data"]],
+            data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
         )
 
     def get_blob_records(self, media_type: str) -> List[BlobRecord]:
@@ -137,7 +150,6 @@ class BuildcacheManifest:
 
         for record in self.data:
             if record.media_type == media_type:
-                # matches.append(BlobRecord.from_json(record.to_json()))
                 matches.append(record)
 
         if matches:
@@ -178,11 +190,13 @@ class URLBuildcacheEntry:
 
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
-    INDEX_VERSION = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
-    SPEC_VERSION = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
-    TARBALL_VERSION = "application/vnd.spack.install.v1.tar+gzip"
-    PUBLIC_KEY = "application/pgp-keys"
-    PUBLIC_KEY_INDEX = "application/vnd.spack.keyindex.v1+json"
+    BUILDCACHE_INDEX_MEDIATYPE = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
+    BUILDCACHE_SPEC_MEDIATYPE = (
+        f"application/vnd.spack.buildcache_spec.v{CURRENT_BUILD_CACHE_LAYOUT_VERSION}+json"
+    )
+    TARBALL_MEDIATYPE = "application/vnd.spack.install.v1.tar+gzip"
+    PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
+    PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["blobs"],
         BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests", "index"],
@@ -201,10 +215,13 @@ class URLBuildcacheEntry:
         BuildcacheComponent.LAYOUT_JSON: [f"v{LAYOUT_VERSION}", "layout.json"],
     }
 
-    def __init__(self, mirror_url: str, spec: Optional[spack.spec.Spec] = None):
+    def __init__(
+        self, mirror_url: str, spec: Optional[spack.spec.Spec] = None, allow_unsigned: bool = False
+    ):
         """Lazily initialize the object"""
         self.mirror_url: str = mirror_url
         self.spec: Optional[spack.spec.Spec] = spec
+        self.allow_unsigned: bool = allow_unsigned
         self.manifest: Optional[BuildcacheManifest] = None
         self.remote_manifest_url: str = ""
         self.stages: Dict[BlobRecord, spack.stage.Stage] = {}
@@ -277,15 +294,15 @@ class URLBuildcacheEntry:
     @classmethod
     def media_type_to_component(cls, media_type: str) -> BuildcacheComponent:
         """Mapping from media types to buildcache components"""
-        if media_type == cls.SPEC_VERSION:
+        if media_type == cls.BUILDCACHE_SPEC_MEDIATYPE:
             return BuildcacheComponent.SPEC
-        elif media_type == cls.TARBALL_VERSION:
+        elif media_type == cls.TARBALL_MEDIATYPE:
             return BuildcacheComponent.TARBALL
-        elif media_type == cls.INDEX_VERSION:
+        elif media_type == cls.BUILDCACHE_INDEX_MEDIATYPE:
             return BuildcacheComponent.INDEX
-        elif media_type == cls.PUBLIC_KEY:
+        elif media_type == cls.PUBLIC_KEY_MEDIATYPE:
             return BuildcacheComponent.KEY
-        elif media_type == cls.PUBLIC_KEY_INDEX:
+        elif media_type == cls.PUBLIC_KEY_INDEX_MEDIATYPE:
             return BuildcacheComponent.KEY_INDEX
 
         raise BuildcacheEntryError(f"Unrecognized content type: {media_type}")
@@ -294,15 +311,15 @@ class URLBuildcacheEntry:
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Mapping from buildcache component to media type"""
         if component == BuildcacheComponent.SPEC or component == BuildcacheComponent.SPECS:
-            return cls.SPEC_VERSION
+            return cls.BUILDCACHE_SPEC_MEDIATYPE
         elif component == BuildcacheComponent.TARBALL:
-            return cls.TARBALL_VERSION
+            return cls.TARBALL_MEDIATYPE
         elif component == BuildcacheComponent.INDEX or component == BuildcacheComponent.INDICES:
-            return cls.INDEX_VERSION
+            return cls.BUILDCACHE_INDEX_MEDIATYPE
         elif component == BuildcacheComponent.KEY or component == BuildcacheComponent.KEYS:
-            return cls.PUBLIC_KEY
+            return cls.PUBLIC_KEY_MEDIATYPE
         elif component == BuildcacheComponent.KEY_INDEX:
-            return cls.PUBLIC_KEY_INDEX
+            return cls.PUBLIC_KEY_INDEX_MEDIATYPE
 
         raise BuildcacheEntryError(f"Not a blob component: {component}")
 
@@ -385,7 +402,7 @@ class URLBuildcacheEntry:
         given component type.
         """
         try:
-            self.read_manifest(verify_signature=False)
+            self.read_manifest()
         except BuildcacheEntryError:
             return False
 
@@ -428,9 +445,7 @@ class URLBuildcacheEntry:
                 raise NoVerifyException("Required signature was not found on manifest")
             return json.loads(manifest_contents)
 
-    def read_manifest(
-        self, manifest_url: Optional[str] = None, verify_signature: bool = True
-    ) -> BuildcacheManifest:
+    def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         """Read and process the the buildcache entry manifest.
 
         If no manifest url is provided, build the url from the internal spec and
@@ -465,22 +480,22 @@ class URLBuildcacheEntry:
             raise BuildcacheEntryError("Unable to read manifest or manifest empty")
 
         manifest_contents = self.verify_and_extract_manifest(
-            manifest_contents, verify=verify_signature
+            manifest_contents, verify=not self.allow_unsigned
         )
 
-        self.manifest = BuildcacheManifest.from_json(manifest_contents)
+        self.manifest = BuildcacheManifest.from_dict(manifest_contents)
 
         if self.manifest.version != 3:
             raise BuildcacheEntryError("Layout version mismatch in fetched manifest")
 
         return self.manifest
 
-    def fetch_metadata(self, allow_unsigned: bool = False) -> dict:
+    def fetch_metadata(self) -> dict:
         """Retrieve metadata for the spec, returns the validated spec dict"""
         if not self.manifest:
             # Reading the manifest will either successfully compute the remote
             # spec url, or else raise an exception
-            self.read_manifest(verify_signature=not allow_unsigned)
+            self.read_manifest()
 
         local_specfile_path = self.fetch_blob(self.get_blob_record(BuildcacheComponent.SPEC))
 
@@ -493,11 +508,11 @@ class URLBuildcacheEntry:
 
         return spec_dict
 
-    def fetch_archive(self, allow_unsigned: bool = False) -> str:
+    def fetch_archive(self) -> str:
         """Retrieve the archive file and return the local archive file path"""
         if not self.manifest:
             # Raises if problems encountered, including not being able to verify signagure
-            self.read_manifest(verify_signature=not allow_unsigned)
+            self.read_manifest()
 
         return self.fetch_blob(self.get_blob_record(BuildcacheComponent.TARBALL))
 
@@ -562,7 +577,7 @@ class URLBuildcacheEntry:
         manifest_file_name = f"{manifest_name}.manifest.json"
         manifest_path = os.path.join(tmpdir, manifest_file_name)
         with open(manifest_path, "w", encoding="utf-8") as f:
-            json.dump(manifest.to_json(), f, indent=0, separators=(",", ":"))
+            json.dump(manifest.to_dict(), f, indent=0, separators=(",", ":"))
             # Note: when using gpg clear sign, we need to avoid long lines (19995
             # chars). If lines are longer, they are truncated without error. So,
             # here we still add newlines, but no indent, so save on file size and
@@ -667,7 +682,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 tarball_content_length,
-                self.TARBALL_VERSION,
+                self.TARBALL_MEDIATYPE,
                 compression,
                 checksum_algorithm,
                 tarball_checksum,
@@ -695,7 +710,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.SPEC_VERSION,
+                self.BUILDCACHE_SPEC_MEDIATYPE,
                 compression,
                 checksum_algorithm,
                 metadata_checksum,
@@ -705,7 +720,7 @@ class URLBuildcacheEntry:
         # generate the manifest
         manifest = {
             "version": self.get_layout_version(),
-            "data": [record.to_json() for record in blobs],
+            "data": [record.to_dict() for record in blobs],
         }
 
         # write the manifest to a temporary location
@@ -744,7 +759,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
     SPEC_URL_REGEX = re.compile(r"(.+)/build_cache/.+")
     LAYOUT_VERSION = 2
-    # Uses the same SPEC_VERSION and TARBALL_VERSION as v3
+    # Uses the same BUILDCACHE_SPEC_MEDIATYPE and TARBALL_MEDIATYPE as v3
     COMPONENT_PATHS = {
         BuildcacheComponent.BLOBS: ["build_cache"],
         BuildcacheComponent.INDICES: ["build_cache"],
@@ -758,10 +773,16 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         BuildcacheComponent.LAYOUT_JSON: ["build_cache", "layout.json"],
     }
 
-    def __init__(self, push_url_base: str, spec: Optional[spack.spec.Spec] = None):
+    def __init__(
+        self,
+        push_url_base: str,
+        spec: Optional[spack.spec.Spec] = None,
+        allow_unsigned: bool = False,
+    ):
         """Lazily initialize the object"""
         self.mirror_url: str = push_url_base
         self.spec: Optional[spack.spec.Spec] = spec
+        self.allow_unsigned: bool = allow_unsigned
 
         self.has_metadata: bool = False
         self.has_tarball: bool = False
@@ -852,7 +873,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         return True
 
-    def fetch_metadata(self, allow_unsigned: bool = False) -> dict:
+    def fetch_metadata(self) -> dict:
         """Retrieve the v2 specfile for the spec, yields the validated spec+ dict"""
         if self.spec_dict:
             # Only fetch the metadata once
@@ -863,7 +884,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         if not self.remote_spec_url:
             raise BuildcacheEntryError(f"Mirror {self.mirror_url} does not have metadata for spec")
 
-        if not allow_unsigned and self.has_unsigned:
+        if not self.allow_unsigned and self.has_unsigned:
             raise BuildcacheEntryError(
                 f"Mirror {self.mirror_url} does not have signed metadata for spec"
             )
@@ -882,7 +903,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         self.local_specfile_path = self.spec_stage.save_filename
 
-        if not allow_unsigned and not try_verify(self.local_specfile_path):
+        if not self.allow_unsigned and not try_verify(self.local_specfile_path):
             raise NoVerifyException(f"Signature on {self.remote_spec_url} could not be verified")
 
         # Check spec file for validity and read it, or else cleanup and exit early
@@ -917,8 +938,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
         return self.spec_dict
 
-    def fetch_archive(self, allow_unsigned: bool = False) -> str:
-        self.fetch_metadata(allow_unsigned=allow_unsigned)
+    def fetch_archive(self) -> str:
+        self.fetch_metadata()
 
         # Adding this, we can avoid passing a dictionary of stages around the
         # install logic, and in fact completely avoid fetching the metadata in
@@ -961,9 +982,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest url")
 
-    def read_manifest(
-        self, manifest_url: Optional[str] = None, verify_signature: bool = True
-    ) -> BuildcacheManifest:
+    def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
 
     def remove(self):
