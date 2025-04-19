@@ -26,6 +26,7 @@ class Libevpath(CMakePackage):
     variant("enet_transport", default=False, description="Build an ENET transport for EVpath")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("gtkorvo-enet", when="@4.4.0: +enet_transport")
     depends_on("gtkorvo-enet@1.3.13", when="@:4.2.4 +enet_transport")

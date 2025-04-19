@@ -23,6 +23,7 @@ class Camellia(CMakePackage):
         description="Compile with MOAB to include support for reading standard mesh formats",
     )
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on(

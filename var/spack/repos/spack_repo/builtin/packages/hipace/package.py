@@ -40,6 +40,7 @@ class Hipace(CMakePackage):
         description="Floating point precision (single/double)",
     )
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.18.0:", type="build", when="@23.05:")

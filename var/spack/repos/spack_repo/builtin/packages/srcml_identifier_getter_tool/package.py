@@ -15,6 +15,7 @@ class SrcmlIdentifierGetterTool(CMakePackage):
 
     version("2022-10-17", commit="01394c247ae6f61cc5864a9697e72e3623d8e7fb", submodules=True)
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("libxml2")

@@ -22,4 +22,7 @@ class JediCmake(CMakePackage):
     )
     version("1.3.0", commit="729a9b2ec97a7e93cbc58213493f28ca11f08754")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake @3.10:", type=("build"))

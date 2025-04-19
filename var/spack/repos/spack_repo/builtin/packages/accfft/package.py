@@ -20,6 +20,7 @@ class Accfft(CMakePackage, CudaPackage):
     variant("pnetcdf", default=True, description="Add support for parallel NetCDF")
     variant("shared", default=True, description="Enables the build of shared libraries")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     # See: http://accfft.org/articles/install/#installing-dependencies

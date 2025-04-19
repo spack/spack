@@ -14,6 +14,7 @@ class Cotter(CMakePackage):
     version("master", branch="master")
     version("20190205", commit="b7b07f3298a8d57b9dfff0b72fc21e68b23a42da")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("erfa")

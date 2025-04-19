@@ -32,6 +32,7 @@ class Opensubdiv(CMakePackage, CudaPackage):
     variant("tbb", default=False, description="Builds with Intel TBB support")
     variant("openmp", default=False, description="Builds with OpenMP support")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@2.8.6:", type="build")

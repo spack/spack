@@ -46,6 +46,7 @@ class Ectrans(CMakePackage):
     variant("transi", default=True, description="Compile TransI C-interface to trans")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
     depends_on("ecbuild", type="build")

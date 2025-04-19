@@ -21,4 +21,5 @@ class Kumi(CMakePackage):
     version("2.0", sha256="c9f2d2014d3513c57db4457c5a678c7adce1fa9bd061ee008847876f06dac355")
     version("1.0", sha256="d28be244e326b1c9f1651b47728af74bb6be80a7accd39f07441a246d49220f5")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated

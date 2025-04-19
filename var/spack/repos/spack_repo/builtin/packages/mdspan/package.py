@@ -31,6 +31,8 @@ class Mdspan(CMakePackage):
         description="Whether to install headers to emulate standard library headers and namespace",
     )
 
+    depends_on("cxx", type="build")
+
     depends_on("benchmark", when="+benchmarks")
     depends_on("googletest@1.14:1", when="+tests")
 
