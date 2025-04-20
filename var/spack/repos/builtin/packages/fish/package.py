@@ -21,6 +21,7 @@ class Fish(CMakePackage):
     license("GPL-2.0-only")
 
     version("master", branch="master")
+    version("4.0.2", sha256="6e1ecdb164285fc057b2f35acbdc20815c1623099e7bb47bbfc011120adf7e83")
     version("4.0.1", sha256="4ed63a70207283e15cf21fc5f21db4230421e4f98d4826b5b1c8254d69c762b5")
     version("4.0.0", sha256="2fda5bd970357064d8d4c896e08285ba59965ca2a8c4829ca8a82bf3b89c69f3")
     version("3.7.1", sha256="614c9f5643cd0799df391395fa6bbc3649427bb839722ce3b114d3bbc1a3b250")
