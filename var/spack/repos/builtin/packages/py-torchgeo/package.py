@@ -94,7 +94,7 @@ class PyTorchgeo(PythonPackage):
         depends_on("py-rtree@1:", when="@0.3:")
         depends_on("py-rtree@0.9.4:", when="@0.2.1:")
         depends_on("py-rtree@0.5:")
-        depends_on("py-segmentation-models-pytorch@0.3.3:", when="@0.7.1:")
+        depends_on("py-segmentation-models-pytorch@0.5:", when="@0.7.1:")
         # https://github.com/microsoft/torchgeo/pull/2740
         depends_on("py-segmentation-models-pytorch@0.3.3:0.4", when="@0.7.0")
         depends_on("py-segmentation-models-pytorch@0.2:0.4")
