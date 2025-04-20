@@ -32,8 +32,8 @@ class PySetuptools(Package, PythonExtension):
     version("75.8.2", sha256="558e47c15f1811c1fa7adbd0096669bf76c1d3f433f58324df69f3f5ecac4e8f")
     version("75.8.1", sha256="3bc32c0b84c643299ca94e77f834730f126efd621de0cc1de64119e0e17dab1f")
     version("75.8.0", sha256="e3982f444617239225d675215d51f6ba05f845d4eec313da4418fdbb56fb27e3")
-    version("75.3.2", sha256="90ab613b6583fc02d5369cbca13ea26ea0e182d1df2d943ee9cbe81d4c61add9")
     # Last version supporting Python 3.8
+    version("75.3.2", sha256="90ab613b6583fc02d5369cbca13ea26ea0e182d1df2d943ee9cbe81d4c61add9")
     version("75.3.1", sha256="ccd77cda9d3bc3d3e99036d221b91d15f86e53195139d643b5b5299d42463cd3")
     version("75.3.0", sha256="f2504966861356aa38616760c0f66568e535562374995367b4e69c7143cf6bcd")
     version("69.2.0", sha256="c21c49fb1042386df081cb5d86759792ab89efca84cf114889191cd09aacc80c")
