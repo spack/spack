@@ -34,6 +34,9 @@ class OptixDev(Package):
     version("7.1.0", sha256="70b9adac04e5a36185e715a74306f22426334b6a3850dd7f1a2744212c83f9e1")
     version("7.0.0", sha256="8b294bcd4d23ced20310d73ed320c7bc3ecbb79e3d50f00eb5d97a3639d129a3")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     def install(self, spec, prefix):
         install_tree("include", prefix.include)
         install("LICENSE.txt", prefix)
