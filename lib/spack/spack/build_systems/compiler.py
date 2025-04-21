@@ -49,8 +49,8 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     # Note: if these are not defined, then e.g. spec["c"].package.opt_flags will
     # raise an error unless each compiler package defines these attributes
-    opt_flags = []
-    debug_flags = []
+    opt_flags: Sequence[str] = []
+    debug_flags: Sequence[str] = []
 
     def __init__(self, spec: "spack.spec.Spec"):
         super().__init__(spec)

@@ -89,9 +89,9 @@ class CompilerAdaptor:
         return unique_compilers[0]
 
     def _first_defined(self, property):
-        for lang in [Languages.C, Languages.CXX, Languages.FORTRAN]:
-            if lang in self.compilers:
-                compiler_pkg = self.compilers[lang].package
+        for language in [Languages.C, Languages.CXX, Languages.FORTRAN]:
+            if language in self.compilers:
+                compiler_pkg = self.compilers[language].package
                 opt_flags = getattr(compiler_pkg, property, None)
                 if opt_flags:
                     return opt_flags
