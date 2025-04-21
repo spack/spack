@@ -150,7 +150,6 @@ class Rccl(CMakePackage):
         depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
 
     depends_on("googletest@1.11.0:", type="test", when="@5.3:")
-    depends_on("libdrm", when="@6.4:")
 
     @classmethod
     def determine_version(cls, lib):
