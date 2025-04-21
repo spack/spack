@@ -15,7 +15,7 @@ class PyFlit(PythonPackage):
     license("BSD-3-Clause")
 
     # version("3.12.0", sha256="1c80f34dd96992e7758b40423d2809f48f640ca285d0b7821825e50745ec3740")
-    # version("3.11.0", sha256="58d0a07f684c315700c9c54a661a1130995798c3e495db0db53ce6e7d0121825")
+    version("3.11.0", sha256="58d0a07f684c315700c9c54a661a1130995798c3e495db0db53ce6e7d0121825")
     version("3.10.1", sha256="9c6258ae76d218ce60f9e39a43ca42006a3abcc5c44ea6bb2a1daa13857a8f1a")
     version("3.10.0", sha256="dadca58d5097db62884d25d70b572f104954927daadc8cee449739215b7237fd")
     version("3.9.0", sha256="d75edf5eb324da20d53570a6a6f87f51e606eee8384925cd66a90611140844c7")
@@ -29,7 +29,7 @@ class PyFlit(PythonPackage):
         depends_on("python@3.6:")
 
         # depends_on("py-flit-core@3.12.0:3", when="@3.12.0:3")
-        # depends_on("py-flit-core@3.11.0:3", when="@3.11.0:3")
+        depends_on("py-flit-core@3.11.0:3", when="@3.11.0:3")
         depends_on("py-flit-core@3.10.1:3", when="@3.10.1:3")
         depends_on("py-flit-core@3.10.0:3", when="@3.10.0:3")
         depends_on("py-flit-core@3.9.0:3", when="@3.9.0:3")
