@@ -26,6 +26,9 @@ class Srilm(MakefilePackage):
     variant("pic", default=False, description="Build position independent code")
     variant("liblbfgs", default=False, description="Enable libLBFGS")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("iconv")
     depends_on("liblbfgs", when="+liblbfgs")
     depends_on("gawk", type=("build", "run"))

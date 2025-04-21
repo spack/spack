@@ -38,9 +38,6 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     version("2.3.1", branch="release-2-3-1", deprecated=True)
     version("2.3.0", branch="release-2-3-0", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("gui", default=True, description="Build GUI and interactive SAGA tools")
     variant("odbc", default=True, description="Build with ODBC support")
 
@@ -57,6 +54,9 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
 
     variant("postgresql", default=False, description="Build with PostgreSQL library")
     variant("opencv", default=False, description="Build with libraries using OpenCV")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")

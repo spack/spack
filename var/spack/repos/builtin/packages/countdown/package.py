@@ -20,8 +20,6 @@ class Countdown(CMakePackage, CudaPackage):
 
     version("1.1.1", sha256="ee7f00ffc047f000a21a7a71f6ea6f4049afb1a8407608adc04993929ceba917")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "acc_mpi",
         default=True,
@@ -63,6 +61,8 @@ class Countdown(CMakePackage, CudaPackage):
     conflicts("+use_cpufreq", when="+use_hwp")
     conflicts("+use_hwp", when="+hwp_auto_discovery")
     conflicts("+use_hwp", when="+use_cpufreq")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("cmake@3.0.0:", type="build")
     depends_on("hwloc", type="link")

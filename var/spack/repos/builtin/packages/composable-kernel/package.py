@@ -17,7 +17,8 @@ class ComposableKernel(CMakePackage):
 
     license("MIT")
 
-    version("master", branch="develop")
+    version("master", branch="develop", deprecated=True)
+    version("6.3.3", sha256="b7102efba044455416a6127af1951019fe8365a653ea7eb0b1d83bb4542c9309")
     version("6.3.2", sha256="875237fe493ff040f8f63b827cddf2ff30a8d3aa18864f87d0e35323c7d62a2d")
     version("6.3.1", sha256="3e8c8c832ca3f9ceb99ab90f654b93b7db876f08d90eda87a70bc629c854052a")
     version("6.3.0", sha256="274f87fc27ec2584c76b5bc7ebdbe172923166b6b93e66a24f98475b44be272d")
@@ -39,8 +40,6 @@ class ComposableKernel(CMakePackage):
         version("5.4.3", commit="bb3d9546f186e39cefedc3e7f01d88924ba20168")
         version("5.4.0", commit="236bd148b98c7f1ec61ee850fcc0c5d433576305")
 
-    depends_on("cxx", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
         "amdgpu_target",
@@ -48,6 +47,8 @@ class ComposableKernel(CMakePackage):
         sticky=True,
         description="set gpu targets",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python", type="build")
     depends_on("z3", type="build")
@@ -61,6 +62,7 @@ class ComposableKernel(CMakePackage):
 
     for ver in [
         "master",
+        "6.3.3",
         "6.3.2",
         "6.3.1",
         "6.3.0",

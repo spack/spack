@@ -49,14 +49,14 @@ class Ghostscript(AutotoolsPackage):
         version("9.21", sha256="02bceadbc4dddeb6f2eec9c8b1623d945d355ca11b8b4df035332b217d58ce85")
         version("9.18", sha256="5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b")
 
-    depends_on("c", type="build")
-
     # --enable-dynamic is deprecated, but kept as a variant since it used to be default
     # https://github.com/ArtifexSoftware/ghostpdl/commit/fe0f842da782b097ce13c31fccacce2374ed6d4b
     variant("dynamic", default=False, description="Enable dynamically loaded drivers")
 
     # https://www.ghostscript.com/ocr.html
     variant("tesseract", default=False, description="Use the Tesseract library for OCR")
+
+    depends_on("c", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("krb5", type="link")

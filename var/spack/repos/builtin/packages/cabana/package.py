@@ -28,9 +28,6 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     version("0.1.0", sha256="3280712facf6932b9d1aff375b24c932abb9f60a8addb0c0a1950afd0cb9b9cf")
     version("0.1.0-rc0", sha256="73754d38aaa0c2a1e012be6959787108fec142294774c23f70292f59c1bdc6c5")
 
-    depends_on("c", type="build", when="+mpi")
-    depends_on("cxx", type="build")
-
     _kokkos_backends = Kokkos.devices_variants
     for _backend in _kokkos_backends:
         _deflt, _descr = _kokkos_backends[_backend]
@@ -49,6 +46,9 @@ class Cabana(CMakePackage, CudaPackage, ROCmPackage):
     variant("testing", default=False, description="Build unit tests")
     variant("examples", default=False, description="Build tutorial examples")
     variant("performance_testing", default=False, description="Build performance tests")
+
+    depends_on("c", type="build", when="+mpi")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.9:", type="build", when="@:0.4.0")
     depends_on("cmake@3.16:", type="build", when="@0.5.0:")

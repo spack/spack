@@ -19,9 +19,6 @@ class Antlr(AutotoolsPackage):
 
     version("2.7.7", sha256="853aeb021aef7586bda29e74a6b03006bcb565a755c86b66032d8ec31b67dbb9")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Fixes build with recent versions of GCC
     patch("gcc.patch")
 
@@ -29,6 +26,9 @@ class Antlr(AutotoolsPackage):
     variant("java", default=False, description="Enable ANTLR for Java")
     variant("python", default=False, description="Enable ANTLR for Python")
     variant("pic", default=False, description="Enable fPIC")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     extends("python", when="+python")
     depends_on("java", type=("build", "run"), when="+java")

@@ -4,7 +4,6 @@
 
 import os
 import sys
-import tempfile
 
 from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
@@ -47,10 +46,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         version("2.7.0", sha256="4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924")
         version("2.6.0", sha256="45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c")
         version("2.5.0", sha256="7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
 
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three
@@ -119,6 +114,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     # ifx does not support submodules in separate files
     conflicts("%oneapi@:2022.1.0", when="+fortran")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.12.0:", type="build")
 
@@ -390,35 +389,29 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
                 exe = which(join_path(self.prefix.bin, cmd))
                 exe(*opts)
 
-    def test_examples(self):
-        """Build and run an example program"""
-        src_dir = self.test_suite.current_test_cache_dir.testing.install.C
-        test_stage_dir = self.test_suite.test_dir_for_spec(self.spec)
+    def test_install(self):
+        """Build and run an install tests"""
+        srcdir = self.test_suite.current_test_cache_dir.testing.install.C
+        blddir = self.test_suite.current_test_cache_dir.build_dir
 
-        # Create the build tree within this spec's test stage dir so it gets
-        # cleaned up automatically
-        build_dir = tempfile.mkdtemp(dir=test_stage_dir)
-        cmake = Executable(spec["cmake"].prefix.bin.cmake)
-
-        std_cmake_args = []
+        cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
+        cmake_args = []
 
         if self.spec.satisfies("+mpi"):
             mpi_exec = join_path(self.spec["mpi"].prefix, "bin", "mpiexec")
-            std_cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
+            cmake_args.append(f"-DMPIEXEC_EXECUTABLE={mpi_exec}")
 
-        built_programs = ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]
-
-        with working_dir(build_dir):
-            with test_part(
-                self, "test_examples_build", purpose="build example against installed adios2"
-            ):
-                cmake(src_dir, *std_cmake_args)
+        with working_dir(blddir, create=True):
+            with test_part(self, "test_install_build", purpose="ADIOS2 install test build app"):
+                cmake(srcdir, *cmake_args)
                 cmake(*(["--build", "."]))
 
-            for p in built_programs:
-                exe = which(join_path(".", p))
+            for binary in ["adios_c_mpi_test", "adios_adios2c_test", "adios_c_test"]:
+                exe = which(join_path(".", binary))
                 if exe:
                     with test_part(
-                        self, f"test_examples_run_{p}", purpose=f"run built adios2 example {p}"
+                        self,
+                        f"test_install_run_{binary}",
+                        purpose=f"ADIOS2 install test run {binary}",
                     ):
                         exe()

@@ -4,7 +4,6 @@
 
 import json
 import os
-import re
 import shutil
 import sys
 from typing import Dict
@@ -26,12 +25,10 @@ import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.mirrors.mirror
 import spack.package_base
-import spack.paths
 import spack.repo
 import spack.spec
 import spack.stage
 import spack.util.executable
-import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
@@ -45,7 +42,6 @@ level = "long"
 SPACK_COMMAND = "spack"
 INSTALL_FAIL_CODE = 1
 FAILED_CREATE_BUILDCACHE_CODE = 100
-BUILTIN = re.compile(r"var\/spack\/repos\/builtin\/packages\/([^\/]+)\/package\.py")
 
 
 def deindent(desc):
@@ -163,6 +159,12 @@ def setup_parser(subparser):
         action="store_true",
         default=False,
         help="stop stand-alone tests after the first failure",
+    )
+    rebuild.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
     )
     rebuild.set_defaults(func=ci_rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
@@ -525,6 +527,7 @@ def ci_rebuild(args):
                     fail_fast=args.fail_fast,
                     log_file=log_file,
                     repro_dir=repro_dir,
+                    timeout=args.timeout,
                 )
 
             except Exception as err:
@@ -783,18 +786,15 @@ def ci_verify_versions(args):
     then parses the git diff between the two to determine which packages
     have been modified verifies the new checksums inside of them.
     """
-    with fs.working_dir(spack.paths.prefix):
-        # We use HEAD^1 explicitly on the merge commit created by
-        # GitHub Actions. However HEAD~1 is a safer default for the helper function.
-        files = spack.util.git.get_modified_files(from_ref=args.from_ref, to_ref=args.to_ref)
-
-    # Get a list of package names from the modified files.
-    pkgs = [(m.group(1), p) for p in files for m in [BUILTIN.search(p)] if m]
+    # Get a list of all packages that have been changed or added
+    # between from_ref and to_ref
+    pkgs = spack.repo.get_all_package_diffs("AC", args.from_ref, args.to_ref)
 
     failed_version = False
-    for pkg_name, path in pkgs:
+    for pkg_name in pkgs:
         spec = spack.spec.Spec(pkg_name)
         pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+        path = spack.repo.PATH.package_path(pkg_name)
 
         # Skip checking manual download packages and trust the maintainers
         if pkg.manual_download:
@@ -818,7 +818,7 @@ def ci_verify_versions(args):
             # TODO: enforce every version have a commit or a sha256 defined if not
             # an infinite version (there are a lot of package's where this doesn't work yet.)
 
-        with fs.working_dir(spack.paths.prefix):
+        with fs.working_dir(os.path.dirname(path)):
             added_checksums = spack_ci.get_added_versions(
                 checksums_version_dict, path, from_ref=args.from_ref, to_ref=args.to_ref
             )

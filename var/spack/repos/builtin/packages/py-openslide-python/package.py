@@ -14,7 +14,9 @@ class PyOpenslidePython(PythonPackage):
     license("LGPL-2.1-or-later")
 
     version("1.1.2", sha256="83e064ab4a29658e7ddf86bf1d3e54d2508cc19ece35d55b55519c826e45d83f")
-    version("1.1.1", sha256="33c390fe43e3d7d443fafdd66969392d3e9efd2ecd5d4af73c3dbac374485ed5")
+
+    with default_args(deprecated=True):
+        version("1.1.1", sha256="33c390fe43e3d7d443fafdd66969392d3e9efd2ecd5d4af73c3dbac374485ed5")
 
     depends_on("c", type="build")  # generated
 

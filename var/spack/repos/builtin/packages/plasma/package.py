@@ -43,9 +43,6 @@ class Plasma(CMakePackage):
         url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     build_system(
         conditional("makefile", when="@:17.1"),
         conditional("cmake", when="@18.9:"),
@@ -54,6 +51,9 @@ class Plasma(CMakePackage):
 
     variant("shared", default=True, description="Build shared library (disables static library)")
     variant("lua", default=False, description="Build Lua support for tuning tile sizes")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # need a Python version to generate all precisions' code in repo
     depends_on("python", when="@develop", type="build")

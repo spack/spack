@@ -69,9 +69,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", deprecated=True
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     is_darwin = sys.platform == "darwin"
 
     # All options are defined in CMakeLists.txt.
@@ -151,6 +148,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Based on PyPI wheel availability
     with default_args(type=("build", "link", "run")):
         depends_on("python@3.9:3.13", when="@2.5:")
@@ -322,6 +322,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-six", when="@1.13:1")
 
     conflicts("%gcc@:9.3", when="@2.2:", msg="C++17 support required")
+
+    # https://github.com/pytorch/pytorch/issues/151316
+    patch(
+        "https://github.com/pytorch/pytorch/pull/151344.patch?full_index=1",
+        sha256="edaadfd5f8acee67fee1c77b34145640a1239c9546d77420f3887af24889799e",
+        when="@2.7.0",
+    )
+    patch("apple_clang_17.patch", when="@1.12:2.6")
 
     # https://github.com/pytorch/pytorch/issues/146239
     patch(
@@ -662,14 +670,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif self.spec["lapack"].name in ["libflame", "amdlibflame"]:
             env.set("BLAS", "FLAME")
             env.set("WITH_BLAS", "FLAME")
-        elif self.spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        elif self.spec["blas"].name == "intel-oneapi-mkl":
             env.set("BLAS", "MKL")
             env.set("WITH_BLAS", "mkl")
-            # help find MKL
-            if self.spec["mkl"].name == "intel-oneapi-mkl":
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
-            else:
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl)
+            env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
         elif self.spec["blas"].name == "openblas":
             env.set("BLAS", "OpenBLAS")
             env.set("WITH_BLAS", "open")

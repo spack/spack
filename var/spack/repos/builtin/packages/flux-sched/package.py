@@ -22,6 +22,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.44.0", sha256="a2b71a0c5fb51a89d32cff9eca2fc7c275a7a1a81746bea8d00b4c1868af366e")
     version("0.43.0", sha256="0d9f6b88f99270fa84094b144a35bd6075adf92b9ec5c7f7f60fceffa668c996")
     version("0.42.2", sha256="3a4a513c6539f2927e7a544f431e97456e50c71b63f8744d31e0dee3dc7fcc2e")
     version("0.42.1", sha256="ab56b257e4918ad7e26ef6a375d0ea500a4929bf6633937f0c11c06e21db56b9")
@@ -54,15 +55,15 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     version("0.18.0", sha256="a4d8a6444fdb7b857b26f47fdea57992b486c9522f4ff92d5a6f547d95b586ae")
     version("0.17.0", sha256="5acfcb757e2294a92eaa91be58ba9b42736b88b42d2937de4a78f4642b1c4933")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Avoid the infinite symlink issue
     # This workaround is documented in PR #3543
     build_directory = "spack-build"
 
     variant("docs", default=False, description="Build flux manpages and docs")
     variant("cuda", default=False, description="Build dependencies with support for CUDA")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Needs to be seen if tis is needed once we remove the default variants
     depends_on(
@@ -80,6 +81,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     conflicts("%gcc@:9.3", when="@0.34:")
     conflicts("%gcc@:11", when="@0.37:", msg="gcc version must be 12 or higher")
     conflicts("%clang@:14", when="@0.37:", msg="clang must be version 15 or higher")
+    conflicts("flux-core@0.68:", when="@:0.38", msg="sched before 0.38 requires older core")
     depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))

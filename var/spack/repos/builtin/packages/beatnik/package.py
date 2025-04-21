@@ -20,14 +20,14 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop", submodules=True)
     version("main", branch="main", submodules=True)
 
-    depends_on("cxx", type="build")  # generated
-
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
     variant("cuda", default=False, description="Use CUDA support from subpackages")
     variant("openmp", default=False, description="Use OpenMP support from subpackages")
 
     # Dependencies for all Beatnik versions
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
     with when("+cuda"):
         depends_on("mpich +cuda", when="^[virtuals=mpi] mpich")
@@ -69,7 +69,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("mpich ~cuda", when="+cuda")
     conflicts("mpich ~rocm", when="+rocm")
     conflicts("openmpi ~cuda", when="+cuda")
-    conflicts("^intel-mpi")  # Heffte won't build with intel MPI because of needed C++ MPI support
+    # Heffte won't build with intel MPI because of needed C++ MPI support
+    conflicts("^intel-oneapi-mpi")
     conflicts("^spectrum-mpi", when="^cuda@11.3:")  # cuda-aware spectrum is broken with cuda 11.3:
 
     # Propagate CUDA and AMD GPU targets to cabana
