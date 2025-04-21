@@ -29,6 +29,7 @@ from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
+    URLBuildcacheEntryV2,
     check_mirrors_for_layout,
     get_url_buildcache_class,
 )
@@ -550,6 +551,42 @@ def test_check_mirrors_for_layout(v2_buildcache_layout, mutable_config, capsys):
         check_mirrors_for_layout()
         err = str(capsys.readouterr()[1])
         assert not err
+
+
+def test_url_buildcache_entry_v2_exists(
+    capsys, v2_buildcache_layout, mock_packages, mutable_config
+):
+    """Test existence check for v2 buildcache entries"""
+    test_mirror_path = v2_buildcache_layout("unsigned")
+    mirror_url = f"file://{test_mirror_path}"
+    mirror("add", "v2mirror", mirror_url)
+    buildcache("list", "-a", "-l")
+
+    v2_cache_class = URLBuildcacheEntryV2
+
+    # If you don't give it a spec, it returns False
+    build_cache = v2_cache_class(mirror_url)
+    assert not build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
+
+    spec = spack.concretize.concretize_one("libdwarf")
+
+    # In v2 we have to ask for both, because we need to have the spec to have the tarball
+    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    assert not build_cache.exists([BuildcacheComponent.TARBALL])
+    assert not build_cache.exists([BuildcacheComponent.SPEC])
+    # But if we do ask for both, they should be there in this case
+    assert build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
+
+    spec_path = build_cache._get_spec_url(spec, mirror_url, ext=".spec.json")[7:]
+    tarball_path = build_cache._get_tarball_url(spec, mirror_url)[7:]
+
+    os.remove(tarball_path)
+    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    assert not build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
+
+    os.remove(spec_path)
+    build_cache = v2_cache_class(mirror_url, spec, allow_unsigned=True)
+    assert not build_cache.exists([BuildcacheComponent.SPEC, BuildcacheComponent.TARBALL])
 
 
 @pytest.mark.parametrize("signing", ["unsigned", "signed"])

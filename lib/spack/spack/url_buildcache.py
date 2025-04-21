@@ -292,22 +292,6 @@ class URLBuildcacheEntry:
         )
 
     @classmethod
-    def media_type_to_component(cls, media_type: str) -> BuildcacheComponent:
-        """Mapping from media types to buildcache components"""
-        if media_type == cls.BUILDCACHE_SPEC_MEDIATYPE:
-            return BuildcacheComponent.SPEC
-        elif media_type == cls.TARBALL_MEDIATYPE:
-            return BuildcacheComponent.TARBALL
-        elif media_type == cls.BUILDCACHE_INDEX_MEDIATYPE:
-            return BuildcacheComponent.INDEX
-        elif media_type == cls.PUBLIC_KEY_MEDIATYPE:
-            return BuildcacheComponent.KEY
-        elif media_type == cls.PUBLIC_KEY_INDEX_MEDIATYPE:
-            return BuildcacheComponent.KEY_INDEX
-
-        raise BuildcacheEntryError(f"Unrecognized content type: {media_type}")
-
-    @classmethod
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Mapping from buildcache component to media type"""
         if component == BuildcacheComponent.SPEC or component == BuildcacheComponent.SPECS:
