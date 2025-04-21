@@ -13,6 +13,7 @@ class PyBuild(PythonPackage):
 
     license("MIT")
 
+    version("1.2.2", sha256="119b2fb462adef986483438377a13b2f42064a2a3a4161f24a0cca698a07ac8c")
     version("1.2.1", sha256="526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d")
     version("1.1.1", sha256="8eea65bb45b1aac2e734ba2cc8dad3a6d97d97901a395bd0ed3e7b46953d2a31")
     version("1.1.0", sha256="f8da3eebb19668bb338b6eb256b1896ef4e87a5398bbdda97ee29ec474569f16")
