@@ -62,7 +62,7 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
         args.append(f"-Dlibblas={blas}")
         args.extend([f"-Dlibblas_path={p}" for p in blas_paths])
         args.append(f"-Dliblapack={lapack}")
-        args.extend([f"-Dlibblas_path={p}" for p in lapack_paths])
+        args.extend([f"-Dliblapack_path={p}" for p in lapack_paths])
         if spec.satisfies("+metis"):
             metis = spec["metis"]
             if metis.satisfies("@5"):

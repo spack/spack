@@ -81,6 +81,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     conflicts("%gcc@:9.3", when="@0.34:")
     conflicts("%gcc@:11", when="@0.37:", msg="gcc version must be 12 or higher")
     conflicts("%clang@:14", when="@0.37:", msg="clang must be version 15 or higher")
+    conflicts("flux-core@0.68:", when="@:0.38", msg="sched before 0.38 requires older core")
     depends_on("py-sphinx@1.6.3:", when="+docs", type="build")
 
     depends_on("flux-core", type=("build", "link", "run"))

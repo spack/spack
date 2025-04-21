@@ -19,7 +19,9 @@ class Mptensor(CMakePackage):
     variant("mpi", default=False, description="Build with MPI library")
     variant("doc", default=False, description="build documentation with Doxygen")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.6:", type="build")
     depends_on("mpi", when="+mpi")

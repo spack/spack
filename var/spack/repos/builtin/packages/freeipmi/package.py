@@ -6,7 +6,7 @@
 from spack.package import *
 
 
-class Freeipmi(AutotoolsPackage):
+class Freeipmi(AutotoolsPackage, GNUMirrorPackage):
     """FreeIPMI provides in-band and out-of-band IPMI software based on the IPMI
     v1.5/2.0 specification. The IPMI specification defines a set of interfaces
     for platform management and is implemented by a number vendors for system
@@ -19,7 +19,7 @@ class Freeipmi(AutotoolsPackage):
     info."""
 
     homepage = "https://www.gnu.org/software/freeipmi/"
-    url = "https://ftp.gnu.org/gnu/freeipmi/freeipmi-1.6.4.tar.gz"
+    gnu_mirror_path = "freeipmi/freeipmi-1.6.4.tar.gz"
 
     license("GPL-3.0-or-later")
 

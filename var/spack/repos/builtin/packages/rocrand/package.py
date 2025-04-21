@@ -22,8 +22,8 @@ class Rocrand(CMakePackage):
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="d55be9d367af28d87d983d649329b7ef04641e74d39064b98aeee4b9980af4eb")
     version("6.3.2", sha256="57f364806369ddb80761ce44187920075cf446de527dd1fbc6adbb4b4b3e9bb8")
     version("6.3.1", sha256="80d86c31ec9cb40f5c5532281b42cf99fbc8a81e3ffd3bc8b3bbe4a7e509bf5f")

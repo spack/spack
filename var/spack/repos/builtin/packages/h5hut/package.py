@@ -38,13 +38,6 @@ class H5hut(AutotoolsPackage):
     # install: .libs/libH5hut.a: No such file or directory
     parallel = False
 
-    @run_before("configure")
-    def validate(self):
-        """Checks if Fortran compiler is available."""
-
-        if self.spec.satisfies("+fortran") and not self.compiler.fc:
-            raise RuntimeError("Cannot build Fortran variant without a Fortran compiler.")
-
     def flag_handler(self, name, flags):
         build_system_flags = []
         if (

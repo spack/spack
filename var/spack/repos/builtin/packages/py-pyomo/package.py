@@ -14,9 +14,12 @@ class PyPyomo(PythonPackage):
     pypi = "Pyomo/Pyomo-5.6.6.tar.gz"
     git = "https://github.com/Pyomo/pyomo.git"
 
-    # Maintainer accurate as of 2024-12-17
+    # Maintainer accurate as of 2025-04-16
     maintainers("mrmundt")
 
+    version("6.9.2", sha256="81b2b14ea619244824e1c547cc12602fe9a6e19309cbf0742868c5b1ef37cb35")
+    version("6.9.1", sha256="ccb85fa4b03450c32614a939c6830d073a7ce79461b12b0f1e7809db96ae86de")
+    version("6.9.0", sha256="622323c9d24de09db9fb491847a9c371be24efa1cc2f38da4782e11850ec1e7d")
     version("6.8.2", sha256="40d8f7b216ad1602bb254f4296591608dd94fe2c961dc1e63ca6b84fb397bed6")
     version("6.8.1", sha256="dc3369193a915d6fa9a59382f1c02c17f6bf540584f641b9bd20d1f1a7f8ba8c")
     version("6.8.0", sha256="a204a78d8ed5fa7ad8fa94d3c8ed4f6da38b5c02a68b8fe446bc694f16c8d1ea")
@@ -80,8 +83,7 @@ class PyPyomo(PythonPackage):
     ############################
 
     # python_requires
-    # Preemptively tagging 3.8:3.13 for 6.8.1 and 6.8.2; 3.8 support will
-    # be removed in 6.9.0(MRM - Dec 2024)
+    depends_on("python@3.9:3.13", when="@6.9", type=("build", "run"))
     depends_on("python@3.8:3.13", when="@6.8.1:6.8.2", type=("build", "run"))
     depends_on("python@3.8:3.12", when="@6.7:6.8.0", type=("build", "run"))
     depends_on("python@3.7:3.11", when="@6.4:6.6", type=("build", "run"))
@@ -112,7 +114,7 @@ class PyPyomo(PythonPackage):
 
     # when docs is requested
     depends_on("py-sphinx@3:", when="@:6.6+docs", type=("run"))
-    depends_on("py-sphinx@5:", when="@6.7:+docs", type=("run"))
+    depends_on("py-sphinx@5:8.1,8.2.1:", when="@6.7:+docs", type=("run"))
     depends_on("py-sphinx-copybutton", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinx-rtd-theme@0.6:", when="@6.1:+docs", type=("run"))
     depends_on("py-sphinxcontrib-jsmath", when="@6.1:+docs", type=("run"))

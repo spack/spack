@@ -30,10 +30,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("release", branch="release")
     version(
-        "2.2.0",
-        sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5",
+        "2.3.0",
+        sha256="d105ee2de5cfa600f1b4b3d2061f97bebd581a0ae1c86c6174af4e8128f83c54",
         preferred=True,
     )
+    version("2.2.0", sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5")
     version("2.1.0", sha256="7b224f1f91e5ef140e193338bf091133b1e9f40d323bccdc8bb80bfc2675e6ea")
     version("2.0.0", sha256="21c8b2cb8f3d4116a4f90c1d08c9f5e27b25c7a0951f7b403eced94576f84880")
     version("1.9.0", sha256="f9862d9d24deae32063ba1ea3d9a42900ac0cdd7f98412d960249a7cac35d47f")
@@ -165,7 +166,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3258
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
-    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2.0")
 
     # VTK-M PR#3259
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259

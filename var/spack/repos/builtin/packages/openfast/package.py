@@ -17,6 +17,7 @@ class Openfast(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="main")
+    version("4.0.3", tag="v4.0.3", commit="20632d7728da024478956b545876eb24a48dadbe")
     version("4.0.2", tag="v4.0.2", commit="fc1110183bcc87b16d93129edabdce6d30e3a497")
     version("3.5.5", tag="v3.5.5", commit="b48e032303c12df6949c67ebffb7050b888db000")
     version("3.5.4", tag="v3.5.4", commit="6a63db76978b0f703165391291963beb517d5a9e")

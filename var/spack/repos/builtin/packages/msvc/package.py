@@ -90,6 +90,13 @@ class Msvc(Package, CompilerPackage):
             extras["compilers"]["fortran"] = fortran_compiler
         return spec, extras
 
+    def setup_dependent_package(self, module, dependent_spec):
+        """Populates dependent module with tooling available from VS"""
+        # We want these to resolve to the paths set by MSVC's VCVARs
+        # so no paths
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.init_msvc()
         # Set the build environment variables for spack. Just using

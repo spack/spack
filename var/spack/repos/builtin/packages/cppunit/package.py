@@ -41,6 +41,7 @@ class Cppunit(AutotoolsPackage):
     )
 
     depends_on("cxx", type="build")
+    depends_on("c", type="build")
 
     depends_on("autoconf", type="build", when="@master,1.15_20220904")
     depends_on("automake", type="build", when="@master,1.15_20220904")
