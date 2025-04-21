@@ -60,8 +60,6 @@ class Nim(Package):
     )
 
     depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     depends_on("gmake", type="build", when="@devel,0.20:")
     depends_on("pcre", type="link")
     depends_on("openssl", type="link")
@@ -115,21 +113,18 @@ class Nim(Package):
                 for path in filter_system_paths(libdirs):
                     quoted_path = shlex.quote(path)
                     if '"""' in quoted_path:
-                        raise InstallError(
-                            "Quoted dependency path " + quoted_path + ' contains """'
-                        )
+                        raise InstallError(f'Quoted dependency path {quoted_path} contains """')
 
                     if not scope:
                         f.write("\nwhen not defined(vcc):\n")  # TODO: Implement for msvc
                         scope = True
 
-                    f.write('  {.passl: """-Xlinker -rpath -Xlinker ' + quoted_path + '""".}\n')
+                    f.write(f'  {{.passl: """-Xlinker -rpath -Xlinker {quoted_path}""".}}\n')
 
-        spec = self.spec
-        append_rpath("lib/wrappers/pcre.nim", spec["pcre"].libs.directories)
-        append_rpath("lib/wrappers/openssl.nim", spec["openssl"].libs.directories)
-        if spec.satisfies("+sqlite"):
-            append_rpath("lib/wrappers/sqlite3.nim", spec["sqlite"].libs.directories)
+        append_rpath("lib/wrappers/pcre.nim", self.spec["pcre"].libs.directories)
+        append_rpath("lib/wrappers/openssl.nim", self.spec["openssl"].libs.directories)
+        if self.spec.satisfies("+sqlite"):
+            append_rpath("lib/wrappers/sqlite3.nim", self.spec["sqlite"].libs.directories)
 
         # Musl defines SysThread as a struct *pthread_t rather than an unsigned long as glibc does.
         if self.spec.satisfies("^[virtuals=libc] musl"):
@@ -170,9 +165,9 @@ class Nim(Package):
         if spec.satisfies("@devel"):
             koch("geninstall")
 
-    def install(self, spec, prefix):
         filter_file("1/nim", "1", "install.sh")
 
+    def install(self, spec, prefix):
         Executable("./install.sh")(prefix)
-
         install_tree("bin", prefix.bin)
+        install_tree("dist", prefix.dist)
