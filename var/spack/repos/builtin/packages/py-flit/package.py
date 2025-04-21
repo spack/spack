@@ -28,8 +28,8 @@ class PyFlit(PythonPackage):
         depends_on("python@3.8:", when="@3.10:")
         depends_on("python@3.6:")
 
-        depends_on("py-flit-core@3.12.0:3", when="@3.12.0:3")
-        depends_on("py-flit-core@3.11.0:3", when="@3.11.0:3")
+        # depends_on("py-flit-core@3.12.0:3", when="@3.12.0:3")
+        # depends_on("py-flit-core@3.11.0:3", when="@3.11.0:3")
         depends_on("py-flit-core@3.10.1:3", when="@3.10.1:3")
         depends_on("py-flit-core@3.10.0:3", when="@3.10.0:3")
         depends_on("py-flit-core@3.9.0:3", when="@3.9.0:3")
