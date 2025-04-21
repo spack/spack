@@ -36,9 +36,6 @@ class Povray(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("boost", default=True, description="Build with boost support")
     variant("debug", default=False, description="Enable compiler debugging mode")
     variant(
@@ -61,6 +58,9 @@ class Povray(AutotoolsPackage):
     # X11 support requires SDL, and I believe therefore lacks support for
     # remote displays.  As we do not have SDL support, no X11 support
     # variant('x11', default=True, description='Build with X11 support')
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Build dependencies
     depends_on("autoconf@2.59:", type="build")

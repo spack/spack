@@ -28,7 +28,8 @@ class Comgr(CMakePackage):
 
     license("NCSA")
 
-    version("master", branch="amd-stg-open")
+    version("master", branch="amd-stg-open", deprecated=True)
+    version("6.3.3", sha256="4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d")
     version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
     version("6.3.1", sha256="e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c")
     version("6.3.0", sha256="79580508b039ca6c50dfdfd7c4f6fbcf489fe1931037ca51324818851eea0c1c")
@@ -52,15 +53,15 @@ class Comgr(CMakePackage):
         version("5.3.3", sha256="6a4ef69e672a077b5909977248445f0eedf5e124af9812993a4d444be030c78b")
         version("5.3.0", sha256="072f849d79476d87d31d62b962e368762368d540a9da02ee2675963dc4942b2c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
     # Disable the hip compile tests.  Spack should not be using
     # /opt/rocm, and this breaks the build when /opt/rocm exists.
     patch("hip-tests.patch", when="@:4.2.0")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.13.4:", type="build")
 
@@ -90,6 +91,7 @@ class Comgr(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
         "master",
     ]:
         # llvm libs are linked statically, so this *could* be a build dep
@@ -118,6 +120,7 @@ class Comgr(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

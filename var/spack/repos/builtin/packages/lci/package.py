@@ -24,14 +24,13 @@ class Lci(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("1.7.9", sha256="49f212d034e7d0b63af29e76b17935a3221830090af02c0e0912cea8a7a58d91")
+    version("1.7.8", sha256="9d54dd669b54e715162c5184a0e5cc64fd479e9fda60b2a490197d901368afda")
     version("1.7.7", sha256="c310f699b7b4317a2f5c3557f85c240fe3c85d2d06618dd248434ef807d53779")
     version("1.7.6", sha256="c88ccea2ad277ed38fc23187771b52b6fb212ed4429114717bfa8887ed21665c")
     version("1.7.5", sha256="13e4084c9e7aaf55966ba5aa0423164b8fd21ee7526fc62017b3c9b3db99cb83")
     version("1.7.4", sha256="00c6ef06bf90a02b55c72076dedf912580dcb1fb59fdc0e771d9e1a71283b72f")
     version("1.7.3", sha256="3c47d51d4925e6700294ac060c88a73c26ca6e9df5b4010d0e90b0bf5e505040")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "fabric",
@@ -117,6 +116,9 @@ class Lci(CMakePackage):
     )
 
     generator("ninja", "make", default="ninja")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.12:", type="build")
     depends_on("libfabric", when="fabric=ofi")

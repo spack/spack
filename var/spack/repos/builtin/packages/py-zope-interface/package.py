@@ -16,6 +16,8 @@ class PyZopeInterface(PythonPackage):
 
     license("ZPL-2.1", checked_by="wdconinc")
 
+    version("7.2", sha256="8b49f1a3d1ee4cdaf5b32d2e738362c7f5e40ac8b46dd7d1a65e82a4872728fe")
+    version("7.1.1", sha256="4284d664ef0ff7b709836d4de7b13d80873dc5faeffc073abdb280058bfac5e3")
     version("7.0.3", sha256="cd2690d4b08ec9eaf47a85914fe513062b20da78d10d6d789a792c0b20307fb1")
     version("7.0.2", sha256="f1146bb27a411d0d40cc0e88182a6b0e979d68ab526c8e5ae9e27c06506ed017")
     version("7.0.1", sha256="f0f5fda7cbf890371a59ab1d06512da4f2c89a6ea194e595808123c863c38eff")
@@ -29,12 +31,16 @@ class PyZopeInterface(PythonPackage):
     version("5.5.0", sha256="700ebf9662cf8df70e2f0cb4988e078c53f65ee3eefd5c9d80cf988c4175c8e3")
     version("5.4.0", sha256="5dba5f530fec3f0988d83b78cc591b58c0b6eb8431a85edd1569a0539a8a5a0e")
     version("5.1.0", sha256="40e4c42bd27ed3c11b2c983fecfb03356fae1209de10686d03c02c8696a1d90e")
-    version("4.5.0", sha256="57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c")
 
-    depends_on("python@2.7:2.8,3.4:", type=("build", "run"), when="@4.5.0")
-    depends_on("python@2.7:2.8,3.5:", type=("build", "run"), when="@5.1.0:")
-    depends_on("python@3.7:", type=("build", "run"), when="@6:")
-    depends_on("python@3.8:", type=("build", "run"), when="@7:")
+    with default_args(deprecated=True):
+        version("4.5.0", sha256="57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c")
 
-    depends_on("py-setuptools", type=("build", "run"))
-    depends_on("py-setuptools@:45", type=("build", "run"), when="@4.5.0")
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@7:")
+        depends_on("python@3.7:", when="@6:")
+        depends_on("python@2.7:2.8,3.5:", when="@5.1.0:")
+        depends_on("python@2.7:2.8,3.4:", when="@4.5.0")
+
+        depends_on("py-setuptools@:73", when="@7.1:")
+        depends_on("py-setuptools@:45", when="@4.5.0")
+        depends_on("py-setuptools")

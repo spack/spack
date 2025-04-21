@@ -4,6 +4,7 @@
 
 import hashlib
 import os.path
+import pathlib
 import shutil
 import tempfile
 import urllib.parse
@@ -68,7 +69,7 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
         sha256: the expected sha256 for the file
         make_dest: function to create a stage for remote files, if needed (e.g., `mkdtemp`)
 
-    Returns: resolved, normalized local path or None
+    Returns: resolved, normalized local path
 
     Raises:
         ValueError: missing or mismatched arguments, unsupported URL scheme
@@ -76,17 +77,25 @@ def local_path(raw_path: str, sha256: str, make_dest: Optional[Callable[[], str]
     if not raw_path:
         raise ValueError("path argument is required to cache remote files")
 
+    file_schemes = ["", "file"]
+
     # Allow paths (and URLs) to contain spack config/environment variables,
     # etc.
     path = canonicalize_path(raw_path)
+
+    # Save off the Windows drive of the canonicalized path (since now absolute)
+    # to ensure recognized by URL parsing as a valid file "scheme".
+    win_path = pathlib.PureWindowsPath(path)
+    if win_path.drive:
+        file_schemes.append(win_path.drive.lower().strip(":"))
+
     url = urllib.parse.urlparse(path)
 
-    # Path isn't remote so return absolute, normalized path with substitutions.
-    if url.scheme in ["", "file"]:
-        return path
+    # Path isn't remote so return normalized, absolute path with substitutions.
+    if url.scheme in file_schemes:
+        return os.path.normpath(path)
 
-    # If scheme is not valid, path is not a url
-    # of a type Spack is generally aware
+    # If scheme is not valid, path is not a supported url.
     if validate_scheme(url.scheme):
         # Fetch files from supported URL schemes.
         if url.scheme in ("http", "https", "ftp"):

@@ -17,6 +17,7 @@ class Geomodel(CMakePackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
+    version("6.10.0", sha256="968a0f7c8108b14f22041ca0c6ae8a3293175131c6f61055527ecdefe8c7839a")
     version("6.9.0", sha256="ea34dad8a0cd392e06794b8a1b7407dd6ad617fefd19fb4cccdf36b154749793")
     version("6.8.0", sha256="4dfd5a932955ee2618a880bb210aed9ce7087cfadd31f23f92e5ff009c8384eb")
     version("6.7.0", sha256="bfa69062ba191d0844d7099b28c0d6c3c0f87e726dacfaa21dba7a6f593d34bf")
@@ -32,8 +33,6 @@ class Geomodel(CMakePackage):
     version("5.3.0", sha256="d30c31f387716415542f3424a7f64ab62ef640a4e6f832243944918f7daca080")
     version("5.1.0", sha256="bbe7d6ea46fe750d9421fb741b2340d16afcddbf5d6aeafab09d60577d55f93d")
     version("4.6.0", sha256="d827dc79a5555fd7b09d1b670fc6f01f91476d0edf98ccd644c624f18fb729ca")
-
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "visualization", default=False, description="Enable the build of GeoModelVisualization"
@@ -65,6 +64,8 @@ class Geomodel(CMakePackage):
     )
 
     conflicts("+fullsimlight", when="+fsl", msg="FSL triggers the build of the FullSimLight")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.16:", type="build")
 

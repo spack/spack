@@ -4,7 +4,6 @@
 
 import subprocess
 
-import spack.compiler
 from spack.package import *
 
 
@@ -38,7 +37,10 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.55.0", sha256="13ec3d81d53cf18aa18322b74b9a6990ad7e51224f1156be5d1f834ee826f95c")
+    version("2.54.2", sha256="70b7be425d07a7be7d9bb0e53b93a372887a048caf23260e0ae602ca6e3670ed")
     version("2.54.1", sha256="2430ded45a98989e9100037f54cf22f5a5083e17196514b3667d3003413e49e1")
+    version("2.53.2", sha256="0f294a5289541b0028773f8e5ab2bf04734ec09241baa5a3dcea0e939d40336f")
     version("2.53.1", sha256="8371a75d4d81294eb9d99d66702f8cf62d4bd954cec3e247e1afae621b4e4726")
     version("2.53.0", sha256="68c24e6c0e3340645b1fb685972c96ef80746d5a289572c9883e520680708ebe")
     version("2.52.0", sha256="c30be3a6ed3fca40aea903e10ee51e2fb50b4ef2445fdc959d4871baf3c20585")
@@ -159,16 +161,19 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.58.1",
+        when="@2.55:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.55.0",
-        when="@2.51:",
+        when="@2.51:2.54",
     )
     resource(
         name="esma_cmake",
@@ -256,9 +261,7 @@ class Mapl(CMakePackage):
     # MAPL can use ifx only from MAPL 2.51 onwards and only supports
     # ifx 2025.0 and newer due to bugs in ifx.
     conflicts("%oneapi@2025:", when="@:2.50")
-    # NOTE there is a further check on oneapi in the cmake_args below
-    # that is hard to conflict since we don't know the fortran compiler
-    # at this point
+    conflicts("^[virtuals=fortran] intel-oneapi-compilers")
 
     variant("flap", default=False, description="Build with FLAP support", when="@:2.39")
     variant("pflogger", default=True, description="Build with pFlogger support")
@@ -280,6 +283,9 @@ class Mapl(CMakePackage):
     # https://github.com/JCSDA/spack-stack/issues/769
     conflicts("+pflogger", when="@:2.40.3 %intel@2021.7:")
     conflicts("+extdata2g", when="@:2.40.3 %intel@2021.7:")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.24:", type="build", when="@2.51:")
     depends_on("cmake@3.23:", type="build", when="@2.50")
@@ -305,14 +311,16 @@ class Mapl(CMakePackage):
     depends_on("udunits", when="@2.48:")
 
     # gFTL dependency
-    depends_on("gftl@1.14.0:", when="@2.48:")
+    depends_on("gftl@1.15.2:", when="@2.55:")
+    depends_on("gftl@1.14.0:", when="@2.48:2.54")
     depends_on("gftl@1.13.0:", when="@2.45:2.47")
     depends_on("gftl@1.11.0:", when="@2.44")
     depends_on("gftl@1.10.0:", when="@2.40:2.43")
     depends_on("gftl@1.5.5:1.9", when="@:2.39")
 
     # gFTL-Shared dependency
-    depends_on("gftl-shared@1.9.0:", when="@2.48:")
+    depends_on("gftl-shared@1.10.0:", when="@2.55:")
+    depends_on("gftl-shared@1.9.0:", when="@2.48:2.54")
     depends_on("gftl-shared@1.8.0:", when="@2.45:2.47")
     depends_on("gftl-shared@1.7.0:", when="@2.44")
     depends_on("gftl-shared@1.6.1:", when="@2.40:2.43")
@@ -326,7 +334,8 @@ class Mapl(CMakePackage):
     depends_on("yafyaml@1.0-beta5", when="@:2.22+extdata2g")
 
     # pflogger dependency
-    depends_on("pflogger@1.15.0: +mpi", when="@2.48:+pflogger")
+    depends_on("pflogger@1.16.1: +mpi", when="@2.55:+pflogger")
+    depends_on("pflogger@1.15.0: +mpi", when="@2.48:2.54+pflogger")
     depends_on("pflogger@1.14.0: +mpi", when="@2.45:2.47+pflogger")
     depends_on("pflogger@1.11.0: +mpi", when="@2.44+pflogger")
     depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
@@ -334,14 +343,16 @@ class Mapl(CMakePackage):
     depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
 
     # fargparse dependency
-    depends_on("fargparse@1.8.0:", when="@2.48:+fargparse")
+    depends_on("fargparse@1.9.0:", when="@2.55:+fargparse")
+    depends_on("fargparse@1.8.0:", when="@2.48:2.54+fargparse")
     depends_on("fargparse@1.7.0:", when="@2.45:2.47+fargparse")
     depends_on("fargparse@1.6.0:", when="@2.44+fargparse")
     depends_on("fargparse@1.5.0:", when="@2.40:43+fargparse")
     depends_on("fargparse@1.4.1:1.4", when="@:2.39+fargparse")
 
     # pfunit dependency
-    depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:+pfunit")
+    depends_on("pfunit@4.11.1: +mpi +fhamcrest", when="@2.55:+pfunit")
+    depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:2.54+pfunit")
     depends_on("pfunit@4.9: +mpi +fhamcrest", when="@2.45:2.47+pfunit")
     depends_on("pfunit@4.8: +mpi +fhamcrest", when="@2.44+pfunit")
     depends_on("pfunit@4.7.3: +mpi +fhamcrest", when="@2.40:+pfunit")
@@ -379,34 +390,15 @@ class Mapl(CMakePackage):
 
         # Compatibility flags for gfortran
         fflags = []
-        if self.compiler.name in ["gcc", "clang", "apple-clang"]:
+        if self["fortran"].name == "gcc":
             fflags.append("-ffree-line-length-none")
-            gfortran_major_ver = int(
-                spack.compiler.get_compiler_version_output(self.compiler.fc, "-dumpversion").split(
-                    "."
-                )[0]
-            )
+
+            gfortran_major_ver = int(self.spec["fortran"].version[0])
             if gfortran_major_ver >= 10:
                 fflags.append("-fallow-invalid-boz")
                 fflags.append("-fallow-argument-mismatch")
         if fflags:
             args.append(self.define("CMAKE_Fortran_FLAGS", " ".join(fflags)))
-
-        # If oneapi@:2024 is used and it gets past the conflict above, we might be
-        # using ifx or ifort. If we are using ifx and the MAPL version is 2.50 or older
-        # we need to raise an error
-
-        if self.spec.satisfies("@:2.50 %oneapi@:2024"):
-            # We now need to get which Fortran compiler is used here but there
-            # isn't an easy way like:
-            #   if self.spec["fortran"].name == "ifx":
-            # yet (see https://github.com/spack/spack/pull/45189)
-            # So we need to parse the output of $FC --version
-            output = spack.compiler.get_compiler_version_output(
-                self.compiler.fc, "-diag-disable=10448 --version", ignore_errors=True
-            )
-            if "ifx" in output:
-                raise InstallError("MAPL versions 2.50 and older do not support ifx")
 
         # Scripts often need to know the MPI stack used to setup the environment.
         # Normally, we can autodetect this, but building with Spack does not

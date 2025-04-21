@@ -187,9 +187,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
     variant("gcp", default=False, description="Build with Google Cloud Platform support")
@@ -222,6 +219,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         default=sys.platform.startswith("linux"),
         description="Build kernels into separate shared objects",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     extends("python")
 
@@ -485,6 +485,14 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         "https://github.com/tensorflow/tensorflow/commit/76b9fa22857148a562f3d9b5af6843402a93c15b.patch?full_index=1",
         sha256="f9e26c544da729cfd376dbd3b096030e3777d3592459add1f3c78b1b9828d493",
         when="@2.9:2.10.0",
+    )
+
+    # can set an upper bound if/when
+    # https://github.com/tensorflow/tensorflow/pull/89032 is merged
+    patch(
+        "allow-empty-config-environment-variables.patch",
+        sha256="e061875c2ca9c157a7837d02afdd25205817def3460745523d5089bbeaa77d29",
+        when="@1.4.0:",
     )
 
     # Version 2.10 produces an error related to cuBLAS:
@@ -828,7 +836,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     def post_configure_fixes(self):
         spec = self.spec
 
-        if spec.satisfies("@2.17:"):
+        if spec.satisfies("@2.17:") and ("patchelf" in spec):
             filter_file(
                 "patchelf",
                 spec["patchelf"].prefix.bin.patchelf,

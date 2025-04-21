@@ -47,3 +47,6 @@ class PyTokenizers(PythonPackage):
     # https://github.com/huggingface/tokenizers/issues/176
     # https://github.com/PyO3/pyo3/issues/5
     depends_on("rust@nightly", when="@:0.8", type="build")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")

@@ -34,7 +34,7 @@ class Func(CMakePackage):
 
     depends_on("boost")
     depends_on("armadillo", when="+armadillo")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
 
     def cmake_args(self):
         args = [

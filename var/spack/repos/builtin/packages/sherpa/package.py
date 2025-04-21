@@ -35,10 +35,6 @@ class Sherpa(CMakePackage, AutotoolsPackage):
         conditional("cmake", when="@3:"), conditional("autotools", when="@:2"), default="cmake"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     _cxxstd_values = (conditional("11", "14", "17", when="@:"), conditional("20", when="@3:"))
     variant(
         "cxxstd",
@@ -59,6 +55,7 @@ class Sherpa(CMakePackage, AutotoolsPackage):
         description="Enable HepMC (version 3.1+) ROOT support",
         when="+root",
     )
+    variant("internal_pdfs", default=True, description="Enables internal PDFs", when="@3:")
     variant("rivet", default=False, description="Enable Rivet support")
     variant("fastjet", default=True, when="@:2", description="Enable FASTJET")
     variant("openloops", default=False, description="Enable OpenLoops")
@@ -84,6 +81,11 @@ class Sherpa(CMakePackage, AutotoolsPackage):
     variant("cms", default=False, description="Append CXXFLAGS used by CMS experiment")
 
     # Note that the delphes integration seems utterly broken: https://sherpa.hepforge.org/trac/ticket/305
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="@:2")
+    depends_on("fortran", type="build", when="@3: +internal_pdfs")
 
     # autotools dependencies are needed at runtime to compile processes
     depends_on("autoconf", when="@:2")
@@ -158,6 +160,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             self.define_from_variant("SHERPA_ENABLE_GZIP", "gzip"),
             self.define_from_variant("SHERPA_ENABLE_HEPMC3", "hepmc3"),
             self.define_from_variant("SHERPA_ENABLE_HEPMC3_ROOT", "hepmc3root"),
+            self.define_from_variant("SHERPA_ENABLE_INTERNAL_PDFS", "internal_pdfs"),
             self.define_from_variant("SHERPA_ENABLE_LHAPDF", "lhapdf"),
             self.define_from_variant("SHERPA_ENABLE_LHOLE", "lhole"),
             self.define_from_variant("SHERPA_ENABLE_MPI", "mpi"),

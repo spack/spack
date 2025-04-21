@@ -25,10 +25,6 @@ class HypreCmake(CMakePackage, CudaPackage):
     version("develop", branch="master")
     version("2.22.0", sha256="2c786eb5d3e722d8d7b40254f138bef4565b2d4724041e56a8fa073bda5cfbb5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "shared",
         default=(sys.platform != "darwin"),
@@ -44,6 +40,10 @@ class HypreCmake(CMakePackage, CudaPackage):
     variant("openmp", default=False, description="Enable OpenMP support")
     variant("debug", default=False, description="Build debug instead of optimized version")
     variant("unified_memory", default=False, description="Use unified memory")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("blas")

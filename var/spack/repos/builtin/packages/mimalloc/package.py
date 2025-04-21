@@ -18,6 +18,7 @@ class Mimalloc(CMakePackage):
     version("dev-slice", branch="dev-slice")
     version("dev", branch="dev")
     version("master", branch="master")
+    version("3.0.3", sha256="baf343041420e2924e1760bbbc0c111101c44e1cecb998e7951f646a957ee05f")
     version("3.0.1", sha256="6a514ae31254b43e06e2a89fe1cbc9c447fdbf26edc6f794f3eb722f36e28261")
     version("2.1.9", sha256="dd8ff701691f19bf4e225d42ef0d3d5e6ca0e03498ee4f044a0402e4697e4a20")
     version("2.1.7", sha256="0eed39319f139afde8515010ff59baf24de9e47ea316a315398e8027d198202d")
@@ -107,7 +108,7 @@ class Mimalloc(CMakePackage):
         "debug_ubsan": (
             False,
             "Build with undefined-behavior sanitizer (needs clang++)",
-            "%clang build_type=Debug +use_cxx",
+            "build_type=Debug +use_cxx %clang ",
         ),
         "skip_collect_on_exit": (False, "Skip collecting memory on program exit", None),
     }

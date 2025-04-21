@@ -19,8 +19,6 @@ class Hicops(CMakePackage):
     version("release", branch="release")
     version("develop", branch="develop")
 
-    depends_on("cxx", type="build")  # generated
-
     # Build Options
     variant("mpi", default=True, description="Enable MPI support.")
     variant(
@@ -76,6 +74,8 @@ class Hicops(CMakePackage):
         multi=False,
     )
     variant("cxx_std", default="14", description="C++ standard", values=("14", "17"), multi=False)
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("py-numpy")
     depends_on("py-python-dateutil")

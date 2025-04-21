@@ -36,10 +36,10 @@ class NcbiToolkit(AutotoolsPackage):
         url="ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/ARCHIVE/2018/Apr_2_2018/ncbi_cxx--21_0_0.tar.gz",
     )
 
+    variant("debug", default=False, description="Build debug versions of libs and apps")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("debug", default=False, description="Build debug versions of libs and apps")
 
     depends_on("boost@1.35.0:+test+log")
     depends_on("bzip2")

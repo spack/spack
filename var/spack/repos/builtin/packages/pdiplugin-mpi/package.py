@@ -22,6 +22,9 @@ class PdipluginMpi(CMakePackage):
 
     variant("tests", default=False, description="Build tests")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3.16.3:", type=("build"), when="@1.8:")
     depends_on("mpi", type=("build", "link", "run"))
     depends_on("pdi@develop", type=("link", "run"), when="@develop")

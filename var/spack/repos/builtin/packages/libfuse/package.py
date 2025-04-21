@@ -30,9 +30,6 @@ class Libfuse(MesonPackage):
     version("3.9.2", sha256="b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0")
     version("2.9.9", sha256="d0e69d5d608cc22ff4843791ad097f554dd32540ddc9bed7638cc6fea7c1b4b5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     def url_for_version(self, version):
         if version < Version("3.0.0"):
             return "https://github.com/libfuse/libfuse/releases/download/fuse-{0}/fuse-{1}.tar.gz".format(
@@ -59,6 +56,9 @@ class Libfuse(MesonPackage):
         ),
     )
     variant("utils", default=True, description="Build and install helper and example programs.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("autoconf", type="build", when="@:2")
     depends_on("automake", type="build", when="@:2")
@@ -93,6 +93,13 @@ class Libfuse(MesonPackage):
         "https://github.com/libfuse/libfuse/commit/5a43d0f724c56f8836f3f92411e0de1b5f82db32.patch?full_index=1",
         sha256="94d5c6d9785471147506851b023cb111ef2081d1c0e695728037bbf4f64ce30a",
         when="@:2",
+    )
+    # fixed in v3.x, but some packages still require v2.x
+    # backport of https://github.com/libfuse/libfuse/commit/6b02a7082ae4c560427ff95b51aa8930bb4a6e1f
+    patch(
+        "fix_aarch64_compile.patch",
+        sha256="6ced88c987543d8e62614fa9bd796e7ede7238d55cc50910ece4355c9c4e57d6",
+        when="@:2 target=aarch64:",
     )
 
     executables = ["^fusermount3?$"]

@@ -10,12 +10,16 @@ class Scons(PythonPackage):
     """SCons is a software construction tool"""
 
     homepage = "https://scons.org"
-    pypi = "SCons/SCons-4.5.1.tar.gz"
+    pypi = "scons/scons-4.9.1.tar.gz"
 
     tags = ["build-tools", "windows"]
 
     license("MIT")
 
+    version("4.9.1", sha256="bacac880ba2e86d6a156c116e2f8f2bfa82b257046f3ac2666c85c53c615c338")
+    version("4.9.0", sha256="f1a5e161bf3d1411d780d65d7919654b9405555994621d3d68e42d62114b592a")
+    version("4.8.1", sha256="5b641357904d2f56f7bfdbb37e165ab996b6143c948b9df0efc7305f54949daa")
+    version("4.8.0", sha256="2c7377ff6a22ca136c795ae3dc3d0824696e5478d1e4940f2af75659b0d45454")
     version("4.7.0", sha256="d8b617f6610a73e46509de70dcf82f76861b79762ff602d546f4e80918ec81f3")
     version("4.5.2", sha256="813360b2bce476bc9cc12a0f3a22d46ce520796b352557202cb07d3e402f5458")
     version("4.5.1", sha256="9daeabe4d87ba2bd4ea15410765fc1ed2d931b723e4dc730a487a3911b9a1738")
@@ -26,7 +30,11 @@ class Scons(PythonPackage):
         "4.1.0.post1", sha256="ecb062482b9d80319b56758c0341eb717735437f86a575bac3552804428bd73e"
     )
     version("4.0.1", sha256="722ed104b5c624ecdc89bd4e02b094d2b14d99d47b5d0501961e47f579a2007c")
-    version("4.0.0", sha256="de8599189ee87bb84234e3d6e30bef0298d6364713979856927576b252c411f3")
+    version(
+        "4.0.0",
+        sha256="de8599189ee87bb84234e3d6e30bef0298d6364713979856927576b252c411f3",
+        url="https://files.pythonhosted.org/packages/source/S/SCons/SCons-4.0.0.tar.gz",
+    )
     version("3.1.2", sha256="8aaa483c303efeb678e6f7c776c8444a482f8ddc3ad891f8b6cdd35264da9a1f")
     version("3.1.1", sha256="fd44f8f2a4562e7e5bc8c63c82b01e469e8115805a3e9c2923ee54cdcd6678b3")
     version("3.1.0", sha256="94e0d0684772d3e6d9368785296716e0ed6ce757270b3ed814e5aa72d3163890")

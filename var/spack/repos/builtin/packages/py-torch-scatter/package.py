@@ -21,6 +21,8 @@ class PyTorchScatter(PythonPackage):
     depends_on("cxx", type="build")
 
     depends_on("python", type=("build", "link", "run"))
+    # https://setuptools.pypa.io/en/latest/history.html#v77-0-0
+    depends_on("py-setuptools@:76", type="build", when="@:2.1.2")
     depends_on("py-setuptools", type="build")
 
     # Undocumented dependencies

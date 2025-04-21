@@ -28,9 +28,6 @@ class G2(CMakePackage):
     version("3.4.5", sha256="c18e991c56964953d778632e2d74da13c4e78da35e8d04cb742a2ca4f52737b6")
     version("3.4.3", sha256="679ea99b225f08b168cbf10f4b29f529b5b011232f298a5442ce037ea84de17c")
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("pic", default=True, description="Build with position-independent-code")
     variant(
         "precision",
@@ -41,22 +38,29 @@ class G2(CMakePackage):
         when="@3.4.6:",
     )
     variant("w3emc", default=True, description="Enable GRIB1 through w3emc", when="@3.4.6:")
-    variant("shared", default="False", description="Build shared library", when="@3.4.7:")
-    variant("openmp", default=False, description="Use OpenMP multithreading", when="@develop")
-    variant("utils", default=False, description="Build grib utilities", when="@develop")
+    variant("shared", default=False, description="Build shared library", when="@3.4.7:")
+    variant("aec", default=True, description="Use AEC library", when="@4:")
+    variant("openmp", default=False, description="Use OpenMP multithreading", when="@4:")
+    variant("utils", default=False, description="Build grib utilities", when="@4:")
     variant(
         "g2c_compare",
         default=False,
         description="Enable copygb2 tests using g2c_compare",
-        when="@develop",
+        when="@4:",
     )
+    variant("use_g2c_api", default=False, description="Use new file-based API", when="@4:")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("jasper@:2.0.32", when="@:3.4.7")
     depends_on("jasper")
+    depends_on("g2c@2:", when="@4:")
+    depends_on("g2c@2: +aec", when="+aec")
     depends_on("libpng")
-    depends_on("zlib-api", when="@develop")
+    depends_on("zlib-api", when="@4:")
     depends_on("bacio", when="@3.4.6:")
-    depends_on("ip", when="@develop")
+    depends_on("ip@3.3.3:", when="@4:")
     requires("^ip precision=d", when="^ip@4.1:")
     depends_on("sp", when="^ip@:4")
     requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
@@ -73,10 +77,12 @@ class G2(CMakePackage):
             self.define_from_variant("OPENMP", "openmp"),
             self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"),
             self.define_from_variant("BUILD_WITH_W3EMC", "w3emc"),
+            self.define_from_variant("USE_AEC", "aec"),
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define("BUILD_4", self.spec.satisfies("precision=4")),
             self.define("BUILD_D", self.spec.satisfies("precision=d")),
             self.define_from_variant("G2C_COMPARE", "g2c_compare"),
+            self.define_from_variant("USE_G2C_API", "use_g2c_api"),
             self.define_from_variant("BUILD_UTILS", "utils"),
         ]
 
@@ -98,4 +104,7 @@ class G2(CMakePackage):
 
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("%intel@:2022"):
+                ctest("--exclude-regex", "test_gribcreate_.")
+            else:
+                ctest()

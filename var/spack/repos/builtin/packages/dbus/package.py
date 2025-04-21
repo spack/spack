@@ -30,6 +30,7 @@ class Dbus(AutotoolsPackage, MesonPackage):
     )
 
     # Note: odd minor versions are unstable, keep last stable version preferred
+    version("1.16.2", sha256="0ba2a1a4b16afe7bceb2c07e9ce99a8c2c3508e5dec290dbb643384bd6beb7e2")
     version("1.16.0", sha256="9f8ca5eb51cbe09951aec8624b86c292990ae2428b41b856e2bed17ec65c8849")
     version("1.15.12", sha256="0589c9c707dd593e31f0709caefa5828e69c668c887a7c0d2e5ba445a86bae4d")
     version("1.15.10", sha256="f700f2f1d0473f11e52f3f3e179f577f31b85419f9ae1972af8c3db0bcfde178")
@@ -42,6 +43,13 @@ class Dbus(AutotoolsPackage, MesonPackage):
     version("1.8.6", sha256="eded83ca007b719f32761e60fd8b9ffd0f5796a4caf455b01b5a5ef740ebd23f")
     version("1.8.4", sha256="3ef63dc8d0111042071ee7f7bafa0650c6ce2d7be957ef0b7ec269495a651ff8")
     version("1.8.2", sha256="5689f7411165adc953f37974e276a3028db94447c76e8dd92efe910c6d3bae08")
+    # Skip function that tries to do something if you're root that doesn't work in a container.
+    # Only tested on 1.15.10, but probably works for other versions as well.
+    patch(
+        "meson_post_install.patch",
+        sha256="d121f842418af606f414ebfc523b51fdd23a2d231e73d66229a4b0ab3486edc4",
+        when="@1.15.10",
+    )
 
     variant("xml_docs", default=False, description="Build XML documentation")
     variant("system-socket", default="default", description="Location for the DBus system socket")

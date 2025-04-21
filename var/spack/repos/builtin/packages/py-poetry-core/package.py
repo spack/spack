@@ -13,6 +13,7 @@ class PyPoetryCore(PythonPackage):
 
     license("MIT")
 
+    version("2.1.2", sha256="f9dbbbd0ebf9755476a1d57f04b30e9aecf71ca9dc2fcd4b17aba92c0002aa04")
     version("1.8.1", sha256="67a76c671da2a70e55047cddda83566035b701f7e463b32a2abfeac6e2a16376")
     version("1.7.0", sha256="8f679b83bd9c820082637beca1204124d5d2a786e4818da47ec8acefd0353b74")
     version("1.6.1", sha256="0f9b0de39665f36d6594657e7d57b6f463cc10f30c28e6d1c3b9ff54c26c9ac3")
@@ -23,11 +24,12 @@ class PyPoetryCore(PythonPackage):
 
     depends_on("c", type="build")  # generated
 
-    depends_on("python@3.8:3", when="@1.7.0:", type=("build", "run"))
-    depends_on("python@3.7:3", when="@1.1.0:", type=("build", "run"))
-    depends_on("python@:3", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.7:", when="@1.1:1.6 ^python@:3.7", type=("build", "run"))
-    depends_on("py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.9:3", when="@2:")
+        depends_on("python@3.8:3", when="@1.7:")
+        depends_on("python@3.7:3", when="@1.1:")
+        depends_on("py-importlib-metadata@1.7:", when="@1.1:1.6 ^python@:3.7")
+        depends_on("py-importlib-metadata@1.7:1", when="@:1.0 ^python@:3.7")
 
     def url_for_version(self, version):
         url = "https://files.pythonhosted.org/packages/source/p/poetry-core/{0}-{1}.tar.gz"

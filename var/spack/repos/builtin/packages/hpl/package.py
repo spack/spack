@@ -22,9 +22,9 @@ class Hpl(AutotoolsPackage):
     version("2.3", sha256="32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830")
     version("2.2", sha256="ac7534163a09e21a5fa763e4e16dfc119bc84043f6e6a807aba666518f8df440")
 
-    depends_on("c", type="build")  # generated
-
     variant("openmp", default=False, description="Enable OpenMP support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi@1.1:")
     depends_on("blas")
@@ -126,11 +126,7 @@ class Hpl(AutotoolsPackage):
         if self.spec.satisfies("+openmp"):
             cflags.append(self.compiler.openmp_flag)
 
-        if (
-            self.spec.satisfies("^intel-mkl")
-            or self.spec.satisfies("^intel-oneapi-mkl")
-            or self.spec.satisfies("^intel-parallel-studio+mkl")
-        ):
+        if self.spec.satisfies("^intel-oneapi-mkl"):
             ldflags.append(self.spec["blas"].libs.ld_flags)
 
         if self.spec.satisfies("%aocc"):

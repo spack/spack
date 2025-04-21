@@ -19,6 +19,8 @@ class Sumaclust(MakefilePackage):
         url="https://git.metabarcoding.org/obitools/sumaclust/uploads/69f757c42f2cd45212c587e87c75a00f/sumaclust_v1.0.20.tar.gz",
     )
 
+    depends_on("c", type="build")
+
     def build(self, spec, prefix):
         make("CC={0}".format(spack_cc))
 

@@ -50,10 +50,6 @@ class Silo(AutotoolsPackage):
     version("4.9", sha256="90f3d069963d859c142809cfcb034bc83eb951f61ac02ccb967fc8e8d0409854")
     version("4.8", sha256="c430c1d33fcb9bc136a99ad473d535d6763bd1357b704a915ba7b1081d58fb21")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("python", default=True, description="Enable Python support")
     variant("fortran", default=True, description="Enable Fortran support")
     variant("shared", default=True, description="Build shared libraries")
@@ -63,6 +59,10 @@ class Silo(AutotoolsPackage):
     variant("hdf5", default=True, description="Support HDF5 for database I/O")
     variant("hzip", default=True, description="Enable hzip support")
     variant("fpzip", default=True, description="Enable fpzip support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("python", type=("build", "link"), when="+python")
     depends_on("perl", type="build")
