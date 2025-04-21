@@ -24,7 +24,12 @@ class Mdspan(CMakePackage):
     variant(
         "cxxstd", default="17", values=["14", "17", "20"], multi=False, description="C++ standard"
     )
-    variant("stdheaders", default=False, when="@stable", description="Whether to install headers to emulate standard library headers and namespace")
+    variant(
+        "stdheaders",
+        default=False,
+        when="@stable",
+        description="Whether to install headers to emulate standard library headers and namespace",
+    )
 
     depends_on("benchmark", when="+benchmarks")
     depends_on("googletest@1.14:1", when="+tests")
