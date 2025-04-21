@@ -79,15 +79,6 @@ class CompilerAdaptor:
             result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
         return result
 
-    def _one_compiler(self, for_name) -> spack.spec.Spec:
-        unique_compilers = list(lang.dedupe(self.compilers.values()))
-        if len(unique_compilers) > 1:
-            raise ValueError(
-                f"Property {for_name} is language-specific and the package has"
-                " more than 1 compiler"
-            )
-        return unique_compilers[0]
-
     def _first_defined(self, property):
         for language in [Languages.C, Languages.CXX, Languages.FORTRAN]:
             if language in self.compilers:
