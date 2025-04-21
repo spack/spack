@@ -3394,7 +3394,7 @@ class Spec:
             return True
 
         # If we have no dependencies, we can't satisfy any constraints.
-        if not self._dependencies and self.original_spec_format() >= 5:
+        if not self._dependencies and self.original_spec_format() >= 5 and not self.external:
             return False
 
         # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
@@ -3427,15 +3427,20 @@ class Spec:
                     except KeyError:
                         return False
 
-                if current_node.original_spec_format() < 5:
+                if current_node.original_spec_format() < 5 or (
+                    current_node.original_spec_format() >= 5 and current_node.external
+                ):
                     compiler_spec = current_node.annotations.compiler_node_attribute
+                    if compiler_spec is None:
+                        return False
+
                     mock_nodes_from_old_specfiles.add(compiler_spec)
                     # This checks that the single node compiler spec satisfies the request
                     # of a direct dependency. The check is not perfect, but based on heuristic.
                     if not compiler_spec.satisfies(rhs_edge.spec):
                         return False
 
-                if current_node.original_spec_format() >= 5:
+                else:
                     candidates = current_node.dependencies(
                         name=rhs_edge.spec.name,
                         deptype=rhs_edge.depflag,

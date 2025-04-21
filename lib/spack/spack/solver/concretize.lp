@@ -184,6 +184,7 @@ literal_node(Root, node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root)
 1 { build_dependency_of_literal_node(LiteralNode, node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1 :-
   literal_node(Root, LiteralNode),
   build(LiteralNode),
+  not external(LiteralNode),
   attr("build_requirement", LiteralNode, build_requirement("node", BuildDependency)).
 
 condition_set(node(min_dupe_id, Root), LiteralNode) :- literal_node(Root, LiteralNode).
@@ -490,6 +491,7 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
      build(node(X, Parent)),
      not external(node(X, Parent)).
 
+% Concrete nodes
 :- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
    concrete(ParentNode),
    not attr("concrete_build_dependency", ParentNode, BuildDependency, _).
@@ -502,6 +504,12 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
+
+% External nodes
+:- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
+   external(ParentNode),
+   not attr("external_build_requirement", ParentNode, build_requirement("node", BuildDependency)).
+
 
 % Asking for gcc@10 %gcc@9 shouldn't give us back an external gcc@10, just because of the hack
 % we have on externals
