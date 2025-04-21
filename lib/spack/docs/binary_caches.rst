@@ -529,7 +529,7 @@ build cache indices stems from the fact that spack does not yet sign build cache
 index manifests. Once that changes, you may start to see these indices stored as
 compressed blobs.
 
-For completenss, here are examples of manifests for the other two types of entities
+For completeness, here are examples of manifests for the other two types of entities
 you might find in a spack build cache. First a public key manifest::
 
   {
