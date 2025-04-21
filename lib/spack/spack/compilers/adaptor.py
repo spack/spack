@@ -88,21 +88,21 @@ class CompilerAdaptor:
             )
         return unique_compilers[0]
 
+    def _first_defined(self, property):
+        for lang in [Languages.C, Languages.CXX, Languages.FORTRAN]:
+            if lang in self.compilers:
+                compiler_pkg = self.compilers[lang].package
+                opt_flags = getattr(compiler_pkg, property, None)
+                if opt_flags:
+                    return opt_flags
+
     @property
     def opt_flags(self) -> List[str]:
-        compiler_pkg = self._one_compiler("opt_flags").package
-        return getattr(compiler_pkg, "opt_flags", [])
+        return self._first_defined("opt_flags") or []
 
     @property
     def debug_flags(self) -> List[str]:
-        compiler_pkg = self._one_compiler("debug_flags").package
-        return getattr(compiler_pkg, "debug_flags", [])
-
-    def opt_flags_for_language(self, lang: str) -> List[str]:
-        return getattr(self.compilers[Languages(lang)].package, "opt_flags", [])
-
-    def debug_flags_for_language(self, lang: str) -> List[str]:
-        return getattr(self.compilers[Languages(lang)].package, "debug_flags", [])
+        return self._first_defined("debug_flags") or []
 
     @property
     def openmp_flag(self) -> str:
