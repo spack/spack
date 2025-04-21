@@ -76,11 +76,15 @@ class MiopenHip(CMakePackage):
     patch("0002-add-include-dir-miopen-hip-6.0.0.patch", when="@6.0")
     patch("0001-link-with-roctracer-when-building-miopendriver-6.1.0.patch", when="@6.1")
     patch("0001-link-with-roctracer-when-building-miopendriver-6.2.0.patch", when="@6.2")
-    patch("0003-link-with-hipblas-roctracer-rocrand-6.3.0.patch", when="@6.3:")
     patch(
         "https://github.com/ROCm/MIOpen/commit/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@5.7",
+    )
+    patch(
+        "https://github.com/ROCm/MIOpen/commit/d1a25ad0f4fc90dffea7a5dbb9cc7a9983a004c2.patch?full_index=1",
+        sha256="3001a90202b572a5cd86a51905064903bcee74d8fa0d9649ee9732274c207801",
+        when="@6.3:",
     )
 
     for ver in [
