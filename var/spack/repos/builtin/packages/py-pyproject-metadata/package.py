@@ -18,7 +18,7 @@ class PyPyprojectMetadata(PythonPackage):
     version("0.6.1", sha256="b5fb09543a64a91165dfe85796759f9e415edc296beb4db33d1ecf7866a862bd")
 
     with default_args(type="build"):
-        depends_on("typing_extensions", when="@0.9: ^python@:3.7")
+        depends_on("py-typing-extensions", when="@0.9: ^python@:3.7")
         depends_on("py-flit-core", when="@0.8:")
         depends_on("py-setuptools@42:", when="@:0.7.1")
 
