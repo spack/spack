@@ -69,22 +69,19 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda", when="cuda_arch=none")
     conflicts("^kokkos", when="+trilinos")
 
-    # Build dependencies
     depends_on("cxx", type="build")
-
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.16:", type="build", when="@1.0:")
     depends_on("cmake@3.22:", type="build", when="@2.0:")
 
-    # System dependencies
     depends_on("mpi", when="+mpi")
     depends_on("rocthrust", when="+rocm")
 
-    # Required dependencies
-    with when("~trilinos"):
-        depends_on("kokkos@4.5.00:", when="@2.0:")
-        depends_on("kokkos@4.2.00:", when="@1.7")
-        depends_on("kokkos@4.1.00:", when="@1.6")
+    depends_on("kokkos@4.5.00:", when="@2.0:")
+    depends_on("kokkos@4.2.00:", when="@1.7")
+    depends_on("kokkos@4.1.00:", when="@1.6")
+    
+    with when("~trilinos @:1.5"):
         depends_on("kokkos@4.0.00:", when="@1.5")
         depends_on("kokkos@3.7.01:", when="@1.4:1.4.1")
         depends_on("kokkos@3.6.00:", when="@1.3")
@@ -103,7 +100,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
             rocm_dep = f"+rocm amdgpu_target={arch}"
             depends_on(f"kokkos {rocm_dep}", when=f"{rocm_dep}")
 
-    with when("+trilinos"):
+    with when("+trilinos @:1.5"):
         depends_on("trilinos@14.2.0:", when="@1.5")
         depends_on("trilinos@14.0.0:", when="@1.4:1.4.1")
         depends_on("trilinos@13.4.0:", when="@1.3")
