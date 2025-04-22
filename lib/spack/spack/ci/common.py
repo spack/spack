@@ -71,7 +71,13 @@ def copy_gzipped(glob_or_path, dest):
         else:
             # Compress and copy in one step
             src_name = os.path.basename(src)
-            zipped = os.path.join(dest, f"{src_name}.gz")
+            if os.path.isdir(dest):
+                zipped = os.path.join(dest, f"{src_name}.gz")
+            elif not dest.endswith(".gz"):
+                zipped = f"{dest}.gz"
+            else:
+                zipped = dest
+
             with open(src, "rb") as fin, gzip.open(zipped, "wb") as fout:
                 shutil.copyfileobj(fin, fout)
 
