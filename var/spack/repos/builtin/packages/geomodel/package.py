@@ -90,7 +90,7 @@ class Geomodel(CMakePackage):
             depends_on("qt-5compat")
         depends_on("coin3d")
         depends_on("soqt")
-        depends_on("opengl")
+        depends_on("gl")
 
     def cmake_args(self):
         args = [
