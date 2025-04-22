@@ -1639,7 +1639,7 @@ build(PackageNode) :- attr("node", PackageNode), not concrete(PackageNode).
 %   100 - 199   Unshifted priorities. Currently only includes minimizing #builds and minimizing dupes.
 %   0   -  99   Priorities for non-built nodes.
 
-treat_node_as_concrete(node(X, Package)) :- external(node(X, Package)).
+treat_node_as_concrete(node(X, Package)) :- external(node(X, Package)), compiler(Package).
 treat_node_as_concrete(node(X, Package)) :- attr("node", node(X, Package)), runtime(Package).
 
 build_priority(PackageNode, 200) :- build(PackageNode), attr("node", PackageNode), not treat_node_as_concrete(PackageNode).
@@ -1806,9 +1806,7 @@ opt_criterion(45, "number of duplicate virtuals needed").
 #minimize{ 0@245: #true }.
 #minimize{ 0@45: #true }.
 #minimize{
-    Weight@45+Priority,ProviderNode,Virtual
-    : provider(ProviderNode, node(Weight, Virtual)),
-      build_priority(ProviderNode, Priority)
+    Weight@245,ProviderNode,Virtual : provider(ProviderNode, node(Weight, Virtual))
 }.
 
 opt_criterion(40, "preferred compilers").

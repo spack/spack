@@ -3346,9 +3346,8 @@ def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runt
         result = spack.concretize.concretize_one("pkg-b %gcc")
         assert pkgb_old.dag_hash() == result.dag_hash()
 
-        result = spack.concretize.concretize_one("pkg-a ^pkg-b %gcc@9")
+        result = spack.concretize.concretize_one("pkg-a %gcc@9 ^pkg-b %gcc@9")
         assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
-        assert result.satisfies("%gcc@9")
 
         result = spack.concretize.concretize_one("pkg-a %gcc@10 ^pkg-b %gcc@9")
         assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()

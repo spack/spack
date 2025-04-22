@@ -1252,8 +1252,7 @@ packages:
     - "%gcc"
     """,
             True,
-            # To minimize installed specs we reuse pkg-b compiler, since the requirement allows it
-            ["%gcc@9"],
+            ["%gcc@10", "^pkg-b%gcc@9"],
         ),
         (
             """
@@ -1273,10 +1272,10 @@ packages:
     - "%gcc"
   pkg-a:
     require:
-    - "%gcc@10"
+    - "%gcc@9"
     """,
             True,
-            ["%gcc@10"],
+            ["%gcc@9"],
         ),
     ],
 )
@@ -1303,4 +1302,4 @@ def test_requirements_on_compilers_and_reuse(
 
     assert is_pkgb_reused == expected_reuse
     for c in expected_contraints:
-        assert pkga.satisfies(c), print(pkga.tree())
+        assert pkga.satisfies(c), pkga.tree()
