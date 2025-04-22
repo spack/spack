@@ -29,6 +29,8 @@ class Verible(Package):
     homepage = "https://chipsalliance.github.io/verible"
     git = "https://github.com/chipsalliance/verible.git"
 
+    maintainers("davekeeshan")
+
     license("BSD-3-Clause")
 
     version("master", branch="master")
@@ -111,8 +113,6 @@ class Verible(Package):
 
     depends_on("cxx", type="build")  # generated
 
-    maintainers("davekeeshan")
-
     depends_on("flex", type="build")
     depends_on("bison", type="build")
     depends_on("bazel", type="build")
@@ -121,11 +121,13 @@ class Verible(Package):
 
     @when("@:0.0.3841")
     def install(self, spec, prefix):
+        """Install method for versions up to 0.0.3841."""
         bazel("build", "-c", "opt", "//...")
         bazel("run", "-c", "opt", ":install", "--", prefix.bin)
 
     @when("@0.0.3841:")
     def install(self, spec, prefix):
+        """Install method for versions 0.0.3841 and newer."""
         mkdirp(prefix.bin)
         bash = which("bash")
         bazel("build", "-c", "opt", ":install-binaries")
