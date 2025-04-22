@@ -39,6 +39,7 @@ class Rocdecode(CMakePackage):
     )
 
     depends_on("libva", type="build", when="@6.2:")
+    depends_on("libdrm", type="build", when="@6.4:")
 
     for ver in [
         "6.1.0",
@@ -54,6 +55,8 @@ class Rocdecode(CMakePackage):
         "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
+
+    patch("0001-add-amdgpu-drm-include.patch", when="@6.4")
 
     def patch(self):
         filter_file(
@@ -84,4 +87,5 @@ class Rocdecode(CMakePackage):
                     "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
                 )
             )
+            args.append(self.define("AMDGPU_DRM_INCLUDE_DIRS", self.spec["libdrm"].prefix.include))
         return args
