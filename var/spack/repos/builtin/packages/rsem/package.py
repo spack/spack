@@ -26,7 +26,8 @@ class Rsem(MakefilePackage):
     depends_on("bowtie")
     depends_on("bowtie2")
     depends_on("star")
-    # The bundled version of samtools/htslib is not compatible with zlib-ng
+    # The bundled samtools-1.3/htslib-1.3 is not compatible with zlib-ng
+    # https://github.com/samtools/htslib/issues/1257
     depends_on("zlib")
 
     def install(self, spec, prefix):
