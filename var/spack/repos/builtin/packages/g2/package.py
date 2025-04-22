@@ -6,17 +6,21 @@ from spack.package import *
 
 
 class G2(CMakePackage):
-    """Utilities for coding/decoding GRIB2 messages. This library contains
-    Fortran 90 decoder/encoder routines for GRIB edition 2, as well as
-    indexing/searching utility routines.
+    """Utilities for coding/decoding GRIB2 messages.
 
-    This is part of the NCEPLIBS project."""
+    This library contains Fortran 90 decoder/encoder routines for GRIB edition 2,
+    as well as indexing/searching utility routines.
+
+    This is part of the NCEPLIBS project.
+    """
 
     homepage = "https://noaa-emc.github.io/NCEPLIBS-g2"
     url = "https://github.com/NOAA-EMC/NCEPLIBS-g2/archive/refs/tags/v3.4.3.tar.gz"
     git = "https://github.com/NOAA-EMC/NCEPLIBS-g2"
 
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
+
+    license("LGPL-3.0")
 
     version("develop", branch="develop")
     version("3.5.1", sha256="a9acdb5d23eca532838f21c4a917727ac85851fc9e1f100d65a6f27c1a563998")
@@ -50,14 +54,16 @@ class G2(CMakePackage):
     )
     variant("use_g2c_api", default=False, description="Use new file-based API", when="@4:")
 
+    # Build dependencies
     depends_on("c", type="build")
     depends_on("fortran", type="build")
 
+    # Required dependencies
     depends_on("jasper@:2.0.32", when="@:3.4.7")
     depends_on("jasper")
+    depends_on("libpng")
     depends_on("g2c@2:", when="@4:")
     depends_on("g2c@2: +aec", when="+aec")
-    depends_on("libpng")
     depends_on("zlib-api", when="@4:")
     depends_on("bacio", when="@3.4.6:")
     depends_on("ip@3.3.3:", when="@4:")
@@ -65,6 +71,7 @@ class G2(CMakePackage):
     depends_on("sp", when="^ip@:4")
     requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
     depends_on("g2c@1.8: +utils", when="+g2c_compare")
+
     with when("+w3emc"):
         depends_on("w3emc")
         depends_on("w3emc precision=4", when="precision=4")
@@ -94,13 +101,13 @@ class G2(CMakePackage):
         )
         for suffix in precisions:
             lib = find_libraries(
-                "libg2_" + suffix,
+                f"libg2_{suffix}",
                 root=self.prefix,
                 shared=self.spec.satisfies("+shared"),
                 recursive=True,
             )
-            env.set("G2_LIB" + suffix, lib[0])
-            env.set("G2_INC" + suffix, join_path(self.prefix, "include_" + suffix))
+            env.set(f"G2_LIB{suffix}", lib[0])
+            env.set(f"G2_INC{suffix}", join_path(self.prefix, f"include_{suffix}"))
 
     def check(self):
         with working_dir(self.build_directory):
