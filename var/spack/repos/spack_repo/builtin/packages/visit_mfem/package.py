@@ -46,6 +46,7 @@ class VisitMfem(CMakePackage):
 
     depends_on("cmake", type="build")
     depends_on("mfem")
+    conflicts("^mfem build_system=cmake")
     depends_on("visit")
 
     extends("visit")

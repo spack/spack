@@ -196,6 +196,7 @@ class Visit(CMakePackage):
     depends_on("mfem@4.4:", when="+mfem")
     depends_on("mfem+shared+exceptions+fms+conduit", when="+mfem")
     depends_on("libfms@0.2:", when="+mfem")
+    conflicts("^mfem build_system=cmake")
 
     with when("+adios2"):
         depends_on("adios2")

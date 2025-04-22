@@ -49,6 +49,8 @@ class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("mfem+strumpack", when="^xsdk+strumpack")
         depends_on("mfem+ginkgo", when="^xsdk+ginkgo")
         depends_on("mfem+hiop", when="^xsdk+hiop")
+        conflicts("^mfem build_system=cmake")
+
         depends_on("sundials+magma", when="+cuda")
 
     depends_on("mpi")

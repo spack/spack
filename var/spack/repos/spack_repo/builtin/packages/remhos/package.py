@@ -37,6 +37,7 @@ class Remhos(MakefilePackage):
 
     depends_on("mfem@develop", when="@develop")
     depends_on("mfem@4.1.0:", when="@1.0")
+    conflicts("^mfem build_system=cmake")
 
     @property
     def build_targets(self):

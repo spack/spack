@@ -35,6 +35,8 @@ class Cardioid(CMakePackage):
     depends_on("cmake@3.1:", type="build")
     depends_on("perl", type="build")
 
+    conflicts("^mfem build_system=cmake")
+
     def cmake_args(self):
         spec = self.spec
         args = [

@@ -286,6 +286,7 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mfem~mpi", when="+mfem~mpi")
     depends_on("mfem+shared", when="+mfem+shared")
     depends_on("mfem~shared", when="+mfem~shared")
+    conflicts("^mfem build_system=cmake")
 
     # occa
     depends_on("occa", when="+occa")

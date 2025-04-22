@@ -199,6 +199,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         depends_on("mfem+mpi", when="+mpi")
         depends_on("mfem~mpi", when="~mpi")
         depends_on("mfem@4.5.0:", when="@0.7.0:")
+        conflicts("^mfem build_system=cmake")
 
     depends_on("python", when="+python")
 

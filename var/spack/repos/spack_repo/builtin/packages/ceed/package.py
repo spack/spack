@@ -283,6 +283,7 @@ class Ceed(BundlePackage, CudaPackage, ROCmPackage):
             when="@4.0.0+mfem+rocm amdgpu_target={0}".format(target),
         )
     depends_on("mfem@4.2.0+occa", when="@4.0.0+mfem+occa")
+    conflicts("^mfem build_system=cmake")
     depends_on("laghos@3.1", when="@4.0.0+mfem")
     depends_on("remhos@1.0", when="@4.0.0+mfem")
     # ceed-3.0

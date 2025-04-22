@@ -113,6 +113,7 @@ class Glvis(MakefilePackage):
     depends_on("mfem@3.3", when="@3.3")
     depends_on("mfem@3.2", when="@3.2")
     depends_on("mfem@3.1", when="@3.1")
+    conflicts("^mfem build_system=cmake")
 
     with when("@:3"):
         depends_on("gl")

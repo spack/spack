@@ -103,6 +103,7 @@ class Ams(CMakePackage, CudaPackage):
                 depends_on(
                     "umpire +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_)
                 )
+        conflicts("^mfem build_system=cmake")
 
     def cmake_args(self):
         spec = self.spec

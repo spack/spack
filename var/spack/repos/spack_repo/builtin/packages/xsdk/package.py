@@ -140,6 +140,7 @@ class Xsdk(BundlePackage, CudaPackage, ROCmPackage):
         cuda_var="cuda",
         rocm_var="rocm",
     )
+    conflicts("^mfem build_system=cmake")
 
     xsdk_depends_on("superlu-dist@9.1.0", when="@1.1.0", cuda_var="cuda", rocm_var="rocm")
     xsdk_depends_on("superlu-dist@8.2.1", when="@1.0.0", cuda_var="cuda", rocm_var="rocm")
