@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
+import errno
 import glob
 import gzip
 import json
@@ -54,7 +55,7 @@ def copy_gzipped(glob_or_path, dest):
 
     files = glob.glob(glob_or_path)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(glob_or_path))
+        raise OSError("No such file or directory: '{0}'".format(glob_or_path), errno.ENOENT)
     if len(files) > 1 and not os.path.isdir(dest):
         raise ValueError(
             "'{0}' matches multiple files but '{1}' is not a directory".format(glob_or_path, dest)
