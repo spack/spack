@@ -285,6 +285,7 @@ class Mapl(CMakePackage):
     conflicts("+extdata2g", when="@:2.40.3 %intel@2021.7:")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("fortran", type="build")
 
     depends_on("cmake@3.24:", type="build", when="@2.51:")
