@@ -95,7 +95,8 @@ class PyPetsc4py(PythonPackage):
 
     # Hack to fix https://github.com/spack/spack/issues/21451, where Petsc4Py expects LDSHARED
     # to start with the same executable as get_config_var("CC")
-    patch("ldshared_319.patch", when="@3.19:")
+    patch("ldshared_3211.patch", when="@3.21.1:3.23.0")
+    patch("ldshared_3190.patch", when="@3.19:3.21.0")
     patch("ldshared.patch", when="@:3.18")
 
     depends_on("c", type="build")  # generated
