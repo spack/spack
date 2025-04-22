@@ -23,10 +23,11 @@ class Scorpio(CMakePackage):
 
     version("develop", branch="truchas")
 
-    version("2021-12-10", commit="b802f16877a6562ccdbeca8887910d3bd3e25cbb", preferred=True)
+    version("2025-03-19", commit="14dffac99b65cdbb9ae54f32eceb582a107d4819", preferred=True)
+    version("2021-12-10", commit="b802f16877a6562ccdbeca8887910d3bd3e25cbb")
 
     depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("cxx", type="build", when="build_system=cmake")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("mpi")
