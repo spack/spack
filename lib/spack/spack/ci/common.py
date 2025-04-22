@@ -45,10 +45,10 @@ SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
 _urlopen = web_util.urlopen
 
 
-def copy_gzipped(glob_or_path, dest):
+def copy_gzipped(glob_or_path: str, dest: str) -> None:
     """Copy all of the files in the source glob/path to the destination.
 
-    Parameters:
+    Args:
         glob_or_path: path to file to test
         dest: destination path to copy to
     """
@@ -82,11 +82,13 @@ def copy_gzipped(glob_or_path, dest):
                 shutil.copyfileobj(fin, fout)
 
 
-def copy_files_to_artifacts(src, artifacts_dir, *, compress_artifacts=False):
+def copy_files_to_artifacts(
+    src: str, artifacts_dir: str, *, compress_artifacts: bool = False
+) -> None:
     """
     Copy file(s) to the given artifacts directory
 
-    Parameters:
+    Args:
         src (str): the glob-friendly path expression for the file(s) to copy
         artifacts_dir (str): the destination directory
         compress_artifacts (bool): option to compress copied artifacts using Gzip
