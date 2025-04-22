@@ -1,25 +1,26 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 
 from spack.package import *
 
 
 class Arborx(CMakePackage, CudaPackage, ROCmPackage):
-    """ArborX is a performance-portable library for geometric search"""
+    """ArborX is a performance-portable library for geometric search."""
 
     homepage = "https://github.com/arborx/arborx"
     url = "https://github.com/arborx/arborx/archive/v1.1.tar.gz"
     git = "https://github.com/arborx/arborx.git"
 
-    tags = ["e4s", "ecp"]
-
     maintainers("aprokop")
 
-    test_requires_compiler = True
-
     license("BSD-3-Clause")
+
+    tags = ["e4s", "ecp"]
+
+    test_requires_compiler = True
 
     version("master", branch="master")
     version("2.0", sha256="5ea6d8f832a69aac77d66c1ae55f96c2ff227272b8a6ba694c7ebcdf3a2413d5")
@@ -59,59 +60,69 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     }
 
     variant("mpi", default=True, description="enable MPI")
+    variant("trilinos", default=False, when="@:1.5", description="use Kokkos from Trilinos")
+
     for backend in kokkos_backends:
         deflt, descr = kokkos_backends[backend]
         variant(backend.lower(), default=deflt, description=descr)
-    variant("trilinos", default=False, when="@:1.5", description="use Kokkos from Trilinos")
 
+    conflicts("+cuda", when="cuda_arch=none")
+    conflicts("^kokkos", when="+trilinos")
+
+    # Build dependencies
     depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.16:", type="build", when="@1.0:")
     depends_on("cmake@3.22:", type="build", when="@2.0:")
+
+    # System dependencies
     depends_on("mpi", when="+mpi")
     depends_on("rocthrust", when="+rocm")
-    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="@:1.5+rocm ^hip@6.0:")
 
-    # Standalone Kokkos
-    depends_on("kokkos@3.1.00:", when="~trilinos")
-    depends_on("kokkos@3.4.00:", when="@1.2~trilinos")
-    depends_on("kokkos@3.6.00:", when="@1.3~trilinos")
-    depends_on("kokkos@3.7.01:", when="@1.4:1.4.1~trilinos")
-    depends_on("kokkos@4.0.00:", when="@1.5~trilinos")
-    depends_on("kokkos@4.1.00:", when="@1.6")
-    depends_on("kokkos@4.2.00:", when="@1.7")
-    depends_on("kokkos@4.5.00:", when="@2.0:")
-    for backend in kokkos_backends:
-        depends_on("kokkos+%s" % backend.lower(), when="~trilinos+%s" % backend.lower())
+    # Required dependencies
+    with when("~trilinos"):
+        depends_on("kokkos@4.5.00:", when="@2.0:")
+        depends_on("kokkos@4.2.00:", when="@1.7")
+        depends_on("kokkos@4.1.00:", when="@1.6")
+        depends_on("kokkos@4.0.00:", when="@1.5")
+        depends_on("kokkos@3.7.01:", when="@1.4:1.4.1")
+        depends_on("kokkos@3.6.00:", when="@1.3")
+        depends_on("kokkos@3.4.00:", when="@1.2")
+        depends_on("kokkos@3.1.00:")
+        depends_on("kokkos+cuda_lambda", when="+cuda")
 
-    for arch in CudaPackage.cuda_arch_values:
-        cuda_dep = f"+cuda cuda_arch={arch}"
-        depends_on(f"kokkos {cuda_dep}", when=f"~trilinos {cuda_dep}")
-        depends_on(f"trilinos {cuda_dep}", when=f"+trilinos {cuda_dep}")
+        for backend in kokkos_backends:
+            depends_on(f"kokkos+{backend.lower()}", when=f"+{backend.lower()}")
 
-    for arch in ROCmPackage.amdgpu_targets:
-        rocm_dep = f"+rocm amdgpu_target={arch}"
-        depends_on(f"kokkos {rocm_dep}", when=f"~trilinos {rocm_dep}")
-        depends_on(f"trilinos {rocm_dep}", when=f"+trilinos {rocm_dep}")
+        for arch in CudaPackage.cuda_arch_values:
+            cuda_dep = f"+cuda cuda_arch={arch}"
+            depends_on(f"kokkos {cuda_dep}", when=f"{cuda_dep}")
 
-    conflicts("+cuda", when="cuda_arch=none")
-    conflicts("^kokkos", when="+trilinos")
-    depends_on("kokkos+cuda_lambda", when="~trilinos+cuda")
+        for arch in ROCmPackage.amdgpu_targets:
+            rocm_dep = f"+rocm amdgpu_target={arch}"
+            depends_on(f"kokkos {rocm_dep}", when=f"{rocm_dep}")
 
-    # Trilinos with internal Kokkos
-    # Notes:
-    # - starting with Trilinos 14.4, Trilinos' spack package uses external Kokkos
-    # - current version of Trilinos package does not allow disabling Serial
-    # - current version of Trilinos package does not allow enabling CUDA
-    depends_on("trilinos+kokkos", when="+trilinos")
-    depends_on("trilinos+openmp", when="+trilinos+openmp")
-    depends_on("trilinos@13.2.0:", when="@1.2+trilinos")
-    depends_on("trilinos@13.4.0:", when="@1.3+trilinos")
-    depends_on("trilinos@14.0.0:", when="@1.4:1.4.1+trilinos")
-    depends_on("trilinos@14.2.0:", when="@1.5+trilinos")
-    patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
+    with when("+trilinos"):
+        depends_on("trilinos@14.2.0:", when="@1.5")
+        depends_on("trilinos@14.0.0:", when="@1.4:1.4.1")
+        depends_on("trilinos@13.4.0:", when="@1.3")
+        depends_on("trilinos@13.2.0:", when="@1.2")
+        depends_on("trilinos+openmp", when="+openmp")
+        depends_on("trilinos+kokkos")
+
+        for arch in CudaPackage.cuda_arch_values:
+            cuda_dep = f"+cuda cuda_arch={arch}"
+            depends_on(f"trilinos {cuda_dep}", when=f"{cuda_dep}")
+
+        for arch in ROCmPackage.amdgpu_targets:
+            rocm_dep = f"+rocm amdgpu_target={arch}"
+            depends_on(f"trilinos {rocm_dep}", when=f"{rocm_dep}")
+
     conflicts("~serial", when="+trilinos")
+
+    patch("trilinos14.0-kokkos-major-version.patch", when="@1.4+trilinos ^trilinos@14.0.0")
+    patch("0001-update-major-version-required-for-rocm-6.0.patch", when="@:1.5+rocm ^hip@6.0:")
 
     def cmake_args(self):
         kokkos_pkg = self["trilinos"] if self.spec.satisfies("+trilinos") else self["kokkos"]
@@ -140,7 +151,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
         return join_path(self.test_suite.current_test_cache_dir, self.examples_src_dir)
 
     def test_run_ctest(self):
-        """run ctest tests on the installed package"""
+        """Run ctest tests on the installed package."""
         cmake_args = [
             ".",
             cmake_prefix_path,
@@ -153,10 +164,11 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
                     else self.spec["trilinos"].prefix
                 ),
             ),
-            self.define("ArborX_ROOT", self.spec["arborx".prefix]),
+            self.define("ArborX_ROOT", self.spec["arborx"].prefix),
         ]
         if self.spec.satisfies("+mpi"):
             cmake_args.append(self.define("MPI_HOME", self.spec["mpi"].prefix))
+
         cmake = which(self.spec["cmake"].prefix.bin.cmake)
         make = which("make")
         ctest = which("ctest")
