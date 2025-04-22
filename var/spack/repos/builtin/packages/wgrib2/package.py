@@ -57,6 +57,7 @@ class Wgrib2(MakefilePackage, CMakePackage):
     )
 
     version("develop", branch="develop")
+    version("3.6.0", sha256="55913cb58f2b329759de17f5a84dd97ad1844d7a93956d245ec94f4264d802be")
     version("3.5.0", sha256="b27b48228442a08bddc3d511d0c6335afca47252ae9f0e41ef6948f804afa3a1")
     version("3.4.0", sha256="ecbce2209c09bd63f1bca824f58a60aa89db6762603bda7d7d3fa2148b4a0536")
     version("3.3.0", sha256="010827fba9c31f05807e02375240950927e9e51379e1444388153284f08f58e2")
@@ -176,7 +177,8 @@ class Wgrib2(MakefilePackage, CMakePackage):
     depends_on("ip@5.1:", when="@3.5: +ipolates")
     depends_on("lapack", when="@3.5: +ipolates")
     depends_on("libaec@1.0.6:", when="@3.2: +aec")
-    depends_on("netcdf-c", when="@3.2: +netcdf4")
+    depends_on("netcdf-c", when="+netcdf4")
+    depends_on("netcdf-c", when="+netcdf")
     depends_on("jasper@:2", when="@3.2:3.4 +jasper")
     depends_on("g2c", when="@3.5: +jasper")
     depends_on("zlib-api", when="@3.2: +png")
