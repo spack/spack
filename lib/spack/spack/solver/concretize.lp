@@ -510,6 +510,17 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
    external(ParentNode),
    not attr("external_build_requirement", ParentNode, build_requirement("node", BuildDependency)).
 
+candidate_external_version(Constraint, BuildDependency, Version)
+  :- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+     external(ParentNode),
+     pkg_fact(BuildDependency, version_satisfies(Constraint, Version)).
+
+error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, LiteralConstraint, ExternalConstraint)
+  :- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, LiteralConstraint)),
+     external(ParentNode),
+     attr("external_build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, ExternalConstraint)),
+     not 1 { pkg_fact(BuildDependency, version_satisfies(ExternalConstraint, Version)) : candidate_external_version(LiteralConstraint, BuildDependency, Version) }.
+
 
 % Asking for gcc@10 %gcc@9 shouldn't give us back an external gcc@10, just because of the hack
 % we have on externals
