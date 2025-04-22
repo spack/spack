@@ -31,6 +31,9 @@ class Spectre(CMakePackage):
 
     version("develop", branch="develop")
     version(
+        "2025.04.21", sha256="09b8412abdbd3853b256b34669c27b0f0e69bf6fc5c48e9bb450a46221e62abd"
+    )
+    version(
         "2025.03.17", sha256="3b3187a6d0e0f0386ae9bf06b77485771b841886a6e71abb12516c2aa874ae65"
     )
     version(
