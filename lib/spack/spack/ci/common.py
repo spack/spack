@@ -100,11 +100,12 @@ def copy_files_to_artifacts(
         else:
             fs.copy(src, artifacts_dir)
     except Exception as err:
-        msg = (
-            f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
-            f"exception: {str(err)}"
+        tty.warn(
+            (
+                f"Unable to copy files ({src}) to artifacts {artifacts_dir} due to "
+                f"exception: {str(err)}"
+            )
         )
-        tty.warn(msg)
 
 
 def win_quote(quote_str: str) -> str:

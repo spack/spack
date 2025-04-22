@@ -639,8 +639,7 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
         if os.path.isdir(archive_root):
             archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
         else:
-            msg = f"No archived files detected at {archive_root}"
-            tty.debug(msg)
+            tty.debug(f"No archived files detected at {archive_root}")
 
     # Try zipped and unzipped versions of the build log
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
@@ -661,8 +660,7 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        msg = f"Cannot copy test logs: job test stage ({test_stage}) does not exist"
-        tty.error(msg)
+        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
     copy_files_to_artifacts(
