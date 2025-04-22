@@ -153,6 +153,8 @@ class Zoltan(AutotoolsPackage):
                     f"--with-scotch-libdir={scotch_prefix.lib}",
                 ]
             )
+            config_libs.append(spec["scotch"].libs.ld_flags)
+            config_ldflags.append(spec["scotch"].libs.ld_flags)
 
         if spec.satisfies("+mpi"):
             config_args.extend(
