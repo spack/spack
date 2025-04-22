@@ -55,6 +55,7 @@ class CrtmFix(Package):
         for d in endian_dirs:
             fix_files = fix_files + find(".", "*/{}/*".format(d), recursive=False)
             fix_files = fix_files + find(".", "*/*/{}/*".format(d), recursive=False)
+            fix_files = fix_files + find(".", "*/*/*/{}/*".format(d), recursive=False)
         if self.spec.satisfies("~testfiles"):
             fix_files = [f for f in fix_files if "/fix/test_data/" not in f]
         fix_files = [f for f in fix_files if os.path.isfile(f)]
