@@ -262,7 +262,7 @@ class Libpressio(CMakePackage, CudaPackage):
     depends_on("zfp", when="+zfp")
     depends_on("petsc", when="+petsc")
     depends_on("mpi@2:", when="+mpi")
-    depends_on("lua-sol2", when="+lua")
+    depends_on("lua-sol2@:3.3.0", when="+lua")
     depends_on("libdistributed@0.0.11:", when="+libdistributed")
     depends_on("libdistributed@0.4.0:", when="@0.85.0:+libdistributed")
     depends_on("pkgconfig", type="build")
