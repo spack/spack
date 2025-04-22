@@ -35,12 +35,16 @@ class R3d(CMakePackage):
         description="Build R3D regression tests (versions 2019-04-24 or earlier)",
     )
 
+    variant("shared", default=False, description="Build shared libraries")
+
     variant(
         "pic", default=False, description="Produce position-independent code (for shared libs)"
     )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+
+    conflicts("+shared ~pic")
 
     @when("@:2019-04-24")
     def cmake(self, spec, prefix):
@@ -81,11 +85,12 @@ class R3d(CMakePackage):
         if r3d_max_verts != "0":
             options.append("-DR3D_MAX_VERTS=" + r3d_max_verts)
 
+        options.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
+
         if self.run_tests:
             options.append("-DENABLE_UNIT_TESTS=ON")
         else:
             options.append("-DENABLE_UNIT_TESTS=OFF")
-
-        options.append(self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic"))
 
         return options

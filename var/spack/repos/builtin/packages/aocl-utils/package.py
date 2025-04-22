@@ -47,7 +47,8 @@ class AoclUtils(CMakePackage):
     variant("shared", default=True, when="@4.2:", description="build shared library")
     variant("examples", default=False, description="enable examples")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("doxygen", when="+doc")

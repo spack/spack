@@ -64,7 +64,8 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("libxml2")
     depends_on("zlib-api")
@@ -115,6 +116,15 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
 
+    def _cc_path(self):
+        return os.path.join(self.spec.prefix.bin, "clang")
+
+    def _cxx_path(self):
+        return os.path.join(self.spec.prefix.bin, "clang++")
+
+    def _fortran_path(self):
+        return os.path.join(self.spec.prefix.bin, "flang")
+
     compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     fortran_names = ["flang"]
 
@@ -138,6 +148,7 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
     }
 
     implicit_rpath_libs = ["libclang"]
+    stdcxx_libs = ("-lstdc++",)
 
     def _standard_flag(self, *, language: str, standard: str) -> str:
         flags = {

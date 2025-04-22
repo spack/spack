@@ -5,8 +5,8 @@ import os
 from typing import Optional, Tuple
 
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.lang import ClassProperty, classproperty
 
 import spack.builder
 import spack.spec
@@ -17,6 +17,12 @@ from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
+
+
+def _homepage(cls: "RacketPackage") -> Optional[str]:
+    if cls.racket_name:
+        return f"https://pkgs.racket-lang.org/package/{cls.racket_name}"
+    return None
 
 
 class RacketPackage(PackageBase):
@@ -37,13 +43,7 @@ class RacketPackage(PackageBase):
     extends("racket", when="build_system=racket")
 
     racket_name: Optional[str] = None
-    parallel = True
-
-    @lang.classproperty
-    def homepage(cls):
-        if cls.racket_name:
-            return "https://pkgs.racket-lang.org/package/{0}".format(cls.racket_name)
-        return None
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
 
 
 @spack.builder.builder("racket")

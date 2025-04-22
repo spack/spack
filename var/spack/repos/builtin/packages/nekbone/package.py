@@ -35,12 +35,6 @@ class Nekbone(Package):
 
     depends_on("mpi", when="+mpi")
 
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "Nekbone can not be built without a Fortran compiler."
-            raise RuntimeError(msg)
-
     def install(self, spec, prefix):
         mkdir(prefix.bin)
 

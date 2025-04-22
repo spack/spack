@@ -19,6 +19,8 @@ class PyPetsc4py(PythonPackage):
     license("BSD-2-Clause")
 
     version("main", branch="main")
+    version("3.23.0", sha256="3be542580763419750cdc67dc6515bae338320dbb53403f0af7ab5c8a948bf4e")
+    version("3.22.5", sha256="058478cdba163e162d17ad14a8f71d519049a7c84807cd33a14c7f852988ec2e")
     version("3.22.4", sha256="c7bd4dee211bc651217ae2732c56afacd8ac349320049cdfaa2131d7621e6d09")
     version("3.22.3", sha256="7ed43cd027f82033e70f53c99fb530713dab743869d0c0827d22bbd5fb651c43")
     version("3.22.2", sha256="6c56f62ae8819069062436d362a2cc7e44f700026eed72a903c3803afbe59fc3")
@@ -111,6 +113,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("petsc~mpi", when="~mpi")
     depends_on("petsc@main", when="@main")
     for ver in [
+        "3.23",
         "3.22",
         "3.21",
         "3.20",

@@ -19,6 +19,8 @@ class Zpares(MakefilePackage):
     variant("mpi", default=False, description="Activates MPI support")
     variant("mumps", default=False, description="Activates MUMPS support")
 
+    depends_on("fortran", type="build")
+
     depends_on("mumps+mpi", when="+mumps+mpi")
     depends_on("mumps~mpi", when="+mumps~mpi")
     depends_on("lapack")

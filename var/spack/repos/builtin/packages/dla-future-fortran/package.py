@@ -20,16 +20,17 @@ class DlaFutureFortran(CMakePackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.4.0", sha256="1c42ed1a12b472ee02702c507a0a4fc94d2090701726ebc782b1b5e8278c8c5b")
     version("0.3.0", sha256="404ce0d2d3df9317764450158901fd6cb2198b37f5687e9616519100ad6e9ece")
     version("0.2.0", sha256="7fd3e1779c111b35f0d2701a024398b4f6e8dea4af523b6c8617d28c0b7ae61a")
     version("0.1.0", sha256="9fd8a105cbb2f3e1daf8a49910f98fce68ca0b954773dba98a91464cf2e7c1da")
 
-    variant("shared", default=True, description="Build shared libraries.")
-    variant("test", default=False, description="Build tests.")
-
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
+
+    variant("shared", default=True, description="Build shared libraries.")
+    variant("test", default=False, description="Build tests.")
 
     generator("ninja")
     depends_on("cmake@3.22:", type="build")
@@ -38,6 +39,7 @@ class DlaFutureFortran(CMakePackage):
     depends_on("dla-future@0.4.1:0.5 +scalapack", when="@0.1.0")
     depends_on("dla-future@0.6.0: +scalapack", when="@0.2.0:")
     depends_on("dla-future@0.7.3: +scalapack", when="@0.3:")
+    depends_on("dla-future@0.9: +scalapack", when="@0.4:")
     depends_on("dla-future +shared", when="+shared")
 
     depends_on("mpi", when="+test")

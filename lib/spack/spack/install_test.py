@@ -12,7 +12,7 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -391,7 +391,7 @@ class PackageTest:
             if self.test_failures:
                 raise TestFailure(self.test_failures)
 
-    def stand_alone_tests(self, kwargs):
+    def stand_alone_tests(self, kwargs, timeout: Optional[int] = None) -> None:
         """Run the package's stand-alone tests.
 
         Args:
@@ -399,7 +399,9 @@ class PackageTest:
         """
         import spack.build_environment  # avoid circular dependency
 
-        spack.build_environment.start_build_process(self.pkg, test_process, kwargs)
+        spack.build_environment.start_build_process(
+            self.pkg, test_process, kwargs, timeout=timeout
+        )
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
@@ -847,7 +849,7 @@ def write_test_summary(counts: "Counter"):
 class TestSuite:
     """The class that manages specs for ``spack test run`` execution."""
 
-    def __init__(self, specs, alias=None):
+    def __init__(self, specs: Iterable[Spec], alias: Optional[str] = None) -> None:
         # copy so that different test suites have different package objects
         # even if they contain the same spec
         self.specs = [spec.copy() for spec in specs]
@@ -855,42 +857,43 @@ class TestSuite:
         self.current_base_spec = None  # spec currently running do_test
 
         self.alias = alias
-        self._hash = None
-        self._stage = None
+        self._hash: Optional[str] = None
+        self._stage: Optional[Prefix] = None
 
         self.counts: "Counter" = Counter()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The name (alias or, if none, hash) of the test suite."""
         return self.alias if self.alias else self.content_hash
 
     @property
-    def content_hash(self):
+    def content_hash(self) -> str:
         """The hash used to uniquely identify the test suite."""
         if not self._hash:
             json_text = sjson.dump(self.to_dict())
+            assert json_text is not None, f"{__name__} unexpected value for 'json_text'"
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
             b32_hash = b32_hash.decode("utf-8")
             self._hash = b32_hash
         return self._hash
 
-    def __call__(self, *args, **kwargs):
+    def __call__(
+        self,
+        *,
+        remove_directory: bool = True,
+        dirty: bool = False,
+        fail_first: bool = False,
+        externals: bool = False,
+        timeout: Optional[int] = None,
+    ):
         self.write_reproducibility_data()
-
-        remove_directory = kwargs.get("remove_directory", True)
-        dirty = kwargs.get("dirty", False)
-        fail_first = kwargs.get("fail_first", False)
-        externals = kwargs.get("externals", False)
-
         for spec in self.specs:
             try:
                 if spec.package.test_suite:
                     raise TestSuiteSpecError(
-                        "Package {} cannot be run in two test suites at once".format(
-                            spec.package.name
-                        )
+                        f"Package {spec.package.name} cannot be run in two test suites at once"
                     )
 
                 # Set up the test suite to know which test is running
@@ -905,7 +908,7 @@ class TestSuite:
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(dirty=dirty, externals=externals)
+                spec.package.do_test(dirty=dirty, externals=externals, timeout=timeout)
 
                 # Clean up on success
                 if remove_directory:
@@ -956,15 +959,12 @@ class TestSuite:
         if failures:
             raise TestSuiteFailure(failures)
 
-    def test_status(self, spec: spack.spec.Spec, externals: bool) -> Optional[TestStatus]:
-        """Determine the overall test results status for the spec.
+    def test_status(self, spec: spack.spec.Spec, externals: bool) -> TestStatus:
+        """Returns the overall test results status for the spec.
 
         Args:
             spec: instance of the spec under test
             externals: ``True`` if externals are to be tested, else ``False``
-
-        Returns:
-            the spec's test status if available or ``None``
         """
         tests_status_file = self.tested_file_for_spec(spec)
         if not os.path.exists(tests_status_file):
@@ -981,108 +981,83 @@ class TestSuite:
             value = (f.read()).strip("\n")
             return TestStatus(int(value)) if value else TestStatus.NO_TESTS
 
-    def ensure_stage(self):
+    def ensure_stage(self) -> None:
         """Ensure the test suite stage directory exists."""
         if not os.path.exists(self.stage):
             fs.mkdirp(self.stage)
 
     @property
-    def stage(self):
-        """The root test suite stage directory.
-
-        Returns:
-            str: the spec's test stage directory path
-        """
+    def stage(self) -> Prefix:
+        """The root test suite stage directory"""
         if not self._stage:
             self._stage = Prefix(fs.join_path(get_test_stage_dir(), self.content_hash))
         return self._stage
 
     @stage.setter
-    def stage(self, value):
+    def stage(self, value: Union[Prefix, str]) -> None:
         """Set the value of a non-default stage directory."""
         self._stage = value if isinstance(value, Prefix) else Prefix(value)
 
     @property
-    def results_file(self):
+    def results_file(self) -> Prefix:
         """The path to the results summary file."""
         return self.stage.join(results_filename)
 
     @classmethod
-    def test_pkg_id(cls, spec):
+    def test_pkg_id(cls, spec: Spec) -> str:
         """The standard install test package identifier.
 
         Args:
             spec: instance of the spec under test
-
-        Returns:
-            str: the install test package identifier
         """
         return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
-    def test_log_name(cls, spec):
+    def test_log_name(cls, spec: Spec) -> str:
         """The standard log filename for a spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's log filename
+            spec: instance of the spec under test
         """
-        return "%s-test-out.txt" % cls.test_pkg_id(spec)
+        return f"{cls.test_pkg_id(spec)}-test-out.txt"
 
-    def log_file_for_spec(self, spec):
+    def log_file_for_spec(self, spec: Spec) -> Prefix:
         """The test log file path for the provided spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the path to the spec's log file
+            spec: instance of the spec under test
         """
         return self.stage.join(self.test_log_name(spec))
 
-    def test_dir_for_spec(self, spec):
+    def test_dir_for_spec(self, spec: Spec) -> Prefix:
         """The path to the test stage directory for the provided spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test stage directory path
+            spec: instance of the spec under test
         """
         return Prefix(self.stage.join(self.test_pkg_id(spec)))
 
     @classmethod
-    def tested_file_name(cls, spec):
+    def tested_file_name(cls, spec: Spec) -> str:
         """The standard test status filename for the spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test status filename
+            spec: instance of the spec under test
         """
         return "%s-tested.txt" % cls.test_pkg_id(spec)
 
-    def tested_file_for_spec(self, spec):
+    def tested_file_for_spec(self, spec: Spec) -> str:
         """The test status file path for the spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test status file path
+            spec: instance of the spec under test
         """
         return fs.join_path(self.stage, self.tested_file_name(spec))
 
     @property
-    def current_test_cache_dir(self):
+    def current_test_cache_dir(self) -> str:
         """Path to the test stage directory where the current spec's cached
         build-time files were automatically copied.
-
-        Returns:
-            str: path to the current spec's staged, cached build-time files.
 
         Raises:
             TestSuiteSpecError: If there is no spec being tested
@@ -1095,12 +1070,9 @@ class TestSuite:
         return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
-    def current_test_data_dir(self):
+    def current_test_data_dir(self) -> str:
         """Path to the test stage directory where the current spec's custom
         package (data) files were automatically copied.
-
-        Returns:
-            str: path to the current spec's staged, custom package (data) files
 
         Raises:
             TestSuiteSpecError: If there is no spec being tested
@@ -1112,17 +1084,17 @@ class TestSuite:
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
 
-    def write_test_result(self, spec, result):
+    def write_test_result(self, spec: Spec, result: TestStatus) -> None:
         """Write the spec's test result to the test suite results file.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-            result (str): result from the spec's test execution (e.g, PASSED)
+            spec: instance of the spec under test
+            result: result from the spec's test execution (e.g, PASSED)
         """
         msg = f"{self.test_pkg_id(spec)} {result}"
         _add_msg_to_file(self.results_file, msg)
 
-    def write_reproducibility_data(self):
+    def write_reproducibility_data(self) -> None:
         for spec in self.specs:
             repo_cache_path = self.stage.repo.join(spec.name)
             spack.repo.PATH.dump_provenance(spec, repo_cache_path)
@@ -1167,12 +1139,12 @@ class TestSuite:
         return TestSuite(specs, alias)
 
     @staticmethod
-    def from_file(filename):
+    def from_file(filename: str) -> "TestSuite":
         """Instantiate a TestSuite using the specs and optional alias
         provided in the given file.
 
         Args:
-            filename (str): The path to the JSON file containing the test
+            filename: The path to the JSON file containing the test
                 suite specs and optional alias.
 
         Raises:

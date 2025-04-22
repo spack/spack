@@ -18,13 +18,14 @@ class Molgw(MakefilePackage):
     """
 
     homepage = "https://github.com/molgw/molgw"
-    url = "https://github.com/molgw/molgw/archive/v3.3.tar.gz"
+    url = "https://github.com/molgw/molgw/archive/v3.4.tar.gz"
     git = "https://github.com/molgw/molgw.git"
 
     maintainers("bruneval")
 
     license("GPL-3.0-only")
 
+    version("3.4", sha256="b7ce298c660861713c25873d46e09713cad80b3927110a6bf747c0114b387e6b")
     version("3.3", sha256="ff1c8eb736049e52608d4554a2d435ee9d15e47c4a9934d41712962748929e81")
     version("3.2", sha256="a3f9a99db52d95ce03bc3636b5999e6d92b503ec2f4afca33d030480c3e10242")
 
@@ -102,8 +103,6 @@ class Molgw(MakefilePackage):
             flags["FC"] = self.compiler.fc
 
         # Set FCFLAGS
-        if self.compiler.flags.get("fflags") is not None:
-            flags["FCFLAGS"] = " ".join(self.compiler.flags.get("fflags")) + " "
         if "+openmp" in spec:
             flags["FCFLAGS"] = flags.get("FCFLAGS", "") + " {0} ".format(self.compiler.openmp_flag)
         if "%intel" in spec or "%oneapi" in spec:

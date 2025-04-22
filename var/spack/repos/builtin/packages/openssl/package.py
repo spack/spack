@@ -82,6 +82,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
@@ -188,18 +189,20 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         if spec.satisfies("platform=windows"):
             host_make = nmake
+            make_args = {}
         else:
             host_make = make
+            make_args = {"parallel": False}
 
         host_make()
 
         if self.run_tests:
-            host_make("test", parallel=False)  # 'VERBOSE=1'
+            host_make("test", **make_args)  # 'VERBOSE=1'
 
         install_tgt = "install" if self.spec.satisfies("+docs") else "install_sw"
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        host_make(install_tgt, parallel=False)
+        host_make(install_tgt, **make_args)
 
     @run_after("install")
     def link_system_certs(self):

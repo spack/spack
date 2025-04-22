@@ -111,22 +111,14 @@ from .enums import InstallRecordStatus
 __all__ = [
     "CompilerSpec",
     "Spec",
-    "SpecParseError",
     "UnsupportedPropagationError",
     "DuplicateDependencyError",
-    "DuplicateCompilerSpecError",
     "UnsupportedCompilerError",
     "DuplicateArchitectureError",
-    "InconsistentSpecError",
     "InvalidDependencyError",
-    "NoProviderError",
-    "MultipleProviderError",
     "UnsatisfiableSpecNameError",
     "UnsatisfiableVersionSpecError",
-    "UnsatisfiableCompilerSpecError",
-    "UnsatisfiableCompilerFlagSpecError",
     "UnsatisfiableArchitectureSpecError",
-    "UnsatisfiableProviderSpecError",
     "UnsatisfiableDependencySpecError",
     "AmbiguousHashError",
     "InvalidHashError",
@@ -1706,10 +1698,10 @@ class Spec:
             result[key] = list(group)
         return result
 
-    def _add_flag(self, name, value, propagate):
-        """Called by the parser to add a known flag.
-        Known flags currently include "arch"
-        """
+    def _add_flag(
+        self, name: str, value: Union[str, bool], propagate: bool, concrete: bool
+    ) -> None:
+        """Called by the parser to add a known flag"""
 
         if propagate and name in vt.RESERVED_NAMES:
             raise UnsupportedPropagationError(
@@ -1718,6 +1710,7 @@ class Spec:
 
         valid_flags = FlagMap.valid_compiler_flags()
         if name == "arch" or name == "architecture":
+            assert type(value) is str, "architecture have a string value"
             parts = tuple(value.split("-"))
             plat, os, tgt = parts if len(parts) == 3 else (None, None, value)
             self._set_architecture(platform=plat, os=os, target=tgt)
@@ -1731,19 +1724,15 @@ class Spec:
             self.namespace = value
         elif name in valid_flags:
             assert self.compiler_flags is not None
+            assert type(value) is str, f"{name} must have a string value"
             flags_and_propagation = spack.compilers.flags.tokenize_flags(value, propagate)
             flag_group = " ".join(x for (x, y) in flags_and_propagation)
             for flag, propagation in flags_and_propagation:
                 self.compiler_flags.add_flag(name, flag, propagation, flag_group)
         else:
-            # FIXME:
-            # All other flags represent variants. 'foo=true' and 'foo=false'
-            # map to '+foo' and '~foo' respectively. As such they need a
-            # BoolValuedVariant instance.
-            if str(value).upper() == "TRUE" or str(value).upper() == "FALSE":
-                self.variants[name] = vt.BoolValuedVariant(name, value, propagate)
-            else:
-                self.variants[name] = vt.AbstractVariant(name, value, propagate)
+            self.variants[name] = vt.VariantValue.from_string_or_bool(
+                name, value, propagate=propagate, concrete=concrete
+            )
 
     def _set_architecture(self, **kwargs):
         """Called by the parser to set the architecture."""
@@ -2351,6 +2340,7 @@ class Spec:
                     [v.name for v in self.variants.values() if v.propagate], flag_names
                 )
             )
+            d["abstract"] = sorted(v.name for v in self.variants.values() if not v.concrete)
 
         if self.external:
             d["external"] = {
@@ -3077,7 +3067,7 @@ class Spec:
             raise UnsatisfiableVersionSpecError(self.versions, other.versions)
 
         for v in [x for x in other.variants if x in self.variants]:
-            if not self.variants[v].compatible(other.variants[v]):
+            if not self.variants[v].intersects(other.variants[v]):
                 raise vt.UnsatisfiableVariantSpecError(self.variants[v], other.variants[v])
 
         sarch, oarch = self.architecture, other.architecture
@@ -4492,7 +4482,7 @@ class VariantMap(lang.HashableMap):
 
     def __setitem__(self, name, vspec):
         # Raise a TypeError if vspec is not of the right type
-        if not isinstance(vspec, vt.AbstractVariant):
+        if not isinstance(vspec, vt.VariantValue):
             raise TypeError(
                 "VariantMap accepts only values of variant types "
                 f"[got {type(vspec).__name__} instead]"
@@ -4602,8 +4592,7 @@ class VariantMap(lang.HashableMap):
         changed = False
         for k in other:
             if k in self:
-                # If they are not compatible raise an error
-                if not self[k].compatible(other[k]):
+                if not self[k].intersects(other[k]):
                     raise vt.UnsatisfiableVariantSpecError(self[k], other[k])
                 # If they are compatible merge them
                 changed |= self[k].constrain(other[k])
@@ -4633,7 +4622,7 @@ class VariantMap(lang.HashableMap):
         bool_keys = []
         kv_keys = []
         for key in sorted_keys:
-            if isinstance(self[key].value, bool):
+            if self[key].type == vt.VariantType.BOOL:
                 bool_keys.append(key)
             else:
                 kv_keys.append(key)
@@ -4666,7 +4655,8 @@ def substitute_abstract_variants(spec: Spec):
     unknown = []
     for name, v in spec.variants.items():
         if name == "dev_path":
-            spec.variants.substitute(vt.SingleValuedVariant(name, v._original_value))
+            v.type = vt.VariantType.SINGLE
+            v.concrete = True
             continue
         elif name in vt.RESERVED_NAMES:
             continue
@@ -4689,7 +4679,7 @@ def substitute_abstract_variants(spec: Spec):
         if rest:
             continue
 
-        new_variant = pkg_variant.make_variant(v._original_value)
+        new_variant = pkg_variant.make_variant(*v.values)
         pkg_variant.validate_or_raise(new_variant, spec.name)
         spec.variants.substitute(new_variant)
 
@@ -4807,6 +4797,7 @@ class SpecfileReaderBase:
             spec.architecture = ArchSpec.from_dict(node)
 
         propagated_names = node.get("propagate", [])
+        abstract_variants = set(node.get("abstract", ()))
         for name, values in node.get("parameters", {}).items():
             propagate = name in propagated_names
             if name in _valid_compiler_flags:
@@ -4814,8 +4805,8 @@ class SpecfileReaderBase:
                 for val in values:
                     spec.compiler_flags.add_flag(name, val, propagate)
             else:
-                spec.variants[name] = vt.MultiValuedVariant.from_node_dict(
-                    name, values, propagate=propagate
+                spec.variants[name] = vt.VariantValue.from_node_dict(
+                    name, values, propagate=propagate, abstract=name in abstract_variants
                 )
 
         spec.external_path = None
@@ -4840,7 +4831,7 @@ class SpecfileReaderBase:
             patches = node["patches"]
             if len(patches) > 0:
                 mvar = spec.variants.setdefault("patches", vt.MultiValuedVariant("patches", ()))
-                mvar.value = patches
+                mvar.set(*patches)
                 # FIXME: Monkey patches mvar to store patches order
                 mvar._patches_in_order_of_appearance = patches
 
@@ -5165,25 +5156,6 @@ def eval_conditional(string):
     return eval(string, valid_variables)
 
 
-class SpecParseError(spack.error.SpecError):
-    """Wrapper for ParseError for when we're parsing specs."""
-
-    def __init__(self, parse_error):
-        super().__init__(parse_error.message)
-        self.string = parse_error.string
-        self.pos = parse_error.pos
-
-    @property
-    def long_message(self):
-        return "\n".join(
-            [
-                "  Encountered when parsing spec:",
-                "    %s" % self.string,
-                "    %s^" % (" " * self.pos),
-            ]
-        )
-
-
 class InvalidVariantForSpecError(spack.error.SpecError):
     """Raised when an invalid conditional variant is specified."""
 
@@ -5201,25 +5173,12 @@ class DuplicateDependencyError(spack.error.SpecError):
     """Raised when the same dependency occurs in a spec twice."""
 
 
-class MultipleVersionError(spack.error.SpecError):
-    """Raised when version constraints occur in a spec twice."""
-
-
-class DuplicateCompilerSpecError(spack.error.SpecError):
-    """Raised when the same compiler occurs in a spec twice."""
-
-
 class UnsupportedCompilerError(spack.error.SpecError):
     """Raised when the user asks for a compiler spack doesn't know about."""
 
 
 class DuplicateArchitectureError(spack.error.SpecError):
     """Raised when the same architecture occurs in a spec twice."""
-
-
-class InconsistentSpecError(spack.error.SpecError):
-    """Raised when two nodes in the same spec DAG have inconsistent
-    constraints."""
 
 
 class InvalidDependencyError(spack.error.SpecError):
@@ -5231,30 +5190,6 @@ class InvalidDependencyError(spack.error.SpecError):
         super().__init__(
             "Package {0} does not depend on {1}".format(pkg, llnl.string.comma_or(deps))
         )
-
-
-class NoProviderError(spack.error.SpecError):
-    """Raised when there is no package that provides a particular
-    virtual dependency.
-    """
-
-    def __init__(self, vpkg):
-        super().__init__("No providers found for virtual package: '%s'" % vpkg)
-        self.vpkg = vpkg
-
-
-class MultipleProviderError(spack.error.SpecError):
-    """Raised when there is no package that provides a particular
-    virtual dependency.
-    """
-
-    def __init__(self, vpkg, providers):
-        """Takes the name of the vpkg"""
-        super().__init__(
-            "Multiple providers found for '%s': %s" % (vpkg, [str(s) for s in providers])
-        )
-        self.vpkg = vpkg
-        self.providers = providers
 
 
 class UnsatisfiableSpecNameError(spack.error.UnsatisfiableSpecError):
@@ -5271,33 +5206,11 @@ class UnsatisfiableVersionSpecError(spack.error.UnsatisfiableSpecError):
         super().__init__(provided, required, "version")
 
 
-class UnsatisfiableCompilerSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec compiler conflicts with package constraints."""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "compiler")
-
-
-class UnsatisfiableCompilerFlagSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a spec variant conflicts with package constraints."""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "compiler_flags")
-
-
 class UnsatisfiableArchitectureSpecError(spack.error.UnsatisfiableSpecError):
     """Raised when a spec architecture conflicts with package constraints."""
 
     def __init__(self, provided, required):
         super().__init__(provided, required, "architecture")
-
-
-class UnsatisfiableProviderSpecError(spack.error.UnsatisfiableSpecError):
-    """Raised when a provider is supplied but constraints don't match
-    a vpkg requirement"""
-
-    def __init__(self, provided, required):
-        super().__init__(provided, required, "provider")
 
 
 # TODO: get rid of this and be more specific about particular incompatible

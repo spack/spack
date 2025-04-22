@@ -11,6 +11,9 @@ class PyKiwisolver(PythonPackage):
     homepage = "https://github.com/nucleic/kiwi"
     pypi = "kiwisolver/kiwisolver-1.1.0.tar.gz"
 
+    version("1.4.8", sha256="23d5f023bdc8c7e54eb65f03ca5d5bb25b601eac4d7f1a042888a1f45237987e")
+    version("1.4.7", sha256="9893ff81bd7107f7b685d3017cc6583daadb4fc26e4a888350df530e41980a60")
+    version("1.4.6", sha256="3cda29d601445e6aa11f80d90a9b8c2ae501650c55d7ad29829bd44499c9e7e0")
     version("1.4.5", sha256="e57e563a57fb22a142da34f38acc2fc1a5c864bc29ca1517a88abc963e60d6ec")
     version("1.4.4", sha256="d41997519fcba4a1e46eb4a2fe31bc12f0ff957b2b81bac28db24744f333e955")
     version("1.3.2", sha256="fc4453705b81d03568d5b808ad8f09c77c47534f6ac2e72e733f9ca4714aa75c")
@@ -25,10 +28,13 @@ class PyKiwisolver(PythonPackage):
     depends_on("python@2.7:2.8,3.4:", type=("build", "run"))
     depends_on("python@3.6:", type=("build", "run"), when="@1.2.0:")
     depends_on("python@3.7:", type=("build", "run"), when="@1.3.2:")
+    depends_on("python@3.8:", type=("build", "run"), when="@1.4.6:")
+    depends_on("python@3.10:", type=("build", "run"), when="@1.4.8:")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@61.2:", when="@1.4.4:", type="build")
     depends_on("py-setuptools-scm@3.4.3:+toml", when="@1.4.4:", type="build")
     depends_on("py-cppy@1.1.0:", type="build", when="@1.2.0:")
     depends_on("py-cppy@1.2.0:", type="build", when="@1.4.4:")
+    depends_on("py-cppy@1.3.0:", type="build", when="@1.4.8:")
     depends_on("py-typing-extensions", when="@1.4.4: ^python@:3.7", type=("build", "run"))

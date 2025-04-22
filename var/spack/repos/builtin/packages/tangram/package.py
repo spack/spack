@@ -40,8 +40,9 @@ class Tangram(CMakePackage):
     conflicts("+thrust +kokkos")  # Don't enable Kokkos, Thrust simultaneously
 
     # dependencies
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.13:", type="build")
 

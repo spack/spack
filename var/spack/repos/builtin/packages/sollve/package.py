@@ -55,6 +55,9 @@ class Sollve(CMakePackage):
     variant("argobots", default=True, description="Use Argobots in BOLT")
     extends("python", when="+python")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python", type="build")

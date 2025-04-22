@@ -30,6 +30,8 @@ class Mumax(MakefilePackage, CudaPackage):
     variant("cuda", default=True, description="Use CUDA; must be true")
     variant("gnuplot", default=False, description="Use gnuplot for graphs")
 
+    depends_on("c", type="build")
+
     depends_on("cuda")
     depends_on("go", type="build")
     depends_on("gnuplot", type="run", when="+gnuplot")

@@ -31,6 +31,10 @@ class Paraconf(CMakePackage):
     variant("fortran", default=True, description="Enable Fortran support")
     variant("tests", default=False, description="Build tests")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.5:", type=("build"))
     depends_on("pkgconfig", type=("build"))
     depends_on("libyaml@0.1.7:", type=("link", "run"))

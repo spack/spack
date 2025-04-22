@@ -55,6 +55,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
         depends_on("occa~cuda", when="~cuda")
 
     depends_on("libxsmm", when="+libxsmm")
+    depends_on("blas", when="+libxsmm", type="link")
 
     depends_on("magma", when="+magma")
 
@@ -136,6 +137,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if spec.satisfies("+libxsmm"):
                 makeopts += ["XSMM_DIR=%s" % spec["libxsmm"].prefix]
+                makeopts += ["BLAS_LIB=%s" % spec["blas"].libs]
 
             if spec.satisfies("+magma"):
                 makeopts += ["MAGMA_DIR=%s" % spec["magma"].prefix]

@@ -20,6 +20,12 @@ class FluxCore(AutotoolsPackage):
     license("LGPL-3.0-only")
 
     version("master", branch="master")
+    version("0.73.0", sha256="d029c3da68bd0a0bea40d964de772e90a55eec72303b610396882f9e94d8c0c6")
+    version("0.72.0", sha256="1642d9f93cca6e0e934b534609787a31753462215ab376d190cdced16c386524")
+    version("0.71.0", sha256="023fd3e2153e20ba28cdf60fefa14d60053df61de3b9e273bf6f9a9ebdef0b52")
+    version("0.70.0", sha256="f68fbc2038d7c0d54c71260b4a8253a73cf6abc09a663ab060a00a4181a9fa94")
+    version("0.69.0", sha256="c44fe9c41e54c2a7dcde24c660c07c8b422072540add0447cbba867719e167b5")
+    version("0.68.0", sha256="fd3d0b0b13136f3914733c7f9e775372a8808d3c7c724ba076fda277a5abeae3")
     version("0.67.0", sha256="9406e776cbeff971881143fd1b94c42ec912e5b226401d2d3d91d766dd81de8c")
     version("0.66.0", sha256="0a25cfb1ebc033c249614eb2350c6fb57b00cdf3c584d0759c787f595c360daa")
     version("0.65.0", sha256="a60bc7ed13b8e6d09e99176123a474aad2d9792fff6eb6fd4da2a00e1d2865ab")
@@ -98,6 +104,9 @@ class FluxCore(AutotoolsPackage):
     depends_on("py-jsonschema@2.3:", type=("build", "run"), when="@:0.58.0")
     depends_on("py-ply", type=("build", "run"), when="@0.46.1:")
     depends_on("py-setuptools", type="build", when="@0.67.0:")
+    # distutils was dropped in Python 3.12, this fallback was added 9/19/2023
+    # for version 0.54.0 but we don't need it until setuptools is dropped
+    depends_on("py-packaging", type=("build", "run"))
     depends_on("jansson@2.10:")
     depends_on("pkgconfig")
     depends_on("lz4")

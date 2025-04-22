@@ -20,6 +20,7 @@ import shlex
 import signal
 import subprocess as sp
 import sys
+import tempfile
 import traceback
 import warnings
 from typing import List, Tuple
@@ -41,6 +42,7 @@ import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
+import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
@@ -871,8 +873,8 @@ def add_command_line_scopes(
     """
     for i, path in enumerate(command_line_scopes):
         name = f"cmd_scope_{i}"
-        scopes = ev.environment_path_scopes(name, path)
-        if scopes is None:
+        scope = ev.environment_path_scope(name, path)
+        if scope is None:
             if os.path.isdir(path):  # directory with config files
                 cfg.push_scope(
                     spack.config.DirectoryConfigScope(name, path, writable=False),
@@ -885,8 +887,7 @@ def add_command_line_scopes(
             else:
                 raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
 
-        for scope in scopes:
-            cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
+        cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
 def _main(argv=None):
@@ -1047,6 +1048,10 @@ def main(argv=None):
     try:
         return _main(argv)
 
+    except spack.solver.asp.OutputDoesNotSatisfyInputError as e:
+        _handle_solver_bug(e)
+        return 1
+
     except spack.error.SpackError as e:
         tty.debug(e)
         e.die()  # gracefully die on any SpackErrors
@@ -1068,6 +1073,46 @@ def main(argv=None):
             raise
         tty.error(e)
         return 3
+
+
+def _handle_solver_bug(
+    e: spack.solver.asp.OutputDoesNotSatisfyInputError, out=sys.stderr, root=None
+) -> None:
+    # when the solver outputs specs that do not satisfy the input and spack is used as a command
+    # line tool, we dump the incorrect output specs to json so users can upload them in bug reports
+    wrong_output = [(input, output) for input, output in e.input_to_output if output is not None]
+    no_output = [input for input, output in e.input_to_output if output is None]
+    if no_output:
+        tty.error(
+            "internal solver error: the following specs were not solved:\n    - "
+            + "\n    - ".join(str(s) for s in no_output),
+            stream=out,
+        )
+    if wrong_output:
+        msg = (
+            "internal solver error: the following specs were concretized, but do not satisfy the "
+            "input:\n    - "
+            + "\n    - ".join(str(s) for s, _ in wrong_output)
+            + "\n    Please report a bug at https://github.com/spack/spack/issues"
+        )
+        # try to write the input/output specs to a temporary directory for bug reports
+        try:
+            tmpdir = tempfile.mkdtemp(prefix="spack-asp-", dir=root)
+            files = []
+            for i, (input, output) in enumerate(wrong_output, start=1):
+                in_file = os.path.join(tmpdir, f"input-{i}.json")
+                out_file = os.path.join(tmpdir, f"output-{i}.json")
+                files.append(in_file)
+                files.append(out_file)
+                with open(in_file, "w", encoding="utf-8") as f:
+                    input.to_json(f)
+                with open(out_file, "w", encoding="utf-8") as f:
+                    output.to_json(f)
+
+            msg += " and attach the following files:\n    - " + "\n    - ".join(files)
+        except Exception:
+            msg += "."
+        tty.error(msg, stream=out)
 
 
 class SpackCommandError(Exception):

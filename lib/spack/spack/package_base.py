@@ -28,7 +28,7 @@ from typing_extensions import Literal
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty, memoized
+from llnl.util.lang import ClassProperty, classproperty, memoized
 
 import spack.config
 import spack.dependency
@@ -701,10 +701,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     _verbose = None
 
     #: Package homepage where users can find more information about the package
-    homepage: Optional[str] = None
+    homepage: ClassProperty[Optional[str]] = None
 
     #: Default list URL (place to find available versions)
-    list_url: Optional[str] = None
+    list_url: ClassProperty[Optional[str]] = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
@@ -1821,7 +1821,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         resource_stage_folder = "-".join(pieces)
         return resource_stage_folder
 
-    def do_test(self, dirty=False, externals=False):
+    def do_test(self, *, dirty=False, externals=False, timeout: Optional[int] = None):
         if self.test_requires_compiler and not any(
             lang in self.spec for lang in ("c", "cxx", "fortran")
         ):
@@ -1839,7 +1839,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             "verbose": tty.is_verbose(),
         }
 
-        self.tester.stand_alone_tests(kwargs)
+        self.tester.stand_alone_tests(kwargs, timeout=timeout)
 
     def unit_test_check(self):
         """Hook for unit tests to assert things about package internals.

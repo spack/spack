@@ -51,12 +51,15 @@ class Wonton(CMakePackage):
     conflicts("+thrust +kokkos")  # Don't enable Kokkos, Thrust simultaneously
 
     # dependencies
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.13:", type="build")
 
-    depends_on("netlib-lapack +lapacke", when="+lapacke")
+    depends_on("blas")
+    depends_on("lapack")
+    requires("^netlib-lapack +lapacke", when="+lapacke ^[virtuals=blas,lapack] netlib-lapack")
 
     depends_on("mpi", when="+mpi")
     depends_on("flecsi", when="+flecsi")
