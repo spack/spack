@@ -22,6 +22,12 @@ class RocprofilerSdk(CMakePackage):
     license("MIT")
 
     version(
+        "6.3.3",
+        tag="rocm-6.3.3",
+        commit="95a3964ee26ac45618517f24669858bdb39ea7d2",
+        submodules=True,
+    )
+    version(
         "6.3.2",
         tag="rocm-6.3.2",
         commit="f5d3fd3d3460c74cb8935f0021e31f0bff5cb305",
@@ -48,7 +54,7 @@ class RocprofilerSdk(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    for ver in ["6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-cmake@{ver}", when=f"@{ver}")
         depends_on(f"aqlprofile@{ver}", when=f"@{ver}")

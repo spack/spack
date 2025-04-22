@@ -18,11 +18,17 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/CHAI.git"
     tags = ["ecp", "e4s", "radiuss"]
 
-    maintainers("davidbeckingsale", "adayton1", "adrienbernede")
+    maintainers("adayton1", "adrienbernede", "davidbeckingsale", "kab163")
 
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2025.03.0",
+        tag="v2025.03.0",
+        commit="79f6414a00a89070054ac97baed47d21d10c83a4",
+        submodules=False,
+    )
     version(
         "2024.07.0",
         tag="v2024.07.0",
@@ -101,7 +107,7 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     # We propagate the patch here.
     patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:2023.06.0")
 
-    variant("enable_pick", default=False, description="Enable pick method")
+    variant("enable_pick", default=False, when="@:2024", description="Enable pick method")
     variant(
         "separable_compilation",
         default=True,

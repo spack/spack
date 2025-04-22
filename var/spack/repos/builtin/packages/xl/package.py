@@ -14,6 +14,8 @@ class Xl(Package, CompilerPackage):
 
     homepage = "https://www.ibm.com/support/knowledgecenter/SSXVZZ_16.1.1/com.ibm.compilers.linux.doc/welcome.html"
 
+    has_code = False
+
     variant("r", default=True, description="The _r version of compilers")
 
     provides("c", "cxx")

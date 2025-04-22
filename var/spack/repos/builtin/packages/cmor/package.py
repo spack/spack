@@ -48,12 +48,6 @@ class Cmor(AutotoolsPackage):
     depends_on("py-wheel", when="+python", type="build")
     depends_on("py-numpy", type=("build", "run"), when="+python")
 
-    @run_before("configure")
-    def validate(self):
-        if self.spec.satisfies("+fortran") and not self.compiler.fc:
-            msg = "cannot build a fortran variant without a fortran compiler"
-            raise RuntimeError(msg)
-
     def configure_args(self):
         spec = self.spec
         args = ["--disable-debug"]

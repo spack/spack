@@ -12,7 +12,7 @@ class Totalview(Package):
     '."""
 
     homepage = "https://totalview.io"
-    maintainers("dshrader", "petertea", "suzannepaterno", "elliebinkley")
+    maintainers("dshrader", "suzannepaterno")
     license_required = True
     license_comment = "#"
     license_files = ["tv_license/license.lic"]
@@ -21,6 +21,42 @@ class Totalview(Package):
     # As the install of Totalview is via multiple tarballs, the base install
     # will be the documentation.  The architecture-specific tarballs are added
     # as resources dependent on the specific architecture used.
+
+    version(
+        "2025.1-x86-64",
+        sha256="d38952c87c155482ef9cdda08bfc648b127b72eedce085c86375e3cf6e2535ed",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2025.1/totalview_2025.1.13_linux_x86-64.tar",
+    )
+
+    version(
+        "2025.1-powerle",
+        sha256="934f95e9d792b146798ab7533c45518c4a1e6e93033ae6ec86867fd5c8315efa",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2025.1/totalview_2025.1.13_linux_powerle.tar",
+    )
+
+    version(
+        "2025.1-linux-arm64",
+        sha256="843ab88ba43d2078cea65b36a5316d5fef69f33c3a8c19fe8df66563ab72bfb7",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2025.1/totalview_2025.1.13_linux_arm64.tar",
+    )
+
+    version(
+        "2024.4-x86-64",
+        sha256="9735ab672c53397370f41212bc9f5d0e2a5cf63335d812406137b954ba3c4672",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.4/totalview_2024.4.2_linux_x86-64.tar",
+    )
+
+    version(
+        "2024.4-powerle",
+        sha256="02741b35a774331f007b590368d776bd76e5ecc2cdd693b8518975cfc0d1db57",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.4/totalview_2024.4.2_linux_powerle.tar",
+    )
+
+    version(
+        "2024.4-linux-arm64",
+        sha256="0eb74718d86923d9fefed006b21cecad678355554b3295e0899b7ed9aafd388d",
+        url="https://dslwuu69twiif.cloudfront.net/totalview/2024.4/totalview_2024.4.2_linux_arm64.tar",
+    )
 
     version(
         "2024.3-x86-64",

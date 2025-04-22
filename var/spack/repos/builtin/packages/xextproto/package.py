@@ -13,6 +13,7 @@ class Xextproto(AutotoolsPackage, XorgPackage):
 
     version("7.3.0", sha256="1b1bcdf91221e78c6c33738667a57bd9aaa63d5953174ad8ed9929296741c9f5")
 
+    depends_on("c", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
 

@@ -13,6 +13,10 @@ class PyMplhep(PythonPackage):
 
     license("MIT", checked_by="wdconinc")
 
+    version("0.3.59", sha256="06f4b3a799e92fe6982ed3939dd648d0f972781aca3dc814a83e5bbd970649fe")
+    version("0.3.58", sha256="fed8b5d5fee92c7aa40cfe70e5b8d2b2bb8ed7aeb7a2c272d73b241279e1adba")
+    version("0.3.57", sha256="3b04a91f75889e31c0d7a5e520dd092f2fd29fb6000418c26cf4e497cc977541")
+    version("0.3.56", sha256="2e773a65a233d186071b81d5faeadd340b768e9bd8825b40bd20c81a419d25f2")
     version("0.3.55", sha256="0fb87cd4b025225ba8fd5d82d58324cfb094fbcdd7929e5a9ea1ea7e22108814")
     version("0.3.26", sha256="d707a95ce59b0bac2fe4fe1c57fede14e15da639f3a7c732e7513a753fd9e9ac")
     version("0.3.15", sha256="595f796ea65930094e86a805214e0d44537ead267a7487ae16eda02d1670653e")

@@ -70,6 +70,8 @@ class GribApi(CMakePackage):
     # tests are enabled but the testing scripts don't use it.
     # depends_on('valgrind', type='test', when='+test')
 
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("netcdf-c", when="+netcdf")
     depends_on("openjpeg@1.5.0:1.5", when="jp2k=openjpeg")
     depends_on("jasper", when="jp2k=jasper")
@@ -84,11 +86,6 @@ class GribApi(CMakePackage):
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
     patch("cmake_install_rpath.patch")
-
-    @run_before("cmake")
-    def check_fortran(self):
-        if "+fortran" in self.spec and self.compiler.fc is None:
-            raise InstallError("Fortran interface requires a Fortran compiler!")
 
     def cmake_args(self):
         var_opt_list = [

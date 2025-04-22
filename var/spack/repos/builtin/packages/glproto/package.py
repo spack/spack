@@ -18,5 +18,6 @@ class Glproto(AutotoolsPackage, XorgPackage):
 
     version("1.4.17", sha256="9d8130fec2b98bd032db7730fa092dd9dec39f3de34f4bb03ceb43b9903dbc96")
 
+    depends_on("c", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")

@@ -140,7 +140,7 @@ class CompilerAdaptor:
     @property
     def c23_flag(self) -> str:
         return self.compilers[Languages.C].package.standard_flag(
-            language=Languages.C.value, standard="17"
+            language=Languages.C.value, standard="23"
         )
 
     @property
@@ -189,6 +189,10 @@ class CompilerAdaptor:
     def f77(self):
         self._lang_exists_or_raise("f77", lang=Languages.FORTRAN)
         return self.compilers[Languages.FORTRAN].package.fortran
+
+    @property
+    def stdcxx_libs(self):
+        return self._maybe_return_attribute("stdcxx_libs", lang=Languages.CXX)
 
 
 class DeprecatedCompiler(lang.DeprecatedProperty):

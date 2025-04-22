@@ -160,6 +160,12 @@ def setup_parser(subparser):
         default=False,
         help="stop stand-alone tests after the first failure",
     )
+    rebuild.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
+    )
     rebuild.set_defaults(func=ci_rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
@@ -521,6 +527,7 @@ def ci_rebuild(args):
                     fail_fast=args.fail_fast,
                     log_file=log_file,
                     repro_dir=repro_dir,
+                    timeout=args.timeout,
                 )
 
             except Exception as err:

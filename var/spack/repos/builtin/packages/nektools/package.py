@@ -42,7 +42,7 @@ class Nektools(Package):
     # Variant for MAXNEL, we need to read this from user
     variant(
         "MAXNEL",
-        default=150000,
+        default="150000",
         description="Maximum number of elements for Nek5000 tools.",
         values=is_integral,
     )
@@ -67,12 +67,6 @@ class Nektools(Package):
     depends_on("xproto", when="+prenek")
     depends_on("libxt", when="+postnek")
     depends_on("visit", when="+visit")
-
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.f77:
-            msg = "Cannot build Nek5000 without a Fortran 77 compiler."
-            raise RuntimeError(msg)
 
     def install(self, spec, prefix):
         tools_dir = "tools"

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+import glob
 import os.path
 import platform
 
@@ -639,6 +640,24 @@ class Nvhpc(Package, CompilerPackage):
             libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)
+
+    def _cc_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _cxx_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc++")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _fortran_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvfortran")
+        if not candidates:
+            return None
+        return candidates[0]
 
     # Avoid binding stub libraries by absolute path
     non_bindable_shared_objects = ["stubs"]

@@ -633,6 +633,23 @@ def specfile_for(default_mock_concretization):
             ],
             "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
         ),
+        # test := and :== syntax for key value pairs
+        (
+            "gcc languages:=c,c++",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
+            ],
+            "gcc languages:='c,c++'",
+        ),
+        (
+            "gcc languages:==c,c++",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.PROPAGATED_KEY_VALUE_PAIR, "languages:==c,c++"),
+            ],
+            "gcc languages:=='c,c++'",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):

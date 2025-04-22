@@ -34,54 +34,28 @@ spack:
       variants: +termlib
     openblas:
       variants: threads=openmp
+      require: 'cppflags="-O1" target=x86_64_v3 %oneapi'
     trilinos:
-      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
     xz:
       variants: +pic
+    gcc-runtime:
+      require: 'target=x86_64_v3 %gcc'
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    rust:
+      require: 'target=x86_64_v3 %gcc' 
+    bison:
+      require: 'target=x86_64_v3 %gcc'
+    raja:
+      variants: +plugins
     mpi:
       require: intel-oneapi-mpi
-    intel-oneapi-mpi:
-      buildable: false
-      externals:
-      - spec: intel-oneapi-mpi@2021.13.1
-        prefix: /opt/intel/oneapi
-    unzip:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    py-maturin:
-      require:
-        - 'target=x86_64_v3 %gcc'
-    binutils:
-      require:
-      - 'target=x86_64_v3 %gcc'
-      variants: +ld +gold +headers +libiberty ~nls
-    llvm:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    ruby:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    rust:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    krb5:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    openssh:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    dyninst:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    bison:
-      require:
-      - 'target=x86_64_v3 %gcc'
-    paraview:
-      require:
-      - +examples target=x86_64_v3
 
   specs:
-  # CPU
   - adios
   - alquimia
   - aml
@@ -95,15 +69,12 @@ spack:
   - butterflypack
   - cabana
   - caliper
-  - chai
+  - chai tests=none
   - charliecloud
   - conduit
   - datatransferkit
-  - dealii ~vtk ~taskflow cflags=-O0 cxxflags=-O0 # +vtk +taskflow: ^taskflow: CMake Error at CMakeLists.txt:81 (message): Taskflow currently supports the following compilers: g++ v7.0 or above, clang++ v6.0 or above; use -O0 to work around compiler failure
-  - drishti
-  - dxt-explorer
-  - ecp-data-vis-sdk ~cuda ~rocm +adios2 ~ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc ~visit +vtkm +zfp # +ascent: fides: fides/xgc/XGCCommon.cxx:233:10: error: no member named 'iota' in namespace 'std'; +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
-  - exaworks
+  - e4s-alc
+  - e4s-cl
   - flecsi
   - flit
   - flux-core
@@ -111,26 +82,24 @@ spack:
   - gasnet
   - ginkgo
   - globalarrays
-  - glvis ^llvm
   - gmp
   - gotcha
-  - gptune ~mpispawn
   - gromacs
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
   - hdf5-vol-log
   - heffte +fftw
+  - hpctoolkit
   - hpx networking=mpi
   - hypre
   - kokkos +openmp
   - kokkos-kernels +openmp
-  - laghos
-  - lammps
+  - laghos ^mfem~cuda
+  - lammps +amoeba +asphere +bocs +body +bpm +brownian +cg-dna +cg-spica +class2 +colloid +colvars +compress +coreshell +dielectric +diffraction +dipole +dpd-basic +dpd-meso +dpd-react +dpd-smooth +drude +eff +electrode +extra-compute +extra-dump +extra-fix +extra-molecule +extra-pair +fep +granular +interlayer +kspace +lepton +machdyn +manybody +mc +meam +mesont +misc +ml-iap +ml-pod +ml-snap +mofff +molecule +openmp-package +opt +orient +peri +phonon +plugin +poems +qeq +reaction +reaxff +replica +rigid +shock +sph +spin +srd +tally +uef +voronoi +yaff
   - legion
   - libceed
   - libnrm
-  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
   - libquo
   - libunwind
   - loki
@@ -142,14 +111,16 @@ spack:
   - mpifileutils ~xattr
   - nccmp
   - nco
+  - nekbone +mpi
+  - netcdf-fortran
   - netlib-scalapack
-  - nrm ^py-scipy cflags="-Wno-error=incompatible-function-pointer-types" # py-scipy@1.8.1 fails without cflags here
+  - nrm
   - nwchem
   - omega-h
   - openfoam
   - openmpi
   - openpmd-api
-  - papi
+  - papi target=x86_64_v3
   - papyrus
   - parsec ~cuda
   - pdt
@@ -159,12 +130,11 @@ spack:
   - precice
   - pruners-ninja
   - pumi
-  - py-amrex ~ipo                   # oneAPI 2024.2.0 builds do not support IPO/LTO says CMake, even though pybind11 strongly encourages it
   - py-h5py
-  - py-jupyterhub
   - py-libensemble
   - py-petsc4py
   - qthreads scheduler=distrib
+  - quantum-espresso
   - raja
   - rempi
   - scr
@@ -197,70 +167,73 @@ spack:
   - hdf5
   - libcatalyst
   - parallel-netcdf
-  - paraview
-  - py-cinemasci
   - sz
   - unifyfs
   - veloc
-  # - visit                                                 # visit: +visit: visit_vtk/lightweight/vtkSkewLookupTable.C:32:10: error: cannot initialize return object of type 'unsigned char *' with an rvalue of type 'const unsigned char *'
-  - vtk-m ~openmp
-  - warpx +python ~python_ipo ^py-amrex ~ipo                # oneAPI 2024.2.0 builds do not support IPO/LTO says CMake, even though pybind11 strongly encourages it
+  - vtk-m ~openmp                   # +openmp: https://github.com/spack/spack/issues/31830
   - zfp
   # --
-  # - chapel ~cuda ~rocm                                    # llvm: closures.c:(.text+0x305e): undefined reference to `_intel_fast_memset'
-  # - cp2k +mpi                                             # dbcsr: dbcsr_api.F(973): #error: incomplete macro call DBCSR_ABORT.
-  # - fftx                                                  # fftx: https://github.com/spack/spack/issues/47048
-  # - geopm-runtime                                         # libelf: configure: error: installation or configuration problem: C compiler cannot create executables.
-  # - hpctoolkit                                            # dyninst@13.0.0%gcc: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'
-  # - lbann                                                 # 2024.2 internal compiler error
-  # - plasma                                                # 2024.2 internal compiler error
-  # - quantum-espresso                                      # quantum-espresso: external/mbd/src/mbd_c_api.F90(392): error #6645: The name of the module procedure conflicts with a name in the encompassing scoping unit.   [F_C_STRING]
-  # - wps                                                   # wps: InstallError: Compiler not recognized nor supported.
+  # - paraview +qt                  # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - py-cinemasci                  # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - visit                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # --
+  # - chapel ~cuda ~rocm            # llvm-19.1.7: https://github.com/spack/spack/issues/49625
+  # - cp2k +mpi                     # dbcsr-2.8.0: FAILED: src/CMakeFiles/dbcsr.dir/dbcsr_api.F-pp.f src/CMakeFiles/dbcsr.dir/dbcsr_api.F.o.ddi: 
+  # - dealii                        # taskflow@3.7.0: cmake: Taskflow currently supports the following compilers: g++ v7.0 or above, clang++ v6.0 or above
+  # - exago +mpi ~ipopt +hiop ~python +raja ^hiop+raja~sparse # raja-0.14.0: RAJA/pattern/kernel/Tile.hpp:174:30: error: no member named 'block_id' in 'IterableTiler<Iterable>'
+  # - exaworks                      # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - fftx                          # fftx-1.2.0: https://github.com/spack/spack/issues/49621
+  # - fpm                           # fpm-0.10.0: /tmp/ifx1305151083OkWTRB/ifxqBG60i.i90: error #6405: The same named entity from different modules and/or program units cannot be referenced.   [TOML_TABLE]; fpm.F90(32048): error #7002: Error in opening the compiled module file.  Check INCLUDE paths.   [FPM_MANIFEST_PREPROCESS]
+  # - geopm-runtime                 # concretize: c-blosc2: conflicts with '%oneapi';
+  # - glvis                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - gptune ~mpispawn              # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - lbann                         # lbann-0.104: https://github.com/spack/spack/issues/49619
+  # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # concretize: c-blosc2: conflicts with '%oneapi';
+  # - nek5000 +mpi ~visit           # nek5000-19.0: RuntimeError: Cannot build example: short_tests/eddy.
+  # - plasma                        # concretizer: requires("%gcc@4.9:", when="@17.1:")
+  # - py-deephyper                  # py-numpy-1.25.2: numpy/distutils/checks/cpu_avx512_knl.c:21:37: error: call to undeclared function '_mm512_exp2a23_pd'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  # - py-jupyterhub                 # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - warpx ~qed +python ~python_ipo compute=sycl ^py-amrex ~ipo # warpx-25.03: https://github.com/spack/spack/issues/49620
+  # - wps                           # wps-4.5: InstallError: Compiler not recognized nor supported.
 
   # PYTHON PACKAGES
   - opencv +python3
-  - py-jupyterlab
   - py-mpi4py
-  - py-notebook
-  - py-numba
   - py-numpy
   - py-openai
-  - py-pandas
-  - py-plotly
   - py-pooch
   - py-pytest
   - py-scikit-learn
   - py-scipy
   - py-seaborn
-  # - py-horovod      # error
-  # - py-jax          # error
-  # - py-matplotlib   # error
-  # - py-tensorflow   # error
-  # - py-torch        # error
+  # --
+  # - py-jupyterlab                 # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - py-notebook                   # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - py-numba                      # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - py-pandas                     # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  # - py-plotly                     # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
 
-  # GPU
   - aml +level_zero
   - amrex +sycl
-  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
-  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17 +examples
+  - arborx +sycl ^kokkos +sycl +openmp cxxstd=17
+  - cabana +sycl ^kokkos +sycl +openmp cxxstd=17
   - ginkgo +sycl
-  - heffte +sycl
-  - kokkos +sycl +openmp cxxstd=17 +examples
-  - kokkos-kernels build_type=Release %oneapi ^kokkos +sycl +openmp cxxstd=17 +examples
-  - petsc +sycl
-  - sundials +sycl cxxstd=17 +examples-install
-  - tau +mpi +opencl +level_zero ~pdt +syscall                # requires libdrm.so to be installed
+  - kokkos +sycl +openmp cxxstd=17
+  - sundials +sycl +examples-install cxxstd=17
+  - tau +mpi +opencl +level_zero +syscall
   - upcxx +level_zero
-  - warpx ~qed +python ~python_ipo compute=sycl ^py-amrex ~ipo  # qed for https://github.com/ECP-WarpX/picsar/pull/53 prior to 24.09 release; ~ipo for oneAPI 2024.2.0 GPU builds do not support IPO/LTO says CMake, even though pybind11 strongly encourages it
   # --
-  # - hpctoolkit +level_zero                                  # dyninst@12.3.0%gcc: /usr/bin/ld: libiberty/./d-demangle.c:142: undefined reference to `_intel_fast_memcpy'; can't mix intel-tbb@%oneapi with dyninst%gcc
-  # - slate +sycl                                             # slate: ifx: error #10426: option '-fopenmp-targets' requires '-fiopenmp'
-
+  # - heffte +sycl                                    # heffte-2.4.1: intel-oneapi-mkl-2024.2.2-yevdna3rfdezkcm6vz4r3gtrz4grkts3/mkl/2024.2/lib//libmkl_sycl_rng.so: undefined reference to `__host_std::sycl_host_floor(sycl::_V1::vec<float, 4>)'
+  # - hpctoolkit +level_zero                          # hpctoolkit-2024.01.1: gpu/intel/level0/level0-command-process.c:94:61: error: illegal initializer type 'atomic_int' (aka '_Atomic(int)')
+  # - hypre +sycl                                     # hypre-2.32.0: gpu/intel/level0/level0-command-process.c:94:61: error: illegal initializer type 'atomic_int' (aka '_Atomic(int)')
+  # - kokkos-kernels ^kokkos +sycl +openmp cxxstd=17  # kokkos-kernels-4.5.01: /opt/intel/oneapi/compiler/2025.1/bin/compiler/../../include/sycl/group_algorithm.hpp:598:31: error: SYCL kernel cannot call an undefined function without SYCL_EXTERNAL attribute
+  # - petsc +sycl                                     # kokkos-kernels-4.4.01: /opt/intel/oneapi/compiler/2025.1/bin/compiler/../../include/sycl/group_algorithm.hpp:598:31: error: SYCL kernel cannot call an undefined function without SYCL_EXTERNAL attribute
+  # - slate +sycl                                     # blaspp-2024.10.26: blas/device.hh:46:14: fatal error: 'sycl.hpp' file not found
 
   ci:
     pipeline-gen:
     - build-job:
-        image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
+        image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2025.1:2025.03.24
 
   cdash:
     build-group: E4S OneAPI

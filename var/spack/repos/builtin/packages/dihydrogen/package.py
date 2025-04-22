@@ -125,6 +125,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Dependencies
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")

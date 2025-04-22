@@ -15,7 +15,7 @@ class Warpx(CMakePackage, PythonExtension):
     """
 
     homepage = "https://ecp-warpx.github.io"
-    url = "https://github.com/BLAST-WarpX/warpx/archive/refs/tags/25.03.tar.gz"
+    url = "https://github.com/BLAST-WarpX/warpx/archive/refs/tags/25.04.tar.gz"
     git = "https://github.com/BLAST-WarpX/warpx.git"
 
     maintainers("ax3l", "dpgrote", "EZoni", "RemiLehe")
@@ -24,13 +24,14 @@ class Warpx(CMakePackage, PythonExtension):
     license("BSD-3-Clause-LBNL")
 
     version("develop", branch="development")
-    version("25.03", sha256="18155ff67b036a00db2a25303058316167192a81cfe6dc1dec65fdef0b6d9903")
+    version("25.04", sha256="374136fbf566d65307dfe95ae12686ccaf3e649d2f66a79cd856585986c94ac7")
     with default_args(deprecated=True):
+        version("25.03", sha256="18155ff67b036a00db2a25303058316167192a81cfe6dc1dec65fdef0b6d9903")
         version("25.02", sha256="7bdea9c1e94f82dbc3565f14f6b6ad7658a639217a10a6cf08c05a16aa26266f")
         # 22.01+ requires C++17 or newer
         # 20.01+ requires C++14 or newer
 
-    for v in ["25.03", "25.02", "develop"]:
+    for v in ["25.04", "25.03", "25.02", "develop"]:
         depends_on(
             f"amrex@{v} build_system=cmake +linear_solvers +pic +particles +shared +tiny_profile",
             when=f"@{v}",

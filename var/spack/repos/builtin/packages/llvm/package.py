@@ -801,7 +801,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     def determine_variants(cls, exes, version_str):
         # Do not need to reuse more general logic from CompilerPackage
         # because LLVM has kindly named compilers
-        variants, compilers = ["+clang"], {}
+        variants, compilers = {"+clang"}, {}
         lld_found, lldb_found = False, False
         for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
@@ -809,18 +809,18 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 compilers.setdefault("cxx", exe)
             elif "clang" in name:
                 compilers.setdefault("c", exe)
-            elif "flang" in name:
-                variants.append("+flang")
+            elif "flang" in name and "fortran" not in compilers:
+                variants.add("+flang")
                 compilers.setdefault("fortran", exe)
             elif "ld.lld" in name:
                 lld_found = True
             elif "lldb" in name:
                 lldb_found = True
 
-        variants.append("+lld" if lld_found else "~lld")
-        variants.append("+lldb" if lldb_found else "~lldb")
+        variants.add("+lld" if lld_found else "~lld")
+        variants.add("+lldb" if lldb_found else "~lldb")
 
-        return "".join(variants), {"compilers": compilers}
+        return "".join(sorted(variants)), {"compilers": compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):

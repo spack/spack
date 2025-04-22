@@ -37,7 +37,7 @@ class Abyss(AutotoolsPackage):
     version("1.5.2", sha256="8a52387f963afb7b63db4c9b81c053ed83956ea0a3981edcad554a895adf84b1")
 
     variant(
-        "maxk", default=128, values=is_multiple_32, description="set the maximum k-mer length."
+        "maxk", default="128", values=is_multiple_32, description="set the maximum k-mer length."
     )
 
     depends_on("c", type="build")

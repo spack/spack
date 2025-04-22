@@ -25,11 +25,12 @@ class FenicsDolfinx(CMakePackage):
     variant(
         "partitioners",
         description="Graph partioning",
-        default=("parmetis",),
+        default="parmetis",
         values=("kahip", "parmetis", "scotch"),
         multi=True,
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     # Graph partitioner dependencies
