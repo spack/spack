@@ -80,7 +80,7 @@ class Arborx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos@4.5.00:", when="@2.0:")
     depends_on("kokkos@4.2.00:", when="@1.7")
     depends_on("kokkos@4.1.00:", when="@1.6")
-    
+
     with when("~trilinos @:1.5"):
         depends_on("kokkos@4.0.00:", when="@1.5")
         depends_on("kokkos@3.7.01:", when="@1.4:1.4.1")
