@@ -81,7 +81,7 @@ class Opencarp(CMakePackage):
     depends_on("py-carputils", when="+carputils", type=("build", "run"))
     depends_on("meshtool", when="+meshtool", type=("build", "run"))
     # Use specific versions of carputils and meshtool for releases
-        for ver in [
+    for ver in [
         "18.0",
         "17.0",
         "16.0",
