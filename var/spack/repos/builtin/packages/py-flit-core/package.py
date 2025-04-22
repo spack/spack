@@ -36,7 +36,6 @@ class PyFlitCore(PythonPackage):
     version("2.3.0", sha256="a50bcd8bf5785e3a7d95434244f30ba693e794c5204ac1ee908fc07c4acdbf80")
 
     with default_args(type=("build", "run")):
-        depends_on("python@3.8:", when="@3.12:")
         depends_on("python@3.6:", when="@3.6:")
         depends_on("python")
 
