@@ -26,6 +26,7 @@ class Nek5000(Package):
         "fluid",
         "ecp",
         "ecp-apps",
+        "e4s",
     ]
 
     version("develop", branch="master")

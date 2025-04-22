@@ -27,6 +27,8 @@ class Plumed(AutotoolsPackage):
     git = "https://github.com/plumed/plumed2.git"
     maintainers("marcodelapierre")
 
+    tags = ["e4s"]
+
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")

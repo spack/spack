@@ -44,6 +44,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     license("Apache-2.0")
     maintainers("adamjstewart", "aweits")
+    tags = ["e4s"]
 
     version(
         "2.18.0-rocm-enhanced",

@@ -14,6 +14,8 @@ class Hdf5VolLog(AutotoolsPackage):
     git = "https://github.com/DataLib-ECP/vol-log-based.git"
     maintainers("hyoklee", "lrknox")
 
+    tags = ["e4s"]
+
     version("master-1.1", branch="master")
 
     version("1.4.0", tag="logvol.1.4.0", commit="786d2cc4da8b4a0827ee00b1b0ab3968ef942f99")

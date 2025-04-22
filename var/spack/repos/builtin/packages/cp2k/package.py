@@ -40,6 +40,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier", "RMeli", "abussy")
 
+    tags = ["e4s"]
+
     license("GPL-2.0-or-later")
 
     version("2025.1", sha256="65c8ad5488897b0f995919b9fa77f2aba4b61677ba1e3c19bb093d5c08a8ce1d")

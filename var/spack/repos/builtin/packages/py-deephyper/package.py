@@ -16,6 +16,8 @@ class PyDeephyper(PythonPackage):
 
     maintainers("mdorier", "Deathn0t", "bretteiffert")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     # Versions

@@ -19,6 +19,8 @@ class Wannier90(MakefilePackage):
 
     license("GPL-2.0-or-later")
 
+    tags = ["e4s"]
+
     version("develop", branch="develop")
     version("3.1.0", sha256="40651a9832eb93dec20a8360dd535262c261c34e13c41b6755fa6915c936b254")
     version("3.0.0", sha256="f196e441dcd7b67159a1d09d2d7de2893b011a9f03aab6b30c4703ecbf20fe5b")

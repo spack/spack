@@ -12,6 +12,8 @@ class Hdf5VolCache(CMakePackage):
 
     maintainers("hyoklee", "lrknox")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("default", branch="develop")

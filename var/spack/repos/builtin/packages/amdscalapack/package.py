@@ -29,6 +29,8 @@ class Amdscalapack(ScalapackBase):
 
     maintainers("amd-toolchain-support")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-Open-MPI")
     version(
         "5.0",

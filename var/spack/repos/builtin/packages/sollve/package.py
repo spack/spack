@@ -15,6 +15,8 @@ class Sollve(CMakePackage):
     homepage = "https://www.bnl.gov/compsci/projects/SOLLVE/"
     git = "https://github.com/SOLLVE/llvm.git"
 
+    tags = ["e4s"]
+
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
     # to save space, build with `build_type=Release`.

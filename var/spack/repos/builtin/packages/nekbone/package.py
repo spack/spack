@@ -14,7 +14,7 @@ class Nekbone(Package):
     homepage = "https://github.com/Nek5000/Nekbone"
     git = "https://github.com/Nek5000/Nekbone.git"
 
-    tags = ["proxy-app", "ecp-proxy-app"]
+    tags = ["proxy-app", "ecp-proxy-app", "e4s"]
 
     license("mpich2")
 

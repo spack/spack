@@ -14,6 +14,8 @@ class PyCinemaLib(PythonPackage):
     url = "https://github.com/cinemascience/cinema_lib/archive/1.2.1.tar.gz"
     git = "https://github.com/cinemascience/cinema_lib.git"
 
+    tags = ["e4s"]
+
     maintainers("EthanS94")
 
     version("master", branch="master")

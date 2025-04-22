@@ -20,6 +20,8 @@ class NetcdfFortran(AutotoolsPackage):
 
     maintainers("skosukhin", "WardF")
 
+    tags = ["e4s"]
+
     license("Apache-2.0")
 
     version("4.6.1", sha256="b50b0c72b8b16b140201a020936aa8aeda5c79cf265c55160986cd637807a37a")

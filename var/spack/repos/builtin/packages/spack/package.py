@@ -20,6 +20,8 @@ class Spack(Package):
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
     maintainers("haampie")
 
+    tags = ["e4s"]
+
     license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")

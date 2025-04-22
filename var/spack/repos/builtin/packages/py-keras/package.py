@@ -20,6 +20,7 @@ class PyKeras(PythonPackage):
     pypi = "keras/keras-3.0.0.tar.gz"
 
     maintainers("adamjstewart")
+    tags = ["e4s"]
     license("Apache-2.0")
 
     version("3.9.2", sha256="322aab6418ee3de1e2bd0871b60a07f0e444e744a7e8cba79af8b42408879ecf")

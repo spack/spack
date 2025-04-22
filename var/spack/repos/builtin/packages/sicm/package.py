@@ -11,6 +11,8 @@ class Sicm(CMakePackage):
     homepage = "https://github.com/lanl/SICM/"
     git = "https://github.com/lanl/SICM.git"
 
+    tags = ["e4s"]
+
     license("BSD-2-Clause")
 
     version("master")

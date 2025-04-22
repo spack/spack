@@ -16,6 +16,8 @@ class Hdf5VolDaos(CMakePackage):
 
     maintainers("hyoklee", "soumagne")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
