@@ -1235,7 +1235,7 @@ class TestConcretize:
         ):
             spec_str = "simple-inheritance+openblas os=redhat6 %gcc@10.1.0"
             s = spack.concretize.concretize_one(spec_str)
-            assert "openblas@0.2.15" in s
+            assert "openblas@0.2.15" in s, s.tree()
             assert s["openblas"].satisfies("%gcc@10.1.0")
 
     @pytest.mark.regression("19981")
@@ -3440,3 +3440,24 @@ packages:
 
     libelf = s["libelf"]
     assert libelf.external and libelf.satisfies("%gcc")
+
+
+@pytest.mark.regression("50161")
+def test_installed_compiler_and_better_external(
+    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
+):
+    """Tests that we always prefer a higher-priority external compiler, when we have a
+    lower-priority compiler installed, and we try to concretize a spec without specifying
+    the compiler dependency.
+    """
+    pkg_b = spack.concretize.concretize_one(spack.spec.Spec("pkg-b %clang"))
+    PackageInstaller([pkg_b.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", False):
+        pkg_a = spack.concretize.concretize_one("pkg-a")
+        assert pkg_a["c"].satisfies("gcc@10"), pkg_a.tree()
+        assert pkg_a["pkg-b"]["c"].satisfies("gcc@10")
+
+    with spack.config.override("concretizer:reuse", False):
+        mpileaks = spack.concretize.concretize_one("mpileaks")
+        assert mpileaks.satisfies("%gcc@10")
