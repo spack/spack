@@ -7,16 +7,16 @@ from spack.package import *
 
 class PyHepstats(PythonPackage):
     """hepstats is a library for statistical inference aiming
-    to cover the needs High Energy Physics.
+    to cover the needs in High Energy Physics.
     It is part of the Scikit-HEP project.
     """
 
     homepage = "https://github.com/scikit-hep/hepstats"
     pypi = "hepstats/hepstats-0.8.1.tar.gz"
-
     maintainers("jonas-eschle")
 
     license("BSD-3-Clause", checked_by="jonas-eschle")
+
 
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
