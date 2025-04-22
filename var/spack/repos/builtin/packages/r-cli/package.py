@@ -33,6 +33,8 @@ class RCli(RPackage):
     version("1.0.1", sha256="ef80fbcde15760fd55abbf9413b306e3971b2a7034ab8c415fb52dc0088c5ee4")
     version("1.0.0", sha256="8fa3dbfc954ca61b8510f767ede9e8a365dac2ef95fe87c715a0f37d721b5a1d")
 
+    depends_on("c", type="build")
+
     depends_on("r@2.10:", type=("build", "run"))
     depends_on("r@3.4:", type=("build", "run"), when="@3.3.0:")
 
