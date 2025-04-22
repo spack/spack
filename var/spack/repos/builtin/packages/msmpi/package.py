@@ -68,11 +68,6 @@ class GenericBuilder(GenericBuilder):
     def build_command_line(self):
         args = ["-noLogo"]
         ifort_bin = self.pkg.compiler.fc
-        if not ifort_bin:
-            raise InstallError(
-                "Cannot install MSMPI without fortran"
-                "please select a compiler with fortran support."
-            )
         args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
         args.append("/p:VCToolsVersion=%s" % self.pkg.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["wdk"].version))

@@ -106,8 +106,8 @@ class IntelOneApiPackage(Package):
 
             bash = Executable("bash")
 
-            # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env("HOME", self.prefix)
+            # Installer writes files in ~/intel set HOME so it goes to staging directory
+            bash.add_default_env("HOME", join_path(self.stage.path, "home"))
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
             bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
 

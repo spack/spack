@@ -14,7 +14,7 @@ class Bml(CMakePackage):
     url = "https://github.com/lanl/bml/archive/refs/tags/v2.2.0.tar.gz"
     git = "https://github.com/lanl/bml.git"
 
-    maintainers("jeanlucf22")
+    maintainers("jeanlucf22", "finkeljos")
 
     license("BSD-3-Clause")
 
@@ -31,19 +31,33 @@ class Bml(CMakePackage):
     version("1.2.2", sha256="babc2fd0229397e418be00f3691277e86f549b5a23cadbcee66078595e9176a0")
     version("1.1.0", sha256="a90ede19d80ed870f0bf1588875a9f371484d89006a7296010d8d791da3eac33")
 
-    variant("shared", default=True, description="Build shared libs")
-    variant("mpi", default=True, description="Build with MPI Support")
-
-    conflicts("+mpi", when="@:1.2.2")
-
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
     depends_on("blas")
     depends_on("lapack")
+
+    variant("shared", default=True, description="Build shared libs")
+
+    variant("mpi", default=True, description="Build with MPI Support")
     depends_on("mpi", when="+mpi")
-    depends_on("python", type="build")
+    conflicts("+mpi", when="@:1.2.2")
+
+    variant("magma", default=False, description="Build with magma support")
+    depends_on("magma", when="+magma")
+    conflicts("+magma", when="@1.1.0:2.2.0", msg="Must use master branch of bml")
+
+    variant(
+        "cusolver",
+        default=False,
+        when="+magma",
+        description="Use cusolver diagonalization instead internal magma one.",
+    )
+    depends_on("cuda", when="+cusolver")
+
+    def setup_build_environment(self, env):
+        if "+magma" in self.spec:
+            env.set("MAGMA_ROOT", self.spec["magma"].prefix)
 
     def cmake_args(self):
         args = [self.define_from_variant("BUILD_SHARED_LIBS", "shared")]
@@ -55,4 +69,16 @@ class Bml(CMakePackage):
             args.append("-DCMAKE_Fortran_COMPILER=%s" % spec["mpi"].mpifc)
         else:
             args.append("-DBML_MPI=False")
+
+        # if using magma variant
+        if "+magma" in self.spec:
+            args.append("-DBML_MAGMA=True")
+
+            # cmake doesnt find lapack lib without explicilty setting it.
+            args.append("-DBLAS_LIBRARIES=%s" % self.spec["blas"].libs)
+            args.append("-DLAPACK_LIBRARIES=%s" % self.spec["lapack"].libs)
+
+            # if using cusolver variant, magma required to use cusolver
+            if "+cusolver" in self.spec:
+                args.append("-DBML_CUSOLVER=True")
         return args
