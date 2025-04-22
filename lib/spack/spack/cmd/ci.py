@@ -453,7 +453,7 @@ def ci_rebuild(args):
 
     # Arguments when installing the root from sources
     deps_install_args = install_args + ["--only=dependencies"]
-    root_install_args = install_args + ["--only=package"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
 
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
@@ -492,6 +492,9 @@ def ci_rebuild(args):
 
     # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
+
+    # Clear the stage directory
+    spack.stage.purge()
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should

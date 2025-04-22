@@ -13,7 +13,7 @@ class PyAmrex(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
     url = "https://github.com/AMReX-Codes/pyamrex/archive/refs/tags/25.04.tar.gz"
     git = "https://github.com/AMReX-Codes/pyamrex.git"
 
-    maintainers("ax3l", "EZoni", "RTSandberg", "sayerhs", "WeiqunZhang")
+    maintainers("ax3l", "EZoni", "atmyers", "sayerhs", "WeiqunZhang")
 
     tags = ["e4s", "hpsf"]
 

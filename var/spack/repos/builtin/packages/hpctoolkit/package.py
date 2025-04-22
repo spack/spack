@@ -281,7 +281,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     def test_sort(self):
         """build and run selection sort unit test"""
         exe = "tst-sort"
-        cxx = which(os.environ["CXX"])
+        cxx = Executable(self["cxx"].cxx)
         cxx(self.test_suite.current_test_data_dir.join("sort.cpp"), "-o", exe)
 
         hpcrun = which("hpcrun")

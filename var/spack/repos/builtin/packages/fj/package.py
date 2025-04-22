@@ -19,6 +19,8 @@ class Fj(Package, CompilerPackage):
     provides("c", "cxx")
     provides("fortran")
 
+    has_code = False
+
     def install(self, spec, prefix):
         raise InstallError(
             "Fujitsu compilers are not installable yet, but can be "

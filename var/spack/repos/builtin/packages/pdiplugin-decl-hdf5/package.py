@@ -4,6 +4,7 @@
 
 from spack import *
 from spack.package import *
+from spack.pkg.builtin.pdi import Pdi
 
 
 class PdipluginDeclHdf5(CMakePackage):
@@ -14,14 +15,14 @@ class PdipluginDeclHdf5(CMakePackage):
 
     homepage = "https://pdi.dev"
     git = "https://github.com/pdidev/pdi.git"
+    url = "https://github.com/pdidev/pdi/archive/refs/tags/1.8.0.tar.gz"
 
     license("BSD-3-Clause")
 
     maintainers("jbigot")
 
-    version("develop", branch="main", no_cache=True)
-    version("1.8.1", commit="105161d5c93431d674c73ef365dce3eb724b4fcb")
-    version("1.8.0", commit="edce72fc198475bab1541cc0b77a30ad02da91c5")
+    for v in Pdi.versions:
+        version(str(v), **Pdi.versions[v])
 
     variant("benchs", default=False, description="Build benchmarks")
     variant("fortran", default=True, description="Enable Fortran (for tests only)")
@@ -32,26 +33,25 @@ class PdipluginDeclHdf5(CMakePackage):
     depends_on("cxx", type="build")
     depends_on("fortran", type="build", when="+fortran")
 
-    depends_on("cmake@3.16.3:", type=("build"), when="@1.8:")
-    depends_on("hdf5@1.10.4:1 +shared", type=("build", "link", "run"), when="@1.8:")
+    depends_on("cmake@3.16.3:", type=("build"))
+    depends_on("hdf5@1.10.4:1 +shared", type=("build", "link", "run"))
     depends_on("hdf5 +mpi", type=("build", "link", "run"), when="+mpi")
-    depends_on("pdi@develop", type=("link", "run"), when="@develop")
-    depends_on("pdi@1.8.1", type=("link", "run"), when="@1.8.1")
-    depends_on("pdi@1.8.0", type=("link", "run"), when="@1.8.0")
+    for v in Pdi.versions:
+        depends_on("pdi@" + str(v), type=("link", "run"), when="@" + str(v))
     depends_on("pkgconfig", type=("build"))
 
     root_cmakelists_dir = "plugins/decl_hdf5"
 
+    def url_for_version(self, version):
+        return Pdi.version_url(version)
+
     def cmake_args(self):
-        args = [
-            "-DBUILD_BENCHMARKING:BOOL={:s}".format("ON" if "+benchs" in self.spec else "OFF"),
+        return [
             "-DINSTALL_PDIPLUGINDIR:PATH={:s}".format(self.prefix.lib),
-            "-DBUILD_TESTING:BOOL={:s}".format("ON" if "+tests" in self.spec else "OFF"),
-            "-DBUILD_FORTRAN:BOOL={:s}".format("ON" if "+tests" in self.spec else "OFF"),
-            "-DBUILD_HDF5_PARALLEL:BOOL={:s}".format("ON" if "+mpi" in self.spec else "OFF"),
-            "-DBUILD_CFG_VALIDATOR:BOOL=OFF",
+            self.define_from_variant("BUILD_BENCHMARKING", "benchs"),
+            self.define_from_variant("BUILD_HDF5_PARALLEL", "mpi"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
-        return args
 
     def setup_run_environment(self, env):
         env.prepend_path("PDI_PLUGIN_PATH", self.prefix.lib)
