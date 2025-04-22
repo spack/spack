@@ -27,6 +27,7 @@ class Rocshmem(CMakePackage):
         depends_on(f"rocthrust@{ver}", when=f"@{ver}")
 
     depends_on("mpi")
+
     def cmake_args(self):
         args = [self.define("USE_GPU_IB", False)]
         return args
