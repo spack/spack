@@ -25,6 +25,9 @@ class Opencarp(CMakePackage):
         preferred=True,
     )
     version(
+        "17.0", commit="537a359d49e976cc9f97042189fb9d3ba4e686c4", submodules=False, no_cache=True
+    )
+    version(
         "16.0", commit="295055b6a3859709730f62fc8d4fe0e87c4e20b9", submodules=False, no_cache=True
     )
     version(
@@ -80,6 +83,7 @@ class Opencarp(CMakePackage):
     # Use specific versions of carputils and meshtool for releases
         for ver in [
         "18.0",
+        "17.0",
         "16.0",
         "15.0",
         "13.0",
