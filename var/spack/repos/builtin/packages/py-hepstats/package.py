@@ -17,7 +17,6 @@ class PyHepstats(PythonPackage):
 
     license("BSD-3-Clause", checked_by="jonas-eschle")
 
-
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
     version("0.8.1", sha256="ebb890496d7aebbf1d717de15d073be31d6775065308a4e0f263ed4051992b3f")
