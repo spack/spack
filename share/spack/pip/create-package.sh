@@ -46,6 +46,7 @@ cat <<EOF > new.config.yaml
 EOF
 cat config.yaml.bak >> new.config.yaml
 mv new.config.yaml "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml"
+rm config.yaml.bak
 
 pushd "${SPACK_PKG_SRC}"
 python3 -m build
