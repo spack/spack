@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,18 +23,18 @@ class Sz3(CMakePackage):
     version("3.1.3.1", commit="323cb17b412d657c4be681b52c34beaf933fe7af")
     version("3.1.3", commit="695dff8dc326f3b165f6676d810f46add088a585")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("hdf5", default=False, description="enable hdf5 filter support")
     variant("mdz", default=True, description="build mdz executable")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zstd")
     depends_on("gsl")
     depends_on("pkgconfig")
     depends_on("hdf5", when="+hdf5")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+hdf5" in self.spec:
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 

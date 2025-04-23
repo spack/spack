@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,9 +26,9 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     version("11.3.0", sha256="d057cc2f73ecca06fae8b9c270d9e14116203abfd211a704810cc50a453b4c9e")
     version("11.2.0", sha256="c33361f117a347a63f6996ea97446d17f1c038f1a1f533e502464235076923e2")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("all", default=False, description="Enable optional py-scipy, optuna, and cython")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@3.7:", when="@:11", type=("build", "run"))
     depends_on("python@3.8:", when="@12:", type=("build", "run"))
@@ -79,8 +78,8 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm")
     conflicts("+cuda cuda_arch=none")
 
-    def setup_build_environment(self, env):
-        env.set("CUPY_NUM_BUILD_JOBS", make_jobs)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("CUPY_NUM_BUILD_JOBS", str(make_jobs))
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value
             arch_str = ";".join("arch=compute_{0},code=sm_{0}".format(i) for i in cuda_arch)
@@ -108,4 +107,4 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
 
             env.set("HIPCC", self.spec["hip"].hipcc)
             env.set("ROCM_HOME", self.spec["hipcub"].prefix)
-            env.set("CUPY_INSTALL_USE_HIP", 1)
+            env.set("CUPY_INSTALL_USE_HIP", "1")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,5 +22,5 @@ class PerlDbdOracle(PerlPackage):
     depends_on("perl-test-nowarnings", type=("build", "link"))
     depends_on("oracle-instant-client", type=("build", "link", "run", "test"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("ORACLE_HOME", self.spec["oracle-instant-client"].prefix)

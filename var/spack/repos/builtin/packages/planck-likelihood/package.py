@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,9 +19,6 @@ class PlanckLikelihood(Package):
         sha256="c1efa208175b2751e75b2ad1c026dae744a7dd279eb74baa5db3098bc9c971bb",
         url="https://irsa.ipac.caltech.edu/data/Planck/release_2/software/COM_Likelihood_Code-v2.0.R2.00.tar.bz2",
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("lensing-ext", default=False, description="Provide lensing-ext data")
     variant("plik-DS", default=False, description="Provide plik-DS data")
@@ -68,9 +64,13 @@ class PlanckLikelihood(Package):
         when="+plik-unbinned",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("blas")
     depends_on("cfitsio +shared")
     depends_on("lapack")
+    depends_on("gmake", type="build")
 
     # Note: Could also install Python bindings
 
@@ -116,12 +116,14 @@ class PlanckLikelihood(Package):
         for dir in dirs:
             install_tree(dir, join_path(prefix, "share", "clik", dir))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("CLIK_PATH", self.prefix)
         env.set("CLIK_DATA", self.prefix.share.clik)
         env.set("CLIK_PLUGIN", "rel2015")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CLIK_PATH", self.prefix)
         env.set("CLIK_DATA", self.prefix.share.clik)
         env.set("CLIK_PLUGIN", "rel2015")

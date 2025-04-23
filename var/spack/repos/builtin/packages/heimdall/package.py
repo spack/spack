@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,7 +32,7 @@ class Heimdall(AutotoolsPackage, CudaPackage):
 
         depends_on(f"psrdada cuda_arch={arch}", when=f"cuda_arch={arch}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.spec["psrdada"].prefix.bin)
         env.prepend_path("PATH", self.prefix.bin)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["dedisp"].prefix.lib)

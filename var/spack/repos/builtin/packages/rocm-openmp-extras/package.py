@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,6 +31,12 @@ aomp = [
     "62a5036a2299ed2e3053ee00b7ea1800469cd545fea486fa17266a8b3acfaf5d",
     "3de1c7a31a88c3f05a6a66ba6854ac8fdad1ce44462e561cb1e6ad59629029ce",
     "5f54d7c7c798bcf1cd47d3a7f17ceaf79991bf166cc5e47e5372a68e7cf7d520",
+    "ac82e8da0c210ee14b911c833ae09a029a41541689930759737c135db52464a3",
+    "ad5674b5626ed6720ca5f8772542e8ed3fb7a9150ed7a86a1adbcd70a2074e8e",
+    "8c8240d948817ab1874eff0406d6053ee0518902427e0236e6b4d2cee84ff882",
+    "8fefdd0d9eecd11866ddecbe039347560469eb69d974934005d480eac4432b81",
+    "eeda81dafd17df7e1d2b9dbf91a23924c6dd8de29f0792725fc25a6cd1d9c5fa",
+    "b43b889b5778572d6d348c6a6614dc02258212004d1f1f64f0cdc74dc3249e86",
 ]
 
 devlib = [
@@ -51,6 +56,12 @@ devlib = [
     "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
     "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
     "12ce17dc920ec6dac0c5484159b3eec00276e4a5b301ab1250488db3b2852200",
+    "4840f109d8f267c28597e936c869c358de56b8ad6c3ed4881387cf531846e5a7",
+    "7af782bf5835fcd0928047dbf558f5000e7f0207ca39cf04570969343e789528",
+    "79580508b039ca6c50dfdfd7c4f6fbcf489fe1931037ca51324818851eea0c1c",
+    "e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c",
+    "1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827",
+    "4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d",
 ]
 
 llvm = [
@@ -70,6 +81,12 @@ llvm = [
     "f1a67efb49f76a9b262e9735d3f75ad21e3bd6a05338c9b15c01e6c625c4460d",
     "300e9d6a137dcd91b18d5809a316fddb615e0e7f982dc7ef1bb56876dff6e097",
     "12ce17dc920ec6dac0c5484159b3eec00276e4a5b301ab1250488db3b2852200",
+    "4840f109d8f267c28597e936c869c358de56b8ad6c3ed4881387cf531846e5a7",
+    "7af782bf5835fcd0928047dbf558f5000e7f0207ca39cf04570969343e789528",
+    "79580508b039ca6c50dfdfd7c4f6fbcf489fe1931037ca51324818851eea0c1c",
+    "e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c",
+    "1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827",
+    "4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d",
 ]
 
 flang = [
@@ -89,6 +106,12 @@ flang = [
     "1bcaa73e73a688cb092f01987cf3ec9ace4aa1fcaab2b812888c610722c4501d",
     "12418ea61cca58811b7e75fd9df48be568b406f84a489a41ba5a1fd70c47f7ba",
     "6af7785b1776aeb9229ce4e5083dcfd451e8450f6e5ebe34214560b13f679d96",
+    "409ee98bf15e51ac68b7ed351f4582930dfa0288de042006e17eea6b64df5ad6",
+    "51c1308f324101e4b637e78cd2eb652e22f68f6d820991a76189c15131f971dc",
+    "43f10662706dbf22b0090839fd590d9fc633e7339b19aaee7578322ea6809275",
+    "2e38ba138312d18b2677347839a960802bb04090bb92b5e6a15ac06ed789dbc0",
+    "4b4d8025a215c52e62dd6317cafce224d95f91040e90942c9a93ade568a8dd48",
+    "e0f650fc633ab4a8eab30b0c1ba0efb46ec596b540c3a4c13ca24d92c512d255",
 ]
 
 extras = [
@@ -108,6 +131,12 @@ extras = [
     "3dc837fbfcac64e000e1b5518e4f8a6b260eaf1a3e74152d8b8c22f128f575b7",
     "2b9351fdb1cba229669233919464ae906ca8f70910c6fa508a2812b7c3bed123",
     "7cef51c980f29d8b46d8d4b110e4f2f75d93544cf7d63c5e5d158cf531aeec7d",
+    "4b0d250b5ebd997ed6d5d057689c3f67dfb4d82f09f582ebb439ca9134fae48d",
+    "34c3506b0f6aefbf0bc7981ff2901b7a2df975a5b40c5eb078522499d81057f0",
+    "22cdd87b1d66e7e7f9e30fd9031fcbf01ce0b631551959144bb42e7f1dba28cb",
+    "4050c60cbbf582122cc0a30b4a99200341c426f2fa3d81ac8dc61f5a0890ed15",
+    "70b49c1198bf176498ec4a94584b8ed8a07f623ebfa567e4fcf1a6545b635185",
+    "9615235b4d5ae78e43ca4854f316b83e75f7d9ed3fc187ed1869b7d8d7e26341",
 ]
 
 versions = [
@@ -127,6 +156,12 @@ versions = [
     "6.1.1",
     "6.1.2",
     "6.2.0",
+    "6.2.1",
+    "6.2.4",
+    "6.3.0",
+    "6.3.1",
+    "6.3.2",
+    "6.3.3",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -144,12 +179,18 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-6.1.2.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-6.3.2.tar.gz"
     tags = ["rocm"]
 
     license("Apache-2.0")
 
-    maintainers("srekolam", "renjithravindrankannath", "estewart08")
+    maintainers("srekolam", "renjithravindrankannath", "estewart08", "afzpatel")
+    version("6.3.3", sha256=versions_dict["6.3.3"]["aomp"])
+    version("6.3.2", sha256=versions_dict["6.3.2"]["aomp"])
+    version("6.3.1", sha256=versions_dict["6.3.1"]["aomp"])
+    version("6.3.0", sha256=versions_dict["6.3.0"]["aomp"])
+    version("6.2.4", sha256=versions_dict["6.2.4"]["aomp"])
+    version("6.2.1", sha256=versions_dict["6.2.1"]["aomp"])
     version("6.2.0", sha256=versions_dict["6.2.0"]["aomp"])
     version("6.1.2", sha256=versions_dict["6.1.2"]["aomp"])
     version("6.1.1", sha256=versions_dict["6.1.1"]["aomp"])
@@ -167,11 +208,12 @@ class RocmOpenmpExtras(Package):
     version("5.3.3", sha256=versions_dict["5.3.3"]["aomp"], deprecated=True)
     version("5.3.0", sha256=versions_dict["5.3.0"]["aomp"], deprecated=True)
 
+    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+    depends_on("gmake", type="build")
 
     depends_on("cmake@3:", type="build")
     depends_on("py-setuptools", type="build")
@@ -182,6 +224,7 @@ class RocmOpenmpExtras(Package):
     depends_on("libffi", type=("build", "link"))
     depends_on("libdrm", when="@5.7:6.0")
     depends_on("numactl", when="@5.7:6.0")
+    depends_on("zlib", when="@6.2:")
 
     for ver in [
         "5.5.0",
@@ -196,6 +239,12 @@ class RocmOpenmpExtras(Package):
         "6.1.1",
         "6.1.2",
         "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -256,8 +305,21 @@ class RocmOpenmpExtras(Package):
             placement="llvm-project",
             when=f"@{ver}",
         )
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0"]:
+    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4"]:
         depends_on(f"hsakmt-roct@{ver}", when=f"@{ver}")
+
+    for ver in [
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+    ]:
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -298,37 +360,27 @@ class RocmOpenmpExtras(Package):
         when="@6.1",
     )
     patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1")
-    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2")
+    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
-        env.set("AOMP", "{0}".format(llvm_prefix))
-        env.set("HIP_DEVICE_LIB_PATH", "{0}/amdgcn/bitcode".format(devlibs_prefix))
-        env.prepend_path("CPATH", "{0}/include".format(openmp_extras_prefix))
-        env.prepend_path("LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
+        env.set("AOMP", f"{llvm_prefix}")
+        env.set("HIP_DEVICE_LIB_PATH", f"{devlibs_prefix}/amdgcn/bitcode")
+        env.prepend_path("CPATH", f"{self.prefix}/include")
+        env.prepend_path("LIBRARY_PATH", f"{self.prefix}/lib")
         if self.spec.satisfies("@5.3.0:"):
-            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(openmp_extras_prefix))
-            env.prepend_path("LD_LIBRARY_PATH", "{0}/lib".format(hsa_prefix))
-        env.set("AOMP_GPU", "`{0}/bin/mygpu`".format(openmp_extras_prefix))
+            env.prepend_path("LD_LIBRARY_PATH", f"{self.prefix}/lib")
+            env.prepend_path("LD_LIBRARY_PATH", f"{hsa_prefix}/lib")
+        env.set("AOMP_GPU", f"`{self.prefix}/bin/mygpu`")
 
-    def setup_build_environment(self, env):
-        openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
-        env.set("AOMP", "{0}".format(llvm_prefix))
-        env.set("FC", "{0}/bin/flang".format(openmp_extras_prefix))
+        env.set("AOMP", f"{llvm_prefix}")
+        env.set("FC", f"{self.prefix}/bin/flang")
         if self.spec.satisfies("@6.1:"):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
-        if self.spec.satisfies("+asan"):
-            env.set("SANITIZER", 1)
-            env.set("VERBOSE", 1)
-            env.set(
-                "LDSHARED",
-                self.spec["llvm-amdgpu"].prefix.bin.clang
-                + " -shared -Wl,-O1 -Wl,-Bsymbolic-functions -Wl,-z,relro -g -fwrapv -O2",
-            )
         gfx_list = "gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908"
 
         if self.spec.version >= Version("4.3.1"):
@@ -457,30 +509,31 @@ class RocmOpenmpExtras(Package):
         src = self.stage.source_path
         gfx_list = os.environ["GFXLIST"]
         gfx_list = gfx_list.replace(" ", ";")
-        openmp_extras_prefix = self.spec["rocm-openmp-extras"].prefix
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
         if self.spec.satisfies("@6.1:"):
-            devlibs_src = "{0}/rocm-openmp-extras/llvm-project/amd/device-libs".format(src)
+            devlibs_src = f"{src}/rocm-openmp-extras/llvm-project/amd/device-libs"
         else:
-            devlibs_src = "{0}/rocm-openmp-extras/rocm-device-libs".format(src)
+            devlibs_src = f"{src}/rocm-openmp-extras/rocm-device-libs"
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
-        hsakmt_prefix = self.spec["hsakmt-roct"].prefix
+        if self.spec.satisfies("@:6.2"):
+            hsakmt_prefix = self.spec["hsakmt-roct"].prefix
         if self.spec.satisfies("@5.7:6.1"):
             libdrm_prefix = self.spec["libdrm"].prefix
             numactl_prefix = self.spec["numactl"].prefix
         comgr_prefix = self.spec["comgr"].prefix
         llvm_inc = "/rocm-openmp-extras/llvm-project/llvm/include"
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
-        omp_bin_dir = "{0}/bin".format(openmp_extras_prefix)
-        omp_lib_dir = "{0}/lib".format(openmp_extras_prefix)
-        bin_dir = "{0}/bin".format(llvm_prefix)
-        lib_dir = "{0}/lib".format(llvm_prefix)
+        omp_bin_dir = f"{self.prefix}/bin"
+        omp_lib_dir = f"{self.prefix}/lib"
+        bin_dir = f"{llvm_prefix}/bin"
+        lib_dir = f"{llvm_prefix}/lib"
         flang_warning = "-Wno-incompatible-pointer-types-discards-qualifiers"
         libpgmath = "/rocm-openmp-extras/flang/runtime/libpgmath/lib/common"
         elfutils_inc = spec["elfutils"].prefix.include
         ffi_inc = spec["libffi"].prefix.include
         if self.spec.satisfies("@6.2:"):
             ncurses_lib_dir = self.spec["ncurses"].prefix.lib
+            zlib_lib_dir = self.spec["zlib"].prefix.lib
 
         # flang1 and flang2 symlink needed for build of flang-runtime
         # libdevice symlink to rocm-openmp-extras for runtime
@@ -496,32 +549,31 @@ class RocmOpenmpExtras(Package):
             os.unlink(os.path.join(lib_dir, "libdevice"))
         if os.path.islink((os.path.join(llvm_prefix, "lib-debug"))):
             os.unlink(os.path.join(llvm_prefix, "lib-debug"))
-
-        os.symlink(os.path.join(omp_bin_dir, "flang1"), os.path.join(bin_dir, "flang1"))
-        os.symlink(os.path.join(omp_bin_dir, "flang2"), os.path.join(bin_dir, "flang2"))
+        if not os.path.exists(os.path.join(bin_dir, "flang1")):
+            os.symlink(os.path.join(omp_bin_dir, "flang1"), os.path.join(bin_dir, "flang1"))
+        if not os.path.exists(os.path.join(bin_dir, "flang2")):
+            os.symlink(os.path.join(omp_bin_dir, "flang2"), os.path.join(bin_dir, "flang2"))
 
         if self.spec.version >= Version("6.1.0"):
             os.symlink(
                 os.path.join(omp_bin_dir, "flang-legacy"), os.path.join(bin_dir, "flang-legacy")
             )
         os.symlink(os.path.join(omp_lib_dir, "libdevice"), os.path.join(lib_dir, "libdevice"))
-        os.symlink(
-            os.path.join(openmp_extras_prefix, "lib-debug"), os.path.join(llvm_prefix, "lib-debug")
-        )
+        os.symlink(os.path.join(self.prefix, "lib-debug"), os.path.join(llvm_prefix, "lib-debug"))
 
         # Set cmake args
         components = dict()
 
         components["aomp-extras"] = [
             "../rocm-openmp-extras/aomp-extras",
-            "-DLLVM_DIR={0}".format(llvm_prefix),
-            "-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode".format(devlibs_prefix),
-            "-DCMAKE_C_COMPILER={0}/clang".format(bin_dir),
-            "-DCMAKE_CXX_COMPILER={0}/clang++".format(bin_dir),
+            f"-DLLVM_DIR={llvm_prefix}",
+            f"-DDEVICE_LIBS_DIR={devlibs_prefix}/amdgcn/bitcode",
+            f"-DCMAKE_C_COMPILER={bin_dir}/clang",
+            f"-DCMAKE_CXX_COMPILER={bin_dir}/clang++",
             "-DAOMP_STANDALONE_BUILD=0",
-            "-DDEVICELIBS_ROOT={0}".format(devlibs_src),
+            f"-DDEVICELIBS_ROOT={devlibs_src}",
             "-DNEW_BC_PATH=1",
-            "-DAOMP={0}".format(llvm_prefix),
+            f"-DAOMP={llvm_prefix}",
         ]
 
         # Shared cmake configuration for openmp, openmp-debug
@@ -531,39 +583,47 @@ class RocmOpenmpExtras(Package):
         # Passing the elfutils include path via cmake options is a
         # workaround until hsa-rocr-dev switches to elfutils.
         openmp_common_args = [
-            "-DROCM_DIR={0}".format(hsa_prefix),
-            "-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode".format(devlibs_prefix),
+            f"-DROCM_DIR={hsa_prefix}",
+            f"-DDEVICE_LIBS_DIR={devlibs_prefix}/amdgcn/bitcode",
             "-DAOMP_STANDALONE_BUILD=0",
-            "-DDEVICELIBS_ROOT={0}".format(devlibs_src),
-            "-DOPENMP_TEST_C_COMPILER={0}/clang".format(bin_dir),
-            "-DOPENMP_TEST_CXX_COMPILER={0}/clang++".format(bin_dir),
-            "-DCMAKE_C_COMPILER={0}/clang".format(bin_dir),
-            "-DCMAKE_CXX_COMPILER={0}/clang++".format(bin_dir),
-            "-DLIBOMPTARGET_AMDGCN_GFXLIST={0}".format(gfx_list),
+            f"-DDEVICELIBS_ROOT={devlibs_src}",
+            f"-DOPENMP_TEST_C_COMPILER={bin_dir}/clang",
+            f"-DOPENMP_TEST_CXX_COMPILER={bin_dir}/clang++",
+            f"-DCMAKE_C_COMPILER={bin_dir}/clang",
+            f"-DCMAKE_CXX_COMPILER={bin_dir}/clang++",
+            f"-DLIBOMPTARGET_AMDGCN_GFXLIST={gfx_list}",
             "-DLIBOMP_COPY_EXPORTS=OFF",
-            "-DHSA_LIB={0}/lib".format(hsa_prefix),
-            "-DHSAKMT_LIB={0}/lib".format(hsakmt_prefix),
-            "-DHSAKMT_LIB64={0}/lib64".format(hsakmt_prefix),
-            "-DCOMGR_INCLUDE={0}/include".format(comgr_prefix),
-            "-DCOMGR_LIB={0}/lib".format(comgr_prefix),
+            f"-DHSA_LIB={hsa_prefix}/lib",
+            f"-DCOMGR_INCLUDE={comgr_prefix}/include",
+            f"-DCOMGR_LIB={comgr_prefix}/lib",
             "-DOPENMP_ENABLE_LIBOMPTARGET=1",
             "-DOPENMP_ENABLE_LIBOMPTARGET_HSA=1",
-            "-DLLVM_MAIN_INCLUDE_DIR={0}{1}".format(src, llvm_inc),
-            "-DLLVM_INSTALL_PREFIX={0}".format(llvm_prefix),
-            "-DCMAKE_C_FLAGS=-isystem{0} -I{1}".format(elfutils_inc, ffi_inc),
-            "-DCMAKE_CXX_FLAGS=-isystem{0} -I{1}".format(elfutils_inc, ffi_inc),
+            f"-DLLVM_MAIN_INCLUDE_DIR={src}{llvm_inc}",
+            f"-DLLVM_INSTALL_PREFIX={llvm_prefix}",
+            f"-DCMAKE_C_FLAGS=-isystem{elfutils_inc} -I{ffi_inc}",
+            f"-DCMAKE_CXX_FLAGS=-isystem{elfutils_inc} -I{ffi_inc}",
             "-DNEW_BC_PATH=1",
-            "-DHSA_INCLUDE={0}/include/hsa".format(hsa_prefix),
+            f"-DHSA_INCLUDE={hsa_prefix}/include/hsa",
+            "-DLIBOMPTARGET_ENABLE_DEBUG=ON",
         ]
         if self.spec.satisfies("@5.7:6.1"):
             openmp_common_args += [
-                "-DLIBDRM_LIB={0}/lib".format(libdrm_prefix),
-                "-DHSAKMT_INC_PATH={0}/include".format(hsakmt_prefix),
-                "-DNUMACTL_DIR={0}".format(numactl_prefix),
+                f"-DLIBDRM_LIB={libdrm_prefix}/lib",
+                f"-DHSAKMT_INC_PATH={hsakmt_prefix}/include",
+                f"-DNUMACTL_DIR={numactl_prefix}",
             ]
-
-        if self.spec.satisfies("@5.3.0:"):
-            openmp_common_args += ["-DLIBOMPTARGET_ENABLE_DEBUG=ON"]
+        if self.spec.satisfies("@:6.2"):
+            openmp_common_args += [
+                f"-DHSAKMT_LIB={hsakmt_prefix}/lib",
+                f"-DHSAKMT_LIB64={hsakmt_prefix}/lib64",
+            ]
+        if self.spec.satisfies("+asan"):
+            openmp_common_args += [
+                "-DASAN_OPTIONS=detect_leaks=0",
+                "-DCMAKE_C_FLAGS=-fsanitize=address -shared-libasan",
+                "-DCMAKE_CXX_FLAGS=-fsanitize=address -shared-libasan",
+                "-DCMAKE_LD_FLAGS=-fuse-ld=lld",
+            ]
 
         components["openmp"] = ["../rocm-openmp-extras/llvm-project/openmp"]
         components["openmp"] += openmp_common_args
@@ -580,15 +640,15 @@ class RocmOpenmpExtras(Package):
         # Shared cmake configuration for pgmath, flang, flang-runtime
         flang_common_args = [
             "-DLLVM_ENABLE_ASSERTIONS=ON",
-            "-DLLVM_CONFIG={0}/llvm-config".format(bin_dir),
-            "-DCMAKE_CXX_COMPILER={0}/clang++".format(bin_dir),
-            "-DCMAKE_C_COMPILER={0}/clang".format(bin_dir),
-            "-DCMAKE_Fortran_COMPILER={0}/flang".format(bin_dir),
+            f"-DLLVM_CONFIG={bin_dir}/llvm-config",
+            f"-DCMAKE_CXX_COMPILER={bin_dir}/clang++",
+            f"-DCMAKE_C_COMPILER={bin_dir}/clang",
+            f"-DCMAKE_Fortran_COMPILER={bin_dir}/flang",
             "-DLLVM_TARGETS_TO_BUILD=AMDGPU;x86",
             # Spack thinks some warnings from the flang build are errors.
             # Disable those warnings in C and CXX flags.
-            "-DCMAKE_CXX_FLAGS={0}".format(flang_warning) + " -I{0}{1}".format(src, libpgmath),
-            "-DCMAKE_C_FLAGS={0}".format(flang_warning) + " -I{0}{1}".format(src, libpgmath),
+            f"-DCMAKE_CXX_FLAGS={flang_warning} -I{src}{libpgmath}",
+            f"-DCMAKE_C_FLAGS={flang_warning} -I{src}{libpgmath}",
         ]
 
         components["pgmath"] = ["../rocm-openmp-extras/flang/runtime/libpgmath"]
@@ -616,9 +676,9 @@ class RocmOpenmpExtras(Package):
         ]
 
         components["flang-legacy"] = [
-            "-DCMAKE_C_COMPILER={0}/clang".format(bin_dir),
-            "-DCMAKE_CXX_COMPILER={0}/clang++".format(bin_dir),
-            "../rocm-openmp-extras/flang/flang-legacy/{0}".format(flang_legacy_version),
+            f"-DCMAKE_C_COMPILER={bin_dir}/clang",
+            f"-DCMAKE_CXX_COMPILER={bin_dir}/clang++",
+            f"../rocm-openmp-extras/flang/flang-legacy/{flang_legacy_version}",
         ]
 
         flang_legacy_flags = []
@@ -629,13 +689,10 @@ class RocmOpenmpExtras(Package):
         ):
             flang_legacy_flags.append("-D_GLIBCXX_USE_CXX11_ABI=0")
         if self.spec.satisfies("@6.2:"):
-            flang_legacy_flags.append("-L{0}".format(ncurses_lib_dir))
-        components["flang-legacy-llvm"] += [
-            "-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))
-        ]
-        components["flang-legacy"] += [
-            "-DCMAKE_CXX_FLAGS={0}".format(",".join(flang_legacy_flags))
-        ]
+            flang_legacy_flags.append(f"-L{ncurses_lib_dir}")
+            flang_legacy_flags.append(f"-L{zlib_lib_dir}")
+        components["flang-legacy-llvm"] += [f"-DCMAKE_CXX_FLAGS={' '.join(flang_legacy_flags)}"]
+        components["flang-legacy"] += [f"-DCMAKE_CXX_FLAGS={' '.join(flang_legacy_flags)}"]
 
         components["flang"] = [
             "../rocm-openmp-extras/flang",
@@ -649,7 +706,7 @@ class RocmOpenmpExtras(Package):
             "../rocm-openmp-extras/flang",
             "-DLLVM_INSTALL_RUNTIME=ON",
             "-DFLANG_BUILD_RUNTIME=ON",
-            "-DOPENMP_BUILD_DIR={0}/spack-build-openmp/runtime/src".format(src),
+            f"-DOPENMP_BUILD_DIR={src}/spack-build-openmp/runtime/src",
         ]
         components["flang-runtime"] += flang_common_args
 
@@ -668,7 +725,7 @@ class RocmOpenmpExtras(Package):
             cmake_args = components[component]
             cmake_args.extend(std_cmake_args)
             if component == "flang-legacy-llvm":
-                with working_dir("spack-build-{0}/llvm-legacy".format(component), create=True):
+                with working_dir(f"spack-build-{component}/llvm-legacy", create=True):
                     cmake_args.append("-DCMAKE_BUILD_TYPE=Release")
                     cmake(*cmake_args)
                     make()
@@ -680,7 +737,7 @@ class RocmOpenmpExtras(Package):
                     make("install")
                     os.symlink(os.path.join(bin_dir, "clang"), os.path.join(omp_bin_dir, "clang"))
             else:
-                with working_dir("spack-build-{0}".format(component), create=True):
+                with working_dir(f"spack-build-{component}", create=True):
                     # OpenMP build needs to be run twice(Release, Debug)
                     if component == "openmp-debug":
                         cmake_args.append("-DCMAKE_BUILD_TYPE=Debug")

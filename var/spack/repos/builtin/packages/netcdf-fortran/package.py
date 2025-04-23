@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,12 +31,12 @@ class NetcdfFortran(AutotoolsPackage):
     version("4.4.4", sha256="b2d395175f8d283e68c8be516e231a96b191ade67ad0caafaf7fa01b1e6b5d75")
     version("4.4.3", sha256="330373aa163d5931e475b5e83da5c1ad041e855185f24e6a8b85d73b48d6cda9")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
     variant("shared", default=True, description="Enable shared library")
     variant("doc", default=False, description="Enable building docs")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("netcdf-c")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required
@@ -112,7 +111,7 @@ class NetcdfFortran(AutotoolsPackage):
             return libs
 
         msg = "Unable to recursively locate {0} {1} libraries in {2}"
-        raise spack.error.NoLibrariesError(
+        raise NoLibrariesError(
             msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
         )
 
@@ -156,7 +155,7 @@ class NetcdfFortran(AutotoolsPackage):
         # To avoid warning messages when compiler user applications in both
         # cases, we create copies of all '*.mod' files in the prefix/include
         # with names in upper- and lowercase.
-        if self.spec.compiler.name != "cce":
+        if not self.spec.satisfies("%cce"):
             return
 
         with working_dir(self.spec.prefix.include):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -55,6 +54,9 @@ class Sollve(CMakePackage):
     variant("python", default=False, description="Install python bindings")
     variant("argobots", default=True, description="Use Argobots in BOLT")
     extends("python", when="+python")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
@@ -242,10 +244,10 @@ class Sollve(CMakePackage):
             )
             raise RuntimeError(explanation)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

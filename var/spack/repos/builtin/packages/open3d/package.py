@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,11 +20,11 @@ class Open3d(CMakePackage, CudaPackage):
         "0.13.0", tag="v0.13.0", commit="c3f9de224e13838a72da0e5565a7ba51038b0f11", submodules=True
     )
 
+    variant("python", default=False, description="Build the Python module")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("python", default=False, description="Build the Python module")
 
     # http://www.open3d.org/docs/latest/compilation.html
 

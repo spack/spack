@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,9 +25,6 @@ class Spdk(AutotoolsPackage):
     version(
         "23.01", tag="v23.01", commit="10edc60aa8b5f1b04d6496fea976dec75e276a95", submodules=True
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("crypto", default=False, description="Build vbdev crypto module")
     variant("dpdk", default=False, description="Build with dpdk")
@@ -63,6 +59,11 @@ class Spdk(AutotoolsPackage):
         "vtune",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("libtool", type="build")
+    depends_on("pkgconfig", type="build")
+
     depends_on("dpdk@22.11:", when="+dpdk")
     depends_on("fio@3.33", when="+fio")
     depends_on("libaio")
@@ -71,6 +72,7 @@ class Spdk(AutotoolsPackage):
     depends_on("numactl")
     depends_on("py-pyelftools")
     depends_on("rdma-core", when="+rdma")
+    depends_on("uuid")
 
     def configure_args(self):
         spec = self.spec

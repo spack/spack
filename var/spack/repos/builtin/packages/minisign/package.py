@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -20,9 +19,9 @@ class Minisign(CMakePackage):
     version("0.8", sha256="130eb5246076bc7ec42f13495a601382e566bb6733430d40a68de5e43a7f1082")
     version("0.7", sha256="0c9f25ae647b6ba38cf7e6aea1da4e8fb20e1bc64ef0c679da737a38c8ad43ef")
 
-    depends_on("c", type="build")  # generated
-
     variant("static", default=True, description="builds a static version of the executable")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libsodium")
 

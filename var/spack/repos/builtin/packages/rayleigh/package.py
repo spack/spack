@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,7 +32,7 @@ class Rayleigh(MakefilePackage):
     depends_on("fftw-api@3")
     depends_on("lapack")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("^cray-mpich"):
             # The Cray wrapper takes care of linking MPI correctly for all compilers.

@@ -1,16 +1,16 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack.package import *
 
 
-class Grep(AutotoolsPackage):
+class Grep(AutotoolsPackage, GNUMirrorPackage):
     """Grep searches one or more input files for lines containing a match to
     a specified pattern"""
 
     homepage = "https://www.gnu.org/software/grep/"
-    url = "https://ftp.gnu.org/gnu/grep/grep-3.3.tar.xz"
+    gnu_mirror_path = "grep/grep-3.3.tar.xz"
 
     license("GPL-3.0-or-later")
 
@@ -20,14 +20,32 @@ class Grep(AutotoolsPackage):
     version("3.7", sha256="5c10da312460aec721984d5d83246d24520ec438dd48d7ab5a05dbc0d6d6823c")
     version("3.3", sha256="b960541c499619efd6afe1fa795402e4733c8e11ebf9fafccc0bb4bccdc5b514")
 
-    depends_on("c", type="build")  # generated
-
     variant("pcre", default=False, description="Enable Perl Compatible Regular Expression support")
 
     build_directory = "spack-build"
 
+    depends_on("c", type="build")  # generated
+
     depends_on("pcre2", when="@3.8:+pcre")
     depends_on("pcre", when="@:3.7+pcre")
+
+    # For spack external find
+    executables = ["^grep$"]
+
+    @classmethod
+    def determine_version(cls, exe):
+        version_string = Executable(exe)("--version", output=str, error=str).split("\n")[0]
+        # Linux
+        if "GNU grep" in version_string:
+            return version_string.lstrip("grep (GNU grep)").strip()
+        # macOS
+        elif "BSD grep, GNU compatible" in version_string:
+            return (
+                version_string.lstrip("grep (BSD grep, GNU compatible)").rstrip("-FreeBSD").strip()
+            )
+        # Don't know how to handle this version of grep, don't add it
+        else:
+            return None
 
     def configure_args(self):
         args = []

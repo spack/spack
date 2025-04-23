@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,7 +32,7 @@ class Gpgme(AutotoolsPackage):
 
     depends_on("gnupg", type="build")
     depends_on("libgpg-error", type="build")
-    depends_on("libassuan", type="build")
+    depends_on("libassuan@2.4.2:2", type=("build", "link"))
 
     @classmethod
     def determine_version(cls, exe):
@@ -43,7 +42,7 @@ class Gpgme(AutotoolsPackage):
         """Fix the build when incompatible Qt libraries are installed on the host"""
         return ["--enable-languages=cpp"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Build tests create a public keyring in ~/.gnupg if $HOME is not redirected"""
         if self.run_tests:
             env.set("HOME", self.build_directory)

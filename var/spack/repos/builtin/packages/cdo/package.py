@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,16 @@ class Cdo(AutotoolsPackage):
 
     maintainers("skosukhin", "Try2Code")
 
+    version(
+        "2.5.0",
+        sha256="e865c05c1b52fd76b80e33421554db81b38b75210820bdc40e8690f4552f68e2",
+        url="https://code.mpimet.mpg.de/attachments/download/29786/cdo-2.5.0.tar.gz",
+    )
+    version(
+        "2.4.4",
+        sha256="49f50bd18dacd585e9518cfd4f55548f692426edfb3b27ddcd1c653eab53d063",
+        url="https://code.mpimet.mpg.de/attachments/download/29649/cdo-2.4.4.tar.gz",
+    )
     version(
         "2.4.3",
         sha256="4a608b70ee1907b45e149ad44033bb47d35b7da96096553193bd362ca9d445eb",
@@ -166,10 +175,6 @@ class Cdo(AutotoolsPackage):
         url="https://code.mpimet.mpg.de/attachments/download/12760/cdo-1.7.2.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # patches
     # see https://code.mpimet.mpg.de/boards/1/topics/15594
     patch(
@@ -207,6 +212,10 @@ class Cdo(AutotoolsPackage):
     variant("fftw3", default=True, description="Enable support for fftw3")
     variant("magics", default=False, description="Enable Magics library support")
     variant("openmp", default=True, description="Enable OpenMP support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
 

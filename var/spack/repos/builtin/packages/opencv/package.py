@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,9 +47,6 @@ class Opencv(CMakePackage, CudaPackage):
     version("3.4.0", sha256="678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da")
     version("3.3.1", sha256="5dca3bb0d661af311e25a72b04a7e4c22c47c1aa86eb73e70063cd378a2aa6ee")
     version("3.3.0", sha256="8bb312b9d9fd17336dc1f8b3ac82f021ca50e2034afc866098866176d985adc6")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     contrib_vers = [
         "3.3.0",
@@ -492,6 +488,7 @@ class Opencv(CMakePackage, CudaPackage):
 
     with when("+hdf"):
         depends_on("hdf5")
+        depends_on("mpi", when="^hdf5+mpi")
 
     with when("+hfs"):
         with when("+cuda"):
@@ -742,6 +739,9 @@ class Opencv(CMakePackage, CudaPackage):
     variant("nonfree", default=False, description="Enable non-free algorithms")
     variant("contrib", default=True, description="Enable OpenCV contrib modules")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Required (dependencies)
     depends_on("cmake@3.5.1:", type="build")
     depends_on("python@2.7:2.8,3.2:", type="build")
@@ -940,6 +940,9 @@ class Opencv(CMakePackage, CudaPackage):
             if spec.variants["cuda_arch"].value[0] != "none":
                 cuda_arch = spec.variants["cuda_arch"].value
                 args.append(self.define("CUDA_ARCH_BIN", " ".join(cuda_arch)))
+            # https://github.com/opencv/opencv/pull/23021
+            if spec.satisfies("@4.9: ^cmake@3.18:"):
+                args.append(self.define("ENABLE_CUDA_FIRST_CLASS_LANGUAGE", True))
 
         # TODO: this CMake flag is deprecated
         if spec.target.family == "ppc64le":

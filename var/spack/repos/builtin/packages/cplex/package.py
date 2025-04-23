@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------------------
@@ -53,7 +52,7 @@ class Cplex(Package):
             for key in config:
                 input_file.write("{0}={1}\n".format(key, config[key]))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix, "cplex/bin/x86-64_linux"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "cplex/bin/x86-64_linux"))
         env.prepend_path("MATLABPATH", join_path(self.prefix, "cplex/matlab/x86-64_linux"))

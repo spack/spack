@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -92,7 +91,7 @@ there are any other variables you need to set, you can do this in the
 
 .. code-block:: python
 
-   def setup_build_environment(self, env):
+   def setup_build_environment(self, env: EnvironmentModifications) -> None:
        env.set("PREFIX", prefix)
        env.set("BLASLIB", spec["blas"].libs.ld_flags)
 

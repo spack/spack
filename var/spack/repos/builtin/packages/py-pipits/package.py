@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -52,7 +51,7 @@ class PyPipits(PythonPackage):
     def install_db(self):
         install_tree(join_path(self.stage.source_path, "refdb"), self.prefix.refdb)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set(
             "PIPITS_UNITE_REFERENCE_DATA_CHIMERA",
             join_path(

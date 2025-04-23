@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,12 +15,14 @@ class HsakmtRoct(CMakePackage):
 
     homepage = "https://github.com/ROCm/ROCT-Thunk-Interface"
     git = "https://github.com/ROCm/ROCT-Thunk-Interface.git"
-    url = "https://github.com/ROCm/ROCT-Thunk-Interface/archive/rocm-6.1.0.tar.gz"
+    url = "https://github.com/ROCm/ROCT-Thunk-Interface/archive/rocm-6.2.4.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath")
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
+    version("6.2.4", sha256="5c71655e3a1b9d1404dc8cb64b9d2fadd27e67606aaa8aec0c325768d8c483c0")
+    version("6.2.1", sha256="bba5dd8cce595d94d6a8e467dbd6de9e921f81e665ca8aac1e346e0ade7620f0")
     version("6.2.0", sha256="73df98ca2be8a887cb76554c23f148ef6556bdbccfac99f34111fa1f87fd7c5d")
     version("6.1.2", sha256="097a5b7eb136300667b36bd35bf55e4a283a1ed04e614cf24dddca0a65c86389")
     version("6.1.1", sha256="c586d8a04fbd9a7bc0a15e0a6a161a07f88f654402bb11694bd8aebc343c00f0")
@@ -40,11 +41,11 @@ class HsakmtRoct(CMakePackage):
         version("5.3.3", sha256="b5350de915997ed48072b37a21c2c44438028255f6cc147c25a196ad383c52e7")
         version("5.3.0", sha256="c150be3958fd46e57bfc9db187819ec34b1db8f0cf9b69f8c3f8915001800ab8")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared or static library")
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("cmake@3:", type="build")
@@ -66,6 +67,9 @@ class HsakmtRoct(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", type="test", when=f"@{ver}")
@@ -96,7 +100,7 @@ class HsakmtRoct(CMakePackage):
             prefixes = ";".join(
                 [
                     self.spec["libdrm"].prefix,
-                    self.spec["hsakmt-roct"].prefix,
+                    self.prefix,
                     self.spec["numactl"].prefix,
                     self.spec["pkgconfig"].prefix,
                     self.spec["llvm-amdgpu"].prefix,
@@ -104,7 +108,7 @@ class HsakmtRoct(CMakePackage):
                     self.spec["ncurses"].prefix,
                 ]
             )
-            hsakmt_path = ";".join([self.spec["hsakmt-roct"].prefix])
+            hsakmt_path = ";".join([self.prefix])
             cc_options = [
                 "-DCMAKE_PREFIX_PATH=" + prefixes,
                 "-DLIBHSAKMT_PATH=" + hsakmt_path,

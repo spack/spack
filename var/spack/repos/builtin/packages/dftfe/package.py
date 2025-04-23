@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -20,8 +19,6 @@ class Dftfe(CMakePackage):
     version("0.5.1", sha256="e47272d3783cf675dcd8bc31da07765695164110bfebbbab29f5815531f148c1")
     version("0.5.0", sha256="9aadb9a9b059f98f88c7756b417423dc67d02f1cdd2ed7472ba395fcfafc6dcb")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "scalapack",
         default=True,
@@ -33,6 +30,8 @@ class Dftfe(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release"),
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi")
     depends_on("dealii+p4est+petsc+slepc+int64+scalapack+mpi")
@@ -55,7 +54,7 @@ class Dftfe(CMakePackage):
             "-DSPGLIB_DIR={0}".format(spec["spglib"].prefix),
         ]
 
-        if spec.satisfies("^intel-mkl"):
+        if spec.satisfies("^[virtuals=scalapack] intel-oneapi-mkl"):
             args.append("-DWITH_INTEL_MKL=ON")
         else:
             args.append("-DWITH_INTEL_MKL=OFF")

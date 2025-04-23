@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -23,9 +23,6 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     version("1.7.0", sha256="1d20c9be7d16ccb4e830e9ee3406796efaf96b0d93414d676337b64bc59ced18")
     version("1.6.0", sha256="01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "build_type",
         default="Distribution",
@@ -40,6 +37,9 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     variant("lapack", default=True, description="Build with lapack support")
     variant("mkldnn", default=False, description="Build with MKL-DNN support")
     variant("python", default=True, description="Install python bindings")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     generator("ninja")
     depends_on("cmake@3.13:", type="build")
@@ -75,7 +75,7 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     # python/setup.py assumes libs can be found in build directory
     build_directory = "build"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MXNET_LIBRARY_PATH", self.spec["mxnet"].libs[0])
 
         if self.spec.satisfies("+nccl ^nccl@2.1:"):
@@ -126,5 +126,4 @@ class Mxnet(CMakePackage, CudaPackage, PythonExtension):
     def install_python(self):
         if "+python" in self.spec:
             with working_dir("python"):
-                args = std_pip_args + ["--prefix=" + prefix, "."]
-                pip(*args)
+                pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")

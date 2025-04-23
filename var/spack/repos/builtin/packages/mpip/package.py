@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,10 +18,6 @@ class Mpip(AutotoolsPackage):
     version("master", branch="master")
     version("3.5", sha256="e366843d53fa016fb03903e51c8aac901aa5155edabe64698a8d6fa618a03bbd")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("demangling", default=True, description="Build with demangling support")
 
     variant("setjmp", default=False, description="Use setjmp to generate stack trace")
@@ -40,24 +35,31 @@ class Mpip(AutotoolsPackage):
     variant(
         "maxargs",
         values=int,
-        default=32,
+        default="32",
         description="Set number of command line arguments in report",
     )
 
     variant(
-        "stackdepth", values=int, default=8, description="Specify maximum report stacktrace depth"
+        "stackdepth",
+        values=int,
+        default="8",
+        description="Specify maximum report stacktrace depth",
     )
 
     variant(
         "internal_stackdepth",
         values=int,
-        default=3,
+        default="3",
         description="Specify number of internal stack frames",
     )
 
     variant("add_shared_target", default=False, description="Add shared make target")
 
     conflicts("platform=darwin")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # make-wrappers.py wrapper generator script requires python
     depends_on("python@2:", type="build")

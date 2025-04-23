@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,12 +31,12 @@ class Tpm2Tss(AutotoolsPackage):
     depends_on("libgcrypt", when="@:2.4.2")
 
     @when("@:2.4.2")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("ACLOCAL_PATH", self.spec["libgcrypt"].prefix.share.aclocal)
         env.prepend_path("ACLOCAL_PATH", self.spec["autoconf-archive"].prefix.share.aclocal)
 
     @when("@3.0.0:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("ACLOCAL_PATH", self.spec["autoconf-archive"].prefix.share.aclocal)
 
     def autoreconf(self, spec, prefix):

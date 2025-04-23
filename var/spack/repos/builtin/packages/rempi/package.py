@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -37,7 +36,7 @@ class Rempi(AutotoolsPackage):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%cce"):
             env.set("MPICC", "mpicc")
             env.set("MPICXX", "mpicxx")

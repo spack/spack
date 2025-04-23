@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -52,12 +51,6 @@ class Petaca(CMakePackage):
     variant("shared", default=False, description="build shared libraries")
 
     variant("std_name", default=False, description="enables std_mod_proc_name with intel")
-
-    # copied from openmpi/package.py to ensure fortran support
-    @run_before("cmake")
-    def die_without_fortran(self):
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError("petaca requires both C and Fortran compilers!")
 
     def cmake_args(self):
         return [

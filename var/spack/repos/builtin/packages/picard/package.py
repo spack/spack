@@ -1,10 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import os.path
+import os
 import re
 
 from spack.package import *
@@ -195,7 +194,7 @@ class Picard(Package):
         filter_file("^java", java, script, **kwargs)
         filter_file("picard.jar", join_path(prefix.bin, "picard.jar"), script, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """The Picard docs suggest setting this as a convenience."""
         env.prepend_path("PICARD", join_path(self.prefix.bin, "picard.jar"))
 

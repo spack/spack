@@ -1,9 +1,7 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from llnl.util import tty
+import os.path
 
 from spack.package import *
 from spack.pkg.builtin.llvm import LlvmDetection
@@ -34,6 +32,12 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
     maintainers("amd-toolchain-support")
 
     version(
+        ver="5.0.0",
+        sha256="966fac2d2c759e9de6e969c10ada7a7b306c113f7f1e07ea376829ec86380daa",
+        url="https://download.amd.com/developer/eula/aocc/aocc-5-0/aocc-compiler-5.0.0.tar",
+        preferred=True,
+    )
+    version(
         ver="4.2.0",
         sha256="ed5a560ec745b24dc0685ccdcbde914843fb2f2dfbfce1ba592de4ffbce1ccab",
         url="https://download.amd.com/developer/eula/aocc/aocc-4-2/aocc-compiler-4.2.0.tar",
@@ -54,10 +58,14 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
         url="https://download.amd.com/developer/eula/aocc-compiler/aocc-compiler-3.2.0.tar",
     )
 
-    depends_on("c", type="build")  # generated
+    provides("c", "cxx")
+    provides("fortran")
 
     # Licensing
     license_url = "https://www.amd.com/en/developer/aocc/aocc-compiler/eula.html"
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("libxml2")
     depends_on("zlib-api")
@@ -108,5 +116,43 @@ class Aocc(Package, LlvmDetection, CompilerPackage):
                 with open(join_path(self.prefix.bin, "{}.cfg".format(compiler)), "w") as f:
                     f.write(compiler_options)
 
+    def _cc_path(self):
+        return os.path.join(self.spec.prefix.bin, "clang")
+
+    def _cxx_path(self):
+        return os.path.join(self.spec.prefix.bin, "clang++")
+
+    def _fortran_path(self):
+        return os.path.join(self.spec.prefix.bin, "flang")
+
     compiler_version_regex = r"AOCC_(\d+[._]\d+[._]\d+)"
     fortran_names = ["flang"]
+
+    debug_flags = [
+        "-gcodeview",
+        "-gdwarf-2",
+        "-gdwarf-3",
+        "-gdwarf-4",
+        "-gdwarf-5",
+        "-gline-tables-only",
+        "-gmodules",
+        "-g",
+    ]
+
+    opt_flags = ["-O0", "-O1", "-O2", "-O3", "-Ofast", "-Os", "-Oz", "-Og", "-O", "-O4"]
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("aocc", "clang"),
+        "cxx": os.path.join("aocc", "clang++"),
+        "fortran": os.path.join("aocc", "flang"),
+    }
+
+    implicit_rpath_libs = ["libclang"]
+    stdcxx_libs = ("-lstdc++",)
+
+    def _standard_flag(self, *, language: str, standard: str) -> str:
+        flags = {
+            "cxx": {"11": "-std=c++11", "14": "-std=c++14", "17": "-std=c++17"},
+            "c": {"99": "-std=c99", "11": "-std=c11"},
+        }
+        return flags[language][standard]

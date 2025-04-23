@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,9 +39,6 @@ class Graphviz(AutotoolsPackage):
         sha256="c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f",
         deprecated=True,
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     # Language bindings
     language_bindings = ["java"]
@@ -108,6 +104,9 @@ class Graphviz(AutotoolsPackage):
         patch("fix-quartz-darwin.patch", when="@:2.47.2")
 
     # Language dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     for lang in language_bindings:
         depends_on("swig", when=("+" + lang))
         depends_on(lang, when=("+" + lang))
@@ -160,14 +159,14 @@ class Graphviz(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh", "NOCONFIG")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
         super().setup_build_environment(env)
 
         if self.spec.satisfies("+quartz"):
             env.set("OBJC", self.compiler.cc)
 
-    @when("%clang platform=darwin")
+    @when("platform=darwin %clang")
     def patch(self):
         # When using Clang, replace GCC's libstdc++ with LLVM's libc++
         mkdirs = ["cmd/dot", "cmd/edgepaint", "cmd/mingle", "plugin/gdiplus"]

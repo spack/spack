@@ -1,10 +1,9 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import os.path
+import os
 
 from spack.package import *
 
@@ -32,6 +31,7 @@ class Plumed(AutotoolsPackage):
 
     version("master", branch="master")
 
+    version("2.9.2", sha256="301fbc958374f81d9b8c7a1eac73095f6dded52cce73ce33d64bdbebf51ac63d")
     version("2.9.1", sha256="e24563ad1eb657611918e0c978d9c5212340f128b4f1aa5efbd439a0b2e91b58")
     version("2.9.0", sha256="612d2387416b5f82dd8545709921440370e144fd46cef633654cf0ee43bac5f8")
 
@@ -114,10 +114,6 @@ class Plumed(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Variants. PLUMED by default builds a number of optional modules.
     # The ones listed here are not built by default for various reasons,
     # such as stability, lack of testing, or lack of demand.
@@ -191,6 +187,10 @@ class Plumed(AutotoolsPackage):
         description="Activates FireArray support",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on("zlib-api")
     depends_on("blas")
@@ -244,7 +244,7 @@ class Plumed(AutotoolsPackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         # Make plumed visible from dependent packages
-        module.plumed = dependent_spec["plumed"].command
+        module.plumed = self.command
 
     @property
     def plumed_inc(self):
@@ -292,10 +292,9 @@ class Plumed(AutotoolsPackage):
         if "+mpi" in spec:
             configure_opts.extend(["--enable-mpi", "CXX={0}".format(spec["mpi"].mpicxx)])
 
-            # If the MPI dependency is provided by the intel-mpi package then
-            # the following additional argument is required to allow it to
-            # build.
-            if "intel-mpi" in spec:
+            # If the MPI dependency is provided by the intel-oneapi-mpi package then the following
+            # additional argument is required to allow it to build.
+            if spec.satisfies("^[virtuals=mpi] intel-oneapi-mpi"):
                 configure_opts.extend(["STATIC_LIBS=-mt_mpi"])
 
         extra_libs = []

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,11 @@ class Cmake(Package):
     homepage = "https://www.cmake.org"
     url = "https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz"
 
+    tags = ["build-tools"]
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     version(
         "3.23.1",
         md5="4cb3ff35b2472aae70f542116d616e63",
@@ -32,11 +36,13 @@ class Cmake(Package):
         url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         env.set("for_install", "for_install")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         env.set("from_cmake", "from_cmake")
 

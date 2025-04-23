@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,7 +22,7 @@ class NcclFastsocket(Package):
 
     maintainers("danielahlin")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)
@@ -57,7 +56,7 @@ class NcclFastsocket(Package):
         bazel(*args)
         install_tree("bazel-bin", prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The current plugin pickup method of NCCL is to scan for libraries with certain
         # names in the standard library search paths. Consequently, to make nccl-fastsocket
         # discoverable to NCCL it is necessary to add it to the LD_LIBRARY_PATH.

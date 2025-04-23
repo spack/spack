@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -168,15 +167,13 @@ class Augustus(MakefilePackage):
             pattern = "^#!.*"
             repl = f"#!{self.spec['perl'].command.path}"
             files = glob.glob("*.pl")
-            for file in files:
-                filter_file(pattern, repl, *files, backup=False)
+            filter_file(pattern, repl, *files, backup=False)
 
             repl = f"#!{self.spec['python'].command.path}"
             files = glob.glob("*.py")
-            for file in files:
-                filter_file(pattern, repl, *files, backup=False)
+            filter_file(pattern, repl, *files, backup=False)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         htslib = self.spec["htslib"].prefix
         bamtools = self.spec["bamtools"].prefix
 
@@ -187,6 +184,6 @@ class Augustus(MakefilePackage):
             env.set("HTSLIB_INSTALL_DIR", htslib)
             env.set("BAMTOOLS_INSTALL_DIR", bamtools)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("AUGUSTUS_CONFIG_PATH", join_path(self.prefix, "config"))
         env.prepend_path("PATH", join_path(self.prefix, "scripts"))

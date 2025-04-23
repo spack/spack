@@ -1,21 +1,28 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 from typing import Optional, Tuple
 
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
+from llnl.util.lang import ClassProperty, classproperty
 
 import spack.builder
+import spack.spec
+import spack.util.prefix
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE
+from spack.config import determine_number_of_jobs
 from spack.directives import build_system, extends, maintainers
 from spack.package_base import PackageBase
-from spack.util.cpus import determine_number_of_jobs
 from spack.util.environment import env_flag
 from spack.util.executable import Executable, ProcessError
+
+
+def _homepage(cls: "RacketPackage") -> Optional[str]:
+    if cls.racket_name:
+        return f"https://pkgs.racket-lang.org/package/{cls.racket_name}"
+    return None
 
 
 class RacketPackage(PackageBase):
@@ -36,13 +43,7 @@ class RacketPackage(PackageBase):
     extends("racket", when="build_system=racket")
 
     racket_name: Optional[str] = None
-    parallel = True
-
-    @lang.classproperty
-    def homepage(cls):
-        if cls.racket_name:
-            return "https://pkgs.racket-lang.org/package/{0}".format(cls.racket_name)
-        return None
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
 
 
 @spack.builder.builder("racket")
@@ -75,18 +76,22 @@ class RacketBuilder(spack.builder.Builder):
             ret = os.path.join(ret, self.subdirectory)
         return ret
 
-    def install(self, pkg, spec, prefix):
+    def install(
+        self, pkg: RacketPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
+    ) -> None:
         """Install everything from build directory."""
         raco = Executable("raco")
         with fs.working_dir(self.build_directory):
-            parallel = self.pkg.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
+            parallel = pkg.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
+            name = pkg.racket_name
+            assert name is not None, "Racket package name is not set"
             args = [
                 "pkg",
                 "install",
                 "-t",
                 "dir",
                 "-n",
-                self.pkg.racket_name,
+                name,
                 "--deps",
                 "fail",
                 "--ignore-implies",
@@ -102,8 +107,7 @@ class RacketBuilder(spack.builder.Builder):
             except ProcessError:
                 args.insert(-2, "--skip-installed")
                 raco(*args)
-                msg = (
-                    "Racket package {0} was already installed, uninstalling via "
+                tty.warn(
+                    f"Racket package {name} was already installed, uninstalling via "
                     "Spack may make someone unhappy!"
                 )
-                tty.warn(msg.format(self.pkg.racket_name))

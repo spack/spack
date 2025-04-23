@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -41,7 +40,7 @@ class PyGmxapi(PythonPackage):
     depends_on("py-pybind11@2.6:", when="@:0.4", type=("build", "run"))
     depends_on("py-pytest@4.6:", type="test")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GROMACS_DIR", self.spec["gromacs"].prefix)
         env.set("gmxapi_ROOT", self.spec["gromacs"].prefix)
         env.set("Python3_ROOT", self.spec["python"].home)

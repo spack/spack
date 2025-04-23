@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,11 +27,11 @@ class Qtgraph(QMakePackage):
     depends_on("graphviz@2.40.1:", when="@develop")
     depends_on("graphviz@2.40.1", when="@1.0.0.0:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GRAPHVIZ_ROOT", self.spec["graphviz"].prefix)
         env.set("INSTALL_ROOT", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # What library suffix should be used based on library existence
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64

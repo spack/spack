@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,7 +8,7 @@ from spack.package import *
 class PyFrozendict(PythonPackage):
     """An immutable dictionary"""
 
-    homepage = "An immutable dictionary"
+    homepage = "https://github.com/Marco-Sulla/python-frozendict"
     pypi = "frozendict/frozendict-1.2.tar.gz"
 
     license("LGPL-3.0-only")
@@ -23,7 +22,7 @@ class PyFrozendict(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # C extension is not supported for 3.11+. See also
         # https://github.com/Marco-Sulla/python-frozendict/issues/68
         if self.spec.satisfies("^python@3.11:"):

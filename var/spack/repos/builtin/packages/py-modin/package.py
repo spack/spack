@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,6 +44,6 @@ class PyModin(PythonPackage):
         depends_on("py-distributed@2.22:", type=("build", "run"))
         depends_on("py-pickle5", when="^python@:3.7", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # modin/config/envvars.py
         env.set("MODIN_ENGINE", self.spec.variants["engine"].value)

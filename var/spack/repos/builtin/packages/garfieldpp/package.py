@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -45,7 +44,7 @@ class Garfieldpp(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)
 
@@ -57,6 +56,8 @@ class Garfieldpp(CMakePackage):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["root"].prefix.lib.root)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["gsl"].prefix.lib.root)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)

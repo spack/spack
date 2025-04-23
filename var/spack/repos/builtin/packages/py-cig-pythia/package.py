@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,10 +24,10 @@ class PyCigPythia(AutotoolsPackage, PythonExtension):
 
     version("1.1.0", sha256="d8e941d2d0fa4772c3c0cb3d1d9b6acbb5fa01ef346dc0706a8da541a8f97731")
 
+    variant("mpi", default=True, description="Build with MPI support.")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("mpi", default=True, description="Build with MPI support.")
 
     depends_on("mpi", when="+mpi")
     depends_on("python@3.8:")

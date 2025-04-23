@@ -1,11 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import Optional, Tuple
 
-import llnl.util.lang as lang
 from llnl.util.filesystem import mkdirp
+from llnl.util.lang import ClassProperty, classproperty
 
 from spack.directives import extends
 
@@ -55,6 +54,32 @@ class RBuilder(GenericBuilder):
         pkg.module.R(*args)
 
 
+def _homepage(cls: "RPackage") -> Optional[str]:
+    if cls.cran:
+        return f"https://cloud.r-project.org/package={cls.cran}"
+    elif cls.bioc:
+        return f"https://bioconductor.org/packages/{cls.bioc}"
+    return None
+
+
+def _url(cls: "RPackage") -> Optional[str]:
+    if cls.cran:
+        return f"https://cloud.r-project.org/src/contrib/{cls.cran}_{str(list(cls.versions)[0])}.tar.gz"
+    return None
+
+
+def _list_url(cls: "RPackage") -> Optional[str]:
+    if cls.cran:
+        return f"https://cloud.r-project.org/src/contrib/Archive/{cls.cran}/"
+    return None
+
+
+def _git(cls: "RPackage") -> Optional[str]:
+    if cls.bioc:
+        return f"https://git.bioconductor.org/packages/{cls.bioc}"
+    return None
+
+
 class RPackage(Package):
     """Specialized class for packages that are built using R.
 
@@ -78,24 +103,7 @@ class RPackage(Package):
 
     extends("r")
 
-    @lang.classproperty
-    def homepage(cls):
-        if cls.cran:
-            return f"https://cloud.r-project.org/package={cls.cran}"
-        elif cls.bioc:
-            return f"https://bioconductor.org/packages/{cls.bioc}"
-
-    @lang.classproperty
-    def url(cls):
-        if cls.cran:
-            return f"https://cloud.r-project.org/src/contrib/{cls.cran}_{str(list(cls.versions)[0])}.tar.gz"
-
-    @lang.classproperty
-    def list_url(cls):
-        if cls.cran:
-            return f"https://cloud.r-project.org/src/contrib/Archive/{cls.cran}/"
-
-    @property
-    def git(self):
-        if self.bioc:
-            return f"https://git.bioconductor.org/packages/{self.bioc}"
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
+    url: ClassProperty[Optional[str]] = classproperty(_url)
+    list_url: ClassProperty[Optional[str]] = classproperty(_list_url)
+    git: ClassProperty[Optional[str]] = classproperty(_git)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,7 +25,7 @@ class PlinkNg(Package):
         template = "https://www.cog-genomics.org/static/bin/plink2_src_{0}.zip"
         return template.format(ver)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         zlib = join_path(self.spec["zlib-api"].prefix.lib, "libz.a")
         env.set("ZLIB", zlib)
 

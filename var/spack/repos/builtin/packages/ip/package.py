@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,9 +32,6 @@ class Ip(CMakePackage):
         preferred=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("openmp", description="Enable OpenMP threading", default=True)
     variant("pic", default=True, description="Build with position-independent-code")
     variant("shared", default=False, description="Build shared library", when="@4.1:")
@@ -64,12 +60,16 @@ class Ip(CMakePackage):
 
     conflicts("+shared ~pic")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("sp", when="@:4")
     depends_on("sp@:2.3.3", when="@:4.0")
     depends_on("sp precision=4", when="@4.1:4 precision=4")
     depends_on("sp precision=d", when="@4.1:4 precision=d")
     depends_on("sp precision=8", when="@4.1:4 precision=8")
     depends_on("lapack", when="@5.1:")
+    depends_on("cmake@3.18:", when="@5.1:")
 
     def cmake_args(self):
         args = [
@@ -105,7 +105,7 @@ class Ip(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         suffixes = (
             self.spec.variants["precision"].value
             if self.spec.satisfies("@4.1:")
@@ -121,5 +121,5 @@ class Ip(CMakePackage):
 
     @when("@4:")
     def check(self):
-        with working_dir(self.builder.build_directory):
+        with working_dir(self.build_directory):
             make("test")

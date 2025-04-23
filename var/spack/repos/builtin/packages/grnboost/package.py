@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,7 +29,7 @@ class Grnboost(Package):
     depends_on("xgboost", type="run")
     depends_on("spark+hadoop", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         grnboost_jar = join_path(self.prefix, "target", "scala-2.11", "GRNBoost.jar")
         xgboost_version = self.spec["xgboost"].version.string
         xgboost_jar = join_path(

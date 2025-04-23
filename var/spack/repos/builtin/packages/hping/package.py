@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,7 +22,7 @@ class Hping(AutotoolsPackage):
     depends_on("libpcap")
     depends_on("tcl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("TCLSH", self.spec["tcl"].prefix.bin.tclsh)
 
     @run_before("configure")
@@ -38,5 +37,5 @@ class Hping(AutotoolsPackage):
         mkdirp(prefix.sbin)
         make("install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

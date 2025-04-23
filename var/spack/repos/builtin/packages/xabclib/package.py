@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,6 +14,9 @@ class Xabclib(MakefilePackage):
     url = "http://www.abc-lib.org/Xabclib/Release/Xabclib-v1.03.tar.gz"
 
     version("1.03", sha256="9d200f40f1db87abc26cfe75a22db3a6d972988a28fc0ce8421a0c88cc574d1a")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     def edit(self, spec, prefix):
         cc = [spack_cc, "-O3", self.compiler.openmp_flag]

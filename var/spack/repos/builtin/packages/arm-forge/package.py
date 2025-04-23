@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -206,7 +205,7 @@ class ArmForge(Package):
             probe = join_path(prefix, "bin", "forge-probe")
             subprocess.call([probe, "--install", "global"])
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Only PATH is needed for Forge.
         # Adding lib to LD_LIBRARY_PATH can cause conflicts with Forge's internal libs.
         env.clear()

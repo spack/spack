@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -54,7 +53,7 @@ class PyDlioProfilerPy(PythonPackage):
     depends_on("ninja", type="build")
     depends_on("cmake@3.12:", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.0.6:"):
             env.set("DLIO_PROFILER_INSTALL_DIR", self.prefix)
             env.set("DLIO_PROFILER_PYTHON_SITE", python_purelib)

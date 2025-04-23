@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,5 +27,6 @@ class PyFluidfftP3dfft(PythonPackage):
         depends_on("py-meson-python")
         depends_on("py-transonic@0.6.4:")
         depends_on("py-fluidfft-builder")
+        depends_on("py-cython@3.0:")
 
     depends_on("py-fluidfft", type="run")

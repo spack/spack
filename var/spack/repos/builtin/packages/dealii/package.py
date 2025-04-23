@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,6 +27,10 @@ class Dealii(CMakePackage, CudaPackage):
     generator("make")
 
     version("master", branch="master")
+    version("9.6.2", sha256="1051e332de3822488e91c2b0460681052a3c4c5ac261cdd7a6af784869a25523")
+    version("9.6.1", sha256="9fcaa3968ac2eab41573b3614756a898a3ea91afcd9f3477ab2f30bb19aa669a")
+    version("9.6.0", sha256="675323f0eb8eed2cfc93e2ced07a0ec5727c6a566ff9e7786c01a2ddcde17bed")
+    version("9.5.2", sha256="7930e5218a9807d60cc05c300a3b70f36f4af22c3551a2cd1141fbab013bbaf1")
     version("9.5.1", sha256="a818b535e6488d3aef7853311657c7b4fadc29a9abe91b7b202b131aad630f5e")
     version("9.5.0", sha256="a81f41565f0d3a22d491ee687957dd48053225da72e8d6d628d210358f4a0464")
     version("9.4.2", sha256="45a76cb400bfcff25cc2d9093d9a5c91545c8367985e6798811c5e9d2a6a6fd4")
@@ -50,10 +53,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.3.0", sha256="4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779")
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Configuration variants
     variant(
@@ -78,7 +77,10 @@ class Dealii(CMakePackage, CudaPackage):
         values=("default", "11", "14", "17"),
     )
     variant("doc", default=False, description="Compile with documentation")
-    variant("examples", default=True, description="Compile and install tutorial programs")
+    variant("examples", default=True, description="Install source files of tutorial programs")
+    variant(
+        "examples_compile", default=True, description="Install binary files of tutorial programs"
+    )
     variant("int64", default=False, description="Compile with 64 bit indices support")
     variant("mpi", default=True, description="Compile with MPI")
     variant("optflags", default=False, description="Compile using additional optimization flags")
@@ -91,6 +93,9 @@ class Dealii(CMakePackage, CudaPackage):
     variant("arpack", default=True, description="Compile with Arpack and PArpack (only with MPI)")
     variant("adol-c", default=True, description="Compile with ADOL-C")
     variant("cgal", default=True, when="@9.4:~cuda", description="Compile with CGAL")
+    variant(
+        "complex", default=False, when="@9.1.0:", description="Compile with complex value support"
+    )
     variant("ginkgo", default=True, description="Compile with Ginkgo")
     variant("gmsh", default=True, description="Compile with GMSH")
     variant("gsl", default=True, description="Compile with GSL")
@@ -100,7 +105,8 @@ class Dealii(CMakePackage, CudaPackage):
     variant("muparser", default=True, description="Compile with muParser")
     variant("nanoflann", default=False, description="Compile with Nanoflann")
     variant("netcdf", default=False, description="Compile with Netcdf (only with MPI)")
-    variant("oce", default=True, description="Compile with OCE")
+    variant("oce", default=False, description="Compile with OCE")
+    variant("opencascade", default=True, description="Compile with OPENCASCADE")
     variant("p4est", default=True, description="Compile with P4est (only with MPI)")
     variant("petsc", default=True, description="Compile with Petsc (only with MPI)")
     variant("scalapack", default=True, description="Compile with ScaLAPACK (only with MPI)")
@@ -118,6 +124,10 @@ class Dealii(CMakePackage, CudaPackage):
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
     variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     # Required dependencies: Light version
     depends_on("blas")
     # Boost 1.58 is blacklisted, require at least 1.59, see
@@ -132,7 +142,7 @@ class Dealii(CMakePackage, CudaPackage):
     # dealii does not build with Boost 1.80.0
     # (https://github.com/spack/spack/pull/32879#issuecomment-1265933265)
     depends_on(
-        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79+thread+system+serialization+iostreams",
+        "boost@1.59.0:1.63,1.65.1,1.67.0:1.79,1.83:+thread+system+serialization+iostreams",
         patches=[
             patch("boost_1.65.1_singleton.patch", level=1, when="@1.65.1"),
             patch("boost_1.68.0.patch", level=1, when="@1.68.0"),
@@ -180,19 +190,25 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("arborx+trilinos", when="@9.3:+arborx+trilinos")
     depends_on("arpack-ng+mpi", when="+arpack+mpi")
     depends_on("assimp", when="@9.0:+assimp")
-    depends_on("cgal", when="@9.4:+cgal")
-    depends_on("cgal@5:", when="@9.5:+cgal")
+    # cgal 6 not yet supported: https://github.com/spack/spack/pull/47285#issuecomment-2455403447
+    depends_on("cgal@:5", when="@9.4:+cgal")
+    depends_on("cgal@5", when="@9.5:+cgal")
     depends_on("doxygen+graphviz", when="+doc")
     depends_on("graphviz", when="+doc")
     depends_on("ginkgo", when="@9.1:+ginkgo")
     depends_on("ginkgo@1.4.0:", when="@9.4:+ginkgo")
-    depends_on("gmsh+tetgen+netgen+oce", when="@9.0:+gmsh", type=("build", "run"))
+    depends_on("gmsh+oce", when="@9.0:+gmsh+oce", type=("build", "run"))
+    depends_on("gmsh+opencascade", when="@9.0:+gmsh+opencascade", type=("build", "run"))
+    depends_on("gmsh", when="@9.0:+gmsh~opencascade~oce", type=("build", "run"))
     depends_on("gsl", when="@8.5.0:+gsl")
     # TODO: next line fixes concretization with petsc
     depends_on("hdf5+mpi+hl+fortran", when="+hdf5+mpi+petsc")
     depends_on("hdf5+mpi+hl", when="+hdf5+mpi~petsc")
     depends_on("kokkos@3.7:", when="@9.5:+kokkos~trilinos")
-    depends_on("kokkos@3.7:+cuda+cuda_lambda+wrapper", when="@9.5:+kokkos~trilinos+cuda")
+    depends_on("kokkos@3.7:+cuda+cuda_lambda+wrapper", when="@9.5:9.5.99+kokkos~trilinos+cuda")
+    depends_on(
+        "kokkos@3.7:+cuda+cuda_lambda+cuda_constexpr+wrapper", when="@9.6:+kokkos~trilinos+cuda"
+    )
     # TODO: concretizer bug. The two lines mimic what comes from PETSc
     # but we should not need it
     depends_on("metis@5:+int64", when="+metis+int64")
@@ -203,6 +219,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("netcdf-c+mpi", when="+netcdf+mpi")
     depends_on("netcdf-cxx", when="+netcdf+mpi")
     depends_on("oce", when="+oce")
+    depends_on("opencascade", when="+opencascade")
     depends_on("p4est", when="+p4est+mpi")
     depends_on("petsc+mpi~int64", when="+petsc+mpi~int64")
     depends_on("petsc+mpi+int64", when="+petsc+mpi+int64")
@@ -214,6 +231,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on("sundials@5:6.7", when="@9.3.4:+sundials")
     depends_on("taskflow@3.4:", when="@9.6:+taskflow")
     depends_on("trilinos gotype=int", when="+trilinos@12.18.1:")
+    depends_on("trilinos+cuda+cuda_constexpr", when="@9.6:+trilinos+cuda")
     # TODO: next line fixes concretization with trilinos and adol-c
     depends_on("trilinos~exodus", when="@9.0:+adol-c+trilinos")
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
@@ -240,7 +258,7 @@ class Dealii(CMakePackage, CudaPackage):
         arch_str = f"+cuda cuda_arch={_arch}"
         trilinos_spec = f"trilinos +wrapper {arch_str}"
         depends_on(trilinos_spec, when=f"@9.5:+trilinos {arch_str}")
-    depends_on("vtk", when="@9.6:+vtk")
+    depends_on("vtk@9:", when="@9.6:+vtk")
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
@@ -318,6 +336,8 @@ class Dealii(CMakePackage, CudaPackage):
         msg="Deal.II 9.6 onwards requires the C++ standard to be set to 17 or later.",
     )
 
+    conflicts("oce", when="+opencascade", msg="Only one among OCE or OPENCASCADE can be selected.")
+
     # Interfaces added in 8.5.0:
     for _package in ["gsl", "python"]:
         conflicts(
@@ -368,12 +388,16 @@ class Dealii(CMakePackage, CudaPackage):
 
     # Check that the combination of variants makes sense
     # 64-bit BLAS:
-    for _package in ["openblas", "intel-mkl", "intel-parallel-studio+mkl"]:
-        conflicts(
-            "^{0}+ilp64".format(_package),
-            when="@:8.5.1",
-            msg="64bit BLAS is only supported from 9.0.0",
-        )
+    conflicts(
+        "^[virtuals=lapack] openblas+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
+    conflicts(
+        "^[virtuals=lapack] intel-oneapi-mkl+ilp64",
+        when="@:8.5.1",
+        msg="64bit BLAS is only supported from 9.0.0",
+    )
 
     # MPI requirements:
     for _package in [
@@ -465,7 +489,7 @@ class Dealii(CMakePackage, CudaPackage):
 
         # Examples / tutorial programs
         options.append(self.define_from_variant("DEAL_II_COMPONENT_EXAMPLES", "examples"))
-        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples"))
+        options.append(self.define_from_variant("DEAL_II_COMPILE_EXAMPLES", "examples_compile"))
 
         # Enforce the specified C++ standard
         if spec.variants["cxxstd"].value != "default":
@@ -485,10 +509,8 @@ class Dealii(CMakePackage, CudaPackage):
         # 64 bit indices
         options.append(self.define_from_variant("DEAL_II_WITH_64BIT_INDICES", "int64"))
 
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             options.append(self.define("LAPACK_WITH_64BIT_BLAS_INDICES", True))
 
@@ -532,7 +554,10 @@ class Dealii(CMakePackage, CudaPackage):
                 )
             # Make sure we use the same compiler that Trilinos uses
             if spec.satisfies("+trilinos"):
-                options.extend([self.define("CMAKE_CXX_COMPILER", spec["trilinos"].kokkos_cxx)])
+                options.extend([self.define("CMAKE_CXX_COMPILER", self["trilinos"].kokkos_cxx)])
+
+        # Complex support
+        options.append(self.define_from_variant("DEAL_II_WITH_COMPLEX_VALUES", "complex"))
 
         # Python bindings
         if spec.satisfies("@8.5.0:"):
@@ -547,20 +572,9 @@ class Dealii(CMakePackage, CudaPackage):
             options.append(self.define_from_variant("DEAL_II_WITH_TBB", "threads"))
         else:
             options.append(self.define_from_variant("DEAL_II_WITH_THREADS", "threads"))
+
         if spec.satisfies("+threads"):
-            if spec.satisfies("^intel-parallel-studio+tbb"):
-                # deal.II/cmake will have hard time picking up TBB from Intel.
-                tbb_ver = ".".join(("%s" % spec["tbb"].version).split(".")[1:])
-                options.extend(
-                    [
-                        self.define("TBB_FOUND", True),
-                        self.define("TBB_VERSION", tbb_ver),
-                        self.define("TBB_INCLUDE_DIRS", ";".join(spec["tbb"].headers.directories)),
-                        self.define("TBB_LIBRARIES", spec["tbb"].libs.joined(";")),
-                    ]
-                )
-            else:
-                options.append(self.define("TBB_DIR", spec["tbb"].prefix))
+            options.append(self.define("TBB_DIR", spec["tbb"].prefix))
 
         # Optional dependencies for which library names are the same as CMake
         # variables:
@@ -642,10 +656,15 @@ class Dealii(CMakePackage, CudaPackage):
                 ]
             )
 
-        # Open Cascade
-        options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "oce"))
-        if spec.satisfies("+oce"):
+        # Open Cascade -- OCE
+        if "+oce" in spec:
+            options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "oce"))
             options.append(self.define("OPENCASCADE_DIR", spec["oce"].prefix))
+
+        # Open Cascade -- OpenCascade
+        if "+opencascade" in spec:
+            options.append(self.define_from_variant("DEAL_II_WITH_OPENCASCADE", "opencascade"))
+            options.append(self.define("OPENCASCADE_DIR", spec["opencascade"].prefix))
 
         # As a final step, collect CXX flags that may have been
         # added anywhere above:
@@ -657,7 +676,7 @@ class Dealii(CMakePackage, CudaPackage):
         # Add flags for machine vectorization, used when tutorials
         # and user code is built.
         # See https://github.com/dealii/dealii/issues/9164
-        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS"]))
+        options.append(self.define("DEAL_II_CXX_FLAGS", os.environ["SPACK_TARGET_ARGS_CXX"]))
 
         # platform introspection - needs to be disabled in some environments
         if spec.satisfies("+platform-introspection"):
@@ -667,10 +686,10 @@ class Dealii(CMakePackage, CudaPackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DEAL_II_DIR", self.prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+cuda") and spec.satisfies("+mpi"):
             env.set("CUDAHOSTCXX", spec["mpi"].mpicxx)

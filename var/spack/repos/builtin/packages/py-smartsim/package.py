@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,8 +67,8 @@ class PySmartsim(PythonPackage):
     # dependencies fetched though Spack
     patch("ss-0-5-0-remove-cli-build-fns.patch")
 
-    def setup_build_environment(self, env):
-        env.set("BUILD_JOBS", make_jobs)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("BUILD_JOBS", str(make_jobs))
 
     @run_after("install")
     def symlink_bin_deps(self):

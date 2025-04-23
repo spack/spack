@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -41,7 +40,10 @@ class Fpm(Package):
     depends_on("curl", type="build")
     depends_on("git@1.8.5:", type="build")
 
-    def setup_build_environment(self, env):
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.4.0"):
             env.set("FPM_C_COMPILER", self.compiler.cc)
 

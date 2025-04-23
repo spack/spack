@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -43,7 +42,7 @@ class Openrasmol(MakefilePackage):
                 f.write("#define CcCmd {0}\n".format(spack_cc))
                 f.write("#endif\n")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("XFORMSLIB_DIR", self.spec["xforms"].prefix)
         env.set("CBFLIB_DIR", self.spec["cbflib"].prefix)
         env.set("CQRLIB_DIR", self.spec["cqrlib"].prefix)

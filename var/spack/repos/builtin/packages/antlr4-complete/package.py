@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -57,7 +56,7 @@ class Antlr4Complete(Package):
         rename(glob.glob("antlr-*-complete.jar")[0], "antlr-complete.jar")
         install("antlr-complete.jar", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ANTLR4_JAR_LOCATION", join_path(self.prefix.bin, "antlr-complete.jar"))
         env.set("ANTLR_JAR_LOCATION", join_path(self.prefix.bin, "antlr-complete.jar"))
         env.set("ANTLR_EXECUTABLE", join_path(self.prefix.bin, "antlr-complete.jar"))

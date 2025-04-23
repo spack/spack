@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,10 +21,6 @@ class Wps(Package):
     version("4.3", sha256="1913cb24de549f029d65635feea27f3304a8f42ec025954a0887651fc89d1e9e")
     version("4.2", sha256="3e175d033355d3e7638be75bc7c0bc0de6da299ebd175a9bbc1b7a121acd0168")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Serial variant recommended in WRF/WPS docs
     variant(
         "build_type",
@@ -42,6 +37,10 @@ class Wps(Package):
     patch("patches/4.3/arch.configure.defaults.patch", when="@=4.3")
     patch("patches/4.3.1/arch.configure.defaults.patch", when="@4.3.1")
     patch("patches/4.4/configure.patch", when="@4.4:")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # According to:
     # http://www2.mmm.ucar.edu/wrf/users/docs/user_guide_v4/v4.0/users_guide_chap2.html#_Required_Compilers_and_1
@@ -62,7 +61,7 @@ class Wps(Package):
 
     patch("for_aarch64.patch", when="target=aarch64:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("WRF_DIR", self.spec["wrf"].prefix)
         env.set("NETCDF", self.spec["netcdf-c"].prefix)
         # This gets used via the applied patch files
@@ -75,7 +74,7 @@ class Wps(Package):
             env.set("FCFLAGS", args)
             env.set("FFLAGS", args)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("PATH", self.prefix)
         env.append_path("PATH", self.prefix.util)
 
@@ -95,7 +94,6 @@ class Wps(Package):
                 "dmpar": "19",
                 "dmpar_NO_GRIB2": "20",
             },
-            "pgi": {"serial": "5", "serial_NO_GRIB2": "6", "dmpar": "7", "dmpar_NO_GRIB2": "8"},
         }
 
         try:

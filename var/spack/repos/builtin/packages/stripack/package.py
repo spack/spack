@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,8 @@ class Stripack(MakefilePackage):
         url="https://people.sc.fsu.edu/~jburkardt/f_src/stripack/stripack.f90",
     )
 
+    depends_on("fortran", type="build")
+
     @run_before("build")
     def run_mkmake(self):
         config = [
@@ -50,7 +51,7 @@ class Stripack(MakefilePackage):
             fh.write("\n".join(config))
         mkdirp(join_path(self.build_directory, "build"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # This is smartly used by VisIt
         env.set(
             "VISIT_FFP_STRIPACK_PATH", join_path(self.spec.prefix.lib, "libstripack." + dso_suffix)
@@ -69,7 +70,7 @@ class Stripack(MakefilePackage):
             fflags += ["-qrealsize=8"]
         elif satisfies("%fj"):
             fflags += ["-CcdRR8"]
-        elif satisfies("%pgi") or satisfies("%nvhpc"):
+        elif satisfies("%nvhpc"):
             fflags += ["-r8"]
         fflags += [self.compiler.fc_pic_flag]
         make("all", "FFLAGS={0}".format(" ".join(fflags)))

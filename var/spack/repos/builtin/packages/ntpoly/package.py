@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,10 +23,10 @@ class Ntpoly(CMakePackage):
     version("2.7.2", sha256="968571a42e93827617c40c4ceefd29be52447c176309f801bb5a454527fe5f49")
     version("2.3.1", sha256="af8c7690321607fbdee9671b9cb3acbed945148014e0541435858cf82bfd887e")
 
+    variant("shared", default=True, description="Build shared libraries.")
+
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=True, description="Build shared libraries.")
 
     depends_on("cmake", type="build")
     depends_on("blas", type="link")

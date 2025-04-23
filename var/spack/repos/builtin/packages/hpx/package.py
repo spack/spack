@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,8 +39,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.2.1", sha256="8cba9b48e919035176d3b7bbfc2c110df6f07803256626f1dad8d9dde16ab77a")
     version("1.2.0", sha256="20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170")
     version("1.1.0", sha256="1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9")
-
-    depends_on("cxx", type="build")
 
     generator("ninja")
 
@@ -97,6 +94,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant("async_cuda", default=False, description="Enable CUDA Futures.")
 
     # Build dependencies
+    depends_on("cxx", type="build")
+
     depends_on("python", type=("build", "test", "run"))
     depends_on("pkgconfig", type="build")
     depends_on("git", type="build")
@@ -170,6 +169,10 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Patches and one-off conflicts
 
+    # Asio 1.34.0 removed io_context::work, used by HPX:
+    # https://github.com/chriskohlhoff/asio/commit/a70f2df321ff40c1809773c2c09986745abf8d20.
+    conflicts("^asio@1.34:", when="@:1.10")
+
     # Certain Asio headers don't compile with nvcc from 1.17.0 onwards with
     # C++17. Starting with CUDA 11.3 they compile again.
     conflicts("^asio@1.17.0:", when="+cuda cxxstd=17 ^cuda@:11.2")
@@ -241,8 +244,8 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("HPX_WITH_ASYNC_CUDA", "async_cuda"),
             self.define("HPX_WITH_TESTS", self.run_tests),
             self.define("HPX_WITH_NETWORKING", "networking=none" not in spec),
-            self.define("HPX_WITH_PARCELPORT_TCP", "networking=tcp" in spec),
-            self.define("HPX_WITH_PARCELPORT_MPI", "networking=mpi" in spec),
+            self.define("HPX_WITH_PARCELPORT_TCP", spec.satisfies("networking=tcp")),
+            self.define("HPX_WITH_PARCELPORT_MPI", spec.satisfies("networking=mpi")),
             self.define(
                 "HPX_WITH_MAX_CPU_COUNT",
                 format_max_cpu_count(spec.variants["max_cpu_count"].value),
@@ -260,7 +263,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             args += [self.define("HPX_WITH_UNITY_BUILD", True)]
 
         # HIP support requires compiling with hipcc
-        if "+rocm" in self.spec:
+        if self.spec.satisfies("+rocm"):
             args += [self.define("CMAKE_CXX_COMPILER", self.spec["hip"].hipcc)]
             if self.spec.satisfies("^cmake@3.21.0:3.21.2"):
                 args += [self.define("__skip_rocmclang", True)]
@@ -268,13 +271,13 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         # Instrumentation
         args += self.instrumentation_args()
 
-        if "instrumentation=thread_debug" in spec:
+        if spec.satisfies("instrumentation=thread_debug"):
             args += [
                 self.define("HPX_WITH_THREAD_DEBUG_INFO", True),
                 self.define("HPX_WITH_LOGGING", True),
             ]
 
-        if "instrumentation=apex" in spec:
+        if spec.satisfies("instrumentation=apex"):
             args += [
                 self.define("APEX_WITH_OTF2", True),
                 self.define("OTF2_ROOT", spec["otf2"].prefix),

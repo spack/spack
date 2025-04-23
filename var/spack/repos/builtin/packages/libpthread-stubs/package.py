@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,3 +25,5 @@ class LibpthreadStubs(AutotoolsPackage, XorgPackage):
         sha256="3031f466cf0b06de6b3ccbf2019d15c4fcf75229b7d226a711bc1885b3a82cde",
         url="https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz",
     )
+
+    depends_on("c", type="build")

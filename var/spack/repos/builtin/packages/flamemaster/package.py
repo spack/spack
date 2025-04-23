@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -128,6 +127,9 @@ class Flamemaster(CMakePackage):
     variant("eglib", default=False, description="Build with EG lib")
     variant("sundials", default=True, description="with sundials")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("cmake@3.12", type="build")
@@ -136,7 +138,7 @@ class Flamemaster(CMakePackage):
 
     root_cmakelists_dir = "Repository"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LAPACK_HOME", self.spec["lapack"].prefix)
         env.set("BLIS_HOME", self.spec["blas"].prefix)
 
@@ -169,11 +171,10 @@ class Flamemaster(CMakePackage):
                 ]
             )
             if self.spec.satisfies("%icc"):
-                cxxflags = "-Ofast -ffast-math -DNDEBUG -march=native\
-                        -mtune=native -funroll-all-loops\
-                        -qopt-multi-version-aggressive -ipo -parallel"
-                cflags = "-Ofast -ffast-math -DNDEBUG -march=native\
-                        -mtune=native -funroll-all-loops -ipo -parallel"
+                cxxflags = "-Ofast -ffast-math -DNDEBUG -march=native -mtune=native "
+                cxxflags += "-funroll-all-loops -qopt-multi-version-aggressive -ipo -parallel"
+                cflags = "-Ofast -ffast-math -DNDEBUG -march=native -mtune=native "
+                cflags += "-funroll-all-loops -ipo -parallel"
                 fcflags = "-Ofast -march=native -mtune=native -ipo -parallel"
                 args.extend(
                     [

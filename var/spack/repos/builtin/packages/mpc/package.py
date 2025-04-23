@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -11,7 +10,7 @@ class Mpc(AutotoolsPackage, GNUMirrorPackage):
     with arbitrarily high precision and correct rounding of the
     result."""
 
-    homepage = "http://www.multiprecision.org"
+    homepage = "https://www.multiprecision.org"
     gnu_mirror_path = "mpc/mpc-1.1.0.tar.gz"
     list_url = "http://www.multiprecision.org/mpc/download.html"
 
@@ -23,8 +22,6 @@ class Mpc(AutotoolsPackage, GNUMirrorPackage):
     version("1.0.3", sha256="617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3")
     version("1.0.2", sha256="b561f54d8a479cee3bc891ee52735f18ff86712ba30f036f8b8537bae380c488")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "libs",
         default="shared,static",
@@ -32,6 +29,8 @@ class Mpc(AutotoolsPackage, GNUMirrorPackage):
         multi=True,
         description="Build shared libs, static libs or both",
     )
+
+    depends_on("c", type="build")  # generated
 
     # Could also be built against mpir instead
     depends_on("gmp@4.3.2:")

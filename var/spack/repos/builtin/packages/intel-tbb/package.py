@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,6 +31,8 @@ class IntelTbb(CMakePackage, MakefilePackage):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("2022.0.0", sha256="e8e89c9c345415b17b30a2db3095ba9d47647611662073f7fbf54ad48b7f3c2a")
+    version("2021.13.0", sha256="3ad5dd08954b39d113dc5b3f8a8dc6dc1fd5250032b7c491eb07aed5c94133e1")
     version("2021.12.0", sha256="c7bb7aa69c254d91b8f0041a71c5bcc3936acb64408a1719aec0b2b7639dd84f")
     version("2021.11.0", sha256="782ce0cab62df9ea125cdea253a50534862b563f1d85d4cda7ad4e77550ac363")
     version("2021.10.0", sha256="487023a955e5a3cc6d3a0d5f89179f9b6c0ae7222613a7185b0227ba0c83700b")
@@ -82,9 +83,6 @@ class IntelTbb(CMakePackage, MakefilePackage):
     version("4.4.1", sha256="05737bf6dd220b31aad63d77ca59c742271f81b4cc6643aa6f93d37450ae32b5")
     version("4.4", sha256="93c74b6054c69c86fa49d0fce7c50061fc907cb198a7237b8dd058298fd40c0e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system(
         conditional("makefile", when="@:2020.3"),
         conditional("cmake", when="@2021:"),
@@ -119,6 +117,9 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.
@@ -187,14 +188,14 @@ class IntelTbb(CMakePackage, MakefilePackage):
 
     @property
     def libs(self):
-        shared = True if "+shared" in self.spec else False
+        shared = True if self.spec.satisfies("+shared") else False
         return find_libraries("libtbb*", root=self.prefix, shared=shared, recursive=True)
 
 
 class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("OS", platform.system())
 
 
@@ -254,9 +255,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
         if (
-            spec.satisfies("%gcc@4.8.0: os=rhel6")
-            or spec.satisfies("%gcc@4.8.0: os=centos6")
-            or spec.satisfies("%gcc@4.8.0: os=scientific6")
+            spec.satisfies("os=rhel6 %gcc@4.8.0:")
+            or spec.satisfies("os=centos6 %gcc@4.8.0:")
+            or spec.satisfies("os=scientific6 %gcc@4.8.0:")
         ):
             filter_file(r"RTM_KEY.*=.*rtm.*", "RTM_KEY =", join_path("build", "linux.gcc.inc"))
 

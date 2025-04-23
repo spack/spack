@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,6 +29,8 @@ class Mumax(MakefilePackage, CudaPackage):
 
     variant("cuda", default=True, description="Use CUDA; must be true")
     variant("gnuplot", default=False, description="Use gnuplot for graphs")
+
+    depends_on("c", type="build")
 
     depends_on("cuda")
     depends_on("go", type="build")
@@ -76,7 +77,7 @@ class Mumax(MakefilePackage, CudaPackage):
         filter_file(r"(^\(cd test)", r"#\1", "make.bash")
         filter_file(r"(for cc in ).*(; do)", r"\1{0}\2".format(self.cuda_arch), "cuda/make.bash")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("GOPATH", self.gopath)
         env.set("CUDA_CC", self.cuda_arch)
         env.set("NVCC_CCBIN", spack_cc)

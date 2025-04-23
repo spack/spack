@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,6 +16,13 @@ class Vecmem(CMakePackage, CudaPackage):
 
     license("MPL-2.0-no-copyleft-exception")
 
+    version("1.14.0", sha256="3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783")
+    version("1.13.0", sha256="fc21cea04140e1210c83a32579b0a7194601889b6c895404214ac55ce547342b")
+    version("1.12.0", sha256="59a5ef061fc9949c3159cb920a717dee7aa1e9a98b3672495200071d3d4b61cf")
+    version("1.11.0", sha256="8f4ef9b50da45ea245291e2a4fef86025245150df4a4654ecb708a20adec5c42")
+    version("1.10.0", sha256="1fbdc599a65ad7b2cd1176844c7578da38911bc747fbe51a71e00d20e6105330")
+    version("1.9.0", sha256="c1ddc43ff0d742306cbee71afd80efd348b6b0b1ba9e4210ca7f8b607f03bd70")
+    version("1.8.0", sha256="d04f1bfcd08837f85c794a69da9f248e163985214a302c22381037feb5b3a7a9")
     version("1.7.0", sha256="ff4bf8ea86a5edcb4a1e3d8dd0c42c73c60e998c6fb6512a40182c1f4620a73d")
     version("1.6.0", sha256="797b016ac0b79bb39abad059ffa9f4817e519218429c9ab4c115f989616bd5d4")
     version("1.5.0", sha256="5d7a2d2dd8eb961af12a1ed9e4e427b89881e843064ffa96ad0cf0934ba9b7ae")
@@ -53,20 +59,25 @@ class Vecmem(CMakePackage, CudaPackage):
     version("0.2.0", sha256="33aea135989684e325cb097e455ff0f9d1a9e85ff32f671e3b3ed6cc036176ac")
     version("0.1.0", sha256="19e24e3262aa113cd4242e7b94e2de34a4b362e78553730a358f64351c6a0a01")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("hip", default=False, description="Build the vecmem::hip library")
     variant("sycl", default=False, description="Build the vecmem::sycl library")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
     depends_on("sycl", when="+sycl")
 
+    # NOTE: this package uses a non-standard "SYCLCXX" environment variable which we can
+    # set easily only by requiring the OneAPI compiler, as this is automatically capable
+    # of compiling SYCL code.
+    requires("%oneapi", when="+sycl")
+
     # FIXME: due to #29447, googletest is not available to cmake when building with --test,
     # and we can choose between always depending on googletest, or using FetchContent
     # depends_on("googletest", type="test")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+sycl"):
             env.set("SYCLCXX", self.compiler.cxx)
             if self.spec.satisfies("%oneapi"):

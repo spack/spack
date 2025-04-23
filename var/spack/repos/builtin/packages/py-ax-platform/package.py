@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,5 +34,5 @@ class PyAxPlatform(PythonPackage):
     depends_on("py-typeguard@2.13.3", type=("build", "run"))
     depends_on("py-plotly@5.12.0:", type=("build", "run"))
 
-    def setup_build_environment(self, env):
-        env.set("ALLOW_BOTORCH_LATEST", True)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("ALLOW_BOTORCH_LATEST", "True")

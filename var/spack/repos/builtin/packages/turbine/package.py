@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -18,12 +17,12 @@ class Turbine(AutotoolsPackage):
     version("1.3.0", sha256="9709e5dada91a7dce958a7967d6ff2bd39ccc9e7da62d05a875324b5089da393")
     version("1.2.3", sha256="a3156c7e0b39e166da3de8892f55fa5d535b0c99c87a9add067c801098fe51ba")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("python", default=False, description="Enable calling python")
     variant("r", default=False, description="Enable calling R")
     variant("hdf5", default=False, description="Enable HDF5 support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("adlbx")
     depends_on("adlbx@master", when="@master")
@@ -41,7 +40,7 @@ class Turbine(AutotoolsPackage):
     depends_on("libtool", type="build", when="@master")
     depends_on("m4", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         env.set("CC", spec["mpi"].mpicc)
@@ -64,7 +63,7 @@ class Turbine(AutotoolsPackage):
         ]
 
         if self.spec.satisfies("^intel-oneapi-mpi"):
-            args.append("--with-mpi=" + self.spec["intel-oneapi-mpi"].package.component_prefix)
+            args.append("--with-mpi=" + self["intel-oneapi-mpi"].component_prefix)
         else:
             args.append("--with-mpi=" + self.spec["mpi"].prefix)
 

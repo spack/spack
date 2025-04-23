@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,10 +34,6 @@ class Itk(CMakePackage):
     version("5.1.2", sha256="f1e5a78e11125348f68f655c6b89b617c3a8b2c09f710081f621054811a70c98")
     version("5.1.1", sha256="39e2a63840054361b728878a35b21bbe38374682ffb4b5c4f8f8f7514dedb58e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("review", default=False, description="enable modules under review")
     variant("rtk", default=False, description="build the RTK (Reconstruction Toolkit module")
     variant("minc", default=False, description="enable support for MINC files")
@@ -57,13 +52,16 @@ class Itk(CMakePackage):
     #     when='+rtk',
     # )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("git", type="build")
     depends_on("perl", type="build")
 
     depends_on("eigen")
     depends_on("expat")
     depends_on("fftw-api")
-    depends_on("googletest")
     depends_on("hdf5+cxx+hl")
     depends_on("jpeg")
     depends_on("libpng")
@@ -77,10 +75,13 @@ class Itk(CMakePackage):
     )
 
     def cmake_args(self):
-        use_mkl = self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES
+        use_mkl = self.spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl")
         args = [
+            self.define("BUILD_TESTING", False),
             self.define("BUILD_SHARED_LIBS", True),
             self.define("ITK_USE_SYSTEM_LIBRARIES", True),
+            # https://github.com/InsightSoftwareConsortium/ITK/issues/303
+            self.define("ITK_USE_SYSTEM_GOOGLETEST", False),
             self.define("ITK_USE_MKL", use_mkl),
             self.define_from_variant("Module_ITKReview", "review"),
             self.define_from_variant("Module_RTK", "rtk"),

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -83,8 +82,6 @@ class VotcaTools(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     # https://github.com/votca/tools/pull/229, fix mkl in exported target
     patch(
         "https://github.com/votca/tools/pull/229.patch?full_index=1",
@@ -100,6 +97,8 @@ class VotcaTools(CMakePackage):
 
     variant("mkl", default=False, description="Build with MKL support")
     conflicts("+mkl", when="@1.4:1.5")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@2.8:", type="build")
     depends_on("expat")

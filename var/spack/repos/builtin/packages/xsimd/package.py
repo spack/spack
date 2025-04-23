@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,11 @@ class Xsimd(CMakePackage):
     license("BSD-3-Clause")
 
     version("develop", branch="master")
+    version("13.1.0", sha256="88c9dc6da677feadb40fe09f467659ba0a98e9987f7491d51919ee13d897efa4")
+    version("12.1.1", sha256="73f94a051278ef3da4533b691d31244d12074d5d71107473a9fd8d7be15f0110")
+    version("11.2.0", sha256="509bbfe12e78ee1a0e81711019e7c7a372dabcff566dbf15b95cc94339443242")
+    version("10.0.0", sha256="73f818368b3a4dad92fab1b2933d93694241bd2365a6181747b2df1768f6afdd")
+    version("9.0.1", sha256="b1bb5f92167fd3a4f25749db0be7e61ed37e0a5d943490f3accdcd2cd2918cc0")
     version("8.1.0", sha256="d52551360d37709675237d2a0418e28f70995b5b7cdad7c674626bcfbbf48328")
     version("8.0.5", sha256="0e1b5d973b63009f06a3885931a37452580dbc8d7ca8ad40d4b8c80d2a0f84d7")
     version("8.0.4", sha256="5197529e7ca715ddfcae7c5c4097879c86dae6ef85f3f67c402e2e6c5e803c41")
@@ -33,6 +37,7 @@ class Xsimd(CMakePackage):
     version("4.0.0", sha256="67b818601c15ef15ea4d611a8cd7382588c340ebd9146c799a0210d212540455")
     version("3.1.0", sha256="d56288826f6b82fd9583f83ace6aa2306ba2ae82cec003de1d04ce17fbb1e91f")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("googletest", type="test")
@@ -41,7 +46,6 @@ class Xsimd(CMakePackage):
     conflicts("%gcc@:4.8")
     conflicts("%clang@:3.6")
     # untested: conflicts('%intel@:15')
-    # untested: conflicts('%pgi@:14')
 
     def cmake_args(self):
         args = [self.define("BUILD_TESTS", self.run_tests)]

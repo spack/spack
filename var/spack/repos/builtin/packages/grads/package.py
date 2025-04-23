@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,8 +23,6 @@ class Grads(AutotoolsPackage):
     version("2.2.2", sha256="1b5a600d4d407ffcf2fbbbba42037a6e1ebfdb8246ba56b93c628e3c472b4ded")
     version("2.2.1", sha256="695e2066d7d131720d598bac0beb61ac3ae5578240a5437401dc0ffbbe516206")
 
-    depends_on("c", type="build")  # generated
-
     variant("geotiff", default=True, description="Enable GeoTIFF support")
     variant("shapefile", default=True, description="Enable Shapefile support")
     variant("grib2", default=True, description="Enable GRIB2 support")
@@ -41,7 +38,9 @@ class Grads(AutotoolsPackage):
     variant("hdf4", default=True, when="@2.2.2:", description="Enable HDF4 support")
     variant("netcdf", default=True, when="@2.2.2:", description="Enable NetCDF support")
 
-    depends_on("hdf5@:1.10", when="+hdf5")
+    depends_on("c", type="build")  # generated
+
+    depends_on("hdf5", when="+hdf5")
     depends_on("hdf", when="+hdf4")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("g2c", when="+grib2")
@@ -64,17 +63,27 @@ class Grads(AutotoolsPackage):
             url = "ftp://cola.gmu.edu/grads/{}/grads-{}-src.tar.gz"
             return url.format(version.up_to(2), version)
 
-    # Name of grib2 C library has changed in recent versions
     def patch(self):
         if self.spec.satisfies("@:2.2.2"):
             filter_file("png15", "png", "configure")
 
+        # Name of grib2 C library has changed in recent versions
         if self.spec.satisfies("+grib2"):
             filter_file("grib2c", "g2c", "configure")
             if self.spec.satisfies("^g2c@1.8.0:"):
                 filter_file("G2_VERSION", "G2C_VERSION", "src/gacfg.c")
 
-    def setup_build_environment(self, env):
+    def flag_handler(self, name, flags):
+        spec = self.spec
+
+        if name == "cflags":
+            # Can use newer versions of HDF5, but 1.10 is the last API GrADS supports
+            if "hdf5" in spec and spec["hdf5"].satisfies("@1.12:"):
+                flags.append("-DH5_USE_110_API")
+
+        return (flags, None, None)
+
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SUPPLIBS", "/")
 
         # Recent versions configure scripts break without PKG_CONFIG set
@@ -83,7 +92,7 @@ class Grads(AutotoolsPackage):
         if "+hdf4" in self.spec and "~shared" in self.spec["hdf"]:
             env.set("LIBS", self.spec["hdf:transitive"].libs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GADDIR", self.prefix.data)
 
     @run_after("install")

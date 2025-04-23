@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,11 +27,11 @@ class IntelLlvm(CMakePackage):
     # conflicts('target != x86_64',
     #            msg='Intel LLVM compiler currently only works for x86')
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
 
-    def setup_run_environment(self, env):
-        if "+clang" in self.spec:
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+        if self.spec.satisfies("+clang"):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
 

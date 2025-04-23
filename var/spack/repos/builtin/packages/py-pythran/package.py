@@ -1,11 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-
-import llnl.util.filesystem as fs
 
 from spack.package import *
 
@@ -89,28 +86,32 @@ class PyPythran(PythonPackage):
         # Pythran is mainly meant to be used as a compiler, so return no headers to
         # avoid issue https://github.com/spack/spack/issues/33237 This can be refined
         # later to allow using pythran also as a library.
-        return fs.HeaderList([])
+        return HeaderList([])
 
     def patch(self):
         # Compiler is used at run-time to determine name of OpenMP library to search for
         cfg_file = join_path("pythran", "pythran-{0}.cfg".format(sys.platform))
         filter_file("CXX=", "CXX=" + self.compiler.cxx, cfg_file)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed for `spack install --test=root py-pythran`
         if self.spec.satisfies("%apple-clang"):
             env.prepend_path(
                 "DYLD_FALLBACK_LIBRARY_PATH", self.spec["llvm-openmp"].libs.directories[0]
             )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Needed for `spack test run py-pythran`
         self.setup_build_environment(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Needed for `spack install py-scipy`
         self.setup_build_environment(env)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Probably needed for something?
         self.setup_build_environment(env)

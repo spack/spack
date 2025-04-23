@@ -1,12 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
 
 
-class Glab(Package):
+class Glab(GoPackage):
     """GitLab's official command line tool."""
 
     homepage = "https://gitlab.com/gitlab-org/cli"
@@ -16,6 +15,12 @@ class Glab(Package):
 
     license("MIT")
 
+    version("1.55.0", sha256="21f58698b92035461e8e8ba9040429f4b5a0f6d528d8333834ef522a973384c8")
+    version("1.54.0", sha256="99f5dd785041ad26c8463ae8630e98a657aa542a2bb02333d50243dd5cfdf9cb")
+    version("1.53.0", sha256="2930aa5dd76030cc6edcc33483bb49dd6a328eb531d0685733ca7be7b906e915")
+    version("1.52.0", sha256="585495e53d3994172fb927218627b7470678bc766320cb52f4b4204238677dde")
+    version("1.51.0", sha256="6a95d827004fee258aacb49a427875e3b505b063cc578933d965cd56481f5a19")
+    version("1.48.0", sha256="45410de23a7bad37feeae18f47f3c0113d81133ad9bb97c8f0b8afc5409272c7")
     version("1.46.1", sha256="935f732ddacc6e54fc83d06351fc25454ac8a58c465c3efa43e066ea226257c2")
     version("1.36.0", sha256="8d6c759ebfe9c6942fcdb7055a4a5c7209a3b22beb25947f906c9aef3bc067e8")
     version("1.35.0", sha256="7ed31c7a9b425fc15922f83c5dd8634a2758262a4f25f92583378655fcad6303")
@@ -31,25 +36,50 @@ class Glab(Package):
     version("1.21.1", sha256="8bb35c5cf6b011ff14d1eaa9ab70ec052d296978792984250e9063b006ee4d50")
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
 
-    depends_on("go@1.13:", type="build")
-    depends_on("go@1.17:", type="build", when="@1.22:")
-    depends_on("go@1.18:", type="build", when="@1.23:")
-    depends_on("go@1.19:", type="build", when="@1.35:")
-    depends_on("go@1.21:", type="build", when="@1.37:")
-    depends_on("go@1.22.3:", type="build", when="@1.41:")
-    depends_on("go@1.22.4:", type="build", when="@1.42:")
-    depends_on("go@1.22.5:", type="build", when="@1.44:")
-    depends_on("go@1.23:", type="build", when="@1.46:")
+    with default_args(type="build"):
+        depends_on("go@1.24.1:", when="@1.54:")
+        depends_on("go@1.23.4:", when="@1.52:")
+        depends_on("go@1.23.2:", when="@1.48:")
+        depends_on("go@1.23.0:", when="@1.46:")
+        depends_on("go@1.22.5:", when="@1.44:")
+        depends_on("go@1.22.4:", when="@1.42:")
+        depends_on("go@1.22.3:", when="@1.41:")
+        depends_on("go@1.21.0:", when="@1.37:")
+        depends_on("go@1.19.0:", when="@1.35:")
+        depends_on("go@1.18.0:", when="@1.23:")
+        depends_on("go@1.17.0:", when="@1.22:")
+        depends_on("go@1.13.0:")
 
-    phases = ["build", "install"]
+    build_directory = "cmd/glab"
 
-    def setup_build_environment(self, env):
-        # Point GOPATH at the top of the staging dir for the build step.
-        env.prepend_path("GOPATH", self.stage.path)
+    # Required to correctly set the version
+    # https://gitlab.com/gitlab-org/cli/-/blob/v1.55.0/Makefile?ref_type=tags#L44
+    @property
+    def build_args(self):
+        extra_ldflags = [f"-X 'main.version=v{self.version}'"]
 
-    def build(self, spec, prefix):
-        make()
+        args = super().build_args
 
-    def install(self, spec, prefix):
-        mkdirp(prefix.bin)
-        install("bin/glab", prefix.bin)
+        if "-ldflags" in args:
+            ldflags_index = args.index("-ldflags") + 1
+            args[ldflags_index] = args[ldflags_index] + " " + " ".join(extra_ldflags)
+        else:
+            args.extend(["-ldflags", " ".join(extra_ldflags)])
+
+        return args
+
+    @run_after("install")
+    def install_completions(self):
+        glab = Executable(self.prefix.bin.glab)
+
+        mkdirp(bash_completion_path(self.prefix))
+        with open(bash_completion_path(self.prefix) / "glab", "w") as file:
+            glab("completion", "-s", "bash", output=file)
+
+        mkdirp(fish_completion_path(self.prefix))
+        with open(fish_completion_path(self.prefix) / "glab.fish", "w") as file:
+            glab("completion", "-s", "fish", output=file)
+
+        mkdirp(zsh_completion_path(self.prefix))
+        with open(zsh_completion_path(self.prefix) / "_glab", "w") as file:
+            glab("completion", "-s", "zsh", output=file)

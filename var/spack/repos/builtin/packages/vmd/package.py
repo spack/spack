@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -36,8 +35,9 @@ class Vmd(Package):
     depends_on("libxinerama", type=("run", "link"))
     depends_on("gl@3:", type=("run", "link"))
     depends_on("patchelf", type="build")
+    depends_on("gmake", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("VMDINSTALLBINDIR", self.prefix.bin)
         env.set("VMDINSTALLLIBRARYDIR", self.prefix.lib64)
 
@@ -58,5 +58,5 @@ class Vmd(Package):
         )
         patchelf("--set-rpath", rpath, join_path(self.prefix, "lib64", "vmd_LINUXAMD64"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PLUGINDIR", self.spec.prefix.lib64.plugins)

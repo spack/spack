@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,10 +17,10 @@ class Accfft(CMakePackage, CudaPackage):
 
     version("develop", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("pnetcdf", default=True, description="Add support for parallel NetCDF")
     variant("shared", default=True, description="Enables the build of shared libraries")
+
+    depends_on("cxx", type="build")  # generated
 
     # See: http://accfft.org/articles/install/#installing-dependencies
     depends_on("fftw precision=float,double ~mpi+openmp")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,15 +26,15 @@ class Icedtea(AutotoolsPackage):
     version("3.5.0", sha256="2c92e18fa70edaf73517fcf91bc2a7cc2ec2aa8ffdf22bb974fa6f9bc3065f30")
     version("3.4.0", sha256="2b606bbbf4ca5bcf2c8e811ea9060da30744860f3d63e1b3149fb5550a90b92b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("X", default=False, description="Build with GUI support.")
     variant(
         "shenandoah",
         default=False,
         description="Build with the shenandoah gc. Only for version 3+",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("gmake", type="build")
@@ -158,9 +157,9 @@ class Icedtea(AutotoolsPackage):
         os.environ["POTENTIAL_CC"] = os.environ["CC"]
         os.environ["WGET"] = self.spec["wget"].command.path
         args = []
-        if "~X" in self.spec:
+        if self.spec.satisfies("~X"):
             args.append("--enable-headless")
-        if "+shenandoah" in self.spec:
+        if self.spec.satisfies("+shenandoah"):
             args.append("--with-hotspot-build=shenandoah")
             args.append("--with-hotspot-src-zip=" + self.stage[9].archive_file)
             args.append("--with-hotspot-checksum=no")
@@ -190,12 +189,14 @@ class Icedtea(AutotoolsPackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set JAVA_HOME."""
 
         env.set("JAVA_HOME", self.home)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
@@ -211,7 +212,9 @@ class Icedtea(AutotoolsPackage):
         classpath = os.pathsep.join(class_paths)
         env.set("CLASSPATH", classpath)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any

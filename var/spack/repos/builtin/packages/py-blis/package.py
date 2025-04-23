@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,6 @@ class PyBlis(PythonPackage):
     depends_on("py-cython@0.25:", when="@0.7.9:", type="build")
     depends_on("py-numpy@1.15:", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLIS_COMPILER", spack_cc)
         env.set("BLIS_ARCH", "generic")

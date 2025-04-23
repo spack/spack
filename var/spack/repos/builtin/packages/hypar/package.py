@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,7 +16,7 @@ class Hypar(AutotoolsPackage):
     forms of the hyperbolic flux, parabolic flux, source terms, upwinding functions, etc.
     """
 
-    homepage = "http://hypar.github.io/"
+    homepage = "https://hypar.github.io/"
     url = "https://github.com/debog/hypar/archive/refs/tags/v4.1.tar.gz"
     git = "https://github.com/debog/hypar.git"
 
@@ -47,18 +46,18 @@ class Hypar(AutotoolsPackage):
     def configure_args(self):
         args = []
         spec = self.spec
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             args.append("--with-mpi-dir={0}".format(spec["mpi"].prefix))
         else:
             args.append("--enable-serial")
-        if "+openmp" in spec:
+        if spec.satisfies("+openmp"):
             args.append("--enable-omp")
-        if "+scalapack" in spec:
+        if spec.satisfies("+scalapack"):
             args.append("--enable-scalapack")
             args.append("--with-blas-dir={0}".format(spec["blas"].prefix))
             args.append("--with-lapack-dir={0}".format(spec["lapack"].prefix))
             args.append("--with-scalapack-dir={0}".format(spec["scalapack"].prefix))
-        if "+fftw" in spec:
+        if spec.satisfies("+fftw"):
             args.append("--enable-fftw")
             args.append("--with-fftw-dir={0}".format(spec["fftw"].prefix))
         return args

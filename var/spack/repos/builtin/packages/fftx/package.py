@@ -1,9 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -30,7 +29,8 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     version("1.1.0", sha256="a6f95605abc11460bbf51839727a456a31488e27e12a970fc29a1b8c42f4e3b5")
     version("1.0.3", sha256="b5ff275facce4a2fbabd0aecc65dd55b744794f2e07cd8cfa91363001c664896")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("spiral-software+fftx+simt+jit+mpi")
     # depend only on spiral-software, but spiral-software must be installed with variants:
@@ -81,11 +81,15 @@ class Fftx(CMakePackage, CudaPackage, ROCmPackage):
             if os.path.isdir(dir):
                 install_tree("cache_jit_files", prefix.cache_jit_files)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("FFTX_HOME", self.prefix)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("FFTX_HOME", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FFTX_HOME", self.prefix)

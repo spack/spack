@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,8 +19,6 @@ class Omm(CMakePackage):
     version("1.2.1", sha256="4876990056efabdd83b0caad52ed56632d9926b61d73fe3efbd04d0f8d242ede")
     version("master", branch="master")
 
-    depends_on("fortran", type="build")  # generated
-
     variant("lapack", default=True, description="Build libOMM with LAPACK interface.")
     variant("mpi", default=True, description="Build libOMM with MPI support.")
     variant(
@@ -31,6 +28,8 @@ class Omm(CMakePackage):
         description="Build libOMM with ScaLAPACK interface.",
     )
     variant("dbcsr", default=False, when="+mpi", description="Build libOMM with DBCSR interface.")
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
     generator("ninja")

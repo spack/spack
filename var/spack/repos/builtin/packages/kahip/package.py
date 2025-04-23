@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -41,9 +40,6 @@ class Kahip(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "deterministic",
         default=False,
@@ -51,6 +47,9 @@ class Kahip(CMakePackage):
         description="Compile with the deterministic seed",
     )
     variant("metis", default=False, description="metis support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("scons", type="build", when="@2:2.10")
     depends_on("argtable")
@@ -68,6 +67,8 @@ class Kahip(CMakePackage):
     # *) second is for files only present in 2.00
     patch("fix-sconstruct-for-py3.patch", when="@2:2.10 ^python@3:")
     patch("fix-sconstruct-for-py3-v2.00.patch", when="@2.00 ^python@3:")
+
+    patch("cstdint.patch", when="@3:")
 
     # 'when' decorators to override new CMake build approach (old build was SConstruct).
     @when("@:2.10")

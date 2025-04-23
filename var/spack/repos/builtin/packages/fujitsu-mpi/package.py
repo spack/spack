@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -55,7 +54,9 @@ class FujitsuMpi(Package):
             self.spec.mpif77 = self.prefix.bin.mpifrt
             self.spec.mpifc = self.prefix.bin.mpifrt
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Use the spack compiler wrappers under MPI
         dependent_module = dependent_spec.package.module
         env.set("OMPI_CC", dependent_module.spack_cc)
@@ -71,7 +72,7 @@ class FujitsuMpi(Package):
             env.set("MPI_CXX_COMPILER", self.prefix.bin.mpiFCC)
             env.set("MPI_Fortran_COMPILER", self.prefix.bin.mpifrt)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI are both compilers and runtimes, we set up the compilers
         # as part of run environment
         if self.spec.satisfies("%gcc"):

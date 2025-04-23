@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -70,6 +69,9 @@ class Rose(AutotoolsPackage):
     # --------------------------------------------------------------------------
     # Dependencies
     # --------------------------------------------------------------------------
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("autoconf@2.69:", type="build")
     depends_on("automake@1.14:", type="build")
     depends_on("libtool@2.4:", type="build")
@@ -206,7 +208,7 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+codethorn" in self.spec:
             env.set("CXXFLAGS", "-std=c++11")
 

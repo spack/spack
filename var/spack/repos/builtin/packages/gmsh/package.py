@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -46,10 +45,6 @@ class Gmsh(CMakePackage):
     version("2.16.0", sha256="e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea")
     version("2.15.0", sha256="992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "external",
         default=False,
@@ -78,8 +73,15 @@ class Gmsh(CMakePackage):
     variant("voropp", default=True, description="Build with voro++ (built-in or 3rd party")
     variant("cgns", default=True, description="Build with CGNS")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # https://gmsh.info/doc/texinfo/gmsh.html#Compiling-the-source-code
     # We make changes to the GMSH default, such as external blas.
+    depends_on("libpng", when="+fltk")
+    depends_on("libjpeg-turbo", when="+fltk")
+    depends_on("zlib-api")
     depends_on("blas", when="~eigen")
     depends_on("lapack", when="~eigen")
     depends_on("eigen@3:", when="+eigen+external")
@@ -193,5 +195,5 @@ class Gmsh(CMakePackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib)

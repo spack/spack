@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,8 +27,6 @@ class Kadath(CMakePackage):
 
     version("fuka", branch="fuka")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI support")
 
     variant(
@@ -39,6 +36,8 @@ class Kadath(CMakePackage):
         values=("none", "BBH", "BH", "BHNS", "BNS", "NS"),
         default="none",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("blas")
     depends_on("boost cxxstd=17")  # kadath uses std=C++17
@@ -62,7 +61,7 @@ class Kadath(CMakePackage):
                     join_path("codes", code, "CMakeLists.txt"),
                 )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HOME_KADATH", self.stage.source_path)
 
     def cmake_args(self):

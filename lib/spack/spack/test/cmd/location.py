@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -9,6 +8,7 @@ import pytest
 
 from llnl.util.filesystem import mkdirp
 
+import spack.concretize
 import spack.environment as ev
 import spack.paths
 import spack.stage
@@ -25,7 +25,7 @@ env = SpackCommand("env")
 @pytest.fixture
 def mock_spec():
     # Make it look like the source was actually expanded.
-    s = spack.spec.Spec("externaltest").concretized()
+    s = spack.concretize.concretize_one("externaltest")
     source_path = s.package.stage.source_path
     mkdirp(source_path)
     yield s, s.package
@@ -36,8 +36,8 @@ def mock_spec():
 def test_location_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
     install = SpackCommand("install")
-    install("libelf@0.8.12")
-    install("libelf@0.8.13")
+    install("--fake", "libelf@0.8.12")
+    install("--fake", "libelf@0.8.13")
     # This would normally return an error without --first
     assert location("--first", "--install-dir", "libelf")
 

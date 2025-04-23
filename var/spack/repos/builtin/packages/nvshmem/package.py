@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,9 +27,6 @@ class Nvshmem(MakefilePackage, CudaPackage):
     version("2.1.2-0", sha256="367211808df99b4575fb901977d9f4347065c61a26642d65887f24d60342a4ec")
     version("2.0.3-0", sha256="20da93e8508511e21aaab1863cb4c372a3bec02307b932144a7d757ea5a1bad2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("cuda", default=True, description="Build with CUDA")
     variant("ucx", default=True, description="Build with UCX support")
     variant("nccl", default=True, description="Build with NCCL support")
@@ -51,12 +47,15 @@ class Nvshmem(MakefilePackage, CudaPackage):
         url_fmt = "https://developer.download.nvidia.com/compute/redist/nvshmem/{0}/source/nvshmem_src_{1}.txz"
         return url_fmt.format(directory, version)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi", when="+mpi")
     depends_on("ucx", when="+ucx")
     depends_on("gdrcopy", when="+gdrcopy")
     depends_on("nccl", when="+nccl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CUDA_HOME", self.spec["cuda"].prefix)
         env.set("NVSHMEM_PREFIX", self.prefix)
 

@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
 
+import spack.variant
 from spack.package import *
 
 
@@ -17,13 +17,19 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
     url = "https://github.com/ROCm/hipRAND/archive/rocm-6.1.2.tar.gz"
     tags = ["rocm"]
 
-    maintainers("cgmb", "srekolam", "renjithravindrankannath")
+    maintainers("cgmb", "srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["libhiprand"]
 
     license("MIT")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
+    version("6.3.3", sha256="ea0d7638a463c06d30692205f8c591d3fe025b58a772226ca1c972e723118a2f")
+    version("6.3.2", sha256="0a08ed7554c161b095c866cd5e6f0d63cdf063e5b3c1183afa6ac18bad94a575")
+    version("6.3.1", sha256="ec43bf64eda348cf53c2767e553fd9561540dc50ae3ce95ca916404aa9a3eafb")
+    version("6.3.0", sha256="7464c1e48f4e1a97a5e5978146641971d068886038810876b60acb5dfb6c4d39")
+    version("6.2.4", sha256="b6010f5e0c63a139acd92197cc1c0d64a428f7a0ad661bce0cd1e553ad6fd6eb")
+    version("6.2.1", sha256="0d4585b8adbc299f3fdc2c74bb20ffd4285027b861a759c3e62ce564589465da")
     version("6.2.0", sha256="daaf32506eaaf3c3b715ed631387c27992cfe0d938353a88ad6acedc735eb54b")
     version("6.1.2", sha256="f0f129811c144dd711e967305c7af283cefb94bfdbcd2a11296b92a9e966be2c")
     version("6.1.1", sha256="dde1526fb6cde17b18bc9ee6daa719056fc468dfbda5801b9a61260daf2b4498")
@@ -41,9 +47,6 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         version("5.4.0", sha256="9456d4b4d5fd5c0b728f4aa4f8c224f829fe6fbf08e397848475293f71029a22")
         version("5.3.3", sha256="f72626b00d61ed2925b3124b7f094ccfaf7750f02bee6bac6b79317e1c5576ef")
         version("5.3.0", sha256="6fd9b3a719bf4c228657cb2a0ff283eb7d777ba31bfffe5a26589d588f89a279")
-
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
@@ -68,6 +71,9 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.10.2:", type="build")
 
@@ -95,6 +101,12 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         "6.1.1",
         "6.1.2",
         "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
         "master",
         "develop",
     ]:
@@ -106,7 +118,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
             "rocrand amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             self.asan_on(env)
@@ -132,7 +144,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         else:
             args.append(self.define("BUILD_WITH_LIB", "ROCM"))
 
-        if self.spec.satisfies("@5.2.0:"):
+        if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))
 
         if self.spec.satisfies("@5.3.0:"):

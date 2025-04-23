@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,9 +31,6 @@ class Gunrock(CMakePackage, CudaPackage):
     version("0.3", submodules=True, tag="v0.3", commit="0b146a70f52f699a2a50d1b1aa26b92c45e834d7")
     version("0.2", submodules=True, tag="v0.2", commit="f9d85343ee68c65567184d74021b9483cd142ea0")
     version("0.1", submodules=True, tag="v0.1", commit="4c00284f6b7d490a83fa7afe5cdff60923316448")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("cuda", default=True, description="Build with Cuda support")
 
@@ -75,6 +71,9 @@ class Gunrock(CMakePackage, CudaPackage):
     variant("boost", default=True, description="Build with Boost")
     variant("metis", default=False, description="Build with Metis support")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("googletest", when="+google_tests")
     depends_on("lcov", when="+code_coverage")
     depends_on("boost@1.58.0:", when="+boost")
@@ -88,8 +87,7 @@ class Gunrock(CMakePackage, CudaPackage):
     conflicts(
         "cuda_arch=none",
         when="+cuda",
-        msg='Must specify CUDA compute capabilities of your GPU. \
-See "spack info gunrock"',
+        msg='Must specify CUDA compute capabilities of your GPU. See "spack info gunrock"',
     )
 
     def cmake_args(self):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,20 +16,23 @@ class FenicsDolfinx(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
+    version("0.9.0", sha256="b266c74360c2590c5745d74768c04568c965b44739becca4cd6b5aa58cdbbbd1")
     version("0.8.0", sha256="acf3104d9ecc0380677a6faf69eabfafc58d0cce43f7777e1307b95701c7cad9")
     version("0.7.2", sha256="7d9ce1338ce66580593b376327f23ac464a4ce89ef63c105efc1a38e5eae5c0b")
     version("0.6.0", sha256="eb8ac2bb2f032b0d393977993e1ab6b4101a84d54023a67206e3eac1a8d79b80")
-
-    depends_on("cxx", type="build")  # generated
 
     # Graph partitioner variants
     variant(
         "partitioners",
         description="Graph partioning",
-        default=("parmetis",),
+        default="parmetis",
         values=("kahip", "parmetis", "scotch"),
         multi=True,
     )
+
+    # HDF5 dependency requires C in CMake
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     # Graph partitioner dependencies
     depends_on("kahip@3.12:", when="partitioners=kahip")
@@ -39,8 +41,11 @@ class FenicsDolfinx(CMakePackage):
 
     variant("slepc", default=False, description="slepc support")
     variant("adios2", default=False, description="adios2 support")
+    variant("petsc", default=False, description="PETSc support")
 
-    depends_on("cmake@3.19:", type="build")
+    depends_on("petsc", when="+slepc")
+    depends_on("cmake@3.21:", when="@0.9:", type="build")
+    depends_on("cmake@3.19:", when="@:0.8", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi")
@@ -48,17 +53,20 @@ class FenicsDolfinx(CMakePackage):
     depends_on("pugixml")
     depends_on("spdlog", when="@0.9:")
 
-    depends_on("petsc+mpi+shared")
-
+    depends_on("petsc+mpi+shared", when="+petsc")
     depends_on("slepc", when="+slepc")
+
+    depends_on("adios2@2.8.1:+mpi", when="@0.9: +adios2")
     depends_on("adios2+mpi", when="+adios2")
 
     depends_on("fenics-ufcx@main", when="@main")
+    depends_on("fenics-ufcx@0.9", when="@0.9")
     depends_on("fenics-ufcx@0.8", when="@0.8")
     depends_on("fenics-ufcx@0.7", when="@0.7")
     depends_on("fenics-ufcx@0.6", when="@0.6")
 
     depends_on("fenics-basix@main", when="@main")
+    depends_on("fenics-basix@0.9", when="@0.9")
     depends_on("fenics-basix@0.8", when="@0.8")
     depends_on("fenics-basix@0.7", when="@0.7")
     depends_on("fenics-basix@0.6", when="@0.6")
@@ -71,6 +79,7 @@ class FenicsDolfinx(CMakePackage):
     def cmake_args(self):
         return [
             self.define("DOLFINX_SKIP_BUILD_TESTS", True),
+            self.define_from_variant("DOLFINX_ENABLE_PETSC", "petsc"),
             self.define_from_variant("DOLFINX_ENABLE_SLEPC", "slepc"),
             self.define_from_variant("DOLFINX_ENABLE_ADIOS2", "adios2"),
             self.define("DOLFINX_UFCX_PYTHON", False),

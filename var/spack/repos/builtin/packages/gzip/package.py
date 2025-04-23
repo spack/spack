@@ -1,16 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
 
-class Gzip(AutotoolsPackage):
+class Gzip(AutotoolsPackage, GNUMirrorPackage):
     """GNU Gzip is a popular data compression program originally written by
     Jean-loup Gailly for the GNU project."""
 
     homepage = "https://www.gnu.org/software/gzip/"
-    url = "https://ftp.gnu.org/gnu/gzip/gzip-1.10.tar.gz"
+    gnu_mirror_path = "gzip/gzip-1.10.tar.gz"
 
     license("GPL-3.0-or-later")
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,25 +33,41 @@ class PyPyside2(PythonPackage):
         submodules=True,
     )
     version(
-        "5.13.2", tag="v5.13.2", commit="a1a94b43c5b277fd4e65c1389e24c4fbbb1c5641", submodules=True
+        "5.13.2",
+        tag="v5.13.2",
+        commit="a1a94b43c5b277fd4e65c1389e24c4fbbb1c5641",
+        submodules=True,
+        deprecated=True,
     )
     version(
-        "5.13.1", tag="v5.13.1", commit="de1e75b55f6f59bba4bae5cd036d6c355c62986a", submodules=True
+        "5.13.1",
+        tag="v5.13.1",
+        commit="de1e75b55f6f59bba4bae5cd036d6c355c62986a",
+        submodules=True,
+        deprecated=True,
     )
     version(
-        "5.13.0", tag="v5.13.0", commit="208d0c8bc8595aebc2191dafd9d0e3ec719e2550", submodules=True
+        "5.13.0",
+        tag="v5.13.0",
+        commit="208d0c8bc8595aebc2191dafd9d0e3ec719e2550",
+        submodules=True,
+        deprecated=True,
     )
     version(
-        "5.12.5", tag="v5.12.5", commit="af0953e0d261ab9b1fc498d63e8d790a329dd285", submodules=True
+        "5.12.5",
+        tag="v5.12.5",
+        commit="af0953e0d261ab9b1fc498d63e8d790a329dd285",
+        submodules=True,
+        deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "doc",
         default=False,
         description="Enables the generation of html and man page documentation",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     # see https://wiki.qt.io/Qt_for_Python#Python_compatibility_matrix
     depends_on("python@2.7.0:2.7,3.5.0:3.5,3.6.1:3.8", when="@:5.15.0", type=("build", "run"))
@@ -81,6 +96,7 @@ class PyPyside2(PythonPackage):
     depends_on("libxml2@2.6.32:", when="+doc", type="build")
     depends_on("libxslt@1.1.19:", when="+doc", type="build")
     depends_on("py-sphinx", when="+doc", type="build")
+    depends_on("gmake", type="build")
 
     def patch(self):
         filter_file(
@@ -96,7 +112,7 @@ class PyPyside2(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LLVM_INSTALL_DIR", self.spec["llvm"].prefix)
 
     def install_options(self, spec, prefix):

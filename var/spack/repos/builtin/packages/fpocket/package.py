@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,7 +28,7 @@ class Fpocket(MakefilePackage):
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.pkg.compiler.name == "gcc":
             env.set("CXX", "g++")
 

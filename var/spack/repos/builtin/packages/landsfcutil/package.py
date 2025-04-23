@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,7 +31,7 @@ class Landsfcutil(CMakePackage):
         args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for suffix in ("4", "d"):
             lib = find_libraries(
                 "liblandsfcutil_" + suffix, root=self.prefix, shared=False, recursive=True
@@ -48,5 +47,5 @@ class Landsfcutil(CMakePackage):
         return (None, None, flags)
 
     def check(self):
-        with working_dir(self.builder.build_directory):
+        with working_dir(self.build_directory):
             make("test")

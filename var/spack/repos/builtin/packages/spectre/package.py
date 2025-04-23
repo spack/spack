@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,6 +30,27 @@ class Spectre(CMakePackage):
     license("MIT")
 
     version("develop", branch="develop")
+    version(
+        "2025.04.21", sha256="09b8412abdbd3853b256b34669c27b0f0e69bf6fc5c48e9bb450a46221e62abd"
+    )
+    version(
+        "2025.03.17", sha256="3b3187a6d0e0f0386ae9bf06b77485771b841886a6e71abb12516c2aa874ae65"
+    )
+    version(
+        "2025.01.30", sha256="1b79c297ca85e9c2c6242e3880144587fc8a1791124887a83f428c6301a80fe3"
+    )
+    version(
+        "2024.12.16", sha256="ddd53fc6e5b42bca5d636862b69859ff7040ac243e097a4a6c0a8d0a8c58ffce"
+    )
+    version(
+        "2024.03.19", sha256="42a25c8827b56268d9826239cde521491be19318d83785b35cd0265a9f6a1f7c"
+    )
+    version(
+        "2024.09.29", sha256="b5e84b4564ad7cd2e069a24c6c472aab342753fe8393242eceba378b52226acb"
+    )
+    version(
+        "2024.09.16", sha256="2524d4e3cbe9206c0d8830fd6969dcf4cf53aefb26c882c6a743638611763171"
+    )
     version(
         "2024.08.03", sha256="18582b625b121c16cd9a1ec421c4ac6cb77bb252622a205b038306e75a466138"
     )
@@ -131,10 +151,6 @@ class Spectre(CMakePackage):
         "2021.12.15", sha256="4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Configuration variants
     variant(
         "executables",
@@ -206,6 +222,11 @@ class Spectre(CMakePackage):
     conflicts("%clang@:7")
     conflicts("%apple-clang@:12", when="@2023.10.11:")
     conflicts("%apple-clang@:10")
+
+    # Language dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Build dependencies
     depends_on("cmake@3.18:", when="@2023.02.09:", type="build")

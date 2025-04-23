@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,14 +21,14 @@ class RedisAi(MakefilePackage):
         "1.2.7", tag="v1.2.7", commit="1bf38d86233ba06e1350ca9de794df2b07cdb274", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("torch", default=True, description="Build with the pytorch backend")
     variant("cuda", default=False, description="Use CUDA")
     variant("rocm", default=False, description="Use ROCm")
 
     conflicts("+cuda+rocm")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Required dependencies
     depends_on("git", type=("build", "link"))
@@ -78,9 +77,7 @@ class RedisAi(MakefilePackage):
     @property
     def torch_dir(self):
         return (
-            join_path(self.spec["py-torch"].package.cmake_prefix_paths[0], "Torch")
-            if self.with_torch
-            else None
+            join_path(self["py-torch"].cmake_prefix_paths[0], "Torch") if self.with_torch else None
         )
 
     @property
@@ -127,5 +124,5 @@ class RedisAi(MakefilePackage):
         torch_lib_dir = join_path(torch_site_dir, "lib")
         install_tree(torch_lib_dir, self.prefix.backends.redisai_torch.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("REDIS_AI", self.prefix.join("redisai.so"))

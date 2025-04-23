@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,14 +16,11 @@ class Eztrace(CMakePackage, AutotoolsPackage, CudaPackage):
     license("CECILL-B")
 
     version("master", branch="master")
+    version("develop", branch="dev")
     version("2.1", sha256="ab5076086eced78e4c6cf7736e7765ca1337dec95a881c9270a42b3251aeea19")
     version("2.0", sha256="67bd296f059cdfab303c62f674af3e1e858213d6945bd79cb8ede4a035c0c2d6")
     version("1.1-13", sha256="6144d04fb62b3ccad41af0268cd921161f168d0cca3f6c210c448bb0b07be7e0")
     version("1.1-10", sha256="63d1af2db38b04efa817614574f381e7536e12db06a2c75375d1795adda3d1d8")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("starpu", default=False, description="Enable StarPU support", when="@2.1:")
     variant("netcdf", default=False, description="Enable NetCDF support", when="@2.1:")
@@ -33,6 +29,10 @@ class Eztrace(CMakePackage, AutotoolsPackage, CudaPackage):
     build_system(
         conditional("cmake", when="@2:"), conditional("autotools", when="@:1"), default="cmake"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("opari2")
@@ -105,7 +105,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LDFLAGS", "--linkfortran")
 
     def autoreconf(self, pkg, spec, prefix):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,9 +19,6 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     version("1.4.19", sha256="3be4a26d825ffdfda52a56fc43246456989a3630093cced3fbddf4771ee58a70")
     version("1.4.18", sha256="ab2633921a5cd38e48797bf5521ad259bdc4b979078034a3b790d7fec5493fab")
     version("1.4.17", sha256="3ce725133ee552b8b4baca7837fb772940b25e81b2a9dc92537aeaf733538c9e")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     patch("gnulib-pgi.patch", when="@1.4.18")
     patch("pgi.patch", when="@1.4.17")
@@ -52,6 +48,9 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     variant("sigsegv", default=True, description="Build the libsigsegv dependency")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("diffutils", type="build")
     depends_on("libsigsegv", when="+sigsegv")
 
@@ -77,20 +76,22 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"GNU M4\)?\s+(\S+)", output)
         return match.group(1) if match else None
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Inform autom4te if it wasn't built correctly (some external
         # installations such as homebrew). See
         # https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/autom4te-Invocation.html
         env.set("M4", self.prefix.bin.m4)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The default optimization level for icx/icpx is "-O2",
         # but building m4 with this level breaks the build of dependents.
         # So we set it explicitely to "-O0".
         if self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
             env.append_flags("CFLAGS", "-O0")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("M4", self.prefix.bin.m4)
 
     def configure_args(self):

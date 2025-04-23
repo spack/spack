@@ -1,11 +1,13 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import re
 
+import llnl.util.lang
+
+import spack.platforms
 from spack.package import *
 
 
@@ -96,11 +98,11 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         deprecated=True,
         sha256="01be35bef4c0cfd24e9b3d50c88866521b9cac3ad4cbb5b1fc97aea55078810f",
     )
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
     # Do NOT add older versions here.
     # UPC++ releases over 2 years old are not supported.
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     patch("fix_configure_ldflags.patch", when="@2021.9.0:master")
 
@@ -175,10 +177,12 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             env.set("UPCXX_NETWORK", "ofi")
             env.set("GASNET_SPAWN_CONTROL", "pmi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.set_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.set_variables(env)
 
     def setup_dependent_package(self, module, dep_spec):
@@ -191,6 +195,12 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
         # UPC++ follows autoconf naming convention for LDLIBS, which is 'LIBS'
         if env.get("LDLIBS"):
             env["LIBS"] = env["LDLIBS"]
+
+        if spec.satisfies("%oneapi@2025:"):
+            env["CXXFLAGS"] = (
+                "-Wno-error=missing-template-arg-list-after-template-kw "
+                "-Wno-missing-template-arg-list-after-template-kw"
+            )
 
         options = ["--prefix=%s" % prefix]
 

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,6 +41,7 @@ class Plink(Package):
         depends_on("zlib-api", when="@1.9-beta6.27:")
         depends_on("blas", when="@1.9-beta6.27:")
         depends_on("lapack", when="@1.9-beta6.27:")
+    depends_on("gmake", type="build")
 
     patch("dynamic_zlib.patch", when="@1.9-beta6.27:")
 
@@ -59,7 +59,7 @@ class Plink(Package):
             install("plink", prefix.bin)
 
     @when("@1.9-beta6.27:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLASFLAGS", self.spec["blas"].libs.ld_flags)
         env.set("ZLIB", self.spec["zlib-api"].libs.ld_flags)
 

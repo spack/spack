@@ -1,16 +1,15 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
 
 
-class Acct(AutotoolsPackage):
+class Acct(AutotoolsPackage, GNUMirrorPackage):
     """Utilities for monitoring process activities."""
 
     homepage = "https://www.gnu.org/software/acct"
-    url = "https://ftp.gnu.org/gnu/acct/acct-6.6.4.tar.gz"
+    gnu_mirror_path = "acct/acct-6.6.4.tar.gz"
 
     license("GPL-3.0-or-later")
 
@@ -21,7 +20,7 @@ class Acct(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def installcheck(self):

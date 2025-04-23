@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,7 +29,7 @@ class Sigio(CMakePackage):
         args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         lib = find_libraries("libsigio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy
         for suffix in ("4", ""):
@@ -44,5 +43,5 @@ class Sigio(CMakePackage):
         return (None, None, flags)
 
     def check(self):
-        with working_dir(self.builder.build_directory):
+        with working_dir(self.build_directory):
             make("test")

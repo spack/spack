@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,9 +25,9 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
     version("1.1.1", sha256="f36da409947aa2b3dcc6af0a8c2e3144bc19db2ed547d64e9171c59c66561c61")
     version("1.1.0", sha256="3d7b4fb1c115f1a530afd430eed2e8861fa57c8b179ec2d5a5d8f1cd0c7a4268")
 
-    depends_on("c", type="build")  # generated
-
     variant("doc", default=False, description="Build documentation")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("doxygen", when="+doc", type="build")
     depends_on("libogg")
@@ -83,13 +82,13 @@ class MSBuildBuilder(MSBuildBuilder):
     def is_64bit(self):
         return "64" in str(self.pkg.spec.target.family)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.pkg.spec
         env.set("SPACK_OGG_PREFIX", spec["libogg"].prefix)
         # devenv is needed to convert ancient MSbuild project to modern
         # msbuild project so MSBuild versions older than 2010 can build this
         # project
-        devenv_path = os.path.join(self.pkg.compiler.vs_root, "Common7", "IDE")
+        devenv_path = os.path.join(self.pkg["msvc"].vs_root, "Common7", "IDE")
         env.prepend_path("PATH", devenv_path)
 
     @property

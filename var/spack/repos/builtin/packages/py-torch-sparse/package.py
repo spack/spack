@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,7 +20,8 @@ class PyTorchSparse(PythonPackage):
     version("0.6.8", sha256="312fb5ae6e4e575fca4bbc0bd092af85e7679d5b8e53459f24492fc2a073c7b6")
     version("0.6.7", sha256="f69b2ed35baf2a9853234756a2b19e6f7ce88d2c1f029d1c7ca166d91e1adbd0")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("py-setuptools", type="build")
     depends_on("py-scipy", type=("build", "run"))
@@ -43,20 +43,20 @@ class PyTorchSparse(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.6.9:"):
             if "+cuda" in self.spec["py-torch"]:
-                env.set("FORCE_CUDA", 1)
-                env.set("FORCE_ONLY_CUDA", 0)
-                env.set("FORCE_ONLY_CPU", 0)
+                env.set("FORCE_CUDA", "1")
+                env.set("FORCE_ONLY_CUDA", "0")
+                env.set("FORCE_ONLY_CPU", "0")
             else:
-                env.set("FORCE_CUDA", 0)
-                env.set("FORCE_ONLY_CUDA", 0)
-                env.set("FORCE_ONLY_CPU", 1)
+                env.set("FORCE_CUDA", "0")
+                env.set("FORCE_ONLY_CUDA", "0")
+                env.set("FORCE_ONLY_CPU", "1")
         else:
             if "+cuda" in self.spec["py-torch"]:
-                env.set("FORCE_CUDA", 1)
-                env.set("FORCE_CPU", 0)
+                env.set("FORCE_CUDA", "1")
+                env.set("FORCE_CPU", "0")
             else:
-                env.set("FORCE_CUDA", 0)
-                env.set("FORCE_CPU", 1)
+                env.set("FORCE_CUDA", "0")
+                env.set("FORCE_CPU", "1")

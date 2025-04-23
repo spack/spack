@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -73,7 +72,9 @@ spack package at this time.""",
     conflicts("netmod=mxm", when="@:3.1.3")
     conflicts("netmod=tcp", when="device=ch4")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # TUTORIAL: set the following variables for dependents:
         #
         # MPICC=join_path(self.prefix.bin, 'mpicc')
@@ -92,11 +93,6 @@ spack package at this time.""",
         self.spec.mpicxx = join_path(self.prefix.bin, "mpic++")
         self.spec.mpifc = join_path(self.prefix.bin, "mpif90")
         self.spec.mpif77 = join_path(self.prefix.bin, "mpif77")
-
-        self.spec.mpicxx_shared_libs = [
-            join_path(self.prefix.lib, "libmpicxx.{0}".format(dso_suffix)),
-            join_path(self.prefix.lib, "libmpi.{0}".format(dso_suffix)),
-        ]
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""

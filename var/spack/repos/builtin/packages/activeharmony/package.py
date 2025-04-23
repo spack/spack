@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,8 +25,8 @@ class Activeharmony(MakefilePackage):
 
     cflags = ["-O3", "-fPIC"]
 
-    def setup_build_environment(self, spack_env):
-        spack_env.set("CFLAGS", " ".join(self.cflags))
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("CFLAGS", " ".join(self.cflags))
 
     @when("@:4.5")
     def install(self, spec, prefix):

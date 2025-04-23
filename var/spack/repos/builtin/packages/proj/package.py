@@ -1,9 +1,7 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.builder
 from spack.build_systems import autotools, cmake
 from spack.package import *
 
@@ -76,9 +74,6 @@ class Proj(CMakePackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("tiff", default=True, when="@7:", description="Enable TIFF support")
     variant("curl", default=True, when="@7:", description="Enable curl support")
     variant("shared", default=True, description="Enable shared libraries")
@@ -110,6 +105,9 @@ class Proj(CMakePackage, AutotoolsPackage):
         when="@6.2:9.1",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
         # https://github.com/OSGeo/PROJ/pull/3374
@@ -136,7 +134,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
         # If an incompatible version of PROJ is found in PROJ_LIB, it can
         # cause the package to fail at run-time. See the following for details:
@@ -145,8 +143,8 @@ class Proj(CMakePackage, AutotoolsPackage):
         env.set("PROJ_LIB", self.prefix.share.proj)
 
 
-class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
-    def setup_build_environment(self, env):
+class AnyBuilder(BaseBuilder):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
     @run_after("install")
@@ -154,7 +152,7 @@ class BaseBuilder(metaclass=spack.builder.PhaseCallbacksMeta):
         install_tree(join_path("share", "proj"), self.prefix.share.proj)
 
 
-class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
+class CMakeBuilder(AnyBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         shared_arg = "BUILD_SHARED_LIBS" if self.spec.satisfies("@7:") else "BUILD_LIBPROJ_SHARED"
         args = [
@@ -177,7 +175,7 @@ class CMakeBuilder(BaseBuilder, cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(BaseBuilder, autotools.AutotoolsBuilder):
+class AutotoolsBuilder(AnyBuilder, autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 

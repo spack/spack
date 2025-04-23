@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,7 +28,7 @@ class Ploticus(MakefilePackage):
             "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz"
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PLOTICUS_PREFABS", self.prefix.prefabs)
 
     def edit(self, spec, prefix):

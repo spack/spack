@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import argparse
@@ -17,11 +16,12 @@ from llnl.util.lang import elide_list, stable_partition
 
 import spack.binary_distribution as bindist
 import spack.cmd
+import spack.concretize
 import spack.config
 import spack.deptypes as dt
 import spack.environment as ev
 import spack.error
-import spack.mirror
+import spack.mirrors.mirror
 import spack.oci.oci
 import spack.spec
 import spack.stage
@@ -33,6 +33,8 @@ from spack import traverse
 from spack.cmd import display_specs
 from spack.cmd.common import arguments
 from spack.spec import Spec, save_dependency_specfiles
+
+from ..enums import InstallRecordStatus
 
 description = "create, download and install binary packages"
 section = "packaging"
@@ -73,9 +75,6 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="store_true",
         default=False,
         help="regenerate buildcache index after building package(s)",
-    )
-    push.add_argument(
-        "--spec-file", default=None, help="create buildcache entry for spec from json or yaml file"
     )
     push.add_argument(
         "--only",
@@ -190,28 +189,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope containing mirrors to check",
     )
-    # Unfortunately there are 3 ways to do the same thing here:
-    check_specs = check.add_mutually_exclusive_group()
-    check_specs.add_argument(
-        "-s", "--spec", help="check single spec instead of release specs file"
-    )
-    check_specs.add_argument(
-        "--spec-file",
-        help="check single spec from json or yaml file instead of release specs file",
-    )
+
     arguments.add_common_arguments(check, ["specs"])
 
     check.set_defaults(func=check_fn)
 
     # Download tarball and specfile
     download = subparsers.add_parser("download", help=download_fn.__doc__)
-    download_spec_or_specfile = download.add_mutually_exclusive_group(required=True)
-    download_spec_or_specfile.add_argument(
-        "-s", "--spec", help="download built tarball for spec from mirror"
-    )
-    download_spec_or_specfile.add_argument(
-        "--spec-file", help="download built tarball for spec (from json or yaml file) from mirror"
-    )
+    download.add_argument("-s", "--spec", help="download built tarball for spec from mirror")
     download.add_argument(
         "-p",
         "--path",
@@ -221,28 +206,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
     download.set_defaults(func=download_fn)
 
-    # Get buildcache name
-    getbuildcachename = subparsers.add_parser(
-        "get-buildcache-name", help=get_buildcache_name_fn.__doc__
-    )
-    getbuildcachename_spec_or_specfile = getbuildcachename.add_mutually_exclusive_group(
-        required=True
-    )
-    getbuildcachename_spec_or_specfile.add_argument(
-        "-s", "--spec", help="spec string for which buildcache name is desired"
-    )
-    getbuildcachename_spec_or_specfile.add_argument(
-        "--spec-file", help="path to spec json or yaml file for which buildcache name is desired"
-    )
-    getbuildcachename.set_defaults(func=get_buildcache_name_fn)
-
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
     savespecfile_spec_or_specfile = savespecfile.add_mutually_exclusive_group(required=True)
     savespecfile_spec_or_specfile.add_argument("--root-spec", help="root spec of dependent spec")
-    savespecfile_spec_or_specfile.add_argument(
-        "--root-specfile", help="path to json or yaml file containing root spec of dependent spec"
-    )
     savespecfile.add_argument(
         "-s",
         "--specs",
@@ -308,7 +275,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
 def _matching_specs(specs: List[Spec]) -> List[Spec]:
     """Disambiguate specs and return a list of matching specs"""
-    return [spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=any) for s in specs]
+    return [
+        spack.cmd.disambiguate_spec(s, ev.active_environment(), installed=InstallRecordStatus.ANY)
+        for s in specs
+    ]
 
 
 def _format_spec(spec: Spec) -> str:
@@ -375,19 +345,13 @@ def _specs_to_be_packaged(
 
 def push_fn(args):
     """create a binary package and push it to a mirror"""
-    if args.spec_file:
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use positional arguments instead."
-        )
-
-    if args.specs or args.spec_file:
-        roots = _matching_specs(spack.cmd.parse_specs(args.specs or args.spec_file))
+    if args.specs:
+        roots = _matching_specs(spack.cmd.parse_specs(args.specs))
     else:
         roots = spack.cmd.require_active_env(cmd_name="buildcache push").concrete_roots()
 
     mirror = args.mirror
-    assert isinstance(mirror, spack.mirror.Mirror)
+    assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
     push_url = mirror.push_url
 
@@ -524,22 +488,7 @@ def check_fn(args: argparse.Namespace):
     this command uses the process exit code to indicate its result, specifically, if the
     exit code is non-zero, then at least one of the indicated specs needs to be rebuilt
     """
-    if args.spec_file:
-        specs_arg = (
-            args.spec_file if os.path.sep in args.spec_file else os.path.join(".", args.spec_file)
-        )
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            f"Use `spack buildcache check {specs_arg}` instead."
-        )
-    elif args.spec:
-        specs_arg = args.spec
-        tty.warn(
-            "The flag `--spec` is deprecated and will be removed in Spack 0.23. "
-            f"Use `spack buildcache check {specs_arg}` instead."
-        )
-    else:
-        specs_arg = args.specs
+    specs_arg = args.specs
 
     if specs_arg:
         specs = _matching_specs(spack.cmd.parse_specs(specs_arg))
@@ -550,8 +499,7 @@ def check_fn(args: argparse.Namespace):
         tty.msg("No specs provided, exiting.")
         return
 
-    for spec in specs:
-        spec.concretize()
+    specs = [spack.concretize.concretize_one(s) for s in specs]
 
     # Next see if there are any configured binary mirrors
     configured_mirrors = spack.config.get("mirrors", scope=args.scope)
@@ -574,28 +522,13 @@ def download_fn(args):
     code indicates that the command failed to download at least one of the required buildcache
     components
     """
-    if args.spec_file:
-        tty.warn(
-            "The flag `--spec-file` is deprecated and will be removed in Spack 0.22. "
-            "Use --spec instead."
-        )
-
-    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
+    specs = _matching_specs(spack.cmd.parse_specs(args.spec))
 
     if len(specs) != 1:
         tty.die("a single spec argument is required to download from a buildcache")
 
     if not bindist.download_single_spec(specs[0], args.path):
         sys.exit(1)
-
-
-def get_buildcache_name_fn(args):
-    """get name (prefix) of buildcache entries for this spec"""
-    tty.warn("This command is deprecated and will be removed in Spack 0.22.")
-    specs = _matching_specs(spack.cmd.parse_specs(args.spec or args.spec_file))
-    if len(specs) != 1:
-        tty.die("a single spec argument is required to get buildcache name")
-    print(bindist.tarball_name(specs[0], ""))
 
 
 def save_specfile_fn(args):
@@ -605,13 +538,7 @@ def save_specfile_fn(args):
     successful. if any errors or exceptions are encountered, or if expected command-line arguments
     are not provided, then the exit code will be non-zero
     """
-    if args.root_specfile:
-        tty.warn(
-            "The flag `--root-specfile` is deprecated and will be removed in Spack 0.22. "
-            "Use --root-spec instead."
-        )
-
-    specs = spack.cmd.parse_specs(args.root_spec or args.root_specfile)
+    specs = spack.cmd.parse_specs(args.root_spec)
 
     if len(specs) != 1:
         tty.die("a single spec argument is required to save specfile")
@@ -619,7 +546,7 @@ def save_specfile_fn(args):
     root = specs[0]
 
     if not root.concrete:
-        root.concretize()
+        root = spack.concretize.concretize_one(root)
 
     save_dependency_specfiles(
         root, args.specfile_dir, dependencies=spack.cmd.parse_specs(args.specs)
@@ -726,7 +653,7 @@ def manifest_copy(manifest_file_list, dest_mirror=None):
     deduped_manifest = {}
 
     for manifest_path in manifest_file_list:
-        with open(manifest_path) as fd:
+        with open(manifest_path, encoding="utf-8") as fd:
             manifest = json.loads(fd.read())
             for spec_hash, copy_list in manifest.items():
                 # Last duplicate hash wins
@@ -745,7 +672,7 @@ def manifest_copy(manifest_file_list, dest_mirror=None):
             copy_buildcache_file(copy_file["src"], dest)
 
 
-def update_index(mirror: spack.mirror.Mirror, update_keys=False):
+def update_index(mirror: spack.mirrors.mirror.Mirror, update_keys=False):
     # Special case OCI images for now.
     try:
         image_ref = spack.oci.oci.image_from_mirror(mirror)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,9 +21,6 @@ class Nest(CMakePackage):
     version("3.0", sha256="d481ea67f3251fe3aadf5252ab0a999172f0cd5536c5985366d271d772e686e6")
     version("2.20.1", sha256="df3d32b5899d5d444f708037b290f889ac6ff8eae6b7be9e9faee2c0d660d8e5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     maintainers("ikitayama")
 
     variant("python", default=False, description="Build the PyNest interface")
@@ -39,6 +35,9 @@ class Nest(CMakePackage):
     conflicts("~gsl", when="@:2.10", msg="Option only introduced for non-ancient versions.")
     conflicts("~shared", when="@:2.10", msg="Option only introduced for non-ancient versions.")
     conflicts("~openmp", when="@:2.10", msg="Option only introduced for non-ancient versions.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("python@2.6:", when="+python", type=("build", "run"))
     depends_on("py-numpy", when="+python", type=("build", "run"))
@@ -139,5 +138,5 @@ class Nest(CMakePackage):
             for f in find_headers("*.{0}".format(suffix), self.stage.source_path, recursive=True):
                 install(f, path_headers)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NEST_INSTALL_DIR", self.spec.prefix)

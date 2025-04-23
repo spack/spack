@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,12 +33,6 @@ class Nekcem(Package):
     depends_on("mpi", when="+mpi")
     depends_on("blas")
     depends_on("lapack")
-
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "NekCEM can not be built without a Fortran compiler."
-            raise RuntimeError(msg)
 
     @run_after("install")
     def check_install(self):
@@ -84,9 +77,6 @@ class Nekcem(Package):
             elif self.compiler.name == "xl" or self.compiler.name == "xl_r":
                 fflags += ["-qrealsize=8"]
                 cflags += ["-DPREFIX=jl_", "-DIBM"]
-            elif self.compiler.name == "pgi":
-                fflags += ["-r8"]
-                cflags += ["-DUNDERSCORE"]
 
             error = Executable(fc)("empty.f", output=str, error=str, fail_on_error=False)
 

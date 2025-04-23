@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,7 +37,7 @@ class Memsurfer(PythonPackage):
     depends_on("vtk@8.1.2 ~ffmpeg~mpi+opengl2~qt~xdmf+python")
 
     # memsurfer's setup needs path to these deps to build extension modules
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("VTK_ROOT", self.spec["vtk"].prefix)
         env.set("CGAL_ROOT", self.spec["cgal"].prefix)
         env.set("BOOST_ROOT", self.spec["boost"].prefix)

@@ -1,15 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-import re
 import shutil
 import sys
 import tempfile
-
-import llnl.util.tty as tty
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
@@ -26,6 +22,11 @@ class QtPackage(CMakePackage):
     def get_url(qualname):
         _url = "https://github.com/qt/{}/archive/refs/tags/v6.2.3.tar.gz"
         return _url.format(qualname.lower())
+
+    @staticmethod
+    def get_git(qualname):
+        _git = "https://github.com/qt/{}.git"
+        return _git.format(qualname.lower())
 
     @staticmethod
     def get_list_url(qualname):
@@ -57,16 +58,17 @@ class QtPackage(CMakePackage):
         # Start with upstream cmake_args
         args = super().cmake_args()
 
-        # Qt components typically install cmake config files in a single prefix,
-        # so we have to point them to the cmake config files of dependencies
-        qt_prefix_path = []
-        re_qt = re.compile("qt-.*")
-        for dep in self.spec.dependencies():
-            if re_qt.match(dep.name):
-                qt_prefix_path.append(self.spec[dep.name].prefix)
+        # Make our CMAKE_INSTALL_RPATH redundant:
+        # for prefix of current package ($ORIGIN/../lib type of rpaths),
+        args.append(self.define("QT_DISABLE_RPATH", True))
+        # for prefixes of dependencies
+        args.append(self.define("QT_NO_DISABLE_CMAKE_INSTALL_RPATH_USE_LINK_PATH", True))
 
-        # Now append all qt-* dependency prefixex into a prefix path
-        args.append(self.define("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", ":".join(qt_prefix_path)))
+        # Pass path variables as cmake arguments since some
+        # are not read from the environment
+        for v in ["QT_ADDITIONAL_PACKAGES_PREFIX_PATH", "QT_ADDITIONAL_SBOM_DOCUMENT_PATHS"]:
+            if v in os.environ:
+                args.append(self.define(v, os.environ[v].split(":")))
 
         return args
 
@@ -115,12 +117,24 @@ class QtPackage(CMakePackage):
         with open(qt_module_pri, "w") as file:
             file.write("\n".join(defs))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("QMAKEPATH", self.prefix)
         if os.path.exists(self.prefix.mkspecs.modules):
             env.prepend_path("QMAKE_MODULE_PATH", self.prefix.mkspecs.modules)
         if os.path.exists(self.prefix.plugins):
             env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
+
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        # Qt components typically install cmake config files in a single prefix,
+        # so we have to point dependencies to the cmake config files.
+        env.prepend_path("QT_ADDITIONAL_PACKAGES_PREFIX_PATH", self.spec.prefix)
+
+        # Qt creates SBOM files based on the used SBOM files in the prefix, and
+        # in additional paths for other components.
+        if self.spec.satisfies("@6.9:"):
+            env.prepend_path("QT_ADDITIONAL_SBOM_DOCUMENT_PATHS", self.spec.prefix)
 
 
 class QtBase(QtPackage):
@@ -133,6 +147,12 @@ class QtBase(QtPackage):
 
     license("BSD-3-Clause")
 
+    version("6.9.0", sha256="defc1b7e6a98f0093254126b1cd80681f1d2a170df127d60c6297358ced43090")
+    version("6.8.3", sha256="cea5c8f2c20d9cbd684f8a402721e63b87a2886e906f6ec7e0f7e1ff69c83206")
+    version("6.8.2", sha256="9dddbb2ea3c107e20a99b816c1c6ba1483915325918936dda2c762bd73836ad9")
+    version("6.8.1", sha256="9b81b83e4079d2f79ae057902973fc0ebb10d566ec022f483e7c0f2294acb19c")
+    version("6.8.0", sha256="3e526ceaaf615005bc89a98ee8a52b87db6fefe7155595bf75c40fd82cd1a7ce")
+    version("6.7.3", sha256="65771d1618cab08ec5e9bbfdc265b5d2ce2ccf0373143d7d9d139647a7196aec")
     version("6.7.2", sha256="96b96e4fd0fc306502ed8b94a34cfa0bacc8a25d43c2e958dd6772b28f6b0e42")
     version("6.7.1", sha256="d6950597ce1fc2e1cf374c3aa70c2d72532bb74150e9853d7127af86a8a6c7b4")
     version("6.7.0", sha256="e17f016ec987092423e86d732c0f9786124598877fa00970fd806da113c02ca5")
@@ -154,9 +174,6 @@ class QtBase(QtPackage):
     version("6.2.4", sha256="657d1405b5e15afcf322cc75b881f62d6a56f16383707742a99eb87f53cb63de")
     version("6.2.3", sha256="2dd095fa82bff9e0feb7a9004c1b2fb910f79ecc6111aa64637c95a02b7a8abb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("dbus", default=False, description="Build with D-Bus support.")
     variant(
         "framework", default=bool(MACOS_VERSION), description="Build as a macOS Framework package."
@@ -177,7 +194,12 @@ class QtBase(QtPackage):
     variant("opengl", default=False, when="+gui", description="Build with OpenGL support.")
     variant("widgets", default=True, when="+gui", description="Build with widgets.")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Dependencies, then variant- and version-specific dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.21:", type="build", when="~shared")
     depends_on("cmake@3.21:", type="build", when="platform=darwin")
     depends_on("double-conversion")

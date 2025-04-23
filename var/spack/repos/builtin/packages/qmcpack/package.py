@@ -1,30 +1,29 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.tty as tty
 
 from spack.package import *
 
 
 class Qmcpack(CMakePackage, CudaPackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte
-    Carlo (QMC) simulation code."""
+    Carlo (QMC) simulation code.
+    """
 
-    # Package information
     homepage = "https://www.qmcpack.org/"
     git = "https://github.com/QMCPACK/qmcpack.git"
     maintainers("ye-luo")
     tags = ["ecp", "ecp-apps"]
 
-    license("CC0-1.0")
+    license("NCSA", checked_by="prckent")
 
     # This download method is untrusted, and is not recommended by the
     # Spack manual. However, it is easier to maintain because github hashes
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("4.0.0", tag="v4.0.0", commit="0199944fb644b4798446fdfc0549c81666a4a943")
     version("3.17.1", tag="v3.17.1", commit="9d0d968139fc33f71dbf9159f526dd7b47f10a3b")
     version("3.17.0", tag="v3.17.0", commit="9049a90626d1fe3c431f55c56a7197f8a13d5fc6")
     version("3.16.0", tag="v3.16.0", commit="5b7544c40be105b0aafa1602601ccb0cf23ea547")
@@ -46,9 +45,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     version("3.2.0", tag="v3.2.0", commit="d531f6b35fbab9ab2b80e9222f694b66e08bdd9d")
     version("3.1.1", tag="v3.1.1", commit="07611637f823187ac5133d6e2249cdb86b92b04d")
     version("3.1.0", tag="v3.1.0", commit="146d920cf33590eac6a7a976f88871c1fe6418a6")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     # These defaults match those in the QMCPACK manual
     variant(
@@ -114,21 +110,14 @@ class Qmcpack(CMakePackage, CudaPackage):
         msg="QMCPACK CUDA+SOA variant does not exist prior to v. 3.5.0.",
     )
 
-    conflicts("^openblas+ilp64", msg="QMCPACK does not support OpenBLAS 64-bit integer variant")
-
-    conflicts("^openblas threads=none", msg="QMCPACK does not support OpenBLAS without threading")
-
-    conflicts("^openblas threads=pthreads", msg="QMCPACK does not support OpenBLAS with pthreads")
+    requires("^openblas~ilp64 threads=openmp", when="^[virtuals=blas,lapack] openblas")
+    requires("^intel-oneapi-mkl ~ilp64", when="^[virtuals=blas,lapack] intel-oneapi-mkl")
 
     conflicts(
         "cuda_arch=none",
         when="+cuda",
         msg="A value for cuda_arch must be specified. Add cuda_arch=XX",
     )
-
-    # Omitted for now due to concretizer bug
-    # conflicts('^intel-mkl+ilp64',
-    #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
     # QMCPACK 3.15.0 increased the minimum gcc to 9
     conflicts("%gcc@:8", when="@3.15.0:")
@@ -145,7 +134,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     cpp14_warning = "QMCPACK v3.6.0 or later requires a " "compiler with support for C++14"
     conflicts("%gcc@:4", when="@3.6.0:", msg=cpp14_warning)
     conflicts("%intel@:17", when="@3.6.0:", msg=cpp14_warning)
-    conflicts("%pgi@:17", when="@3.6.0:", msg=cpp14_warning)
     conflicts("%clang@:3.4", when="@3.6.0:", msg=cpp14_warning)
 
     conflicts("+afqmc", when="@:3.6.0", msg="AFQMC not recommended before v3.7")
@@ -166,9 +154,11 @@ class Qmcpack(CMakePackage, CudaPackage):
         "QMCPACK releases prior to 3.5.0 require the "
         "Intel compiler when linking against Intel MKL"
     )
-    conflicts("%gcc", when="@:3.4.0 ^intel-mkl", msg=mkl_warning)
-    conflicts("%pgi", when="@:3.4.0 ^intel-mkl", msg=mkl_warning)
-    conflicts("%llvm", when="@:3.4.0 ^intel-mkl", msg=mkl_warning)
+    conflicts("%gcc", when="@:3.4.0 ^[virtuals=blas,lapack] intel-oneapi-mkl", msg=mkl_warning)
+    conflicts("%llvm", when="@:3.4.0 ^[virtuals=blas,lapack] intel-oneapi-mkl", msg=mkl_warning)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
@@ -244,7 +234,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         return targets
 
     # QMCPACK prefers taking MPI compiler wrappers as CMake compilers.
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+mpi" in spec:
             env.set("CC", spec["mpi"].mpicc)
@@ -381,7 +371,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         # Next two environment variables were introduced in QMCPACK 3.5.0
         # Prior to v3.5.0, these lines should be benign but CMake
         # may issue a warning.
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES:
+        if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
             args.append("-DENABLE_MKL=1")
             args.append("-DMKL_ROOT=%s" % env["MKLROOT"])
         else:
@@ -413,7 +403,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         with working_dir(self.build_directory):
             install_tree("bin", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set-up runtime environment for QMCPACK.
         Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 

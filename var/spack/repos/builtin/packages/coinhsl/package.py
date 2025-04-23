@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -63,7 +62,7 @@ class Coinhsl(MesonPackage, AutotoolsPackage):
         args.append(f"-Dlibblas={blas}")
         args.extend([f"-Dlibblas_path={p}" for p in blas_paths])
         args.append(f"-Dliblapack={lapack}")
-        args.extend([f"-Dlibblas_path={p}" for p in lapack_paths])
+        args.extend([f"-Dliblapack_path={p}" for p in lapack_paths])
         if spec.satisfies("+metis"):
             metis = spec["metis"]
             if metis.satisfies("@5"):

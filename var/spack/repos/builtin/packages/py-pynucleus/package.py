@@ -1,8 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -54,16 +54,14 @@ class PyPynucleus(PythonPackage):
         "PyNucleus-nl",
     ]
 
-    def setup_build_environment(self, env):
-        env.set("PYNUCLEUS_BUILD_PARALLELISM", make_jobs)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("PYNUCLEUS_BUILD_PARALLELISM", str(make_jobs))
 
     @run_before("install")
     def install_python(self):
-        prefix = self.prefix
         for subpackage in ["packageTools", "base", "metisCy", "fem", "multilevelSolver", "nl"]:
             with working_dir(subpackage):
-                args = std_pip_args + ["--prefix=" + prefix, "."]
-                pip(*args)
+                pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
 
     @run_after("install")
     def install_additional_files(self):
