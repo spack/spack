@@ -69,7 +69,7 @@ def descend(coll, fqn=""):
             else:
                 descend(coll[idx], new_fqn)
     else:
-        print("Collection if of unexpected type:", type(coll))
+        print("Collection is of unexpected type:", type(coll))
         assert coll is not dict and coll is not list
     for section in to_delete:
         del coll[section]
