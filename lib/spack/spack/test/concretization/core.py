@@ -1831,10 +1831,7 @@ class TestConcretize:
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
         monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
 
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError,
-            match="a subset of input specs could not be solved for",
-        ):
+        with pytest.raises(spack.solver.asp.OutputDoesNotSatisfyInputError):
             list(solver.solve_in_rounds(specs))
 
     def test_coconcretize_reuse_and_virtuals(self):
@@ -3336,3 +3333,36 @@ def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
     assert mpich["fortran"].satisfies("gcc")
     assert mpich["c"].satisfies("llvm")
     assert mpich["cxx"].satisfies("llvm")
+
+
+@pytest.mark.regression("49847")
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
+def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runtimes_on_reuse):
+    """Test that we can reuse a spec when specifying build dependencies in the input"""
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b %gcc")
+        assert pkgb_old.dag_hash() == result.dag_hash()
+
+        result = spack.concretize.concretize_one("pkg-a ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+        assert result.satisfies("%gcc@9")
+
+        result = spack.concretize.concretize_one("pkg-a %gcc@10 ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+
+
+@pytest.mark.regression("49847")
+def test_reuse_when_requiring_build_dep(
+    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
+):
+    """Test that we can reuse a spec when specifying build dependencies in requirements"""
+    mutable_config.set("packages:all:require", "%gcc")
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b")
+        assert pkgb_old.dag_hash() == result.dag_hash(), result.tree()

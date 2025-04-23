@@ -25,6 +25,7 @@ class SentieonGenomics(Package):
     url = "https://s3.amazonaws.com/sentieon-release/software/sentieon-genomics-201808.01.tar.gz"
     maintainers("snehring")
 
+    version("202503", sha256="da8fd40e8fe86e0d52ac7023b2ee561d5eb4a89f15afe79ef2ff1d3a13cea73d")
     version("202308.02", sha256="adb553c72d5180f551aea77fb6626dea36f33f1968f3d0ab0bb00dc7af4f5b55")
     version("202308", sha256="13dc8d50577fe4767142c50f1a95772db95cd4b173c2b281cdcdd68a5af47cb0")
     version("202112.07", sha256="ea770483d3e70e9d157fe938096d5ea06e47166d57e0037cf66b6449c7fce2ab")
@@ -42,7 +43,8 @@ class SentieonGenomics(Package):
     def install(self, spec, prefix):
         install_tree("bin", prefix.bin)
         install_tree("doc", prefix.doc)
-        install_tree("etc", prefix.etc)
+        if spec.satisfies("@:202308.02"):
+            install_tree("etc", prefix.etc)
         install_tree("lib", prefix.lib)
         install_tree("libexec", prefix.libexec)
         install_tree("share", prefix.share)

@@ -38,22 +38,16 @@ class G2c(CMakePackage):
         when="@1.7:",
     )
     variant(
-        "pthreads",
-        default=False,
-        description="Turn on thread-safety with pthreads",
-        when="@develop",
+        "pthreads", default=False, description="Turn on thread-safety with pthreads", when="@2:"
     )
     variant(
-        "utils",
-        default=True,
-        description="Build and install some utility programs",
-        when="@develop",
+        "utils", default=True, description="Build and install some utility programs", when="@2:"
     )
     variant(
         "build_v2_api",
-        default=False,
+        default=True,
         description="Build new g2c API, experimental until 2.0.0 release",
-        when="@develop",
+        when="@2:",
     )
 
     depends_on("c", type="build")
@@ -64,6 +58,7 @@ class G2c(CMakePackage):
     depends_on("openjpeg", when="+openjpeg")
     depends_on("libxml2@2.9:", when="+build_v2_api")
 
+    conflicts("+utils ~build_v2_api", msg="+utils requires G2C API")
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
     def cmake_args(self):

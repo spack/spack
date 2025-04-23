@@ -276,14 +276,6 @@ class MvapichPlus(AutotoolsPackage, CudaPackage, ROCmPackage):
             os.path.join(self.prefix.lib, f"libmpi.{dso_suffix}"),
         ]
 
-    @run_before("configure")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError("Mvapich requires both C and Fortran compilers!")
-
     def configure_args(self):
         spec = self.spec
         args = [
