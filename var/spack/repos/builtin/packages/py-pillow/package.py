@@ -125,18 +125,17 @@ class PyPillowBase(PythonPackage):
             )
 
         if self.spec.satisfies("@:9"):
-
-            def variant_to_cfg(variant):
-                able = "enable" if "+" + variant in self.spec else "disable"
-                return "{0}_{1}=1\n".format(able, variant)
-
             with open("setup.cfg", "a") as setup:
-                setup.write("[build_ext]\n")
-                for variant in self.VARIANTS:
-                    setup.write(variant_to_cfg(variant))
+                print("[build_ext]", file=setup)
 
-                setup.write("rpath={0}\n".format(":".join(self.rpath)))
-                setup.write("[install]\n")
+                for variant in self.VARIANTS:
+                    if self.spec.satisfies(f"+{variant}"):
+                        print(f"enable_{variant}=1", file=setup)
+                    elif self.spec.satisfies(f"~{variant}"):
+                        print(f"disable_{variant}=1", file=setup)
+
+                print("rpath={0}".format(":".join(self.rpath)), file=setup)
+                print("[install]", file=setup)
 
     @when("@:9")
     def setup_build_environment(self, env):
