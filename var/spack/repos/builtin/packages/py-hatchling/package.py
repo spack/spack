@@ -27,10 +27,15 @@ class PyHatchling(PythonPackage):
     version("1.4.1", sha256="13461b42876ade4f75ee5d2a2c656b288ca0aab7f048ef66657ef166996b2118")
 
     with default_args(type=("build", "run")):
-        depends_on("py-editables@0.3:")
+        depends_on("python@3.8:", when="@1.18:")
+        depends_on("python@3.7:", when="@1.12:")
 
-        depends_on("py-packaging@24.2:", when="@1.26.0:")
-        depends_on("py-packaging@23.2:", when="@1.24.2:")
+        depends_on("py-editables@0.3:", when="@:1.21")
+
+        depends_on("py-importlib-metadata", when="@1.12:1.17 ^python@:3.7")
+
+        depends_on("py-packaging@24.2:", when="@1.26:")
+        depends_on("py-packaging@23.2:", when="@1.23:")
         depends_on("py-packaging@21.3:")
 
         depends_on("py-pathspec@0.10.1:", when="@1.9:")
