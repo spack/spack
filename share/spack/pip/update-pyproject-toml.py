@@ -4,9 +4,6 @@ import sys
 
 import toml
 
-verbosity = 0
-
-
 def update_value(fqn, value):
     if fqn == ".project.name":
         new_val = "spack-package-manager-mlcurry"
@@ -78,8 +75,6 @@ def descend(coll, fqn=""):
 
 
 if __name__ == "__main__":
-    global verbosity
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i", "--input", type=str, help="Input pyproject.toml", action="store", default=sys.stdin
@@ -96,7 +91,7 @@ if __name__ == "__main__":
         "-v", "--verbose", help="Increase verbosity of this tool", action="count", default=0
     )
     args = parser.parse_args()
-    verbosity = args.verbosity
+    verbosity = args.verbose
 
     spack_toml = toml.load(args.input)
 
