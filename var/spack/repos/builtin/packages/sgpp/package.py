@@ -54,9 +54,9 @@ class Sgpp(SConsPackage):
     # to complain about missing headers (due to a path check not working anymore)
     # See issue https://github.com/SGpp/SGpp/issues/263 and https://github.com/SGpp/SGpp/pull/266
     patch("disable_disutils_deprecation_warning.patch", when="@:3.4.0 ^python@3.10:3.11")
-    # SGpp does not contain aarch64 support as of yet. To make it work still, this patch adds
+    # SGpp does not contain aarch64 support as of 3.4.0. To make it work still, this patch adds
     # simple build system support for it.
-    patch("for_aarch64.patch", when="target=aarch64:")
+    patch("for_aarch64.patch", when="@:3.4.0 target=aarch64:")
     # SGpp will default to the system paths when linking boost without the patch
     # This may work (depending on the boost versions in question) but we should use the boost
     # from spack. This patch allows to correctly pass the spack's boost path to SGpp
@@ -224,6 +224,8 @@ class Sgpp(SConsPackage):
             self.args.append("ARCH=sse42")
         elif "sse3" in self.spec.target:
             self.args.append("ARCH=sse3")
+        elif "target=aarch64:" in spec:
+            self.args.append("ARCH=aarch64")
 
         # OpenCL Flags
         self.args.append("USE_OCL={0}".format("1" if "+opencl" in spec else "0"))
