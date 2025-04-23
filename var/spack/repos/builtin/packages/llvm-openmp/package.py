@@ -96,7 +96,7 @@ class LlvmOpenmp(CMakePackage):
             # as libgomp alias which can conflict with GCC's libgomp.
             cmake_args.append("-DLIBOMP_INSTALL_ALIASES=OFF")
 
-        # Build llvm-openmp-ompt as a stand alone library
+        # Variant to build llvm-openmp-ompt as a stand alone library
         # CMAKE rpath variable prevents standalone error
         # where this package wants the llvm tools path
         if "+openmp_libraries_only" in self.spec:
