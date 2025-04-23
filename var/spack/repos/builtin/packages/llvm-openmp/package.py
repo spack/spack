@@ -54,7 +54,6 @@ class LlvmOpenmp(CMakePackage):
         "libomptarget", default=True, description="Enable building libomptarget for offloading"
     )
 
-
     variant("multicompat", default=True, description="Support the GNU OpenMP runtime interface.")
 
     depends_on("c", type="build")  # generated
