@@ -85,13 +85,11 @@ class CompilerAdaptor:
 
     @property
     def opt_flags(self) -> List[str]:
-        first_compiler = next(iter(self.compilers.values())).package
-        return getattr(first_compiler, "opt_flags", [])
+        return next(iter(self.compilers.values())).package.opt_flags
 
     @property
     def debug_flags(self) -> List[str]:
-        first_compiler = next(iter(self.compilers.values())).package
-        return getattr(first_compiler, "debug_flags", [])
+        return next(iter(self.compilers.values())).package.debug_flags
 
     @property
     def openmp_flag(self) -> str:
