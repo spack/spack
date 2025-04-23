@@ -142,6 +142,7 @@ class ScalapackBase(CMakePackage):
             c_flags.append("-Wno-error=implicit-function-declaration")
 
         options.append(self.define("CMAKE_C_FLAGS", " ".join(c_flags)))
+        options.append(self.define("CMAKE_FFLAGS", " ".join(fflags)))
 
         return options
 
