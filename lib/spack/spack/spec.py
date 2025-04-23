@@ -1765,6 +1765,9 @@ class Spec:
             direct: if True denotes a direct dependency (associated with the % sigil)
             when: if non-None, condition under which dependency holds
         """
+        if when is None:
+            when = Spec()
+
         if spec.name not in self._dependencies or not spec.name:
             self.add_dependency_edge(
                 spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
@@ -1824,6 +1827,9 @@ class Spec:
             direct: if True denotes a direct dependency
             when: if non-None, condition under which dependency holds
         """
+        if when is None:
+            when = Spec()
+
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
