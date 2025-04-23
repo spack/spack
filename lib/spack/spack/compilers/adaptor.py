@@ -18,6 +18,9 @@ class Languages(enum.Enum):
 
 
 class CompilerAdaptor:
+    """Provides access to compiler attributes via `Package.compiler`. Useful for
+    packages which do not yet access compiler properties via `self.spec[language]`.
+    """
     def __init__(
         self, compiled_spec: spack.spec.Spec, compilers: Dict[Languages, spack.spec.Spec]
     ) -> None:
@@ -79,21 +82,15 @@ class CompilerAdaptor:
             result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
         return result
 
-    def _first_defined(self, property):
-        for language in [Languages.C, Languages.CXX, Languages.FORTRAN]:
-            if language in self.compilers:
-                compiler_pkg = self.compilers[language].package
-                opt_flags = getattr(compiler_pkg, property, None)
-                if opt_flags:
-                    return opt_flags
-
     @property
     def opt_flags(self) -> List[str]:
-        return self._first_defined("opt_flags") or []
+        first_compiler = next(iter(self.compilers.values())).package
+        return getattr(first_compiler, "opt_flags", [])
 
     @property
     def debug_flags(self) -> List[str]:
-        return self._first_defined("debug_flags") or []
+        first_compiler = next(iter(self.compilers.values())).package
+        return getattr(first_compiler, "debug_flags", [])
 
     @property
     def openmp_flag(self) -> str:

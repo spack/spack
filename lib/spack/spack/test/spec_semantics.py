@@ -1366,7 +1366,12 @@ class TestSpecSemantics:
             vt.splice(vh, transitive)
 
     def test_adaptor_optflags(self):
-        spec = spack.concretize.concretize_one(Spec("pkg-a"))
+        """Tests that we can obtain the list of optflags, and debugflags,
+        from the compiler adaptor, and that this list is taken from the
+        appropriate compiler package.
+        """
+        # pkg-a depends on c, so only the gcc compiler should be chosen
+        spec = spack.concretize.concretize_one(Spec("pkg-a %gcc"))
         assert "-Otestopt" in spec.package.compiler.opt_flags
         # This is not set, make sure we get an empty list
         for x in spec.package.compiler.debug_flags:
