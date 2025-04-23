@@ -88,6 +88,11 @@ class PyPillowBase(PythonPackage):
         settings = {"parallel": make_jobs}
 
         for variant in self.VARIANTS:
+            try:
+                self.get_variant(variant)
+            except ValueError:
+                continue
+
             if spec.satisfies(f"+{variant}"):
                 settings[variant] = "enable"
             elif spec.satisfies(f"~{variant}"):
@@ -133,6 +138,10 @@ class PyPillowBase(PythonPackage):
             with open("setup.cfg", "a") as setup:
                 setup.write("[build_ext]\n")
                 for variant in self.VARIANTS:
+                    try:
+                        self.get_variant(variant)
+                    except ValueError:
+                        continue
                     setup.write(variant_to_cfg(variant))
 
                 setup.write("rpath={0}\n".format(":".join(self.rpath)))
