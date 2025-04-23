@@ -33,20 +33,19 @@ pip install -r requirements.txt
 mv "${SPACK_PKG_SRC}/spack/pyproject.toml" "${SPACK_PKG_SRC}/spack/pyproject.toml.bak"
 python update-pyproject-toml.py -i "${SPACK_PKG_SRC}/spack/pyproject.toml.bak" -o "${SPACK_PKG_SRC}/pyproject.toml"
 
-# Install updated end-user config.yaml
-mkdir -p "${SPACK_PKG_SRC}/spack/etc/spack/end-user"
-python update-config-yaml.py -i "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml" -o "${SPACK_PKG_SRC}/spack/etc/spack/end-user/config.yaml"
+# Install updated site-admin config.yaml
+mkdir -p "${SPACK_PKG_SRC}/spack/etc/spack/site-admin"
+python update-config-yaml.py -i "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml" -o "${SPACK_PKG_SRC}/spack/etc/spack/site-admin/config.yaml"
 
-# Update defaults/config.yaml with a warning about end-user/config.yaml
+# Update defaults/config.yaml with a warning about site-admin/config.yaml
 cp "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml" config.yaml.bak
 cat <<EOF > new.config.yaml
 # Since this Spack is managed by pip, this configuration is overriden
-# by the one in ../end-user/config.yaml. Please refer to that one for
+# by the one in ../site-admin/config.yaml. Please refer to that one for
 # current settings.
 EOF
 cat config.yaml.bak >> new.config.yaml
 mv new.config.yaml "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml"
-rm config.yaml.bak
 
 pushd "${SPACK_PKG_SRC}"
 python3 -m build
