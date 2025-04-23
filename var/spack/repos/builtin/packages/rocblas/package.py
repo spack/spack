@@ -134,6 +134,9 @@ class Rocblas(CMakePackage):
 
     for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
+    for ver in ["6.4.0"]:
+        depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
+
     depends_on("python@3.6:", type="build")
 
     with when("+tensile"):
