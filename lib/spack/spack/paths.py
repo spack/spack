@@ -30,13 +30,19 @@ def _get_xdg_var(xdg_name):
 # User configuration in $HOME/.spack
 # Override w/ `SPACK_USER_CONFIG_PATH` or `XDG_CONFIG_HOME`
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or _get_xdg_var("XDG_CONFIG_HOME") or "~%s.spack" % os.sep)
+    return os.path.expanduser(
+        os.getenv("SPACK_USER_CONFIG_PATH")
+        or _get_xdg_var("XDG_CONFIG_HOME")
+        or "~%s.spack" % os.sep
+    )
 
 
 # User data and caches in $HOME/.spack
 # Override w/ `SPACK_USER_DATA_PATH` or `XDG_DATA_HOME`
 def _get_user_data_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_DATA_PATH") or _get_xdg_var("XDG_DATA_HOME") or "~%s.spack" % os.sep)
+    return os.path.expanduser(
+        os.getenv("SPACK_USER_DATA_PATH") or _get_xdg_var("XDG_DATA_HOME") or "~%s.spack" % os.sep
+    )
 
 
 # Configuration in /etc/spack on the system

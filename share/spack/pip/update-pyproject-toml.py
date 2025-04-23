@@ -4,6 +4,7 @@ import sys
 
 import toml
 
+
 def update_value(fqn, value):
     if fqn == ".project.name":
         new_val = "spack-package-manager-mlcurry"
@@ -60,7 +61,7 @@ def descend(coll, fqn=""):
                     descend(coll[k], new_fqn)
     elif type(coll) is list:
         for idx in range(len(coll)):
-            new_fqn = fqn # Explicitly omit index from fqn
+            new_fqn = fqn  # Explicitly omit index from fqn
             if type(coll[idx]) is str:
                 coll[idx] = update_value(new_fqn, coll[idx])
             elif type(coll[idx]) in [int, bool]:
@@ -68,8 +69,8 @@ def descend(coll, fqn=""):
             else:
                 descend(coll[idx], new_fqn)
     else:
-        print('Collection if of unexpected type:', type(coll))
-        assert(coll is not dict and coll is not list)
+        print("Collection if of unexpected type:", type(coll))
+        assert coll is not dict and coll is not list
     for section in to_delete:
         del coll[section]
 
