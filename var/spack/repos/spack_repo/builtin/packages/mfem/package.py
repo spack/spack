@@ -530,6 +530,74 @@ class Mfem(Package, CMakePackage, CudaPackage, ROCmPackage):
     patch("mfem-4.7.patch", when="@4.7.0")
     patch("mfem-4.7-sundials-7.patch", when="@4.7.0+sundials ^sundials@7:")
 
+    @property
+    def suitesparse_components(self):
+        """Return the SuiteSparse components needed by MFEM."""
+        ss_comps = "umfpack,cholmod,colamd,amd,camd,ccolamd,suitesparseconfig"
+        if self.spec.satisfies("@3.2:"):
+            ss_comps = "klu,btf," + ss_comps
+        return ss_comps
+
+    @property
+    def sundials_components(self):
+        """Return the SUNDIALS components needed by MFEM."""
+        spec = self.spec
+        sun_comps = "arkode,cvodes,nvecserial,kinsol"
+        if "+mpi" in spec:
+            if spec.satisfies("@4.2:"):
+                sun_comps += ",nvecparallel,nvecmpiplusx"
+            else:
+                sun_comps += ",nvecparhyp,nvecparallel"
+        if "+cuda" in spec and "+cuda" in spec["sundials"]:
+            sun_comps += ",nveccuda"
+        if "+rocm" in spec and "+rocm" in spec["sundials"]:
+            sun_comps += ",nvechip"
+        return sun_comps
+
+    @property
+    def headers(self):
+        """Export the main mfem header, mfem.hpp."""
+        hdrs = HeaderList(find(self.prefix.include, "mfem.hpp", recursive=False))
+        return hdrs or None
+
+    @property
+    def libs(self):
+        """Export the mfem library file."""
+        libs = find_libraries(
+            "libmfem", root=self.prefix.lib, shared=("+shared" in self.spec), recursive=False
+        )
+        return libs or None
+
+    @property
+    def config_mk(self):
+        """Export the location of the config.mk file.
+        This property can be accessed using pkg["mfem"].config_mk
+        """
+        dirs = [self.prefix, self.prefix.share.mfem]
+        for d in dirs:
+            f = join_path(d, "config.mk")
+            if os.access(f, os.R_OK):
+                return FileList(f)
+        return FileList(find(self.prefix, "config.mk", recursive=True))
+
+    @property
+    def test_mk(self):
+        """Export the location of the test.mk file.
+        This property can be accessed using pkg["mfem"].test_mk.
+        In version 3.3.2 and newer, the location of test.mk is also defined
+        inside config.mk, variable MFEM_TEST_MK.
+        """
+        dirs = [self.prefix, self.prefix.share.mfem]
+        for d in dirs:
+            f = join_path(d, "test.mk")
+            if os.access(f, os.R_OK):
+                return FileList(f)
+        return FileList(find(self.prefix, "test.mk", recursive=True))
+
+    @property
+    def xlinker(self):
+        return "-Wl," if "~cuda" in self.spec else "-Xlinker="
+
 
 def str_to_timerid(timer_type):
     timer_ids = {"auto": "-1", "std": "0", "posix": "2", "mac": "4", "mpi": "6"}
@@ -1299,70 +1367,6 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
         for f in files_with_bom:
             filter_file(bom, "", f)
 
-    @property
-    def suitesparse_components(self):
-        """Return the SuiteSparse components needed by MFEM."""
-        ss_comps = "umfpack,cholmod,colamd,amd,camd,ccolamd,suitesparseconfig"
-        if self.spec.satisfies("@3.2:"):
-            ss_comps = "klu,btf," + ss_comps
-        return ss_comps
-
-    @property
-    def sundials_components(self):
-        """Return the SUNDIALS components needed by MFEM."""
-        spec = self.spec
-        sun_comps = "arkode,cvodes,nvecserial,kinsol"
-        if "+mpi" in spec:
-            if spec.satisfies("@4.2:"):
-                sun_comps += ",nvecparallel,nvecmpiplusx"
-            else:
-                sun_comps += ",nvecparhyp,nvecparallel"
-        if "+cuda" in spec and "+cuda" in spec["sundials"]:
-            sun_comps += ",nveccuda"
-        if "+rocm" in spec and "+rocm" in spec["sundials"]:
-            sun_comps += ",nvechip"
-        return sun_comps
-
-    @property
-    def headers(self):
-        """Export the main mfem header, mfem.hpp."""
-        hdrs = HeaderList(find(self.prefix.include, "mfem.hpp", recursive=False))
-        return hdrs or None
-
-    @property
-    def libs(self):
-        """Export the mfem library file."""
-        libs = find_libraries(
-            "libmfem", root=self.prefix.lib, shared=("+shared" in self.spec), recursive=False
-        )
-        return libs or None
-
-    @property
-    def config_mk(self):
-        """Export the location of the config.mk file.
-        This property can be accessed using pkg["mfem"].config_mk
-        """
-        dirs = [self.prefix, self.prefix.share.mfem]
-        for d in dirs:
-            f = join_path(d, "config.mk")
-            if os.access(f, os.R_OK):
-                return FileList(f)
-        return FileList(find(self.prefix, "config.mk", recursive=True))
-
-    @property
-    def test_mk(self):
-        """Export the location of the test.mk file.
-        This property can be accessed using pkg["mfem"].test_mk.
-        In version 3.3.2 and newer, the location of test.mk is also defined
-        inside config.mk, variable MFEM_TEST_MK.
-        """
-        dirs = [self.prefix, self.prefix.share.mfem]
-        for d in dirs:
-            f = join_path(d, "test.mk")
-            if os.access(f, os.R_OK):
-                return FileList(f)
-        return FileList(find(self.prefix, "test.mk", recursive=True))
-
     # See also find_system_libraries in lib/spack/llnl/util/filesystem.py
     # where the similar list of paths is used.
     sys_lib_paths = [
@@ -1378,17 +1382,13 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
     def is_sys_lib_path(self, dir):
         return dir in self.sys_lib_paths
 
-    @property
-    def xlinker(self):
-        return "-Wl," if "~cuda" in self.spec else "-Xlinker="
-
     # Similar to spec[pkg].libs.ld_flags but prepends rpath flags too.
     # Also does not add system library paths as defined by 'sys_lib_paths'
     # above -- this is done to avoid issues like this:
     # https://github.com/mfem/mfem/issues/1088.
     def ld_flags_from_library_list(self, libs_list):
         flags = [
-            "%s-rpath,%s" % (self.xlinker, dir)
+            "%s-rpath,%s" % (self.pkg.xlinker, dir)
             for dir in libs_list.directories
             if not self.is_sys_lib_path(dir)
         ]
@@ -1398,7 +1398,7 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
 
     def ld_flags_from_dirs(self, pkg_dirs_list, pkg_libs_list):
         flags = [
-            "%s-rpath,%s" % (self.xlinker, dir)
+            "%s-rpath,%s" % (self.pkg.xlinker, dir)
             for dir in pkg_dirs_list
             if not self.is_sys_lib_path(dir)
         ]
