@@ -17,4 +17,4 @@ class PyId(PythonPackage):
 
     depends_on("py-flit-core@3.2:3", type="build")
     depends_on("python@3.8:", type=("build", "run"))
-    depends_on("py-urllib3@2:2", type=("build", "run"))
+    depends_on("py-requests", type=("build", "run"))
