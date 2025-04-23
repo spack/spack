@@ -36,8 +36,9 @@ class PyFlitCore(PythonPackage):
     version("2.3.0", sha256="a50bcd8bf5785e3a7d95434244f30ba693e794c5204ac1ee908fc07c4acdbf80")
 
     with default_args(type=("build", "run")):
-        depends_on("python@3.6:", when="@3.6:")
-        depends_on("python")
+        depends_on("python@3.6:", when="@3.4:")
+        depends_on("python@3.4:", when="@3.0:")
+        depends_on("python@2.7,3.4:", when="@2.3:")
 
     # flit_core/build_thyself.py
     depends_on("py-tomli", when="@3.4:3.5", type="run")
