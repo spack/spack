@@ -97,16 +97,10 @@ class Wgrib2(MakefilePackage, CMakePackage):
         when="@:3.1",
     )
     variant(
-        "netcdf4",
-        default=False,
-        description="Link in netcdf4 library to write netcdf3/4 files",
-        when="@:3.3",
-    )
-    variant(
         "netcdf",
         default=False,
         description="Link in netcdf4 library to write netcdf3/4 files",
-        when="@3.4:",
+        when="@3.2:",
     )
     variant("ipolates", default=False, description="Use to interpolate to new grids")
     variant(
@@ -167,7 +161,6 @@ class Wgrib2(MakefilePackage, CMakePackage):
         "enable_docs", default=False, description="Build doxygen documentation", when="@3.4.0:"
     )
 
-    conflicts("+netcdf3", when="+netcdf4")
     conflicts("+netcdf3", when="+netcdf")
     conflicts("+openmp", when="%apple-clang")
 
@@ -177,7 +170,7 @@ class Wgrib2(MakefilePackage, CMakePackage):
     depends_on("ip@5.1:", when="@3.5: +ipolates")
     depends_on("lapack", when="@3.5: +ipolates")
     depends_on("libaec@1.0.6:", when="@3.2: +aec")
-    depends_on("netcdf-c", when="+netcdf4")
+    depends_on("netcdf-c", when="+netcdf3")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("jasper@:2", when="@3.2:3.4 +jasper")
     depends_on("g2c", when="@3.5: +jasper")
