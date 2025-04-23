@@ -19,9 +19,10 @@ class PyHepstats(PythonPackage):
 
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
+    version("0.9.2", sha256="cf929871d45e338492eef585faaaa23eff93b200b4787d6b6181dc81f2607be7")
     version("0.8.1", sha256="ebb890496d7aebbf1d717de15d073be31d6775065308a4e0f263ed4051992b3f")
 
-    depends_on("python@3.9:3.12", type=("build", "run"), when="@0.8:")
+    depends_on("python@3.9:", type=("build", "run"), when="@0.8:")
     depends_on("py-setuptools@42:", type="build")
     depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
