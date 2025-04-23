@@ -27,6 +27,7 @@ class PyNetcdf4(PythonPackage):
 
     variant("mpi", default=True, description="Parallel IO support")
 
+    depends_on("c", type="build")
     depends_on("python", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@1.7.1:", type=("build", "link", "run"))
     depends_on("py-cython@0.29:", when="@1.6.5:", type="build")
