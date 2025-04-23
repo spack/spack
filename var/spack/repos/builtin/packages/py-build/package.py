@@ -26,7 +26,7 @@ class PyBuild(PythonPackage):
 
     variant("virtualenv", default=False, description="Install optional virtualenv dependency")
 
-    with default_args(type=("build")):
+    with default_args(type="build"):
         depends_on("py-flit-core@3.8:", when="@1:")
         depends_on("py-flit-core@3.4:", when="@0.10:")
 
