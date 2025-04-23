@@ -35,8 +35,8 @@ class NetcdfFortran(AutotoolsPackage):
     variant("shared", default=True, description="Enable shared library")
     variant("doc", default=False, description="Enable building docs")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("netcdf-c")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required
