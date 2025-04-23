@@ -2106,15 +2106,15 @@ class Spec:
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
             # note: depflag not allowed, currently, on "direct" edges
             edge_attributes = ""
-            if item.virtuals or item.when:
-                edge_attributes = item.spec.format("{edge_attributes}") + ""
+            if item.virtuals or item.when != Spec():
+                edge_attributes = item.spec.format("{edge_attributes}") + " "
 
             parts.append(f"%{edge_attributes}{item.spec.format()}".replace(current_name, new_name))
         for item in sorted(transitive, key=lambda x: x.spec.name):
             # Recurse to attach build deps in order
             edge_attributes = ""
-            if item.virtuals or item.depflag or item.when:
-                edge_attributes = item.spec.format("{edge_attributes}") + ""
+            if item.virtuals or item.depflag or item.when != Spec():
+                edge_attributes = item.spec.format("{edge_attributes}") + " "
             parts.append(f"^{edge_attributes}{str(item.spec)}")
         return " ".join(parts).strip()
 
