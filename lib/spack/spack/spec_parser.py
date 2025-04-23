@@ -573,8 +573,9 @@ class SpecParsingError(spack.error.SpecSyntaxError):
 
     def __init__(self, message, token, text):
         message += f"\n{text}"
-        underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
-        message += color.colorize(f"@*r{{{underline}}}")
+        if token:
+            underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+            message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
 
