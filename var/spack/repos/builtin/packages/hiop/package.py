@@ -75,10 +75,6 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     variant(
         "axom",
         default=False,
@@ -102,6 +98,10 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("lapack")
     depends_on("blas")
