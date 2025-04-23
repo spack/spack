@@ -1197,11 +1197,11 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
 
 
 def test_relative_path_components():
-    blobs_v3 = URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS)
+    blobs_v3 = URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOB)
     assert len(blobs_v3) == 1
     assert "blobs" in blobs_v3
 
-    blobs_v2 = URLBuildcacheEntryV2.get_relative_path_components(BuildcacheComponent.BLOBS)
+    blobs_v2 = URLBuildcacheEntryV2.get_relative_path_components(BuildcacheComponent.BLOB)
     assert len(blobs_v2) == 1
     assert "build_cache" in blobs_v2
 
@@ -1251,7 +1251,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
 
     index_blob_path = os.path.join(
         str(mirror_root),
-        *cache_class.get_relative_path_components(BuildcacheComponent.BLOBS),
+        *cache_class.get_relative_path_components(BuildcacheComponent.BLOB),
         "sha256",
         index_json_hash[:2],
         index_json_hash,
@@ -1274,11 +1274,7 @@ def mock_index(tmp_path, monkeypatch) -> IndexInformation:
         "data": [index_blob_record.to_dict()],
     }
 
-    manifest_json_path = os.path.join(
-        str(mirror_root),
-        *cache_class.get_relative_path_components(BuildcacheComponent.SPECS),
-        "index.manifest.json",
-    )
+    manifest_json_path = cache_class.get_index_url(str(mirror_root))
 
     os.makedirs(os.path.dirname(manifest_json_path))
 

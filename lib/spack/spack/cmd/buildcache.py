@@ -25,7 +25,6 @@ import spack.spec
 import spack.stage
 import spack.store
 import spack.util.parallel
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.cmd import display_specs
@@ -601,13 +600,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
         raise BuildcacheEntryError(f"No source tarball blob record, failed to sync {spec_label}")
 
     # Try to push the tarball
-    tarball_dest_url = url_util.join(
-        destination_url,
-        *cache_entry.get_relative_path_components(BuildcacheComponent.BLOBS),
-        tarball_blob_record.checksum_alg,
-        tarball_blob_record.checksum[:2],
-        tarball_blob_record.checksum,
-    )
+    tarball_dest_url = cache_entry.get_blob_url(destination_url, tarball_blob_record)
 
     try:
         web_util.push_to_url(local_tarball_path, tarball_dest_url, keep_original=True)
@@ -621,13 +614,7 @@ def copy_buildcache_entry(cache_entry: URLBuildcacheEntry, destination_url: str)
         raise BuildcacheEntryError(f"No source spec blob record, failed to sync {spec_label}")
 
     # Try to push the spec file
-    spec_dest_url = url_util.join(
-        destination_url,
-        *cache_entry.get_relative_path_components(BuildcacheComponent.BLOBS),
-        spec_blob_record.checksum_alg,
-        spec_blob_record.checksum[:2],
-        spec_blob_record.checksum,
-    )
+    spec_dest_url = cache_entry.get_blob_url(destination_url, spec_blob_record)
 
     try:
         web_util.push_to_url(local_spec_path, spec_dest_url, keep_original=True)

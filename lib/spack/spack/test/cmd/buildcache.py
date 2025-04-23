@@ -189,7 +189,7 @@ def test_buildcache_autopush(tmp_path, install_mockery, mock_fetch):
     assert s.name is not None
     manifest_file = URLBuildcacheEntry.get_manifest_filename(s)
     specs_dirs = os.path.join(
-        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPECS), s.name
+        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.SPEC), s.name
     )
 
     assert not (mirror_dir / specs_dirs / manifest_file).exists()
@@ -331,7 +331,7 @@ def test_buildcache_create_install(
     assert spec.name is not None
     manifest_path = os.path.join(
         str(tmpdir),
-        *cache_class.get_relative_path_components(BuildcacheComponent.SPECS),
+        *cache_class.get_relative_path_components(BuildcacheComponent.SPEC),
         spec.name,
         cache_class.get_manifest_filename(spec),
     )

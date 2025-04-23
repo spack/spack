@@ -10,8 +10,8 @@ import json
 import os
 import re
 import shutil
-import tempfile
 from contextlib import closing, contextmanager
+from tempfile import TemporaryDirectory
 from typing import Any, Dict, List, Optional, Tuple, Type
 
 import jsonschema
@@ -29,7 +29,6 @@ import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.database import INDEX_JSON_FILE
 from spack.mirrors.mirror import MirrorCollection
 from spack.schema.buildcache_spec import schema as buildcache_spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
@@ -52,20 +51,16 @@ class BuildcacheComponent(enum.Enum):
 
     These enums serve two purposes: They allow different buildcache layout
     versions to specify different relative location of these entities, and
-    some of them (usually the singular versions) can be mapped to and from
-    the different media types.
+    they're used to map buildcache objects to their respective media types.
     """
 
     # metadata file for a binary package
-    SPECS = enum.auto()
     SPEC = enum.auto()
     # things that live in the blobs directory
-    BLOBS = enum.auto()
+    BLOB = enum.auto()
     # binary mirror index
-    INDICES = enum.auto()
     INDEX = enum.auto()
     # public key used for verifying signed binary packages
-    KEYS = enum.auto()
     KEY = enum.auto()
     # index of all public keys found in the mirror
     KEY_INDEX = enum.auto()
@@ -197,18 +192,11 @@ class URLBuildcacheEntry:
     TARBALL_MEDIATYPE = "application/vnd.spack.install.v1.tar+gzip"
     PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
     PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
+    BUILDCACHE_INDEX_FILE = "index.manifest.json"
     COMPONENT_PATHS = {
-        BuildcacheComponent.BLOBS: ["blobs"],
-        BuildcacheComponent.INDICES: [f"v{LAYOUT_VERSION}", "manifests", "index"],
-        BuildcacheComponent.INDEX: [
-            f"v{LAYOUT_VERSION}",
-            "manifests",
-            "index",
-            INDEX_MANIFEST_FILE,
-        ],
-        BuildcacheComponent.KEYS: [f"v{LAYOUT_VERSION}", "manifests", "key"],
+        BuildcacheComponent.BLOB: ["blobs"],
+        BuildcacheComponent.INDEX: [f"v{LAYOUT_VERSION}", "manifests", "index"],
         BuildcacheComponent.KEY: [f"v{LAYOUT_VERSION}", "manifests", "key"],
-        BuildcacheComponent.SPECS: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
         BuildcacheComponent.SPEC: [f"v{LAYOUT_VERSION}", "manifests", "spec"],
         BuildcacheComponent.KEY_INDEX: [f"v{LAYOUT_VERSION}", "manifests", "key"],
         BuildcacheComponent.TARBALL: ["blobs"],
@@ -248,26 +236,31 @@ class URLBuildcacheEntry:
 
         layout_contents = {"signing": "gpg"}
 
-        tmpdir = tempfile.mkdtemp()
-        try:
+        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             local_layout_path = os.path.join(tmpdir, "layout.json")
             with open(local_layout_path, "w", encoding="utf-8") as fd:
-                fd.write(json.dumps(layout_contents))
+                json.dump(layout_contents, fd)
             remote_layout_url = url_util.join(
                 mirror_url, *cls.get_relative_path_components(BuildcacheComponent.LAYOUT_JSON)
             )
             web_util.push_to_url(local_layout_path, remote_layout_url, keep_original=False)
-        finally:
-            shutil.rmtree(tmpdir)
 
     @classmethod
     def get_base_url(cls, manifest_url: str) -> str:
         """Given any manifest url (i.e. one containing 'v3/manifests/') return the
         base part of the url"""
-        rematch = cls.SPEC_URL_REGEX.search(manifest_url)
+        rematch = cls.SPEC_URL_REGEX.match(manifest_url)
         if not rematch:
             raise BuildcacheEntryError(f"Unable to parse spec url: {manifest_url}")
         return rematch.group(1)
+
+    @classmethod
+    def get_index_url(cls, mirror_url: str):
+        return url_util.join(
+            mirror_url,
+            *cls.get_relative_path_components(BuildcacheComponent.INDEX),
+            cls.BUILDCACHE_INDEX_FILE,
+        )
 
     @classmethod
     def get_relative_path_components(cls, component: BuildcacheComponent) -> List[str]:
@@ -286,7 +279,7 @@ class URLBuildcacheEntry:
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
         """Given a concrete spec and a base url, return the full url where the
         spec manifest should be found"""
-        path_components = cls.get_relative_path_components(BuildcacheComponent.SPECS)
+        path_components = cls.get_relative_path_components(BuildcacheComponent.SPEC)
         return url_util.join(
             mirror_url, *path_components, spec.name, cls.get_manifest_filename(spec)
         )
@@ -294,13 +287,13 @@ class URLBuildcacheEntry:
     @classmethod
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Mapping from buildcache component to media type"""
-        if component == BuildcacheComponent.SPEC or component == BuildcacheComponent.SPECS:
+        if component == BuildcacheComponent.SPEC:
             return cls.BUILDCACHE_SPEC_MEDIATYPE
         elif component == BuildcacheComponent.TARBALL:
             return cls.TARBALL_MEDIATYPE
-        elif component == BuildcacheComponent.INDEX or component == BuildcacheComponent.INDICES:
+        elif component == BuildcacheComponent.INDEX:
             return cls.BUILDCACHE_INDEX_MEDIATYPE
-        elif component == BuildcacheComponent.KEY or component == BuildcacheComponent.KEYS:
+        elif component == BuildcacheComponent.KEY:
             return cls.PUBLIC_KEY_MEDIATYPE
         elif component == BuildcacheComponent.KEY_INDEX:
             return cls.PUBLIC_KEY_INDEX_MEDIATYPE
@@ -330,7 +323,7 @@ class URLBuildcacheEntry:
 
     def check_blob_exists(self, record: BlobRecord) -> bool:
         """Return True if the blob given by record exists on the mirror, False otherwise"""
-        blob_url = self.get_blob_url(record)
+        blob_url = self.get_blob_url(self.mirror_url, record)
         return web_util.url_exists(blob_url)
 
     @classmethod
@@ -338,15 +331,16 @@ class URLBuildcacheEntry:
         """Given a BlobRecord, return the relative path of the blob within a mirror
         as a list of path components"""
         return [
-            *cls.get_relative_path_components(BuildcacheComponent.BLOBS),
+            *cls.get_relative_path_components(BuildcacheComponent.BLOB),
             record.checksum_alg,
             record.checksum[:2],
             record.checksum,
         ]
 
-    def get_blob_url(self, record: BlobRecord) -> str:
+    @classmethod
+    def get_blob_url(cls, mirror_url: str, record: BlobRecord) -> str:
         """Return the full url of the blob given by record"""
-        return url_util.join(self.mirror_url, *self.get_blob_path_components(record))
+        return url_util.join(mirror_url, *cls.get_blob_path_components(record))
 
     def fetch_blob(self, record: BlobRecord) -> str:
         """Given a blob record, find associated blob in the manifest and stage it
@@ -354,7 +348,7 @@ class URLBuildcacheEntry:
         Returns the local path to the staged blob
         """
         if record not in self.stages:
-            blob_url = self.get_blob_url(record)
+            blob_url = self.get_blob_url(self.mirror_url, record)
             blob_stage = spack.stage.Stage(blob_url)
 
             # Fetch the blob, or else cleanup and exit early
@@ -413,15 +407,12 @@ class URLBuildcacheEntry:
         if manifest_contents.startswith(magic_string):
             if verify:
                 # Rry to verify and raise if we fail
-                tmpdir = tempfile.mkdtemp()
-                try:
+                with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
                     manifest_path = os.path.join(tmpdir, "manifest.json.sig")
                     with open(manifest_path, "w", encoding="utf-8") as fd:
                         fd.write(manifest_contents)
                     if not try_verify(manifest_path):
                         raise NoVerifyException("Signature could not be verified")
-                finally:
-                    shutil.rmtree(tmpdir)
 
             return spack.spec.Spec.extract_json_from_clearsig(manifest_contents)
         else:
@@ -514,14 +505,18 @@ class URLBuildcacheEntry:
 
             try:
                 web_util.remove_url(
-                    self.get_blob_url(self.get_blob_record(BuildcacheComponent.TARBALL))
+                    self.get_blob_url(
+                        self.mirror_url, self.get_blob_record(BuildcacheComponent.TARBALL)
+                    )
                 )
             except Exception as e:
                 tty.debug(f"Failed to remove previous archive: {e}")
 
             try:
                 web_util.remove_url(
-                    self.get_blob_url(self.get_blob_record(BuildcacheComponent.SPEC))
+                    self.get_blob_url(
+                        self.mirror_url, self.get_blob_record(BuildcacheComponent.SPEC)
+                    )
                 )
             except Exception as e:
                 tty.debug(f"Failed to remove previous metadata: {e}")
@@ -532,14 +527,7 @@ class URLBuildcacheEntry:
     def push_blob(cls, mirror_url: str, blob_path: str, record: BlobRecord) -> None:
         """Push the blob_path file to mirror as a blob represented by the given
         record"""
-        blob_destination_url = url_util.join(
-            mirror_url,
-            *cls.get_relative_path_components(BuildcacheComponent.BLOBS),
-            record.checksum_alg,
-            record.checksum[:2],
-            record.checksum,
-        )
-
+        blob_destination_url = cls.get_blob_url(mirror_url, record)
         web_util.push_to_url(blob_path, blob_destination_url, keep_original=False)
 
     @classmethod
@@ -592,17 +580,15 @@ class URLBuildcacheEntry:
         cache_class = get_url_buildcache_class()
         checksum_algo = "sha256"
         blob_to_push = local_file_path
-        tmpdir = tempfile.mkdtemp()
 
-        try:
+        with TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             blob_to_push = os.path.join(tmpdir, os.path.basename(local_file_path))
 
             with compression_writer(blob_to_push, compression, checksum_algo) as (
-                compressor,
+                fout,
                 checker,
-            ):
-                with open(local_file_path, "r", encoding="utf-8") as fd:
-                    compressor.write(fd.read().encode("utf-8"))
+            ), open(local_file_path, "rb") as fin:
+                shutil.copyfileobj(fin, fout)
 
             record = BlobRecord(
                 checker.length,
@@ -618,8 +604,6 @@ class URLBuildcacheEntry:
             cls.push_manifest(
                 mirror_url, manifest_name, manifest, tmpdir, component_type=component_type
             )
-        finally:
-            shutil.rmtree(tmpdir)
 
     def push_binary_package(
         self,
@@ -652,7 +636,7 @@ class URLBuildcacheEntry:
         # Any previous archive/tarball is gone, compute the path to the new one
         remote_archive_url = url_util.join(
             self.mirror_url,
-            *self.get_relative_path_components(BuildcacheComponent.BLOBS),
+            *self.get_relative_path_components(BuildcacheComponent.BLOB),
             checksum_algorithm,
             tarball_checksum[:2],
             tarball_checksum,
@@ -675,14 +659,14 @@ class URLBuildcacheEntry:
 
         # compress the spec dict and compute its checksum
         specfile = os.path.join(tmpdir, f"{spec.dag_hash()}.spec.json")
-        metadata_checksum, metadata_size = compress_and_write_spec(
+        metadata_checksum, metadata_size = compressed_json_from_dict(
             specfile, spec_dict, checksum_algorithm
         )
 
         # Any previous metadata blob is gone, compute the path to the new one
         remote_spec_url = url_util.join(
             self.mirror_url,
-            *self.get_relative_path_components(BuildcacheComponent.BLOBS),
+            *self.get_relative_path_components(BuildcacheComponent.BLOB),
             checksum_algorithm,
             metadata_checksum[:2],
             metadata_checksum,
@@ -743,14 +727,11 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
 
     SPEC_URL_REGEX = re.compile(r"(.+)/build_cache/.+")
     LAYOUT_VERSION = 2
-    # Uses the same BUILDCACHE_SPEC_MEDIATYPE and TARBALL_MEDIATYPE as v3
+    BUILDCACHE_INDEX_FILE = "index.json"
     COMPONENT_PATHS = {
-        BuildcacheComponent.BLOBS: ["build_cache"],
-        BuildcacheComponent.INDICES: ["build_cache"],
-        BuildcacheComponent.INDEX: ["build_cache", INDEX_JSON_FILE],
-        BuildcacheComponent.KEYS: ["build_cache", "_pgp"],
+        BuildcacheComponent.BLOB: ["build_cache"],
+        BuildcacheComponent.INDEX: ["build_cache"],
         BuildcacheComponent.KEY: ["build_cache", "_pgp"],
-        BuildcacheComponent.SPECS: ["build_cache"],
         BuildcacheComponent.SPEC: ["build_cache"],
         BuildcacheComponent.KEY_INDEX: ["build_cache", "_pgp"],
         BuildcacheComponent.TARBALL: ["build_cache"],
@@ -801,7 +782,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         spec_formatted = spec.format_path(
             "{architecture}-{compiler.name}-{compiler.version}-{name}-{version}-{hash}"
         )
-        path_components = self.get_relative_path_components(BuildcacheComponent.SPECS)
+        path_components = self.get_relative_path_components(BuildcacheComponent.SPEC)
         return url_util.join(mirror_url, *path_components, f"{spec_formatted}{ext}")
 
     def _get_tarball_url(self, spec: spack.spec.Spec, mirror_url: str) -> str:
@@ -814,7 +795,7 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
         filename = f"{spec_formatted}.spack"
         return url_util.join(
             mirror_url,
-            *self.get_relative_path_components(BuildcacheComponent.BLOBS),
+            *self.get_relative_path_components(BuildcacheComponent.BLOB),
             directory_name,
             filename,
         )
@@ -982,7 +963,8 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     def get_blob_path_components(cls, record: BlobRecord) -> List[str]:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
-    def get_blob_url(self, record: BlobRecord) -> str:
+    @classmethod
+    def get_blob_url(cls, mirror_url: str, record: BlobRecord) -> str:
         raise BuildcacheEntryError("v2 buildcache layout is unaware of manifests and blobs")
 
     def fetch_blob(self, record: BlobRecord) -> str:
@@ -1084,7 +1066,7 @@ def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
         )
 
 
-def _get_compressor(compression: str, writable: io.IOBase) -> io.IOBase:
+def _get_compressor(compression: str, writable: io.BufferedIOBase) -> io.BufferedIOBase:
     if compression == "gzip":
         return gzip.GzipFile(filename="", mode="wb", compresslevel=6, mtime=0, fileobj=writable)
     elif compression == "none":
@@ -1111,15 +1093,18 @@ def compression_writer(output_path: str, compression: str, checksum_algo: str):
         yield compress_writer, checksum_writer
 
 
-def compress_and_write_spec(
+def compressed_json_from_dict(
     output_path: str, spec_dict: dict, checksum_algo: str
 ) -> Tuple[str, int]:
     """Compress the spec dict and write it to the given path
 
     Return the checksum (using the given algorithm) and size on disk of the file
     """
-    with compression_writer(output_path, "gzip", "sha256") as (compressor, checker):
-        compressor.write(json.dumps(spec_dict).encode("utf-8"))
+    with compression_writer(output_path, "gzip", checksum_algo) as (
+        f_bin,
+        checker,
+    ), io.TextIOWrapper(f_bin, encoding="utf-8") as f_txt:
+        json.dump(spec_dict, f_txt, separators=(",", ":"))
 
     return checker.hexdigest(), checker.length
 

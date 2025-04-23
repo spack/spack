@@ -6,7 +6,6 @@ import codecs
 import json
 import os
 import pathlib
-import shutil
 import tempfile
 from typing import NamedTuple
 
@@ -27,8 +26,7 @@ from .enums import InstallRecordStatus
 from .url_buildcache import (
     BlobRecord,
     BuildcacheComponent,
-    URLBuildcacheEntry,
-    compress_and_write_spec,
+    compressed_json_from_dict,
     get_url_buildcache_class,
     sign_file,
     try_verify,
@@ -182,18 +180,25 @@ def _migrate_spec(
     # Compress the spec dict and compute its checksum
     metadata_checksum_algo = "sha256"
     spec_json_path = os.path.join(tmpdir, f"{s.name}_{s.dag_hash()}.spec.json")
-    metadata_checksum, metadata_size = compress_and_write_spec(
+    metadata_checksum, metadata_size = compressed_json_from_dict(
         spec_json_path, spec_dict, metadata_checksum_algo
     )
 
-    # Compute the url to the archive/tarball blob
-    v3_archive_url = url_util.join(
-        mirror_url,
-        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS),
-        algorithm,
-        checksum[:2],
-        checksum,
+    tarball_blob_record = BlobRecord(
+        spec_dict["archive_size"], v3_cache_class.TARBALL_MEDIATYPE, "gzip", algorithm, checksum
     )
+
+    metadata_blob_record = BlobRecord(
+        metadata_size,
+        v3_cache_class.BUILDCACHE_SPEC_MEDIATYPE,
+        "gzip",
+        metadata_checksum_algo,
+        metadata_checksum,
+    )
+
+    # Compute the urls to the new blobs
+    v3_archive_url = v3_cache_class.get_blob_url(mirror_url, tarball_blob_record)
+    v3_spec_url = v3_cache_class.get_blob_url(mirror_url, metadata_blob_record)
 
     # First push the tarball
     tty.debug(f"Pushing {local_tarfile_path} to {v3_archive_url}")
@@ -202,15 +207,6 @@ def _migrate_spec(
         web_util.push_to_url(local_tarfile_path, v3_archive_url, keep_original=True)
     except Exception:
         return MigrateSpecResult(False, f"Failed to push archive for {print_spec}")
-
-    # Compute the url to the metadata/spec blob
-    v3_spec_url = url_util.join(
-        mirror_url,
-        *URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOBS),
-        metadata_checksum_algo,
-        metadata_checksum[:2],
-        metadata_checksum,
-    )
 
     # Then push the spec file
     tty.debug(f"Pushing {spec_json_path} to {v3_spec_url}")
@@ -223,22 +219,7 @@ def _migrate_spec(
     # Generate the manifest and write it to a temporary location
     manifest = {
         "version": v3_cache_class.get_layout_version(),
-        "data": [
-            BlobRecord(
-                spec_dict["archive_size"],
-                v3_cache_class.TARBALL_MEDIATYPE,
-                "gzip",
-                algorithm,
-                checksum,
-            ).to_dict(),
-            BlobRecord(
-                metadata_size,
-                v3_cache_class.BUILDCACHE_SPEC_MEDIATYPE,
-                "gzip",
-                metadata_checksum_algo,
-                metadata_checksum,
-            ).to_dict(),
-        ],
+        "data": [tarball_blob_record.to_dict(), metadata_blob_record.to_dict()],
     }
 
     manifest_path = os.path.join(tmpdir, f"{s.dag_hash()}.manifest.json")
@@ -301,73 +282,70 @@ def migrate(
     except (web_util.SpackWebError, OSError):
         raise MigrationException("Buildcache migration requires a buildcache index")
 
-    tmpdir = tempfile.mkdtemp()
-    index_path = os.path.join(tmpdir, "_tmp_index.json")
-    with open(index_path, "w", encoding="utf-8") as fd:
-        fd.write(contents)
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        index_path = os.path.join(tmpdir, "_tmp_index.json")
+        with open(index_path, "w", encoding="utf-8") as fd:
+            fd.write(contents)
 
-    db = bindist.BuildCacheDatabase(tmpdir)
-    db._read_from_file(pathlib.Path(index_path))
+        db = bindist.BuildCacheDatabase(tmpdir)
+        db._read_from_file(pathlib.Path(index_path))
 
-    specs_to_migrate = [
-        s
-        for s in db.query_local(installed=InstallRecordStatus.ANY)
-        if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
-    ]
+        specs_to_migrate = [
+            s
+            for s in db.query_local(installed=InstallRecordStatus.ANY)
+            if not s.external and db.query_local_by_spec_hash(s.dag_hash()).in_buildcache
+        ]
 
-    # Run the tasks in parallel if possible
-    executor = spack.util.parallel.make_concurrent_executor()
-    migrate_futures = [
-        executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key)
-        for spec in specs_to_migrate
-    ]
+        # Run the tasks in parallel if possible
+        executor = spack.util.parallel.make_concurrent_executor()
+        migrate_futures = [
+            executor.submit(_migrate_spec, spec, mirror_url, tmpdir, unsigned, signing_key)
+            for spec in specs_to_migrate
+        ]
 
-    success_count = 0
+        success_count = 0
 
-    tty.msg("Migration summary:")
-    for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
-        result = migrate_future.result()
-        msg = f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}"
-        if result.success:
-            success_count += 1
-            tty.msg(msg)
+        tty.msg("Migration summary:")
+        for spec, migrate_future in zip(specs_to_migrate, migrate_futures):
+            result = migrate_future.result()
+            msg = f"  {spec.name}/{spec.dag_hash()[:7]}: {result.message}"
+            if result.success:
+                success_count += 1
+                tty.msg(msg)
+            else:
+                tty.error(msg)
+            # The migrated index should have the same specs as the original index,
+            # modulo any specs that we failed to migrate for whatever reason. So
+            # to avoid having to re-fetch all the spec files now, just mark them
+            # appropriately in the existing database and push that.
+            db.mark(spec, "in_buildcache", result.success)
+
+        if success_count > 0:
+            tty.msg("Updating index and pushing keys")
+
+            # If the layout.json doesn't yet exist on this mirror, push it
+            v3_cache_class = get_url_buildcache_class(layout_version=3)
+            v3_cache_class.maybe_push_layout_json(mirror_url)
+
+            # Push the migrated mirror index
+            index_tmpdir = os.path.join(tmpdir, "rebuild_index")
+            os.mkdir(index_tmpdir)
+            bindist._push_index(db, index_tmpdir, mirror_url)
+
+            # Push the public part of the signing key
+            if not unsigned:
+                keys_tmpdir = os.path.join(tmpdir, "keys")
+                os.mkdir(keys_tmpdir)
+                bindist._url_push_keys(
+                    mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir
+                )
         else:
-            tty.error(msg)
-        # The migrated index should have the same specs as the original index,
-        # modulo any specs that we failed to migrate for whatever reason. So
-        # to avoid having to re-fetch all the spec files now, just mark them
-        # appropriately in the existing database and push that.
-        db.mark(spec, "in_buildcache", result.success)
+            tty.warn("No specs migrated, did you mean to perform an unsigned migration instead?")
 
-    if success_count > 0:
-        tty.msg("Updating index and pushing keys")
-
-        # If the layout.json doesn't yet exist on this mirror, push it
-        v3_cache_class = get_url_buildcache_class(layout_version=3)
-        v3_cache_class.maybe_push_layout_json(mirror_url)
-
-        # Push the migrated mirror index
-        index_tmpdir = os.path.join(tmpdir, "rebuild_index")
-        os.mkdir(index_tmpdir)
-        bindist._push_index(db, index_tmpdir, mirror_url)
-
-        # Push the public part of the signing key
-        if not unsigned:
-            keys_tmpdir = os.path.join(tmpdir, "keys")
-            os.mkdir(keys_tmpdir)
-            bindist._url_push_keys(
-                mirror_url, keys=[signing_key], update_index=True, tmpdir=keys_tmpdir
-            )
-    else:
-        tty.warn("No specs migrated, did you mean to perform an unsigned migration instead?")
-
-    # Delete the old layout if the user requested it
-    if delete_existing:
-        delete_prefix = url_util.join(mirror_url, "build_cache")
-        tty.msg(f"Recursively deleting {delete_prefix}")
-        web_util.remove_url(delete_prefix, recursive=True)
-
-    # Clean up all working files
-    shutil.rmtree(tmpdir)
+        # Delete the old layout if the user requested it
+        if delete_existing:
+            delete_prefix = url_util.join(mirror_url, "build_cache")
+            tty.msg(f"Recursively deleting {delete_prefix}")
+            web_util.remove_url(delete_prefix, recursive=True)
 
     tty.msg("Migration complete")

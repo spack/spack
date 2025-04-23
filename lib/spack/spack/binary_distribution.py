@@ -245,9 +245,8 @@ class BinaryCacheIndex:
     def _associate_built_specs_with_mirror(self, cache_key, url_and_version: MirrorURLAndVersion):
         mirror_url = url_and_version.url
         layout_version = url_and_version.version
-        tmpdir = tempfile.mkdtemp()
 
-        try:
+        with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
             try:
@@ -288,8 +287,6 @@ class BinaryCacheIndex:
                     self._mirrors_for_spec[dag_hash].append(
                         MirrorForSpec(url_and_version, indexed_spec)
                     )
-        finally:
-            shutil.rmtree(tmpdir)
 
     def get_all_built_specs(self):
         spec_list = []
@@ -528,8 +525,7 @@ class BinaryCacheIndex:
 
         if scheme != "oci":
             cache_class = get_url_buildcache_class(layout_version=layout_version)
-            index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
-            if not web_util.url_exists(url_util.join(mirror_url, *index_components)):
+            if not web_util.url_exists(cache_class.get_index_url(mirror_url)):
                 return False
 
         fetcher: IndexFetcher = get_index_fetcher(scheme, url_and_version, cache_entry)
@@ -627,32 +623,32 @@ def get_buildinfo_dict(spec):
 
 def buildcache_relative_keys_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.KEYS))
+    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.KEY))
 
 
 def buildcache_relative_keys_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.KEYS))
+    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.KEY))
 
 
 def buildcache_relative_specs_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.SPECS))
+    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.SPEC))
 
 
 def buildcache_relative_specs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.SPECS))
+    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.SPEC))
 
 
 def buildcache_relative_blobs_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOBS))
+    return os.path.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
 
 
 def buildcache_relative_blobs_url(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
     cache_class = get_url_buildcache_class(layout_version=layout_version)
-    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOBS))
+    return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.BLOB))
 
 
 def buildcache_relative_index_path(layout_version: int = CURRENT_BUILD_CACHE_LAYOUT_VERSION):
@@ -687,7 +683,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
     cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
     cache_class.push_local_file_as_blob(
-        index_json_path, cache_prefix, "index", BuildcacheComponent.INDICES, compression="none"
+        index_json_path, cache_prefix, "index", BuildcacheComponent.INDEX, compression="none"
     )
 
 
@@ -737,30 +733,30 @@ def _specs_from_cache_aws_cli(cache_prefix):
         cache_entry.destroy()
         return spec_dict
 
-    tmpspecsdir = tempfile.mkdtemp()
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--exclude",
-        "*",
-        "--include",
-        "*.spec.manifest.json",
-        cache_prefix,
-        tmpspecsdir,
-    ]
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        sync_command_args = [
+            "s3",
+            "sync",
+            "--exclude",
+            "*",
+            "--include",
+            "*.spec.manifest.json",
+            cache_prefix,
+            tmpspecsdir,
+        ]
 
-    try:
         tty.debug(
             "Using aws s3 sync to download manifests from {0} to {1}".format(
                 cache_prefix, tmpspecsdir
             )
         )
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
-        read_fn = file_read_method
-    except Exception:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-        shutil.rmtree(tmpspecsdir)
+
+        try:
+            aws(*sync_command_args, output=os.devnull, error=os.devnull)
+            file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
+            read_fn = file_read_method
+        except Exception:
+            tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
 
     return file_list, read_fn
 
@@ -2377,7 +2373,7 @@ def _get_keys(
     tty.debug("Finding public keys in {0}".format(url_util.format(mirror_url)))
 
     keys_prefix = url_util.join(
-        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
+        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEY)
     )
     key_index_manifest_url = url_util.join(keys_prefix, "keys.manifest.json")
     index_entry = cache_class(mirror_url, allow_unsigned=True)
@@ -2423,7 +2419,7 @@ def _get_keys_v2(mirror_url, install=False, trust=False, force=False):
     cache_class = get_url_buildcache_class(layout_version=2)
 
     keys_url = url_util.join(
-        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEYS)
+        mirror_url, *cache_class.get_relative_path_components(BuildcacheComponent.KEY)
     )
     keys_index = url_util.join(keys_url, "index.json")
 
@@ -2873,8 +2869,7 @@ class DefaultIndexFetcher(IndexFetcher):
 
     def conditional_fetch(self) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
-        url_index_manifest = url_util.join(self.url, *index_components)
+        url_index_manifest = cache_class.get_index_url(self.url)
 
         try:
             response = self.urlopen(
@@ -2931,8 +2926,7 @@ class EtagIndexFetcher(IndexFetcher):
     def conditional_fetch(self) -> FetchIndexResult:
         # Do a conditional fetch of the index manifest (i.e. using If-None-Match header)
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        index_components = cache_class.get_relative_path_components(BuildcacheComponent.INDEX)
-        manifest_url = url_util.join(self.url, *index_components)
+        manifest_url = cache_class.get_index_url(self.url)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
 
         try:
