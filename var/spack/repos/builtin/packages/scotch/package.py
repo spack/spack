@@ -152,7 +152,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return "64" in str(self.pkg.spec.target.family)
 
     @when("+noarch")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("SPACK_TARGET_ARGS")
 
 

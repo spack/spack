@@ -329,11 +329,13 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     compiler_version_regex = r"roc-(\d+[._]\d+[._]\d+)"
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         # Required for enabling asan on dependent packages
         for root, _, files in os.walk(self.prefix):
@@ -358,7 +360,9 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
             )
 
     # Required for enabling asan on dependent packages
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         for root, _, files in os.walk(self.prefix):
             if "libclang_rt.asan-x86_64.so" in files:
                 env.prepend_path("LD_LIBRARY_PATH", root)

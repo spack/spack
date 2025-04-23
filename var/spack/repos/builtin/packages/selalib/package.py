@@ -61,7 +61,7 @@ class Selalib(CMakePackage):
         ]
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("FFTW_INCLUDE", self.spec["fftw"].prefix.include)
         env.set("FFTW_ROOT", self.spec["fftw"].prefix)
 

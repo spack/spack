@@ -267,7 +267,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     # module file.  The run dependencies are all curried into hpctoolkit
     # and we don't want to risk exposing a package if the application
     # uses a different version of the same package.
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.clear()
         env.prepend_path("PATH", spec.prefix.bin)

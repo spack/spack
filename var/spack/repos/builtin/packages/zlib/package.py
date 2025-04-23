@@ -93,7 +93,7 @@ class Zlib(MakefilePackage, Package):
 
 
 class SetupEnvironment:
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+pic" in self.spec:
             env.append_flags("CFLAGS", self.pkg.compiler.cc_pic_flag)
         if "+optimize" in self.spec:

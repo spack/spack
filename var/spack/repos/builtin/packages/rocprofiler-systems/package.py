@@ -178,7 +178,7 @@ class RocprofilerSystems(CMakePackage):
                 flags.append("-lintl")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+tau" in self.spec:
             import glob
 

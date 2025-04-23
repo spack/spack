@@ -85,5 +85,5 @@ class Bart(MakefilePackage, CudaPackage):
             install("python/bartview.py", join_path(prefix.bin, "bartview"))
             filter_file(r"#!/usr/bin/python", "#!/usr/bin/env python", prefix.bin.bartview)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("TOOLBOX_PATH", self.prefix)

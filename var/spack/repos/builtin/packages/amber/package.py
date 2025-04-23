@@ -153,7 +153,7 @@ class Amber(Package, CudaPackage):
         url = "file://{0}/Amber{1}.tar.bz2".format(os.getcwd(), version)
         return url
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         amber_src = self.stage.source_path
         env.set("AMBERHOME", amber_src)
 
@@ -242,7 +242,7 @@ class Amber(Package, CudaPackage):
         # just install everything that was built
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("AMBER_PREFIX", self.prefix)
         env.set("AMBERHOME", self.prefix)
         # CUDA

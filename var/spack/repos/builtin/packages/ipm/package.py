@@ -63,7 +63,7 @@ class Ipm(AutotoolsPackage):
     def patch(self):
         filter_file(r"#!/usr/bin/perl", "#!/usr/bin/env perl", "bin/ipm_parse")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("MPICC", spec["mpi"].mpicc)
         env.set("MPIFC", spec["mpi"].mpifc)

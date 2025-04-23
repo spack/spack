@@ -132,7 +132,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         when="+rocm @1.8.0",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+sycl"):
             env.set("MKLROOT", join_path(spec["intel-oneapi-mkl"].prefix, "mkl", "latest"))

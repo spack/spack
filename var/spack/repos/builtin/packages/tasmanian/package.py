@@ -93,7 +93,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     # patching a bug in the interpretation of the C++ standard
     patch("tas80_clang17.patch", when="@8.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # needed for the hipcc compiler
         if "+rocm" in self.spec:
             env.set("CXX", self.spec["hip"].hipcc)

@@ -67,18 +67,22 @@ class Librsvg(AutotoolsPackage):
         url += "{0}/librsvg-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         # librsvg uses pthread_atfork() but does not use -pthread on Ubuntu 18.04 %gcc@8
         env.append_flags("LDFLAGS", "-pthread")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def configure_args(self):

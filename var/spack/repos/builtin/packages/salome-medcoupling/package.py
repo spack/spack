@@ -77,14 +77,14 @@ class SalomeMedcoupling(CMakePackage):
     def check(self):
         pass
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+metis" in self.spec:
             env.set("METIS_ROOT_DIR", self.spec["metis"].prefix)
 
         if "+scotch" in self.spec:
             env.set("SCOTCH_ROOT_DIR", self.spec["scotch"].prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         python_ver = self.spec["python"].version.up_to(2)
         env.prepend_path(
             "PYTHONPATH", join_path(self.prefix.lib, f"python{python_ver}", "site-packages")

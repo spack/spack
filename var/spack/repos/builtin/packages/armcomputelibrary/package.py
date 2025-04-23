@@ -121,7 +121,7 @@ class Armcomputelibrary(SConsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Spack compiler wrapper inject -mcpu flag for some targets.
         # This can conflict with -march set in scons script, so override it here.
         env.set("SPACK_TARGET_ARGS", "")

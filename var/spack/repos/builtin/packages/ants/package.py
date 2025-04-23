@@ -42,5 +42,5 @@ class Ants(CMakePackage):
             make("install")
         install_tree("Scripts", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ANTSPATH", self.prefix.bin)

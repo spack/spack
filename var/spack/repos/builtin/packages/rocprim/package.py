@@ -93,7 +93,7 @@ class Rocprim(CMakePackage):
     # the patch is meant for 5.3.0 only.this is already in the 5.3.3+ releases
     patch("fix-device-merge-mismatched-param-5.3.0.patch", when="@5.3.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")

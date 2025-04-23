@@ -444,7 +444,7 @@ class Mapl(CMakePackage):
                 "(target_link_libraries[^)]+PUBLIC )", r"\1 %s " % nc_flags, "pfio/CMakeLists.txt"
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # esma_cmake, an internal dependency of mapl, is
         # looking for the cmake argument -DBASEDIR, and
         # if it doesn't find it, it's looking for an

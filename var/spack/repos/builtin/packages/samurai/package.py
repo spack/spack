@@ -46,11 +46,13 @@ class Samurai(CMakePackage):
     depends_on("petsc+mpi", when="+mpi")
     depends_on("boost+serialization+mpi", when="+mpi")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         include_path = self.spec.prefix.include
         env.append_path("CXXFLAGS", f"-I{include_path}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec.prefix.include)
 
     def cmake_args(self):

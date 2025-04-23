@@ -112,7 +112,7 @@ class Totalview(Package):
         url="https://dslwuu69twiif.cloudfront.net/totalview/2024.1/totalview_2024.1.21_linux_arm64.tar",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "PATH",
             join_path(self.prefix, "toolworks", "totalview.{0}".format(self.version), "bin"),

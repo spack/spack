@@ -112,7 +112,7 @@ class PyPyside2(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LLVM_INSTALL_DIR", self.spec["llvm"].prefix)
 
     def install_options(self, spec, prefix):

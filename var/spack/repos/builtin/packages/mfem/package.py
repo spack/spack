@@ -516,7 +516,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     phases = ["configure", "build", "install"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("MFEM_DIR")
         env.unset("MFEM_BUILD_DIR")
         # Workaround for changes made by the 'kokkos-nvcc-wrapper' package

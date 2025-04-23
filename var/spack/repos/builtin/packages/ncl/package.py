@@ -199,7 +199,7 @@ class Ncl(Package):
                 )
                 filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo -lfreetype"', wrapper)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NCARG_ROOT", self.spec.prefix)
 
         # We cannot rely on Spack knowledge of esmf when NCL is an external

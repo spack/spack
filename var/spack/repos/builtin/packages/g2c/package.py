@@ -78,7 +78,7 @@ class G2c(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:1.6"):
             shared = False
         else:

@@ -74,9 +74,9 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
 
     # Taken from here to build 4.8.0 with apple-clang:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/findutils.rb
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@4.8.0 %apple-clang"):
-            spack_env.set("CFLAGS", "-D__nonnull\\(params\\)=")
+            env.set("CFLAGS", "-D__nonnull\\(params\\)=")
 
     @classmethod
     def determine_version(cls, exe):

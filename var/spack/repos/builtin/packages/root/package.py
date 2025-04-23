@@ -829,7 +829,7 @@ class Root(CMakePackage):
 
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         if "lz4" in spec:
@@ -878,7 +878,7 @@ class Root(CMakePackage):
             return "LD_LIBRARY_PATH"
         return "ROOT_LIBRARY_PATH"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)

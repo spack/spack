@@ -73,7 +73,7 @@ class Dalton(CMakePackage):
         " version or a different compiler suite.",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.spec.prefix.join("dalton"))
 
     def cmake_args(self):

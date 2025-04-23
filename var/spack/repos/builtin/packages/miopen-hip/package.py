@@ -178,7 +178,7 @@ class MiopenHip(CMakePackage):
     depends_on("nlohmann-json", type="link")
     depends_on("googletest", when="@6.1:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         lib_dir = self.spec["zlib-api"].libs.directories[0]
         env.prepend_path("LIBRARY_PATH", lib_dir)
         if self.spec.satisfies("+asan"):

@@ -42,5 +42,5 @@ class Guidance(MakefilePackage):
         with working_dir(join_path("www", "Guidance")):  # copy without suffix
             install("guidance.pl", join_path(prefix.bin.www.Guidance, "guidance"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", prefix.bin.www.Guidance)

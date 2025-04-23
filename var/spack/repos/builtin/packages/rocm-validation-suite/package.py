@@ -75,9 +75,9 @@ class RocmValidationSuite(CMakePackage):
     depends_on("googletest")
     depends_on("doxygen", type="build")
 
-    def setup_build_environment(self, build_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
-        build_env.set("HIPCC_PATH", spec["hip"].prefix)
+        env.set("HIPCC_PATH", spec["hip"].prefix)
 
     for ver in [
         "5.3.0",

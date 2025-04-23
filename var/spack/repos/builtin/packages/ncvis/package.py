@@ -29,5 +29,5 @@ class Ncvis(CMakePackage):
     def install_resources(self):
         install_tree("resources", self.prefix.resources)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NCVIS_RESOURCE_DIR", self.prefix.resources)

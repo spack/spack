@@ -119,5 +119,5 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
         self.build(spec, prefix)
         install_tree(self.build_directory, prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.app)

@@ -204,7 +204,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         # no self.spec.mpif90
         self.spec.mpifc = wrappers[4]
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         dependent_module = dependent_spec.package.module
         for var_name, attr_name in (
             ("I_MPI_CC", "spack_cc"),

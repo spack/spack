@@ -113,7 +113,7 @@ class Adios(AutotoolsPackage):
 
         return "--without-phdf5"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/ornladios/ADIOS/issues/206
         if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FCFLAGS", "-fallow-argument-mismatch")

@@ -29,7 +29,7 @@ class Adlbx(AutotoolsPackage):
     depends_on("m4", type="build", when="@master")
     depends_on("mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("CC", spec["mpi"].mpicc)
         env.set("CXX", spec["mpi"].mpicxx)

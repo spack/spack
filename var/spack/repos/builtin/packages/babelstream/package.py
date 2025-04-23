@@ -831,7 +831,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ######################################
         # Build and Installation Directories #
         ######################################

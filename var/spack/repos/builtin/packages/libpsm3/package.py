@@ -51,7 +51,7 @@ class Libpsm3(AutotoolsPackage):
         os.unlink("%s/libpsm3-fi.la" % prefix.lib)
         install("src/libpsm3-fi.la", prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("FI_PROVIDER_PATH", self.prefix.lib)
         env.set("FI_PROVIDER", "psm3")
         env.set("PSM3_ALLOW_ROUTERS", "1")

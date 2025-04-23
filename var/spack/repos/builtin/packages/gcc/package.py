@@ -1047,14 +1047,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
-    def setup_run_environment(self, env):
-        if self.spec.satisfies("languages=c"):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+        if self.cc and self.spec.satisfies("languages=c"):
             env.set("CC", self.cc)
 
-        if self.spec.satisfies("languages=c++"):
+        if self.cxx and self.spec.satisfies("languages=c++"):
             env.set("CXX", self.cxx)
 
-        if self.spec.satisfies("languages=fortran"):
+        if self.fortran and self.spec.satisfies("languages=fortran"):
             env.set("FC", self.fortran)
             env.set("F77", self.fortran)
 

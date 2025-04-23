@@ -27,5 +27,5 @@ class Dialign(MakefilePackage):
         mkdirp(prefix.share)
         install_tree("dialign2_dir", prefix.share)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DIALIGN2_DIR", self.prefix.share)

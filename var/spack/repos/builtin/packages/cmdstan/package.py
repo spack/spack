@@ -84,5 +84,5 @@ class Cmdstan(MakefilePackage):
             install("stanc", prefix.bin)
             install("stansummary", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CMDSTAN", self.prefix)

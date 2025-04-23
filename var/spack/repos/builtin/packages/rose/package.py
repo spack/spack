@@ -208,7 +208,7 @@ class Rose(AutotoolsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+codethorn" in self.spec:
             env.set("CXXFLAGS", "-std=c++11")
 

@@ -95,7 +95,7 @@ class G2(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         precisions = (
             self.spec.variants["precision"].value if self.spec.satisfies("@3.4.6:") else ("4", "d")
         )

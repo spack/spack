@@ -122,7 +122,7 @@ class Rust(Package):
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Manually instruct Cargo dependency libssh2-sys to build with
         # the Spack installed libssh2 package. For more info see
         # https://github.com/alexcrichton/ssh2-rs/issues/173

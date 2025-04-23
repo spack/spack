@@ -40,7 +40,7 @@ class Xsd(MakefilePackage):
     def install(self, spec, prefix):
         make("install", "install_prefix=" + prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         xercesc_lib_flags = self.spec["xerces-c"].libs.search_flags
         env.append_flags("LDFLAGS", xercesc_lib_flags)
         cxxstdflag = "cxx{0}_flag".format(self.spec.variants["cxxstd"].value)

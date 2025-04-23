@@ -37,11 +37,11 @@ class Swiftsim(AutotoolsPackage):
     depends_on("hdf5~mpi", when="~mpi")
     depends_on("hdf5+mpi", when="+mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed to be able to download from the Durham gitlab repository
         tty.warn('Setting "GIT_SSL_NO_VERIFY=1"')
         tty.warn("This is needed to clone SWIFT repository")
-        env.set("GIT_SSL_NO_VERIFY", 1)
+        env.set("GIT_SSL_NO_VERIFY", "1")
 
     def configure_args(self):
         return [

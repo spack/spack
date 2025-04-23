@@ -99,7 +99,9 @@ class Msvc(Package, CompilerPackage):
         module.nmake = Executable("nmake")
         module.msbuild = Executable("msbuild")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.init_msvc()
         # Set the build environment variables for spack. Just using
         # subprocess.call() doesn't work since that operates in its own
@@ -126,8 +128,10 @@ class Msvc(Package, CompilerPackage):
             else:
                 env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
-        env.set("CC", self.cc)
-        env.set("CXX", self.cxx)
+        if self.cc:
+            env.set("CC", self.cc)
+        if self.cxx:
+            env.set("CXX", self.cxx)
         if self.fortran:
             env.set("FC", self.fortran)
             env.set("F77", self.fortran)

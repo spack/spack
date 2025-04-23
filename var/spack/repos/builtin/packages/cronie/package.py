@@ -24,5 +24,5 @@ class Cronie(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

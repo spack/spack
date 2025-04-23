@@ -141,7 +141,7 @@ class Steps(CMakePackage):
             ]
         return targets
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # This recipe exposes a Python package from a C++ CMake project.
         # This hook is required to reproduce what Spack PythonPackage does.
         env.prepend_path("PYTHONPATH", self.prefix)

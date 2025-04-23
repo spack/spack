@@ -42,7 +42,7 @@ class Influxdb(Package):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.usr.bin)
 
     def install(self, spec, prefix):

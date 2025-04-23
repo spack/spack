@@ -142,7 +142,7 @@ class Rocrand(CMakePackage):
             os.rmdir("hipRAND")
             os.rename("hiprand", "hipRAND")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")

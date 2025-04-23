@@ -96,7 +96,7 @@ class PyH5py(PythonPackage):
                 flags.append("-Wno-error=incompatible-pointer-types-discards-qualifiers")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)
         if "+mpi" in self.spec:
             env.set("CC", self.spec["mpi"].mpicc)

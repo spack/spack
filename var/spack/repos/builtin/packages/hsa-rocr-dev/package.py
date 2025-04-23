@@ -158,7 +158,7 @@ class HsaRocrDev(CMakePackage):
             ver = None
         return ver
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@5.7: +asan"):
             numa_inc = self.spec["numactl"].prefix.include
             numa_lib = self.spec["numactl"].prefix.lib

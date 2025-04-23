@@ -42,5 +42,5 @@ class PyGensim(PythonPackage):
     depends_on("py-smart-open@1.7.0:", when="@3.8.0", type=("build", "run"))
     depends_on("py-smart-open@1.8.1:", when="@3.8.1:", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GENSIM_CYTHON_REQUIRES", "Cython=={0}".format(self.spec["py-cython"].version))

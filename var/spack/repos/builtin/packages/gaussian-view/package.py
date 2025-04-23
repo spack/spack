@@ -95,7 +95,7 @@ files as documented here:
         )
 
     @when("@:6.0")
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GV_DIR", self.prefix)
 
         env.set("GV_LIB_PATH", self.prefix.lib)
@@ -106,7 +106,7 @@ files as documented here:
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     @when("@6.1:")
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GV_DIR", self.prefix)
 
         # the wrappers in gv/exec setup everything just nicely

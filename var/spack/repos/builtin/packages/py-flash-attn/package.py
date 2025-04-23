@@ -49,6 +49,6 @@ class PyFlashAttn(PythonPackage):
     depends_on("python@3.7:", type=("build", "run"), when="@:2.5")
     depends_on("python@3.8:", type=("build", "run"), when="@2.6:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # If oom error, try lowering the number of jobs with `spack install -j`
-        env.set("MAX_JOBS", make_jobs)
+        env.set("MAX_JOBS", str(make_jobs))

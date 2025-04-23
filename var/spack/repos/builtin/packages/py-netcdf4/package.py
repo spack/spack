@@ -79,7 +79,7 @@ class PyNetcdf4(PythonPackage):
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
         # system versions

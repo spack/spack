@@ -96,7 +96,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     # fix hardcoded search in /opt/rocm and broken config mode search
     patch("find-hip-cuda-rocm-5.3.patch", when="@5.3: +cuda")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+rocm"):
             env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):

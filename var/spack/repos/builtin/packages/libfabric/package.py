@@ -175,17 +175,19 @@ class Libfabric(AutotoolsPackage, CudaPackage):
             results.append(" ".join(variants))
         return results
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.run_tests:
             env.prepend_path("PATH", self.prefix.bin)
 
     # To enable this package add it to the LD_LIBRARY_PATH
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 
     # To enable this package add it to the LD_LIBRARY_PATH
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib64)
 

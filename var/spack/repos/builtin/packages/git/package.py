@@ -195,7 +195,7 @@ class Git(AutotoolsPackage):
     def patch(self):
         filter_file(r"^EXTLIBS =$", "#EXTLIBS =", "Makefile")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # We use EXTLIBS rather than LDFLAGS so that git's Makefile
         # inserts the information into the proper place in the link commands
         # (alongside the # other libraries/paths that configure discovers).
@@ -325,7 +325,7 @@ class Git(AutotoolsPackage):
                 make(" ".join(install_args))
                 install("git-subtree", self.prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Setup run environment if using SVN extension
         # Libs from perl-alien-svn and apr-util are required in
         # LD_LIBRARY_PATH

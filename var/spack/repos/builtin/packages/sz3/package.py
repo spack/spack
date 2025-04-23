@@ -34,7 +34,7 @@ class Sz3(CMakePackage):
     depends_on("pkgconfig")
     depends_on("hdf5", when="+hdf5")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+hdf5" in self.spec:
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 

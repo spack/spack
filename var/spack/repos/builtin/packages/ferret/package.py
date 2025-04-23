@@ -187,7 +187,7 @@ class Ferret(Package):
             mkdir(self.prefix.fer_dsets)
             install_tree("fer_dsets", self.prefix.fer_dsets)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FER_DIR", self.prefix)
         env.set(
             "FER_GO", " ".join([".", self.prefix.go, self.prefix.examples, self.prefix.contrib])

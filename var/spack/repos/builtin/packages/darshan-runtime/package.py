@@ -156,7 +156,7 @@ class DarshanRuntime(AutotoolsPackage):
 
         return extra_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.variants["log_path"].value == "none":
             # set a default path for log file that can be overrode by user
             darshan_log_dir = os.environ["HOME"]

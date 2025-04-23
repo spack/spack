@@ -46,7 +46,7 @@ class Dataspaces(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+mpi"):
             env.set("CC", self.spec["mpi"].mpicc)
             env.set("FC", self.spec["mpi"].mpifc)

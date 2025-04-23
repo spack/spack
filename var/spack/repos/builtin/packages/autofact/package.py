@@ -31,6 +31,6 @@ class Autofact(Package):
     def install(self, spec, prefix):
         install_tree(self.stage.source_path, prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.scripts)
         env.set("PATH2AUTOFACT", self.prefix)

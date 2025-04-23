@@ -24,6 +24,8 @@ class Cinch(Package):
         # (CMake) Header Only library so just copy
         install_tree(self.stage.source_path, prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("CMAKE_PREFIX_PATH", self.prefix)
         env.set("CINCH_SOURCE_DIR", self.prefix)

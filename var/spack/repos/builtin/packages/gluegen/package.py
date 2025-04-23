@@ -65,17 +65,19 @@ class Gluegen(Package):
         install_tree("make", prefix.make)
         filter_file("..", prefix, join_path(prefix.make, "build.xml"), string=True)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "CLASSPATH", join_path(self.stage.source_path, "ant-optional", "optional-1.5.4.jar")
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         class_paths = find(prefix.build, "*.jar")
         classpath = os.pathsep.join(class_paths)
         env.prepend_path("CLASSPATH", classpath)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         class_paths = find(prefix.build, "*.jar")
         classpath = os.pathsep.join(class_paths)
         env.prepend_path("CLASSPATH", classpath)

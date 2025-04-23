@@ -91,7 +91,7 @@ class PyShapely(PythonPackage):
         if os.path.exists("shapely/vectorized/_vectorized.c"):
             os.remove("shapely/vectorized/_vectorized.c")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GEOS_CONFIG", join_path(self.spec["geos"].prefix.bin, "geos-config"))
 
         # Shapely uses ctypes.util.find_library, which searches LD_LIBRARY_PATH
@@ -103,8 +103,10 @@ class PyShapely(PythonPackage):
         else:
             env.prepend_path("LD_LIBRARY_PATH", libs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_build_environment(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_build_environment(env)

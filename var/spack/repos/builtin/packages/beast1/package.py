@@ -25,7 +25,7 @@ class Beast1(Package):
         base = "https://github.com/beast-dev/beast-mcmc/releases/download"
         return "{0}/v{1}/BEASTv{1}.tgz".format(base, ver.dotted)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BEAST1", self.prefix)
         env.set("BEAST_LIB", self.prefix.lib)
 

@@ -29,7 +29,7 @@ class Grnboost(Package):
     depends_on("xgboost", type="run")
     depends_on("spark+hadoop", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         grnboost_jar = join_path(self.prefix, "target", "scala-2.11", "GRNBoost.jar")
         xgboost_version = self.spec["xgboost"].version.string
         xgboost_jar = join_path(

@@ -117,7 +117,9 @@ class SpectrumMpi(BundlePackage):
             self.spec.mpif77 = os.path.join(self.prefix.bin, "mpif77")
             self.spec.mpifc = os.path.join(self.prefix.bin, "mpif90")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if "%xl" in dependent_spec or "%xl_r" in dependent_spec:
             env.set("MPICC", os.path.join(self.prefix.bin, "mpixlc"))
             env.set("MPICXX", os.path.join(self.prefix.bin, "mpixlC"))
@@ -136,7 +138,7 @@ class SpectrumMpi(BundlePackage):
         env.set("OMPI_F77", dependent_module.spack_f77)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI functions as a compiler we need to setup the compilers
         # in the run environment, like any compiler
         if "%xl" in self.spec or "%xl_r" in self.spec:

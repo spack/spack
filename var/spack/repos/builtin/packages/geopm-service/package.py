@@ -153,7 +153,7 @@ class GeopmService(AutotoolsPackage):
             args.append("--disable-cpuid")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Required to ensure geopmdpy can load
         # libgeopmd.so.2 via CFFI
         if os.path.isdir(self.prefix.lib64):

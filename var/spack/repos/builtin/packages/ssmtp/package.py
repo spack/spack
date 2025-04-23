@@ -28,7 +28,7 @@ class Ssmtp(AutotoolsPackage):
     patch("install.patch")
 
     @when("+ssl")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The configure script is generated with a very old version of
         # autoconf, which cannot accept LIBS as a command-line argument
         env.set("LIBS", self.spec["openssl"].libs.link_flags)

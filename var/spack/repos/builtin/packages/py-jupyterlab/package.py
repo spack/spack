@@ -82,5 +82,5 @@ class PyJupyterlab(PythonPackage):
         depends_on("py-tornado@:5,6.0.3:", type=("build", "run"))
         depends_on("py-jupyterlab-server@1.1.5:1", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("JUPYTERLAB_DIR", self.prefix.share.jupyter.lab)
