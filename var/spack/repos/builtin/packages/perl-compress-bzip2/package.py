@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,7 +20,7 @@ class PerlCompressBzip2(PerlPackage):
     depends_on("c", type="build")
     depends_on("bzip2", type=("build", "test", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BZLIB_INCLUDE", self.spec["bzip2"].prefix.include)
         env.set("BZLIB_LIB", self.spec["bzip2"].prefix.lib)
         env.set("BZLIB_BIN", self.spec["bzip2"].prefix.bin)

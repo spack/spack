@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,6 +24,31 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html"
     )
 
+    version(
+        "2025.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dc93af13-2b3f-40c3-a41b-2bc05a707a80/intel-onemkl-2025.1.0.803_offline.sh",
+        sha256="80a4b1338b48b3fbee55a8dc784f92e5e88d618f1b99d80f5f207a00c86a6638",
+        expand=False,
+    )
+    version(
+        "2025.0.1",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/246ea40e-5aa7-42a4-81fa-0c029dc8650f/intel-onemkl-2025.0.1.16_offline.sh",
+        sha256="bd86677aa17499c89ca7a3c3c83b73f0644147e4f1d2a218b45a7349cf582f4a",
+        expand=False,
+    )
+    version(
+        "2025.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/79153e0f-74d7-45af-b8c2-258941adf58a/intel-onemkl-2025.0.0.940_offline.sh",
+        sha256="c0fe8c43718c56858df96ad469b22d9d5e5c1aa4b872e34c6cbebfb17bd15b9c",
+        expand=False,
+    )
+    version(
+        "2024.2.2",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89a381f6-f85d-4dda-ae62-30d51470f53c/l_onemkl_p_2024.2.2.17_offline.sh",
+        sha256="6b64ab95567bee53d6cf7e78f9f7b15695902fb9da0d20c29e638ad001b6b348",
+        expand=False,
+        preferred=True,
+    )
     version(
         "2024.2.1",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6e00e368-b61d-4f87-a409-9b510c022a37/l_onemkl_p_2024.2.1.105_offline.sh",
@@ -162,14 +186,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     # If a +cluster then mpi_family must be set
     with when("+cluster"):
         conflicts("mpi_family=none")
-        requires("mpi_family=mpich", when="^intel-oneapi-mpi")
-        requires("mpi_family=mpich", when="^intel-mpi")
-        requires("mpi_family=mpich", when="^mpich")
-        requires("mpi_family=mpich", when="^mvapich")
-        requires("mpi_family=mpich", when="^mvapich2")
-        requires("mpi_family=mpich", when="^cray-mpich")
-        requires("mpi_family=openmpi", when="^openmpi")
-        requires("mpi_family=openmpi", when="^hpcx-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] intel-oneapi-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mpich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich2")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] cray-mpich")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] openmpi")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] hpcx-mpi")
 
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
@@ -210,7 +233,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
             env.set("MKLROOT", self.component_prefix)
@@ -271,7 +296,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         try:
             if self.spec.satisfies("+cluster ^mpi"):
                 resolved_libs = resolved_libs + self.spec["mpi"].libs
-        except spack.error.NoLibrariesError:
+        except NoLibrariesError:
             pass
 
         if self.spec.satisfies("threads=openmp"):

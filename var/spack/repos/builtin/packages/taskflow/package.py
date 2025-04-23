@@ -1,9 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.compiler import UnsupportedCompilerFlag
+from spack.compilers.error import UnsupportedCompilerFlag
 from spack.package import *
 
 
@@ -31,7 +30,6 @@ class Taskflow(CMakePackage):
     conflicts("%clang@:3.5")
     conflicts("%apple-clang@:8.0.0")
     # untested: conflicts('%intel@:15')
-    # untested: conflicts('%pgi@:14')
 
     def cmake_args(self):
         try:

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,6 +28,6 @@ class PyAwscrt(PythonPackage):
     depends_on("py-setuptools", type=("build"))
 
     # On Linux, tell aws-crt-python to use libcrypto from spack (openssl)
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         with when("platform=linux"):
-            env.set("AWS_CRT_BUILD_USE_SYSTEM_LIBCRYPTO", 1)
+            env.set("AWS_CRT_BUILD_USE_SYSTEM_LIBCRYPTO", "1")

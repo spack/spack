@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -30,7 +29,8 @@ class PyCudf(PythonPackage):
     depends_on("py-cython", type="build")
     depends_on("py-numba@0.40.0:", type=("build", "run"))
     depends_on("py-numpy@1.14.4:", type=("build", "run"))
-    depends_on("py-pyarrow+cuda+orc+parquet", type=("build", "run"))
+    depends_on("py-pyarrow", type=("build", "run"))
+    depends_on("arrow+cuda+orc+parquet")
     depends_on("py-pandas@0.23.4:", type=("build", "run"))
     depends_on("py-rmm", type=("build", "run"))
     depends_on("cuda@10:")

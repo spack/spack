@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -61,7 +60,7 @@ class Thunar(AutotoolsPackage):
             depends_on("gtkplus@3.22:")
             depends_on("gobject-introspection@1.60:", when="+introspection")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@4.18"):
             # Fails to check in xcfe4 include subdirectory for the libxfce4kbd-private-3 tree
             env.append_flags("CPPFLAGS", f"-I{self.spec['libxfce4ui'].home.include.xfce4}")

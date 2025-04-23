@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,8 +21,6 @@ class Sp(CMakePackage):
     version("2.4.0", sha256="dbb4280e622d2683b68a28f8e3837744adf9bbbb1e7940856e8f4597f481c708")
     version("2.3.3", sha256="c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f")
 
-    depends_on("fortran", type="build")
-
     variant("shared", default=False, description="Build shared library", when="@2.4:")
     variant("openmp", default=False, description="Use OpenMP threading")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
@@ -36,7 +33,9 @@ class Sp(CMakePackage):
         when="@2.4:",
     )
 
-    def setup_run_environment(self, env):
+    depends_on("fortran", type="build")
+
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@2.4:"):
             suffixes = self.spec.variants["precision"].value
         else:
@@ -66,5 +65,5 @@ class Sp(CMakePackage):
         return args
 
     def check(self):
-        with working_dir(self.builder.build_directory):
+        with working_dir(self.build_directory):
             make("test")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import collections
@@ -13,7 +12,10 @@ import llnl.util.tty as tty
 
 import spack.config
 import spack.environment as ev
+import spack.error
+import spack.schema
 import spack.schema.env
+import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 from spack.cmd.common import arguments
@@ -254,7 +256,7 @@ def config_remove(args):
         existing.pop(value, None)
     else:
         # This should be impossible to reach
-        raise spack.config.ConfigError("Config has nested non-dict values")
+        raise spack.error.ConfigError("Config has nested non-dict values")
 
     spack.config.set(path, existing, scope)
 
@@ -338,7 +340,7 @@ def _config_change(config_path, match_spec_str=None):
         if not changed:
             existing_requirements = spack.config.get(key_path)
             if isinstance(existing_requirements, str):
-                raise spack.config.ConfigError(
+                raise spack.error.ConfigError(
                     "'config change' needs to append a requirement,"
                     " but existing require: config is not a list"
                 )
@@ -348,9 +350,12 @@ def _config_change(config_path, match_spec_str=None):
                 if spack.config.get(key_path, scope=scope):
                     ideal_scope_to_modify = scope
                     break
+            # If we find our key in a specific scope, that's the one we want
+            # to modify. Otherwise we use the default write scope.
+            write_scope = ideal_scope_to_modify or spack.config.default_modify_scope()
 
             update_path = f"{key_path}:[{str(spec)}]"
-            spack.config.add(update_path, scope=ideal_scope_to_modify)
+            spack.config.add(update_path, scope=write_scope)
     else:
         raise ValueError("'config change' can currently only change 'require' sections")
 
@@ -516,8 +521,6 @@ def config_prefer_upstream(args):
     for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
         pkg = pkgs.get(spec.name, {"version": []})
-        all = pkgs.get("all", {"compiler": []})
-        pkgs["all"] = all
         pkgs[spec.name] = pkg
 
         # We have no existing variant if this is our first added version.
@@ -527,18 +530,14 @@ def config_prefer_upstream(args):
         if version not in pkg["version"]:
             pkg["version"].append(version)
 
-        compiler = str(spec.compiler)
-        if compiler not in all["compiler"]:
-            all["compiler"].append(compiler)
-
         # Get and list all the variants that differ from the default.
         variants = []
         for var_name, variant in spec.variants.items():
-            if var_name in ["patches"] or var_name not in spec.package.variants:
+            if var_name in ["patches"] or not spec.package.has_variant(var_name):
                 continue
 
-            variant_desc, _ = spec.package.variants[var_name]
-            if variant.value != variant_desc.default:
+            vdef = spec.package.get_variant(var_name)
+            if variant.value != vdef.default:
                 variants.append(str(variant))
         variants.sort()
         variants = " ".join(variants)
@@ -564,7 +563,7 @@ def config_prefer_upstream(args):
 
     # Simply write the config to the specified file.
     existing = spack.config.get("packages", scope=scope)
-    new = spack.config.merge_yaml(existing, pkgs)
+    new = spack.schema.merge_yaml(existing, pkgs)
     spack.config.set("packages", new, scope)
     config_file = spack.config.CONFIG.get_config_filename(scope, section)
 

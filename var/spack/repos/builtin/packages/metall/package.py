@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,6 +22,8 @@ class Metall(CMakePackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
+    version("0.30", sha256="d241f45978fceeb83a4b2eda7513466341c45452fa26ec224c5235d00d279d37")
+    version("0.29", sha256="03281b603b46703c324971798819242529431cbbdaa80d5dbb5f0f8a24a74a58")
     version("0.28", sha256="770dedb7f8220c333688b232a22104ca9d8d5823e7a8a21152b58ef970eb85d0")
     version("0.27", sha256="6e6f17a760778f9162def939701f9381a75e5275fd1eb1b2af4b2e89e86e1c58")
     version("0.26", sha256="7453c87d99708be8542e354e582cbeefac1e5ba65e609cd85d7126c5b25a6d7b")
@@ -70,11 +71,11 @@ class Metall(CMakePackage):
             args = ["-DINSTALL_HEADER_ONLY=ON"]
             return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Configure the directories for test
         if self.run_tests:
             env.set("METALL_TEST_DIR", join_path(self.build_directory, "build_test"))
 
     # 'spack load metall' sets METALL_ROOT environmental variable
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("METALL_ROOT", self.prefix)

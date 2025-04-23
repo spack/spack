@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,8 +25,8 @@ class FujitsuSsl2(Package):
 
     def install(self, spec, prefix):
         raise InstallError(
-            "Fujitsu SSL2 is not installable; it is vendor supplied \
-             You need to specify it as an external package in packages.yaml"
+            "Fujitsu SSL2 is not installable; it is vendor supplied "
+            "You need to specify it as an external package in packages.yaml"
         )
 
     @property
@@ -123,7 +122,9 @@ class FujitsuSsl2(Package):
 
         return libs
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         path = self.prefix.include
         env.append_flags("fcc_ENV", "-idirafter " + path)
         env.append_flags("FCC_ENV", "-idirafter " + path)

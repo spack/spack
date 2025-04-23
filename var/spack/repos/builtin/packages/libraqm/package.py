@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,8 +16,6 @@ class Libraqm(MesonPackage):
 
     version("0.9.0", sha256="9ed6fdf41da6391fc9bf7038662cbe412c330aa6eb22b19704af2258e448107c")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "bidi_algo",
         default="fribidi",
@@ -26,6 +23,8 @@ class Libraqm(MesonPackage):
         values=("fribidi", "sheenbidi"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("freetype")
     depends_on("harfbuzz")

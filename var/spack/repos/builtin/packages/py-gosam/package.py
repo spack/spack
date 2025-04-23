@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -21,6 +20,11 @@ class PyGosam(Package):
     license("GPL-3.0-only")
 
     version(
+        "2.1.2",
+        url="https://github.com/gudrunhe/gosam/releases/download/2.1.2/gosam-2.1.2+c307997.tar.gz",
+        sha256="53601ab203c3d572764439018f976baff9c83b87abe1fcbbe15c07caf174680c",
+    )
+    version(
         "2.1.1",
         url="https://github.com/gudrunhe/gosam/releases/download/2.1.1/gosam-2.1.1-4b98559.tar.gz",
         sha256="4a2b9160d51e3532025b9579a4d17d0e0f8a755b8481aeb8271c1f58eb97ab01",
@@ -35,7 +39,7 @@ class PyGosam(Package):
     depends_on("gosam-contrib", type="link")
     depends_on("python@3:", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         gosam_contrib_lib_dir = self.spec["gosam-contrib"].prefix.lib
         env.prepend_path("LD_LIBRARY_PATH", gosam_contrib_lib_dir)
 

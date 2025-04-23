@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -34,7 +34,7 @@ class PyTensorboardDataServer(PythonPackage):
         when="@0.6.1",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CARGO_HOME", self.stage.source_path)
 
     def install(self, spec, prefix):
@@ -60,5 +60,4 @@ class PyTensorboardDataServer(PythonPackage):
             )
 
         wheel = glob.glob("*.whl")[0]
-        args = std_pip_args + ["--prefix=" + prefix, wheel]
-        pip(*args)
+        pip(*PythonPipBuilder.std_args(self), f"--prefix={prefix}", wheel)

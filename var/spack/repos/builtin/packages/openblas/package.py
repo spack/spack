@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,8 @@ class Openblas(CMakePackage, MakefilePackage):
     license("BSD-3-Clause")
 
     version("develop", branch="develop")
+    version("0.3.29", sha256="38240eee1b29e2bde47ebb5d61160207dc68668a54cac62c076bb5032013b1eb")
+    version("0.3.28", sha256="f1003466ad074e9b0c8d421a204121100b0751c96fc6fcf3d1456bd12f8a00a1")
     version("0.3.27", sha256="aa2d68b1564fe2b13bc292672608e9cdeeeb6dc34995512e65c3b10f4599e897")
     version("0.3.26", sha256="4e6e4f5cb14c209262e33e6816d70221a2fe49eb69eaf0a06f065598ac602c68")
     version("0.3.25", sha256="4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543")
@@ -60,10 +61,6 @@ class Openblas(CMakePackage, MakefilePackage):
     version("0.2.17", sha256="0fe836dfee219ff4cadcc3567fb2223d9e0da5f60c7382711fb9e2c35ecf0dbf")
     version("0.2.16", sha256="766f350d0a4be614812d535cead8c816fc3ad3b9afcd93167ea5e4df9d61869b")
     version("0.2.15", sha256="73c40ace5978282224e5e122a41c8388c5a19e65a6f2329c2b7c0b61bacc9044")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant(
         "fortran",
@@ -106,8 +103,19 @@ class Openblas(CMakePackage, MakefilePackage):
     provides("lapack@3.9.1:", when="@0.3.15:")
     provides("lapack@3.7.0", when="@0.2.20")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+    depends_on("perl", when="@:0.3.20", type="build")
+
+    # https://github.com/OpenMathLib/OpenBLAS/pull/4879
+    patch("openblas-0.3.28-thread-buffer.patch", when="@0.3.28")
+
     # https://github.com/OpenMathLib/OpenBLAS/pull/4328
     patch("xcode15-fortran.patch", when="@0.3.25 %apple-clang@15:")
+
+    # https://github.com/OpenMathLib/OpenBLAS/issues/5202
+    patch("openblas-0.3.29-darwin-aarch64.patch", when="@0.3.29 platform=darwin")
 
     # https://github.com/xianyi/OpenBLAS/pull/2519/files
     patch("ifort-msvc.patch", when="%msvc")
@@ -136,7 +144,7 @@ class Openblas(CMakePackage, MakefilePackage):
 
     # Fixes compilation error on POWER8 with GCC 7
     # https://github.com/OpenMathLib/OpenBLAS/pull/1098
-    patch("power8.patch", when="@0.2.18:0.2.19 %gcc@7.1.0: target=power8")
+    patch("power8.patch", when="@0.2.18:0.2.19 target=power8 %gcc@7.1.0:")
 
     # Change file comments to work around clang 3.9 assembler bug
     # https://github.com/OpenMathLib/OpenBLAS/pull/982
@@ -264,7 +272,7 @@ class Openblas(CMakePackage, MakefilePackage):
         msg="Visual Studio does not support OpenBLAS dynamic dispatch features",
     )
 
-    depends_on("perl", type="build")
+    conflicts("target=x86_64_v4:", when="%intel@2021")
 
     build_system("makefile", "cmake", default="makefile")
 
@@ -289,20 +297,6 @@ class Openblas(CMakePackage, MakefilePackage):
         # unclear whether setting `-j N` externally was supported before 0.3
         return self.spec.version >= Version("0.3.0")
 
-    @run_before("edit")
-    def check_compilers(self):
-        # As of 06/2016 there is no mechanism to specify that packages which
-        # depends on Blas/Lapack need C or/and Fortran symbols. For now
-        # require both.
-        # As of 08/2022 (0.3.21), we can build purely with a C compiler using
-        # a f2c translated LAPACK version
-        #   https://github.com/xianyi/OpenBLAS/releases/tag/v0.3.21
-        if self.compiler.fc is None and "~fortran" not in self.spec:
-            raise InstallError(
-                self.compiler.cc
-                + " has no Fortran compiler added in spack. Add it or use openblas~fortran!"
-            )
-
     @property
     def headers(self):
         # The only public headers for cblas and lapacke in
@@ -317,7 +311,7 @@ class Openblas(CMakePackage, MakefilePackage):
         spec = self.spec
 
         # Look for openblas{symbol_suffix}
-        name = ["libopenblas", "openblas"]
+        name = self.libraries
         search_shared = bool(spec.variants["shared"].value)
         suffix = spec.variants["symbol_suffix"].value
         if suffix != "none":
@@ -447,7 +441,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # When building OpenBLAS with threads=openmp, `make all`
         # runs tests, so we set the max number of threads at runtime
         # accordingly
@@ -541,6 +535,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         if self.spec.satisfies("+bignuma"):
             make_defs.append("BIGNUMA=1")
+
+        if not self.spec.satisfies("target=x86_64_v4:"):
+            make_defs.append("NO_AVX512=1")
 
         # Avoid that NUM_THREADS gets initialized with the host's number of CPUs.
         if self.spec.satisfies("threads=openmp") or self.spec.satisfies("threads=pthreads"):

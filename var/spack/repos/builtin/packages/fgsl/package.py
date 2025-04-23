@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -48,6 +47,6 @@ class Fgsl(AutotoolsPackage):
     def create_m4_dir(self):
         mkdir("m4")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.compiler.name == "gcc":
             env.append_flags("FCFLAGS", "-ffree-line-length-none")

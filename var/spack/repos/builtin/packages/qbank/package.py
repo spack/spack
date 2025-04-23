@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,6 +32,7 @@ class Qbank(Package):
 
     depends_on("perl@5.6:5.16", type=("build", "run"))
     depends_on("perl-dbi@1.00:", type=("build", "run"))
+    depends_on("gmake", type="build")
 
     def configure_args(self):
         config_args = ["--prefix", self.prefix, "--logdir", self.prefix.var.log.qbank]
@@ -52,6 +52,6 @@ class Qbank(Package):
         if "+doc" in spec:
             install_tree("doc", prefix.doc)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+doc" in self.spec:
             env.prepend_path("MANPATH", self.prefix.doc)

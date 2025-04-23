@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -60,8 +59,9 @@ class Xyce(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("flex")
@@ -101,7 +101,9 @@ class Xyce(CMakePackage):
 
     depends_on("python@3:", type=("build", "link", "run"), when="+pymi")
     depends_on("py-pip", type="run", when="+pymi")
-    depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="+pymi")
+    depends_on("py-pybind11@2.6.1:", type=("build", "link"), when="@:7.8 +pymi")
+    depends_on("py-pybind11@2.13:", type=("build", "link"), when="@7.9: +pymi")
+    depends_on("python-venv", when="+pymi")
 
     depends_on(
         "trilinos"
@@ -143,11 +145,7 @@ class Xyce(CMakePackage):
         depends_on("blis libs=static", when="^[virtuals=blas] blis+cblas")
         depends_on("blis libs=static", when="^[virtuals=blas] blis+blas")
         depends_on("clblast~shared", when="^[virtuals=blas] clblast+netlib")
-        depends_on("intel-mkl~shared", when="^[virtuals=blas] intel-mkl")
         depends_on("intel-oneapi-mkl~shared", when="^[virtuals=blas] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio~shared", when="^[virtuals=blas] intel-parallel-studio+mkl"
-        )
         depends_on("veclibfort~shared", when="^[virtuals=blas] veclibfort")
         conflicts("^essl", msg="essl not supported with +pymi_static_tpls")
         conflicts("^flexiblas", msg="flexiblas not supported with +pymi_static_tpls")
@@ -227,7 +225,11 @@ class Xyce(CMakePackage):
             flags.append("-DXyce_INTRUSIVE_PCE -Wreorder")
         elif name == "ldflags":
             # Fortran lib (assumes clang is built with gfortran!)
-            if spec.compiler.name in ["gcc", "clang", "apple-clang"]:
+            if (
+                spec.satisfies("%gcc")
+                or spec.satisfies("%clang")
+                or spec.satisfies("%apple-clang")
+            ):
                 fc = Executable(self.compiler.fc)
                 libgfortran = fc(
                     "--print-file-name", "libgfortran." + dso_suffix, output=str

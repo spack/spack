@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,8 +19,6 @@ class Hpcg(AutotoolsPackage):
 
     version("develop", branch="master")
     version("3.1", sha256="33a434e716b79e59e745f77ff72639c32623e7f928eeb7977655ffcaade0f4a4")
-
-    depends_on("cxx", type="build")  # generated
 
     variant("openmp", default=True, description="Enable OpenMP support")
 
@@ -56,6 +53,8 @@ class Hpcg(AutotoolsPackage):
         when="%clang",
     )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi@1.1:")
 
     arch = "{0}-{1}".format(platform.system(), platform.processor())
@@ -69,6 +68,7 @@ class Hpcg(AutotoolsPackage):
             and not spec.satisfies("%arm")
             and not spec.satisfies("%intel")
             and not spec.satisfies("%oneapi")
+            and not spec.satisfies("%fj")
             and not spec.satisfies("%clang")
         ):
             CXXFLAGS += " -ftree-vectorizer-verbose=0 "
@@ -76,7 +76,7 @@ class Hpcg(AutotoolsPackage):
             CXXFLAGS += " -Rpass=loop-vectorize"
             CXXFLAGS += " -Rpass-missed=loop-vectorize"
             CXXFLAGS += " -Rpass-analysis=loop-vectorize "
-        if "+openmp" in self.spec:
+        if self.spec.satisfies("+openmp"):
             CXXFLAGS += self.compiler.openmp_flag
         config = [
             # Shell

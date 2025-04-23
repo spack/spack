@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -307,7 +306,7 @@ class Hdf5(CMakePackage):
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
     @when("@:1.8.21,1.10.0:1.10.5+szip")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
 
     @run_before("cmake")
@@ -461,7 +460,7 @@ HDF5 version {version} {version}
 """.format(
                 version=str(spec.version.up_to(3))
             )
-            with open("check.c", "w") as f:
+            with open("check.c", "w", encoding="utf-8") as f:
                 f.write(source)
             if "+mpi" in spec:
                 cc = Executable(spec["mpi"].mpicc)

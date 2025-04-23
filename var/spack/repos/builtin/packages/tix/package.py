@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -95,7 +94,7 @@ class Tix(AutotoolsPackage):
     def libs(self):
         return find_libraries(["libTix{0}".format(self.version)], root=self.prefix, recursive=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set TIX_LIBRARY to the directory containing Tix.tcl.
 
         For further info, see:
@@ -106,7 +105,9 @@ class Tix(AutotoolsPackage):
         # python will not be able to find Tix unless TIX_LIBRARY is set.
         env.set("TIX_LIBRARY", os.path.dirname(find(self.prefix, "Tix.tcl")[0]))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set TIX_LIBRARY to the directory containing Tix.tcl.
 
         For further info, see:

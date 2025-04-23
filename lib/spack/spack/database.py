@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Spack's installation tracking database.
@@ -32,6 +31,7 @@ from typing import (
     Container,
     Dict,
     Generator,
+    Iterable,
     List,
     NamedTuple,
     Optional,
@@ -40,6 +40,9 @@ from typing import (
     Type,
     Union,
 )
+
+import spack
+import spack.repo
 
 try:
     import uuid
@@ -50,6 +53,7 @@ except ImportError:
     pass
 
 import llnl.util.filesystem as fs
+import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.deptypes as dt
@@ -67,6 +71,8 @@ from spack.directory_layout import (
 from spack.error import SpackError
 from spack.util.crypto import bit_length
 
+from .enums import InstallRecordStatus
+
 # TODO: Provide an API automatically retyring a build after detecting and
 # TODO: clearing a failure.
 
@@ -76,11 +82,11 @@ _DB_DIRNAME = ".spack-db"
 #: DB version.  This is stuck in the DB file to track changes in format.
 #: Increment by one when the database format changes.
 #: Versions before 5 were not integers.
-_DB_VERSION = vn.Version("7")
+_DB_VERSION = vn.Version("8")
 
 #: For any version combinations here, skip reindex when upgrading.
 #: Reindexing can take considerable time and is not always necessary.
-_SKIP_REINDEX = [
+_REINDEX_NOT_NEEDED_ON_READ = [
     # reindexing takes a significant amount of time, and there's
     # no reason to do it from DB version 0.9.3 to version 5. The
     # only difference is that v5 can contain "deprecated_for"
@@ -89,6 +95,8 @@ _SKIP_REINDEX = [
     (vn.Version("0.9.3"), vn.Version("5")),
     (vn.Version("5"), vn.Version("6")),
     (vn.Version("6"), vn.Version("7")),
+    (vn.Version("6"), vn.Version("8")),
+    (vn.Version("7"), vn.Version("8")),
 ]
 
 #: Default timeout for spack database locks in seconds or None (no timeout).
@@ -120,12 +128,33 @@ DEFAULT_INSTALL_RECORD_FIELDS = (
     "deprecated_for",
 )
 
+#: File where the database is written
+INDEX_JSON_FILE = "index.json"
+
+# Verifier file to check last modification of the DB
+_INDEX_VERIFIER_FILE = "index_verifier"
+
+# Lockfile for the database
+_LOCK_FILE = "lock"
+
+
+@llnl.util.lang.memoized
+def _getfqdn():
+    """Memoized version of `getfqdn()`.
+
+    If we call `getfqdn()` too many times, DNS can be very slow. We only need to call it
+    one time per process, so we cache it here.
+
+    """
+    return socket.getfqdn()
+
 
 def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
     reader_cls = {
-        vn.Version("5"): spack.spec.SpecfileV1,
-        vn.Version("6"): spack.spec.SpecfileV3,
-        vn.Version("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("5"): spack.spec.SpecfileV1,
+        vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
+        vn.StandardVersion.from_string("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("8"): spack.spec.SpecfileV5,
     }
     return reader_cls[version]
 
@@ -147,36 +176,12 @@ def _autospec(function):
     return converter
 
 
-class InstallStatus(str):
-    pass
-
-
-class InstallStatuses:
-    INSTALLED = InstallStatus("installed")
-    DEPRECATED = InstallStatus("deprecated")
-    MISSING = InstallStatus("missing")
-
-    @classmethod
-    def canonicalize(cls, query_arg):
-        if query_arg is True:
-            return [cls.INSTALLED]
-        if query_arg is False:
-            return [cls.MISSING]
-        if query_arg is any:
-            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
-        if isinstance(query_arg, InstallStatus):
-            return [query_arg]
-        try:
-            statuses = list(query_arg)
-            if all(isinstance(x, InstallStatus) for x in statuses):
-                return statuses
-        except TypeError:
-            pass
-
-        raise TypeError(
-            "installation query must be `any`, boolean, "
-            "InstallStatus, or iterable of InstallStatus"
-        )
+def normalize_query(installed: Union[bool, InstallRecordStatus]) -> InstallRecordStatus:
+    if installed is True:
+        installed = InstallRecordStatus.INSTALLED
+    elif installed is False:
+        installed = InstallRecordStatus.MISSING
+    return installed
 
 
 class InstallRecord:
@@ -214,8 +219,8 @@ class InstallRecord:
         installation_time: Optional[float] = None,
         deprecated_for: Optional[str] = None,
         in_buildcache: bool = False,
-        origin=None,
-    ):
+        origin: Optional[str] = None,
+    ) -> None:
         self.spec = spec
         self.path = str(path) if path else None
         self.installed = bool(installed)
@@ -226,14 +231,12 @@ class InstallRecord:
         self.in_buildcache = in_buildcache
         self.origin = origin
 
-    def install_type_matches(self, installed):
-        installed = InstallStatuses.canonicalize(installed)
+    def install_type_matches(self, installed: InstallRecordStatus) -> bool:
         if self.installed:
-            return InstallStatuses.INSTALLED in installed
+            return InstallRecordStatus.INSTALLED in installed
         elif self.deprecated_for:
-            return InstallStatuses.DEPRECATED in installed
-        else:
-            return InstallStatuses.MISSING in installed
+            return InstallRecordStatus.DEPRECATED in installed
+        return InstallRecordStatus.MISSING in installed
 
     def to_dict(self, include_fields=DEFAULT_INSTALL_RECORD_FIELDS):
         rec_dict = {}
@@ -272,59 +275,10 @@ class ForbiddenLockError(SpackError):
 
 class ForbiddenLock:
     def __getattr__(self, name):
-        raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
+        raise ForbiddenLockError(f"Cannot access attribute '{name}' of lock")
 
     def __reduce__(self):
         return ForbiddenLock, tuple()
-
-
-_QUERY_DOCSTRING = """
-
-        Args:
-            query_spec: queries iterate through specs in the database and
-                return those that satisfy the supplied ``query_spec``. If
-                query_spec is `any`, This will match all specs in the
-                database.  If it is a spec, we'll evaluate
-                ``spec.satisfies(query_spec)``
-
-            known (bool or None): Specs that are "known" are those
-                for which Spack can locate a ``package.py`` file -- i.e.,
-                Spack "knows" how to install them.  Specs that are unknown may
-                represent packages that existed in a previous version of
-                Spack, but have since either changed their name or
-                been removed
-
-            installed (bool or InstallStatus or typing.Iterable or None):
-                if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: True)
-
-            explicit (bool or None): A spec that was installed
-                following a specific user request is marked as explicit. If
-                instead it was pulled-in as a dependency of a user requested
-                spec it's considered implicit.
-
-            start_date (datetime.datetime or None): filters the query
-                discarding specs that have been installed before ``start_date``.
-
-            end_date (datetime.datetime or None): filters the query discarding
-                specs that have been installed after ``end_date``.
-
-            hashes (Container): list or set of hashes that we can use to
-                restrict the search
-
-            in_buildcache (bool or None): Specs that are marked in
-                this database as part of an associated binary cache are
-                ``in_buildcache``. All other specs are not. This field is used
-                for querying mirror indices. Default is ``any``.
-
-        Returns:
-            list of specs that match the query
-
-        """
 
 
 class LockConfiguration(NamedTuple):
@@ -480,13 +434,24 @@ class FailureTracker:
     the likelihood of collision very low with no cleanup required.
     """
 
+    #: root directory of the failure tracker
+    dir: pathlib.Path
+
+    #: File for locking particular concrete spec hashes
+    locker: SpecLocker
+
     def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.dir.mkdir(parents=True, exist_ok=True)
-
         self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+
+    def _ensure_parent_directories(self) -> None:
+        """Ensure that parent directories of the FailureTracker exist.
+
+        Accesses the filesystem only once, the first time it's called on a given FailureTracker.
+        """
+        self.dir.mkdir(parents=True, exist_ok=True)
 
     def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
@@ -530,13 +495,18 @@ class FailureTracker:
 
         tty.debug("Removing prefix failure tracking files")
         try:
-            for fail_mark in os.listdir(str(self.dir)):
-                try:
-                    (self.dir / fail_mark).unlink()
-                except OSError as exc:
-                    tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
+            marks = os.listdir(str(self.dir))
+        except FileNotFoundError:
+            return  # directory doesn't exist yet
         except OSError as exc:
             tty.warn(f"Unable to remove failure marking files: {str(exc)}")
+            return
+
+        for fail_mark in marks:
+            try:
+                (self.dir / fail_mark).unlink()
+            except OSError as exc:
+                tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
 
     def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
         """Marks a spec as failing to install.
@@ -544,6 +514,8 @@ class FailureTracker:
         Args:
             spec: spec that failed to install
         """
+        self._ensure_parent_directories()
+
         # Dump the spec to the failure file for (manual) debugging purposes
         path = self._path(spec)
         path.write_text(spec.to_json())
@@ -592,6 +564,9 @@ class FailureTracker:
         return self.dir / f"{spec.name}-{spec.dag_hash()}"
 
 
+SelectType = Callable[[InstallRecord], bool]
+
+
 class Database:
     #: Fields written for each install record
     record_fields: Tuple[str, ...] = DEFAULT_INSTALL_RECORD_FIELDS
@@ -625,17 +600,13 @@ class Database:
                 Relevant only if the repository is not an upstream.
         """
         self.root = root
-        self.database_directory = os.path.join(self.root, _DB_DIRNAME)
+        self.database_directory = pathlib.Path(self.root) / _DB_DIRNAME
         self.layout = layout
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self.database_directory, "index.json")
-        self._verifier_path = os.path.join(self.database_directory, "index_verifier")
-        self._lock_path = os.path.join(self.database_directory, "lock")
-
-        # Create needed directories and files
-        if not is_upstream and not os.path.exists(self.database_directory):
-            fs.mkdirp(self.database_directory)
+        self._index_path = self.database_directory / INDEX_JSON_FILE
+        self._verifier_path = self.database_directory / _INDEX_VERIFIER_FILE
+        self._lock_path = self.database_directory / _LOCK_FILE
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
@@ -650,14 +621,14 @@ class Database:
 
         # initialize rest of state.
         self.db_lock_timeout = lock_cfg.database_timeout
-        tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
+        tty.debug(f"DATABASE LOCK TIMEOUT: {str(self.db_lock_timeout)}s")
 
         self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(
-                self._lock_path,
+                str(self._lock_path),
                 default_timeout=self.db_lock_timeout,
                 desc="database",
                 enable=lock_cfg.enable,
@@ -673,6 +644,22 @@ class Database:
 
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
+        self._db_version: Optional[vn.ConcreteVersion] = None
+
+    @property
+    def db_version(self) -> vn.ConcreteVersion:
+        if self._db_version is None:
+            raise AttributeError("version not set -- DB has not been read yet")
+        return self._db_version
+
+    @db_version.setter
+    def db_version(self, value: vn.ConcreteVersion):
+        self._db_version = value
+
+    def _ensure_parent_directories(self):
+        """Create the parent directory for the DB, if necessary."""
+        if not self.is_upstream:
+            self.database_directory.mkdir(parents=True, exist_ok=True)
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -688,6 +675,8 @@ class Database:
 
         This function does not do any locking or transactions.
         """
+        self._ensure_parent_directories()
+
         # map from per-spec hash code to installation record.
         installs = dict(
             (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
@@ -810,16 +799,15 @@ class Database:
 
                 spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
-    def _read_from_file(self, filename):
+    def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
         Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
         try:
-            with open(filename, "r") as f:
-                # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
-                fdata, _ = JSONDecoder().raw_decode(f.read())
+            # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
+            fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
@@ -828,7 +816,7 @@ class Database:
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError("Spack database is corrupt: %s" % msg, self._index_path)
+                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", self._index_path)
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -836,24 +824,15 @@ class Database:
         db = fdata["database"]
         check("version" in db, "no 'version' in JSON DB.")
 
-        # TODO: better version checking semantics.
-        version = vn.Version(db["version"])
-        if version > _DB_VERSION:
-            raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
-        elif version < _DB_VERSION and not any(
-            old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX
-        ):
-            tty.warn(f"Spack database version changed from {version} to {_DB_VERSION}. Upgrading.")
-
-            self.reindex()
-            installs = dict(
-                (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
-            )
+        self.db_version = vn.StandardVersion.from_string(db["version"])
+        if self.db_version > _DB_VERSION:
+            raise InvalidDatabaseVersionError(self, _DB_VERSION, self.db_version)
+        elif self.db_version < _DB_VERSION:
+            installs = self._handle_old_db_versions_read(check, db, reindex=reindex)
         else:
-            check("installs" in db, "no 'installs' in JSON DB.")
-            installs = db["installs"]
+            installs = self._handle_current_version_read(check, db)
 
-        spec_reader = reader(version)
+        spec_reader = reader(self.db_version)
 
         def invalid_record(hash_key, error):
             return CorruptDatabaseError(
@@ -910,6 +889,39 @@ class Database:
         self._data = data
         self._installed_prefixes = installed_prefixes
 
+    def _handle_current_version_read(self, check, db):
+        check("installs" in db, "no 'installs' in JSON DB.")
+        installs = db["installs"]
+        return installs
+
+    def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
+        if reindex is False and not self.is_upstream:
+            self.raise_explicit_database_upgrade_error()
+
+        if not self.is_readable():
+            raise DatabaseNotReadableError(
+                f"cannot read database v{self.db_version} at {self.root}"
+            )
+
+        return self._handle_current_version_read(check, db)
+
+    def is_readable(self) -> bool:
+        """Returns true if this DB can be read without reindexing"""
+        return (self.db_version, _DB_VERSION) in _REINDEX_NOT_NEEDED_ON_READ
+
+    def raise_explicit_database_upgrade_error(self):
+        """Raises an ExplicitDatabaseUpgradeError with an appropriate message"""
+        raise ExplicitDatabaseUpgradeError(
+            f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
+            long_message=(
+                f"\nChange config:install_tree:root to use a different store, or use `spack "
+                f"reindex` to migrate the store at {self.root} to version {_DB_VERSION}.\n\n"
+                f"If you decide to migrate the store, note that:\n"
+                f"1. The operation cannot be reverted, and\n"
+                f"2. Older Spack versions will not be able to read the store anymore\n"
+            ),
+        )
+
     def reindex(self):
         """Build database index from scratch based on a directory layout.
 
@@ -918,14 +930,15 @@ class Database:
         if self.is_upstream:
             raise UpstreamDatabaseLockingError("Cannot reindex an upstream database")
 
+        self._ensure_parent_directories()
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
-                    self._read_from_file(self._index_path)
-            except CorruptDatabaseError as e:
-                tty.warn(f"Reindexing corrupt database, error was: {e}")
+                if self._index_path.is_file():
+                    self._read_from_file(self._index_path, reindex=True)
+            except (CorruptDatabaseError, DatabaseNotReadableError):
                 self._data = {}
                 self._installed_prefixes = set()
 
@@ -1065,7 +1078,7 @@ class Database:
                     % (key, found, expected, self._index_path)
                 )
 
-    def _write(self, type, value, traceback):
+    def _write(self, type=None, value=None, traceback=None):
         """Write the in-memory database index to its file path.
 
         This is a helper function called by the WriteTransaction context
@@ -1076,6 +1089,8 @@ class Database:
 
         This routine does no locking.
         """
+        self._ensure_parent_directories()
+
         # Do not write if exceptions were raised
         if type is not None:
             # A failure interrupted a transaction, so we should record that
@@ -1084,16 +1099,16 @@ class Database:
             self._state_is_inconsistent = True
             return
 
-        temp_file = self._index_path + (".%s.%s.temp" % (socket.getfqdn(), os.getpid()))
+        temp_file = str(self._index_path) + (".%s.%s.temp" % (_getfqdn(), os.getpid()))
 
         # Write a temporary database file them move it into place
         try:
-            with open(temp_file, "w") as f:
+            with open(temp_file, "w", encoding="utf-8") as f:
                 self._write_to_file(f)
-            fs.rename(temp_file, self._index_path)
+            fs.rename(temp_file, str(self._index_path))
 
             if _use_uuid:
-                with open(self._verifier_path, "w") as f:
+                with self._verifier_path.open("w", encoding="utf-8") as f:
                     new_verifier = str(uuid.uuid4())
                     f.write(new_verifier)
                     self.last_seen_verifier = new_verifier
@@ -1106,11 +1121,11 @@ class Database:
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
+        if self._index_path.is_file():
             current_verifier = ""
             if _use_uuid:
                 try:
-                    with open(self._verifier_path, "r") as f:
+                    with self._verifier_path.open("r", encoding="utf-8") as f:
                         current_verifier = f.read()
                 except BaseException:
                     pass
@@ -1123,7 +1138,7 @@ class Database:
                 self._state_is_inconsistent = False
             return
         elif self.is_upstream:
-            tty.warn("upstream not found: {0}".format(self._index_path))
+            tty.warn(f"upstream not found: {self._index_path}")
 
     def _add(
         self,
@@ -1148,7 +1163,7 @@ class Database:
             installation_time:
                 Date and time of installation
             allow_missing: if True, don't warn when installation is not found on on disk
-                This is useful when installing specs without build deps.
+                This is useful when installing specs without build/test deps.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1168,10 +1183,8 @@ class Database:
                 edge.spec,
                 explicit=False,
                 installation_time=installation_time,
-                # allow missing build-only deps. This prevents excessive warnings when a spec is
-                # installed, and its build dep is missing a build dep; there's no need to install
-                # the build dep's build dep first, and there's no need to warn about it missing.
-                allow_missing=allow_missing or edge.depflag == dt.BUILD,
+                # allow missing build / test only deps
+                allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
 
         # Make sure the directory layout agrees whether the spec is installed
@@ -1233,7 +1246,7 @@ class Database:
         self._data[key].explicit = explicit
 
     @_autospec
-    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False) -> None:
+    def add(self, spec: "spack.spec.Spec", *, explicit: bool = False, allow_missing=False) -> None:
         """Add spec at path to database, locking and reading DB to sync.
 
         ``add()`` will lock and read from the DB on disk.
@@ -1242,7 +1255,7 @@ class Database:
         # TODO: ensure that spec is concrete?
         # Entire add is transactional.
         with self.write_transaction():
-            self._add(spec, explicit=explicit)
+            self._add(spec, explicit=explicit, allow_missing=allow_missing)
 
     def _get_matching_spec_key(self, spec: "spack.spec.Spec", **kwargs) -> str:
         """Get the exact spec OR get a single spec that matches."""
@@ -1369,7 +1382,7 @@ class Database:
         self._data[spec_key] = spec_rec
 
     @_autospec
-    def mark(self, spec: "spack.spec.Spec", key, value) -> None:
+    def mark(self, spec: "spack.spec.Spec", key: str, value: Any) -> None:
         """Mark an arbitrary record on a spec."""
         with self.write_transaction():
             return self._mark(spec, key, value)
@@ -1388,7 +1401,7 @@ class Database:
     def installed_relatives(
         self,
         spec: "spack.spec.Spec",
-        direction: str = "children",
+        direction: tr.DirectionType = "children",
         transitive: bool = True,
         deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
     ) -> Set["spack.spec.Spec"]:
@@ -1429,7 +1442,13 @@ class Database:
             if spec.package.extends(extendee_spec):
                 yield spec.package
 
-    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(
+        self,
+        dag_hash: str,
+        default: Optional[List["spack.spec.Spec"]] = None,
+        installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
+    ) -> Optional[List["spack.spec.Spec"]]:
+        installed = normalize_query(installed)
         # hash is a full hash and is in the data somewhere
         if dag_hash in self._data:
             rec = self._data[dag_hash]
@@ -1438,8 +1457,7 @@ class Database:
             else:
                 return default
 
-        # check if hash is a prefix of some installed (or previously
-        # installed) spec.
+        # check if hash is a prefix of some installed (or previously installed) spec.
         matches = [
             record.spec
             for h, record in self._data.items()
@@ -1451,52 +1469,43 @@ class Database:
         # nothing found
         return default
 
-    def get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def get_by_hash_local(
+        self,
+        dag_hash: str,
+        default: Optional[List["spack.spec.Spec"]] = None,
+        installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
+    ) -> Optional[List["spack.spec.Spec"]]:
         """Look up a spec in *this DB* by DAG hash, or by a DAG hash prefix.
 
-        Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
-                not in the DB (default: None)
-            installed (bool or InstallStatus or typing.Iterable or None):
-                if ``True``, includes only installed
-                specs in the search; if ``False`` only missing specs, and if
-                ``any``, all specs in database. If an InstallStatus or iterable
-                of InstallStatus, returns specs whose install status
-                (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: any)
+        Args:
+            dag_hash: hash (or hash prefix) to look up
+            default: default value to return if dag_hash is not in the DB
+            installed: if ``True``, includes only installed specs in the search; if ``False``
+                only missing specs. Otherwise, a InstallRecordStatus flag.
 
-        ``installed`` defaults to ``any`` so that we can refer to any
-        known hash.  Note that ``query()`` and ``query_one()`` differ in
-        that they only return installed specs by default.
+        ``installed`` defaults to ``InstallRecordStatus.ANY`` so we can refer to any known hash.
 
-        Returns:
-            (list): a list of specs matching the hash or hash prefix
-
+        ``query()`` and ``query_one()`` differ in that they only return installed specs by default.
         """
         with self.read_transaction():
             return self._get_by_hash_local(dag_hash, default=default, installed=installed)
 
-    def get_by_hash(self, dag_hash, default=None, installed=any):
+    def get_by_hash(
+        self,
+        dag_hash: str,
+        default: Optional[List["spack.spec.Spec"]] = None,
+        installed: Union[bool, InstallRecordStatus] = InstallRecordStatus.ANY,
+    ) -> Optional[List["spack.spec.Spec"]]:
         """Look up a spec by DAG hash, or by a DAG hash prefix.
 
-        Arguments:
-            dag_hash (str): hash (or hash prefix) to look up
-            default (object or None): default value to return if dag_hash is
-                not in the DB (default: None)
-            installed (bool or InstallStatus or typing.Iterable or None):
-                if ``True``, includes only installed specs in the search; if ``False``
-                only missing specs, and if ``any``, all specs in database. If an
-                InstallStatus or iterable of InstallStatus, returns specs whose install
-                status (installed, deprecated, or missing) matches (one of) the
-                InstallStatus. (default: any)
+        Args:
+            dag_hash: hash (or hash prefix) to look up
+            default: default value to return if dag_hash is not in the DB
+            installed: if ``True``, includes only installed specs in the search; if ``False``
+                only missing specs. Otherwise, a InstallRecordStatus flag.
 
-        ``installed`` defaults to ``any`` so that we can refer to any
-        known hash.  Note that ``query()`` and ``query_one()`` differ in
-        that they only return installed specs by default.
-
-        Returns:
-            (list): a list of specs matching the hash or hash prefix
+        ``installed`` defaults to ``InstallRecordStatus.ANY`` so we can refer to any known hash.
+        ``query()`` and ``query_one()`` differ in that they only return installed specs by default.
 
         """
 
@@ -1513,62 +1522,52 @@ class Database:
 
     def _query(
         self,
-        query_spec=any,
-        known=any,
-        installed=True,
-        explicit=any,
-        start_date=None,
-        end_date=None,
-        hashes=None,
-        in_buildcache=any,
-        origin=None,
-    ):
-        """Run a query on the database."""
+        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        *,
+        predicate_fn: Optional[SelectType] = None,
+        installed: Union[bool, InstallRecordStatus] = True,
+        explicit: Optional[bool] = None,
+        start_date: Optional[datetime.datetime] = None,
+        end_date: Optional[datetime.datetime] = None,
+        hashes: Optional[Iterable[str]] = None,
+        in_buildcache: Optional[bool] = None,
+        origin: Optional[str] = None,
+    ) -> List["spack.spec.Spec"]:
+        installed = normalize_query(installed)
 
-        # TODO: Specs are a lot like queries.  Should there be a
-        # TODO: wildcard spec object, and should specs have attributes
-        # TODO: like installed and known that can be queried?  Or are
-        # TODO: these really special cases that only belong here?
+        # Restrict the set of records over which we iterate first
+        matching_hashes = self._data
+        if hashes is not None:
+            matching_hashes = {h: self._data[h] for h in hashes if h in self._data}
 
-        if query_spec is not any:
-            if not isinstance(query_spec, spack.spec.Spec):
-                query_spec = spack.spec.Spec(query_spec)
+        if isinstance(query_spec, str):
+            query_spec = spack.spec.Spec(query_spec)
 
-            # Just look up concrete specs with hashes; no fancy search.
-            if query_spec.concrete:
-                # TODO: handling of hashes restriction is not particularly elegant.
-                hash_key = query_spec.dag_hash()
-                if hash_key in self._data and (not hashes or hash_key in hashes):
-                    return [self._data[hash_key].spec]
-                else:
-                    return []
+        if query_spec is not None and query_spec.concrete:
+            hash_key = query_spec.dag_hash()
+            if hash_key not in matching_hashes:
+                return []
+            matching_hashes = {hash_key: matching_hashes[hash_key]}
 
-        # Abstract specs require more work -- currently we test
-        # against everything.
         results = []
         start_date = start_date or datetime.datetime.min
         end_date = end_date or datetime.datetime.max
 
-        # save specs whose name doesn't match for last, to avoid a virtual check
         deferred = []
-
-        for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
-                continue
-
+        for rec in matching_hashes.values():
             if origin and not (origin == rec.origin):
                 continue
 
             if not rec.install_type_matches(installed):
                 continue
 
-            if in_buildcache is not any and rec.in_buildcache != in_buildcache:
+            if in_buildcache is not None and rec.in_buildcache != in_buildcache:
                 continue
 
-            if explicit is not any and rec.explicit != explicit:
+            if explicit is not None and rec.explicit != explicit:
                 continue
 
-            if known is not any and known(rec.spec.name):
+            if predicate_fn is not None and not predicate_fn(rec):
                 continue
 
             if start_date or end_date:
@@ -1576,7 +1575,7 @@ class Database:
                 if not (start_date < inst_date < end_date):
                     continue
 
-            if query_spec is any:
+            if query_spec is None or query_spec.concrete:
                 results.append(rec.spec)
                 continue
 
@@ -1594,36 +1593,123 @@ class Database:
         # If we did fine something, the query spec can't be virtual b/c we matched an actual
         # package installation, so skip the virtual check entirely. If we *didn't* find anything,
         # check all the deferred specs *if* the query is virtual.
-        if not results and query_spec is not any and deferred and query_spec.virtual:
+        if (
+            not results
+            and query_spec is not None
+            and deferred
+            and spack.repo.PATH.is_virtual(query_spec.name)
+        ):
             results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
 
-    if _query.__doc__ is None:
-        _query.__doc__ = ""
-    _query.__doc__ += _QUERY_DOCSTRING
+    def query_local(
+        self,
+        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        *,
+        predicate_fn: Optional[SelectType] = None,
+        installed: Union[bool, InstallRecordStatus] = True,
+        explicit: Optional[bool] = None,
+        start_date: Optional[datetime.datetime] = None,
+        end_date: Optional[datetime.datetime] = None,
+        hashes: Optional[List[str]] = None,
+        in_buildcache: Optional[bool] = None,
+        origin: Optional[str] = None,
+    ) -> List["spack.spec.Spec"]:
+        """Queries the local Spack database.
 
-    def query_local(self, *args, **kwargs):
-        """Query only the local Spack database.
+        This function doesn't guarantee any sorting of the returned data for performance reason,
+        since comparing specs for __lt__ may be an expensive operation.
 
-        This function doesn't guarantee any sorting of the returned
-        data for performance reason, since comparing specs for __lt__
-        may be an expensive operation.
+        Args:
+            query_spec:  if query_spec is ``None``, match all specs in the database.
+                If it is a spec, return all specs matching ``spec.satisfies(query_spec)``.
+
+            predicate_fn: optional predicate taking an InstallRecord as argument, and returning
+                whether that record is selected for the query. It can be used to craft criteria
+                that need some data for selection not provided by the Database itself.
+
+            installed: if ``True``, includes only installed specs in the search. If ``False`` only
+                missing specs, and if ``any``, all specs in database. If an InstallStatus or
+                iterable of InstallStatus, returns specs whose install status matches at least
+                one of the InstallStatus.
+
+            explicit: a spec that was installed following a specific user request is marked as
+                explicit. If instead it was pulled-in as a dependency of a user requested spec
+                it's considered implicit.
+
+            start_date: if set considers only specs installed from the starting date.
+
+            end_date: if set considers only specs installed until the ending date.
+
+            in_buildcache: specs that are marked in this database as part of an associated binary
+                cache are ``in_buildcache``. All other specs are not. This field is used for
+                querying mirror indices. By default, it does not check this status.
+
+            hashes: list of hashes used to restrict the search
+
+            origin: origin of the spec
         """
         with self.read_transaction():
-            return self._query(*args, **kwargs)
+            return self._query(
+                query_spec,
+                predicate_fn=predicate_fn,
+                installed=installed,
+                explicit=explicit,
+                start_date=start_date,
+                end_date=end_date,
+                hashes=hashes,
+                in_buildcache=in_buildcache,
+                origin=origin,
+            )
 
-    if query_local.__doc__ is None:
-        query_local.__doc__ = ""
-    query_local.__doc__ += _QUERY_DOCSTRING
+    def query(
+        self,
+        query_spec: Optional[Union[str, "spack.spec.Spec"]] = None,
+        *,
+        predicate_fn: Optional[SelectType] = None,
+        installed: Union[bool, InstallRecordStatus] = True,
+        explicit: Optional[bool] = None,
+        start_date: Optional[datetime.datetime] = None,
+        end_date: Optional[datetime.datetime] = None,
+        in_buildcache: Optional[bool] = None,
+        hashes: Optional[List[str]] = None,
+        origin: Optional[str] = None,
+        install_tree: str = "all",
+    ) -> List["spack.spec.Spec"]:
+        """Queries the Spack database including all upstream databases.
 
-    def query(self, *args, **kwargs):
-        """Query the Spack database including all upstream databases.
+        Args:
+            query_spec:  if query_spec is ``None``, match all specs in the database.
+                If it is a spec, return all specs matching ``spec.satisfies(query_spec)``.
 
-        Additional Arguments:
-            install_tree (str): query 'all' (default), 'local', 'upstream', or upstream path
+            predicate_fn: optional predicate taking an InstallRecord as argument, and returning
+                whether that record is selected for the query. It can be used to craft criteria
+                that need some data for selection not provided by the Database itself.
+
+            installed: if ``True``, includes only installed specs in the search. If ``False`` only
+                missing specs, and if ``any``, all specs in database. If an InstallStatus or
+                iterable of InstallStatus, returns specs whose install status matches at least
+                one of the InstallStatus.
+
+            explicit: a spec that was installed following a specific user request is marked as
+                explicit. If instead it was pulled-in as a dependency of a user requested spec
+                it's considered implicit.
+
+            start_date: if set considers only specs installed from the starting date.
+
+            end_date: if set considers only specs installed until the ending date.
+
+            in_buildcache: specs that are marked in this database as part of an associated binary
+                cache are ``in_buildcache``. All other specs are not. This field is used for
+                querying mirror indices. By default, it does not check this status.
+
+            hashes: list of hashes used to restrict the search
+
+            install_tree: query 'all' (default), 'local', 'upstream', or upstream path
+
+            origin: origin of the spec
         """
-        install_tree = kwargs.pop("install_tree", "all")
         valid_trees = ["all", "upstream", "local", self.root] + [u.root for u in self.upstream_dbs]
         if install_tree not in valid_trees:
             msg = "Invalid install_tree argument to Database.query()\n"
@@ -1639,28 +1725,55 @@ class Database:
             # queries for upstream DBs need to *not* lock - we may not
             # have permissions to do this and the upstream DBs won't know about
             # us anyway (so e.g. they should never uninstall specs)
-            upstream_results.extend(upstream_db._query(*args, **kwargs) or [])
+            upstream_results.extend(
+                upstream_db._query(
+                    query_spec,
+                    predicate_fn=predicate_fn,
+                    installed=installed,
+                    explicit=explicit,
+                    start_date=start_date,
+                    end_date=end_date,
+                    hashes=hashes,
+                    in_buildcache=in_buildcache,
+                    origin=origin,
+                )
+                or []
+            )
 
-        local_results = []
+        local_results: Set["spack.spec.Spec"] = set()
         if install_tree in ("all", "local") or self.root == install_tree:
-            local_results = set(self.query_local(*args, **kwargs))
+            local_results = set(
+                self.query_local(
+                    query_spec,
+                    predicate_fn=predicate_fn,
+                    installed=installed,
+                    explicit=explicit,
+                    start_date=start_date,
+                    end_date=end_date,
+                    hashes=hashes,
+                    in_buildcache=in_buildcache,
+                    origin=origin,
+                )
+            )
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
+        results.sort()  # type: ignore[call-overload]
+        return results
 
-        return sorted(results)
-
-    if query.__doc__ is None:
-        query.__doc__ = ""
-    query.__doc__ += _QUERY_DOCSTRING
-
-    def query_one(self, query_spec, known=any, installed=True):
+    def query_one(
+        self,
+        query_spec: Optional[Union[str, "spack.spec.Spec"]],
+        predicate_fn: Optional[SelectType] = None,
+        installed: Union[bool, InstallRecordStatus] = True,
+    ) -> Optional["spack.spec.Spec"]:
         """Query for exactly one spec that matches the query spec.
 
-        Raises an assertion error if more than one spec matches the
-        query. Returns None if no installed package matches.
+        Returns None if no installed package matches.
 
+        Raises:
+            AssertionError: if more than one spec matches the query.
         """
-        concrete_specs = self.query(query_spec, known=known, installed=installed)
+        concrete_specs = self.query(query_spec, predicate_fn=predicate_fn, installed=installed)
         assert len(concrete_specs) <= 1
         return concrete_specs[0] if concrete_specs else None
 
@@ -1706,24 +1819,6 @@ class Database:
                 for rec in self._data.values()
                 if id(rec.spec) not in needed and rec.installed
             ]
-
-    def update_explicit(self, spec, explicit):
-        """
-        Update the spec's explicit state in the database.
-
-        Args:
-            spec (spack.spec.Spec): the spec whose install record is being updated
-            explicit (bool): ``True`` if the package was requested explicitly
-                by the user, ``False`` if it was pulled in as a dependency of
-                an explicit package.
-        """
-        rec = self.get_record(spec)
-        if explicit != rec.explicit:
-            with self.write_transaction():
-                message = "{s.name}@{s.version} : marking the package {0}"
-                status = "explicit" if explicit else "implicit"
-                tty.debug(message.format(status, s=spec))
-                rec.explicit = explicit
 
 
 class NoUpstreamVisitor:
@@ -1784,6 +1879,14 @@ class InvalidDatabaseVersionError(SpackError):
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class ExplicitDatabaseUpgradeError(SpackError):
+    """Raised to request an explicit DB upgrade to the user"""
+
+
+class DatabaseNotReadableError(SpackError):
+    """Raised to signal Database.reindex that the reindex should happen via spec.json"""
 
 
 class NoSuchSpecError(KeyError):

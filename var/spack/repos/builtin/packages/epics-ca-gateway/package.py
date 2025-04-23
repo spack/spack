@@ -1,7 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 from spack.package import *
 
@@ -35,5 +36,5 @@ class EpicsCaGateway(MakefilePackage):
             release_file.write("EPICS_BASE = " + env["EPICS_BASE"] + "\n")
             release_file.write("PCAS = " + spec["epics-pcas"].prefix)
 
-    def setup_run_environment(self, envmod):
-        envmod.prepend_path("PATH", join_path(self.prefix.bin, env["EPICS_HOST_ARCH"]))
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+        env.prepend_path("PATH", join_path(self.prefix.bin, os.environ["EPICS_HOST_ARCH"]))

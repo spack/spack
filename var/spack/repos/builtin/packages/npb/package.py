@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import numbers
@@ -34,9 +33,6 @@ class Npb(MakefilePackage):
 
     version("3.3.1", sha256="4a8ea679b1df69f583c544c47198b3c26a50ec2bb6f8f69aef66c04c9a747d2d")
     version("3.4.1", sha256="f3a43467da6e84a829ea869156d3ea86c17932136bb413a4b6dab23018a28881")
-
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # Valid Benchmark Names
     valid_names = (
@@ -97,6 +93,9 @@ class Npb(MakefilePackage):
         multi=True,
         description="Number of processes (comma separated list)",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi@2:", when="implementation=mpi")
 

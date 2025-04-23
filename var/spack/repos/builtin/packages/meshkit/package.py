@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,12 +16,12 @@ class Meshkit(AutotoolsPackage):
 
     version("1.5.0", sha256="6a4c119af191e24ef40644acb7cfbe967af0678ac3412f38a943fb28d661cac7")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="enable mpi support")
     variant("netgen", default=False, description="enable netgen support")
     variant("debug", default=False, description="enable debug symbols")
     variant("shared", default=False, description="enable shared builds")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("netgen", when="+netgen")

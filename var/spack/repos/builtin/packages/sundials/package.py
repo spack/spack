@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("7.3.0", tag="v7.3.0", commit="e941546af1a5b5e492dcac0a1872540e9961c556")
+    version("7.2.1", tag="v7.2.1", commit="5c53be85c88f63c5201c130b8cb2c686615cfb03")
+    version("7.2.0", tag="v7.2.0", commit="0eff39663606f2ff280c4059a947ed62ae38180a")
     version("7.1.1", tag="v7.1.1", commit="c28eaa3764a03705d61decb6025b409360e9d53f")
     version("7.0.0", sha256="d762a7950ef4097fbe9d289f67a8fb717a0b9f90f87ed82170eb5c36c0a07989")
     version("6.7.0", sha256="5f113a1564a9d2d98ff95249f4871a4c815a05dbb9b8866a82b13ab158c37adb")
@@ -61,10 +63,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.0", sha256="28b8e07eecfdef66e2c0d0ea0cb1b91af6e4e94d71008abfe80c27bf39f63fde")
     version("2.7.0", sha256="d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104")
     version("2.6.2", sha256="d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # ==========================================================================
     # Variants
@@ -224,6 +222,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Dependencies
     # ==========================================================================
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     # Build dependencies
     depends_on("cmake@3.18:", type="build")
 
@@ -287,7 +289,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # https://github.com/LLNL/sundials/pull/434
     # https://github.com/LLNL/sundials/pull/437
-    patch("sundials-hip-platform.patch", when="@7.0.0 +rocm")
+    patch("sundials-hip-platform.patch", when="@6.7.0:7.0.0 +rocm")
 
     # https://github.com/spack/spack/issues/29526
     patch("nvector-pic.patch", when="@6.1.0:6.2.0 +rocm")
@@ -398,6 +400,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         if "+cuda" in spec:
             args.append(define("CMAKE_CUDA_ARCHITECTURES", spec.variants["cuda_arch"].value))
+            args.append(define("CUDAToolkit_ROOT", self.spec["cuda"].prefix))
 
         if "+rocm" in spec:
             args.extend(
@@ -647,7 +650,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
         cxx_files = [
             "arkode/CXX_parallel/Makefile",
-            "arkode/CXX_serial/Makefile" "cvode/cuda/Makefile",
+            "arkode/CXX_serial/Makefile",
+            "cvode/cuda/Makefile",
             "cvode/raja/Makefile",
             "nvector/cuda/Makefile",
             "nvector/raja/Makefile",
@@ -733,6 +737,8 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             # Q: should the result be ordered by dependency?
         else:
             sun_libs = ["libsundials_" + p for p in query_parameters]
+            if self.spec.satisfies("@7:"):
+                sun_libs += ["libsundials_core"]
         is_shared = "+shared" in self.spec
 
         libs = find_libraries(sun_libs, root=self.prefix, shared=is_shared, recursive=True)
@@ -743,7 +749,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     @on_package_attributes(run_tests=True)
     def check_test_install(self):
         """Perform test_install on the build."""
-        with working_dir(self.builder.build_directory):
+        with working_dir(self.build_directory):
             make("test_install")
 
     @property

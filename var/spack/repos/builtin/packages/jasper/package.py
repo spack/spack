@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,9 +25,6 @@ class Jasper(AutotoolsPackage, CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     build_system(
         conditional("cmake", when="@2:"), conditional("autotools", when="@:1"), default="cmake"
     )
@@ -36,6 +32,9 @@ class Jasper(AutotoolsPackage, CMakePackage):
     variant("jpeg", default=True, description="Enable the use of the JPEG library")
     variant("opengl", default=False, description="Enable the use of the OpenGL and GLUT libraries")
     variant("shared", default=True, description="Enable the building of shared libraries")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         depends_on("cmake@2.8.11:", type="build")

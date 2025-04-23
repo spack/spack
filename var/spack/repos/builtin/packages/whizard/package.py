@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -13,7 +12,7 @@ class Whizard(AutotoolsPackage):
     of multi-particle scattering cross sections
     and simulated event samples."""
 
-    homepage = "whizard.hepforge.org"
+    homepage = "https://whizard.hepforge.org"
     urls = [
         "https://launchpad.net/whizard/3.1.x/3.1.2/+download/whizard-3.1.2.tar.gz",
         "https://whizard.hepforge.org/downloads/?f=whizard-2.8.3.tar.gz",
@@ -27,6 +26,7 @@ class Whizard(AutotoolsPackage):
     license("GPL-2.0-or-later")
 
     version("master", branch="master")
+    version("3.1.5", sha256="731d147b342e3b63307ea541f6f0bb4073195a78a75da60db10f284f282c3d19")
     version("3.1.4", sha256="9da9805251d786adaf4ad5a112f9c4ee61d515778af0d2623d6460c3f1f900cd")
     version("3.1.2", sha256="4f706f8ef02a580ae4dba867828691dfe0b3f9f9b8982b617af72eb8cd4c6fa3")
     version("3.1.1", sha256="dd48e4e39b8a4990be47775ec6171f89d8147cb2e9e293afc7051a7dbc5a23ef")
@@ -44,10 +44,6 @@ class Whizard(AutotoolsPackage):
     version("2.8.1", sha256="0c759ce0598e25f38e04659f745c5963d238c4b5c12209f16449b6c0bc6dc64e")
     version("2.8.0", sha256="3b5175eafa879d1baca20237d18fb2b18bee89631e73ada499de9c082d009696")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "hepmc",
         default="3",
@@ -64,6 +60,10 @@ class Whizard(AutotoolsPackage):
     variant("openmp", default=False, description="builds with openmp")
     variant("openloops", default=False, description="builds with openloops")
     variant("latex", default=False, description="data visualization with latex")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("libtirpc", type=("build", "link", "run"))
     depends_on("ocaml@4.02.3:", type="build", when="@3:")
@@ -117,7 +117,7 @@ class Whizard(AutotoolsPackage):
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # whizard uses some environment variables to detect dependencies at
         # configure time if they are not installed to standard system prefixes
         if self.spec.satisfies("+lcio"):

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -66,8 +65,8 @@ class Corenlp(Package):
         kwargs = {"ignore_absent": False, "backup": False, "string": False}
         filter_file("^java", java, script, **kwargs)
 
-    def setup_run_environment(self, run_env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         class_paths = []
         class_paths.extend(find(prefix.lib, "*.jar"))
         classpath = os.pathsep.join(class_paths)
-        run_env.prepend_path("CLASSPATH", classpath)
+        env.prepend_path("CLASSPATH", classpath)

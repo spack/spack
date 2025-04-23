@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,10 +17,12 @@ class Conflict(Package):
 
     conflicts("%clang", when="+foo")
 
+    depends_on("c", type="build")
+
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
         make()
         make("install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FOOBAR", self.name)

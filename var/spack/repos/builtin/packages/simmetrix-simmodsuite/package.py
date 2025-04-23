@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -541,8 +540,11 @@ class SimmetrixSimmodsuite(Package):
     variant("parallelmesh", default=False, description="enable parallel meshing")
     variant("paralleladapt", default=False, description="enable parallel adaptation")
 
+    depends_on("c", type="build")
+
     depends_on("mpi")
     depends_on("libtirpc", type="link")
+    depends_on("gmake", type="build")
 
     oslib = "x64_rhel8_gcc83"
 
@@ -571,12 +573,14 @@ class SimmetrixSimmodsuite(Package):
             condition = "@{0}+{1}".format(sim_version, feature)
             simmetrix_resource(_name, url, sha256, condition)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)

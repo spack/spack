@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,7 @@ class PyFluidfft(PythonPackage):
     with default_args(type="run"):
         depends_on("py-fluiddyn@0.2.3:")
         depends_on("py-pyfftw@0.10.4:")
-        depends_on("py-importlib_metadata", when="^python@:3.10")
+        depends_on("py-importlib-metadata", when="^python@:3.10")
 
     def config_settings(self, spec, prefix):
         settings = {"setup-args": {"-Dnative": spec.variants["native"].value}}

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,7 @@ class Ip2(CMakePackage):
     depends_on("sp")
     requires("^sp precision=4,8,d", when="^sp@2.4:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for suffix in ("4", "8", "d"):
             lib = find_libraries(
                 "libip2_" + suffix, root=self.prefix, shared=False, recursive=True

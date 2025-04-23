@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,6 +21,7 @@ class Vim(AutotoolsPackage):
 
     license("Vim")
 
+    version("9.1.1194", sha256="4575b9ae81cca6a304f165d16ea3c65f4864390001ed5d7bf000e55417153f30")
     version("9.1.0437", sha256="7024fbf8d0e8eec2eae21d279d487b60c58dc4ba3d42146388dc3743506d1fe6")
     version("9.0.0045", sha256="594a31e96e3eda07a358db305de939ca749693b4684de9e027bfa70311b1994d")
     version(
@@ -41,9 +41,6 @@ class Vim(AutotoolsPackage):
     version("8.0.0134", sha256="1b3e3e7d187eed55cbdb0a1dae6b8f3b885005fbae84222420877d7afa3b2310")
     version("7.4.2367", sha256="a9ae4031ccd73cc60e771e8bf9b3c8b7f10f63a67efce7f61cd694cd8d7cda5c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     _features = ("huge", "big", "normal", "small", "tiny")
 
     variant("cscope", default=False, description="build with cscope support")
@@ -58,6 +55,9 @@ class Vim(AutotoolsPackage):
 
     for _f in _features[1:]:
         conflicts("+gui", when="features=" + _f, msg="+gui requires features=huge")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("findutils", type="build")
     depends_on("ncurses", when="@7.4:")

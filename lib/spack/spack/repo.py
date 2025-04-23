@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -15,7 +14,6 @@ import importlib.util
 import inspect
 import itertools
 import os
-import os.path
 import random
 import re
 import shutil
@@ -34,6 +32,7 @@ import llnl.util.lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
+import spack
 import spack.caches
 import spack.config
 import spack.error
@@ -41,6 +40,8 @@ import spack.patch
 import spack.provider_index
 import spack.spec
 import spack.tag
+import spack.tengine
+import spack.util.file_cache
 import spack.util.git
 import spack.util.naming as nm
 import spack.util.path
@@ -48,6 +49,8 @@ import spack.util.spack_yaml as syaml
 
 #: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
 ROOT_PYTHON_NAMESPACE = "spack.pkg"
+
+_API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 
 
 def python_package_for_repo(namespace):
@@ -78,43 +81,6 @@ def namespace_from_fullname(fullname):
     if namespace.startswith(prefix_and_dot):
         namespace = namespace[len(prefix_and_dot) :]
     return namespace
-
-
-class _PrependFileLoader(importlib.machinery.SourceFileLoader):
-    def __init__(self, fullname, path, prepend=None):
-        super(_PrependFileLoader, self).__init__(fullname, path)
-        self.prepend = prepend
-
-    def path_stats(self, path):
-        stats = super(_PrependFileLoader, self).path_stats(path)
-        if self.prepend:
-            stats["size"] += len(self.prepend) + 1
-        return stats
-
-    def get_data(self, path):
-        data = super(_PrependFileLoader, self).get_data(path)
-        if path != self.path or self.prepend is None:
-            return data
-        else:
-            return self.prepend.encode() + b"\n" + data
-
-
-class RepoLoader(_PrependFileLoader):
-    """Loads a Python module associated with a package in specific repository"""
-
-    #: Code in ``_package_prepend`` is prepended to imported packages.
-    #:
-    #: Spack packages are expected to call `from spack.package import *`
-    #: themselves, but we are allowing a deprecation period before breaking
-    #: external repos that don't do this yet.
-    _package_prepend = "from spack.package import *"
-
-    def __init__(self, fullname, repo, package_name):
-        self.repo = repo
-        self.package_name = package_name
-        self.package_py = repo.filename_for_package_name(package_name)
-        self.fullname = fullname
-        super().__init__(self.fullname, self.package_py, prepend=self._package_prepend)
 
 
 class SpackNamespaceLoader:
@@ -186,7 +152,8 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    return RepoLoader(fullname, repo, package_name)
+                    module_path = repo.filename_for_package_name(package_name)
+                    return importlib.machinery.SourceFileLoader(fullname, module_path)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -215,9 +182,9 @@ NOT_PROVIDED = object()
 def packages_path():
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return spack.repo.PATH.get_repo("builtin.mock").packages_path
-    except spack.repo.UnknownNamespaceError:
-        return spack.repo.PATH.get_repo("builtin").packages_path
+        return PATH.get_repo("builtin.mock").packages_path
+    except UnknownNamespaceError:
+        return PATH.get_repo("builtin").packages_path
 
 
 class GitExe:
@@ -313,7 +280,7 @@ def add_package_to_git_stage(packages):
     git = GitExe()
 
     for pkg_name in packages:
-        filename = spack.repo.PATH.filename_for_package_name(pkg_name)
+        filename = PATH.filename_for_package_name(pkg_name)
         if not os.path.isfile(filename):
             tty.die("No such package: %s.  Path does not exist:" % pkg_name, filename)
 
@@ -589,7 +556,7 @@ class RepoIndex:
         self,
         package_checker: FastPackageChecker,
         namespace: str,
-        cache: "spack.caches.FileCacheType",
+        cache: spack.util.file_cache.FileCache,
     ):
         self.checker = package_checker
         self.packages_path = self.checker.packages_path
@@ -635,7 +602,9 @@ class RepoIndex:
         """Determine which packages need an update, and update indexes."""
 
         # Filename of the provider index cache (we assume they're all json)
-        cache_filename = f"{name}/{self.namespace}-index.json"
+        cache_filename = (
+            f"{name}/{self.namespace}-specfile_v{spack.spec.SPECFILE_FORMAT_VERSION}-index.json"
+        )
 
         # Compute which packages needs to be updated in the cache
         index_mtime = self.cache.mtime(cache_filename)
@@ -682,7 +651,7 @@ class RepoPath:
     def __init__(
         self,
         *repos: Union[str, "Repo"],
-        cache: Optional["spack.caches.FileCacheType"],
+        cache: Optional[spack.util.file_cache.FileCache],
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.repos: List[Repo] = []
@@ -945,26 +914,59 @@ class RepoPath:
         return RepoPath.unmarshal, self.marshal()
 
 
+def _parse_package_api_version(
+    config: Dict[str, Any],
+    min_api: Tuple[int, int] = spack.min_package_api_version,
+    max_api: Tuple[int, int] = spack.package_api_version,
+) -> Tuple[int, int]:
+    api = config.get("api")
+    if api is None:
+        package_api = (1, 0)
+    else:
+        if not isinstance(api, str):
+            raise BadRepoError(f"Invalid Package API version '{api}'. Must be of the form vX.Y")
+        api_match = _API_REGEX.match(api)
+        if api_match is None:
+            raise BadRepoError(f"Invalid Package API version '{api}'. Must be of the form vX.Y")
+        package_api = (int(api_match.group(1)), int(api_match.group(2)))
+
+    if min_api <= package_api <= max_api:
+        return package_api
+
+    min_str = ".".join(str(i) for i in min_api)
+    max_str = ".".join(str(i) for i in max_api)
+    curr_str = ".".join(str(i) for i in package_api)
+    raise BadRepoError(
+        f"Package API v{curr_str} is not supported by this version of Spack ("
+        f"must be between v{min_str} and v{max_str})"
+    )
+
+
 class Repo:
     """Class representing a package repository in the filesystem.
 
-    Each package repository must have a top-level configuration file
-    called `repo.yaml`.
+    Each package repository must have a top-level configuration file called `repo.yaml`.
 
-    Currently, `repo.yaml` must define:
+    It contains the following keys:
 
     `namespace`:
         A Python namespace where the repository's packages should live.
 
     `subdirectory`:
         An optional subdirectory name where packages are placed
+
+    `api`:
+        A string of the form vX.Y that indicates the Package API version. The default is "v1.0".
+        For the repo to be compatible with the current version of Spack, the version must be
+        greater than or equal to :py:data:`spack.min_package_api_version` and less than or equal to
+        :py:data:`spack.package_api_version`.
     """
 
     def __init__(
         self,
         root: str,
         *,
-        cache: "spack.caches.FileCacheType",
+        cache: spack.util.file_cache.FileCache,
         overrides: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Instantiate a package repository from a filesystem path.
@@ -994,7 +996,7 @@ class Repo:
             f"{os.path.join(root, repo_config_name)} must define a namespace.",
         )
 
-        self.namespace = config["namespace"]
+        self.namespace: str = config["namespace"]
         check(
             re.match(r"[a-zA-Z][a-zA-Z0-9_.]+", self.namespace),
             f"Invalid namespace '{self.namespace}' in repo '{self.root}'. "
@@ -1007,11 +1009,13 @@ class Repo:
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
 
-        packages_dir = config.get("subdirectory", packages_dir_name)
+        packages_dir: str = config.get("subdirectory", packages_dir_name)
         self.packages_path = os.path.join(self.root, packages_dir)
         check(
             os.path.isdir(self.packages_path), f"No directory '{packages_dir}' found in '{root}'"
         )
+
+        self.package_api = _parse_package_api_version(config)
 
         # Class attribute overrides by package name
         self.overrides = overrides or {}
@@ -1062,10 +1066,10 @@ class Repo:
         parts = fullname.split(".")
         return self._names[: len(parts)] == parts
 
-    def _read_config(self) -> Dict[str, str]:
+    def _read_config(self) -> Dict[str, Any]:
         """Check for a YAML config file in this db's root directory."""
         try:
-            with open(self.config_file) as reponame_file:
+            with open(self.config_file, encoding="utf-8") as reponame_file:
                 yaml_data = syaml.load(reponame_file)
 
                 if (
@@ -1077,7 +1081,7 @@ class Repo:
 
                 return yaml_data["repo"]
 
-        except IOError:
+        except OSError:
             tty.die(f"Error reading {self.config_file} when opening {self.root}")
 
     def get(self, spec: "spack.spec.Spec") -> "spack.package_base.PackageBase":
@@ -1399,13 +1403,15 @@ def create_repo(root, namespace=None, subdir=packages_dir_name):
         packages_path = os.path.join(root, subdir)
 
         fs.mkdirp(packages_path)
-        with open(config_path, "w") as config:
+        with open(config_path, "w", encoding="utf-8") as config:
             config.write("repo:\n")
             config.write(f"  namespace: '{namespace}'\n")
             if subdir != packages_dir_name:
                 config.write(f"  subdirectory: '{subdir}'\n")
+            x, y = spack.package_api_version
+            config.write(f"  api: v{x}.{y}\n")
 
-    except (IOError, OSError) as e:
+    except OSError as e:
         # try to clean up.
         if existed:
             shutil.rmtree(config_path, ignore_errors=True)
@@ -1439,9 +1445,7 @@ def _path(configuration=None):
     return create(configuration=configuration)
 
 
-def create(
-    configuration: Union["spack.config.Configuration", llnl.util.lang.Singleton]
-) -> RepoPath:
+def create(configuration: spack.config.Configuration) -> RepoPath:
     """Create a RepoPath from a configuration object.
 
     Args:
@@ -1464,7 +1468,7 @@ def create(
 
 
 #: Singleton repo path instance
-PATH: Union[RepoPath, llnl.util.lang.Singleton] = llnl.util.lang.Singleton(_path)
+PATH: RepoPath = llnl.util.lang.Singleton(_path)  # type: ignore
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
@@ -1523,12 +1527,12 @@ class MockRepositoryBuilder:
                 ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
         """
         dependencies = dependencies or []
-        context = {"cls_name": spack.util.naming.mod_to_class(name), "dependencies": dependencies}
+        context = {"cls_name": nm.mod_to_class(name), "dependencies": dependencies}
         template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
         text = template.render(context)
         package_py = self.recipe_filename(name)
         fs.mkdirp(os.path.dirname(package_py))
-        with open(package_py, "w") as f:
+        with open(package_py, "w", encoding="utf-8") as f:
             f.write(text)
 
     def remove(self, name):
@@ -1582,7 +1586,7 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = spack.repo.PATH
+                    repo = PATH
 
                 # We need to compare the base package name
                 pkg_name = name.rsplit(".", 1)[-1]

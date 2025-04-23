@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,8 +24,10 @@ class Hiptt(MakefilePackage, ROCmPackage):
     patch("bugfix_make.patch")
 
     # To enable this package add it to the LD_LIBRARY_PATH
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        hiptt_home = self.spec["hiptt"].prefix
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        hiptt_home = self.prefix
         env.prepend_path("cuTT_ROOT", hiptt_home)
         env.prepend_path("cuTT_LIBRARY", hiptt_home.lib)
         env.prepend_path("cuTT_INCLUDE_PATH", hiptt_home.include)

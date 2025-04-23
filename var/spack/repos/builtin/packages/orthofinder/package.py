@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -74,6 +73,6 @@ class Orthofinder(Package):
             shutil.rmtree(prefix.bin.scripts_of.bin)
         os.rename("%s/orthofinder.py" % prefix.bin, "%s/orthofinder" % prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", prefix.bin)
         env.prepend_path("PATH", prefix.bin.tools)

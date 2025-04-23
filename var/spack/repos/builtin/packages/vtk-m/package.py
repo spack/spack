@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -7,6 +6,7 @@
 import os
 import sys
 
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
@@ -30,10 +30,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("release", branch="release")
     version(
-        "2.2.0",
-        sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5",
+        "2.3.0",
+        sha256="d105ee2de5cfa600f1b4b3d2061f97bebd581a0ae1c86c6174af4e8128f83c54",
         preferred=True,
     )
+    version("2.2.0", sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5")
     version("2.1.0", sha256="7b224f1f91e5ef140e193338bf091133b1e9f40d323bccdc8bb80bfc2675e6ea")
     version("2.0.0", sha256="21c8b2cb8f3d4116a4f90c1d08c9f5e27b25c7a0951f7b403eced94576f84880")
     version("1.9.0", sha256="f9862d9d24deae32063ba1ea3d9a42900ac0cdd7f98412d960249a7cac35d47f")
@@ -51,8 +52,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.3.0", sha256="2d05a6545abfaa7594ef344389617fdca48c7f5ebddc617038544317b70ba19e")
     version("1.2.0", sha256="44596e88b844e7626248fb8e96a38be25a0e585a22256b1c859208b23ef45171")
     version("1.1.0", sha256="55f42c417d3a41893230b2fd3b5c192daeee689a2193de10bf22a1ef5c24c7ad")
-
-    depends_on("cxx", type="build")  # generated
 
     variant("shared", default=False, description="build shared libs")
 
@@ -85,6 +84,10 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         description="build openmp support",
     )
     variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
+    variant("sycl", default=False, description="Build with SYCL backend")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")  # CMake >= 3.12
     depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18
@@ -132,6 +135,13 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+rocm", when="~kokkos", msg="VTK-m does not support HIP without Kokkos")
     conflicts("+rocm", when="+virtuals", msg="VTK-m does not support virtual functions with ROCm")
 
+    # VTK-m uses the Kokkos SYCL backend.
+    # If Kokkos provides multiple backends, the SYCL backend may or
+    # may not be used for VTK-m depending on the default selected by Kokkos
+    depends_on("kokkos +sycl", when="+kokkos +sycl")
+
+    conflicts("+sycl", when="~kokkos", msg="VTK-m does not support SYCL without Kokkos")
+
     # Can build +shared+cuda after @1.7:
     conflicts("+shared", when="@:1.6 +cuda_native")
     conflicts("+cuda~cuda_native~kokkos", msg="Cannot have +cuda without a cuda device")
@@ -156,11 +166,19 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3258
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
-    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2.0")
 
     # VTK-M PR#3259
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
     patch("mr3259-thrust-is_arithmetic-fix.patch", when="@2.0.0:2.2.0 +cuda ^cuda@12.6:")
+
+    # VTK-m PR#3271
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3271
+    patch("mr3271-contourtree-print-error.patch", when="@2.0:2.2")
+
+    # VTK-m PR#3272
+    # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3272
+    patch("mr3272-bad-mir-table-method.patch", when="@2.0:2.2")
 
     # Disable Thrust patch that is no longer needed in modern Thrust
     patch(
@@ -168,6 +186,12 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
         sha256="58dc104ba05ec99c359eeec3ac094cdb071053a4250f4ad9d72ef6a356c4346e",
         when="@1.6.0:2.1 +cuda ^cuda@12.5:",
     )
+
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            if self.spec.satisfies("@:2.2.0 %oneapi@2025:"):
+                flags.append("-Wno-error=missing-template-arg-list-after-template-kw")
+        return (flags, None, None)
 
     def cmake_args(self):
         spec = self.spec
@@ -215,7 +239,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 os.environ["TBB_ROOT"] = spec["tbb"].prefix
 
             if "+kokkos" in spec and "+rocm" in spec and spec.satisfies("^kokkos@4:"):
-                options.append(f"-DCMAKE_CXX_COMPILER:BOOL={spec['hip'].prefix.bin.hipcc}")
+                options.append(f"-DCMAKE_CXX_COMPILER:FILEPATH={spec['hip'].prefix.bin.hipcc}")
 
             # Support for relocatable code
             if "~shared" in spec and "+fpic" in spec:
@@ -227,7 +251,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
                 options.append("-DCMAKE_CUDA_HOST_COMPILER={0}".format(env["SPACK_CXX"]))
 
                 if spec.satisfies("@1.9.0:") and spec.satisfies("^cmake@3.18:"):
-                    options.append(self.builder.define_cuda_architectures(self))
+                    options.append(CMakeBuilder.define_cuda_architectures(self))
 
                 else:
                     # VTKm_CUDA_Architecture only accepts a single CUDA arch
@@ -247,26 +271,22 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
             # hip support
             if "+rocm" in spec:
-                options.append(self.builder.define_hip_architectures(self))
+                options.append(CMakeBuilder.define_hip_architectures(self))
 
         return options
 
     def test_smoke_test(self):
         """Build and run ctests"""
-        spec = self.spec
-
-        if "+examples" not in spec:
+        if "+examples" not in self.spec:
             raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
-            cmake = Executable(spec["cmake"].prefix.bin.cmake)
-            ctest = Executable(spec["cmake"].prefix.bin.ctest)
-            cmakeExampleDir = spec["vtk-m"].prefix.share.doc.VTKm.examples.smoke_test
-
-            cmake(*([cmakeExampleDir, "-DVTKm_ROOT=" + spec["vtk-m"].prefix]))
-            cmake(*(["--build", "."]))
-            ctest(*(["--verbose"]))
+            cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
+            ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
+            cmake(self.prefix.share.doc.VTKm.examples.smoke_test, f"-DVTKm_ROOT={self.prefix}")
+            cmake("--build", ".")
+            ctest("--verbose")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

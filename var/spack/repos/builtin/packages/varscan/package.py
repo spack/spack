@@ -1,9 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -39,6 +38,6 @@ class Varscan(Package):
         filter_file("^java", java, script, **kwargs)
         filter_file("varscan.jar", join_path(prefix.jar, jar_file), script, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("VARSCAN_HOME", self.prefix.jar)
         env.set("CLASSPATH", self.prefix.jar)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -41,6 +40,19 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
             return r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
         return r"\((?:IFORT|ICC)\) ([^ ]+)"
 
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("intel", "icc"),
+        "cxx": os.path.join("intel", "icpc"),
+        "fortran": os.path.join("intel", "ifort"),
+    }
+
+    implicit_rpath_libs = ["libirc", "libifcore", "libifcoremt", "libirng"]
+
+    stdcxx_libs = ("-cxxlib",)
+
+    provides("c", "cxx")
+    provides("fortran")
+
     # Versions before 2021 are in the `intel` package
     # intel-oneapi versions before 2022 use intel@19.0.4
     for ver, oneapi_ver in {
@@ -69,7 +81,7 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         oneapi_version = self.spec["intel-oneapi-compilers"].version
         return self.spec["intel-oneapi-compilers"].prefix.compiler.join(str(oneapi_version))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -86,6 +98,22 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
         env.set("CXX", bin_prefix.icpc)
         env.set("F77", bin_prefix.ifort)
         env.set("FC", bin_prefix.ifort)
+
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        super().setup_dependent_build_environment(env, dependent_spec)
+        # Edge cases for Intel's oneAPI compilers when using the legacy classic compilers:
+        # Always pass flags to disable deprecation warnings, since these warnings can
+        # confuse tools that parse the output of compiler commands (e.g. version checks).
+        if dependent_spec.satisfies("^[virtuals=c] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_CFLAGS", "-diag-disable=10441")
+
+        if dependent_spec.satisfies("^[virtuals=cxx] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_CXXFLAGS", "-diag-disable=10441")
+
+        if dependent_spec.satisfies("^[virtuals=fortran] intel-oneapi-compilers-classic"):
+            env.append_flags("SPACK_ALWAYS_FFLAGS", "-diag-disable=10448")
 
     def install(self, spec, prefix):
         # If we symlink top-level directories directly, files won't show up in views
@@ -109,3 +137,15 @@ class IntelOneapiCompilersClassic(Package, CompilerPackage):
                 link_tree.merge(dest_path)
             else:
                 os.symlink(src_path, dest_path)
+
+    def _cc_path(self):
+        return str(self.prefix.bin.icc)
+
+    def _cxx_path(self):
+        return str(self.prefix.bin.icpc)
+
+    def _fortran_path(self):
+        return str(self.prefix.bin.ifort)
+
+    def archspec_name(self):
+        return "intel"

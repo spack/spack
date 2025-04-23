@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -44,7 +43,7 @@ class Ctffind(AutotoolsPackage):
     def configure_args(self):
         config_args = []
 
-        if self.spec["fftw-api"].name in INTEL_MATH_LIBRARIES:
+        if self.spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
             config_args.extend(
                 [
                     "--enable-mkl",

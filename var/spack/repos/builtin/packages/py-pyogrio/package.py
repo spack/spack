@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,6 +19,7 @@ class PyPyogrio(PythonPackage):
     version("0.9.0", sha256="6a6fa2e8cf95b3d4a7c0fac48bce6e5037579e28d3eb33b53349d6e11f15e5a8")
 
     depends_on("python@3.8:", type=("build", "run"))
+    depends_on("gdal@2.4:", type=("build", "link", "run"))
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-versioneer@0.28 +toml", type="build")
     # this is an implicit dependency already listed in py-versioneer, not needed

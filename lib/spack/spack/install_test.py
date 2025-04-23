@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import base64
@@ -13,7 +12,7 @@ import re
 import shutil
 import sys
 from collections import Counter, OrderedDict
-from typing import Callable, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Callable, Iterable, List, Optional, Tuple, Type, TypeVar, Union
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -22,8 +21,6 @@ from llnl.string import plural
 from llnl.util.lang import nullcontext
 from llnl.util.tty.color import colorize
 
-import spack.build_environment
-import spack.builder
 import spack.config
 import spack.error
 import spack.package_base
@@ -33,7 +30,7 @@ import spack.spec
 import spack.util.executable
 import spack.util.path
 import spack.util.spack_json as sjson
-from spack.installer import InstallError
+from spack.error import InstallError
 from spack.spec import Spec
 from spack.util.prefix import Prefix
 
@@ -82,7 +79,7 @@ def get_escaped_text_output(filename: str) -> List[str]:
     Returns:
         escaped text lines read from the file
     """
-    with open(filename) as f:
+    with open(filename, encoding="utf-8") as f:
         # Ensure special characters are escaped as needed
         expected = f.read()
 
@@ -119,7 +116,7 @@ def cache_extra_test_sources(pkg: Pb, srcs: ListOrStringType):
             location(s) under the install testing directory.
 
     Raises:
-        spack.installer.InstallError: if any of the source paths are absolute
+        spack.error.InstallError: if any of the source paths are absolute
             or do not exist
             under the build stage
     """
@@ -353,9 +350,7 @@ class PackageTest:
         self.test_parts[part_name] = status
         self.counts[status] += 1
 
-    def phase_tests(
-        self, builder: spack.builder.Builder, phase_name: str, method_names: List[str]
-    ):
+    def phase_tests(self, builder, phase_name: str, method_names: List[str]):
         """Execute the builder's package phase-time tests.
 
         Args:
@@ -372,30 +367,22 @@ class PackageTest:
             builder.pkg.test_suite.current_test_spec = builder.pkg.spec
             builder.pkg.test_suite.current_base_spec = builder.pkg.spec
 
-            # TODO (post-34236): "test"->"test_" once remove deprecated methods
-            have_tests = any(name.startswith("test") for name in method_names)
+            have_tests = any(name.startswith("test_") for name in method_names)
             if have_tests:
                 copy_test_files(builder.pkg, builder.pkg.spec)
 
             for name in method_names:
                 try:
-                    # Prefer the method in the package over the builder's.
-                    # We need this primarily to pick up arbitrarily named test
-                    # methods but also some build-time checks.
-                    fn = getattr(builder.pkg, name, getattr(builder, name))
-
-                    msg = f"RUN-TESTS: {phase_name}-time tests [{name}]"
-                    print_message(logger, msg, verbose)
-
-                    fn()
-
+                    fn = getattr(builder, name, None) or getattr(builder.pkg, name)
                 except AttributeError as e:
-                    msg = f"RUN-TESTS: method not implemented [{name}]"
-                    print_message(logger, msg, verbose)
-
-                    self.add_failure(e, msg)
+                    print_message(logger, f"RUN-TESTS: method not implemented [{name}]", verbose)
+                    self.add_failure(e, f"RUN-TESTS: method not implemented [{name}]")
                     if fail_fast:
                         break
+                    continue
+
+                print_message(logger, f"RUN-TESTS: {phase_name}-time tests [{name}]", verbose)
+                fn()
 
             if have_tests:
                 print_message(logger, "Completed testing", verbose)
@@ -404,15 +391,17 @@ class PackageTest:
             if self.test_failures:
                 raise TestFailure(self.test_failures)
 
-    def stand_alone_tests(self, kwargs):
+    def stand_alone_tests(self, kwargs, timeout: Optional[int] = None) -> None:
         """Run the package's stand-alone tests.
 
         Args:
             kwargs (dict): arguments to be used by the test process
         """
-        import spack.build_environment
+        import spack.build_environment  # avoid circular dependency
 
-        spack.build_environment.start_build_process(self.pkg, test_process, kwargs)
+        spack.build_environment.start_build_process(
+            self.pkg, test_process, kwargs, timeout=timeout
+        )
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
@@ -469,24 +458,19 @@ class PackageTest:
             elif self.counts[TestStatus.PASSED] > 0:
                 status = TestStatus.PASSED
 
-        with open(self.tested_file, "w") as f:
+        with open(self.tested_file, "w", encoding="utf-8") as f:
             f.write(f"{status.value}\n")
 
 
 @contextlib.contextmanager
 def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbose: bool = False):
+    import spack.build_environment  # avoid circular dependency
+
     wdir = "." if work_dir is None else work_dir
     tester = pkg.tester
-    # TODO (post-34236): "test"->"test_" once remove deprecated methods
     assert test_name and test_name.startswith(
-        "test"
-    ), f"Test name must start with 'test' but {test_name} was provided"
-
-    if test_name == "test":
-        tty.warn(
-            "{}: the 'test' method is deprecated. Convert stand-alone "
-            "test(s) to methods with names starting 'test_'.".format(pkg.name)
-        )
+        "test_"
+    ), f"Test name must start with 'test_' but {test_name} was provided"
 
     title = "test: {}: {}".format(test_name, purpose or "unspecified purpose")
     with fs.working_dir(wdir, create=True):
@@ -520,7 +504,7 @@ def test_part(pkg: Pb, test_name: str, purpose: str, work_dir: str = ".", verbos
             for i, entry in enumerate(stack):
                 filename, lineno, function, text = entry
                 if spack.repo.is_package_file(filename):
-                    with open(filename) as f:
+                    with open(filename, encoding="utf-8") as f:
                         lines = f.readlines()
                     new_lineno = lineno - 2
                     text = lines[new_lineno]
@@ -585,7 +569,7 @@ def copy_test_files(pkg: Pb, test_spec: spack.spec.Spec):
 
     # copy test data into test stage data dir
     try:
-        pkg_cls = test_spec.package_class
+        pkg_cls = spack.repo.PATH.get_pkg_class(test_spec.fullname)
     except spack.repo.UnknownPackageError:
         tty.debug(f"{test_spec.name}: skipping test data copy since no package class found")
         return
@@ -642,32 +626,15 @@ def test_functions(
         vpkgs = virtuals(pkg)
         for vname in vpkgs:
             try:
-                classes.append((Spec(vname)).package_class)
+                classes.append(spack.repo.PATH.get_pkg_class(vname))
             except spack.repo.UnknownPackageError:
                 tty.debug(f"{vname}: virtual does not appear to have a package file")
 
-    # TODO (post-34236): Remove if removing empty test method check
-    def skip(line):
-        # This should match the lines in the deprecated test() method
-        ln = line.strip()
-        return ln.startswith("#") or ("warn" in ln and "deprecated" in ln)
-
-    doc_regex = r'\s+("""[\w\s\(\)\-\,\;\:]+""")'
     tests = []
     for clss in classes:
         methods = inspect.getmembers(clss, predicate=lambda x: inspect.isfunction(x))
         for name, test_fn in methods:
-            # TODO (post-34236): "test"->"test_" once remove deprecated methods
-            if not name.startswith("test"):
-                continue
-
-            # TODO (post-34236): Could remove empty method check once remove
-            # TODO (post-34236): deprecated methods though some use cases,
-            # TODO (post-34236): such as checking packages have actual, non-
-            # TODO (post-34236): empty tests, may want this check to remain.
-            source = re.sub(doc_regex, r"", inspect.getsource(test_fn)).splitlines()[1:]
-            lines = [ln.strip() for ln in source if not skip(ln)]
-            if not lines:
+            if not name.startswith("test_"):
                 continue
 
             tests.append((clss.__name__, test_fn))  # type: ignore[union-attr]
@@ -704,7 +671,7 @@ def process_test_parts(pkg: Pb, test_specs: List[spack.spec.Spec], verbose: bool
 
             # grab test functions associated with the spec, which may be virtual
             try:
-                tests = test_functions(spec.package_class)
+                tests = test_functions(spack.repo.PATH.get_pkg_class(spec.fullname))
             except spack.repo.UnknownPackageError:
                 # Some virtuals don't have a package so we don't want to report
                 # them as not having tests when that isn't appropriate.
@@ -789,7 +756,7 @@ def virtuals(pkg):
 
     # hack for compilers that are not dependencies (yet)
     # TODO: this all eventually goes away
-    c_names = ("gcc", "intel", "intel-parallel-studio", "pgi")
+    c_names = ("gcc", "intel", "intel-parallel-studio")
     if pkg.name in c_names:
         v_names.extend(["c", "cxx", "fortran"])
     if pkg.spec.satisfies("llvm+clang"):
@@ -857,7 +824,7 @@ def get_test_suite(name: str) -> Optional["TestSuite"]:
 
 def write_test_suite_file(suite):
     """Write the test suite to its (JSON) lock file."""
-    with open(suite.stage.join(test_suite_filename), "w") as f:
+    with open(suite.stage.join(test_suite_filename), "w", encoding="utf-8") as f:
         sjson.dump(suite.to_dict(), stream=f)
 
 
@@ -882,7 +849,7 @@ def write_test_summary(counts: "Counter"):
 class TestSuite:
     """The class that manages specs for ``spack test run`` execution."""
 
-    def __init__(self, specs, alias=None):
+    def __init__(self, specs: Iterable[Spec], alias: Optional[str] = None) -> None:
         # copy so that different test suites have different package objects
         # even if they contain the same spec
         self.specs = [spec.copy() for spec in specs]
@@ -890,42 +857,43 @@ class TestSuite:
         self.current_base_spec = None  # spec currently running do_test
 
         self.alias = alias
-        self._hash = None
-        self._stage = None
+        self._hash: Optional[str] = None
+        self._stage: Optional[Prefix] = None
 
         self.counts: "Counter" = Counter()
 
     @property
-    def name(self):
+    def name(self) -> str:
         """The name (alias or, if none, hash) of the test suite."""
         return self.alias if self.alias else self.content_hash
 
     @property
-    def content_hash(self):
+    def content_hash(self) -> str:
         """The hash used to uniquely identify the test suite."""
         if not self._hash:
             json_text = sjson.dump(self.to_dict())
+            assert json_text is not None, f"{__name__} unexpected value for 'json_text'"
             sha = hashlib.sha1(json_text.encode("utf-8"))
             b32_hash = base64.b32encode(sha.digest()).lower()
             b32_hash = b32_hash.decode("utf-8")
             self._hash = b32_hash
         return self._hash
 
-    def __call__(self, *args, **kwargs):
+    def __call__(
+        self,
+        *,
+        remove_directory: bool = True,
+        dirty: bool = False,
+        fail_first: bool = False,
+        externals: bool = False,
+        timeout: Optional[int] = None,
+    ):
         self.write_reproducibility_data()
-
-        remove_directory = kwargs.get("remove_directory", True)
-        dirty = kwargs.get("dirty", False)
-        fail_first = kwargs.get("fail_first", False)
-        externals = kwargs.get("externals", False)
-
         for spec in self.specs:
             try:
                 if spec.package.test_suite:
                     raise TestSuiteSpecError(
-                        "Package {} cannot be run in two test suites at once".format(
-                            spec.package.name
-                        )
+                        f"Package {spec.package.name} cannot be run in two test suites at once"
                     )
 
                 # Set up the test suite to know which test is running
@@ -940,7 +908,7 @@ class TestSuite:
                 fs.mkdirp(test_dir)
 
                 # run the package tests
-                spec.package.do_test(dirty=dirty, externals=externals)
+                spec.package.do_test(dirty=dirty, externals=externals, timeout=timeout)
 
                 # Clean up on success
                 if remove_directory:
@@ -991,15 +959,12 @@ class TestSuite:
         if failures:
             raise TestSuiteFailure(failures)
 
-    def test_status(self, spec: spack.spec.Spec, externals: bool) -> Optional[TestStatus]:
-        """Determine the overall test results status for the spec.
+    def test_status(self, spec: spack.spec.Spec, externals: bool) -> TestStatus:
+        """Returns the overall test results status for the spec.
 
         Args:
             spec: instance of the spec under test
             externals: ``True`` if externals are to be tested, else ``False``
-
-        Returns:
-            the spec's test status if available or ``None``
         """
         tests_status_file = self.tested_file_for_spec(spec)
         if not os.path.exists(tests_status_file):
@@ -1012,112 +977,87 @@ class TestSuite:
                 status = TestStatus.NO_TESTS
             return status
 
-        with open(tests_status_file, "r") as f:
+        with open(tests_status_file, "r", encoding="utf-8") as f:
             value = (f.read()).strip("\n")
             return TestStatus(int(value)) if value else TestStatus.NO_TESTS
 
-    def ensure_stage(self):
+    def ensure_stage(self) -> None:
         """Ensure the test suite stage directory exists."""
         if not os.path.exists(self.stage):
             fs.mkdirp(self.stage)
 
     @property
-    def stage(self):
-        """The root test suite stage directory.
-
-        Returns:
-            str: the spec's test stage directory path
-        """
+    def stage(self) -> Prefix:
+        """The root test suite stage directory"""
         if not self._stage:
             self._stage = Prefix(fs.join_path(get_test_stage_dir(), self.content_hash))
         return self._stage
 
     @stage.setter
-    def stage(self, value):
+    def stage(self, value: Union[Prefix, str]) -> None:
         """Set the value of a non-default stage directory."""
         self._stage = value if isinstance(value, Prefix) else Prefix(value)
 
     @property
-    def results_file(self):
+    def results_file(self) -> Prefix:
         """The path to the results summary file."""
         return self.stage.join(results_filename)
 
     @classmethod
-    def test_pkg_id(cls, spec):
+    def test_pkg_id(cls, spec: Spec) -> str:
         """The standard install test package identifier.
 
         Args:
             spec: instance of the spec under test
-
-        Returns:
-            str: the install test package identifier
         """
         return spec.format_path("{name}-{version}-{hash:7}")
 
     @classmethod
-    def test_log_name(cls, spec):
+    def test_log_name(cls, spec: Spec) -> str:
         """The standard log filename for a spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's log filename
+            spec: instance of the spec under test
         """
-        return "%s-test-out.txt" % cls.test_pkg_id(spec)
+        return f"{cls.test_pkg_id(spec)}-test-out.txt"
 
-    def log_file_for_spec(self, spec):
+    def log_file_for_spec(self, spec: Spec) -> Prefix:
         """The test log file path for the provided spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the path to the spec's log file
+            spec: instance of the spec under test
         """
         return self.stage.join(self.test_log_name(spec))
 
-    def test_dir_for_spec(self, spec):
+    def test_dir_for_spec(self, spec: Spec) -> Prefix:
         """The path to the test stage directory for the provided spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test stage directory path
+            spec: instance of the spec under test
         """
         return Prefix(self.stage.join(self.test_pkg_id(spec)))
 
     @classmethod
-    def tested_file_name(cls, spec):
+    def tested_file_name(cls, spec: Spec) -> str:
         """The standard test status filename for the spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test status filename
+            spec: instance of the spec under test
         """
         return "%s-tested.txt" % cls.test_pkg_id(spec)
 
-    def tested_file_for_spec(self, spec):
+    def tested_file_for_spec(self, spec: Spec) -> str:
         """The test status file path for the spec.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-
-        Returns:
-            str: the spec's test status file path
+            spec: instance of the spec under test
         """
         return fs.join_path(self.stage, self.tested_file_name(spec))
 
     @property
-    def current_test_cache_dir(self):
+    def current_test_cache_dir(self) -> str:
         """Path to the test stage directory where the current spec's cached
         build-time files were automatically copied.
-
-        Returns:
-            str: path to the current spec's staged, cached build-time files.
 
         Raises:
             TestSuiteSpecError: If there is no spec being tested
@@ -1130,12 +1070,9 @@ class TestSuite:
         return self.test_dir_for_spec(base_spec).cache.join(test_spec.name)
 
     @property
-    def current_test_data_dir(self):
+    def current_test_data_dir(self) -> str:
         """Path to the test stage directory where the current spec's custom
         package (data) files were automatically copied.
-
-        Returns:
-            str: path to the current spec's staged, custom package (data) files
 
         Raises:
             TestSuiteSpecError: If there is no spec being tested
@@ -1147,17 +1084,17 @@ class TestSuite:
         base_spec = self.current_base_spec
         return self.test_dir_for_spec(base_spec).data.join(test_spec.name)
 
-    def write_test_result(self, spec, result):
+    def write_test_result(self, spec: Spec, result: TestStatus) -> None:
         """Write the spec's test result to the test suite results file.
 
         Args:
-            spec (spack.spec.Spec): instance of the spec under test
-            result (str): result from the spec's test execution (e.g, PASSED)
+            spec: instance of the spec under test
+            result: result from the spec's test execution (e.g, PASSED)
         """
         msg = f"{self.test_pkg_id(spec)} {result}"
         _add_msg_to_file(self.results_file, msg)
 
-    def write_reproducibility_data(self):
+    def write_reproducibility_data(self) -> None:
         for spec in self.specs:
             repo_cache_path = self.stage.repo.join(spec.name)
             spack.repo.PATH.dump_provenance(spec, repo_cache_path)
@@ -1202,19 +1139,19 @@ class TestSuite:
         return TestSuite(specs, alias)
 
     @staticmethod
-    def from_file(filename):
+    def from_file(filename: str) -> "TestSuite":
         """Instantiate a TestSuite using the specs and optional alias
         provided in the given file.
 
         Args:
-            filename (str): The path to the JSON file containing the test
+            filename: The path to the JSON file containing the test
                 suite specs and optional alias.
 
         Raises:
             BaseException: sjson.SpackJSONError if problem parsing the file
         """
         try:
-            with open(filename) as f:
+            with open(filename, encoding="utf-8") as f:
                 data = sjson.load(f)
                 test_suite = TestSuite.from_dict(data)
                 content_hash = os.path.basename(os.path.dirname(filename))
@@ -1231,7 +1168,7 @@ def _add_msg_to_file(filename, msg):
         filename (str): path to the file
         msg (str): message to be appended to the file
     """
-    with open(filename, "a+") as f:
+    with open(filename, "a+", encoding="utf-8") as f:
         f.write(f"{msg}\n")
 
 

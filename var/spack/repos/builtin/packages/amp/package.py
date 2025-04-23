@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -31,6 +30,10 @@ class Amp(CMakePackage):
     variant("sundials", default=True, description="Build with support for Sundials")
     variant("trilinos", default=True, description="Build with support for Trilinos")
     variant("zlib", default=True, description="Build with support for zlib")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Everything should be compiled position independent (-fpic)
     depends_on("blas")

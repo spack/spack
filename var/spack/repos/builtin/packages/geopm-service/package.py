@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,10 +27,6 @@ class GeopmService(AutotoolsPackage):
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
     version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, when="@3.0.1", description="Create man pages with Sphinx")
     variant("systemd", default=True, description="Enable use of systemd/DBus")
@@ -41,7 +36,7 @@ class GeopmService(AutotoolsPackage):
     )
     variant("gnu-ld", default=False, description="Assume C compiler uses gnu-ld")
 
-    variant("levelzero", default=False, description="Enables the use of oneAPI Level Zero loader")
+    variant("level_zero", default=False, description="Enables the use of oneAPI Level Zero loader")
     variant("nvml", default=False, description="Enable NVML support")
 
     variant(
@@ -51,7 +46,7 @@ class GeopmService(AutotoolsPackage):
         when="@develop",
     )
 
-    conflicts("+nvml", when="+levelzero", msg="LevelZero and NVML support are mutually exclusive")
+    conflicts("+nvml", when="+level_zero", msg="LevelZero and NVML support are mutually exclusive")
 
     conflicts("%gcc@:7.2", msg="Requires C++17 support")
     conflicts("%clang@:4", msg="Requires C++17 support")
@@ -64,6 +59,10 @@ class GeopmService(AutotoolsPackage):
     conflicts("target=ppc64le:", msg="Only available on x86_64", when="@3.0.1")
 
     patch("0001-Support-NVML-via-CUDA-installation.patch", when="+nvml")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Autotools dependencies
     depends_on("automake", type="build")
@@ -100,7 +99,7 @@ class GeopmService(AutotoolsPackage):
     depends_on("systemd", when="+systemd")
     depends_on("libcap", when="+libcap")
     depends_on("liburing", when="+liburing")
-    depends_on("oneapi-level-zero", when="+levelzero")
+    depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("cuda", when="+nvml")
 
     extends("python")
@@ -129,19 +128,19 @@ class GeopmService(AutotoolsPackage):
     def configure_args(self):
         args = [
             "--with-bash-completion-dir="
-            + join_path(self.spec.prefix, "share", "bash-completion", "completions")
+            + join_path(self.spec.prefix, "share", "bash-completion", "completions"),
+            *self.enable_or_disable("debug"),
+            *self.enable_or_disable("docs"),
+            *self.enable_or_disable("systemd"),
+            *self.enable_or_disable("liburing"),
+            *self.with_or_without("liburing", activation_value="prefix"),
+            *self.enable_or_disable("libcap"),
+            *self.with_or_without("gnu-ld"),
+            *self.enable_or_disable("levelzero", variant="level_zero"),
+            *self.enable_or_disable("nvml"),
+            *self.enable_or_disable("rawmsr"),
         ]
 
-        args += self.enable_or_disable("debug")
-        args += self.enable_or_disable("docs")
-        args += self.enable_or_disable("systemd")
-        args += self.enable_or_disable("liburing")
-        args += self.with_or_without("liburing", activation_value="prefix")
-        args += self.enable_or_disable("libcap")
-        args += self.with_or_without("gnu-ld")
-
-        args += self.enable_or_disable("levelzero")
-        args += self.enable_or_disable("nvml")
         if self.spec.satisfies("+nvml"):
             args += [
                 "--with-nvml="
@@ -150,13 +149,11 @@ class GeopmService(AutotoolsPackage):
                 )
             ]
 
-        args += self.enable_or_disable("rawmsr")
-        with when("@develop"):
-            if self.spec.target.family != "x86_64":
-                args += ["--disable-cpuid"]
+        if self.spec.satisfies("@develop") and self.spec.target.family != "x86_64":
+            args.append("--disable-cpuid")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Required to ensure geopmdpy can load
         # libgeopmd.so.2 via CFFI
         if os.path.isdir(self.prefix.lib64):

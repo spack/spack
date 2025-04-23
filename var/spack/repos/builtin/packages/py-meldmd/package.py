@@ -1,10 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -52,11 +52,10 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
 
     @run_after("install")
     def install_python(self):
-        args = std_pip_args + ["--prefix=" + prefix, "."]
-        pip(*args)
+        pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
         with working_dir(join_path(self.build_directory, "python")):
             make("MeldPluginPatch")
-            pip(*args)
+            pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
         for _, _, files in os.walk(self.spec["openmm"].prefix.lib.plugins):
             for f in files:
                 os.symlink(
@@ -81,7 +80,7 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
         if self.spec.satisfies("^openmm@7.6.0:"):
             filter_file("simtk.openmm", "openmm", "plugin/python/meldplugin.i", string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("OPENMM_PLUGIN_DIR", self.prefix.lib.plugins)
 
     @run_after("install")

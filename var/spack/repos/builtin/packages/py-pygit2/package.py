@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,7 +17,11 @@ class PyPygit2(PythonPackage):
     version("1.11.1", sha256="793f583fd33620f0ac38376db0f57768ef2922b89b459e75b1ac440377eb64ec")
     version("1.6.0", sha256="7aacea4e57011777f4774421228e5d0ddb9a6ddb87ac4b542346d17ab12a4d62")
     version("1.4.0", sha256="cbeb38ab1df9b5d8896548a11e63aae8a064763ab5f1eabe4475e6b8a78ee1c8")
-    version("1.3.0", sha256="0be93f6a8d7cbf0cc79ae2f0afb1993fc055fc0018c27e2bd01ba143e51d4452")
+    version(
+        "1.3.0",
+        sha256="0be93f6a8d7cbf0cc79ae2f0afb1993fc055fc0018c27e2bd01ba143e51d4452",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
 
@@ -40,7 +43,7 @@ class PyPygit2(PythonPackage):
     depends_on("py-cached-property", when="@1.1:1.5", type=("build", "run"))
     depends_on("py-cached-property", when="@1.6: ^python@:3.7", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # https://www.pygit2.org/install.html
         env.set("LIBGIT2", spec["libgit2"].prefix)

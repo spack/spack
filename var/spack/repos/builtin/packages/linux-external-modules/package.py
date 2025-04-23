@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -24,9 +23,9 @@ class LinuxExternalModules(MakefilePackage):
     # linux-external-modules.
     how_to = "https://docs.kernel.org/kbuild/modules.html"
 
-    maintainers("fleshling", "rountree")
+    maintainers("kyotsukete", "rountree")
 
-    license("GPL-2.0-only", checked_by="fleshling")
+    license("GPL-2.0-only", checked_by="kyotsukete")
 
     version("6.10.3", sha256="fa5f22fd67dd05812d39dca579320c493048e26c4a556048a12385e7ae6fc698")
     version("6.10.2", sha256="73d8520dd9cba5acfc5e7208e76b35d9740b8aae38210a9224e32ec4c0d29b70")
@@ -324,7 +323,7 @@ class LinuxExternalModules(MakefilePackage):
     depends_on("binutils@2.25:", when="@6.2:")
     depends_on("binutils@2.23:", when="@6.0:6.2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("KBUILD_OUTPUT", self.prefix)
 
     @run_before("build")

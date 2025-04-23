@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,8 +18,6 @@ class Hicops(CMakePackage):
 
     version("release", branch="release")
     version("develop", branch="develop")
-
-    depends_on("cxx", type="build")  # generated
 
     # Build Options
     variant("mpi", default=True, description="Enable MPI support.")
@@ -78,6 +75,8 @@ class Hicops(CMakePackage):
     )
     variant("cxx_std", default="14", description="C++ standard", values=("14", "17"), multi=False)
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("py-numpy")
     depends_on("py-python-dateutil")
     depends_on("py-setuptools")
@@ -110,7 +109,7 @@ class Hicops(CMakePackage):
     conflicts("+mpip -timemory")
     conflicts("+mpip -mpi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.tools)
         env.prepend_path("PATH", self.prefix.bin.tools)
         env.set("HICOPS_INSTALL", self.prefix)

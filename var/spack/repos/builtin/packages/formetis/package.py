@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -20,12 +19,12 @@ class Formetis(CMakePackage):
 
     version("0.0.2", sha256="0067c03ca822f4a3955751acb470f21eed489256e2ec5ff24741eb2b638592f1")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=False, description="Enable ParMETIS support")
     variant("shared", default=True, description="Build shared libraries")
     variant("swig", default=False, description="Regenerate source files using SWIG")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("metis@5:")
     depends_on("parmetis", when="+mpi")

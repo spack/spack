@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -29,13 +28,19 @@ class Apptainer(SingularityBase):
     url = "https://github.com/apptainer/apptainer/releases/download/v1.0.2/apptainer-1.0.2.tar.gz"
     git = "https://github.com/apptainer/apptainer.git"
 
+    maintainers("wdconinc")
+
     license(
         "BSD-3-Clause AND BSD-3-Clause-LBNL"
         " AND BSD-2-Clause AND Apache-2.0 AND MIT AND MPL-2.0 AND Unlicense",
         checked_by="tgamblin",
     )
 
-    version("main", branch="main")
+    version("main", branch="main", get_full_repo=True)  # apptainer version uses git describe
+    version("1.4.0", sha256="204cded54046547cb3eb4c7874bdf45892fedc58b0d104195c59d2972cba51d3")
+    version("1.3.6", sha256="b5343369e7fdf67572f887d81f8d2b938f099fb39c876d96430d747935960d51")
+    version("1.3.5", sha256="fe1c977da952edf1056915b2df67ae2203ef06065d4e4901a237c902329306b2")
+    version("1.3.4", sha256="c6ccfdd7c967e5c36dde8711f369c4ac669a16632b79fa0dcaf7e772b7a47397")
     version("1.3.3", sha256="94a274ab4898cdb131f4e3867c4e15f7e16bc2823303d2afcbafee0242f0838d")
     version("1.3.2", sha256="483910727e1a15843b93d9f2db1fc87e27804de9c74da13cc32cd4bd0d35e079")
     # version "1.3.1" has security vulnerability CVE-2024-3727
@@ -49,17 +54,22 @@ class Apptainer(SingularityBase):
     version("1.1.3", sha256="c7bf7f4d5955e1868739627928238d02f94ca9fd0caf110b0243d65548427899")
     version("1.0.2", sha256="2d7a9d0a76d5574459d249c3415e21423980d9154ce85e8c34b0600782a7dfd3")
 
+    variant("libsubid", default=True, when="@1.4:", description="Enable libsubid support")
+
     depends_on("c", type="build")  # generated
 
     depends_on("e2fsprogs@1.47:+fuse2fs", type="run")
     depends_on("go@1.17.5:", when="@1.1.0:")
     depends_on("go@1.19:", when="@1.2:")
     depends_on("go@1.20:", when="@1.3:")
+    depends_on("go@1.22.7:", when="@1.4:")
     depends_on("gocryptfs@2.4:", type="run", when="@1.3:")
     depends_on("squashfuse", type="run")
     depends_on("squashfuse@0.5.1:", type="run", when="@1.3:")
     depends_on("fuse-overlayfs", type="run")
     depends_on("fuse-overlayfs@1.13:", type="run", when="@1.3:")
+
+    depends_on("shadow", when="+libsubid")
 
     singularity_org = "apptainer"
     singularity_name = "apptainer"
@@ -75,6 +85,10 @@ class Apptainer(SingularityBase):
         options = []
         if spec.satisfies("@1.1.0: +suid"):
             options.append("--with-suid")
+        if spec.satisfies("+libsubid"):
+            options.append("--with-libsubid")
+        else:
+            options.append("--without-libsubid")
         return options
 
     def flag_handler(self, name, flags):

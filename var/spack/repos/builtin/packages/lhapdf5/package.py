@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,7 +32,7 @@ class Lhapdf5(AutotoolsPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("FFLAGS", "-std=legacy")
 
     def configure_args(self):

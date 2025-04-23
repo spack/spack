@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,24 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
         "https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onednn.html"
     )
 
+    version(
+        "2025.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/9cf476b7-5b8b-4995-ac33-91a446bc0c6e/intel-onednn-2025.1.0.653_offline.sh",
+        sha256="7dc6d730c01fa7a57485ba58144679f4b35605277c1ab3f0b385cf735f438a44",
+        expand=False,
+    )
+    version(
+        "2025.0.1",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6cfa324b-1591-4c0b-b8d2-97c5b3b272a7/intel-onednn-2025.0.1.12_offline.sh",
+        sha256="3c81880a1fc40f2e68a1dcc05f220b5e22c1e9c78723a2e57770ed3c740800f2",
+        expand=False,
+    )
+    version(
+        "2025.0.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/87e117ab-039b-437d-9c80-dcd5c9e675d5/intel-onednn-2025.0.0.862_offline.sh",
+        sha256="267f63e8a3fe2a37c92873e53f3bf14a2cf680e888005cb6deb2014bc3be077c",
+        expand=False,
+    )
     version(
         "2024.2.1",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/7c850be0-b17d-4b7f-898d-3bc5fc36aa8d/l_onednn_p_2024.2.1.76_offline.sh",

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -35,6 +34,8 @@ class AutoconfArchive(AutotoolsPackage, GNUMirrorPackage):
     # The package does not produce any libraries and does not use libtool:
     patch_libtool = False
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Adds the ACLOCAL path for autotools."""
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)

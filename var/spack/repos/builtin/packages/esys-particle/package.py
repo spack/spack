@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,7 +33,7 @@ class EsysParticle(CMakePackage):
         for file in files:
             filter_file("PYTHON_LIBRARIES", "Python_LIBRARIES", file, string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         pylibpath = join_path(
             self.prefix.lib, "python{0}".format(self.spec["python"].version.up_to(2))
         )

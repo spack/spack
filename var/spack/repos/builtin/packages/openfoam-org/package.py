@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,8 +38,6 @@ import glob
 import os
 import re
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.pkg.builtin.openfoam import (
     OpenfoamArch,
@@ -49,7 +46,6 @@ from spack.pkg.builtin.openfoam import (
     rewrite_environ_files,
     write_environ,
 )
-from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -85,9 +81,6 @@ class OpenfoamOrg(Package):
         url="http://downloads.sourceforge.net/foam/OpenFOAM-2.3.1.tgz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("int64", default=False, description="Compile with 64-bit label")
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
@@ -102,6 +95,9 @@ class OpenfoamOrg(Package):
         values=("sp", "dp", conditional("lp", when="@6:")),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi")
     depends_on("zlib-api")
@@ -189,7 +185,7 @@ class OpenfoamOrg(Package):
             settings["label-size"] = False
         return settings
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         bashrc = self.prefix.etc.bashrc
         try:
             env.extend(EnvironmentModifications.from_sourcing_file(bashrc, clean=True))
@@ -197,7 +193,9 @@ class OpenfoamOrg(Package):
             msg = "unexpected error when sourcing OpenFOAM bashrc [{0}]"
             tty.warn(msg.format(str(e)))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of
@@ -205,7 +203,9 @@ class OpenfoamOrg(Package):
         """
         env.set("FOAM_PROJECT_DIR", self.projectdir)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Location of the OpenFOAM project directory.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of

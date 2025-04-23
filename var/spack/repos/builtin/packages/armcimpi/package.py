@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,13 +22,13 @@ class Armcimpi(AutotoolsPackage):
         "0.3.1-beta", sha256="f3eaa8f365fb55123ecd9ced401086b0732e37e4df592b27916d71a67ab34fe9"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Builds a shared version of the library")
     variant("progress", default=False, description="Enable asynchronous progress")
 
     provides("armci")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -47,5 +46,7 @@ class Armcimpi(AutotoolsPackage):
         args.extend(self.with_or_without("progress"))
         return args
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("ARMCIMPI_DIR", self.prefix)

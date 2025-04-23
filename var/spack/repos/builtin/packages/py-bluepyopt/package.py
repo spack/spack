@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -36,6 +35,6 @@ class PyBluepyopt(PythonPackage):
     depends_on("neuron@7.4:", type=("build", "run"), when="@:1.14.4")
     depends_on("neuron@7.8:", type=("build", "run"), when="@1.14.11:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.unset("PMI_RANK")
         env.set("NEURON_INIT_MPI", "0")

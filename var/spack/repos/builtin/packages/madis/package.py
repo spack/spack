@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,15 +22,15 @@ class Madis(MakefilePackage):
 
     version("4.3", sha256="5d1ee9800c84e623dcf4271653aa66d17a744143e58354e70f8a0646cd6b246c")
 
-    depends_on("fortran", type="build")  # generated
-
     variant("pic", default=True, description="Build with position-independent code (PIC)")
     variant("pnetcdf", default=False, description="Build with parallel NetCDF")
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("netcdf-fortran")
     depends_on("parallel-netcdf", when="+pnetcdf")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         fflags = []
         if self.spec.satisfies("%gcc@10:"):
             fflags += ["-fallow-argument-mismatch"]

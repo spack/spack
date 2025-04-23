@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,6 +25,8 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     depends_on("intltool@0.30:", type="build")
     depends_on("xproto@7.0.20:", type="build")
 
+    provides("xkbdata-api")
+
     # TODO: missing dependencies
     # xgettext
     # msgmerge
@@ -34,8 +35,12 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     # perl@5.8.1:
     # perl XML::Parser
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XKB_CONFIG_ROOT", self.prefix.share.X11.xkb)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XKB_CONFIG_ROOT", self.prefix.share.X11.xkb)

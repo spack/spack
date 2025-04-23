@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -33,12 +32,12 @@ class PyElephant(PythonPackage):
     version("0.4.1", sha256="86b21a44cbacdc09a6ba6f51738dcd5b42ecd553d73acb29f71a0be7c82eac81")
     version("0.3.0", sha256="747251ccfb5820bdead6391411b5faf205b4ddf3ababaefe865f50b16540cfef")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("docs", default=False, description="Install documentation dependencies")
     variant(
         "extras", default=False, description="Build with extras for GPFA, ASSET", when="@0.6.4:"
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("py-setuptools", type="build")
 

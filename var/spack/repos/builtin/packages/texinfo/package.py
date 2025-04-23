@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,7 +67,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
             targets.append(f"CFLAGS={self.compiler.c11_flag}")
         return targets
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # texinfo builds Perl XS modules internally, and by default it overrides the
         # CC that the top-level configure reports. This loses the Spack wrappers unless
         # we set PERL_EXT_CC

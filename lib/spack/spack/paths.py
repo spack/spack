@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -32,7 +31,6 @@ sbang_script = os.path.join(bin_path, "sbang")
 # spack directory hierarchy
 lib_path = os.path.join(prefix, "lib", "spack")
 external_path = os.path.join(lib_path, "external")
-build_env_path = os.path.join(lib_path, "env")
 module_path = os.path.join(lib_path, "spack")
 command_path = os.path.join(module_path, "cmd")
 analyzers_path = os.path.join(module_path, "analyzers")
@@ -109,6 +107,8 @@ default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
 default_misc_cache_path = os.path.join(user_cache_path, "cache")
 
+#: concretization cache for Spack concretizations
+default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
 
 # Below paths pull configuration from the host environment.
 #
@@ -136,3 +136,16 @@ user_config_path = _get_user_config_path()
 
 #: System configuration location
 system_config_path = _get_system_config_path()
+
+#: Recorded directory where spack command was originally invoked
+spack_working_dir = None
+
+
+def set_working_dir():
+    """Change the working directory to getcwd, or spack prefix if no cwd."""
+    global spack_working_dir
+    try:
+        spack_working_dir = os.getcwd()
+    except OSError:
+        os.chdir(prefix)
+        spack_working_dir = prefix

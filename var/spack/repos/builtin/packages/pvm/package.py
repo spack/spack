@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -49,7 +48,7 @@ class Pvm(MakefilePackage):
                 "^SHAREDCFLAGS =", "SHAREDCFLAGS = -fPIC", join_path("conf", pvm_arch + ".def")
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         tirpc = self.spec["libtirpc"].prefix
         env.prepend_path("SPACK_INCLUDE_DIRS", tirpc.include.tirpc)
         env.set("SPACK_LDLIBS", "-ltirpc")
@@ -60,7 +59,7 @@ class Pvm(MakefilePackage):
         install_tree("lib", prefix.lib)
         install_tree("man", prefix.man)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Before running PVM, you must set the environment
         # variable "PVM_ROOT" to the path where PVM resides
         pvm_arch = self.pvm_arch(self.prefix)

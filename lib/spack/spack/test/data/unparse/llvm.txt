@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
@@ -518,7 +517,7 @@ class Llvm(CMakePackage, CudaPackage):
             return (None, flags, None)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ["clang", "apple-clang"]:
             for lld in "ld.lld-{0}".format(self.compiler.version.version[0]), "ld.lld":
@@ -529,7 +528,7 @@ class Llvm(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

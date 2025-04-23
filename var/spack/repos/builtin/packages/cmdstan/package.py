@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,13 +15,13 @@ class Cmdstan(MakefilePackage):
 
     version("2.30.1", sha256="bab76dcefa7f4c955595c0bf0496770507fc6ab0df5896e8cf8c2db0a17eedb9")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("threads", default=True, description="enable thread support")
     variant("opencl", default=False, description="enable OpenCl support")
     variant("mpi", default=False, description="enable MPI support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("opencl", when="+opencl")
     depends_on("mpi", when="+mpi")
@@ -32,7 +31,7 @@ class Cmdstan(MakefilePackage):
     filter_compiler_wrappers("local", relative_root="make")
 
     def edit(self, spec, prefix):
-        if spec.compiler.name == "intel":
+        if spec.satisfies("%intel"):
             cxx_type = "icc"
         else:
             cxx_type = spec.compiler.name
@@ -85,5 +84,5 @@ class Cmdstan(MakefilePackage):
             install("stanc", prefix.bin)
             install("stansummary", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CMDSTAN", self.prefix)

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,9 +67,6 @@ class Xrootd(CMakePackage):
     version("4.4.0", sha256="f066e7488390c0bc50938d23f6582fb154466204209ca92681f0aa06340e77c8")
     version("4.3.0", sha256="d34865772d975b5d58ad80bb05312bf49aaf124d5431e54dc8618c05a0870e3c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("davix", default=True, description="Build with Davix")
     variant(
         "ec",
@@ -137,6 +133,9 @@ class Xrootd(CMakePackage):
     conflicts("cxxstd=17", when="@5 ~client_only")
     conflicts("cxxstd=20", when="@5 ~client_only")
     conflicts("^scitokens-cpp", when="@:5.5.2 +client_only")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("bzip2")
     depends_on("cmake@2.6:", type="build", when="@3.1.0:")
@@ -247,7 +246,7 @@ class Xrootd(CMakePackage):
         return options
 
     @when("@:5.1.99")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstdflag = ""
         if self.spec.variants["cxxstd"].value == "98":
             cxxstdflag = self.compiler.cxx98_flag
@@ -260,7 +259,7 @@ class Xrootd(CMakePackage):
         else:
             # The user has selected a (new?) legal value that we've
             # forgotten to deal with here.
-            tty.die(
+            raise InstallError(
                 "INTERNAL ERROR: cannot accommodate unexpected variant ",
                 "cxxstd={0}".format(self.spec.variants["cxxstd"].value),
             )

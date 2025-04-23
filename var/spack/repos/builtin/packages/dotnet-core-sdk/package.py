@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -86,7 +85,7 @@ class DotnetCoreSdk(Package):
 
     variant("telemetry", default=False, description="allow collection of telemetry data")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("~telemetry"):
             env.set("DOTNET_CLI_TELEMETRY_OPTOUT", "1")
 

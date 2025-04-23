@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -119,9 +118,9 @@ class Trinity(MakefilePackage):
         force_remove(join_path(prefix.bin, "trinity-plugins", "seqtk-trinity-0.0.2", ".gitignore"))
         force_remove(join_path(prefix.bin, "trinity-plugins", "slclust", "bin", ".hidden"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", self.compiler.openmp_flag)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("TRINITY_HOME", self.prefix.bin)
         env.prepend_path("PATH", self.prefix.bin.util)

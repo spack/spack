@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,10 +15,10 @@ class Lesstif(AutotoolsPackage):
 
     version("0.95.2", sha256="eb4aa38858c29a4a3bcf605cfe7d91ca41f4522d78d770f69721e6e3a4ecf7e3")
 
-    depends_on("c", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libice")
     depends_on("libsm")
@@ -29,7 +28,7 @@ class Lesstif(AutotoolsPackage):
     def patch(self):
         filter_file("ACLOCALDIR=.*", "ACLOCALDIR='${datarootdir}/aclocal'", "configure")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # 'sed' fails if LANG=en_US.UTF-8 as is often the case on Macs.
         # The configure script finds our superenv sed wrapper, sets
         # SED, but then doesn't use that variable.
@@ -42,8 +41,8 @@ class Lesstif(AutotoolsPackage):
             "--disable-debug",
             "--enable-production",
             "--disable-dependency-tracking",
-            "--enable-shared" if "+shared" in spec else "--disable-shared",
-            "--enable-static" if "+static" in spec else "--disable-static",
+            "--enable-shared" if spec.satisfies("+shared") else "--disable-shared",
+            "--enable-static" if spec.satisfies("+static") else "--disable-static",
         ]
 
         return args

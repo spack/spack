@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -40,7 +39,7 @@ class Libdap4(AutotoolsPackage):
     depends_on("uuid")
     depends_on("rpc")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Configure script will search for RPC library, but not actually add RPC library references
         # during configure tests. This can cause a failure with libtirpc if the following variable
         # is not set.

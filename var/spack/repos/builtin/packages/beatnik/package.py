@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -16,11 +15,10 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("1.1", commit="7d5a6fa588bcb7065fc53c3e8ae52d4d7f13b6f1", submodules=True)
     version("1.0", commit="ae31ef9cb44678d5ace77994b45b0778defa3d2f")
-    version("develop", branch="develop")
-    version("main", branch="main")
-
-    depends_on("cxx", type="build")  # generated
+    version("develop", branch="develop", submodules=True)
+    version("main", branch="main", submodules=True)
 
     # Variants are primarily backends to build on GPU systems and pass the right
     # informtion to the packages we depend on
@@ -28,6 +26,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=False, description="Use OpenMP support from subpackages")
 
     # Dependencies for all Beatnik versions
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
     with when("+cuda"):
         depends_on("mpich +cuda", when="^[virtuals=mpi] mpich")
@@ -44,16 +44,20 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos @4:")
     depends_on("kokkos +cuda +cuda_lambda +cuda_constexpr", when="+cuda")
     depends_on("kokkos +rocm", when="+rocm")
-    depends_on("kokkos +wrapper", when="%gcc+cuda")
+    depends_on("kokkos +wrapper", when="+cuda%gcc")
 
     # Cabana dependencies
-    depends_on("cabana @0.6.0 +grid +heffte +silo +hdf5 +mpi")
+    depends_on("cabana @0.7.0 +grid +heffte +silo +hdf5 +mpi +arborx", when="@1.1")
+    depends_on("cabana @0.7.0 +grid +heffte +silo +hdf5 +mpi +arborx", when="@1.0")
+    depends_on("cabana @master +grid +heffte +silo +hdf5 +mpi +arborx", when="@develop")
+    depends_on("cabana @0.7.0 +grid +heffte +silo +hdf5 +mpi +arborx", when="@main")
     depends_on("cabana +cuda", when="+cuda")
     depends_on("cabana +rocm", when="+rocm")
 
     # Silo dependencies
     depends_on("silo @4.11:")
-    depends_on("silo @4.11.1:", when="%cce")  # Eariler silo versions have trouble cce
+    depends_on("silo @4.11.1 +fpzip+hzip~python", when="%cce")
+    # Eariler silo versions have trouble with cce
 
     # Heffte dependencies - We always require FFTW so that there's a host
     # backend even when we're compiling for GPUs
@@ -65,7 +69,8 @@ class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("mpich ~cuda", when="+cuda")
     conflicts("mpich ~rocm", when="+rocm")
     conflicts("openmpi ~cuda", when="+cuda")
-    conflicts("^intel-mpi")  # Heffte won't build with intel MPI because of needed C++ MPI support
+    # Heffte won't build with intel MPI because of needed C++ MPI support
+    conflicts("^intel-oneapi-mpi")
     conflicts("^spectrum-mpi", when="^cuda@11.3:")  # cuda-aware spectrum is broken with cuda 11.3:
 
     # Propagate CUDA and AMD GPU targets to cabana

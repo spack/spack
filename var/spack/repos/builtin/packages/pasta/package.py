@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,12 +30,12 @@ class Pasta(PythonPackage):
         destination=".",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         tools = join_path(self.prefix, "sate-tools-linux")
         env.set("PASTA_TOOLS_DEVDIR", tools)
         env.set("PASTA_TOOLS_RUNDIR", self.prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PASTA_TOOLS_RUNDIR", self.prefix.bin)
 
     @run_before("install")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -23,7 +22,7 @@ def spec_uses_gccname(spec):
 
 def llnl_link_helpers(options, spec, compiler):
     # From local package:
-    if compiler.fc:
+    if "fortran" in spec:
         fortran_compilers = ["gfortran", "xlf"]
         if any(f_comp in compiler.fc for f_comp in fortran_compilers) and (
             "clang" in compiler.cxx
@@ -38,7 +37,7 @@ def llnl_link_helpers(options, spec, compiler):
             if flags:
                 options.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", flags, description))
 
-    if "cce" in compiler.cxx:
+    if "cxx" in spec and spec["cxx"].name == "cce":
         description = "Adds a missing rpath for libraries " "associated with the fortran compiler"
         # Here is where to find libs that work for fortran
         libdir = "/opt/cray/pe/cce/{0}/cce-clang/x86_64/lib".format(compiler.version)
@@ -73,6 +72,7 @@ class Blt(Package):
     #  if you export targets this could cause problems in downstream
     #  projects if not handled properly. More info here:
     #  https://llnl-blt.readthedocs.io/en/develop/tutorial/exporting_targets.html
+    version("0.7.0", sha256="df8720a9cba1199d21f1d32649cebb9dddf95aa61bc3ac23f6c8a3c6b6083528")
     version("0.6.2", sha256="84b663162957c1fe0e896ac8e94cbf2b6def4a152ccfa12a293db14fb25191c8")
     version("0.6.1", sha256="205540b704b8da5a967475be9e8f2d1a5e77009b950e7fbf01c0edabc4315906")
     version("0.6.0", sha256="ede355e85f7b11d7c8442b51e4f7871c152093818606e00b1e1cf30f67ebdb23")

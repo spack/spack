@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -44,7 +43,7 @@ class PyScikitsOdes(PythonPackage):
         sha256="8d05d7bcc3582b7c482a4393bf5a8c0460a58eb62d1e3c86339c95a0d4ce30ac",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SUNDIALS_INST", self.spec["sundials"].prefix)
 
     @run_after("install")

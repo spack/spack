@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -25,5 +24,5 @@ class PyLws(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
 
-    def setup_build_environment(self, env):
-        env.set("LWS_USE_CYTHON", 1)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("LWS_USE_CYTHON", "1")

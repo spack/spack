@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -36,6 +35,6 @@ class Breseq(AutotoolsPackage):
     conflicts("%gcc@:4.8")
     conflicts("%clang@:3.3")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LDFLAGS", "-L{0}".format(self.spec["zlib-api"].prefix.lib))
         env.set("CFLAGS", "-I{0}".format(self.spec["zlib-api"].prefix.include))

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
@@ -30,7 +29,7 @@ class GenerateNinja(Package):
     depends_on("python", type="build")
     depends_on("llvm+clang", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DEPLOY", "1")
         env.set("CC", self.spec["llvm"].home.bin.clang)
         env.set("CXX", self.spec["llvm"].home.bin.join("clang++"))

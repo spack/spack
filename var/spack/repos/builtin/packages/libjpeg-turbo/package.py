@@ -1,8 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
+import spack.build_systems.cmake
 from spack.package import *
 
 
@@ -22,6 +24,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     license("BSD-3-Clause AND IJG AND Zlib")
 
+    version("3.0.4", sha256="0270f9496ad6d69e743f1e7b9e3e9398f5b4d606b6a47744df4b73df50f62e38")
     version("3.0.3", sha256="a649205a90e39a548863a3614a9576a3fb4465f8e8e66d54999f127957c25b21")
     version("3.0.2", sha256="29f2197345aafe1dcaadc8b055e4cbec9f35aad2a318d61ea081f835af2eebe9")
     version("3.0.1", sha256="5b9bbca2b2a87c6632c821799438d358e27004ab528abf798533c15d50b39f82")
@@ -55,9 +58,6 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     provides("jpeg")
 
     build_system(
@@ -68,7 +68,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
 
     variant(
         "libs",
-        default=("shared", "static"),
+        default="shared,static",
         values=("shared", "static"),
         multi=True,
         description="Build shared libs, static libs, or both",
@@ -94,12 +94,16 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         when="@2.0.6 +partial_decoder",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Can use either of these. But in the current version of the package
     # only nasm is used. In order to use yasm an environmental variable
     # NASM must be set.
     # TODO: Implement the selection between two supported assemblers.
     # depends_on('yasm', type='build')
     depends_on("nasm", type="build")
+
     with when("build_system=autotools"):
         depends_on("autoconf", type="build")
         depends_on("automake", type="build")
@@ -111,7 +115,8 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
     @property
     def libs(self):
         shared = self.spec.satisfies("libs=shared")
-        return find_libraries("libjpeg*", root=self.prefix, shared=shared, recursive=True)
+        name = "jpeg" if sys.platform == "win32" else "libjpeg*"
+        return find_libraries(name, root=self.prefix, shared=shared, recursive=True, runtime=False)
 
 
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
@@ -128,5 +133,5 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     @run_after("install")
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
-        if self.spec.satisfies("platform=darwin") and ("+shared" in self.spec):
+        if self.spec.satisfies("platform=darwin") and self.spec.satisfies("+shared"):
             fix_darwin_install_name(self.prefix.lib)

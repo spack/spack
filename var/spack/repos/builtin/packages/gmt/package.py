@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -38,9 +37,6 @@ class Gmt(CMakePackage, AutotoolsPackage):
         url="ftp://ftp.soest.hawaii.edu/gmt/gmt-4.5.18-src.tar.bz2",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "ghostscript",
         default=False,
@@ -65,6 +61,9 @@ class Gmt(CMakePackage, AutotoolsPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     with when("build_system=cmake"):
         generator("ninja")
         depends_on("cmake@2.8.12:", type="build")

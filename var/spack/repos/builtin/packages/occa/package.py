@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -34,15 +33,16 @@ class Occa(Package):
     version("0.2.0", tag="v0.2.0", commit="2eceaa5706ad6cf3a1b153c1f2a8a2fffa2d5945")
     version("0.1.0", tag="v0.1.0", commit="381e886886dc87823769c5f20d0ecb29dd117afa")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("cuda", default=True, description="Activates support for CUDA")
     variant("openmp", default=True, description="Activates support for OpenMP")
     variant("opencl", default=True, description="Activates support for OpenCL")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cuda", when="+cuda")
+    depends_on("gmake", type="build")
 
     conflicts("%gcc@6:", when="^cuda@:8")
     conflicts("%gcc@7:", when="^cuda@:9")
@@ -71,7 +71,7 @@ class Occa(Package):
             # Run-time CUDA compiler:
             s_env.set("OCCA_CUDA_COMPILER", join_path(cuda_dir, "bin", "nvcc"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # The environment variable CXX is automatically set to the Spack
         # compiler wrapper.
@@ -113,11 +113,13 @@ class Occa(Package):
         env.set("OCCA_VERBOSE", "1")
         self._setup_runtime_flags(env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The 'env' is included in the Spack generated module files.
         self._setup_runtime_flags(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
         self._setup_runtime_flags(env)

@@ -1,11 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Single util module where Spack should get a git executable."""
 
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import llnl.util.lang
 
@@ -27,3 +26,17 @@ def git(required: bool = False):
         git.add_default_arg("-c", "protocol.file.allow=always")
 
     return git
+
+
+def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[str]:
+    """Get a list of files modified between `from_ref` and `to_ref`
+    Args:
+       from_ref (str): oldest git ref, defaults to `HEAD~1`
+       to_ref (str): newer git ref, defaults to `HEAD`
+    Returns: list of file paths
+    """
+    git_exe = git(required=True)
+
+    stdout = git_exe("diff", "--name-only", from_ref, to_ref, output=str)
+
+    return stdout.split()

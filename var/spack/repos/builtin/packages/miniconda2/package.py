@@ -1,12 +1,10 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from os.path import split
 
 from spack.package import *
-from spack.util.environment import EnvironmentModifications
 
 
 class Miniconda2(Package):
@@ -65,6 +63,6 @@ class Miniconda2(Package):
         bash = which("bash")
         bash(script, "-b", "-f", "-p", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
         env.extend(EnvironmentModifications.from_sourcing_file(filename))

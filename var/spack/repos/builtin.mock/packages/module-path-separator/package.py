@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -12,7 +11,7 @@ class ModulePathSeparator(Package):
 
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("COLON", "foo")
         env.prepend_path("COLON", "foo")
         env.remove_path("COLON", "foo")

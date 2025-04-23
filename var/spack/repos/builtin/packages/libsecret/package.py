@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -22,12 +21,12 @@ class Libsecret(AutotoolsPackage):
 
     version("0.18.8", sha256="3bfa889d260e0dbabcf5b9967f2aae12edcd2ddc9adc365de7a5cc840c311d15")
 
-    depends_on("c", type="build")  # generated
-
     variant("gcrypt", default=True, description="Build with libgcrypt")
     variant("gobj", default=False, description="Build with gobject-introspection")
     # Optional Vala support is not implemented yet
     # variant('vala', default=False, descript='Build with Vala support')
+
+    depends_on("c", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     #    depends_on('mesa')

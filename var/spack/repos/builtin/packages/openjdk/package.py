@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -8,7 +7,6 @@ import platform
 import re
 
 from spack.package import *
-from spack.util.prefix import Prefix
 
 # If you need to add a new version, please be aware that:
 #  - versions in the following dict are automatically added to the package
@@ -406,6 +404,14 @@ class Openjdk(Package):
 
             version(ver, sha256=pkg[0], url=pkg[1], preferred=is_preferred)
 
+    variant(
+        "certs",
+        default="none",
+        values=("system", "none"),
+        multi=False,
+        description=("symlink system certs if requested, otherwise use default package version"),
+    )
+
     provides("java@21", when="@21.0:21")
     provides("java@17", when="@17.0:17")
     provides("java@16", when="@16.0:16")
@@ -479,12 +485,45 @@ class Openjdk(Package):
         top_dir = "Contents/Home/" if platform.system() == "Darwin" else "."
         install_tree(top_dir, prefix)
 
-    def setup_run_environment(self, env):
+    @run_after("install")
+    def link_system_certs(self):
+        if self.spec.variants["certs"].value != "system":
+            return
+
+        system_dirs = [
+            # CentOS, Fedora, RHEL
+            "/etc/pki/java",
+            # Ubuntu
+            "/etc/ssl/certs/java",
+            # OpenSUSE
+            "/var/lib/ca-certificates/java-certs",
+        ]
+
+        for directory in system_dirs:
+            # Link configuration file
+            sys_certs = join_path(directory, "cacerts")
+
+            # path for 1.8.0 versions
+            pkg_dir = join_path(self.prefix, "jre", "lib", "security")
+            if not os.path.exists(pkg_dir):
+                # path for version 11 and newer
+                pkg_dir = join_path(self.prefix, "lib", "security")
+            if not os.path.exists(pkg_dir):
+                break
+            pkg_conf = join_path(pkg_dir, "cacerts")
+            if os.path.exists(sys_certs):
+                if os.path.exists(pkg_conf):
+                    os.remove(pkg_conf)
+                os.symlink(sys_certs, pkg_conf)
+
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set JAVA_HOME."""
 
         env.set("JAVA_HOME", self.home)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set JAVA_HOME and CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
@@ -500,7 +539,9 @@ class Openjdk(Package):
         classpath = os.pathsep.join(class_paths)
         env.set("CLASSPATH", classpath)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set CLASSPATH.
 
         CLASSPATH contains the installation prefix for the extension and any
@@ -516,3 +557,6 @@ class Openjdk(Package):
     # fix that prevents us from modifying the soname of libjvm.so. If we move
     # to source builds this should be possible.
     non_bindable_shared_objects = ["libjvm.so"]
+
+    # contains precompiled binaries without rpaths
+    unresolved_libraries = ["*"]

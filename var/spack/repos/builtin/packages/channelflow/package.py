@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,8 +18,6 @@ class Channelflow(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("shared", default=True, description="Build shared libs")
     variant("mpi", default=True, description="Enable MPI parallelism")
     variant("hdf5", default=True, description="Enable support for HDF5 I/O")
@@ -32,6 +29,8 @@ class Channelflow(CMakePackage):
         description="Level of support for NetCDF I/O",
     )
     variant("python", default=False, description="Build python bindings")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("eigen")
     depends_on("fftw")

@@ -1,7 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import spack.build_systems.cmake
+from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
@@ -56,7 +57,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
     for val in CudaPackage.cuda_arch_values:
         depends_on("kokkos cuda_arch={0}".format(val), when="cuda_arch={0}".format(val))
     # Use +wrapper when not %clang %cce
-    depends_on("kokkos+wrapper", when="%gcc+cuda")
+    depends_on("kokkos+wrapper", when="+cuda %gcc")
 
     # ROCm
     for val in ROCmPackage.amdgpu_targets:
@@ -109,7 +110,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     build_directory = "build"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PL_BACKEND", "lightning_kokkos")
         cm_args = " ".join([s[2:] for s in self.cmake_args()])
         env.set("CMAKE_ARGS", f"{cm_args}")
@@ -143,8 +144,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             python("setup.py", "build_ext", *args)
 
     def install(self, pkg, spec, prefix):
-        pip_args = std_pip_args + [f"--prefix={prefix}", "."]
-        pip(*pip_args)
+        pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
         super().install(pkg, spec, prefix)
 
     @run_after("install")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -49,7 +48,7 @@ class Ddt(Package):
         else:
             return f"https://downloads.linaroforge.com/{version}/linaro-forge-{version}-linux-x86_64.tar"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
 
     def install(self, spec, prefix):

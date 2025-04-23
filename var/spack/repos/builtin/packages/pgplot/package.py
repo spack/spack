@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -28,9 +27,6 @@ class Pgplot(MakefilePackage):
         sha256="a5799ff719a510d84d26df4ae7409ae61fe66477e3f1e8820422a9a4727a5be4",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Replace hard-coded compilers and options by tokens, so that Spack can
     # edit the file more easily
     patch("g77_gcc.conf.patch")
@@ -47,6 +43,9 @@ class Pgplot(MakefilePackage):
     variant("X", default=False, description="Build with X11 support.")
     variant("png", default=True, description="Enable driver for Portable Network Graphics file.")
     variant("ps", default=True, description="Enable driver for PostScript files.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("libx11", when="+X")
     depends_on("libpng", when="+png")
@@ -120,7 +119,7 @@ class Pgplot(MakefilePackage):
         for key, value in sub.items():
             filter_file(key, value, conf)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+X" in self.spec:
             env.append_flags("LIBS", self.spec["libx11"].libs.ld_flags)
         if "+png" in self.spec:
@@ -175,10 +174,12 @@ class Pgplot(MakefilePackage):
             libnames = ["libcpgplot", "libpgplot"]
         return find_libraries(libnames, root=self.prefix, shared=shared, recursive=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")

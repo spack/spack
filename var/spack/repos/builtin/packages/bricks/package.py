@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -27,10 +26,10 @@ class Bricks(CMakePackage):
     version("r0.1", branch="r0.1")
     version("2023.08.25", commit="d81725055c117c4b63a1b3835c6b634768b5bea7")  # no official release
 
+    variant("cuda", default=False, description="Build bricks with CUDA enabled")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cuda", default=False, description="Build bricks with CUDA enabled")
 
     # Building a variant of cmake without openssl is to match how the
     # ECP E4S project builds cmake in their e4s-base-cuda Docker image

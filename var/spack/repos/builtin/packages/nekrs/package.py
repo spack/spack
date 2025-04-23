@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -42,10 +41,6 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
     version("23.0", sha256="2cb4ded69551b9614036e1a9d5ac54c8535826eae8f8b6a00ddb89043b2c392a")
     version("21.0", tag="v21.0", commit="bcd890bf3f9fb4d91224c83aeda75c33570f1eaa")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("opencl", default=False, description="Activates support for OpenCL")
 
     # Conflicts:
@@ -56,6 +51,10 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
     #     conflicts('^' + pkg, msg=(pkg + " is built into nekRS"))
 
     # Dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("mpi")
     depends_on("git")
     depends_on("cmake")
@@ -69,7 +68,7 @@ class Nekrs(Package, CMakePackage, CudaPackage, ROCmPackage):
                 filter_file(r"mpirun -np", "srun -n", "nrspre")
                 filter_file(r"mpirun -np", "srun -n", "nrsbmpi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The 'env' is included in the Spack generated module files.
         spec = self.spec
         env.set("OCCA_CXX", self.compiler.cxx)
@@ -100,7 +99,7 @@ class SetupEnvironment:
             # Run-time CUDA compiler:
             s_env.set("OCCA_CUDA_COMPILER", join_path(cuda_dir, "bin", "nvcc"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # The environment variable CXX is automatically set to the Spack
         # compiler wrapper.
@@ -137,7 +136,9 @@ class SetupEnvironment:
         env.set("OCCA_VERBOSE", "1")
         self._setup_runtime_flags(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
         self._setup_runtime_flags(env)

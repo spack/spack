@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,6 +17,7 @@ class LuaSol2(CMakePackage):
     license("MIT")
 
     version("develop", branch="develop")
+    version("3.5.0", tag="v3.5.0", commit="9190880c593dfb018ccf5cc9729ab87739709862")
     version("3.3.0", tag="v3.3.0", commit="eba86625b707e3c8c99bbfc4624e51f42dc9e561")
     version("3.2.3", sha256="f74158f92996f476786be9c9e83f8275129bb1da2a8d517d050421ac160a4b9e")
     version("3.2.2", sha256="141790dae0c1821dd2dbac3595433de49ba72545845efc3ec7d88de8b0a3b2da")
@@ -26,10 +26,17 @@ class LuaSol2(CMakePackage):
     version("3.0.3", sha256="bf089e50387edfc70063e24fd7fbb693cceba4a50147d864fabedd1b33483582")
     version("3.0.2", sha256="3f5f369eae6732ae9a315fe4370bbdc9900d2f2f4f291206aeb5b2d5533f0c99")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Lua is not needed when building, since sol2 is headers-only
     depends_on("lua", type=("link", "run"))
+
+    patch(
+        "https://github.com/ThePhD/sol2/pull/1606.patch?full_index=1",
+        when="@3.3.0 %oneapi@2025:",
+        sha256="ed6c5924a0639fb1671e6d7dacbb88dce70aa006bcee2f380b6acd34da89664c",
+    )
 
     def cmake_args(self):
         args = [

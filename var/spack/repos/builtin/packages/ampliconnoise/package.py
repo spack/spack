@@ -1,9 +1,8 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os.path
+import os
 
 from spack.package import *
 
@@ -24,7 +23,7 @@ class Ampliconnoise(MakefilePackage):
 
     patch("Fix-return-type.patch")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.Scripts)
         env.set("PYRO_LOOKUP_FILE", os.path.join(self.prefix, "Data", "LookUp_E123.dat"))
         env.set("SEQ_LOOKUP_FILE", os.path.join(self.prefix, "Data", "Tran.dat"))

@@ -1,5 +1,4 @@
-.. Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-   Spack Project Developers. See the top-level COPYRIGHT file for details.
+.. Copyright Spack Project Developers. See COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -129,7 +128,7 @@ depend on the spec:
 
 .. code-block:: python
 
-   def setup_run_environment(self, env):
+   def setup_run_environment(self, env: EnvironmentModifications) -> None:
        if self.spec.satisfies("+foo"):
            env.set("FOO", "bar")
 
@@ -143,7 +142,7 @@ For example, a simplified version of the ``python`` package could look like this
 
 .. code-block:: python
 
-   def setup_dependent_run_environment(self, env, dependent_spec):
+   def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec) -> None:
        if dependent_spec.package.extends(self.spec):
            env.prepend_path("PYTHONPATH", dependent_spec.prefix.lib.python)
 
@@ -457,14 +456,13 @@ For instance, the following config options,
        tcl:
          all:
            suffixes:
-             ^python@3.12: 'python-3.12'
+             ^python@3: 'python{^python.version.up_to_2}'
              ^openblas: 'openblas'
 
-will add a ``python-3.12`` version string to any packages compiled with
-Python matching the spec, ``python@3.12``. This is useful to know which
-version of Python a set of Python extensions is associated with. Likewise, the
-``openblas`` string is attached to any program that has openblas in the spec,
-most likely via the ``+blas`` variant specification.
+will add a ``python3.12`` to module names of packages compiled with Python 3.12, and similarly for
+all specs depending on ``python@3``. This is useful to know which version of Python a set of Python
+extensions is associated with. Likewise, the ``openblas`` string is attached to any program that
+has openblas in the spec, most likely via the ``+blas`` variant specification.
 
 The most heavyweight solution to module naming is to change the entire
 naming convention for module files. This uses the projections format

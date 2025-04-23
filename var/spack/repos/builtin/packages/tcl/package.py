@@ -1,35 +1,32 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
 import sys
 
-from llnl.util.filesystem import find_first
-
+import spack.build_systems.autotools
+import spack.build_systems.nmake
 from spack.package import *
 from spack.util.environment import is_system_path
 
 is_windows = sys.platform == "win32"
 
 
-class TclHelper:
-    @staticmethod
-    def find_script_dir(spec):
-        # Put more-specific prefixes first
-        check_prefixes = [
-            join_path(spec.prefix, "share", "tcl{0}".format(spec.package.version.up_to(2))),
-            spec.prefix,
-        ]
-        for prefix in check_prefixes:
-            result = find_first(prefix, "init.tcl")
-            if result:
-                return os.path.dirname(result)
-        raise RuntimeError("Cannot locate init.tcl")
+def find_script_dir(spec: Spec) -> str:
+    # Put more-specific prefixes first
+    check_prefixes = [
+        join_path(spec.prefix, "share", "tcl{0}".format(spec.package.version.up_to(2))),
+        spec.prefix,
+    ]
+    for prefix in check_prefixes:
+        result = find_first(prefix, "init.tcl")
+        if result:
+            return os.path.dirname(result)
+    raise RuntimeError("Cannot locate init.tcl")
 
 
-class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
+class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage):
     """Tcl (Tool Command Language) is a very powerful but easy to learn dynamic
     programming language, suitable for a very wide range of uses, including web and
     desktop applications, networking, administration, testing and many more. Open source
@@ -96,7 +93,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
         exe = ".exe" if is_windows else ""
         return Executable(os.path.realpath(self.prefix.bin.join(f"tclsh{self._tcl_name}{exe}")))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set TCL_LIBRARY to the directory containing init.tcl.
 
         For further info see:
@@ -105,9 +102,11 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
         """
         # When using tkinter from within spack provided python+tkinter,
         # python will not be able to find Tcl unless TCL_LIBRARY is set.
-        env.set("TCL_LIBRARY", TclHelper.find_script_dir(self.spec))
+        env.set("TCL_LIBRARY", find_script_dir(self.spec))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
 
@@ -123,7 +122,7 @@ class Tcl(AutotoolsPackage, NMakePackage, SourceforgePackage, TclHelper):
                     env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
 
 
-class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
+class AnyBuilder(BaseBuilder):
     @run_after("install")
     def symlink_tclsh(self):
         # There's some logic regarding this suffix in the build system
@@ -141,7 +140,9 @@ class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
         with working_dir(self.prefix.bin):
             symlink(f"tclsh{ver_suffix}{win_suffix}", "tclsh")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set TCL_LIBRARY to the directory containing init.tcl.
         Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
@@ -151,7 +152,7 @@ class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
         * https://wiki.tcl-lang.org/page/TCL_LIBRARY
         * https://wiki.tcl-lang.org/page/TCLLIBPATH
         """
-        env.set("TCL_LIBRARY", TclHelper.find_script_dir(self.spec))
+        env.set("TCL_LIBRARY", find_script_dir(self.spec))
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
@@ -182,8 +183,14 @@ class BaseBuilder(TclHelper, metaclass=spack.builder.PhaseCallbacksMeta):
                     env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
 
 
-class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(AnyBuilder, spack.build_systems.autotools.AutotoolsBuilder):
     configure_directory = "unix"
+
+    # if TCL is present on the system this may be set to the system's
+    # existing TCL so ensure it is unset
+    # https://wiki.tcl-lang.org/page/TCL%5FLIBRARY
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("TCL_LIBRARY", "")
 
     def install(self, pkg, spec, prefix):
         with working_dir(self.build_directory):
@@ -215,7 +222,7 @@ class AutotoolsBuilder(BaseBuilder, spack.build_systems.autotools.AutotoolsBuild
             make("clean")
 
 
-class NMakeBuilder(BaseBuilder, spack.build_systems.nmake.NMakeBuilder):
+class NMakeBuilder(AnyBuilder, spack.build_systems.nmake.NMakeBuilder):
     build_targets = ["all"]
     install_targets = ["install"]
 

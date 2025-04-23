@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -47,7 +46,7 @@ class PyPsana(PythonPackage):
 
     build_directory = "psana"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("INSTDIR", "{0}".format(self.prefix))
         env.set("XTCDATADIR", "{0}".format(self.spec["xtcdata"].prefix))
         env.set("PSALGDIR", "{0}".format(self.spec["psalg"].prefix))

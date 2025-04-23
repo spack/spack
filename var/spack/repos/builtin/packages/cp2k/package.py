@@ -1,15 +1,11 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import copy
 import os
-import os.path
 import sys
 
-import spack.platforms
 import spack.util.environment
-import spack.util.executable
 from spack.build_environment import dso_suffix
 from spack.build_systems import cmake, makefile
 from spack.package import *
@@ -42,10 +38,11 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/cp2k/cp2k.git"
     list_url = "https://github.com/cp2k/cp2k/releases"
 
-    maintainers("dev-zero", "mtaillefumier")
+    maintainers("dev-zero", "mtaillefumier", "RMeli", "abussy")
 
     license("GPL-2.0-or-later")
 
+    version("2025.1", sha256="65c8ad5488897b0f995919b9fa77f2aba4b61677ba1e3c19bb093d5c08a8ce1d")
     version("2024.3", sha256="a6eeee773b6b1fb417def576e4049a89a08a0ed5feffcd7f0b33c7d7b48f19ba")
     version("2024.2", sha256="cc3e56c971dee9e89b705a1103765aba57bf41ad39a11c89d3de04c8b8cdf473")
     version("2024.1", sha256="a7abf149a278dfd5283dc592a2c4ae803b37d040df25d62a5e35af5c4557668f")
@@ -59,9 +56,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
     version("master", branch="master", submodules="True")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    generator("ninja")
 
     variant("mpi", default=True, description="Enable MPI support")
     variant("openmp", default=True, description="Enable OpenMP support")
@@ -117,8 +112,26 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
+    variant("dftd4", when="@2024.2:", default=False, description="Enable DFT-D4 support")
     variant("mpi_f08", default=False, description="Use MPI F08 module")
-
+    variant("smeagol", default=False, description="Enable libsmeagol support", when="@2025.2:")
+    variant(
+        "pw_gpu", default=True, description="Enable FFT calculations on GPU", when="@2025.2: +cuda"
+    )
+    variant("grid_gpu", default=True, description="Enable grid GPU backend", when="@2025.2:")
+    variant("dbm_gpu", default=True, description="Enable DBM GPU backend", when="@2025.2:")
+    variant(
+        "pw_gpu",
+        default=False,
+        description="Enable FFT calculations on GPU",
+        when="@2025.2: +rocm",
+    )
+    variant(
+        "hip_backend_cuda",
+        default=False,
+        description="Enable HIP backend on Nvidia GPU",
+        when="@2025.2: +cuda",
+    )
     variant(
         "enable_regtests",
         default=False,
@@ -126,6 +139,26 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         " It build cp2k normally but put the executables in exe/cmake-build-* instead of the"
         " conventional location. This option is only relevant when regtests need to be run.",
     )
+    variant(
+        "grpp",
+        default=False,
+        description="Enable GRPP psuedo potentials",
+        when="@2025.2: build_system=cmake",
+    )
+    variant(
+        "hdf5",
+        default=False,
+        description="Enable HDF5 support",
+        when="@2025.2: build_system=cmake",
+    )
+    variant(
+        "trexio",
+        default=False,
+        description="Enable TrexIO support",
+        when="@2025.2: build_system=cmake",
+    )
+    variant("deepmd", default=False, description="Enable DeepMD-kit support")
+    conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
     with when("+cuda"):
         variant(
@@ -147,6 +180,12 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
             description="Use CUBLAS for general matrix operations in DBCSR",
         )
 
+    with when("+hip_backend_cuda"):
+        depends_on("hipcc")
+        depends_on("hip+cuda")
+        depends_on("hipfft+cuda")
+        depends_on("hipblas+cuda")
+
     HFX_LMAX_RANGE = range(4, 8)
 
     variant(
@@ -157,11 +196,19 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("python@3", type="build")
+    depends_on("pkgconfig", type="build", when="build_system=cmake")
 
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
+
+    depends_on("hdf5+hl+fortran", when="+hdf5")
+    depends_on("trexio", when="+trexio")
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
@@ -188,18 +235,21 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("+libint"):
         depends_on("pkgconfig", type="build", when="@7.0:")
         for lmax in HFX_LMAX_RANGE:
+            depends_on(f"libint@2.6.0:+fortran tune=cp2k-lmax-{lmax}", when=f"@7.0: lmax={lmax}")
+            # AOCC only works with libint@2.6.0
             depends_on(
-                "libint@2.6.0:+fortran tune=cp2k-lmax-{0}".format(lmax),
-                when="@7.0: lmax={0}".format(lmax),
+                f"libint@=2.6.0+fortran tune=cp2k-lmax-{lmax}", when=f"@7.0: lmax={lmax} %aocc"
             )
 
     with when("+libxc"):
-        depends_on("pkgconfig", type="build", when="@7.0:")
+        depends_on("pkgconfig", type="build", when="@7.0: ^libxc@:6")
         depends_on("libxc@4.0.3:4", when="@7.0:8.1")
         depends_on("libxc@5.1.3:5.1", when="@8.2:8")
         depends_on("libxc@5.1.7:5.1", when="@9:2022.2")
         depends_on("libxc@6.1:", when="@2023.1:")
         depends_on("libxc@6.2:", when="@2023.2:")
+        depends_on("libxc@:6", when="@:2024.3")
+        depends_on("libxc@7 build_system=cmake", when="@2025.2:")
 
     with when("+spla"):
         depends_on("spla+cuda+fortran", when="+cuda")
@@ -240,6 +290,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
         with when("@2024.2:"):
             depends_on("dla-future-fortran@0.1.0:")
+            depends_on("dla-future-fortran@0.2.0:", when="@2025.1:")
 
             # Use a direct dependency on dla-future so that constraints can be expressed
             # WARN: In the concretizer output, dla-future will appear as dependency of CP2K
@@ -258,6 +309,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("plumed+shared")
         depends_on("plumed+mpi", when="+mpi")
         depends_on("plumed~mpi", when="~mpi")
+
+    depends_on("libsmeagol", when="+smeagol")
 
     # while we link statically against PEXSI, its own deps may be linked in
     # dynamically, therefore can't set this as pure build-type dependency.
@@ -289,6 +342,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("spglib", when="+spglib")
 
+    depends_on("dftd4@3.6.0: build_system=cmake", when="+dftd4")
+
     with when("build_system=cmake"):
         depends_on("cmake@3.22:", type="build")
 
@@ -304,6 +359,9 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     with when("@2022: +rocm"):
         depends_on("hipblas")
         depends_on("hipfft")
+
+    # The CMake build system and AOCC are not compatible as of AOCC 5
+    requires("build_system=makefile", when="%aocc")
 
     # CP2K needs compiler specific compilation flags, e.g. optflags
     conflicts("%apple-clang")
@@ -362,6 +420,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # These patches backport 2023.x fixes to previous versions
     patch("backport_avoid_null_2022.x.patch", when="@2022.1:2022.2 %aocc@:4.0")
     patch("backport_avoid_null_9.1.patch", when="@9.1 %aocc@:4.0")
+
     patch("cmake-fixes-2023.2.patch", when="@2023.2 build_system=cmake")
 
     # Allow compilation with build_type=RelWithDebInfo and build_type=MinSizeRel
@@ -369,15 +428,43 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     # The patch applies https://github.com/cp2k/cp2k/pull/3251 to version 2024.1
     patch("cmake-relwithdebinfo-2024.1.patch", when="@2024.1 build_system=cmake")
 
-    # Patch for an undefined constant due to incompatible changes in ELPA
-    @when("@9.1:2022.2 +elpa")
+    # Bugfix for D4 dispersion correction in CP2K 2024.3
+    # https://github.com/cp2k/cp2k/issues/3688
+    patch("d4-dispersion-bugfix-2024.3.patch", when="@2024.3")
+
+    # Fix segmentation faults caused by accessing unallocated arrays
+    # https://github.com/cp2k/cp2k/pull/3733
+    patch(
+        "https://github.com/cp2k/cp2k/commit/7a99649828ecf7d5dc53d952a1bf7be6970deabe.patch?full_index=1",
+        sha256="37f4f1a76634ff4a5617fe0c670e6acfe2afa2b2cfc5b2875e438a54baa4525e",
+        when="@2024.2:2024.3",
+    )
+
     def patch(self):
-        if self.spec["elpa"].satisfies("@2022.05.001:"):
-            filter_file(
-                r"ELPA_2STAGE_REAL_INTEL_GPU",
-                "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
-                "src/fm/cp_fm_elpa.F",
-            )
+        # Patch for an undefined constant due to incompatible changes in ELPA
+        if self.spec.satisfies("@9.1:2022.2 +elpa"):
+            if self.spec["elpa"].satisfies("@2022.05.001:"):
+                filter_file(
+                    r"ELPA_2STAGE_REAL_INTEL_GPU",
+                    "ELPA_2STAGE_REAL_INTEL_GPU_SYCL",
+                    "src/fm/cp_fm_elpa.F",
+                )
+
+        # Patch for resolving .mod file conflicts in ROCm by implementing 'USE, INTRINSIC'
+        if self.spec.satisfies("+rocm"):
+            for directory, subdirectory, files in os.walk(os.getcwd()):
+                for i in files:
+                    file_path = os.path.join(directory, i)
+                    filter_file("USE ISO_C_BINDING", "USE,INTRINSIC :: ISO_C_BINDING", file_path)
+                    filter_file(
+                        "USE ISO_FORTRAN_ENV", "USE,INTRINSIC :: ISO_FORTRAN_ENV", file_path
+                    )
+                    filter_file("USE omp_lib", "USE,INTRINSIC :: omp_lib", file_path)
+                    filter_file("USE OMP_LIB", "USE,INTRINSIC :: OMP_LIB", file_path)
+                    filter_file("USE iso_c_binding", "USE,INTRINSIC :: iso_c_binding", file_path)
+                    filter_file(
+                        "USE iso_fortran_env", "USE,INTRINSIC :: iso_fortran_env", file_path
+                    )
 
     def url_for_version(self, version):
         url = "https://github.com/cp2k/cp2k/releases/download/v{0}/cp2k-{0}.tar.bz2"
@@ -400,15 +487,15 @@ class MakefileBuilder(makefile.MakefileBuilder):
         optimization_flags = {
             "gcc": ["-O2", "-funroll-loops", "-ftree-vectorize"],
             "intel": ["-O2", "-pc64", "-unroll"],
-            "pgi": ["-fast"],
             "nvhpc": ["-fast"],
             "cce": ["-O2"],
             "xl": ["-O3"],
             "aocc": ["-O2"],
+            "rocmcc": ["-O1"],
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        if fftw.name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if fftw.name == "intel-oneapi-mkl":
             cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
         else:
             cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
@@ -446,9 +533,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 "-ffree-line-length-none",
                 "-ggdb",  # make sure we get proper Fortran backtraces
             ]
-        elif spec.satisfies("%aocc"):
+        elif spec.satisfies("%aocc") or spec.satisfies("%rocmcc"):
             fcflags += ["-ffree-form", "-Mbackslash"]
-        elif spec.satisfies("%pgi") or spec.satisfies("%nvhpc"):
+        elif spec.satisfies("%nvhpc"):
             fcflags += ["-Mfreeform", "-Mextend"]
         elif spec.satisfies("%cce"):
             fcflags += ["-emf", "-ffree", "-hflex_mp=strict"]
@@ -456,7 +543,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             fcflags += ["-qpreprocess", "-qstrict", "-q64"]
             ldflags += ["-Wl,--allow-multiple-definition"]
 
-        if "%gcc@10: +mpi" in spec and spec["mpi"].name in ["mpich", "cray-mpich"]:
+        if "+mpi %gcc@10:" in spec and spec["mpi"].name in ["mpich", "cray-mpich"]:
             fcflags += [
                 "-fallow-argument-mismatch"
             ]  # https://github.com/pmodels/mpich/issues/4300
@@ -495,12 +582,11 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 # (short-int vs int) which otherwise causes segfaults at
                 # runtime due to wrong offsets into the shared library
                 # symbols.
-                libs.extend(
-                    [
-                        join_path(spec["libint"].libs.directories[0], "libderiv.a"),
-                        join_path(spec["libint"].libs.directories[0], "libint.a"),
-                    ]
-                )
+                libs += [
+                    join_path(spec["libint"].libs.directories[0], "libderiv.a"),
+                    join_path(spec["libint"].libs.directories[0], "libint.a"),
+                ]
+
             else:
                 fcflags += pkgconf("--cflags", "libint2", output=str).split()
                 libs += pkgconf("--libs", "libint2", output=str).split()
@@ -523,18 +609,14 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+pexsi"):
             cppflags.append("-D__LIBPEXSI")
             fcflags.append("-I" + join_path(spec["pexsi"].prefix, "fortran"))
-            libs.extend(
-                [
-                    join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
-                    join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
-                    join_path(
-                        spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
-                    ),
-                    join_path(
-                        spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)
-                    ),
-                ]
-            )
+            libs += [
+                join_path(spec["pexsi"].libs.directories[0], "libpexsi.a"),
+                join_path(spec["superlu-dist"].libs.directories[0], "libsuperlu_dist.a"),
+                join_path(
+                    spec["parmetis"].libs.directories[0], "libparmetis.{0}".format(dso_suffix)
+                ),
+                join_path(spec["metis"].libs.directories[0], "libmetis.{0}".format(dso_suffix)),
+            ]
 
         if spec.satisfies("+elpa"):
             elpa = spec["elpa"]
@@ -551,16 +633,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     )
                 )
             else:
-                libs.append(
-                    join_path(
-                        elpa.libs.directories[0],
-                        (
-                            "libelpa{elpa_suffix}.{dso_suffix}".format(
-                                elpa_suffix=elpa_suffix, dso_suffix=dso_suffix
-                            )
-                        ),
-                    )
-                )
+                libs.append(elpa.libs.ld_flags)
 
             if spec.satisfies("@:4"):
                 if elpa.satisfies("@:2014.5"):
@@ -587,20 +660,32 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("+plumed"):
             dflags.extend(["-D__PLUMED2"])
             cppflags.extend(["-D__PLUMED2"])
-            libs.extend([join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))])
+            libs += [join_path(spec["plumed"].prefix.lib, "libplumed.{0}".format(dso_suffix))]
 
         if spec.satisfies("+libvori"):
             cppflags += ["-D__LIBVORI"]
             libvori = spec["libvori"].libs
             ldflags += [libvori.search_flags]
-            libs += libvori
+            libs.append(libvori.ld_flags)
             libs += ["-lstdc++"]
 
         if spec.satisfies("+spglib"):
             cppflags += ["-D__SPGLIB"]
             spglib = spec["spglib"].libs
             ldflags += [spglib.search_flags]
-            libs += spglib
+            libs.append(spglib.ld_flags)
+
+        if spec.satisfies("+dftd4"):
+            cppflags += ["-D__DFTD4"]
+            dftd4 = spec["dftd4"].libs
+            ldflags += [dftd4.search_flags]
+            libs.append(dftd4.ld_flags)
+
+        if spec.satisfies("+smeagol"):
+            cppflags += ["-D__SMEAGOL"]
+            smeagol = spec["libsmeagol"].libs
+            ldflags += [smeagol.search_flags]
+            libs.append(smeagol.ld_flags)
 
         cc = spack_cc if "~mpi" in spec else spec["mpi"].mpicc
         cxx = spack_cxx if "~mpi" in spec else spec["mpi"].mpicxx
@@ -615,12 +700,12 @@ class MakefileBuilder(makefile.MakefileBuilder):
         lapack = spec["lapack"].libs
         blas = spec["blas"].libs
         ldflags.append((lapack + blas).search_flags)
-        libs.extend([str(x) for x in (fftw.libs, lapack, blas)])
+        libs += [str(x) for x in (fftw.libs, lapack, blas)]
 
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
 
-        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if spec["blas"].name == "intel-oneapi-mkl":
             cppflags += ["-D__MKL"]
         elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
@@ -629,7 +714,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             # add before ScaLAPACK to override the p?gemm symbols
             cosma = spec["cosma"].libs
             ldflags.append(cosma.search_flags)
-            libs.extend(cosma)
+            libs += cosma
 
         # MPI
         if spec.satisfies("+mpi"):
@@ -640,8 +725,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             else:
                 mpi = spec["mpi:cxx"].libs
 
-            # while intel-mkl has a mpi variant and adds the scalapack
-            # libs to its libs, intel-oneapi-mkl does not.
             if spec["scalapack"].name == "intel-oneapi-mkl":
                 mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
                 scalapack = [
@@ -657,9 +740,9 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 scalapack = spec["scalapack"].libs
                 ldflags.append(scalapack.search_flags)
 
-            libs.extend(scalapack)
-            libs.extend(mpi)
-            libs.extend(pkg.compiler.stdcxx_libs)
+            libs += scalapack
+            libs += mpi
+            libs += pkg.compiler.stdcxx_libs
 
             if spec.satisfies("+mpi_f08"):
                 cppflags.append("-D__MPI_F08")
@@ -718,18 +801,20 @@ class MakefileBuilder(makefile.MakefileBuilder):
 
         if spec.satisfies("@2022: +rocm"):
             libs += [
-                "-L{}".format(spec["rocm"].libs.directories[0]),
-                "-L{}/stubs".format(spec["rocm"].libs.directories[0]),
+                "-L{}".format(spec["hip"].prefix.lib),
+                "-lamdhip64",
                 "-lhipblas",
                 "-lhipfft",
                 "-lstdc++",
             ]
 
-            cppflags += ["-D__OFFLOAD_HIP"]
             acc_compiler_var = "hipcc"
             acc_flags_var = "NVFLAGS"
             cppflags += ["-D__ACC"]
             cppflags += ["-D__DBCSR_ACC"]
+            cppflags += ["-D__HIP_PLATFORM_AMD__"]
+            cppflags += ["-D__GRID_HIP"]
+
             gpuver = GPU_MAP[spec.variants["amdgpu_target"].value[0]]
 
         if spec.satisfies("smm=libsmm"):
@@ -742,8 +827,8 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     "Point environment variable LIBSMM_PATH to "
                     "the absolute path of the libsmm.a file"
                 )
-            except IOError:
-                raise IOError(
+            except OSError:
+                raise OSError(
                     "The file LIBSMM_PATH pointed to does not "
                     "exist. Note that it must be absolute path."
                 )
@@ -768,7 +853,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
                     "# include Plumed.inc as recommended by"
                     "PLUMED to include libraries and flags"
                 )
-                mkf.write("include {0}\n".format(spec["plumed"].package.plumed_inc))
+                mkf.write("include {0}\n".format(self.pkg["plumed"].plumed_inc))
 
             mkf.write("\n# COMPILER, LINKER, TOOLS\n\n")
             mkf.write(
@@ -807,12 +892,21 @@ class MakefileBuilder(makefile.MakefileBuilder):
             mkf.write(fflags("CXXFLAGS", cxxflags))
             if spec.satisfies("+cuda"):
                 mkf.write(fflags(acc_flags_var, nvflags))
+            if "+rocm" in spec:
+                mkf.write("OFFLOAD_TARGET = hip\n")
+
             mkf.write(fflags("FCFLAGS", fcflags))
             mkf.write(fflags("LDFLAGS", ldflags))
             mkf.write(fflags("LIBS", libs))
 
             if spec.satisfies("%intel"):
                 mkf.write(fflags("LDFLAGS_C", ldflags + ["-nofor-main"]))
+
+            if spec.satisfies("%aocc@5:"):
+                # ensure C based applications can be build properly
+                mkf.write(fflags("LDFLAGS_C", ldflags + ["-fno-fortran-main"]))
+                # This flag is required for the correct runtime behaviour of the code with aocc@5.0
+                mkf.write(fflags("FCFLAGS", fcflags + ["-mllvm -enable-newgvn=true"]))
 
             mkf.write("# CP2K-specific flags\n\n")
             mkf.write("GPUVER = {0}\n".format(gpuver))
@@ -913,7 +1007,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
             content += " " + self.spec["fftw-api"].libs.ld_flags
 
             fftw = self.spec["fftw-api"]
-            if fftw.name in ["fftw", "amdfftw"] and fftw.satisfies("+openmp"):
+            if fftw.name in ["fftw", "amdfftw", "cray-fftw"] and fftw.satisfies("+openmp"):
                 content += " -lfftw3_omp"
 
             content += "\n"
@@ -932,10 +1026,15 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 raise InstallError("CP2K supports only one cuda_arch at a time.")
             else:
                 gpu_ver = GPU_MAP[spec.variants["cuda_arch"].value[0]]
-                args += [
-                    self.define("CP2K_USE_ACCEL", "CUDA"),
-                    self.define("CP2K_WITH_GPU", gpu_ver),
-                ]
+                if spec.satisfies("+hip_backend_cuda"):
+                    args += [
+                        self.define("CP2K_USE_ACCEL", "HIP"),
+                        self.define("CMAKE_HIP_PLATFORM", "nvidia"),
+                    ]
+                else:
+                    args += [self.define("CP2K_USE_ACCEL", "CUDA")]
+
+                args += [self.define("CP2K_WITH_GPU", gpu_ver)]
 
         if spec.satisfies("+rocm"):
             if len(spec.variants["amdgpu_target"].value) > 1:
@@ -964,7 +1063,16 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_VORI", "libvori"),
             self.define_from_variant("CP2K_USE_SPLA", "spla"),
             self.define_from_variant("CP2K_USE_QUIP", "quip"),
+            self.define_from_variant("CP2K_USE_DFTD4", "dftd4"),
             self.define_from_variant("CP2K_USE_MPI_F08", "mpi_f08"),
+            self.define_from_variant("CP2K_USE_LIBSMEAGOL", "smeagol"),
+            self.define_from_variant("CP2K_ENABLE_GRID_GPU", "grid_gpu"),
+            self.define_from_variant("CP2K_ENABLE_DBM_GPU", "dbm_gpu"),
+            self.define_from_variant("CP2K_ENABLE_PW_GPU", "pw_gpu"),
+            self.define_from_variant("CP2K_USE_GRPP", "grpp"),
+            self.define_from_variant("CP2K_USE_HDF5", "hdf5"),
+            self.define_from_variant("CP2K_USE_DEEPMD", "deepmd"),
+            self.define_from_variant("CP2K_USE_TREXIO", "trexio"),
         ]
 
         # we force the use elpa openmp threading support. might need to be revisited though
@@ -988,7 +1096,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if blas.name == "intel-oneapi-mkl":
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -26,11 +25,11 @@ class Gnuradio(CMakePackage):
 
     version("3.8.2.0", sha256="ddda12b55e3e1d925eefb24afb9d604bca7c9bbe0a431707aa48a2eed53eec2f")
 
+    variant("gui", default=False, description="Build with gui support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("gui", default=False, description="Build with gui support")
 
     depends_on("cmake@3.5.1:", type="build")
     depends_on("volk")
@@ -69,14 +68,18 @@ class Gnuradio(CMakePackage):
     def cmake_args(self):
         return ["-DENABLE_INTERNAL_VOLK=OFF"]
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)

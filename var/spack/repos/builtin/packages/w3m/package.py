@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -68,7 +67,7 @@ class W3m(AutotoolsPackage):
         values=("gdk-pixbuf", "imlib2"),
         multi=False,
     )
-    depends_on("gdk-pixbuf@2:+x11", when="imagelib=gdk-pixbuf +image")
+    depends_on("gdk-pixbuf@2:", when="imagelib=gdk-pixbuf +image")
     depends_on("imlib2@1.0.5:", when="imagelib=imlib2 +image")
 
     # fix for modern libraries
@@ -103,7 +102,7 @@ class W3m(AutotoolsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.variants["termlib"].value == "ncurses":
             env.append_flags("LDFLAGS", "-ltinfo")
             env.append_flags("LDFLAGS", "-lncurses")

@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -39,9 +38,6 @@ class IntelXed(Package):
 
     # The old 2019.03.01 version (before there were tags).
     version("10.2019.03", commit="b7231de4c808db821d64f4018d15412640c34113", deprecated=True)
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     # XED wants the mbuild directory adjacent to xed in the same directory.
     mdir = join_path("..", "mbuild")
@@ -83,6 +79,9 @@ class IntelXed(Package):
         description="Add compatibility headers for software written on the old include layout",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # The current mfile uses python3 by name.
     depends_on("python@3.7:", type="build")
 
@@ -103,7 +102,7 @@ class IntelXed(Package):
         except OSError:
             pass
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # XED needs PYTHONPATH to find the mbuild directory.
         env.prepend_path("PYTHONPATH", self.mdir)
 
@@ -124,11 +123,11 @@ class IntelXed(Package):
             "--no-werror",
             f"--prefix={prefix}",
         )
-        if "+optimize" in spec:
+        if spec.satisfies("+optimize"):
             mfile.add_default_arg("--opt=2")
-        if "+debug" in spec:
+        if spec.satisfies("+debug"):
             mfile.add_default_arg("--debug")
-        if "+pic" in spec:
+        if spec.satisfies("+pic"):
             mfile.add_default_arg(
                 f"--extra-ccflags={self.compiler.cc_pic_flag}",
                 f"--extra-cxxflags={self.compiler.cxx_pic_flag}",
@@ -144,11 +143,11 @@ class IntelXed(Package):
         mfile(
             f"--install-dir={shared_kit}",
             "--shared",
-            *(["examples"] if "+examples" in spec else []),
+            *(["examples"] if spec.satisfies("+examples") else []),
             "install",
         )
 
-        if "+examples" in self.spec:
+        if self.spec.satisfies("+examples"):
             # Install the example binaries to share/xed/examples
             install_tree(join_path(shared_kit, "bin"), prefix.share.xed.examples)
 

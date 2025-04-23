@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,10 +18,10 @@ class Chaparral(CMakePackage):
     version("develop", branch="truchas")
     version("2020-08-28", commit="c8a190bb74ef33ad8b2f7b67d20590f393fde32a", preferred=True)
 
-    depends_on("c", type="build")  # generated
-
     variant("shared", default=True, description="Build shared library")
     variant("mpi", default=True, description="Build parallel library")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("cmake@3.16:", type="build")

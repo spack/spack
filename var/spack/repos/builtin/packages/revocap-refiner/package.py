@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -19,6 +18,10 @@ class RevocapRefiner(MakefilePackage):
     version("1.1.04", sha256="bf3d959f4c1ab08a7e99cd7e02e710c758af28d71500f4814eed8b4eb3fb2d13")
 
     parallel = False
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # add space between literal and identifier.
     patch("add_space.patch")

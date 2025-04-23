@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -18,12 +17,12 @@ class Cardioid(CMakePackage):
     version("develop", branch="master")
     version("elecfem", branch="elec-fem")
 
+    variant("cuda", default=False, description="Build with cuda support")
+    variant("mfem", default=False, description="Build with mfem support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("cuda", default=False, description="Build with cuda support")
-    variant("mfem", default=False, description="Build with mfem support")
 
     depends_on("blas")
     depends_on("lapack")

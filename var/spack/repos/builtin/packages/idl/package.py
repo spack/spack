@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -31,7 +30,7 @@ class Idl(Package):
         install_script = Executable("./install.sh")
         install_script("-s", input="silent/idl_answer_file")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # set necessary environment variables
         env.prepend_path("EXELIS_DIR", self.prefix)
         env.prepend_path("IDL_DIR", self.prefix.idl)

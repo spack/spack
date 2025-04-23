@@ -1,5 +1,4 @@
-# Copyright 2013-2024 Lawrence Livermore National Security, LLC and other
-# Spack Project Developers. See the top-level COPYRIGHT file for details.
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
@@ -17,11 +16,10 @@ class SysSage(CMakePackage):
 
     license("Apache-2.0")
 
+    version("0.5.0", sha256="044e53bf0f3873325fa4dedb510849d58b23b5a2c654d41b1389a318b2cb7ee1")
     version("0.4.3", sha256="e24313c4274576c1511a62e1b27c86a78cea7e4c123b8a53303cfc70de978faa")
     version("master", branch="master")
     version("develop", branch="develop")
-
-    depends_on("cxx", type="build")  # generated
 
     conflicts("%gcc@:7", msg="gcc can be used from version 8 and above")
 
@@ -56,6 +54,8 @@ class SysSage(CMakePackage):
         description="builds the caps-numa-benchmark. If turned on, includes Linux-specific "
         "libraries.",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
     depends_on("libxml2@2.9.13:")
