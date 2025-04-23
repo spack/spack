@@ -138,8 +138,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:
