@@ -32,8 +32,8 @@ from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
 from spack.error import SpackError
-from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
+from spack.schema.spec import schema as specfile_schema
 from spack.test.conftest import MockHTTPResponse
 
 config_cmd = spack.main.SpackCommand("config")
@@ -866,7 +866,7 @@ spack:
             # Now that index is regenerated, validate "buildcache list" output
             assert "patchelf" in buildcache_cmd("list", output=str)
 
-            # Also test buildcache_spec schema
+            # Also test spec schema
             cache_class = spack.binary_distribution.get_url_buildcache_class(layout_version)
             cache_entry = cache_class(mirror_url, concrete_spec, allow_unsigned=True)
             spec_dict = cache_entry.fetch_metadata()

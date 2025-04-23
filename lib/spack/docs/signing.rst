@@ -202,14 +202,14 @@ a gpg cleartext signature, as illustrated below::
     "data": [
       {
         "contentLength": 10731083,
-        "mediaType": "application/vnd.spack.install.v1.tar+gzip",
+        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
         "compression": "gzip",
         "checksumAlgorithm": "sha256",
         "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
       },
       {
         "contentLength": 1000,
-        "mediaType": "application/vnd.spack.buildcache_spec.v3+json",
+        "mediaType": "application/vnd.spack.spec.v5+json",
         "compression": "gzip",
         "checksumAlgorithm": "sha256",
         "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"

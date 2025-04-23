@@ -145,8 +145,8 @@ def _migrate_spec(
     algorithm = bcc["hash_algorithm"]
     checksum = bcc["hash"]
 
-    # Update layout version
-    spec_dict["buildcache_layout_version"] = 3
+    # TODO: Remove this key once oci buildcache no longer uses it
+    spec_dict["buildcache_layout_version"] = 2
 
     v2_archive_url = url_util.join(mirror_url, "build_cache", v2_tarball_path_name(s, ".spack"))
 
@@ -190,7 +190,7 @@ def _migrate_spec(
 
     metadata_blob_record = BlobRecord(
         metadata_size,
-        v3_cache_class.BUILDCACHE_SPEC_MEDIATYPE,
+        v3_cache_class.SPEC_MEDIATYPE,
         "gzip",
         metadata_checksum_algo,
         metadata_checksum,

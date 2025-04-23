@@ -30,7 +30,7 @@ import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
 from spack.mirrors.mirror import MirrorCollection
-from spack.schema.buildcache_spec import schema as buildcache_spec_schema
+from spack.schema.spec import schema as spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
@@ -186,10 +186,8 @@ class URLBuildcacheEntry:
     SPEC_URL_REGEX = re.compile(r"(.+)/v([\d]+)/manifests/.+")
     LAYOUT_VERSION = 3
     BUILDCACHE_INDEX_MEDIATYPE = f"application/vnd.spack.db.v{spack.database._DB_VERSION}+json"
-    BUILDCACHE_SPEC_MEDIATYPE = (
-        f"application/vnd.spack.buildcache_spec.v{CURRENT_BUILD_CACHE_LAYOUT_VERSION}+json"
-    )
-    TARBALL_MEDIATYPE = "application/vnd.spack.install.v1.tar+gzip"
+    SPEC_MEDIATYPE = f"application/vnd.spack.spec.v{spack.spec.SPECFILE_FORMAT_VERSION}+json"
+    TARBALL_MEDIATYPE = "application/vnd.spack.install.v2.tar+gzip"
     PUBLIC_KEY_MEDIATYPE = "application/pgp-keys"
     PUBLIC_KEY_INDEX_MEDIATYPE = "application/vnd.spack.keyindex.v1+json"
     BUILDCACHE_INDEX_FILE = "index.manifest.json"
@@ -288,7 +286,7 @@ class URLBuildcacheEntry:
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
         """Mapping from buildcache component to media type"""
         if component == BuildcacheComponent.SPEC:
-            return cls.BUILDCACHE_SPEC_MEDIATYPE
+            return cls.SPEC_MEDIATYPE
         elif component == BuildcacheComponent.TARBALL:
             return cls.TARBALL_MEDIATYPE
         elif component == BuildcacheComponent.INDEX:
@@ -622,8 +620,8 @@ class URLBuildcacheEntry:
         """
 
         spec_dict = spec.to_dict(hash=ht.dag_hash)
-        layout_version = self.get_layout_version()
-        spec_dict["buildcache_layout_version"] = layout_version
+        # TODO: Remove this key once oci buildcache no longer uses it
+        spec_dict["buildcache_layout_version"] = 2
         tarball_content_length = os.stat(tarball_path).st_size
         compression = "gzip"
 
@@ -678,7 +676,7 @@ class URLBuildcacheEntry:
         blobs.append(
             BlobRecord(
                 metadata_size,
-                self.BUILDCACHE_SPEC_MEDIATYPE,
+                self.SPEC_MEDIATYPE,
                 compression,
                 checksum_algorithm,
                 metadata_checksum,
@@ -1131,7 +1129,7 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
     except Exception as e:
         raise InvalidMetadataFile(f"Could not parse {path} due to: {e}") from e
 
-    jsonschema.validate(spec_dict, buildcache_spec_schema)
+    jsonschema.validate(spec_dict, spec_schema)
 
     # Ensure this version is not too new.
     try:
