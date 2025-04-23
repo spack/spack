@@ -21,6 +21,7 @@ class CompilerAdaptor:
     """Provides access to compiler attributes via `Package.compiler`. Useful for
     packages which do not yet access compiler properties via `self.spec[language]`.
     """
+
     def __init__(
         self, compiled_spec: spack.spec.Spec, compilers: Dict[Languages, spack.spec.Spec]
     ) -> None:
