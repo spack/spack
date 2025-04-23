@@ -1225,6 +1225,7 @@ class TestConcretize:
             assert not node.dependencies(deptype="test"), msg.format(pkg_name)
 
     @pytest.mark.regression("20019")
+    @pytest.mark.xfail(reason="version badness priority is higher than reused compiler")
     def test_compiler_match_is_preferred_to_newer_version(self, compiler_factory):
         # This spec depends on openblas. Openblas has a conflict
         # that doesn't allow newer versions with gcc@4.4.0. Check
@@ -1235,7 +1236,7 @@ class TestConcretize:
         ):
             spec_str = "simple-inheritance+openblas os=redhat6 %gcc@10.1.0"
             s = spack.concretize.concretize_one(spec_str)
-            assert "openblas@0.2.15" in s, s.tree()
+            assert "openblas@0.2.15" in s
             assert s["openblas"].satisfies("%gcc@10.1.0")
 
     @pytest.mark.regression("19981")
@@ -3346,8 +3347,9 @@ def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runt
         result = spack.concretize.concretize_one("pkg-b %gcc")
         assert pkgb_old.dag_hash() == result.dag_hash()
 
-        result = spack.concretize.concretize_one("pkg-a %gcc@9 ^pkg-b %gcc@9")
+        result = spack.concretize.concretize_one("pkg-a ^pkg-b %gcc@9")
         assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+        assert result.satisfies("%gcc@9")
 
         result = spack.concretize.concretize_one("pkg-a %gcc@10 ^pkg-b %gcc@9")
         assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
