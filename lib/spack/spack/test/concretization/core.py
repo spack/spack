@@ -188,6 +188,7 @@ class Root(Package):
     url      = "http://www.example.com/root-1.0.tar.gz"
 
     version("1.0", sha256="abcde")
+    depends_on("middle")
     depends_on("changing")
 
     conflicts("^changing~foo")
@@ -195,6 +196,20 @@ class Root(Package):
     package_py = packages_dir / "root" / "package.py"
     package_py.parent.mkdir(parents=True)
     package_py.write_text(root_pkg_str)
+
+    middle_pkg_str = """
+from spack.package import *
+
+class Middle(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/root-1.0.tar.gz"
+
+    version("1.0", sha256="abcde")
+    depends_on("changing")
+"""
+    package_py = packages_dir / "middle" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(middle_pkg_str)
 
     changing_template = """
 from spack.package import *
@@ -445,9 +460,7 @@ class TestConcretize:
             if "c" not in x or not x.name.startswith("dt-diamond"):
                 continue
             expected_gcc = x.name != "dt-diamond"
-            assert (
-                bool(x.dependencies(name="llvm", deptype="build")) is not expected_gcc
-            ), x.long_spec
+            assert bool(x.dependencies(name="llvm", deptype="build")) is not expected_gcc, x.tree()
             assert bool(x.dependencies(name="gcc", deptype="build")) is expected_gcc
             assert x.satisfies("%clang") is not expected_gcc
             assert x.satisfies("%gcc") is expected_gcc
@@ -1866,7 +1879,7 @@ class TestConcretize:
 
     @pytest.mark.regression("31148")
     def test_version_weight_and_provenance(self):
-        """Test package preferences during coconcretization."""
+        """Test package preferences during concretization."""
         reusable_specs = [
             spack.concretize.concretize_one(spec_str) for spec_str in ("pkg-b@0.9", "pkg-b@1.0")
         ]
@@ -1876,17 +1889,18 @@ class TestConcretize:
             solver = spack.solver.asp.Solver()
             setup = spack.solver.asp.SpackSolverSetup()
             result, _, _ = solver.driver.solve(setup, [root_spec], reuse=reusable_specs)
-            # The result here should have a single spec to build ('pkg-a')
-            # and it should be using pkg-b@1.0 with a version badness of 2
-            # The provenance is:
+            # Version badness should be > 0 only for reused specs. For instance, for pkg-b
+            # the version provenance is:
+            #
             # version_declared("pkg-b","1.0",0,"package_py").
             # version_declared("pkg-b","0.9",1,"package_py").
             # version_declared("pkg-b","1.0",2,"installed").
             # version_declared("pkg-b","0.9",3,"installed").
-            #
-            # Depending on the target, it may also use gnuconfig
+            v_weights = [x for x in result.criteria if x[2] == "version badness (non roots)"][0]
+            reused_weights, built_weights, _ = v_weights
+            assert reused_weights > 2 and built_weights == 0
+
             result_spec = result.specs[0]
-            assert (2, 0, "version badness (non roots)") in result.criteria
             assert result_spec.satisfies("^pkg-b@1.0")
             assert result_spec["pkg-b"].dag_hash() == reusable_specs[1].dag_hash()
 
@@ -1933,7 +1947,9 @@ class TestConcretize:
     def test_installed_externals_are_reused(
         self, mutable_database, repo_with_changing_recipe, tmp_path
     ):
-        """Test that external specs that are in the DB can be reused."""
+        """Tests that external specs that are in the DB can be reused, if they result in a
+        better optimization score.
+        """
         external_conf = {
             "changing": {
                 "buildable": False,
@@ -1943,22 +1959,23 @@ class TestConcretize:
         spack.config.set("packages", external_conf)
 
         # Install the external spec
-        external1 = spack.concretize.concretize_one("changing@1.0")
-        PackageInstaller([external1.package], fake=True, explicit=True).install()
-        assert external1.external
+        middle_pkg = spack.concretize.concretize_one("middle")
+        PackageInstaller([middle_pkg.package], fake=True, explicit=True).install()
+        assert middle_pkg["changing"].external
+        changing_external = middle_pkg["changing"]
 
         # Modify the package.py file
         repo_with_changing_recipe.change({"delete_variant": True})
 
         # Try to concretize the external without reuse and confirm the hash changed
         with spack.config.override("concretizer:reuse", False):
-            external2 = spack.concretize.concretize_one("changing@1.0")
-        assert external2.dag_hash() != external1.dag_hash()
+            root_no_reuse = spack.concretize.concretize_one("root")
+        assert root_no_reuse["changing"].dag_hash() != changing_external.dag_hash()
 
         # ... while with reuse we have the same hash
         with spack.config.override("concretizer:reuse", True):
-            external3 = spack.concretize.concretize_one("changing@1.0")
-        assert external3.dag_hash() == external1.dag_hash()
+            root_with_reuse = spack.concretize.concretize_one("root")
+        assert root_with_reuse["changing"].dag_hash() == changing_external.dag_hash()
 
     @pytest.mark.regression("31484")
     def test_user_can_select_externals_with_require(self, mutable_database, tmp_path):

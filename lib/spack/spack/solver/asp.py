@@ -128,8 +128,6 @@ class Provenance(enum.IntEnum):
     SPEC = enum.auto()
     # A dev spec literal
     DEV_SPEC = enum.auto()
-    # An external spec declaration
-    EXTERNAL = enum.auto()
     # The 'packages' section of the configuration
     PACKAGES_YAML = enum.auto()
     # A package requirement
@@ -138,6 +136,8 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # An external spec declaration
+    EXTERNAL = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)

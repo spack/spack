@@ -1270,13 +1270,10 @@ packages:
 packages:
   all:
     require:
-    - "%gcc"
-  pkg-a:
-    require:
-    - "%gcc@10"
+    - "%gcc@9"
     """,
             True,
-            ["%gcc@10"],
+            ["%gcc@9"],
         ),
     ],
 )
