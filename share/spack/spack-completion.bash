@@ -749,7 +749,7 @@ _spack_compiler() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find add remove rm list info"
+        SPACK_COMPREPLY="find add remove rm list ls info"
     fi
 }
 
@@ -790,6 +790,10 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_compiler_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
@@ -1173,7 +1177,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find list ls read-cray-manifest"
     fi
 }
 
@@ -1187,6 +1191,10 @@ _spack_external_find() {
 }
 
 _spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_ls() {
     SPACK_COMPREPLY="-h --help"
 }
 
