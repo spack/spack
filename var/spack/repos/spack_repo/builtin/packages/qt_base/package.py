@@ -212,7 +212,11 @@ class QtBase(QtPackage):
         depends_on("libdrm")
         depends_on("at-spi2-core", when="+accessibility")
     depends_on("dbus", when="+dbus")
-    depends_on("gl", when="+opengl")
+    # OpenGL headers are required at build time
+    # GL, provided by the Qt application is required at runtime.
+    # Do not include GL in the "link" rpaths as GL may be loaded at runtime
+    # and differ from the GL that provided the headers.
+    depends_on("gl", when="+opengl", type=("build", "run"))
     depends_on("sqlite", when="+sql")
 
     with when("+gui"):
