@@ -37,6 +37,7 @@ from ..url_buildcache import (
     BuildcacheComponent,
     BuildcacheEntryError,
     URLBuildcacheEntry,
+    check_mirror_for_layout,
     get_url_buildcache_class,
 )
 
@@ -421,6 +422,10 @@ def push_fn(args):
                 failed.extend(
                     (s, PackageNotInstalledError("package not installed")) for s in not_installed
                 )
+
+    # Warn about possible old binary mirror layout
+    if not mirror.push_url.startswith("oci://"):
+        check_mirror_for_layout(mirror)
 
     with bindist.make_uploader(
         mirror=mirror,

@@ -23,13 +23,13 @@ import spack.config as config
 import spack.database
 import spack.error
 import spack.hash_types as ht
+import spack.mirrors.mirror
 import spack.spec
 import spack.stage
 import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.mirrors.mirror import MirrorCollection
 from spack.schema.spec import schema as spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
@@ -1037,20 +1037,17 @@ def get_url_buildcache_class(
         )
 
 
-def check_mirrors_for_layout():
-    """Check configured mirrors, warning about any that are missing layout.json"""
-    if not config.get("config:check_mirrors_on_startup"):
-        return
-
+def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
+    """Check specified mirror, and warn if missing layout.json"""
     cache_class = get_url_buildcache_class()
-    for mirror in MirrorCollection(binary=True).values():
-        if not cache_class.check_layout_json_exists(mirror.fetch_url):
-            msg = (
-                f"Configured mirror {mirror.name} is missing layout.json and has either \n"
-                "    never been pushed or is of an old layout version. Consider running \n"
-                "    'spack buildcache migrate' or rebuilding the specs in this mirror."
-            )
-            tty.warn(msg)
+    if not cache_class.check_layout_json_exists(mirror.fetch_url):
+        msg = (
+            f"Configured mirror {mirror.name} is missing layout.json and has either \n"
+            "    never been pushed or is of an old layout version. If it's the latter, \n"
+            "    consider running 'spack buildcache migrate' or rebuilding the specs in \n"
+            "    in this mirror."
+        )
+        tty.warn(msg)
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:

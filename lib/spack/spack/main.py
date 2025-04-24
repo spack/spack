@@ -48,7 +48,6 @@ import spack.store
 import spack.util.debug
 import spack.util.environment
 import spack.util.lock
-from spack.url_buildcache import check_mirrors_for_layout
 
 from .enums import ConfigScopePriority
 
@@ -984,9 +983,6 @@ def _main(argv=None):
     if not args.command:
         parser.print_help()
         return 1
-
-    # Check mirrors for old binary layout and warn about it
-    check_mirrors_for_layout()
 
     # Try to load the particular command the caller asked for.
     cmd_name = args.command[0]

@@ -225,8 +225,3 @@ config:
     concretise: concretize
     containerise: containerize
     rm: remove
-
-  # By default spack will check all configured mirrors on startup, warning for
-  # any mirrors that do not have the v3 layout.json file.  Set to 'false' to
-  # disable this check.
-  check_mirrors_on_startup: true

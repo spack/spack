@@ -17,7 +17,6 @@ import spack.binary_distribution
 import spack.buildcache_migrate as migrate
 import spack.cmd.buildcache
 import spack.concretize
-import spack.config as cfg
 import spack.environment as ev
 import spack.error
 import spack.main
@@ -30,7 +29,7 @@ from spack.url_buildcache import (
     BuildcacheComponent,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
-    check_mirrors_for_layout,
+    check_mirror_for_layout,
     get_url_buildcache_class,
 )
 
@@ -536,21 +535,13 @@ def v2_buildcache_layout(tmp_path):
     return _layout
 
 
-def test_check_mirrors_for_layout(v2_buildcache_layout, mutable_config, capsys):
-    """Check printed warning in the presence of v2 layout binary mirrors
-    and make sure the config option disables it when set to False."""
+def test_check_mirror_for_layout(v2_buildcache_layout, mutable_config, capsys):
+    """Check printed warning in the presence of v2 layout binary mirrors"""
     test_mirror_path = v2_buildcache_layout("unsigned")
-    mirror("add", "oldmirror", str(test_mirror_path))
 
-    with cfg.override("config:check_mirrors_on_startup", True):
-        check_mirrors_for_layout()
-        err = str(capsys.readouterr()[1])
-        assert all([word in err for word in ["Warning", "missing", "layout"]])
-
-    with cfg.override("config:check_mirrors_on_startup", False):
-        check_mirrors_for_layout()
-        err = str(capsys.readouterr()[1])
-        assert not err
+    check_mirror_for_layout(spack.mirrors.mirror.Mirror.from_local_path(str(test_mirror_path)))
+    err = str(capsys.readouterr()[1])
+    assert all([word in err for word in ["Warning", "missing", "layout"]])
 
 
 def test_url_buildcache_entry_v2_exists(
@@ -560,7 +551,12 @@ def test_url_buildcache_entry_v2_exists(
     test_mirror_path = v2_buildcache_layout("unsigned")
     mirror_url = f"file://{test_mirror_path}"
     mirror("add", "v2mirror", mirror_url)
-    buildcache("list", "-a", "-l")
+
+    with capsys.disabled():
+        output = buildcache("list", "-a", "-l")
+
+    assert "Fetching an index from a v2 binary mirror layout" in output
+    assert "is deprecated" in output
 
     v2_cache_class = URLBuildcacheEntryV2
 
@@ -615,6 +611,8 @@ def test_install_v2_layout(
     assert "libelf: Successfully installed" in output
     assert "Extracting libdwarf" in output
     assert "libdwarf: Successfully installed" in output
+    assert "Installing a spec from a v2 binary mirror layout" in output
+    assert "is deprecated" in output
 
 
 def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):

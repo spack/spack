@@ -661,6 +661,17 @@ def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYO
     return url_util.join(*cache_class.get_relative_path_components(BuildcacheComponent.INDEX))
 
 
+@llnl.util.lang.memoized
+def warn_v2_layout(mirror_url: str, action: str) -> bool:
+    tty.warn(
+        f"{action} from a v2 binary mirror layout, located at \n"
+        f"    {mirror_url} is deprecated. Support for this will be \n"
+        "    removed in a future version of spack. Please consider running `spack \n"
+        "    buildcache migrate' or rebuilding the specs in this mirror."
+    )
+    return True
+
+
 def select_signing_key() -> str:
     keys = spack.util.gpg.signing_keys()
     num = len(keys)
@@ -1914,6 +1925,9 @@ def download_tarball(
                 cache_entry.destroy()
                 continue
 
+            if layout_version == 2:
+                warn_v2_layout(fetch_url, "Installing a spec")
+
             return cache_entry.get_archive_stage()
 
     # Falling through the nested loops meeans we exhaustively searched
@@ -2762,6 +2776,8 @@ class DefaultIndexFetcherV2(IndexFetcher):
                 response.headers.get("Etag", None) or response.headers.get("etag", None)
             )
 
+        warn_v2_layout(self.url, "Fetching an index")
+
         return FetchIndexResult(etag=etag, hash=computed_hash, data=result, fresh=False)
 
 
@@ -2792,6 +2808,8 @@ class EtagIndexFetcherV2(IndexFetcher):
             result = codecs.getreader("utf-8")(response).read()
         except (ValueError, OSError) as e:
             raise FetchIndexError(f"Remote index {url} is invalid", e) from e
+
+        warn_v2_layout(self.url, "Fetching an index")
 
         headers = response.headers
         etag_header_value = headers.get("Etag", None) or headers.get("etag", None)
