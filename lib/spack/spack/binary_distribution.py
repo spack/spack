@@ -712,11 +712,12 @@ def _read_specs_and_push_index(
     _push_index(db, temp_dir, cache_prefix)
 
 
-def _specs_from_cache_aws_cli(cache_prefix):
+def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
     """Use aws cli to sync all the specs into a local temporary directory.
 
     Args:
-        cache_prefix (str): prefix of the build cache on s3
+        url: prefix of the build cache on s3
+        tmpspecsdir: path to temporary directory to use for writing files
 
     Return:
         List of the local file paths and a function that can read each one from the file system.
@@ -725,43 +726,42 @@ def _specs_from_cache_aws_cli(cache_prefix):
     file_list = None
     aws = which("aws")
 
+    if not aws:
+        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+        return file_list, read_fn
+
     def file_read_method(manifest_path):
         cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(cache_prefix, allow_unsigned=True)
+        cache_entry = cache_class(url, allow_unsigned=True)
         cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
         spec_dict = cache_entry.fetch_metadata()
         cache_entry.destroy()
         return spec_dict
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        sync_command_args = [
-            "s3",
-            "sync",
-            "--exclude",
-            "*",
-            "--include",
-            "*.spec.manifest.json",
-            cache_prefix,
-            tmpspecsdir,
-        ]
+    sync_command_args = [
+        "s3",
+        "sync",
+        "--exclude",
+        "*",
+        "--include",
+        "*.spec.manifest.json",
+        url,
+        tmpspecsdir,
+    ]
 
-        tty.debug(
-            "Using aws s3 sync to download manifests from {0} to {1}".format(
-                cache_prefix, tmpspecsdir
-            )
-        )
+    tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
 
-        try:
-            aws(*sync_command_args, output=os.devnull, error=os.devnull)
-            file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
-            read_fn = file_read_method
-        except Exception:
-            tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
+    try:
+        aws(*sync_command_args, output=os.devnull, error=os.devnull)
+        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
+        read_fn = file_read_method
+    except Exception:
+        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
 
     return file_list, read_fn
 
 
-def _specs_from_cache_fallback(url: str):
+def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
     """Use spack.util.web module to get a list of all the specs at the remote url.
 
     Args:
@@ -798,12 +798,13 @@ def _specs_from_cache_fallback(url: str):
     return file_list, read_fn
 
 
-def _spec_files_from_cache(url: str):
+def _spec_files_from_cache(url: str, tmpspecsdir: str):
     """Get a list of all the spec files in the mirror and a function to
     read them.
 
     Args:
         url: Base url of mirror (location of spec files)
+        tmpspecsdir: Temporary location for writing files
 
     Return:
         A tuple where the first item is a list of absolute file paths or
@@ -818,7 +819,7 @@ def _spec_files_from_cache(url: str):
     callbacks.append(_specs_from_cache_fallback)
 
     for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url)
+        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir)
         if file_list:
             return file_list, read_fn
 
@@ -836,20 +837,23 @@ def _url_generate_package_index(url: str, tmpdir: str):
     Return:
         None
     """
-    try:
-        file_list, read_fn = _spec_files_from_cache(url)
-    except ListMirrorSpecsError as e:
-        raise GenerateIndexError(f"Unable to generate package index: {e}") from e
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        try:
+            file_list, read_fn = _spec_files_from_cache(url, tmpspecsdir)
+        except ListMirrorSpecsError as e:
+            raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 
-    tty.debug(f"Retrieving spec descriptor files from {url} to build index")
+        tty.debug(f"Retrieving spec descriptor files from {url} to build index")
 
-    db = BuildCacheDatabase(tmpdir)
-    db._write()
+        db = BuildCacheDatabase(tmpdir)
+        db._write()
 
-    try:
-        _read_specs_and_push_index(file_list, read_fn, url, db, str(db.database_directory))
-    except Exception as e:
-        raise GenerateIndexError(f"Encountered problem pushing package index to {url}: {e}") from e
+        try:
+            _read_specs_and_push_index(file_list, read_fn, url, db, str(db.database_directory))
+        except Exception as e:
+            raise GenerateIndexError(
+                f"Encountered problem pushing package index to {url}: {e}"
+            ) from e
 
 
 def generate_key_index(mirror_url: str, tmpdir: str) -> None:
