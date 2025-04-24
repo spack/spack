@@ -1181,7 +1181,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 f"MKL_CPARDISO_DIR={spec['mkl'].prefix}",
                 f"MKL_LIBRARY_DIR=lib/intel64",
-                f"MKL_MPI_WRAPPER_LIB={mpi_wrapper_lib}"
+                f"MKL_MPI_WRAPPER={mpi_wrapper_lib}",
+                f"MFEM_USE_MKL_CPARDISO=YES",
             ]
 
         return options
@@ -1249,8 +1250,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         install test subdirectory for use during `spack test run`."""
         # Clean the 'examples' directory -- at least one example is always built
         # and we do not want to cache executables.
-        make("examples/clean", parallel=False)
-        cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
+        if "+examples" in self.spec:
+            make("examples/clean", parallel=False)
+            cache_extra_test_sources(self, [self.examples_src_dir, self.examples_data_dir])
 
     def test_ex10(self):
         """build and run ex10(p)"""
