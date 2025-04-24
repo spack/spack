@@ -20,6 +20,8 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     license("Apache-2.0")
 
+    sanity_check_is_file = ["bin/celer-sim"]
+
     version("develop", branch="develop", get_full_repo=True)
 
     version("0.6.0", sha256="c776dee357ecff42f85ed02c328f24b092400af28e67af2c0e195ce8f67613b0")
