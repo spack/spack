@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import importlib
 import os
 
 import pytest
@@ -333,3 +334,8 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_package_name_from_class_type(mock_packages):
+    module = importlib.import_module("spack.pkg.builtin.mock.num7zip")
+    assert module._7zip.name == "7zip"

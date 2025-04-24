@@ -83,6 +83,21 @@ def namespace_from_fullname(fullname):
     return namespace
 
 
+def pkg_name_from_module(module_name: str) -> str:
+    """Return the actual package name from a module name.
+
+    For instance ``spack.pkg.builtin.num3dtk`` has package name ``3dtk``
+    and ``spack.pkg.builtin.py_numpy`` has package name ``py-numpy``
+    """
+    if not module_name.startswith(f"{ROOT_PYTHON_NAMESPACE}."):
+        raise ValueError(f"Module '{module_name}' is not a Spack package module")
+    namespace, _, import_name = module_name[len(ROOT_PYTHON_NAMESPACE) + 1 :].rpartition(".")
+    name = PATH.get_repo(namespace).real_name(import_name)
+    if name is None:
+        raise ValueError(f"Module '{module_name}' does not correspond to a known package")
+    return name
+
+
 class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
