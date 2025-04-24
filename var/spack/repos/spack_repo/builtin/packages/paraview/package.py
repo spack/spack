@@ -75,7 +75,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("fortran", default=False, description="Enable Fortran support")
     variant("mpi", default=True, description="Enable MPI support")
     variant("qt", default=False, description="Enable Qt (gui) support")
-    variant("opengl2", default=True, description="Enable OpenGL2 backend")
+    variant("opengl2", default=True, description="Enable OpenGL2 backend", when="@5:5")
+    variant("use_x", default=True, description="Enable OpenGL2 backend")
     variant("examples", default=False, description="Build examples")
     variant("hdf5", default=False, description="Use external HDF5")
     variant("shared", default=True, description="Builds a shared version of the library")
@@ -140,7 +141,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("paraview@:5.10", when="+rocm")
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
-    conflicts("~opengl2", when="@5.5:")
+    conflicts("~opengl2", when="@5.5:5")
     # in 5.7 you cannot reduce the size of the code for Catalyst builds.
     conflicts("build_edition=catalyst_rendering", when="@:5.7")
     conflicts("build_edition=catalyst", when="@:5.7")
@@ -232,22 +233,59 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     conflicts("mpi", when="~mpi")
 
-    depends_on("qt@:4", when="@:5.2.0+qt")
-    depends_on("qt+sql", when="+qt")
-    with when("+qt"):
-        depends_on("qt+opengl", when="@5.3.0:+opengl2")
-        depends_on("qt~opengl", when="@5.3.0:~opengl2")
-
-    depends_on("gl@3.2:", when="+opengl2")
-    depends_on("gl@1.2:", when="~opengl2")
-    depends_on("glew")
-    depends_on("libxt", when="platform=linux ^[virtuals=gl] glx")
-
-    for plat in ["linux", "darwin", "freebsd"]:
+    # Handle X11 dependencies
+    # X is only used on Unix like platforms
+    conflicts("glx", when="~use_x")
+    # When on linux, X is required for Qt
+    for plat in ["linux", "freebsd"]:
         with when(f"platform={plat}"):
-            requires(
-                "^[virtuals=gl] glx", when="+qt", msg="Qt support requires GLX on non Windows"
-            )
+            requires("+use_x", when="+qt", msg="Qt support requires GLX on Linux/FreeBSD")
+
+    with when("+use_x"):
+        depends_on("libxt", when="@:5.12")
+        depends_on("libx11")
+        depends_on("libxcursor")
+        # When Qt and X are enabled, GLX is required in the runtime
+        requires("^[virtuals=gl] glx", when="@:5 +use_x")
+        depends_on("glx", when="@6: +use_x", type=("run"))
+
+    # ParaView@:5 support Qt5 and requires a GL provider to be known at
+    # build/link time.
+    with when("@:5"):
+        with when("+qt"):
+            depends_on("qt@:4", when="@:5.2.0")
+            depends_on("qt+sql")
+            depends_on("qt+opengl", when="@5.3.0:5 +opengl2")
+            depends_on("qt~opengl", when="@5.3.0:5 ~opengl2")
+            # Headless rendering not supported with Qt
+            conflicts("osmesa")
+            conflicts("egl")
+
+            # linux and freebsd require X11 when using Qt
+            for plat in ["linux", "freebsd"]:
+                with when(f"platform={plat}"):
+                    conflicts("~use_x", msg="X is required when building Qt on Linux")
+
+        depends_on("gl@3.2:", when="+opengl2")
+        depends_on("gl@1.2:", when="~opengl2")
+        depends_on("glew")
+
+    # OpenGL is dropped as a direct dependency after ParaView@6:
+    # and switches to a runtime driven GL loader model using GLAD
+    # ParaView will also no longer support Spack builds with Qt5.
+    with when("@6:"):
+        with when("+qt"):
+            depends_on("qt-base+opengl")
+            depends_on("qt-5compat")
+            depends_on("qt-svg")
+
+        # ParaView@6: and later will depend on OSMesa as a fallback for
+        # OpenGL unless using Qt which requires Apple-GL or GLX or WGL
+        # The search order for GL is:
+        # * the system rendering default (WGL/AGL/GLX)
+        # * EGL
+        # * OSMesa (guarenteed to exist and work on all systems)
+        depends_on("osmesa", type=("run"), when="~qt")
 
     depends_on("ospray@2.1:2", when="+raytracing")
     depends_on("openimagedenoise", when="+raytracing")
