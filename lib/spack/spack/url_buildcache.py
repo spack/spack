@@ -30,7 +30,6 @@ import spack.util.crypto
 import spack.util.gpg
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.schema.spec import schema as spec_schema
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
@@ -1125,8 +1124,6 @@ def get_valid_spec_file(path: str, max_supported_layout: int) -> Tuple[Dict, int
             spec_dict = json.loads(as_string)
     except Exception as e:
         raise InvalidMetadataFile(f"Could not parse {path} due to: {e}") from e
-
-    jsonschema.validate(spec_dict, spec_schema)
 
     # Ensure this version is not too new.
     try:
