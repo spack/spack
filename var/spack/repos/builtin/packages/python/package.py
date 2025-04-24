@@ -1274,13 +1274,11 @@ print(json.dumps(config))
         if self.spec.satisfies("platform=windows"):
             env.prepend_path("PATH", dependent_spec.prefix.Scripts)
             env.prepend_path("PATH", self.spec.prefix)
-            # The logic below is linux specific, and used to inject the 
+            # The logic below is linux specific, and used to inject the
             # compiler wrapper to compile Python extensions.
             # Thus, it is not needed on Windows.
             return
 
-
-    
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
