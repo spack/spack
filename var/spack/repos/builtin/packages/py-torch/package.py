@@ -24,6 +24,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("2.7.0", tag="v2.7.0", commit="134179474539648ba7dee1317959529fbd0e7f89")
     version("2.6.0", tag="v2.6.0", commit="1eba9b3aa3c43f86f4a2c807ac8e12c4a7767340")
     version("2.5.1", tag="v2.5.1", commit="a8d6afb511a69687bbb2b7e88a3cf67917e1697e")
     version("2.5.0", tag="v2.5.0", commit="32f585d9346e316e554c8d9bf7548af9f62141fc")
@@ -175,7 +176,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-typing-extensions@4.8:", when="@2.2:")
         depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:")
         depends_on("py-setuptools")
-        depends_on("py-sympy@1.13.1", when="@2.5:")
+        depends_on("py-sympy@1.13.3:", when="@2.7:")
+        depends_on("py-sympy@1.13.1", when="@2.5:2.6")
         depends_on("py-sympy", when="@2:")
         depends_on("py-networkx", when="@2:")
         depends_on("py-jinja2", when="@2:")
@@ -194,7 +196,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
 
-    # Third party dependencies
+    # third_party
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("fxdiv@2020-04-17", when="@1.6:")
     depends_on("nvtx@3.1.0", when="@2.6:")
@@ -263,7 +265,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-pybind11@2.10.0:", when="@1.13:1")
         depends_on("py-pybind11@2.6.2:", when="@1.8:1.12")
         depends_on("py-pybind11@2.3.0:", when="@:1.7")
-    depends_on("sleef@3.6.0_2024-03-20", when="@2.4:")
+    depends_on("sleef@3.7.0_2024-12-06", when="@2.7:")
+    depends_on("sleef@3.6.0_2024-03-20", when="@2.4:2.6")
     depends_on("sleef@3.5.1_2020-12-22", when="@1.8:2.3")
     depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
 
@@ -333,10 +336,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/146239
     patch(
-        "https://github.com/pytorch/pytorch/pull/140275.patch?full_index=1",
-        sha256="65f56305a27d47d7065711d1131c6ac1611fabcb55b129c27ed6beabe4b94fe0",
+        "https://github.com/pytorch/pytorch/pull/146637.patch?full_index=1",
+        sha256="f93aa66e2cf9c0febdbcf72f44213a213e570e5f860186e81c92c8d2af0857c0",
         when="@2.6:",
-        reverse=True,
     )
 
     # https://github.com/pytorch/pytorch/issues/90448
