@@ -22,8 +22,9 @@ class PyRepligit(PythonPackage):
 
     variant("aiohttp", default="False", description="Enable aiohttp support")
 
-    depends_on("python@3.10:", type=("build", "run"))
+    conflicts("python@:3.12", when="@0.1.0")
 
+    depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-hatchling", type="build")
 
     depends_on("py-aiohttp", type=("build", "run"), when="+aiohttp")
