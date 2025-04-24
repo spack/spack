@@ -457,6 +457,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("pmix_getline_pmix_version.patch", when="@5.0.0:5.0.3")
     patch("pmix_getline_pmix_version-prte.patch", when="@5.0.3")
 
+    # OpenMPI 5.0.7 specific patch - see https://github.com/open-mpi/ompi/pull/13106
+    patch(
+        "https://github.com/open-mpi/ompi/commit/d10e9765bdd28e62621395aef6bbb7710bae2e82.patch?full_index=1",
+        sha256="38529b557df029d6a987fa7e337db40b0ac1c1bb921776b95aacaa40e945cd21",
+        when="@5.0.7",
+    )
     FABRICS = (
         "psm",
         "psm2",
