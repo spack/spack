@@ -29,8 +29,6 @@ class OpenclClhpp(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
-    root_cmakelists_dir = "include"
-
     @run_after("install")
     def post_install(self):
         if sys.platform == "darwin":
