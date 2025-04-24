@@ -16,7 +16,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/celeritas-project/celeritas.git"
     url = "https://github.com/celeritas-project/celeritas/releases/download/v0.1.0/celeritas-0.1.0.tar.gz"
 
-    maintainers("sethrj")
+    maintainers("sethrj", "drbenmorgan")
 
     license("Apache-2.0")
 
