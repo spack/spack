@@ -1349,7 +1349,6 @@ print(json.dumps(config))
         """
         if self.spec.satisfies("platform=windows"):
             env.prepend_path("PATH", dependent_spec.prefix.Scripts)
-            env.prepend_path("PATH", self.spec.prefix)
 
         if not dependent_spec.package.extends(self.spec) or dependent_spec.dependencies(
             "python-venv"
@@ -1367,6 +1366,13 @@ print(json.dumps(config))
         module.python_include = join_path(dependent_spec.prefix, self.include)
         module.python_platlib = join_path(dependent_spec.prefix, self.platlib)
         module.python_purelib = join_path(dependent_spec.prefix, self.purelib)
+
+    def setup_run_environment(self, env):
+        """Adds Python's base install prefix to the PATH on Windows so
+        components with a run dep on Python can access the launcher/other tooling
+        """
+        if self.spec.satisfies("platform=windows"):
+            env.prepend_path("PATH", self.spec.prefix)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):
         """Make the view a virtual environment if it isn't one already.
