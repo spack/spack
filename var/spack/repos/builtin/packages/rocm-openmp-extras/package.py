@@ -373,9 +373,16 @@ class RocmOpenmpExtras(Package):
     patch("0001-Avoid-duplicate-registration-on-cuda-env-6.4.patch", when="@6.4:")
 
     def setup_run_environment(self, env):
-        devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        llvm_prefix = self.spec["llvm-amdgpu"].prefix
-        hsa_prefix = self.spec["hsa-rocr-dev"].prefix
+        if self.spec.external:
+            devlibs_prefix = self.prefix
+            llvm_prefix = self.prefix
+            # prefix is set to either <rocm_path>/llvm or <rocm_path>/lib/llvm
+            path_parts = os.path.normpath(path)
+            hsa_prefix  = os.path.dirname(path_parts)
+        else:
+            devlibs_prefix = self.spec["llvm-amdgpu"].prefix
+            llvm_prefix = self.spec["llvm-amdgpu"].prefix
+            hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         env.set("AOMP", f"{llvm_prefix}")
         env.set("HIP_DEVICE_LIB_PATH", f"{devlibs_prefix}/amdgcn/bitcode")
         env.prepend_path("CPATH", f"{self.prefix}/include")
