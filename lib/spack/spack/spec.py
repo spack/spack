@@ -3432,6 +3432,10 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # Skip checking any conditional edge that is not satisfied
+            if rhs_edge.when != Spec() and not rhs_edge.parent.satisfies(rhs_edge.when):
+                continue
+
             # If we are checking for ^mpi we need to verify if there is any edge
             if spack.repo.PATH.is_virtual(rhs_edge.spec.name):
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
@@ -3517,10 +3521,25 @@ class Spec:
 
         # Edges have been checked above already, hence deps=False
         lhs_nodes = [x for x in self.traverse(root=False)] + sorted(mock_nodes_from_old_specfiles)
-        return all(
-            any(lhs.satisfies(rhs, deps=False) for lhs in lhs_nodes)
-            for rhs in other.traverse(root=False)
-        )
+        for rhs in other.traverse(root=False):
+            # Possible lhs nodes to match this rhs node
+            lhss = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
+
+            # Check whether the node needs matching (not a conditional that isn't satisfied)
+            in_edges = [
+                e
+                for e in rhs.edges_from_dependents()
+                if e.parent.satisfies(e.when)
+                or (lhss and all(lhs.satisfies(e.when) for lhs in lhss))
+            ]
+            if not in_edges:
+                continue
+
+            # If there is no matching lhs for this rhs node
+            if not lhss:
+                return False
+
+        return True
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
