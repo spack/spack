@@ -10,6 +10,7 @@ import spack.bootstrap.core
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.paths
 import spack.store
 import spack.util.path
 
@@ -133,10 +134,14 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 
 
 # TODO/RepoSplit: No compilers => check within context fails though
-# TODO/RepoSplit:   before/after checks probably aren't as expected.
+# TODO/RepoSplit:   before/after checks probably don't work as expected.
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
-def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
+def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, monkeypatch):
+    # TODO/RepoSplit: Is replacing the builtin packages_path with the mock the
+    # TODO/RepoSplit:   right thing to do here? (mock_packages breaks first call)
+    monkeypatch.setattr(spack.paths, "packages_path", spack.paths.mock_packages_path)
+
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.compilers.config.all_compilers(init_config=False)
@@ -144,12 +149,16 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
 
 
 # TODO/RepoSplit: No compilers => check within context fails though
-# TODO/RepoSplit:   before/after checks probably aren't as expected.
+# TODO/RepoSplit:   before/after checks probably don't work as expected.
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_environment_active(
-    no_packages_yaml, active_mock_environment
+    no_packages_yaml, active_mock_environment, monkeypatch
 ):
+    # TODO/RepoSplit: Is replacing the builtin packages_path with the mock the
+    # TODO/RepoSplit:   right thing to do here? (mock_packages breaks first call)
+    monkeypatch.setattr(spack.paths, "packages_path", spack.paths.mock_packages_path)
+
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.compilers.config.all_compilers(init_config=False)
