@@ -1272,8 +1272,9 @@ print(json.dumps(config))
         """
         # The logic below is linux specific, and used to inject the compiler wrapper to
         # compile Python extensions. Thus, it is not needed on Windows.
-        if sys.platform == "win32":
-            return
+        if self.spec.satisfies("platform=windows"):
+            env.prepend_path("PATH", dependent_spec.prefix.scripts)
+            env.prepend_path("PATH", self.spec.prefix)
 
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
@@ -1343,6 +1344,9 @@ print(json.dumps(config))
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
+        if self.spec.satisfies("platform=windows"):
+            env.prepend_path("PATH", dependent_spec.prefix.scripts)
+            env.prepend_path("PATH", self.spec.prefix)
         if not dependent_spec.package.extends(self.spec) or dependent_spec.dependencies(
             "python-venv"
         ):
