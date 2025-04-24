@@ -41,4 +41,3 @@ class PyHepstats(PythonPackage):
 
         with when("+zfit"):
             depends_on("py-zfit@0.20:", when="@0.8:")
-
