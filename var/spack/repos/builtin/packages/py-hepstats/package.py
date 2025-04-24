@@ -23,8 +23,11 @@ class PyHepstats(PythonPackage):
     version("0.8.1", sha256="ebb890496d7aebbf1d717de15d073be31d6775065308a4e0f263ed4051992b3f")
 
     depends_on("python@3.9:", type=("build", "run"), when="@0.8:")
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    # Build system changed from setuptools to hatch with v0.9.0
+    depends_on("py-setuptools@42:", type="build", when="@:0.8.1")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build", when="@:0.8.1")
+    depends_on("py-hatchling", type="build", when="@0.9.0:")
+    depends_on("py-hatch-vcs", type="build", when="@0.9.0:")
 
     variant("zfit", default=False, description="Allows to use improved tools from zfit.")
 
@@ -38,3 +41,4 @@ class PyHepstats(PythonPackage):
 
         with when("+zfit"):
             depends_on("py-zfit@0.20:", when="@0.8:")
+
