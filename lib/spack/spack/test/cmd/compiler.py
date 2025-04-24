@@ -156,8 +156,12 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     os.environ["PATH"] = str(compilers_dir)
     output = compiler("find", "--scope=site")
 
-    # assert "llvm@11.0.0" in output
     assert "gcc@8.4.0" in output
+
+    if not os.path.exists(spack.paths.packages_path):
+       pytest.xfail("TODO/RepoSplit: Checking llvm requires llvm package solution")
+
+    assert "llvm@11.0.0" in output
 
     compilers = spack.compilers.config.all_compilers_from(no_packages_yaml, scope="site")
     clang = [x for x in compilers if x.satisfies("llvm@11")]
