@@ -49,6 +49,7 @@ class RocmDebugAgent(CMakePackage):
     conflicts("+asan", when="os=centos8")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("cmake@3:", type="build")
     depends_on("elfutils@:0.168", type="link")

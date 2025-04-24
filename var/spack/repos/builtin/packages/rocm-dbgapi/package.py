@@ -56,6 +56,8 @@ class RocmDbgapi(CMakePackage):
     conflicts("+asan", when="os=centos8")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+
     depends_on("cmake@3:", type="build")
     depends_on("hwdata", when="@5.5.0:")
     depends_on("pciutils", when="@5.5.0:")
