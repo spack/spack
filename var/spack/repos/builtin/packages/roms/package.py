@@ -128,16 +128,16 @@ class Roms(MakefilePackage):
         if "+debug" in self.spec:
             makefile.filter(r"\sUSE_DEBUG\s[?]=.*", "USE_DEBUG = on")
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         netcdf_include = spec["netcdf-fortran"].prefix.include
         nf_config = join_path(spec["netcdf-fortran"].prefix.bin, "nf-config")
 
-        spack_env.set("NF_CONFIG", nf_config)
-        spack_env.set("NETCDF_INCDIR", netcdf_include)
-        spack_env.set("HDF5_INCDIR", spec["hdf5"].prefix.include)
-        spack_env.set("HDF5_LIBDIR", spec["hdf5"].prefix.libs)
+        env.set("NF_CONFIG", nf_config)
+        env.set("NETCDF_INCDIR", netcdf_include)
+        env.set("HDF5_INCDIR", spec["hdf5"].prefix.include)
+        env.set("HDF5_LIBDIR", spec["hdf5"].prefix.libs)
 
     def build(self, spec, prefix):
         make(parallel=False)

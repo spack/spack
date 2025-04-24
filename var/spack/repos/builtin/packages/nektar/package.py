@@ -168,7 +168,7 @@ class Nektar(CMakePackage):
             with working_dir(self.build_directory):
                 python("setup.py", "install", "--prefix", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path(
             "CMAKE_PREFIX_PATH",
             os.path.join(
@@ -179,10 +179,14 @@ class Nektar(CMakePackage):
             "PYTHONPATH", os.path.abspath(os.path.join(self.spec.prefix, "build_tree"))
         )
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_run_environment(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_run_environment(env)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):

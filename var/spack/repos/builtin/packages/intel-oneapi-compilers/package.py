@@ -444,7 +444,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     def compiler_search_prefix(self):
         return self._llvm_bin
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -470,7 +470,9 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         env.set("F77", self._llvm_bin.ifx)
         env.set("FC", self._llvm_bin.ifx)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         super().setup_dependent_build_environment(env, dependent_spec)
         # workaround bug in icpx driver where it requires sycl-post-link is on the PATH
         # It is located in the same directory as the driver. Error message:
@@ -479,9 +481,9 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         # also ensures that shared objects and libraries required by the compiler,
         # e.g. libonnx, can be found succesfully
         # due to a fix, this is no longer required for OneAPI versions >= 2024.2
-        bin_dir = os.path.dirname(self.cxx)
-        lib_dir = os.path.join(os.path.dirname(bin_dir), "lib")
         if self.cxx and self.spec.satisfies("%oneapi@:2024.1"):
+            bin_dir = os.path.dirname(self.cxx)
+            lib_dir = os.path.join(os.path.dirname(bin_dir), "lib")
             env.prepend_path("PATH", bin_dir)
             env.prepend_path("LD_LIBRARY_PATH", lib_dir)
 

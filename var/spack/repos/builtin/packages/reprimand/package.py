@@ -44,7 +44,7 @@ class Reprimand(MesonPackage):
 
     extends("python", when="+python")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXXFLAGS", self.compiler.cxx11_flag)
         env.set("BOOST_ROOT", self.spec["boost"].prefix)
 

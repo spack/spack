@@ -35,7 +35,7 @@ class Sp(CMakePackage):
 
     depends_on("fortran", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@2.4:"):
             suffixes = self.spec.variants["precision"].value
         else:

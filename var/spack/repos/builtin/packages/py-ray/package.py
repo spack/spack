@@ -94,7 +94,7 @@ class PyRay(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SKIP_THIRDPARTY_INSTALL", "1")
 
     # Compile the dashboard npm modules included in the project

@@ -26,5 +26,5 @@ class PyQtpy(PythonPackage):
     for api in apis:
         depends_on("py-" + api, when="api=" + api, type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("QT_API", self.spec.variants["api"].value)

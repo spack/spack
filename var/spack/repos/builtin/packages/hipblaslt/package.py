@@ -91,7 +91,7 @@ class Hipblaslt(CMakePackage):
     patch("0001-Set-LLVM-Path-6.3.Patch", when="@6.3")
     patch("002-link-roctracer.patch", when="@6.4")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("@6.3.0:"):
             env.set(

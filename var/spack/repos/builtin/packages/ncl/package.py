@@ -161,9 +161,6 @@ class Ncl(Package):
             )
 
     def install(self, spec, prefix):
-        if (self.compiler.fc is None) or (self.compiler.cc is None):
-            raise InstallError("NCL package requires both " "C and Fortran compilers.")
-
         self.prepare_site_config()
         self.prepare_install_config()
         self.prepare_src_tree()
@@ -202,7 +199,7 @@ class Ncl(Package):
                 )
                 filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo -lfreetype"', wrapper)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NCARG_ROOT", self.spec.prefix)
 
         # We cannot rely on Spack knowledge of esmf when NCL is an external

@@ -46,6 +46,6 @@ class SspaceStandard(Package):
         install_tree("tools", prefix.tools)
         install(rootscript, prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SSPACE_HOME", self.prefix)
         env.prepend_path("PATH", self.prefix)

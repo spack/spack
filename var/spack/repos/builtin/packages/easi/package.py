@@ -85,7 +85,7 @@ class Easi(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+python"):
             full_path = os.path.join(python_platlib, "easilib/cmake/easi/python_wrapper")
             env.prepend_path("PYTHONPATH", full_path)

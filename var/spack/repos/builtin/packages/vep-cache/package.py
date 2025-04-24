@@ -101,7 +101,7 @@ class VepCache(Package):
             "full_path": join_path(root, cache_dir),
         }
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+env"):
             cache = self.vep_cache_config(self.home)
             env.set("VEP_OFFLINE", "1")

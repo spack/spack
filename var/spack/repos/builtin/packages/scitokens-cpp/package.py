@@ -65,5 +65,5 @@ class ScitokensCpp(CMakePackage):
         ]
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("JWC_CPP_DIR", self.spec["jwt-cpp"].prefix)

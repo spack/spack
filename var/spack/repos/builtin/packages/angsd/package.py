@@ -35,7 +35,7 @@ class Angsd(MakefilePackage):
 
     depends_on("r", type="run", when="+r")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("R_LIBS", self.prefix.R)
 
     def install(self, spec, prefix):

@@ -38,7 +38,7 @@ class Yorick(Package):
         url = "https://github.com/dhmunro/yorick/archive/y_{0}.tar.gz"
         return url.format(version.underscored)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("FORTRAN_LINKAGE", "-Df_linkage")
         if self.spec.satisfies("arch=aarch64:"):
             env.set("FPU_IGNORE", "1")

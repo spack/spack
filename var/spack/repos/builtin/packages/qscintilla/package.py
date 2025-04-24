@@ -59,10 +59,10 @@ class Qscintilla(QMakePackage):
 
     # When INSTALL_ROOT is unset, qscintilla is installed under qt_prefix
     # giving 'Nothing Installed Error'
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("INSTALL_ROOT", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     # Fix install prefix

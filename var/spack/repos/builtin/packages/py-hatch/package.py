@@ -13,6 +13,7 @@ class PyHatch(PythonPackage):
 
     license("MIT")
 
+    version("1.13.0", sha256="5e1a75770cfe8f3ebae3abfded3a976238b0acefd19cdabc5245597525b8066f")
     version("1.12.0", sha256="ae80478d10312df2b44d659c93bc2ed4d33aecddce4b76378231bdf81c8bf6ad")
 
     depends_on("python@3.8:", type=("build", "run"))

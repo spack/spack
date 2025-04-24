@@ -99,7 +99,7 @@ class LinuxPerf(Package):
     def url_for_version(self, version):
         return f"https://cdn.kernel.org/pub/linux/kernel/v{version[0]}.x/linux-{version}.tar.xz"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # This variable is used in the Makefile. If it is defined on the
         # system, it can break the build if there is no build recipe for
         # that specific ARCH

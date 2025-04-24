@@ -330,7 +330,7 @@ class PyMatplotlib(PythonPackage):
             python("-m", "pytest", "--pyargs", "mpl_toolkits.tests")
 
     @when("@:3.8")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         include = []
         library = []
         for dep in self.spec.dependencies(deptype="link"):

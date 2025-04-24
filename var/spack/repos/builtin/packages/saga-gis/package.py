@@ -120,7 +120,7 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Point saga to its tool set, will be loaded during runtime
         env.set("SAGA_MLB", self.prefix.lib.saga)
         env.set("SAGA_TLB", self.prefix.lib.saga)

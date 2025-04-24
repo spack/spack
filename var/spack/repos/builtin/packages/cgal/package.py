@@ -143,7 +143,7 @@ class Cgal(CMakePackage):
 
         return url.format(version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         env.set("BOOST_INCLUDEDIR", spec["boost"].headers.directories[0])

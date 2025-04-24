@@ -152,7 +152,7 @@ class GeopmRuntime(AutotoolsPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Required to ensure libgeopm.so
         # can be used with LD_PRELOAD
         if os.path.isdir(self.prefix.lib64):

@@ -117,7 +117,7 @@ class Libint(AutotoolsPackage):
 
         return flags
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Set optimization flags
         env.set("CFLAGS", self.optflags)
         env.set("CXXFLAGS", self.optflags)

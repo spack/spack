@@ -58,7 +58,7 @@ class Msmpi(Package):
 
 
 class GenericBuilder(GenericBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
 
@@ -68,11 +68,6 @@ class GenericBuilder(GenericBuilder):
     def build_command_line(self):
         args = ["-noLogo"]
         ifort_bin = self.pkg.compiler.fc
-        if not ifort_bin:
-            raise InstallError(
-                "Cannot install MSMPI without fortran"
-                "please select a compiler with fortran support."
-            )
         args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
         args.append("/p:VCToolsVersion=%s" % self.pkg.compiler.msvc_version)
         args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["wdk"].version))

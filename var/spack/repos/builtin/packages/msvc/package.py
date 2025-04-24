@@ -31,6 +31,8 @@ class Msvc(Package, CompilerPackage):
 
     homepage = "https://visualstudio.microsoft.com/vs/features/cplusplus/"
 
+    has_code = False
+
     def install(self, spec, prefix):
         raise InstallError(
             "MSVC compilers are not installable with Spack, but can be "
@@ -90,7 +92,16 @@ class Msvc(Package, CompilerPackage):
             extras["compilers"]["fortran"] = fortran_compiler
         return spec, extras
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_package(self, module, dependent_spec):
+        """Populates dependent module with tooling available from VS"""
+        # We want these to resolve to the paths set by MSVC's VCVARs
+        # so no paths
+        module.nmake = Executable("nmake")
+        module.msbuild = Executable("msbuild")
+
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.init_msvc()
         # Set the build environment variables for spack. Just using
         # subprocess.call() doesn't work since that operates in its own
@@ -117,8 +128,10 @@ class Msvc(Package, CompilerPackage):
             else:
                 env.set_path(env_var, int_env[env_var].split(os.pathsep))
 
-        env.set("CC", self.cc)
-        env.set("CXX", self.cxx)
+        if self.cc:
+            env.set("CC", self.cc)
+        if self.cxx:
+            env.set("CXX", self.cxx)
         if self.fortran:
             env.set("FC", self.fortran)
             env.set("F77", self.fortran)

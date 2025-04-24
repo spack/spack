@@ -29,6 +29,6 @@ class Wordnet(AutotoolsPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WNHOME", self.prefix)
         env.set("WNSEARCHDIR", self.prefix.dict)

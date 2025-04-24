@@ -28,7 +28,7 @@ class Microbiomeutil(MakefilePackage, SourceforgePackage):
         install_tree("RESOURCES", prefix.resources)
         install_tree("AmosCmp16Spipeline", prefix.AmosCmp16Spipeline)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.ChimeraSlayer)
         env.prepend_path("PATH", join_path(self.prefix, "NAST-iEr"))
         env.prepend_path("PATH", self.prefix.TreeChopper)

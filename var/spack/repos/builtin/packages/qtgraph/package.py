@@ -27,11 +27,11 @@ class Qtgraph(QMakePackage):
     depends_on("graphviz@2.40.1:", when="@develop")
     depends_on("graphviz@2.40.1", when="@1.0.0.0:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GRAPHVIZ_ROOT", self.spec["graphviz"].prefix)
         env.set("INSTALL_ROOT", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # What library suffix should be used based on library existence
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64

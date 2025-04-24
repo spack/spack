@@ -113,7 +113,7 @@ class Likwid(Package):
         filter_file("^#!/usr/bin/perl -w", "#!/usr/bin/env perl", *files)
         filter_file("^#!/usr/bin/perl", "#!/usr/bin/env perl", *files)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             libs = find_libraries(
                 "libcupti", root=self.spec["cuda"].prefix, shared=True, recursive=True

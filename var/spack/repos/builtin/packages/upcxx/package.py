@@ -177,10 +177,12 @@ class Upcxx(Package, CudaPackage, ROCmPackage):
             env.set("UPCXX_NETWORK", "ofi")
             env.set("GASNET_SPAWN_CONTROL", "pmi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.set_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.set_variables(env)
 
     def setup_dependent_package(self, module, dep_spec):

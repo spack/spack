@@ -55,11 +55,13 @@ class AwsOfiNccl(AutotoolsPackage):
         return url_fmt.format(version)
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     # To enable this plug-in to work with NCCL add it to the LD_LIBRARY_PATH
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def configure_args(self):

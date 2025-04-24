@@ -165,11 +165,15 @@ class PyNbconvert(PythonPackage):
         # Avoid install-time downloads of css files.
         filter_file("css = urlopen(url).read()", "assert False", "hatch_build.py", string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)

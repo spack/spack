@@ -69,11 +69,13 @@ class GdkPixbuf(MesonPackage):
         url = "https://download.gnome.org/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
@@ -83,7 +85,7 @@ class GdkPixbuf(MesonPackage):
             args.append(f"-Dtests={'true' if self.run_tests else 'false'}")
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The "post-install.sh" script uses gdk-pixbuf-query-loaders,
         # which was installed earlier.
         env.prepend_path("PATH", self.prefix.bin)

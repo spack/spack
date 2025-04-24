@@ -149,7 +149,7 @@ class Serialbox(CMakePackage):
 
         return flags, None, (cmake_flags or None)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Allow for running the preprocessor directly:
         env.prepend_path("PATH", self.prefix.python.pp_ser)
         # Allow for running the preprocessor as a Python module, as well as

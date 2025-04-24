@@ -831,10 +831,12 @@ class Boost(Package):
         if (sys.platform == "darwin") and ("+shared" in spec):
             fix_darwin_install_name(prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BOOST_ROOT", self.prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if "+context" in self.spec and "context-impl" in self.spec.variants:
             context_impl = self.spec.variants["context-impl"].value
             # fcontext, as the default, has no corresponding macro

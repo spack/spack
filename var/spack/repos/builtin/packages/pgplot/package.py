@@ -119,7 +119,7 @@ class Pgplot(MakefilePackage):
         for key, value in sub.items():
             filter_file(key, value, conf)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+X" in self.spec:
             env.append_flags("LIBS", self.spec["libx11"].libs.ld_flags)
         if "+png" in self.spec:
@@ -174,10 +174,12 @@ class Pgplot(MakefilePackage):
             libnames = ["libcpgplot", "libpgplot"]
         return find_libraries(libnames, root=self.prefix, shared=shared, recursive=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("PGPLOT_FONT", self.prefix.include + "/grfont.dat")
         env.set("PGPLOT_DIR", self.prefix.lib + "/pgplot5")

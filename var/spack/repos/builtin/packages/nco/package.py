@@ -90,7 +90,7 @@ class Nco(AutotoolsPackage):
         config_args += self.enable_or_disable("openmp")
         return config_args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("NETCDF_INC", spec["netcdf-c"].prefix.include)
         env.set("NETCDF_LIB", spec["netcdf-c"].prefix.lib)

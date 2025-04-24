@@ -95,7 +95,9 @@ class Ruby(AutotoolsPackage, NMakePackage):
         url = "https://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if dependent_spec.package.extends(self.spec):
             env.prepend_path("GEM_PATH", dependent_spec.prefix)
 
@@ -114,7 +116,9 @@ class Ruby(AutotoolsPackage, NMakePackage):
 
 
 class SetupEnvironment:
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         for d in dependent_spec.traverse(deptype=("build", "run", "test"), root=True):

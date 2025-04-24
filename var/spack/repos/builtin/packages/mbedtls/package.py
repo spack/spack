@@ -98,7 +98,7 @@ class Mbedtls(MakefilePackage):
 
         return (None, flags, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "shared" in self.spec.variants["libs"].value:
             env.set("SHARED", "yes")
 

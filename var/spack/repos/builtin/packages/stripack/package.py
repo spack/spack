@@ -51,7 +51,7 @@ class Stripack(MakefilePackage):
             fh.write("\n".join(config))
         mkdirp(join_path(self.build_directory, "build"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # This is smartly used by VisIt
         env.set(
             "VISIT_FFP_STRIPACK_PATH", join_path(self.spec.prefix.lib, "libstripack." + dso_suffix)

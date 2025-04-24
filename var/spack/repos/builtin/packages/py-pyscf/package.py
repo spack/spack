@@ -58,7 +58,7 @@ class PyPyscf(PythonPackage):
     depends_on("libxc")
     depends_on("xcfun")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Tell PSCF where supporting libraries are located."
         spec = self.spec
 

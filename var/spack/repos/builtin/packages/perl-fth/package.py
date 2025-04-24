@@ -87,12 +87,14 @@ class PerlFth(Package):
         for name in checks:
             setattr(module, name, self._make_executable(name))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("JAVATEX_DIR", self.prefix)
         env.set("FTAGSHTML_DIR", self.prefix)
         env.set("FTAGSHTML_DOC", join_path(self.prefix, "doc"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/spack/spack/discussions/13926
         # Let us set the adequate environment when loading perl-fth
         env.set("JAVATEX_DIR", self.prefix)

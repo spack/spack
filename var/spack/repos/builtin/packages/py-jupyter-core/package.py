@@ -47,7 +47,9 @@ class PyJupyterCore(PythonPackage):
     # Historical dependencies
     depends_on("py-setuptools", when="@:4.9.2", type=("build", "run"))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # https://docs.jupyter.org/en/stable/use/jupyter-directories.html
         if os.path.exists(dependent_spec.prefix.etc.jupyter):
             env.prepend_path("JUPYTER_CONFIG_PATH", dependent_spec.prefix.etc.jupyter)

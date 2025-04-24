@@ -32,7 +32,7 @@ class Heimdall(AutotoolsPackage, CudaPackage):
 
         depends_on(f"psrdada cuda_arch={arch}", when=f"cuda_arch={arch}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.spec["psrdada"].prefix.bin)
         env.prepend_path("PATH", self.prefix.bin)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["dedisp"].prefix.lib)

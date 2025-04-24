@@ -129,7 +129,7 @@ class HdfEos2(AutotoolsPackage):
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Add flags to LDFLAGS for any dependencies that need it
         extra_ldflags = []
         # hdf might have link dependency on rpc, if so need to add flags

@@ -36,7 +36,8 @@ class Nag(Package, CompilerPackage):
         deprecated=True,
     )
 
-    depends_on("fortran", type="build")  # generated
+    depends_on("gcc languages=c", type="run", when="platform=linux")
+    provides("fortran")
 
     # Licensing
     license_required = True
@@ -64,7 +65,7 @@ class Nag(Package, CompilerPackage):
         # Run install script
         os.system("./INSTALLU.sh")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("F77", self.prefix.bin.nagfor)
         env.set("FC", self.prefix.bin.nagfor)
 

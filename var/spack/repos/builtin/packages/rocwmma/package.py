@@ -134,7 +134,7 @@ class Rocwmma(CMakePackage):
     patch("0001-add-rocm-smi-lib-path-for-building-tests.patch", when="@5.6:6.3")
     patch("0001-add-rocm-smi-lib-path-for-building-tests-6.4.patch", when="@6.4:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):

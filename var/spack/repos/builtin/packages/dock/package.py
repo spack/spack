@@ -27,7 +27,7 @@ class Dock(Package):
     depends_on("flex", type="build")
     depends_on("mpi", when="+mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+mpi"):
             env.set("MPICH_HOME", self.spec["mpi"].prefix)
 

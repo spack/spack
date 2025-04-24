@@ -143,7 +143,7 @@ class Spack(Package):
         depends_on("py-sphinx-rtd-theme", type="run")
         depends_on("graphviz", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPACK_PYTHON", self.spec["python"].command.path)
 
     def install(self, spec, prefix):

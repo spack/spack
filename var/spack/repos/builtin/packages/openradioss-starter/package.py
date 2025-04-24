@@ -105,7 +105,7 @@ class OpenradiossStarter(CMakePackage):
             join_path(prefix, "extlib", "hm_reader"),
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("OPENRADIOSS_PATH", self.prefix)
         env.set("RAD_CFG_PATH", join_path(self.prefix, "hm_cfg_files"))
         env.set("RAD_H3D_PATH", join_path(self.prefix, "extlib", "h3d", "lib", "linux64"))

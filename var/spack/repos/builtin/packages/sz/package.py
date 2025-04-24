@@ -96,7 +96,7 @@ class Sz(CMakePackage, AutotoolsPackage):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+hdf5" in self.spec:
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 

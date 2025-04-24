@@ -77,7 +77,7 @@ class Vecmem(CMakePackage, CudaPackage):
     # and we can choose between always depending on googletest, or using FetchContent
     # depends_on("googletest", type="test")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+sycl"):
             env.set("SYCLCXX", self.compiler.cxx)
             if self.spec.satisfies("%oneapi"):

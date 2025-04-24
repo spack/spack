@@ -102,7 +102,7 @@ class IntelXed(Package):
         except OSError:
             pass
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # XED needs PYTHONPATH to find the mbuild directory.
         env.prepend_path("PYTHONPATH", self.mdir)
 

@@ -75,7 +75,7 @@ class Fleur(Package):
     conflicts("@:4.0", when="+spfft", msg="SpFFT is supported from Fleur v4.0")
     conflicts("@:4.0", when="+external_libxc", msg="External libxc is supported from Fleur v4.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         if spec.satisfies("+mpi"):

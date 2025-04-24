@@ -51,7 +51,7 @@ class Hdfview(Package):
         chmod("+x", self.prefix.bin.hdfview)
         install_tree(path, prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5LIBS", self.spec["hdf5"].prefix)
         env.set("HDFLIBS", self.spec["hdf"].prefix)
         env.set("ANT_HOME", self.spec["ant"].prefix)

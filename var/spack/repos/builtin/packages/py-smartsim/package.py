@@ -67,8 +67,8 @@ class PySmartsim(PythonPackage):
     # dependencies fetched though Spack
     patch("ss-0-5-0-remove-cli-build-fns.patch")
 
-    def setup_build_environment(self, env):
-        env.set("BUILD_JOBS", make_jobs)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("BUILD_JOBS", str(make_jobs))
 
     @run_after("install")
     def symlink_bin_deps(self):

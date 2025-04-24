@@ -41,7 +41,7 @@ class PyGeopmdpy(PythonPackage):
         else:
             return "geopmdpy"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 

@@ -46,7 +46,7 @@ class PyPsana(PythonPackage):
 
     build_directory = "psana"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("INSTDIR", "{0}".format(self.prefix))
         env.set("XTCDATADIR", "{0}".format(self.spec["xtcdata"].prefix))
         env.set("PSALGDIR", "{0}".format(self.spec["psalg"].prefix))

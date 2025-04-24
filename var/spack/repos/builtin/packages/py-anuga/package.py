@@ -45,7 +45,7 @@ class PyAnuga(PythonPackage):
     # https://github.com/GeoscienceAustralia/anuga_core/issues/247
     conflicts("%apple-clang@12:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.run_tests:
             env.prepend_path("PATH", self.spec["mpi"].prefix.bin)
 

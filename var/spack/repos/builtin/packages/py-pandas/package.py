@@ -209,3 +209,4 @@ class PyPandas(PythonPackage):
 
         with when("+parquet"):
             depends_on("py-pyarrow@10.0.1:")
+            depends_on("arrow+parquet")

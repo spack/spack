@@ -275,7 +275,7 @@ class OpenspeedshopUtils(CMakePackage):
 
         cmake_options.extend(mpi_options)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         # Find Dyninst library path, this is needed to
