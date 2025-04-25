@@ -487,6 +487,9 @@ class Stage(LockableStagingDir):
             for mirror in self.mirrors:
                 if mirror.fetch_url.startswith("oci://"):
                     continue
+                look_at = [self.mirror_layout.path]
+                if mirror.fetch_url.startswith("file://") and hasattr(self.mirror_layout, "alias"):
+                    look_at.append(self.mirror_layout.alias)
                 for rel_path in self.mirror_layout:
                     mirror_fetchers.append(
                         fs.from_url_scheme(
