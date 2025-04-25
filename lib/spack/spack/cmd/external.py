@@ -5,7 +5,7 @@ import argparse
 import errno
 import os
 import re
-import sys
+from collections import defaultdict
 from typing import List, Optional, Set
 
 import llnl.util.tty as tty
@@ -17,7 +17,6 @@ import spack.config
 import spack.cray_manifest as cray_manifest
 import spack.detection
 import spack.error
-import spack.package_base
 import spack.repo
 import spack.spec
 from spack.cmd.common import arguments
@@ -246,13 +245,16 @@ def _collect_and_consume_cray_manifest_files(
 
 
 def external_list(args):
-    # Trigger a read of all packages, might take a long time.
-    list(spack.repo.PATH.all_package_classes())
     # Print all the detectable packages
     tty.msg("Detectable packages per repository")
-    for namespace, pkgs in sorted(spack.package_base.detectable_packages.items()):
+    repo_to_packages = defaultdict(list)
+    for fullname in spack.repo.PATH.packages_with_tags("detectable", full=True):
+        repo, _, pkg = fullname.rpartition(".")
+        repo_to_packages[repo].append(pkg)
+
+    for namespace in sorted(repo_to_packages):
         print("Repository:", namespace)
-        colify.colify(pkgs, indent=4, output=sys.stdout)
+        colify.colify(repo_to_packages[namespace], indent=4)
 
 
 def external(parser, args):

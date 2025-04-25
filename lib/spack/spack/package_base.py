@@ -132,11 +132,6 @@ class WindowsRPath:
             win_rpath.establish_link()
 
 
-#: Registers which are the detectable packages, by repo and package name
-#: Need a pass of package repositories to be filled.
-detectable_packages = collections.defaultdict(list)
-
-
 class DetectablePackageMeta(type):
     """Check if a package is detectable and add default implementations
     for the detection function.
@@ -241,9 +236,6 @@ class DetectablePackageMeta(type):
             @classmethod
             def determine_variants(cls, objs, version_str):
                 return ""
-
-            # Register the class as a detectable package
-            detectable_packages[cls.namespace].append(cls.name)
 
             # Attach function implementations to the detectable class
             default = False
