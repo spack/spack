@@ -489,6 +489,8 @@ class Stage(LockableStagingDir):
                     continue
                 look_at = [self.mirror_layout.path]
                 if mirror.fetch_url.startswith("file://") and hasattr(self.mirror_layout, "alias"):
+                    # Local mirrors might be manually updated by a human,
+                    # so check the human-readable alias
                     look_at.append(self.mirror_layout.alias)
                 for rel_path in self.mirror_layout:
                     mirror_fetchers.append(
