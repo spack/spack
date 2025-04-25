@@ -24,7 +24,7 @@ class Callpath(CMakePackage):
     depends_on("dyninst")
     depends_on("adept-utils")
     depends_on("mpi")
-    depends_on("cmake@2.8:", type="build")
+    depends_on("cmake@2.8:3", when="build_system=cmake", type="build")
 
     def cmake_args(self):
         # TODO: offer options for the walker used.

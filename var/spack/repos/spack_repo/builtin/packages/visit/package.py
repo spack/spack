@@ -127,8 +127,8 @@ class Visit(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@3.14.7:", type="build")
     depends_on("cmake@3.24:", type="build", when="@3.4:")
+    depends_on("cmake@3.14.7:3", when="build_system=cmake", type="build")
     depends_on("mpi", when="+mpi")
     conflicts("mpi", when="~mpi")
 

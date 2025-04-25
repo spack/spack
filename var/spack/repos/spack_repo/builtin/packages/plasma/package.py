@@ -41,6 +41,7 @@ class Plasma(CMakePackage):
         "17.1",
         sha256="d4b89f7c3d240a69dfe986284a14471eec4830b9e352ae902ea8861f15573dee",
         url="https://github.com/icl-utk-edu/plasma/releases/download/17.01/plasma-17.01.tar.gz",
+        deprecated=True,
     )
 
     build_system(
@@ -48,6 +49,7 @@ class Plasma(CMakePackage):
         conditional("cmake", when="@18.9:"),
         default="cmake",
     )
+    depends_on("cmake@:3", when="build_system=cmake", type="build")
 
     variant("shared", default=True, description="Build shared library (disables static library)")
     variant("lua", default=False, description="Build Lua support for tuning tile sizes")

@@ -33,6 +33,7 @@ class Pandorasdk(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
+    depends_on("cmake@:3", when="build_system=cmake", type="build")
     depends_on("pandorapfa")
 
     def cmake_args(self):

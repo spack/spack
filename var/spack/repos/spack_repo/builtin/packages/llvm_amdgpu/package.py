@@ -91,7 +91,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@3.13.4:", type="build")
+    depends_on("cmake@3.13.4:3", when="build_system=cmake", type="build")
     depends_on("python", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")
