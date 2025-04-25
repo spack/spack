@@ -831,13 +831,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in cls.__mro__:
-            namespace = getattr(cls, "namespace", None)
-            if namespace:
-                fullnames.append("%s.%s" % (namespace, cls.name))
-            if namespace == "builtin":
-                # builtin packages cannot inherit from other repos
+        for base in cls.__mro__:
+            if not base.__module__.startswith(f"{spack.repo.ROOT_PYTHON_NAMESPACE}."):
                 break
+            fullnames.append(base.fullname)
         return fullnames
 
     @classproperty
