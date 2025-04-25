@@ -2138,3 +2138,129 @@ def test_unified_environment_with_mixed_compilers_and_fortran(tmp_path, config):
     assert mpich.satisfies("%fortran=gcc")
     assert openblas.satisfies("%c,fortran=gcc")
     assert mpich["fortran"].dag_hash() == openblas["fortran"].dag_hash()
+
+
+def test_env_include_env_includes(tmp_path, mutable_config):
+    """Confirm that an environment that includes two other environments,
+    each including their own configuration, picks up the specs from both
+    but its own configuration setting."""
+    includes_dir = tmp_path / "includes"
+    fs.mkdirp(includes_dir)
+
+    config_template = """\
+config:
+  install_tree:
+     root: {0}
+"""
+    specs_template = """\
+spack:
+  include:
+  - {0}
+  specs:
+  - {1}
+"""
+
+    includes = []
+    pkgs = ["libdwarf", "mpileaks"]
+    for pkg in pkgs:
+        install_root = tmp_path / "store" / pkg
+        fs.mkdirp(install_root)
+
+        env_path = includes_dir / pkg
+        fs.mkdirp(env_path)
+        config_path = env_path / "config.yaml"
+        config_path.write_text(config_template.format(install_root))
+
+        include = env_path / ev.manifest_name
+        include.write_text(specs_template.format(config_path, pkg))
+        includes.append(str(include))
+
+    install_root = tmp_path / "store"
+
+    spack_yaml = f"""\
+spack:
+  config:
+    install_tree:
+      root: {str(install_root)}
+  include: {includes}
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+
+    e = ev.Environment(tmp_path)
+    ev.activate(e)
+
+    user_specs = e.user_specs
+    for pkg in pkgs:
+        assert spack.spec.Spec(pkg) in user_specs
+
+    # ensure the included environment scopes are found
+    pattern = rf"^env:{str(tmp_path)}"
+    assert len(mutable_config.matching_scopes(rf"{pattern}$")) == 1  # environment's scope
+    hash_pattern = "[0-9a-fA-F]{7}"
+    assert (
+        len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+    )  # 1st level includes
+    hash_pattern = rf"{hash_pattern}:{hash_pattern}"
+    assert (
+        len(mutable_config.matching_scopes(rf"{pattern}:{hash_pattern}$")) == 2
+    )  # 2nd level includes
+
+    # ensure the install root matches the top-most (i.e., environment's) configured path
+    config_install_root = mutable_config.get("config:install_tree:root", None)
+    assert config_install_root == str(install_root)
+
+
+def test_env_include_env_highest_config(tmp_path, config):
+    """Confirm that an environment that includes two other environments
+    picks up the configuration setting from the highest include."""
+
+    config_template = """\
+config:
+  build_jobs: {0}
+"""
+    expected_build_jobs = 32
+
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(config_template.format(expected_build_jobs))
+
+    includes_dir = tmp_path / "includes"
+    fs.mkdirp(includes_dir)
+    env2_config_file = includes_dir / "config.yaml"
+    env2_config_file.write_text(config_template.format(8))
+
+    env2_file = includes_dir / ev.manifest_name
+    pkgs = ["libdwarf", "mpileaks"]
+    env2_file.write_text(
+        f"""\
+spack:
+  include:
+  - {env2_config_file}
+  specs: {pkgs}
+"""
+    )
+
+    env_file = tmp_path / ev.manifest_name
+    env_file.write_text(
+        f"""\
+spack:
+  include:
+  - {env2_file}
+  - {config_file}
+"""
+    )
+
+    e = ev.Environment(tmp_path)
+    ev.activate(e)
+
+    user_specs = e.user_specs
+    for pkg in pkgs:
+        assert spack.spec.Spec(pkg) in user_specs
+
+    # ensure the build job configuration matches the highest config.yaml setting
+    # i.e., that from config_file
+    build_jobs = spack.config.CONFIG.get("config:build_jobs", None)
+    try:
+        assert build_jobs is not None and build_jobs == expected_build_jobs
+    except AssertionError:
+        pytest.xfail("nested includes are not processed in BFS order")

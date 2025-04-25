@@ -30,12 +30,14 @@ schemas are in submodules of :py:mod:`spack.schema`.
 import contextlib
 import copy
 import functools
+import glob
 import os
 import os.path
 import pathlib
 import re
 import sys
 import tempfile
+import urllib.parse
 from collections import defaultdict
 from itertools import chain
 from typing import Any, Callable, Dict, Generator, List, Optional, Set, Tuple, Union, cast
@@ -95,13 +97,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
     "toolchains": spack.schema.toolchains.schema,
-}
-
-# Same as above, but including keys for environments
-# this allows us to unify config reading between configs and environments
-_ALL_SCHEMAS: Dict[str, Any] = {
-    **SECTION_SCHEMAS,
-    spack.schema.env.TOP_LEVEL_KEY: spack.schema.env.schema,
+    "spack": spack.schema.env.schema,
 }
 
 #: Path to the main configuration scope
@@ -152,19 +148,39 @@ class ConfigScope:
         #: included configuration scopes
         self._included_scopes: Optional[List["ConfigScope"]] = None
 
+    def get_includes(self) -> Optional[YamlConfigDict]:
+        """Retrieve the 'include' section, allowing for the fact that includes
+        nested in a manifest file fall under spack:include."""
+        includes = self.get_section("include")
+        if includes:
+            tty.debug(f"Retrieved configuration includes for {self.name}: {includes}", level=3)
+            return includes
+
+        spack = self.get_section("spack")
+        if spack:
+            includes = spack["spack"]
+            tty.debug(f"Retrieved environment includes for {self.name}: {includes}", level=3)
+        return includes
+
     @property
     def included_scopes(self) -> List["ConfigScope"]:
         """Memoized list of included scopes, in the order they appear in this scope."""
         if self._included_scopes is None:
             self._included_scopes = []
 
-            includes = self.get_section("include")
+            includes = self.get_includes()
             if includes:
+                if "include" not in includes:
+                    return self._included_scopes
+
                 include_paths = [included_path(data) for data in includes["include"]]
+                tty.debug(
+                    f"Processing included paths: {[str(path) for path in include_paths]}", level=3
+                )
                 included_scopes = chain(*[include.scopes(self) for include in include_paths])
 
-                # Do not include duplicate scopes
                 for included_scope in included_scopes:
+                    # Do not include duplicate scopes
                     if any([included_scope.name == scope.name for scope in self._included_scopes]):
                         tty.warn(f"Ignoring duplicate included scope: {included_scope.name}")
                         continue
@@ -172,6 +188,11 @@ class ConfigScope:
                     if included_scope not in self._included_scopes:
                         self._included_scopes.append(included_scope)
 
+        tty.debug(
+            f"{self.name} has {'' if len(self._included_scopes) else 'no '}"
+            f"included scopes: {self._included_scopes}",
+            level=3,
+        )
         return self._included_scopes
 
     @property
@@ -196,6 +217,7 @@ class ConfigScope:
         _names.add(self.name)
         for scope in self.included_scopes:
             _names |= scope.transitive_includes(_names=_names)
+        tty.debug(f"Names of scope and transitively included scopes: {_names}")
         return _names
 
     def get_section_filename(self, section: str) -> str:
@@ -548,7 +570,6 @@ class Configuration:
         Args:
             scope: scope to be added
             priority: priority of the scope
-
         """
         # TODO: As a follow on to #48784, change this to create a graph of the
         # TODO: includes AND ensure properly sorted such that the order included
@@ -849,8 +870,20 @@ class Configuration:
         # filter any scopes overridden by `include::`
         scopes = self._filter_overridden(scopes)
 
+        def get_env_section(config_scope, section):
+            data = config_scope.get_section(spack.schema.env.TOP_LEVEL_KEY)
+            if data is None:
+                return None
+
+            # Grab the actual data
+            if spack.schema.env.TOP_LEVEL_KEY in data:
+                data = data[spack.schema.env.TOP_LEVEL_KEY]
+
+            return data
+
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
+        # process from lowest to highest precedence since newer take precedence
         for config_scope in scopes:
             if section == "include" and config_scope not in self.active_include_section_scopes:
                 continue
@@ -868,15 +901,21 @@ class Configuration:
                 data["include"] = data.pop("include")  # strip override
 
             # Skip empty configs
+            env_data = None
             if not isinstance(data, dict) or section not in data:
-                continue
+                data = None
+                env_data = get_env_section(config_scope, section)
+                if not isinstance(env_data, dict):
+                    continue
+
+                tty.debug(f"Retrieved {config_scope.name}'s '{section}' data", level=3)
 
             # If configuration is in an old format, transform it and keep track of the scope that
             # may need to be written out to disk.
-            if _update_in_memory(data, section):
+            if data and _update_in_memory(data, section):
                 updated_scopes.append(config_scope)
 
-            merged_section = spack.schema.merge_yaml(merged_section, data)
+            merged_section = spack.schema.merge_yaml(merged_section, data or env_data)
 
         self.updated_scopes_by_section[section] = updated_scopes
 
@@ -1071,7 +1110,7 @@ class OptionalInclude:
     def base_directory(
         self, path_or_url: str, parent_scope: Optional[ConfigScope] = None
     ) -> Optional[str]:
-        """Return the local directory to use for this include.
+        """Return the local directory to use for remote or relative includes.
 
         For remote includes this is the cache destination directory.
         For local relative includes this is the working directory from which to resolve the path.
@@ -1080,12 +1119,26 @@ class OptionalInclude:
             path_or_url: path or URL of the include
             parent_scope: including scope
 
-        Returns: ``None`` for a local include without an enclosing parent scope;
-            an appropriate subdirectory of the enclosing (parent) scope's writable
-            directory (when available); otherwise a stable temporary directory.
+        Returns: ``None`` for an absolute path, the explicit destination (if writable)
+            or an appropriate subdirectory of the enclosing (parent) scope's writable directory
+            (when available); otherwise a stable temporary directory.
+
+        Raises:
+            AssertionError: The explicit destination is not writable
         """
+        # An absolute path does not need a local base directory.
+        if os.path.isabs(path_or_url):
+            tty.debug(f"The included path ({self}) is absolute so needs no base directory")
+            return None
+
+        # Use the explicit destination but require it to be writable.
+        if self.destination:
+            assert filesystem.can_write_to_dir(self.destination)
+            return self.destination
+
+        # Prefer the (writable) parent scope directory for a local relative file.
         scope_dir = self._parent_scope_directory(parent_scope)
-        if not self.remote:
+        if not self.remote and filesystem.can_write_to_dir(scope_dir):
             return scope_dir
 
         def _subdir():
@@ -1129,14 +1182,14 @@ class OptionalInclude:
     def _scope(
         self, path: str, config_path: str, parent_scope: ConfigScope
     ) -> Optional[ConfigScope]:
-        """Instantiate a configuration scope for the configuration path.
+        """Instantiate a configuration scope for a configuration path.
 
         Args:
             path: raw include path
             config_path: configuration path
             parent_scope: including scope
 
-        Returns: configuration scopes
+        Returns: configuration scope or ``None``
 
         Raises:
             ValueError: the required configuration path does not exist
@@ -1149,8 +1202,8 @@ class OptionalInclude:
         # processing is handled when the environment is processed.
         if path and os.path.basename(path) == "spack.lock":
             tty.debug(
-                f"Ignoring inclusion of '{path}' since environment lock files "
-                "are processed elsewhere"
+                f"Ignoring inclusion of lock file '{path}' since it is processed "
+                "in the environment."
             )
             return None
 
@@ -1201,12 +1254,12 @@ class OptionalInclude:
             )
         elif ext == ".yaml" or ext == ".yml":
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
+            if os.path.basename(config_path) == "spack.yaml":
+                schema = spack.schema.env.schema
+            else:
+                schema = spack.schema.merged.schema
             return SingleFileScope(
-                config_name,
-                config_path,
-                spack.schema.merged.schema,
-                prefer_modify=self.prefer_modify,
-                included=True,
+                config_name, config_path, schema, prefer_modify=self.prefer_modify, included=True
             )
         elif exists:
             raise ValueError(
@@ -1229,7 +1282,7 @@ class OptionalInclude:
         assert parent_scope.name.strip(), "Parent scope of an include must have a name"
 
     def evaluate_condition(self) -> bool:
-        """Evaluate the include condition:
+        """Evaluate the include condition.
 
         Returns: ``True`` if the include condition is satisfied; else ``False``.
         """
@@ -1258,6 +1311,15 @@ class OptionalInclude:
 
         raise NotImplementedError("must be implemented in derived classes")
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the minimal configuration information in dictionary form."""
+        result = {}
+        for name in ["when", "optional"]:
+            value = getattr(self, name)
+            if value:
+                result[name] = value
+        return result
+
 
 class IncludePath(OptionalInclude):
     path: str
@@ -1277,13 +1339,24 @@ class IncludePath(OptionalInclude):
         self.path = spack.util.path.substitute_path_variables(path)
 
         self.sha256 = entry.get("sha256", "")
-        self.remote = "sha256" in entry
-        self.destination = None
+        self.destination = entry.get("destination", "")
+        if self.destination:
+            # Possible work-around for adding spack.util.path circular import
+            # since already a circular import for spack.util.remote_file_cache.
+            self.destination = rfc_util.canonicalize_path(self.destination)
+
+            # Ensure the explicit destination is writable.
+            assert filesystem.can_write_to_dir(self.destination)
+
+        self.remote = urllib.parse.urlparse(self.path).scheme in ("http", "https", "ftp")
+        if self.remote and not self.sha256:
+            raise spack.error.ConfigError(f"Remote include {self.path} requires a 'sha256'")
 
     def __repr__(self):
         return (
-            f"IncludePath({self.path}, sha256={self.sha256}, "
-            f"when='{self.when}', optional={self.optional})"
+            f"IncludePath('{self.name}', '{self.path}', sha256={self.sha256}, "
+            f"when='{self.when}', optional={self.optional}, "
+            f"destination={self.destination})"
         )
 
     def scopes(self, parent_scope: ConfigScope) -> List[ConfigScope]:
@@ -1292,10 +1365,11 @@ class IncludePath(OptionalInclude):
         Args:
             parent_scope: including scope
 
-        Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, an empty list.
+        Returns: configuration scopes for configuration files IF the when
+            condition is satisfied; otherwise, an empty list.
 
         Raises:
+            AssertionError: unable to write to the directory
             ConfigFileError: unable to access remote configuration file
             ValueError: included path has an unsupported URL scheme, is required
                 but does not exist; configuration stage directory argument is missing
@@ -1308,22 +1382,25 @@ class IncludePath(OptionalInclude):
             tty.debug(f"Using existing scopes: {[s.name for s in self._scopes]}")
             return self._scopes
 
-        # An absolute path does not need a local base directory.
-        if os.path.isabs(self.path):
-            tty.debug(f"The included path ({self}) is absolute so needs no base directory")
-            base = None
-        else:
-            base = self.base_directory(self.path, parent_scope)
+        def _destination():
+            if self.destination:
+                return self.destination
+
+            return self.base_directory(self.path, parent_scope)
 
         # Make sure to use a proper working directory when obtaining the local
         # path for a local (or remote) file.
+        base = _destination()
         tty.debug(f"Local base directory for {self.path} is {base}")
 
         config_path = rfc_util.local_path(self.path, self.sha256, base)
         assert config_path
-        self.destination = config_path
 
-        scope = self._scope(self.path, self.destination, parent_scope)
+        # TODO/TLD/TBD: Is this the right thing to do here?
+        if not self.destination:
+            self.destination = config_path
+
+        scope = self._scope(self.path, config_path, parent_scope)
         if scope is not None:
             self._scopes = [scope]
 
@@ -1334,6 +1411,15 @@ class IncludePath(OptionalInclude):
         """Path(s) associated with the include."""
 
         return [self.path]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return minimal the configuration information in dictionary form."""
+        result = super().to_dict()
+        for name in ["path", "sha256"]:
+            value = getattr(self, name)
+            if value:
+                result[name] = value
+        return result
 
 
 class GitIncludePaths(OptionalInclude):
@@ -1357,17 +1443,16 @@ class GitIncludePaths(OptionalInclude):
         self._paths = [
             spack.util.path.substitute_path_variables(path) for path in entry.get("paths", [])
         ]
-        self.destination = None
+        self.destination = entry.get("destination", "")
+        if self.destination:
+            # Possible work-around for adding spack.util.path circular import
+            # since already a circular import for spack.util.remote_file_cache.
+            self.destination = rfc_util.canonicalize_path(self.destination)
         self.remote = True
 
         if not self.branch and not self.commit and not self.tag:
             raise spack.error.ConfigError(
                 "Git include paths ({self}) must specify one or more of: branch, commit, tag"
-            )
-
-        if not self._paths:
-            raise spack.error.ConfigError(
-                "Git include paths ({self}) must include one or more relative paths"
             )
 
     def __repr__(self):
@@ -1378,7 +1463,8 @@ class GitIncludePaths(OptionalInclude):
 
         return (
             f"GitIncludePaths('{self.name}', {self.git}, paths={self._paths}, "
-            f"{identifier}, when='{self.when}', optional={self.optional})"
+            f"{identifier}, when='{self.when}', optional={self.optional}, "
+            f"destination={self.destination})"
         )
 
     def _clone(self, parent_scope: ConfigScope) -> Optional[str]:
@@ -1387,55 +1473,60 @@ class GitIncludePaths(OptionalInclude):
         Args:
             parent_scope: enclosing scope
 
+
         Returns: destination path if cloned or ``None``
+
+        Raises:
+            AssertionError: unable to write to the directory
         """
         if self.fetched():
             tty.debug(f"Repository ({self.git}) already cloned to {self.destination}")
             return self.destination
 
-        # environment includes should be located under the environment
-        destination = self.base_directory(self.git, parent_scope)
-        assert destination, f"{self} requires a local cache directory"
-        tty.debug(f"Cloning {self.git} into {destination}")
-
-        with filesystem.working_dir(destination, create=True):
+        # TODO/TLD/TBD: Was base_directory called for a git repo before this?
+        tty.debug(f"Cloning {self.git} into {self.destination}")
+        with filesystem.working_dir(self.destination, create=True):
             if not os.path.exists(".git"):
                 try:
                     tty.debug("Initializing the git repository")
                     spack.util.git.init_git_repo(self.git)
                 except spack.util.executable.ProcessError as e:
+                    msg = (
+                        f"Unable to initialize repository ({self.git}) under "
+                        f"{self.destination}"
+                    )
+                    if self.optional:
+                        tty.warning(msg + ". Ignoring optional include.")
+                    else:
+                        raise spack.error.ConfigError(msg + f": {e}")
+
+            if os.path.exists(".git"):
+                try:
+                    if self.commit:
+                        tty.debug(f"Pulling commit {self.commit}")
+                        spack.util.git.pull_checkout_commit(self.commit)
+                    elif self.tag:
+                        tty.debug(f"Pulling tag {self.tag}")
+                        spack.util.git.pull_checkout_tag(self.tag)
+                    elif self.branch:
+                        # if the branch already exists we should use the
+                        # previously configured remote
+                        tty.debug(f"Pulling branch {self.branch}")
+                        try:
+                            git = spack.util.git.git(required=True)
+                            output = git("config", f"branch.{self.branch}.remote", output=str)
+                            remote = output.strip()
+                        except spack.util.executable.ProcessError:
+                            remote = "origin"
+                        spack.util.git.pull_checkout_branch(self.branch, remote=remote)
+                    else:
+                        raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
+
+                except spack.util.executable.ProcessError as e:
                     raise spack.error.ConfigError(
-                        f"Unable to initialize repository ({self.git}) under {destination}: {e}"
+                        f"Unable to check out repository ({self}) in {self.destination}: {e}"
                     )
 
-            try:
-                if self.commit:
-                    tty.debug(f"Pulling commit {self.commit}")
-                    spack.util.git.pull_checkout_commit(self.commit)
-                elif self.tag:
-                    tty.debug(f"Pulling tag {self.tag}")
-                    spack.util.git.pull_checkout_tag(self.tag)
-                elif self.branch:
-                    # if the branch already exists we should use the
-                    # previously configured remote
-                    tty.debug(f"Pulling branch {self.branch}")
-                    try:
-                        git = spack.util.git.git(required=True)
-                        output = git("config", f"branch.{self.branch}.remote", output=str)
-                        remote = output.strip()
-                    except spack.util.executable.ProcessError:
-                        remote = "origin"
-                    spack.util.git.pull_checkout_branch(self.branch, remote=remote)
-                else:
-                    raise spack.error.ConfigError(f"Missing or unsupported options in {self}")
-
-            except spack.util.executable.ProcessError as e:
-                raise spack.error.ConfigError(
-                    f"Unable to check out repository ({self}) in {destination}: {e}"
-                )
-
-            # only set the destination on successful clone/checkout
-            self.destination = destination
             return self.destination
 
     def fetched(self) -> bool:
@@ -1449,8 +1540,8 @@ class GitIncludePaths(OptionalInclude):
         Args:
             parent_scope: including scope
 
-        Returns: configuration scopes IF the when condition is satisfied;
-            otherwise, an empty list.
+        Returns: configuration scopes for configuration files IF the when
+            condition is satisfied; otherwise, an empty list.
 
         Raises:
             ConfigFileError: unable to access remote configuration file(s)
@@ -1484,8 +1575,37 @@ class GitIncludePaths(OptionalInclude):
     @property
     def paths(self) -> List[str]:
         """Path(s) associated with the include."""
+        if self._paths:
+            return self._paths
 
-        return self._paths
+        if not self.fetched():
+            return []
+
+        config_sections = SECTION_SCHEMAS.keys()
+
+        def config_file(path: str) -> bool:
+            root, _ = os.path.splitext(path)
+            return root in config_sections
+
+        manifest_filename = "spack.yaml"
+        with filesystem.working_dir(self.destination, create=False):
+            yaml_files = glob.glob("*.yaml")
+            # An environment manifest file takes precedence over any other
+            # configuration files in a directory.
+            if manifest_filename in yaml_files:
+                return [manifest_filename]
+
+            # Otherwise, only return supported configuraton files.
+            return [path for path in yaml_files if config_file(path)]
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the minimal configuration information in dictionary form."""
+        result = super().to_dict()
+        for name in ["git", "branch", "tag", "commit", "paths"]:
+            value = getattr(self, name)
+            if value:
+                result[name] = value
+        return result
 
 
 def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, GitIncludePaths]:
@@ -1503,22 +1623,6 @@ def included_path(entry: Union[str, pathlib.Path, dict]) -> Union[IncludePath, G
         return IncludePath(entry)
 
     return GitIncludePaths(entry)
-
-
-def paths_from_includes(includes: List[Union[str, dict]]) -> List[str]:
-    """The path(s) from the configured includes.
-
-    Args:
-        includes: include configuration information
-
-    Returns: list of path or an empty list if there are none
-    """
-
-    paths = []
-    for entry in includes:
-        include = included_path(entry)
-        paths.extend(include.paths)
-    return paths
 
 
 def config_paths_from_entry_points() -> List[Tuple[str, str]]:
@@ -1836,7 +1940,7 @@ def read_config_file(
         if data:
             if schema is None:
                 key = next(iter(data))
-                schema = _ALL_SCHEMAS[key]
+                schema = SECTION_SCHEMAS[key]
             validate(data, schema)
 
         return data
@@ -2163,7 +2267,8 @@ def ensure_latest_format_fn(section: str) -> Callable[[YamlConfigDict], bool]:
         section: section of the configuration e.g. "packages", "config", etc.
     """
     # Every module we need is already imported at the top level, so getattr should not raise
-    return getattr(getattr(spack.schema, section), "update", lambda _: False)
+    attr = "env" if section == "spack" else section  # handle special env case
+    return getattr(getattr(spack.schema, attr), "update", lambda _: False)
 
 
 @contextlib.contextmanager

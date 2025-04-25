@@ -182,8 +182,8 @@ default_view_name = "default"
 # Default behavior to link all packages into views (vs. only root packages)
 default_view_link = "all"
 
-# (DEPRECATED) Use as the heading/name in the manifest is deprecated.
 # The key for any concrete specs included in a lockfile.
+# (DEPRECATED) Use as the heading/name in the manifest is deprecated.
 lockfile_include_key = "include_concrete"
 
 # The name/heading for include paths in the manifest file.
@@ -410,10 +410,7 @@ def create_in_dir(
             manifest.set_default_view(with_view)
 
         if include_concrete is not None:
-            set_included_envs_to_env_paths(include_concrete)
-            validate_included_envs_exists(include_concrete)
-            validate_included_envs_concrete(include_concrete)
-            manifest.set_include_concrete(include_concrete)
+            manifest.add_include_concrete(include_concrete)
 
         manifest.flush()
 
@@ -533,67 +530,6 @@ def environment_dir_from_name(name: str, exists_ok: bool = True) -> str:
 def ensure_env_root_path_exists():
     if not os.path.isdir(env_root_path()):
         fs.mkdirp(env_root_path())
-
-
-def set_included_envs_to_env_paths(include_concrete: List[str]) -> None:
-    """If the included environment(s) is the environment name
-    it is replaced by the path to the environment
-
-    Args:
-        include_concrete: list of env name or path to env"""
-
-    for i, env_name in enumerate(include_concrete):
-        if is_env_dir(env_name):
-            include_concrete[i] = env_name
-        elif exists(env_name):
-            include_concrete[i] = root(env_name)
-
-
-def validate_included_envs_exists(include_concrete: List[str]) -> None:
-    """Checks that all of the included environments exist
-
-    Args:
-       include_concrete: list of already existing concrete environments to include
-
-    Raises:
-        SpackEnvironmentError: if any of the included environments do not exist
-    """
-
-    missing_envs = set()
-
-    for i, env_name in enumerate(include_concrete):
-        if not is_env_dir(env_name):
-            missing_envs.add(env_name)
-
-    if missing_envs:
-        msg = "The following environment(s) are missing: {0}".format(", ".join(missing_envs))
-        raise SpackEnvironmentError(msg)
-
-
-def validate_included_envs_concrete(include_concrete: List[str]) -> None:
-    """Checks that all of the included environments are concrete
-
-    Args:
-        include_concrete: list of already existing concrete environments to include
-
-    Raises:
-        SpackEnvironmentError: if any of the included environments are not concrete
-    """
-
-    non_concrete_envs = set()
-
-    for env_path in include_concrete:
-        if not os.path.exists(os.path.join(env_path, lockfile_name)):
-            non_concrete_envs.add(environment_name(env_path))
-
-    if non_concrete_envs:
-        msg = "The following environment(s) are not concrete: {0}\nPlease run:".format(
-            ", ".join(non_concrete_envs)
-        )
-        for env in non_concrete_envs:
-            msg += f"\n\t`spack -e {env} concretize`"
-
-        raise SpackEnvironmentError(msg)
 
 
 def all_environment_names():
@@ -1043,6 +979,17 @@ class ConcretizedRootInfo:
         )
 
 
+def included_env_config(key: str, default: Optional[Any] = None) -> Any:
+    """Extract the included environment configuration for the key.
+
+    Args:
+      key: environment manifest configuration key
+      default: optional default value if key is not detected under ``spack:``
+    """
+    data = spack.config.CONFIG.get(TOP_LEVEL_KEY, {})
+    return data.get(key, default)
+
+
 class Environment:
     """A Spack environment, which bundles together configuration and a list of specs."""
 
@@ -1262,22 +1209,34 @@ class Environment:
         self._process_view(spack.config.get("view", True))
         self._process_included_lockfiles()
 
+    # TODO/TLD/TBD: Properly resolve the conflicts related to adding included
+    # TODO/TLD/TBD: user specs
     def _sync_speclists(self):
-        self._spec_lists_parser = SpecListParser(
-            toolchains=spack.config.CONFIG.get("toolchains", {})
-        )
+        # Combined toolchains from global config and included environments.
+        toolchains = spack.config.CONFIG.get("toolchains", {})
+        toolchains.update(included_env_config("toolchains", {}))
+        self._spec_lists_parser = SpecListParser(toolchains=toolchains)
+
+        # Combined definitions from the global config and included environments.
         self.spec_lists = {}
-        self.spec_lists.update(
-            self._spec_lists_parser.parse_definitions(
-                data=spack.config.CONFIG.get("definitions", [])
-            )
-        )
+        combined_yaml = []
+        combined_yaml.extend(spack.config.CONFIG.get("definitions", []))
+        combined_yaml.extend(included_env_config("definitions", []))
+        self.spec_lists.update(self._spec_lists_parser.parse_definitions(data=combined_yaml))
+
+        # TODO/TLD/TBD: Make sure process groups from included manifests
         for group in self.manifest.groups():
             tty.debug(f"[{__name__}]: Synchronizing user specs from the '{group}' group", level=2)
             key = self._user_specs_key(group=group)
             self.spec_lists[key] = self._spec_lists_parser.parse_user_specs(
                 name=key, yaml_list=self.manifest.user_specs(group=group)
             )
+            # TODO/TLD/TBD: Resolve this correctly
+            # self.spec_lists[key].extend(
+            #     self._spec_lists_parser.parse_user_specs(
+            #         name=key, yaml_list=included_env_config.user_specs(group=group)
+            #     )
+            # )
 
     def _user_specs_key(self, *, group: Optional[str] = None) -> str:
         if group is None or group == DEFAULT_USER_SPEC_GROUP:
@@ -3098,41 +3057,58 @@ def initialize_environment_dir(
 
     shutil.copy(envfile, target_manifest)
 
-    # Copy relative path includes that live inside the environment dir
+    # Rewrite the relative path in the include path data
+    def new_include(included_path: spack.config.IncludePath, new_path: str):
+        info = included_path.to_dict()
+        if len(info) == 1:
+            return new_path
+
+        info["path"] = new_path
+        return info
+
     try:
         manifest = EnvironmentManifestFile(environment_dir)
     except Exception:
         # error handling for bad manifests is handled on other code paths
         return
 
-    # TODO: make this recursive
+    # Override relative paths for IncludePath entries.
+    # GitIncludePaths should NOT be overriden.
     includes = manifest[TOP_LEVEL_KEY].get(manifest_include_name, [])
-    paths = spack.config.paths_from_includes(includes)
-    for path in paths:
-        if os.path.isabs(path):
+    included_paths = [spack.config.included_path(entry) for entry in includes]
+    included_paths = [
+        include for include in included_paths if isinstance(include, spack.config.IncludePath)
+    ]
+    for idx, include in enumerate(included_paths):
+        if os.path.isabs(include.path):
             continue
 
-        abspath = pathlib.Path(os.path.normpath(environment_dir / path))
+        abspath = pathlib.Path(os.path.normpath(environment_dir / include.path))
         common_path = pathlib.Path(os.path.commonpath([environment_dir, abspath]))
         if common_path != environment_dir:
-            tty.debug(f"Will not copy relative include file from outside environment: {path}")
+            tty.warn(
+                f"Relative include path ({include.path}) is outside environment "
+                "so will retain as is"
+            )
             continue
 
-        orig_abspath = os.path.normpath(envfile.parent / path)
-        if os.path.isfile(orig_abspath):
-            fs.touchp(abspath)
-            shutil.copy(orig_abspath, abspath)
-            continue
-
+        orig_abspath = os.path.normpath(envfile.parent / include.path)
         if not os.path.exists(orig_abspath):
-            tty.warn(f"Skipping copy of non-existent include path: '{path}'")
+            tty.warn(f"Include '{include.path}' does not exist so will retain as is")
             continue
 
-        if os.path.exists(abspath):
-            tty.warn(f"Skipping copy of directory over existing path: {path}")
-            continue
+        if os.path.isfile(orig_abspath):
+            manifest.override_include(new_include(include, orig_abspath), idx)
+        else:
+            if os.path.exists(abspath):
+                tty.warn(
+                    f"Skipping replacement of duplicate directory ({include.path}) "
+                    f"since {abspath} exists"
+                )
+                continue
+            manifest.override_include(new_include(include, orig_abspath), idx)
 
-        shutil.copytree(orig_abspath, abspath, symlinks=True)
+    manifest.flush()
 
 
 class EnvironmentManifestFile(collections.abc.Mapping):
@@ -3151,7 +3127,6 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         Args:
              manifest_dir: directory containing the manifest and lockfile
         """
-        # TBD: Should this be the abspath?
         manifest_dir = pathlib.Path(manifest_dir)
         lockfile = manifest_dir / lockfile_name
         with lockfile.open("r", encoding="utf-8") as f:
@@ -3378,13 +3353,53 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             raise SpackEnvironmentError(msg) from e
         self.changed = True
 
-    def set_include_concrete(self, include_concrete: List[str]) -> None:
-        """Sets the included concrete environments in the manifest to the value(s) passed as input.
+    def add_include_concrete(self, include_concrete: List[str]) -> None:
+        """Adds the valid included concrete environment lockfiles to the manifest.
 
         Args:
-            include_concrete: list of already existing concrete environments to include
+            include_concrete: concrete environment root paths to include
+
+        Raises:
+            SpackEnvironmentError: if any included concrete environments do not exist
+            ValueError: if any included managed environments have invalid names
         """
-        self.configuration[lockfile_include_key] = list(include_concrete)
+        abstract = set()
+        concrete_paths = []
+        for include in include_concrete:
+            env_root = as_env_dir(include)
+            lockfile = os.path.join(env_root, lockfile_name)
+            if os.path.exists(lockfile):
+                concrete_paths.append(lockfile)
+            else:
+                abstract.add(include)
+
+        if abstract:
+            msg = (
+                f"The following environment(s) are not concrete: {', '.join(abstract)}\n"
+                "Please run:"
+            )
+            for env in abstract:
+                msg += f"\n\t`spack -e {env} concretize`"
+            raise SpackEnvironmentError(msg)
+
+        self.configuration[manifest_include_name] = concrete_paths
+        self.changed = True
+
+    def override_include(self, include: Union[str, dict], idx: int) -> None:
+        """Overrides the included path data at index idx with the one passed as input.
+        Args:
+            include: new include data
+            idx: index of the include to be overridden
+
+        Raises:
+            SpackEnvironmentError: when the include cannot be overridden
+        """
+        try:
+            current_include = self.configuration["include"][idx]
+            self.configuration["include"][idx] = include
+        except ValueError as e:
+            msg = f"cannot override '{current_include}' with '{include}'"
+            raise SpackEnvironmentError(msg) from e
         self.changed = True
 
     def add_definition(self, user_spec: str, list_name: str) -> None:
@@ -3555,7 +3570,7 @@ class EnvironmentManifestFile(collections.abc.Mapping):
         )
 
     def deactivate_config_scope(self) -> None:
-        """Remove the manifest's scope from the global config path."""
+        """Remove the manifest's scope(s) from the global config path."""
         spack.config.CONFIG.remove_scope(self.env_config_scope.name)
 
     @contextlib.contextmanager

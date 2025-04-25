@@ -94,6 +94,8 @@ properties: Dict[str, Any] = {
             },
             # (DEPRECATED) include concrete to be merged under the include key
             "include_concrete": include_concrete,
+            # nested environments
+            "spack": {"$ref": "#/spack/properties"},
         },
     }
 }

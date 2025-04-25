@@ -6,6 +6,7 @@ import collections
 import io
 import os
 import pathlib
+import stat
 import sys
 import tempfile
 import textwrap
@@ -1672,8 +1673,7 @@ def test_config_include_similar_name(tmp_path: pathlib.Path):
 
     # Ensure all of the scopes are found
     assert len(config.matching_scopes("^test$")) == 1
-    assert len(config.matching_scopes("^test:a/config$")) == 1
-    assert len(config.matching_scopes("^test:b/config$")) == 1
+    assert len(config.matching_scopes("^test:")) == 2
 
 
 def test_deepcopy_as_builtin(env_yaml):
@@ -1707,6 +1707,8 @@ def test_included_path_string(
     assert include.path == str(path)
     assert not include.optional
     assert include.evaluate_condition()
+    out = include.to_dict()
+    assert len(out) == 1 and out["path"] == str(path)
 
     parent_scope = mock_low_high_config.scopes["low"]
 
@@ -1717,7 +1719,7 @@ def test_included_path_string(
     # First successful pass builds the scope
     path.touch()
     scopes = include.scopes(parent_scope)
-    assert scopes and len(scopes) == 1
+    assert len(scopes) == 1
     assert isinstance(scopes[0], spack.config.SingleFileScope)
 
     # Second pass uses the scopes previously built
@@ -1734,12 +1736,14 @@ def test_included_path_string_no_parent_path(
     will be rooted in the current working directory (usually SPACK_ROOT)."""
     entry = {"path": "config.yaml", "optional": True}
     include = spack.config.included_path(entry)
+
     parent_scope = spack.config.InternalConfigScope("parent-scope")
     included_scopes = include.scopes(parent_scope)
     # ensure scope is returned even if there is no parent path
     assert len(included_scopes) == 1
     # ensure scope for include is singlefile as it ends in .yaml
     assert isinstance(included_scopes[0], spack.config.SingleFileScope)
+
     destination = include.destination
     curr_dir = os.getcwd()
     assert curr_dir == os.path.commonprefix([curr_dir, destination])  # type: ignore[list-item]
@@ -1766,16 +1770,37 @@ def test_included_path_conditional_bad_when(
     path.mkdir()
     entry = {"path": str(path), "when": 'platform == "nosuchplatform"', "optional": True}
     include = spack.config.included_path(entry)
-    assert isinstance(include, spack.config.IncludePath)
-    assert include.path == entry["path"]
-    assert include.when == entry["when"]
-    assert include.optional
     assert not include.evaluate_condition()
+    out = include.to_dict()
+    assert out == entry
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capfd.readouterr()[1]
     assert "condition is not satisfied" in captured
     assert not scopes
+
+
+def test_included_path_destination(
+    tmp_path: pathlib.Path, mock_fetch_url_text, mock_low_high_config, ensure_debug
+):
+    destination = tmp_path / "remotes"
+    entry = {
+        "path": "https://github.com/path/to/raw/config/config.yaml",
+        "destination": str(destination),
+    }
+
+    # confirm missing sha256 is flagged
+    with pytest.raises(spack.error.ConfigError, match="requires a 'sha256'"):
+        spack.config.included_path(entry)
+
+    # confirm proper remote include with destination works
+    if sys.platform != "win32":
+        entry["sha256"] = "805ab8e677f83311a141e948674e5a3ad57d94b54fc126d410a853937ca8255f"
+    else:
+        entry["sha256"] = "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
+
+    include = spack.config.included_path(entry)
+    assert include.scopes(mock_low_high_config.scopes["low"])
 
 
 def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high_config):
@@ -1784,13 +1809,13 @@ def test_included_path_conditional_success(tmp_path: pathlib.Path, mock_low_high
     entry = {"path": str(path), "when": 'platform == "test"', "optional": True}
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.IncludePath)
-    assert include.path == entry["path"]
-    assert include.when == entry["when"]
     assert include.optional
     assert include.evaluate_condition()
+    out = include.to_dict()
+    assert out == entry
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
-    assert scopes and len(scopes) == 1
+    assert len(scopes) == 1
     assert isinstance(scopes[0], spack.config.DirectoryConfigScope)
 
 
@@ -1798,12 +1823,6 @@ def test_included_path_git_missing_args():
     # must have one or more of: branch, tag and commit so fail if missing any
     entry = {"git": "https://example.com/windows/configs.git", "paths": ["config.yaml"]}
     with pytest.raises(spack.error.ConfigError, match="specify one or more"):
-        spack.config.included_path(entry)
-
-    # must have one or more paths
-    entry["tag"] = "v1.0"
-    entry["paths"] = []
-    with pytest.raises(spack.error.ConfigError, match="must include one or more"):
         spack.config.included_path(entry)
 
 
@@ -1819,11 +1838,10 @@ def test_included_path_git_unsat(
     }
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
-    assert include.git == entry["git"]
-    assert include.tag == entry["tag"]
-    assert include.paths == entry["paths"]
-    assert include.when == entry["when"]
     assert not include.optional and not include.evaluate_condition()
+
+    out = include.to_dict()
+    assert out == entry
 
     scopes = include.scopes(mock_low_high_config.scopes["low"])
     captured = capfd.readouterr()[1]
@@ -1880,6 +1898,9 @@ def test_included_path_git(
     include = spack.config.included_path(entry)
     assert isinstance(include, spack.config.GitIncludePaths)
     assert not include.optional and include.evaluate_condition()
+
+    destination = include.base_directory(include.git)
+    assert destination and not os.path.exists(destination)
 
     # set up minimal git and repository operations
     class MockIncludeGit(spack.util.executable.Executable):
@@ -1989,6 +2010,69 @@ def test_included_path_git_temp_dest(mock_low_high_config):
         assert dest_dir == temp_dir, pre + rest
 
 
+@pytest.mark.parametrize(
+    "paths,dest", [(["spack.yaml"], True), (["config.yaml", "packages.yaml"], False), ([], False)]
+)
+def test_included_path_git_default_paths(
+    tmp_path: pathlib.Path, mock_low_high_config, ensure_debug, monkeypatch, paths, dest
+):
+    """Confirm the default selection of paths."""
+    monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
+
+    class MockIncludeGit(spack.util.executable.Executable):
+        def __init__(self, required: bool):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "config":
+                return "origin"
+
+            return ""
+
+    entry = {"git": "https://example.com/linux/configs.git", "branch": "main"}
+    if dest:
+        path = tmp_path / "remotes"
+        path.mkdir()
+        path = str(path)
+        entry["destination"] = path
+    else:
+        path = ""
+
+    include = spack.config.included_path(entry)
+    assert isinstance(include, spack.config.GitIncludePaths)
+
+    destination = path if dest else include._destination_directory(include.git)
+
+    # set up minimal git and repository operations
+    monkeypatch.setattr(spack.util.git, "git", MockIncludeGit)
+
+    def _init_repo(*args, **kwargs):
+        fs.mkdirp(fs.join_path(destination, ".git"))
+
+    def _checkout(*args, **kwargs):
+        # Make sure the files exist at the clone destination
+        with fs.working_dir(destination):
+            for p in paths:
+                fs.touch(p)
+
+            # Throw in a couple of files that should NOT get picked up
+            fs.touch("spack.lock")
+            fs.touch("unsupported.yaml")
+
+    monkeypatch.setattr(spack.util.git, "init_git_repo", _init_repo)
+    monkeypatch.setattr(spack.util.git, "pull_checkout_branch", _checkout)
+
+    # Ensure the repository is cloned and the paths, if any, are chosen
+    parent_scope = mock_low_high_config.scopes["low"]
+    scopes = include.scopes(parent_scope)
+    assert len(scopes) == len(paths)
+    for scope in scopes:
+        assert isinstance(scope, spack.config.SingleFileScope)
+        assert os.path.basename(scope.path) in paths  # type: ignore[union-attr]
+
+
 def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, monkeypatch):
     monkeypatch.setattr(spack.paths, "user_cache_path", str(tmp_path))
 
@@ -2028,8 +2112,10 @@ def test_included_path_git_errs(tmp_path: pathlib.Path, mock_low_high_config, mo
     with pytest.raises(spack.error.ConfigError, match="Unable to check out"):
         include.scopes(parent_scope)
 
-    # set up invalid option failure
+    # set up invalid option failure, making sure to first clear the default
+    # destination from the previous call
     include.branch = ""  # type: ignore[union-attr]
+    include.destination = ""  # type: ignore[union-attr]
     with pytest.raises(spack.error.ConfigError, match="Missing or unsupported options"):
         include.scopes(parent_scope)
 
@@ -2150,3 +2236,64 @@ def test_config_invalid_scope(mock_low_high_config):
     err = "Must be one of \\['low', 'high'\\]"  # noqa: W605
     with pytest.raises(ValueError, match=err):
         spack.config.CONFIG.get_config_filename("noscope", "nosection")
+
+
+def test_config_optional_include_failures(tmp_path: pathlib.Path):
+    include = spack.config.OptionalInclude({})
+
+    with pytest.raises(NotImplementedError):
+        include.paths
+
+    config_scope = spack.config.DirectoryConfigScope("test", str(tmp_path))
+    with pytest.raises(NotImplementedError):
+        include.scopes(config_scope)
+
+
+@pytest.mark.not_on_windows("chmod behaves differently")
+def test_included_path_unwritable_dest(tmp_path: pathlib.Path, mock_fetch_url_text):
+    dest = tmp_path / "unwritable"
+    dest.mkdir()
+    current_mode = os.stat(str(dest)).st_mode
+    dest.chmod(current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+
+    sha256 = (
+        "1e44af11d28bb1ddce335ff90129d6b081faf067930f1bb9b745990c6958d8b6"
+        if sys.platform == "win32"
+        else "805ab8e677f83311a141e948674e5a3ad57d94b54fc126d410a853937ca8255f"
+    )
+    entry = {
+        "path": "https://github.com/path/to/raw/config/config.yaml",
+        "destination": str(dest),
+        "sha256": sha256,
+    }
+    include = spack.config.included_path(entry)
+
+    parent_scope = spack.config.ConfigScope("FakeScope")
+    try:
+        with pytest.raises(AssertionError, match="to unwritable"):
+            include.scopes(parent_scope)
+    finally:
+        dest.chmod(current_mode)
+
+
+@pytest.mark.not_on_windows("chmod behaves differently")
+def test_included_path_git_unwritable_dest(tmp_path: pathlib.Path):
+    dest = tmp_path / "unwritable"
+    dest.mkdir()
+    current_mode = os.stat(str(dest)).st_mode
+    dest.chmod(current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH))
+
+    entry = {
+        "git": "https://example.com/windows/configs.git",
+        "branch": "main",
+        "paths": ["config.yaml"],
+        "destination": str(dest),
+    }
+    include = spack.config.included_path(entry)
+
+    parent_scope = spack.config.ConfigScope("fake")
+    try:
+        with pytest.raises(AssertionError, match="to unwritable"):
+            include.scopes(parent_scope)
+    finally:
+        dest.chmod(current_mode)
