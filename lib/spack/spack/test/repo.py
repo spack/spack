@@ -396,17 +396,11 @@ def test_mod_to_pkg_name_and_reverse():
 
 def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     # Create a repo with a v2 structure
-    repo_dir = tmp_path / "spack_repo" / "repo_1"
-    repo_dir.mkdir(parents=True)
-    (repo_dir / "repo.yaml").write_text(
-        """
-repo:
-  namespace: repo_1
-  api: v2.0
-"""
-    )
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_1", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
     # Create two invalid module names
-    (repo_dir / "packages" / "zlib-ng").mkdir(parents=True)
+    (repo_dir / "packages" / "zlib-ng").mkdir()
     (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
         """
 from spack.package import Package
@@ -415,7 +409,7 @@ class ZlibNg(Package):
     pass
 """
     )
-    (repo_dir / "packages" / "UPPERCASE").mkdir(parents=True)
+    (repo_dir / "packages" / "UPPERCASE").mkdir()
     (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
         """
 from spack.package import Package
@@ -435,17 +429,11 @@ class Uppercase(Package):
 
 def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
     # Create a repo with a v2 structure
-    repo_dir = tmp_path / "spack_repo" / "repo_2"
-    repo_dir.mkdir(parents=True)
-    (repo_dir / "repo.yaml").write_text(
-        """
-repo:
-  namespace: repo_2
-  api: v2.0
-"""
-    )
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_2", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
     # Create an invalid module name
-    (repo_dir / "packages" / "_1example_2_test").mkdir(parents=True)
+    (repo_dir / "packages" / "_1example_2_test").mkdir()
     (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
         """
 from spack.package import Package
