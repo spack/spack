@@ -12,6 +12,7 @@ import spack.repo
 import spack.spec
 import spack.util.file_cache
 import spack.util.naming
+from spack.util.naming import valid_module_name
 
 
 @pytest.fixture(params=["packages", "", "foo"])
@@ -380,6 +381,18 @@ def test_mod_to_pkg_name_and_reverse():
     assert spack.util.naming.pkg_name_to_mod("zlib-ng", package_api=(2, 0)) == "zlib_ng"
     assert spack.util.naming.pkg_name_to_mod("3example-4", package_api=(2, 0)) == "_3example_4"
 
+    # reserved names need an underscore
+    assert spack.util.naming.mod_to_pkg_name("_finally", package_api=(2, 0)) == "finally"
+    assert spack.util.naming.mod_to_pkg_name("_assert", package_api=(2, 0)) == "assert"
+    assert spack.util.naming.pkg_name_to_mod("finally", package_api=(2, 0)) == "_finally"
+    assert spack.util.naming.pkg_name_to_mod("assert", package_api=(2, 0)) == "_assert"
+
+    # reserved names are case sensitive, so true/false/none are ok
+    assert spack.util.naming.mod_to_pkg_name("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.mod_to_pkg_name("none", package_api=(2, 0)) == "none"
+    assert spack.util.naming.pkg_name_to_mod("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_name_to_mod("none", package_api=(2, 0)) == "none"
+
 
 def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     # Create a repo with a v2 structure
@@ -447,3 +460,35 @@ class _1example2Test(Package):
         pkg_cls = repo.get_pkg_class("1example-2-test")
         assert pkg_cls.name == "1example-2-test"
         assert pkg_cls.module.__name__ == "spack_repo.repo_2.packages._1example_2_test.package"
+
+
+def test_valid_module_name_v2():
+    api = (2, 0)
+
+    # no hyphens
+    assert not valid_module_name("zlib-ng", api)
+
+    # cannot start with a number
+    assert not valid_module_name("7zip", api)
+
+    # no consecutive underscores
+    assert not valid_module_name("zlib__ng", api)
+
+    # reserved names
+    assert not valid_module_name("finally", api)
+    assert not valid_module_name("assert", api)
+
+    # cannot contain uppercase
+    assert not valid_module_name("False", api)
+    assert not valid_module_name("zlib_NG", api)
+
+    # reserved names are allowed when preceded by underscore
+    assert valid_module_name("_finally", api)
+    assert valid_module_name("_assert", api)
+
+    # digits are allowed when preceded by underscore
+    assert valid_module_name("_1example_2_test", api)
+
+    # underscore is not allowed unless followed by reserved name or digit
+    assert not valid_module_name("_zlib", api)
+    assert not valid_module_name("_false", api)

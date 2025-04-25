@@ -6,7 +6,7 @@ import io
 import itertools
 import re
 import string
-from typing import Tuple
+from typing import List, Tuple
 
 import spack.error
 
@@ -19,8 +19,49 @@ __all__ = [
     "NamespaceTrie",
 ]
 
+#: see keyword.kwlist: https://github.com/python/cpython/blob/main/Lib/keyword.py
+RESERVED_NAMES_ONLY_LOWERCASE = frozenset(
+    [
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+    ]
+)
+
+RESERVED_NAMES_LIST_MIXED_CASE = ("False", "None", "True")
+
 # Valid module names can contain '-' but can't start with it.
 _VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
+
 _VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
@@ -44,29 +85,31 @@ def pkg_name_to_class_name(pkg_name: str):
     class_name = string.capwords(class_name, "-")
     class_name = class_name.replace("-", "")
 
-    # If a class starts with a number, prefix it with _ to make it a valid Python class name.
-    if re.match(r"^[0-9]", class_name):
-        class_name = "_%s" % class_name
+    # Ensure that the class name is a valid Python identifier
+    if re.match(r"^[0-9]", class_name) or class_name in RESERVED_NAMES_LIST_MIXED_CASE:
+        class_name = f"_{class_name}"
 
     return class_name
 
 
 def mod_to_pkg_name(dirname: str, package_api: Tuple[int, int]) -> str:
     """Translate a module name to its corresponding package name"""
-    if package_api[0] == 1:
+    if package_api < (2, 0):
         return dirname
     return dirname.lstrip("_").replace("_", "-")
 
 
 def pkg_name_to_mod(name: str, package_api: Tuple[int, int]) -> str:
     """Translate a package name to its corresponding module name"""
-    if package_api[0] == 1:
+    if package_api < (2, 0):
         return name
     name = name.replace("-", "_")
-    return f"_{name}" if re.match(r"^[0-9]", name) else name
+    if re.match(r"^[0-9]", name) or name in RESERVED_NAMES_ONLY_LOWERCASE:
+        name = f"_{name}"
+    return name
 
 
-def possible_spack_module_names(python_mod_name):
+def possible_spack_module_names(python_mod_name: str) -> List[str]:
     """Given a Python module name, return a list of all possible spack module
     names that could correspond to it."""
     mod_name = re.sub(r"^num(\d)", r"\1", python_mod_name)
@@ -74,7 +117,7 @@ def possible_spack_module_names(python_mod_name):
     parts = re.split(r"(_)", mod_name)
     options = [["_", "-"]] * mod_name.count("_")
 
-    results = []
+    results: List[str] = []
     for subs in itertools.product(*options):
         s = list(parts)
         s[1::2] = subs
@@ -83,7 +126,7 @@ def possible_spack_module_names(python_mod_name):
     return results
 
 
-def simplify_name(name):
+def simplify_name(name: str) -> str:
     """Simplify package name to only lowercase, digits, and dashes.
 
     Simplifies a name which may include uppercase letters, periods,
@@ -133,8 +176,15 @@ def simplify_name(name):
 
 def valid_module_name(mod_name: str, package_api: Tuple[int, int]) -> bool:
     """Return whether mod_name is valid for use in Spack."""
-    regex = _VALID_MODULE_RE_V1 if package_api[0] == 1 else _VALID_MODULE_RE_V2
-    return bool(regex.match(mod_name))
+    if package_api < (2, 0):
+        return bool(_VALID_MODULE_RE_V1.match(mod_name))
+    elif not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
+        return False
+    elif mod_name.startswith("_"):
+        # it can only start with an underscore if followed by digit or reserved name
+        return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
+    else:
+        return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
 
 
 def validate_module_name(mod_name: str, package_api: Tuple[int, int]) -> None:

@@ -52,6 +52,10 @@ class TestPackage:
         assert "PmgrCollective" == pkg_name_to_class_name("pmgr-collective")
         assert "Pmgrcollective" == pkg_name_to_class_name("PmgrCollective")
         assert "_3db" == pkg_name_to_class_name("3db")
+        assert "_True" == pkg_name_to_class_name("true")  # reserved keyword
+        assert "_False" == pkg_name_to_class_name("false")  # reserved keyword
+        assert "_None" == pkg_name_to_class_name("none")  # reserved keyword
+        assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
