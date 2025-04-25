@@ -85,7 +85,7 @@ class Sgpp(SConsPackage):
     variant(
         "eigen",
         default=False,
-        description="Build with Eigen support",
+        description="Enables Eigen support",
         when="@3.4.0: +optimization",
     )
     variant(
