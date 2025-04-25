@@ -4,9 +4,9 @@
 
 from typing import Optional
 
-from spack.directives import conflicts
 import spack.package_base
 import spack.util.url
+from spack.directives import conflicts
 
 
 class XorgPackage(spack.package_base.PackageBase):
