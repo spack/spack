@@ -99,9 +99,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         description="Enable/disable cuSovler LU refactorization",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("lapack")
     depends_on("blas")
