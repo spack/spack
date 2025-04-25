@@ -9,6 +9,7 @@ static DSL metadata for packages.
 """
 
 import os
+import pathlib
 import shutil
 
 import pytest
@@ -22,6 +23,7 @@ import spack.error
 import spack.install_test
 import spack.package
 import spack.package_base
+import spack.repo
 import spack.spec
 import spack.store
 from spack.build_systems.generic import Package
@@ -245,23 +247,31 @@ def test_package_exes_and_libs():
             libraries = ["libFindMe.a"]
 
 
-def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+def test_package_url_and_urls(tmp_path: pathlib.Path):
+    repo_path = tmp_path / "test-repo"
+    spack.repo.create_repo(str(repo_path))
+    package_py = repo_path / "packages" / "urls-package" / "package.py"
+    package_py.parent.mkdir(parents=True)
+    package_py.write_text(
+        """\
+from spack.package import *
 
+class UrlsPackage(Package):
+    url = "https://www.example.com/url-package-1.0.tgz"
+    urls = ["https://www.example.com/archive"]
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_path)) as repo:
+        pkg_cls = repo.get_pkg_class("urls-package")
+        s = spack.spec.Spec("urls-package")
+        with pytest.raises(ValueError, match="defines both"):
+            pkg_cls(s)
+
+
+def test_package_license(mock_packages):
     s = spack.spec.Spec("pkg-a")
-    with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
-
-
-def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
-
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = spack.repo.PATH.get_pkg_class("pkg-a")(s)
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
