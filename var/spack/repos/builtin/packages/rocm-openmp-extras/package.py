@@ -377,7 +377,7 @@ class RocmOpenmpExtras(Package):
             devlibs_prefix = self.prefix
             llvm_prefix = self.prefix
             # prefix is set to either <rocm_path>/llvm or <rocm_path>/lib/llvm
-            path_parts = self.prefix.rstrip('llvm').rstrip('lib/')
+            path_parts = self.prefix.rstrip("llvm").rstrip("lib/")
             hsa_prefix = os.path.dirname(path_parts)
         else:
             devlibs_prefix = self.spec["llvm-amdgpu"].prefix
