@@ -1037,22 +1037,22 @@ class Repo:
                 "Namespaces must be valid python identifiers separated by '.'",
             )
         else:
-            # From Package API v2.0 there is no need to define the namespace, since it has to be
-            # equal to the directory name of the repository, which itself is a Python module name.
-            repo_basename = os.path.basename(self.root)
+            # From Package API v2.0 the namespace follows from the directory structure.
+            derived_namespace = self.root.rpartition(f"spack_repo{os.sep}")[2].replace(os.sep, ".")
             if "namespace" in config:
                 self.namespace = config["namespace"]
 
                 check(
-                    isinstance(self.namespace, str) and self.namespace == repo_basename,
-                    f"Namespace '{self.namespace}' must be equal to the repository's directory "
-                    f"name '{repo_basename}' or omitted",
+                    isinstance(self.namespace, str) and self.namespace == derived_namespace,
+                    f"Namespace '{self.namespace}' should be {derived_namespace} or ommited in "
+                    f"{os.path.join(root, repo_config_name)}",
                 )
             else:
-                self.namespace = repo_basename
+                self.namespace = derived_namespace
 
+            # check that all subdirectories are valid module names
             check(
-                nm.valid_module_name(self.namespace, self.package_api),
+                all(nm.valid_module_name(x, self.package_api) for x in self.namespace.split(".")),
                 f"Invalid namespace '{self.namespace}' in repo '{self.root}'",
             )
 
