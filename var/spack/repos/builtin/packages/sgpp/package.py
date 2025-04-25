@@ -83,13 +83,10 @@ class Sgpp(SConsPackage):
     )
     variant("mpi", default=False, description="Enables support for MPI-distributed operations")
     variant(
-        "eigen",
-        default=False,
-        description="Enables Eigen support",
-        when="@3.4.0: +optimization",
+        "eigen", default=False, description="Enables Eigen support", when="@3.4.0: +optimization"
     )
     variant(
-        "dakota", default=False, description="Build with Dakota support", when="@3.4.0: +combigrid"
+        "dakota", default=False, description="Enables Dakota support", when="@3.4.0: +combigrid"
     )
     variant(
         "visualization",
