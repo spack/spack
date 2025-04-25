@@ -31,8 +31,6 @@ class G4emlow(Package):
     version("6.50", sha256="c97be73fece5fb4f73c43e11c146b43f651c6991edd0edf8619c9452f8ab1236")
     version("6.35", sha256="1564045a0acad344c8d432cd48c2c3bb2e051a81ab3099a84e0f56ba0fe82cec")
 
-    depends_on("cxx", type="build")  # generated
-
     def install(self, spec, prefix):
         mkdirp(join_path(prefix.share, "data"))
         install_path = join_path(prefix.share, "data", self.g4datasetname)
