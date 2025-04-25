@@ -23,7 +23,6 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     compiler_wrapper_link_paths = {
         "c": "rocmcc/amdclang",
         "cxx": "rocmcc/amdclang++",
-        "fortran": "rocmcc/amdflang",
     }
 
     stdcxx_libs = ("-lstdc++",)
@@ -60,7 +59,6 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
         version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
 
     provides("c", "cxx")
-    provides("fortran")
 
     variant(
         "rocm-device-libs",
@@ -374,6 +372,3 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
 
     def _cxx_path(self):
         return os.path.join(self.spec.prefix.bin, "amdclang++")
-
-    def _fortran_path(self):
-        return os.path.join(self.spec.prefix.bin, "amdflang")
