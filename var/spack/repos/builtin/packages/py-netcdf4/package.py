@@ -29,6 +29,7 @@ class PyNetcdf4(PythonPackage):
 
     depends_on("python", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@1.7.1:", type=("build", "link", "run"))
+    depends_on("c", type="build")
     depends_on("py-cython@0.29:", when="@1.6.5:", type="build")
     depends_on("py-cython@0.19:", type="build")
     depends_on("py-setuptools@61:", when="@1.6.5:", type="build")
