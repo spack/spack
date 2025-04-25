@@ -50,6 +50,11 @@ properties: Dict[str, Any] = {
                             "description": "Required SHA256 hash for remote URLs to verify "
                             "file integrity",
                         },
+                        "destination": {
+                            "type": "string",
+                            "description": "Optional destination for a remote (ftp, http, "
+                            "https) path.",
+                        },
                         "optional": {
                             "type": "boolean",
                             "description": "If true, include only if path exists; if false "
@@ -94,6 +99,11 @@ properties: Dict[str, Any] = {
                             "configuration files are located",
                         },
                         "name": {"type": "string"},
+                        "destination": {
+                            "type": "string",
+                            "description": "Optional destination for a remote (ftp, http, "
+                            "https) path.",
+                        },
                         "when": {
                             "type": "string",
                             "description": "Include this config only when the condition (as "
@@ -105,7 +115,7 @@ properties: Dict[str, Any] = {
                             "if false (default), inaccessible repository causes errors",
                         },
                     },
-                    "required": ["git", "paths"],
+                    "required": ["git"],
                     "additionalProperties": False,
                 },
             ]

@@ -263,7 +263,6 @@ Note that when we installed the abstract spec ``zlib@1.2.8``, it was presented a
 All explicitly installed packages will be listed as roots of the environment.
 
 All of the Spack commands that act on the list of installed specs are environment-aware in this way, including ``install``, ``uninstall``, ``find``, ``extensions``, etc.
-In the :ref:`environment-configuration` section we will discuss environment-aware commands further.
 
 .. _cmd-spack-add:
 
@@ -282,6 +281,7 @@ To update the lockfile, the environment must be :ref:`re-concretized <cmd-spack-
 The ``spack add`` command is environment-aware.
 It adds the spec to the currently active environment.
 An error is generated if there isn't an active environment.
+All environment-aware commands can also be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: spec
 
@@ -591,6 +591,108 @@ It isn't until you run the ``spack concretize`` command that the combined enviro
    $ spack -e combined_env concretize
    $ spack -e combined_env find
    ==> In environment combined_env
+   ==> No root specs
+   ==> Included specs
+   perl  python
+
+   ==> 0 installed packages
+
+.. _environment-configuration:
+
+Included Concrete Environments
+------------------------------
+
+Spack environments can create an environment based off of information in already established environments.
+You can think of it as a combination of existing environments.
+It will gather information from the existing environment's ``spack.lock`` and use that during the creation of this included concrete environment.
+When an included concrete environment is created it will generate a ``spack.lock`` file for the newly created environment.
+
+
+Creating included environments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+To create a combined concrete environment, you must have at least one existing concrete environment.
+You will use the command ``spack env create`` with the argument ``--include-concrete`` followed by the name or path of the environment you'd like to include.
+Here is an example of how to create a combined environment from the command line.
+
+.. code-block:: spec
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+You can also include an environment directly in the ``spack.yaml`` file.
+It involves adding the ``include_concrete`` heading in the yaml followed by the absolute path to the independent environments.
+Note that you may use Spack config variables such as ``$spack`` or environment variables as long as the expression expands to an absolute path.
+
+.. code-block:: yaml
+
+   spack:
+     include:
+     - /absolute/path/to/environment1/spack.lock
+     - $spack/../path/to/environment2/spack.lock
+     specs: []
+     concretizer:
+       unify: true
+
+Once the ``spack.yaml`` has been updated you must concretize the environment to get the concrete specs from the included environments.
+
+Updating an included environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If changes were made to the base environment and you want that reflected in the included environment you will need to re-concretize both the base environment and the included environment for the change to be implemented.
+For example:
+
+.. code-block:: spec
+
+   $ spack env create myenv
+   $ spack -e myenv add python
+   $ spack -e myenv concretize
+   $ spack env create --include-concrete myenv included_env
+
+
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   python
+
+   ==> 0 installed packages
+
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+Here we see that ``included_env`` has access to the python package through the ``myenv`` environment.
+But if we were to add another spec to ``myenv``, ``included_env`` will not be able to access the new information.
+
+.. code-block:: spec
+
+   $ spack -e myenv add perl
+   $ spack -e myenv concretize
+   $ spack -e myenv find
+   ==> In environment myenv
+   ==> Root specs
+   perl  python
+
+   ==> 0 installed packages
+   $ spack -e included_env find
+   ==> In environment included_env
+   ==> No root specs
+   ==> Included specs
+   python
+
+   ==> 0 installed packages
+
+It isn't until you run the ``spack concretize`` command that the combined environment will get the updated information from the re-concretized base environment.
+
+.. code-block:: console
+
+   $ spack -e included_env concretize
+   $ spack -e included_env find
+   ==> In environment included_env
    ==> No root specs
    ==> Included specs
    perl  python
