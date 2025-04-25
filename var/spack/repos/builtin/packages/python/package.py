@@ -1273,7 +1273,6 @@ print(json.dumps(config))
 
         if self.spec.satisfies("platform=windows"):
             env.prepend_path("PATH", dependent_spec.prefix.Scripts)
-            env.prepend_path("PATH", self.spec.prefix)
             # The logic below is linux specific, and used to inject the
             # compiler wrapper to compile Python extensions.
             # Thus, it is not needed on Windows.
