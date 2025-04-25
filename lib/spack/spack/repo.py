@@ -1038,13 +1038,18 @@ class Repo:
             )
         else:
             # From Package API v2.0 the namespace follows from the directory structure.
+            check(
+                f"{os.sep}spack_repo{os.sep}" in self.root,
+                f"Invalid repository path '{self.root}'. "
+                f"Path must contain 'spack_repo{os.sep}'",
+            )
             derived_namespace = self.root.rpartition(f"spack_repo{os.sep}")[2].replace(os.sep, ".")
             if "namespace" in config:
                 self.namespace = config["namespace"]
 
                 check(
                     isinstance(self.namespace, str) and self.namespace == derived_namespace,
-                    f"Namespace '{self.namespace}' should be {derived_namespace} or ommited in "
+                    f"Namespace '{self.namespace}' should be {derived_namespace} or omitted in "
                     f"{os.path.join(root, repo_config_name)}",
                 )
             else:

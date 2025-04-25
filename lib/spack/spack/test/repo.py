@@ -396,8 +396,8 @@ def test_mod_to_pkg_name_and_reverse():
 
 def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     # Create a repo with a v2 structure
-    repo_dir = tmp_path / "repo_1"
-    repo_dir.mkdir()
+    repo_dir = tmp_path / "spack_repo" / "repo_1"
+    repo_dir.mkdir(parents=True)
     (repo_dir / "repo.yaml").write_text(
         """
 repo:
