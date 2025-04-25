@@ -52,7 +52,7 @@ class RocmDebugAgent(CMakePackage):
     depends_on("c", type="build")
 
     depends_on("cmake@3:", type="build")
-    depends_on("elfutils@:0.168", type="link")
+    depends_on("elfutils@0.188:", type="link")
 
     for ver in [
         "5.3.0",
@@ -141,9 +141,9 @@ class RocmDebugAgent(CMakePackage):
         return None
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+        env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
         if self.spec.satisfies("+asan"):
-            env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
-            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
