@@ -227,14 +227,16 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
 
 
 def test_mirror_check_human_readable_format(mock_packages, mutable_config, tmpdir):
-    """Package base is ultimately responsible for """
+    """Package base is ultimately responsible for"""
     import spack.config
+
     s = spack.concretize.concretize_one("pkg-a@2.0")
     spack.config.add(f'mirrors:{{"test": {tmpdir}}}')
     human_readable_path = os.path.join(tmpdir, "pkg-a", "pkg-a-2.0.tar.gz")
-    x = list(s.package.stage[0]._generate_fetchers())
-    assert any(human_readable_path in getattr(f, "url", "")
-               for f in s.package.stage[0]._generate_fetchers())
+    assert any(
+        human_readable_path in getattr(f, "url", "")
+        for f in s.package.stage[0]._generate_fetchers()
+    )
 
 
 def test_cache_extra_sources_fails(install_mockery):
