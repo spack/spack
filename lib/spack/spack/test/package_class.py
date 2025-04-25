@@ -227,7 +227,10 @@ def test_cache_extra_sources(install_mockery, spec, sources, extras, expect):
 
 
 def test_mirror_check_human_readable_format(mock_packages, mutable_config, tmpdir):
-    """Package base is ultimately responsible for"""
+    """The package is responsible for attempting to download
+    a package version from a mirror path that a human could
+    reasonably construct, of the form
+    <package-name>/<package-name>-<package-version>.<archive-extension>"""
     import spack.config
 
     s = spack.concretize.concretize_one("pkg-a@2.0")
