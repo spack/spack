@@ -16,6 +16,8 @@ class Xfce4Core(BundlePackage):
     version("4.18")
     version("4.16")
 
+    has_code = False
+
     for xfce4_version, new_components, override in [
         ("4.20", ["libxfce4windowing"], {}),
         ("4.18", [], {}),
