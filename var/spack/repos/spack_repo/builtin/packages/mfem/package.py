@@ -924,14 +924,14 @@ class GenericBuilder(AnyBuilder, GenericBuilder):
             ]
 
         if "+suite-sparse" in spec:
-            ss_spec = "suite-sparse:" + self.suitesparse_components
+            ss_spec = "suite-sparse:" + self.pkg.suitesparse_components
             options += [
                 "SUITESPARSE_OPT=-I%s" % spec[ss_spec].prefix.include,
                 "SUITESPARSE_LIB=%s" % ld_flags_from_library_list(spec[ss_spec].libs),
             ]
 
         if "+sundials" in spec:
-            sun_spec = "sundials:" + self.sundials_components
+            sun_spec = "sundials:" + self.pkg.sundials_components
             options += [
                 "SUNDIALS_OPT=%s" % spec[sun_spec].headers.cpp_flags,
                 "SUNDIALS_LIB=%s" % ld_flags_from_library_list(spec[sun_spec].libs),
