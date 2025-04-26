@@ -12,6 +12,8 @@ class Cce(Package, CompilerPackage):
     homepage = "https://cpe.ext.hpe.com/docs/cce/index.html"
     url = "https://cpe.ext.hpe.com/docs/cce/index.html"
 
+    has_code = False
+
     compiler_languages = ["c", "cxx", "fortran"]
     c_names = ["craycc"]
     cxx_names = ["crayCC"]

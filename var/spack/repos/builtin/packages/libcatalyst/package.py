@@ -53,7 +53,7 @@ class Libcatalyst(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+conduit"):
             env.prepend_path("CMAKE_PREFIX_PATH", spec["conduit"].prefix)

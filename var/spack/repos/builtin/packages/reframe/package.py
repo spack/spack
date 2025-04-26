@@ -181,7 +181,7 @@ class Reframe(Package):
                         shutil.move("reframe.settings.8", "man8")
         install_tree(self.stage.source_path, self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix)
         if self.spec.satisfies("@3.0:"):
             if "+docs" in self.spec:

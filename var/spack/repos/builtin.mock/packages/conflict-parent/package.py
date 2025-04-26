@@ -23,5 +23,5 @@ class ConflictParent(Package):
         make()
         make("install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FOOBAR", self.name)

@@ -33,7 +33,7 @@ class EsysParticle(CMakePackage):
         for file in files:
             filter_file("PYTHON_LIBRARIES", "Python_LIBRARIES", file, string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         pylibpath = join_path(
             self.prefix.lib, "python{0}".format(self.spec["python"].version.up_to(2))
         )

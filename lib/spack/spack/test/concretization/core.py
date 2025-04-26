@@ -3366,3 +3366,17 @@ def test_reuse_when_requiring_build_dep(
     with spack.config.override("concretizer:reuse", True):
         result = spack.concretize.concretize_one("pkg-b")
         assert pkgb_old.dag_hash() == result.dag_hash(), result.tree()
+
+
+@pytest.mark.regression("50167")
+def test_input_analysis_and_conditional_requirements(default_mock_concretization):
+    """Tests that input analysis doesn't account for conditional requirement
+    to discard possible dependencies.
+
+    If the requirement is conditional, and impossible to achieve on the current
+    platform, the valid search space is still the complement of the condition that
+    activates the requirement.
+    """
+    libceed = default_mock_concretization("libceed")
+    assert libceed["libxsmm"].satisfies("@main")
+    assert libceed["libxsmm"].satisfies("platform=test")

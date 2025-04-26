@@ -29,7 +29,7 @@ class UcscBedgraphtobigwig(Package):
     depends_on("mysql-client")
     conflicts("^mysql@8.0.0:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MYSQLLIBS", "-lmysqlclient")
         env.set("L", "-lssl")
         env.set("BINDIR", "bin")

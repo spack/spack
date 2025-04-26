@@ -30,5 +30,5 @@ class PyPylikwid(PythonPackage):
     depends_on("likwid", when="~cuda")
     depends_on("likwid+cuda", when="+cuda")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LIKWID_PREFIX", self.spec["likwid"].prefix)

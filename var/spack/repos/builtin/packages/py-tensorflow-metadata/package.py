@@ -53,6 +53,6 @@ class PyTensorflowMetadata(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         tmp_path = tempfile.mkdtemp(prefix="spack")
         env.set("TEST_TMPDIR", tmp_path)

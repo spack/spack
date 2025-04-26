@@ -71,6 +71,7 @@ spack:
   - geant4 ~vtk ^[virtuals=qmake] qt
   - geant4 ~vtk ^[virtuals=qmake] qt-base
   #- genie +atmo
+  - geomodel +examples +fullsimlight +geomodelg4 +hepmc3 +pythia +tools +visualization
   - hepmc
   - hepmc3 +interfaces +protobuf +python +rootio
   #- herwig3 +njet +vbfnlo  # Note: herwig3 fails to find evtgen

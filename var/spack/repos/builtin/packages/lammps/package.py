@@ -1033,11 +1033,11 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+intel %aocc"):
             env.append_flags("LDFLAGS", "-lalm -lm")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("LAMMPS_POTENTIALS", self.prefix.share.lammps.potentials)
         if self.spec.satisfies("+python"):
             if self.spec.platform == "darwin":

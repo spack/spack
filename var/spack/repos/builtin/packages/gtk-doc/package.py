@@ -49,7 +49,7 @@ class GtkDoc(AutotoolsPackage):
 
     patch("build.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """If test/tools.sh does not find gtkdocize it starts a sh which blocks"""
         env.prepend_path("PATH", join_path(self.stage.source_path, "buildsystems", "autotools"))
 

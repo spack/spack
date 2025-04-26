@@ -87,7 +87,7 @@ class Ecflow(CMakePackage):
         )
 
     @when("+ssl ^openssl~shared")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LIBS", self.spec["zlib"].libs.search_flags)
 
     def cmake_args(self):

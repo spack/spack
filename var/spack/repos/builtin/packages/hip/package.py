@@ -532,13 +532,15 @@ class Hip(CMakePackage):
             # This is picked up by CMake when using HIP as a CMake language.
             env.append_path("HIPFLAGS", f"--gcc-toolchain={self.compiler.prefix}", separator=" ")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         self.set_variables(env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.set_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.set_variables(env)
 
         if "amdgpu_target" in dependent_spec.variants:
@@ -546,7 +548,9 @@ class Hip(CMakePackage):
             if "none" not in arch and "auto" not in arch:
                 env.set("HCC_AMDGPU_TARGET", ",".join(arch.value))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_dependent_build_environment(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):

@@ -149,7 +149,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return options
 
     @when("@:3.7.0 %gcc@10:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # version up to and including 3.7.0 are not ported to gcc 10
         # https://github.com/opencollab/arpack-ng/issues/242
         env.set("FFLAGS", "-fallow-argument-mismatch")

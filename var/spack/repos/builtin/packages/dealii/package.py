@@ -686,10 +686,10 @@ class Dealii(CMakePackage, CudaPackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DEAL_II_DIR", self.prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+cuda") and spec.satisfies("+mpi"):
             env.set("CUDAHOSTCXX", spec["mpi"].mpicxx)

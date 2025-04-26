@@ -423,7 +423,9 @@ class Charmpp(Package):
             parallel=False,
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if not self.spec.satisfies("backend=mpi"):
             env.set("MPICC", self.prefix.bin.ampicc)
             env.set("MPICXX", self.prefix.bin.ampicxx)

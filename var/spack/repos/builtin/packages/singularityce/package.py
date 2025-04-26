@@ -94,7 +94,7 @@ class SingularityBase(MakefilePackage):
     build_targets = ["-C", "builddir", "parallel=False"]
     install_targets = ["install", "-C", "builddir", "parallel=False"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.gopath)
 

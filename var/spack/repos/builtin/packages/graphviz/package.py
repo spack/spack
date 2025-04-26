@@ -159,7 +159,7 @@ class Graphviz(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh", "NOCONFIG")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
         super().setup_build_environment(env)
 

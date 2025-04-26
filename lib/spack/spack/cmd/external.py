@@ -62,7 +62,7 @@ def setup_parser(subparser):
         "package Spack knows how to find."
     )
 
-    sp.add_parser("list", help="list detectable packages, by repository and name")
+    sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -259,6 +259,7 @@ def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
+        "ls": external_list,
         "read-cray-manifest": external_read_cray_manifest,
     }
     action[args.external_command](args)

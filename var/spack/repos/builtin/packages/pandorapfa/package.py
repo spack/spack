@@ -55,8 +55,10 @@ class Pandorapfa(Package):
         url = base_url + "/v%s-%s-%s.tar.gz" % (major, minor, patch)
         return url
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("PANDORAPFA", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PANDORAPFA", self.prefix)

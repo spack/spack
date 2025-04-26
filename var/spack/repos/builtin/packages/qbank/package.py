@@ -52,6 +52,6 @@ class Qbank(Package):
         if "+doc" in spec:
             install_tree("doc", prefix.doc)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+doc" in self.spec:
             env.prepend_path("MANPATH", self.prefix.doc)

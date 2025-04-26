@@ -41,7 +41,7 @@ class Citcoms(AutotoolsPackage):
     depends_on("cuda", when="+cuda")
     depends_on("hdf5+mpi", when="+hdf5")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+ggrd"):
             env.set("HC_HOME", self.spec["hc"].prefix)
 

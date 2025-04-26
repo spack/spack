@@ -124,5 +124,5 @@ class RedisAi(MakefilePackage):
         torch_lib_dir = join_path(torch_site_dir, "lib")
         install_tree(torch_lib_dir, self.prefix.backends.redisai_torch.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("REDIS_AI", self.prefix.join("redisai.so"))

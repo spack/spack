@@ -128,7 +128,7 @@ class Elmerfem(CMakePackage):
                 string=True,
             )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ELMER_HOME", self.prefix)
         env.set("ELMER_Fortran_COMPILER", self.compiler.fc)
         if self.spec.satisfies("+gui"):

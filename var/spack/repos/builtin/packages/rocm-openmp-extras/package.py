@@ -362,7 +362,7 @@ class RocmOpenmpExtras(Package):
     patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1")
     patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         devlibs_prefix = self.spec["llvm-amdgpu"].prefix
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         hsa_prefix = self.spec["hsa-rocr-dev"].prefix
@@ -375,7 +375,7 @@ class RocmOpenmpExtras(Package):
             env.prepend_path("LD_LIBRARY_PATH", f"{hsa_prefix}/lib")
         env.set("AOMP_GPU", f"`{self.prefix}/bin/mygpu`")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         llvm_prefix = self.spec["llvm-amdgpu"].prefix
         env.set("AOMP", f"{llvm_prefix}")
         env.set("FC", f"{self.prefix}/bin/flang")

@@ -138,7 +138,7 @@ class Heasoft(AutotoolsPackage):
         headas_setup = Executable(headas_setup_file)
         headas_setup("sh")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         try:
             env.extend(
                 EnvironmentModifications.from_sourcing_file(

@@ -16,6 +16,7 @@ import spack.error
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
@@ -846,7 +847,9 @@ To resolve this problem, please try the following:
             with open(self._removed_la_files_log, mode="w", encoding="utf-8") as f:
                 f.write("\n".join(libtool_files))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         if self.spec.platform == "darwin" and macos_version() >= Version("11"):
             # Many configure files rely on matching '10.*' for macOS version
             # detection and fail to add flags if it shows as version 11.

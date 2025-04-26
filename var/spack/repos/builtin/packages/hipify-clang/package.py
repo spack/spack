@@ -106,7 +106,7 @@ class HipifyClang(CMakePackage):
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The installer puts the binaries directly into the prefix
         # instead of prefix/bin, so add prefix to the PATH
         env.prepend_path("PATH", self.spec.prefix)

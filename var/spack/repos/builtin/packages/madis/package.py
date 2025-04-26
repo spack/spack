@@ -30,7 +30,7 @@ class Madis(MakefilePackage):
     depends_on("netcdf-fortran")
     depends_on("parallel-netcdf", when="+pnetcdf")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         fflags = []
         if self.spec.satisfies("%gcc@10:"):
             fflags += ["-fallow-argument-mismatch"]

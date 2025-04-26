@@ -47,14 +47,14 @@ class OsgCaCerts(Package):
 
     depends_on("openssl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("OSG_CERTS_VERSION", self.version[:2])
         env.set("OUR_CERTS_VERSION", str(self.version[:2]) + "NEW")
         env.set("IGTF_CERTS_VERSION", self.version[3:])
         env.set("CADIST", join_path(self.stage.source_path, "certificates"))
         env.set("PKG_NAME", self.spec.name)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("X509_CERT_DIR", join_path(self.prefix, "certificates"))
 
     def install(self, spec, prefix):

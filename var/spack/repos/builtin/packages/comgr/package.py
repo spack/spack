@@ -139,7 +139,7 @@ class Comgr(CMakePackage):
             args.append(self.define_from_variant("ADDRESS_SANITIZER", "asan"))
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@5.7: +asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
             env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")

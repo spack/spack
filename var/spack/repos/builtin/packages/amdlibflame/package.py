@@ -250,6 +250,8 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         # make install in parallel fails with message 'File already exists'
         make("install", parallel=False)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if self.spec.external:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

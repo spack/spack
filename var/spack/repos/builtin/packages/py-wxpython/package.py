@@ -33,7 +33,7 @@ class PyWxpython(PythonPackage):
     depends_on("pil", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # By default wxWdigets is built as well instead of using spack provided version,
         # this tells it to just build the python extensions
         env.set("WXPYTHON_BUILD_ARGS", "build_py --use_syswx")

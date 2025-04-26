@@ -218,7 +218,7 @@ class Conduit(CMakePackage):
         sha256="784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
         # conduit uses a <=1.10 api version before 0.8
         if "@:0.7 +hdf5" in self.spec and "@1.10:" in self.spec["hdf5"]:

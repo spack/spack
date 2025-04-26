@@ -253,7 +253,7 @@ class Phist(CMakePackage):
             "drivers/matfuncs/matpde3d.F90",
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPACK_SBANG", sbang.sbang_install_path())
 
     def cmake_args(self):

@@ -151,7 +151,7 @@ class OpenpmdApi(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
         if spec.satisfies("@:0.14"):  # pre C++17 releases
@@ -169,7 +169,9 @@ class OpenpmdApi(CMakePackage):
         if spec.satisfies("+hdf5"):
             env.prepend_path("CMAKE_PREFIX_PATH", spec["hdf5"].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
         if spec.satisfies("@:0.14"):  # pre C++17 releases

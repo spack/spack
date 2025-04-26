@@ -133,5 +133,5 @@ class Bcftools(AutotoolsPackage):
             install("plugins/*.so", self.prefix.libexec.bcftools)
 
     @when("@1.2")
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BCFTOOLS_PLUGINS", self.prefix.libexec.bcftools)

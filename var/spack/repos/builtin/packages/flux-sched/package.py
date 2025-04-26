@@ -182,7 +182,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     def lua_lib_dir(self):
         return os.path.join("lib", "lua", str(self.lua_version))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # If this package is external, we expect the external provider to set
         # things like LUA paths. So, we early return. If the package is not
         # external, properly set these environment variables to make sure the

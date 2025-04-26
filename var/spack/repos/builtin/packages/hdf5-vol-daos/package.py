@@ -41,7 +41,7 @@ class Hdf5VolDaos(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib)
 
     def check(self):

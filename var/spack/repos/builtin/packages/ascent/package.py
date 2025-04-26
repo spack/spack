@@ -350,7 +350,7 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
                 $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:HIP>>:-std=c++17>)"""
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
     ####################################################################

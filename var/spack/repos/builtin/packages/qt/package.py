@@ -375,7 +375,7 @@ class Qt(Package):
 
         return url
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not IS_WINDOWS:
             env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
         if self.version >= Version("5.11"):
@@ -388,13 +388,15 @@ class Qt(Package):
                 llvm_path = "/spack-disable-llvm"
             env.set("LLVM_INSTALL_DIR", llvm_path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("QTDIR", self.prefix)
         env.set("QTINC", self.prefix.inc)
         env.set("QTLIB", self.prefix.lib)
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("QTDIR", self.prefix)
         env.set("QTINC", self.prefix.inc)
         env.set("QTLIB", self.prefix.lib)

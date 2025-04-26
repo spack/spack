@@ -55,7 +55,7 @@ class PyCvxopt(PythonPackage):
     # depends_on('mosek@8:',  when='+mosek')
     depends_on("dsdp@5.8:", when="+dsdp")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # BLAS/LAPACK Libraries
@@ -78,7 +78,7 @@ class PyCvxopt(PythonPackage):
         # GSL Libraries
 
         if "+gsl" in spec:
-            env.set("CVXOPT_BUILD_GSL", 1)
+            env.set("CVXOPT_BUILD_GSL", "1")
 
             # Directory containing libgsl
             env.set("CVXOPT_GSL_LIB_DIR", spec["gsl"].libs.directories[0])
@@ -86,12 +86,12 @@ class PyCvxopt(PythonPackage):
             # Directory containing the GSL header files
             env.set("CVXOPT_GSL_INC_DIR", spec["gsl"].headers.directories[0])
         else:
-            env.set("CVXOPT_BUILD_GSL", 0)
+            env.set("CVXOPT_BUILD_GSL", "0")
 
         # FFTW Libraries
 
         if "+fftw" in spec:
-            env.set("CVXOPT_BUILD_FFTW", 1)
+            env.set("CVXOPT_BUILD_FFTW", "1")
 
             # Directory containing libfftw3
             env.set("CVXOPT_FFTW_LIB_DIR", spec["fftw"].libs.directories[0])
@@ -99,12 +99,12 @@ class PyCvxopt(PythonPackage):
             # Directory containing fftw.h
             env.set("CVXOPT_FFTW_INC_DIR", spec["fftw"].headers.directories[0])
         else:
-            env.set("CVXOPT_BUILD_FFTW", 0)
+            env.set("CVXOPT_BUILD_FFTW", "0")
 
         # GLPK Libraries
 
         if "+glpk" in spec:
-            env.set("CVXOPT_BUILD_GLPK", 1)
+            env.set("CVXOPT_BUILD_GLPK", "1")
 
             # Directory containing libglpk
             env.set("CVXOPT_GLPK_LIB_DIR", spec["glpk"].libs.directories[0])
@@ -112,12 +112,12 @@ class PyCvxopt(PythonPackage):
             # Directory containing glpk.h
             env.set("CVXOPT_GLPK_INC_DIR", spec["glpk"].headers.directories[0])
         else:
-            env.set("CVXOPT_BUILD_GLPK", 0)
+            env.set("CVXOPT_BUILD_GLPK", "0")
 
         # DSDP Libraries
 
         if "+dsdp" in spec:
-            env.set("CVXOPT_BUILD_DSDP", 1)
+            env.set("CVXOPT_BUILD_DSDP", "1")
 
             # Directory containing libdsdp
             env.set("CVXOPT_DSDP_LIB_DIR", spec["dsdp"].libs.directories[0])

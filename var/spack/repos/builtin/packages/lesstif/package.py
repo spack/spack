@@ -28,7 +28,7 @@ class Lesstif(AutotoolsPackage):
     def patch(self):
         filter_file("ACLOCALDIR=.*", "ACLOCALDIR='${datarootdir}/aclocal'", "configure")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # 'sed' fails if LANG=en_US.UTF-8 as is often the case on Macs.
         # The configure script finds our superenv sed wrapper, sets
         # SED, but then doesn't use that variable.

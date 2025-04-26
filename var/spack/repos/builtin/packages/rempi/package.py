@@ -36,7 +36,7 @@ class Rempi(AutotoolsPackage):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%cce"):
             env.set("MPICC", "mpicc")
             env.set("MPICXX", "mpicxx")

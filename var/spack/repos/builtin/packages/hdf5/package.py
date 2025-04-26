@@ -507,10 +507,10 @@ class Hdf5(CMakePackage):
         return results
 
     @when("@:1.8.21,1.10.0:1.10.5+szip")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # According to related github posts and problems running test_install
         # as a stand-alone test, it appears the lib path must be added to
         # LD_LIBRARY_PATH.

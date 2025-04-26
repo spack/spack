@@ -109,7 +109,7 @@ class Hicops(CMakePackage):
     conflicts("+mpip -timemory")
     conflicts("+mpip -mpi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.tools)
         env.prepend_path("PATH", self.prefix.bin.tools)
         env.set("HICOPS_INSTALL", self.prefix)

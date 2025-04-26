@@ -22,6 +22,7 @@ class Sirius(CMakePackage, CudaPackage, ROCmPackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
+    version("7.7.0", sha256="be0bdc76db9eb8afdcb950f0ccaf7535b8e85d72a4232dc92246f54fa68d9d7b")
     version("7.6.2", sha256="1ba92942aa39b49771677cc8bf1c94a0b4350eb45bf3009318a6c2350b46a276")
     version("7.6.1", sha256="16a114dc17e28697750585820e69718a96e6929f88406d266c75cf9a7cdbdaaa")
     version("7.6.0", sha256="e424206fecb35bb2082b5c87f0865a9536040e984b88b041e6f7d531f8a65b20")

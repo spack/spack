@@ -262,6 +262,6 @@ class Nwchem(Package):
                 f.write(nwchemrc)
             install(".nwchemrc", share_path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NWCHEM_BASIS_LIBRARY", join_path(self.prefix, "share/nwchem/libraries/"))
         env.set("NWCHEM_NWPW_LIBRARY", join_path(self.prefix, "share/nwchem/libraryps/"))

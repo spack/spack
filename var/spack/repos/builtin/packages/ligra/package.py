@@ -28,11 +28,11 @@ class Ligra(MakefilePackage):
 
     depends_on("mkl", when="+mkl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+openmp"):
             env.set("OPENMP", "1")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.apps)
         env.prepend_path("PATH", self.prefix.utils)
 

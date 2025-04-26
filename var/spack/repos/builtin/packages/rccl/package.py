@@ -149,7 +149,7 @@ class Rccl(CMakePackage):
             ver = None
         return ver
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         env.set("ROCMCORE_PATH", self.spec["rocm-core"].prefix)
         if self.spec.satisfies("+asan"):

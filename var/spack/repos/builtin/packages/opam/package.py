@@ -53,7 +53,7 @@ class Opam(AutotoolsPackage):
         return self.stage.source_path
 
     @when("@:1.2.2")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """In OCaml <4.06.1, the default was -safe-string=0, and this has
         changed in OCaml >=4.06.1. OPAM version 1 was written before 4.06.1
         was released, so OPAM <2.0 assumes mutable strings and requires the

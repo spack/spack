@@ -35,7 +35,7 @@ class Nut(CMakePackage):
     conflicts("%nag", when="@serial")
     build_targets = ["VERBOSE=on"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("RANDOM123_DIR", self.spec["random123"].prefix)
 
     def install(self, spec, prefix):

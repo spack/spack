@@ -58,7 +58,7 @@ class Msmpi(Package):
 
 
 class GenericBuilder(GenericBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
 

@@ -28,7 +28,7 @@ class Isescan(Package):
     depends_on("fraggenescan@:1.30", type="run")
     depends_on("hmmer@3.1b2:", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "ssw201507"))
 

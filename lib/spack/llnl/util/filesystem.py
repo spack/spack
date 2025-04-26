@@ -764,7 +764,7 @@ def copy_tree(
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise OSError("No such file or directory: '{0}'".format(src), errno.ENOENT)
 
     # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
     # all symlinks to this list while traversing the tree, then when finished, make all

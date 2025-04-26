@@ -35,6 +35,6 @@ class PyBluepyopt(PythonPackage):
     depends_on("neuron@7.4:", type=("build", "run"), when="@:1.14.4")
     depends_on("neuron@7.8:", type=("build", "run"), when="@1.14.11:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.unset("PMI_RANK")
         env.set("NEURON_INIT_MPI", "0")

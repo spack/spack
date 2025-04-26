@@ -500,7 +500,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for library in ["lib", "lib64"]:
             lib_path = join_path(self.prefix, library)
             if os.path.exists(lib_path):

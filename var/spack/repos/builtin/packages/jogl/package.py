@@ -58,15 +58,17 @@ class Jogl(Package):
         with working_dir(join_path("build", "lib")):
             install("*.so", prefix.lib)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("CLASSPATH")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         class_paths = find(prefix.lib, "*.jar")
         classpath = os.pathsep.join(class_paths)
         env.prepend_path("CLASSPATH", classpath)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         class_paths = find(prefix.lib, "*.jar")
         classpath = os.pathsep.join(class_paths)
         env.prepend_path("CLASSPATH", classpath)

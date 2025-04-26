@@ -81,7 +81,7 @@ class Cosma(CMakePackage):
 
     patch("fj-ssl2.patch", when="^fujitsu-ssl2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
 

@@ -36,8 +36,8 @@ class PyRtree(PythonPackage):
             name = name.lower()
         return url.format(name, version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPATIALINDEX_C_LIBRARY", self.spec["libspatialindex"].libs[0])
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_build_environment(env)

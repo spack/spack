@@ -69,7 +69,7 @@ class HipTensor(CMakePackage, ROCmPackage):
     ]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@6.1"):
             env.set("CXX", self.spec["hipcc"].prefix.bin.hipcc)
         else:

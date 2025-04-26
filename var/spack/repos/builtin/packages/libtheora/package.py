@@ -82,7 +82,7 @@ class MSBuildBuilder(MSBuildBuilder):
     def is_64bit(self):
         return "64" in str(self.pkg.spec.target.family)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.pkg.spec
         env.set("SPACK_OGG_PREFIX", spec["libogg"].prefix)
         # devenv is needed to convert ancient MSbuild project to modern

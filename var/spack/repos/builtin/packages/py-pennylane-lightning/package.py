@@ -74,7 +74,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
 class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
     build_directory = "build"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PL_BACKEND", "lightning_qubit")
         cm_args = " ".join([s[2:] for s in self.cmake_args()])
         env.set("CMAKE_ARGS", f"{cm_args}")

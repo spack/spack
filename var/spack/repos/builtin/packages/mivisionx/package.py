@@ -311,12 +311,12 @@ class Mivisionx(CMakePackage):
     ]:
         depends_on(f"rpp@{ver}", when=f"@{ver}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MIVISIONX_MODEL_COMPILER_PATH", self.spec.prefix.libexec.mivisionx.model_compiler)
         if self.spec.satisfies("@6.1:"):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@6.1:"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
             env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")

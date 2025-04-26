@@ -322,7 +322,7 @@ class Aqlprofile(Package):
         install_tree(f"opt/rocm-{spec.version}/share/", prefix.share)
         install_tree(f"opt/rocm-{spec.version}/lib/", prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
     # This package is installed from binaries, and we haven't patched rpaths.

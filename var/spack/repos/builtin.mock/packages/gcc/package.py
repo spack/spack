@@ -40,6 +40,8 @@ class Gcc(CompilerPackage, Package):
     compiler_version_regex = r"(?<!clang version)\s?([0-9.]+)"
     compiler_version_argument = ("-dumpfullversion", "-dumpversion")
 
+    opt_flags = ["-Otestopt"]
+
     compiler_wrapper_link_paths = {
         "c": os.path.join("gcc", "gcc"),
         "cxx": os.path.join("gcc", "g++"),

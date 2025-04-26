@@ -37,7 +37,7 @@ class Tophat(AutotoolsPackage):
         # Newer versions of autoconf hate calling AM_INIT_AUTOMAKE twice
         filter_file(r"^AM_INIT_AUTOMAKE$", "", "configure.ac")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CFLAGS", self.compiler.cxx98_flag)
 
     def configure_args(self):

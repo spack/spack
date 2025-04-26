@@ -347,7 +347,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
 
         return configure_args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+mpi"):
             env.set("CC", spec["mpi"].mpicc)

@@ -77,7 +77,7 @@ class Mumax(MakefilePackage, CudaPackage):
         filter_file(r"(^\(cd test)", r"#\1", "make.bash")
         filter_file(r"(for cc in ).*(; do)", r"\1{0}\2".format(self.cuda_arch), "cuda/make.bash")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("GOPATH", self.gopath)
         env.set("CUDA_CC", self.cuda_arch)
         env.set("NVCC_CCBIN", spack_cc)

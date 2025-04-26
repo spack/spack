@@ -43,7 +43,7 @@ class PyScikitsOdes(PythonPackage):
         sha256="8d05d7bcc3582b7c482a4393bf5a8c0460a58eb62d1e3c86339c95a0d4ce30ac",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SUNDIALS_INST", self.spec["sundials"].prefix)
 
     @run_after("install")

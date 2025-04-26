@@ -91,7 +91,7 @@ class ComposableKernel(CMakePackage):
     # https://github.com/ROCm/composable_kernel/commit/959073842c0db839d45d565eb260fd018c996ce4
     patch("0001-mark-kernels-maybe-unused.patch", when="@6.2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):

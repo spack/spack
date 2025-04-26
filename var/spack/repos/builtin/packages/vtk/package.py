@@ -271,7 +271,7 @@ class Vtk(CMakePackage):
         url = "http://www.vtk.org/files/release/{0}/VTK-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # VTK has some trouble finding freetype unless it is set in
         # the environment
         env.set("FREETYPE_DIR", self.spec["freetype"].prefix)

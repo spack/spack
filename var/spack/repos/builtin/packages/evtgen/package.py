@@ -84,5 +84,5 @@ class Evtgen(CMakePackage):
 
         filter_file("-shared", "-dynamiclib -undefined dynamic_lookup", "make.inc")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("EVTGEN", self.prefix.share)

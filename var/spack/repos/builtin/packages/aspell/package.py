@@ -33,5 +33,5 @@ class Aspell(AutotoolsPackage, GNUMirrorPackage):
         make("gen/dirs.h")
         make("gen/static_filters.src.cpp")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ASPELL_CONF", f"prefix {self.prefix}")

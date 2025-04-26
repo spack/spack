@@ -28,7 +28,7 @@ class Pagit(Package):
             install_tree("lib", prefix.lib)
             install_tree("RATT", prefix.RATT)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PAGIT_HOME", self.prefix)
         env.set("PILEUP_HOME", join_path(self.prefix.bin, "pileup_v0.5"))
         env.set("ICORN_HOME", self.prefix.icorn)

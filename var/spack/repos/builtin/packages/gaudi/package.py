@@ -181,7 +181,7 @@ class Gaudi(CMakePackage, CudaPackage):
             args.append(self.define("GAUDI_CXX_STANDARD", "20"))
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)

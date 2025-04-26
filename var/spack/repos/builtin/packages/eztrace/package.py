@@ -105,7 +105,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
 
 class AutotoolsBuilder(autotools.AutotoolsBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LDFLAGS", "--linkfortran")
 
     def autoreconf(self, pkg, spec, prefix):

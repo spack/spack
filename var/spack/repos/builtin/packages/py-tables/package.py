@@ -76,7 +76,7 @@ class PyTables(PythonPackage):
     # Historical dependencies
     depends_on("py-six@1.9:", when="@:3.5", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)
         if "+bzip2" in self.spec:
             env.set("BZIP2_DIR", self.spec["bzip2"].prefix)

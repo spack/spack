@@ -105,7 +105,7 @@ class Ip(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         suffixes = (
             self.spec.variants["precision"].value
             if self.spec.satisfies("@4.1:")

@@ -134,7 +134,7 @@ class Rivet(AutotoolsPackage):
     def force_autoreconf(self):
         return True
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # this avoids an "import site" error in the build
         env.unset("PYTHONHOME")
 

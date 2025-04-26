@@ -30,7 +30,7 @@ class Ip2(CMakePackage):
     depends_on("sp")
     requires("^sp precision=4,8,d", when="^sp@2.4:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for suffix in ("4", "8", "d"):
             lib = find_libraries(
                 "libip2_" + suffix, root=self.prefix, shared=False, recursive=True

@@ -25,6 +25,6 @@ class PyBlis(PythonPackage):
     depends_on("py-cython@0.25:", when="@0.7.9:", type="build")
     depends_on("py-numpy@1.15:", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLIS_COMPILER", spack_cc)
         env.set("BLIS_ARCH", "generic")

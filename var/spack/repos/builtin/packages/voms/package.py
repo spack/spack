@@ -40,7 +40,7 @@ class Voms(AutotoolsPackage):
             r"/usr/bin/soapcpp2", f"{self.spec['gsoap'].prefix.bin.soapcpp2}", "m4/wsdl2h.m4"
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=voms
         pkgconfig = Executable(join_path(self.spec["pkgconfig"].prefix.bin, "pkg-config"))
         env.set("GSOAP_SSL_PP_CFLAGS", pkgconfig("--cflags", "gsoapssl++", "zlib", output=str))
