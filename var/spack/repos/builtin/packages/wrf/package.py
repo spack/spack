@@ -114,9 +114,6 @@ class Wrf(Package):
         url="https://github.com/wrf-model/WRF/archive/V3.9.1.1.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build_type",
         default="dmpar",
@@ -184,19 +181,19 @@ class Wrf(Package):
     patch("patches/4.2/var.gen_be.Makefile.patch", when="@4.2:")
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
-    patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 %gcc target=aarch64:")
-    patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 %arm target=aarch64:")
+    patch("patches/4.2/add_aarch64.patch", when="@4.2:4.3.1 target=aarch64: %gcc")
+    patch("patches/4.2/add_aarch64_acfl.patch", when="@4.2:4.3.1 target=aarch64: %arm")
     patch("patches/4.2/configure_aocc_2.3.patch", when="@4.2 %aocc@:2.4.0")
     patch("patches/4.2/configure_aocc_3.0.patch", when="@4.2 %aocc@3.0.0:3.2.0")
     patch("patches/4.2/hdf5_fix.patch", when="@4.2:4.5.1 %aocc")
     patch("patches/4.2/derf_fix.patch", when="@=4.2 %aocc")
     patch(
         "patches/4.2/add_tools_flags_acfl2304.patch",
-        when="@4.2:4.4.2 %arm@23.04.1: target=aarch64:",
+        when="@4.2:4.4.2 target=aarch64: %arm@23.04.1:",
     )
 
-    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 %gcc target=aarch64:")
-    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 %arm target=aarch64:")
+    patch("patches/4.3/add_aarch64.patch", when="@4.3.2:4.4.2 target=aarch64: %gcc")
+    patch("patches/4.3/add_aarch64_acfl.patch", when="@4.3.2:4.4.2 target=aarch64: %arm")
 
     patch("patches/4.4/arch.postamble.patch", when="@4.4:4.5.1")
     patch("patches/4.4/configure.patch", when="@4.4:4.4.2")
@@ -241,6 +238,9 @@ class Wrf(Package):
         when="@4.5: %arm",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
 
@@ -256,8 +256,7 @@ class Wrf(Package):
     depends_on("zlib-api")
     depends_on("perl")
     depends_on("jemalloc", when="%aocc")
-    # not sure if +fortran is required, but seems like a good idea
-    depends_on("hdf5+fortran+hl+mpi")
+    depends_on("hdf5+hl+mpi")
     # build script use csh
     depends_on("tcsh", type=("build"))
     # time is not installed on all systems b/c bash provides it
@@ -282,12 +281,12 @@ class Wrf(Package):
     )
     phases = ["configure", "build", "install"]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WRF_HOME", self.prefix)
         env.append_path("PATH", self.prefix.main)
         env.append_path("PATH", self.prefix.tools)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # From 4.5.2 the split-netcdf patches are not needed,
         # just tell the build system where netcdf and netcdf-c are:
         if self.spec.satisfies("@4.5.2:"):
@@ -299,9 +298,9 @@ class Wrf(Package):
             env.set("PNETCDF", self.spec["parallel-netcdf"].prefix)
         # Add WRF-Chem module
         if "+chem" in self.spec:
-            env.set("WRF_CHEM", 1)
+            env.set("WRF_CHEM", "1")
         if "+netcdf_classic" in self.spec:
-            env.set("NETCDF_classic", 1)
+            env.set("NETCDF_classic", "1")
         # This gets used via the applied patch files
         env.set("NETCDFF", self.spec["netcdf-fortran"].prefix)
         env.set("PHDF5", self.spec["hdf5"].prefix)
@@ -309,7 +308,7 @@ class Wrf(Package):
         env.set("JASPERLIB", self.spec["jasper"].prefix.lib)
 
         if self.spec.satisfies("%aocc"):
-            env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", 1)
+            env.set("WRFIO_NCD_LARGE_FILE_SUPPORT", "1")
             env.set("HDF5", self.spec["hdf5"].prefix)
             env.prepend_path("PATH", ancestor(self.compiler.cc))
 
@@ -424,12 +423,6 @@ class Wrf(Package):
                 "^CFLAGS_LOCAL(.*?)=([^#\n\r]*)(.*)$", r"CFLAGS_LOCAL\1= \2 -fpermissive \3"
             )
             config.filter("^CC_TOOLS(.*?)=([^#\n\r]*)(.*)$", r"CC_TOOLS\1=\2 -fpermissive \3")
-
-    @run_before("configure")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "cannot build WRF without a Fortran compiler"
-            raise RuntimeError(msg)
 
     def configure(self, spec, prefix):
         # Remove broken default options...

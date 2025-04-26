@@ -21,8 +21,6 @@ class Roms(MakefilePackage):
     version("3.9", sha256="8e93f6ed40040e3f1b88d456ea9411ed3c06f280dc50b2787d6e5f793f58f1bc")
     version("3.8", sha256="99fb69239e70edaef35771d82e203e43cd301dde4f2a5662da038499b7258ae7")
 
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=False, description="Turn on shared-memory parallelization in ROMS")
     variant("mpi", default=True, description="Turn on distributed-memory parallelization in ROMS")
     variant(
@@ -37,6 +35,8 @@ class Roms(MakefilePackage):
         default=False,
         description="Turn on symbolic debug information with no optimization",
     )
+
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
     depends_on("netcdf-fortran")
@@ -128,16 +128,16 @@ class Roms(MakefilePackage):
         if "+debug" in self.spec:
             makefile.filter(r"\sUSE_DEBUG\s[?]=.*", "USE_DEBUG = on")
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         netcdf_include = spec["netcdf-fortran"].prefix.include
         nf_config = join_path(spec["netcdf-fortran"].prefix.bin, "nf-config")
 
-        spack_env.set("NF_CONFIG", nf_config)
-        spack_env.set("NETCDF_INCDIR", netcdf_include)
-        spack_env.set("HDF5_INCDIR", spec["hdf5"].prefix.include)
-        spack_env.set("HDF5_LIBDIR", spec["hdf5"].prefix.libs)
+        env.set("NF_CONFIG", nf_config)
+        env.set("NETCDF_INCDIR", netcdf_include)
+        env.set("HDF5_INCDIR", spec["hdf5"].prefix.include)
+        env.set("HDF5_LIBDIR", spec["hdf5"].prefix.libs)
 
     def build(self, spec, prefix):
         make(parallel=False)

@@ -16,6 +16,8 @@ class Libxcb(AutotoolsPackage, XorgPackage):
 
     license("MIT")
 
+    tags = ["build-tools"]
+
     maintainers("wdconinc")
 
     version("1.17.0", sha256="599ebf9996710fea71622e6e184f3a8ad5b43d0e5fa8c4e407123c88a59a6d55")
@@ -67,5 +69,5 @@ class Libxcb(AutotoolsPackage, XorgPackage):
     # If a newer release can be verified to build with LC_ALL=en_US.ISO-8859-1,
     # then we can limit the following function, e.g.
     # when("@:1.17")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LC_ALL", "C.UTF-8")

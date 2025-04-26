@@ -37,10 +37,6 @@ class Neuron(CMakePackage):
         "7.8.2", tag="7.8.2", commit="09b151ecb2b3984335c265932dc6ba3e4fcb318e", submodules="True"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("backtrace", default=False, description="Enable printing backtraces on failure")
     variant("interviews", default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-unit", default=False, description="Enable legacy units")
@@ -67,6 +63,10 @@ class Neuron(CMakePackage):
     variant("caliper", default=False, description="Add Caliper support")
 
     generator("ninja")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("bison@3:", type="build")
     depends_on("flex@2.6:", type="build")
@@ -185,7 +185,7 @@ class Neuron(CMakePackage):
             nrnmakefile = join_path(self.prefix, "share/coreneuron/nrnivmodl_core_makefile")
             filter_file("(?:^|\\s)CXX\\s*=.+", "CXX = {0}".format(cxx_compiler), nrnmakefile)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "lib"))
         if self.spec.satisfies("+python"):

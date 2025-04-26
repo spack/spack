@@ -13,6 +13,7 @@ class PyBuild(PythonPackage):
 
     license("MIT")
 
+    version("1.2.2", sha256="119b2fb462adef986483438377a13b2f42064a2a3a4161f24a0cca698a07ac8c")
     version("1.2.1", sha256="526263f4870c26f26c433545579475377b2b7588b6f1eac76a001e873ae3e19d")
     version("1.1.1", sha256="8eea65bb45b1aac2e734ba2cc8dad3a6d97d97901a395bd0ed3e7b46953d2a31")
     version("1.1.0", sha256="f8da3eebb19668bb338b6eb256b1896ef4e87a5398bbdda97ee29ec474569f16")
@@ -25,21 +26,35 @@ class PyBuild(PythonPackage):
 
     variant("virtualenv", default=False, description="Install optional virtualenv dependency")
 
-    depends_on("py-flit-core@3.8:", when="@1:", type="build")
-    depends_on("py-flit-core@3.4:", when="@0.10:", type="build")
-    depends_on("py-packaging@19:", type=("build", "run"))
-    depends_on("py-pyproject-hooks", when="@0.10.0:", type=("build", "run"))
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
-    depends_on("py-importlib-metadata@4.6:", when="@1: ^python@:3.9", type=("build", "run"))
-    depends_on("py-importlib-metadata@0.22:", when="@0 ^python@:3.7", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@1: ^python@:3.10", type=("build", "run"))
-    depends_on("py-tomli@1.1:", when="@0.10", type=("build", "run"))
-    depends_on("py-tomli@1:", when="@:0.9", type=("build", "run"))
+    with default_args(type="build"):
+        depends_on("py-flit-core@3.8:", when="@1:")
+        depends_on("py-flit-core@3.4:", when="@0.10:")
 
-    # Historical dependencies
-    depends_on("py-setuptools", when="@:0.9", type="build")
-    depends_on("py-pep517@0.9.1:", when="@:0.9", type=("build", "run"))
-    depends_on("py-virtualenv@20.0.35:", when="+virtualenv", type=("build", "run"))
+        # Historical dependencies
+        depends_on("py-setuptools", when="@:0.9")
+
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@1.2:")
+        depends_on("python@3.7:", when="@0.10:")
+        depends_on("python@3.6:", when="@0.6:")
+
+        depends_on("py-packaging@19.1:", when="@1.2:")
+        depends_on("py-packaging@19:")
+
+        depends_on("py-pyproject-hooks", when="@0.10.0:")
+
+        depends_on("py-colorama", when="platform=windows")
+
+        depends_on("py-importlib-metadata@4.6:", when="@1.1.0: ^python@:3.10.1")
+        depends_on("py-importlib-metadata@4.6:", when="@1: ^python@:3.9")
+        depends_on("py-importlib-metadata@0.22:", when="@0 ^python@:3.7")
+
+        depends_on("py-tomli@1.1:", when="@0.10: ^python@:3.10")
+        depends_on("py-tomli@1:", when="@:0.9")
+
+        # Historical dependencies
+        depends_on("py-pep517@0.9.1:", when="@:0.9")
+        depends_on("py-virtualenv@20.0.35:", when="+virtualenv")
 
     # https://github.com/pypa/build/issues/266
     # https://github.com/pypa/build/issues/406

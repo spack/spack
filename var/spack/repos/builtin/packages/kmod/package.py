@@ -34,9 +34,5 @@ class Kmod(AutotoolsPackage):
         bash("autogen.sh")
 
     def configure_args(self):
-        args = [
-            "--disable-manpages",
-            "--with-bashcompletiondir="
-            + join_path(self.spec["kmod"].prefix, "share", "bash-completion", "completions"),
-        ]
-        return args
+        completions = join_path(self.prefix, "share", "bash-completion", "completions")
+        return ["--disable-manpages", f"--with-bashcompletiondir={completions}"]

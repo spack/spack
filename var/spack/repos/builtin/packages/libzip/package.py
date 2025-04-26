@@ -25,9 +25,6 @@ class Libzip(CMakePackage):
         url="https://github.com/nih-at/libzip/releases/download/rel-1-6-1/libzip-1.6.1.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     def url_for_version(self, version):
         if version < Version("1.6"):
             return f"https://libzip.org/download/libzip-{version}.tar.gz"
@@ -41,6 +38,10 @@ class Libzip(CMakePackage):
     variant("openssl", default=True, description="Enable openssl support")
     variant("zstd", default=True, description="Enable zstd support", when="@1.8:")
     variant("mbedtls", default=True, description="Enable mbedtls support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("gnutls", when="+gnutls")
     depends_on("bzip2", when="+bzip2")
     depends_on("lzma", when="+lzma")

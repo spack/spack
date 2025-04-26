@@ -16,6 +16,7 @@ class PyPyproj(PythonPackage):
     license("MIT")
     maintainers("citibeth", "adamjstewart")
 
+    version("3.7.1", sha256="60d72facd7b6b79853f19744779abcd3f804c4e0d4fa8815469db20c9f640a47")
     version("3.7.0", sha256="bf658f4aaf815d9d03c8121650b6f0b8067265c36e31bc6660b98ef144d81813")
     version("3.6.1", sha256="44aa7c704c2b7d8fb3d483bbf75af6cb2350d30a63b144279a09b75fead501bf")
     version("3.6.0", sha256="a5b111865b3f0f8b77b3983f2fbe4dd6248fc09d3730295949977c8dcd988062")
@@ -62,7 +63,7 @@ class PyPyproj(PythonPackage):
     depends_on("proj@6.0:7", when="@2.0:2.1")
     depends_on("proj")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://pyproj4.github.io/pyproj/stable/installation.html#pyproj-build-environment-variables
         env.set("PROJ_VERSION", self.spec["proj"].version)
         env.set("PROJ_DIR", self.spec["proj"].prefix)

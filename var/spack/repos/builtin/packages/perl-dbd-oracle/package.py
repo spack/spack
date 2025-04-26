@@ -22,5 +22,5 @@ class PerlDbdOracle(PerlPackage):
     depends_on("perl-test-nowarnings", type=("build", "link"))
     depends_on("oracle-instant-client", type=("build", "link", "run", "test"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("ORACLE_HOME", self.spec["oracle-instant-client"].prefix)

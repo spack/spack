@@ -21,8 +21,6 @@ class Sp(CMakePackage):
     version("2.4.0", sha256="dbb4280e622d2683b68a28f8e3837744adf9bbbb1e7940856e8f4597f481c708")
     version("2.3.3", sha256="c0d465209e599de3c0193e65671e290e9f422f659f1da928505489a3edeab99f")
 
-    depends_on("fortran", type="build")
-
     variant("shared", default=False, description="Build shared library", when="@2.4:")
     variant("openmp", default=False, description="Use OpenMP threading")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
@@ -35,7 +33,9 @@ class Sp(CMakePackage):
         when="@2.4:",
     )
 
-    def setup_run_environment(self, env):
+    depends_on("fortran", type="build")
+
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@2.4:"):
             suffixes = self.spec.variants["precision"].value
         else:

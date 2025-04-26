@@ -35,9 +35,9 @@ class PyNumcodecs(PythonPackage):
     version("0.7.3", sha256="022b12ad83eb623ec53f154859d49f6ec43b15c36052fa864eaf2d9ee786dd85")
     version("0.6.4", sha256="ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d")
 
-    depends_on("c", type="build")  # generated
-
     variant("msgpack", default=False, description="Codec to encode data as msgpacked bytes.")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python@3.10:", when="@0.13:", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@0.11:0.12", type=("build", "link", "run"))
@@ -54,13 +54,13 @@ class PyNumcodecs(PythonPackage):
     depends_on("py-entrypoints", when="@0.10.1:0.11", type=("build", "run"))
     depends_on("py-msgpack", type=("build", "run"), when="+msgpack")
 
-    patch("apple-clang-12.patch", when="%apple-clang@12: @:0.13")
+    patch("apple-clang-12.patch", when="@:0.13 %apple-clang@12:")
 
     # TODO: this package should really depend on blosc, zstd, lz4, zlib, but right now it vendors
     # those libraries without any way to use the system versions.
     # https://github.com/zarr-developers/numcodecs/issues/464
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # This package likes to compile natively by checking cpu features and then setting flags
         # -msse2 and -mavx2, which we want to avoid in Spack. This could go away if the package
         # supports external libraries.

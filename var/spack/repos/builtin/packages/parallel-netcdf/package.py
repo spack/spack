@@ -48,10 +48,6 @@ class ParallelNetcdf(AutotoolsPackage):
     version("1.7.0", sha256="52f0d106c470a843c6176318141f74a21e6ece3f70ee8fe261c6b93e35f70a94")
     version("1.6.1", sha256="8cf1af7b640475e3cc931e5fbcfe52484c5055f2fab526691933c02eda388aae")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("cxx", default=True, description="Build the C++ Interface")
     variant("fortran", default=True, description="Build the Fortran Interface")
     variant("pic", default=True, description="Produce position-independent code (for shared libs)")
@@ -59,6 +55,10 @@ class ParallelNetcdf(AutotoolsPackage):
     variant("burstbuffer", default=False, description="Enable burst buffer feature")
     variant("examples", default=False, description="Install example programs")
     conflicts("+examples", when="@:1.12")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
 
@@ -84,7 +84,7 @@ class ParallelNetcdf(AutotoolsPackage):
     # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
     # override the verbose output flag for Fortran compiler on the command line
     # (see below).
-    conflicts("+shared", when="@:1.9%nag+fortran")
+    conflicts("+shared", when="@:1.9+fortran%nag")
 
     @property
     def libs(self):
@@ -145,7 +145,7 @@ class ParallelNetcdf(AutotoolsPackage):
             args += self.enable_or_disable("shared")
             args.extend(["--enable-static", "--disable-silent-rules"])
 
-        if self.spec.satisfies("%nag+fortran+shared"):
+        if self.spec.satisfies("+fortran+shared%nag"):
             args.extend(["ac_cv_prog_fc_v=-Wl,-v", "ac_cv_prog_f77_v=-Wl,-v"])
 
         if self.spec.satisfies("+burstbuffer"):

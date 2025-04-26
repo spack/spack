@@ -29,5 +29,5 @@ class PyPylintGitlab(PythonPackage):
     depends_on("py-tomli", type=("build", "run"))
     depends_on("py-dill", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CI_COMMIT_TAG", self.spec.version.string)

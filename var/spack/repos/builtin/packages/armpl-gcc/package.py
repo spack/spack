@@ -4,7 +4,6 @@
 
 import os
 
-import spack.error
 import spack.platforms
 from spack.package import *
 
@@ -406,6 +405,10 @@ class ArmplGcc(Package):
     provides("lapack")
     provides("fftw-api@3")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+    requires("^[virtuals=c,fortran] gcc", msg="armpl-gcc is only compatible with the GCC compiler")
+
     depends_on("gmake", type="build")
 
     # Run the installer with the desired install directory
@@ -431,8 +434,6 @@ class ArmplGcc(Package):
                 # Unmount image
                 hdiutil("detach", mountpoint)
             return
-        if self.compiler.name != "gcc":
-            raise spack.error.SpackError(("Only compatible with GCC.\n"))
 
         with when("@:22"):
             armpl_version = spec.version.up_to(3).string.split("_")[0]
@@ -494,7 +495,7 @@ class ArmplGcc(Package):
         hlist.directories = [incdir]
         return hlist
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         armpl_dir = get_armpl_prefix(self.spec)
         if self.spec.platform == "darwin":
             env.prepend_path("DYLD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
@@ -525,7 +526,9 @@ class ArmplGcc(Package):
             for f in find(join_path(armpl_dir, "pkgconfig"), "*"):
                 symlink(f, f + ".pc")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         armpl_dir = get_armpl_prefix(self.spec)
         if self.spec.satisfies("@:22"):
             # pkgconfig directory is not in standard ("lib", "lib64", "share") location

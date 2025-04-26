@@ -28,7 +28,7 @@ class Sonlib(MakefilePackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         binpath = os.path.join(self.stage.source_path, "bin")
         libpath = os.path.join(self.stage.source_path, "lib")
 

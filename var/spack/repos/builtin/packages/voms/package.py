@@ -15,6 +15,7 @@ class Voms(AutotoolsPackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
+    version("2.1.2", sha256="171cfa66b000422761b2a534a84ad88b646c675ff7910409b08b900775dbf035")
     version("2.1.0", sha256="2fd2468620af531c02e9ac495aaaf2a8d5b8cfbe24d4904f2e8fa7f64cdeeeec")
 
     depends_on("c", type="build")
@@ -33,12 +34,13 @@ class Voms(AutotoolsPackage):
 
     force_autoreconf = True
 
+    @when("@:2.1.0")
     def patch(self):
         filter_file(
             r"/usr/bin/soapcpp2", f"{self.spec['gsoap'].prefix.bin.soapcpp2}", "m4/wsdl2h.m4"
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://aur.archlinux.org/cgit/aur.git/tree/PKGBUILD?h=voms
         pkgconfig = Executable(join_path(self.spec["pkgconfig"].prefix.bin, "pkg-config"))
         env.set("GSOAP_SSL_PP_CFLAGS", pkgconfig("--cflags", "gsoapssl++", "zlib", output=str))

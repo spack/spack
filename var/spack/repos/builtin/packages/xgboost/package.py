@@ -31,11 +31,11 @@ class Xgboost(CMakePackage, CudaPackage):
     version("1.5.2", tag="v1.5.2", commit="742c19f3ecf2135b4e008a4f4a10b59add8b1045")
     version("1.3.3", tag="v1.3.3", commit="000292ce6d99ed658f6f9aebabc6e9b330696e7e")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("nccl", default=False, description="Build with NCCL to enable distributed GPU support")
     variant("openmp", default=True, description="Build with OpenMP support")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type="build"):
         depends_on("cmake@3.16:", when="platform=darwin")  # openmp issues
@@ -55,7 +55,7 @@ class Xgboost(CMakePackage, CudaPackage):
         depends_on("cuda@:12.4", when="@:2.1")
 
     depends_on("nccl", when="+nccl")
-    depends_on("llvm-openmp", when="%apple-clang +openmp")
+    depends_on("llvm-openmp", when="+openmp %apple-clang")
     depends_on("hwloc", when="%clang")
 
     # https://github.com/dmlc/xgboost/issues/6972

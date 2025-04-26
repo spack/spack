@@ -88,7 +88,7 @@ class Quda(CMakePackage, CudaPackage, ROCmPackage):
     with when("+multigrid"):
         variant(
             "mg_mrhs_list",
-            default=16,
+            default="16",
             multi=True,
             description="The list of multi-rhs sizes that get compiled",
         )

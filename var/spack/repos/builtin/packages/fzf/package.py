@@ -7,7 +7,7 @@ import re
 from spack.package import *
 
 
-class Fzf(MakefilePackage):
+class Fzf(GoPackage):
     """A general-purpose command-line fuzzy finder that provides fast, interactive
     filtering for files, processes, git commits, and more. It supports fuzzy
     search with real-time preview and various input sources."""
@@ -21,10 +21,11 @@ class Fzf(MakefilePackage):
     license("MIT")
 
     sanity_check_is_file = ["bin/fzf"]
-    sanity_check_is_dir = ["share/fzf/shell"]
 
     # Versions from newest to oldest
     version("master", branch="master")
+    version("0.61.0", sha256="5d72cdf708c6adc240b3b43dfecd218cf4703ea609422fb4d62812e9f79f0a12")
+    version("0.60.3", sha256="bdef337774050c26c6c4a6f38bc4ccb0901450854cd7f667cb3a330166a9ada5")
     version("0.60.0", sha256="69255fd9301e491b6ac6788bf1caf5d4f70d9209b4b8ab70ceb1caf6a69b5c16")
     version("0.57.0", sha256="d4e8e25fad2d3f75943b403c40b61326db74b705bf629c279978fdd0ceb1f97c")
     version("0.56.2", sha256="1d67edb3e3ffbb14fcbf786bfcc0b5b8d87db6a0685135677b8ef4c114d2b864")
@@ -62,28 +63,24 @@ class Fzf(MakefilePackage):
         base = "refs/tags/v" if self.spec.satisfies("@:0.53.0") else ""
         return f"https://github.com/junegunn/fzf/archive/{base}{version}.tar.gz"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set up the build environment for fzf."""
-        # Point GOPATH at the top of the staging dir for the build step
-        env.prepend_path("GOPATH", self.stage.path)
+        # Setup build env from GoPackage builder
+        super().setup_build_environment(env)
 
         # Set required environment variables for non-git builds
         env.set("FZF_VERSION", self.spec.version)
         env.set("FZF_REVISION", "tarball")
 
-    def install(self, spec, prefix):
-        """Install fzf and its components."""
-        make("install")
+    @run_after("install")
+    def install_completions(self):
+        mkdirp(bash_completion_path(self.prefix))
+        mkdirp(zsh_completion_path(self.prefix))
 
-        # Install binary
-        mkdir(prefix.bin)
-        install("bin/fzf", prefix.bin)
+        install("shell/completion.bash", bash_completion_path(self.prefix) / "fzf.bash")
+        install("shell/completion.zsh", zsh_completion_path(self.prefix) / "_fzf")
 
-        # Install shell integration scripts
-        mkdirp(prefix.share.fzf.shell)
-        install_tree("shell", prefix.share.fzf.shell)
-
-        # Install vim plugin if requested
-        if spec.satisfies("+vim"):
-            mkdirp(prefix.share.fzf.plugins)
-            install("plugin/fzf.vim", prefix.share.fzf.plugins)
+    @run_after("install", when="+vim")
+    def install_vim_plugin(self):
+        mkdirp(self.prefix.share.fzf.plugins)
+        install("plugin/fzf.vim", self.prefix.share.fzf.plugins)

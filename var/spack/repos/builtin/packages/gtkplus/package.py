@@ -51,10 +51,10 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
         deprecated=True,
     )
 
+    variant("cups", default=False, description="enable cups support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cups", default=False, description="enable cups support")
 
     # See meson.build for version requirements
     depends_on("meson@0.48.0:", when="build_system=meson", type="build")
@@ -88,6 +88,8 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
     depends_on("cups", when="+cups")
     depends_on("libxfixes", when="@:2")
 
+    conflicts("%gcc@14:", when="@:3.24.35")
+
     patch("no-demos.patch", when="@2.0:2")
 
     def url_for_version(self, version):
@@ -105,17 +107,21 @@ class Gtkplus(AutotoolsPackage, MesonPackage):
         if self.spec.satisfies("@3.24:%gcc@11:"):
             filter_file("    '-Werror=array-bounds',", "", "meson.build", string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
 
 class BuildEnvironment:
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 

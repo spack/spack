@@ -41,15 +41,15 @@ class OpenpmdApi(CMakePackage):
     version("0.12.0", tag="0.12.0-alpha", commit="23be484dd2570b5277779eafcc5f1eb70c6d98f2")
     version("0.11.1", tag="0.11.1-alpha", commit="c40292aafbf564807710424d106304f9670a8304")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=True, description="Build a shared version of the library")
     variant("mpi", default=True, description="Enable parallel I/O")
     variant("hdf5", default=True, description="Enable HDF5 support")
     variant("adios1", default=False, description="Enable ADIOS1 support", when="@:0.15")
     variant("adios2", default=True, description="Enable ADIOS2 support")
     variant("python", default=False, description="Enable Python bindings")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.15.0:", type="build")
     depends_on("cmake@3.22.0:", type="build", when="@0.16.0:")
@@ -151,7 +151,7 @@ class OpenpmdApi(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
         if spec.satisfies("@:0.14"):  # pre C++17 releases
@@ -169,7 +169,9 @@ class OpenpmdApi(CMakePackage):
         if spec.satisfies("+hdf5"):
             env.prepend_path("CMAKE_PREFIX_PATH", spec["hdf5"].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spec = self.spec
         # pre-load dependent CMake-PUBLIC header-only libs
         if spec.satisfies("@:0.14"):  # pre C++17 releases

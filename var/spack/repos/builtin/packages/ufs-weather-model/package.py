@@ -32,9 +32,6 @@ class UfsWeatherModel(CMakePackage):
         submodules=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=True, description="Enable MPI")
     variant(
         "32bit", default=True, description="Enable 32-bit single precision arithmetic in dycore"
@@ -110,6 +107,9 @@ class UfsWeatherModel(CMakePackage):
 
     variant("app", default="ATM", description="UFS application", when="@develop")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("bacio")
     depends_on("mpi", when="+mpi")
     depends_on("netcdf-c")
@@ -163,7 +163,7 @@ class UfsWeatherModel(CMakePackage):
 
     conflicts("%gcc@:8", when="@develop")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("CC", spec["mpi"].mpicc)
         env.set("CXX", spec["mpi"].mpicxx)

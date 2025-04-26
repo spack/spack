@@ -145,7 +145,7 @@ class Wannier90(MakefilePackage):
                 string=True,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MPIFC", self.prefix.bin.mpifc)
 
     def install(self, spec, prefix):

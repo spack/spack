@@ -54,7 +54,7 @@ class OfPrecice(Package):
         # it takes a very long time to rebuild!
         tty.info(
             "Build for "
-            + self.spec["openfoam"].format("{name}{@version}{%compiler}{compiler_flags}{variants}")
+            + self.spec["openfoam"].format("{name}{@version}{compiler_flags}{variants}{%compiler}")
         )
 
     def configure(self, spec, prefix):
@@ -94,5 +94,5 @@ export CPLUS_INCLUDE_PATH
         # Place directly under 'lib' (no bin)
         install_tree(join_path(self.build_userdir, "lib"), join_path(self.prefix, "lib"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "lib"))

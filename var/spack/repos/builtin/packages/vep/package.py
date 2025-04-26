@@ -20,6 +20,7 @@ class Vep(Package):
 
     license("APACHE-2.0", checked_by="teaguesterling")
 
+    version("113.3", sha256="af3af9d0ecb8a73fec04ff694bcd2ee31a1ef963fe073dc5f47a996f1407e142")
     version("112.0", sha256="46dd08838fd94ecbfaa931266c78570748a3cb39668b6e43c3608e6cd0aff93f")
     version("111.0", sha256="9cb326a1fa0054ce1a417f8fd4f2325ba605c40ec10eefbf87f461c264a89407")
     version("110.0", sha256="391a1fe50139064c1044c09e013bb21437933d677537b5d3336807f3b131fb51")
@@ -83,7 +84,7 @@ class Vep(Package):
     def vep_installer_path(self):
         return f"{self.vep_scripts_path.INSTALL}.pl"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("VEP_HOME", self.home)
         if self.spec.satisfies("+bundled_htslib"):
             env.prepend_path("PATH", self.vep_lib_path.htslib)

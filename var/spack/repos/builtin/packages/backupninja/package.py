@@ -22,5 +22,5 @@ class Backupninja(AutotoolsPackage):
     depends_on("bash", type="build")
     depends_on("gawk", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

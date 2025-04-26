@@ -29,5 +29,5 @@ class Rasdaemon(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

@@ -41,7 +41,7 @@ class PySphinxRtdTheme(PythonPackage):
     depends_on("py-sphinxcontrib-jquery@2:", when="@1.2:1.2.1", type=("build", "run"))
     conflicts("^py-sphinxcontrib-jquery@3.0.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Hack to prevent usage of npm in 0.5+
         # https://github.com/readthedocs/sphinx_rtd_theme/issues/1014
-        env.set("CI", True)
+        env.set("CI", "True")

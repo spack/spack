@@ -40,8 +40,6 @@ class Hpcc(MakefilePackage):
     version("develop", branch="main")
     version("1.5.0", sha256="0a6fef7ab9f3347e549fed65ebb98234feea9ee18aea0c8f59baefbe3cf7ffb8")
 
-    depends_on("c", type="build")  # generated
-
     variant(
         "fft",
         default="internal",
@@ -49,6 +47,8 @@ class Hpcc(MakefilePackage):
         values=("internal", "fftw2", "mkl"),
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gmake", type="build")
     depends_on("mpi@1.1:")
@@ -120,9 +120,8 @@ class Hpcc(MakefilePackage):
                 lin_alg_libs.append(join_path(spec["fftw-api"].prefix.lib, "libsfftw_mpi.so"))
                 lin_alg_libs.append(join_path(spec["fftw-api"].prefix.lib, "libsfftw.so"))
 
-            elif (
-                self.spec.variants["fft"].value == "mkl"
-                and spec["fftw-api"].name in INTEL_MATH_LIBRARIES
+            elif self.spec.variants["fft"].value == "mkl" and spec.satisfies(
+                "^[virtuals=fftw-api] intel-oneapi-mkl"
             ):
                 mklroot = env["MKLROOT"]
                 self.config["@LAINC@"] += f" -I{join_path(mklroot, 'include/fftw')}"
@@ -159,8 +158,6 @@ class Hpcc(MakefilePackage):
 
         # Compiler flags for CPU architecture optimizations
         if spec.satisfies("%intel"):
-            # with intel-parallel-studio+mpi the '-march' arguments
-            # are not passed to icc
             arch_opt = optimization_flags(self.compiler, spec.target)
             self.config["@CCFLAGS@"] = f"-O3 -restrict -ansi-alias -ip {arch_opt}"
             self.config["@CCNOOPT@"] = "-restrict"

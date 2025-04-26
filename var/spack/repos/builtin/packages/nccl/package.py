@@ -53,10 +53,10 @@ class Nccl(MakefilePackage, CudaPackage):
     version("2.3.7-1", sha256="e6eff80d9d2db13c61f8452e1400ca2f098d2dfe42857cb23413ce081c5b9e9b")
     version("2.3.5-5", sha256="bac9950b4d3980c25baa8e3e4541d2dfb4d21edf32ad3b89022d04920357142f")
 
+    variant("cuda", default=True, description="Build with CUDA")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cuda", default=True, description="Build with CUDA")
 
     depends_on("rdma-core")
 

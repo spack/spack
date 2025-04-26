@@ -49,9 +49,6 @@ class Mysql(CMakePackage):
     version("5.6.43", sha256="1c95800bf0e1b7a19a37d37fbc5023af85c6bc0b41532433b3a886263a1673ef")
     version("5.5.62", sha256="b1e7853bc1f04aabf6771e0ad947f35ac8d237f4b35d0706d1095c9526ff99d7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("client_only", default=False, description="Build and install client only.")
     variant(
         "cxxstd",
@@ -68,6 +65,9 @@ class Mysql(CMakePackage):
     conflicts("cxxstd=17", when="@8.0.0:~client_only")
 
     provides("mysql-client")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://dev.mysql.com/doc/refman/8.0/en/source-installation.html
     # https://dev.mysql.com/doc/refman/8.0/en/source-configuration-options.html
@@ -212,7 +212,7 @@ class Mysql(CMakePackage):
         # prepend to PATH the temporary folder where it resides.
         env.prepend_path("PATH", dtrace_copy_path)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstd = self.spec.variants["cxxstd"].value
         flag = getattr(self.compiler, "cxx{0}_flag".format(cxxstd))
         if flag:

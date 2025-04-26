@@ -16,6 +16,9 @@ class WasiSdkPrebuilt(Package):
 
     license("APACHE-2.0", checked_by="teaguesterling")
 
+    version("25.0", sha256="52640dde13599bf127a95499e61d6d640256119456d1af8897ab6725bcf3d89c")
+    version("24.0", sha256="c6c38aab56e5de88adf6c1ebc9c3ae8da72f88ec2b656fb024eda8d4167a0bc5")
+    version("23.0", sha256="521838d92816c92a731dee9246b0364eb00e300c5e2336e6dfa38f26a6494b06")
     version("22.0", sha256="fa46b8f1b5170b0fecc0daf467c39f44a6d326b80ced383ec4586a50bc38d7b8")
     version("21.0", sha256="f2fe0723b337c484556b19d64c0f6c6044827014bfcd403d00951c65a86cfa26")
     version("20.0", sha256="7030139d495a19fbeccb9449150c2b1531e15d8fb74419872a719a7580aad0f9")

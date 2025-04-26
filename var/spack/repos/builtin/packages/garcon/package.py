@@ -45,6 +45,8 @@ class Garcon(AutotoolsPackage):
         args += self.enable_or_disable("introspection")
         return args
 
-    def setup_dependent_build_environment(self, env, dep_spec):
-        if self.spec.satisfies("+introspection") and dep_spec.satisfies("+introspection"):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        if self.spec.satisfies("+introspection") and dependent_spec.satisfies("+introspection"):
             env.append_path("XDG_DATA_DIRS", self.prefix.share)

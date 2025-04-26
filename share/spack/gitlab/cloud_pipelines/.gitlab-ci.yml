@@ -188,7 +188,7 @@ default:
 
 .generate-neoverse_v1:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
+  tags: ["spack", "public", "medium", "aarch64", "neoverse_v1"]
 
 .generate-neoverse-v2:
   extends: [ ".generate-base" ]
@@ -334,7 +334,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2025.1:2025.03.24
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -426,7 +426,7 @@ developer-tools-aarch64-linux-gnu-build:
     SPACK_CI_STACK_NAME: developer-tools-darwin
 
 developer-tools-darwin-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [ ".developer-tools-darwin", ".generate-base"]
 
 developer-tools-darwin-build:
@@ -686,7 +686,7 @@ ml-linux-aarch64-cuda-build:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
 ml-darwin-aarch64-mps-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
 
 ml-darwin-aarch64-mps-build:
@@ -741,6 +741,7 @@ aws-pcluster-generate-x86_64_v4:
     - - . "./share/spack/setup-env.sh"
       # TODO: Move this to the container next time it is rebuilt
       - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/binutils-2.37-qvccg7zpskturysmr4bzbsfrx34kvazo/bin:$PATH
+      - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
 
 aws-pcluster-build-x86_64_v4:
   extends: [ ".linux_x86_64_v4", ".aws-pcluster-x86_64_v4", ".build" ]
@@ -765,6 +766,7 @@ aws-pcluster-generate-neoverse_v1:
     - - . "./share/spack/setup-env.sh"
       # TODO: Move this to the container next time it is rebuilt
       - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/binutils-2.37-2yxz3xsjfmesxujxtlrgcctxlyilynmp/bin:$PATH
+      - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
 
 aws-pcluster-build-neoverse_v1:
   extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
@@ -910,7 +912,7 @@ bootstrap-x86_64-linux-gnu-build:
     SPACK_CI_STACK_NAME: bootstrap-aarch64-darwin
 
 bootstrap-aarch64-darwin-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [.bootstrap-aarch64-darwin, .generate-base]
 
 bootstrap-aarch64-darwin-build:

@@ -19,6 +19,8 @@ class Bcftools(AutotoolsPackage):
 
     license("GPL-3.0-or-later")
 
+    version("1.21", sha256="528a4cc1d3555368db75a700b22a3c95da893fd1827f6d304716dfd45ea4e282")
+    version("1.20", sha256="312b8329de5130dd3a37678c712951e61e5771557c7129a70a327a300fda8620")
     version("1.19", sha256="782b5f1bc690415192231e82213b3493b047f45e630dc8ef6f154d6126ab3e68")
     version("1.18", sha256="d9b9d36293e4cc62ab7473aa2539389d4e1de79b1a927d483f6e91f3c3ceac7e")
     version("1.17", sha256="01f75d8e701d85b2c759172412009cc04f29b61616ace2fa75116123de4596cc")
@@ -36,9 +38,6 @@ class Bcftools(AutotoolsPackage):
     version("1.3.1", sha256="12c37a4054cbf1980223e2b3a80a7fdb3fd850324a4ba6832e38fdba91f1b924")
     version("1.2", sha256="53c628339020dd45334a007c9cefdaf1cba3f1032492ec813b116379fa684fd6")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "libgsl",
         default=False,
@@ -52,12 +51,18 @@ class Bcftools(AutotoolsPackage):
         "filtering expressions, for versions >= 1.8.",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("gsl", when="+libgsl")
     depends_on("py-matplotlib", when="@1.6:", type="run")
     depends_on("py-gffutils", when="@1.9:", type="run")
     depends_on("perl", when="@1.8:~perl-filters", type="run")
     depends_on("perl", when="@1.8:+perl-filters", type=("build", "run"))
 
+    depends_on("htslib")
+    depends_on("htslib@1.21", when="@1.21")
+    depends_on("htslib@1.20", when="@1.20")
     depends_on("htslib@1.19", when="@1.19")
     depends_on("htslib@1.18", when="@1.18")
     depends_on("htslib@1.17", when="@1.17")
@@ -128,5 +133,5 @@ class Bcftools(AutotoolsPackage):
             install("plugins/*.so", self.prefix.libexec.bcftools)
 
     @when("@1.2")
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BCFTOOLS_PLUGINS", self.prefix.libexec.bcftools)

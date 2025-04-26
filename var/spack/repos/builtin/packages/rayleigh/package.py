@@ -32,7 +32,7 @@ class Rayleigh(MakefilePackage):
     depends_on("fftw-api@3")
     depends_on("lapack")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("^cray-mpich"):
             # The Cray wrapper takes care of linking MPI correctly for all compilers.

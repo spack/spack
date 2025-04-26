@@ -26,7 +26,7 @@ class Libhugetlbfs(AutotoolsPackage):
     install_targets = ["-e", "install"]
     parallel = False
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BUILDTYPE", "NATIVEONLY")
         env.set("PREFIX", self.prefix)
         env.set("V", "1")

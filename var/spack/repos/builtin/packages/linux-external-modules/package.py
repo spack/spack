@@ -323,7 +323,7 @@ class LinuxExternalModules(MakefilePackage):
     depends_on("binutils@2.25:", when="@6.2:")
     depends_on("binutils@2.23:", when="@6.0:6.2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("KBUILD_OUTPUT", self.prefix)
 
     @run_before("build")

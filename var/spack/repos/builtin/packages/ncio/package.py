@@ -28,7 +28,7 @@ class Ncio(CMakePackage):
     depends_on("mpi")
     depends_on("netcdf-fortran")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         lib = find_libraries("libncio", root=self.prefix, shared=False, recursive=True)
         env.set("NCIO_LIB", lib[0])
         env.set("NCIO_INC", join_path(self.prefix, "include"))

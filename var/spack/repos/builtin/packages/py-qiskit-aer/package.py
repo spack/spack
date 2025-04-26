@@ -42,7 +42,7 @@ class PyQiskitAer(PythonPackage, CudaPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("gdr", default=True, description="Enable GDR support")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DISABLE_CONAN", "ON")
         env.set("DISABLE_DEPENDENCY_INSTALL", "1")
         env.set("CUDAHOSTCXX", spack_cxx)

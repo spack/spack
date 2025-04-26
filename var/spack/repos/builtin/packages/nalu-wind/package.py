@@ -24,19 +24,32 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     tags = ["ecp", "ecp-apps"]
 
     version("master", branch="master", submodules=True)
-    version("2.1.0", tag="v2.1.0", submodules=True)
-    version("2.0.0", tag="v2.0.0", submodules=True)
+    version(
+        "2.2.2", tag="v2.2.2", commit="6e98cb004e5cc2dcb60d09b155182a7095007c8e", submodules=True
+    )
+    version(
+        "2.2.1", tag="v2.2.1", commit="ffa9de729df2a11b5241fdeb7628e7fab9f48f9b", submodules=True
+    )
+    version(
+        "2.2.0", tag="v2.2.0", commit="a530903dd9fd67df2528e990ca496f64d45e5e20", submodules=True
+    )
+    version(
+        "2.1.0", tag="v2.1.0", commit="9242f8b766379465ee325a9cbcdcd7f2398d4eef", submodules=True
+    )
+    version(
+        "2.0.0", tag="v2.0.0", commit="dd115634489a736f48593f10be7ac2c992b16088", submodules=True
+    )
 
     variant("pic", default=True, description="Position independent code")
     variant(
         "abs_tol",
-        default=1.0e-15,
+        default="1.0e-15",
         values=_parse_float,
         description="Absolute tolerance for regression tests",
     )
     variant(
         "rel_tol",
-        default=1.0e-12,
+        default="1.0e-12",
         values=_parse_float,
         description="Relative tolerance for regression tests",
     )
@@ -47,7 +60,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
     variant("catalyst", default=False, description="Compile with Catalyst support")
     variant("shared", default=True, description="Build shared libraries")
     variant("fftw", default=False, description="Compile with FFTW support")
-    variant("fsi", default=False, description="Enable fluid-structure-interaction models")
     variant("boost", default=False, description="Enable Boost integration")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
     variant("wind-utils", default=False, description="Build wind-utils")
@@ -62,7 +74,6 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("mpi")
     depends_on("yaml-cpp@0.6.0:0.7.0")
-    depends_on("openfast@4.0.2:+cxx+netcdf", when="+fsi")
     depends_on("openfast@4.0.2:+cxx+netcdf", when="+openfast")
     depends_on("trilinos@15.1.1", when="@=2.1.0")
     depends_on("trilinos@13.4.1", when="@=2.0.0")
@@ -131,7 +142,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         "openfast@4.0.0:4.0.1", msg="OpenFAST 4.0.0:4.0.1 contains a bug. Use OpenFAST >= 4.0.2."
     )
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spec = self.spec
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             env.set("CUDA_LAUNCH_BLOCKING", "1")
@@ -139,7 +152,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             env.set("HIP_LAUNCH_BLOCKING", "1")
             env.set("HIP_MANAGED_FORCE_DEVICE_ALLOC", "1")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if spec.satisfies("+cuda"):

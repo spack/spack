@@ -32,10 +32,10 @@ class OpenIscsi(MakefilePackage):
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CFLAGS", "-DNO_SYSTEMD")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def install(self, spec, prefix):

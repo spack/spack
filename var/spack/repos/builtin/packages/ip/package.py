@@ -32,9 +32,6 @@ class Ip(CMakePackage):
         preferred=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     variant("openmp", description="Enable OpenMP threading", default=True)
     variant("pic", default=True, description="Build with position-independent-code")
     variant("shared", default=False, description="Build shared library", when="@4.1:")
@@ -62,6 +59,9 @@ class Ip(CMakePackage):
     )
 
     conflicts("+shared ~pic")
+
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("sp", when="@:4")
     depends_on("sp@:2.3.3", when="@:4.0")
@@ -105,7 +105,7 @@ class Ip(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         suffixes = (
             self.spec.variants["precision"].value
             if self.spec.satisfies("@4.1:")

@@ -17,11 +17,17 @@ class PyNanobind(PythonPackage):
     url = "https://github.com/wjakob/nanobind/archive/refs/tags/v1.2.0.tar.gz"
     git = "https://github.com/wjakob/nanobind.git"
 
-    maintainers("chrisrichardson", "garth-wells", "ma595")
+    maintainers("chrisrichardson", "garth-wells")
 
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
+    version(
+        "2.6.1", tag="v2.6.1", commit="9b3afa9dbdc23641daf26fadef7743e7127ff92f", submodules=True
+    )
+    version(
+        "2.5.0", tag="v2.5.0", commit="4ccbe6e005fc017652312305f280742da49d3dd5", submodules=True
+    )
     version(
         "2.4.0", tag="v2.4.0", commit="0f9ce749b257fdfe701edb3cf6f7027ba029434a", submodules=True
     )

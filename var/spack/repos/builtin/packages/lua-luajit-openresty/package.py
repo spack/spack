@@ -35,7 +35,8 @@ class LuaLuajitOpenresty(LuaImplPackage):
         description="add symlinks to make lua-luajit a drop-in lua replacement",
     )
 
-    provides("luajit", "lua-lang@5.1", when="+lualinks")
+    provides("luajit", "lua-lang", when="+lualinks")
+    provides("lua-lang@5.1", when="+lualinks")
     lua_version_override = "5.1"
 
     @run_after("install")
@@ -64,7 +65,7 @@ class LuaLuajitOpenresty(LuaImplPackage):
         # on some platforms for the final link stage to work
         src_makefile.filter("^TARGET_LD = .*", f"TARGET_LD = {spack_cxx}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "LUA_PATH",
             os.path.join(self.spec.prefix, "share", f"luajit-{self.version[0:2]}", "?.lua"),

@@ -24,6 +24,8 @@ class PyPip(Package, PythonExtension):
 
     license("MIT")
 
+    version("25.0.1", sha256="c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f")
+    version("25.0", sha256="b6eb97a803356a52b2dd4bb73ba9e65b2ba16caa6bcb25a7497350a4e5859b65")
     version("24.3.1", sha256="3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed")
     version("24.2", sha256="2cd581cf58ab7fcfca4ce8efa6dcacd0de5bf8d0a3eb9ec927e07405f4d9e2a2")
     version("24.1.2", sha256="7cd207eed4c60b0f411b444cd1464198fe186671c323b6cd6d433ed80fc9d247")
@@ -45,11 +47,16 @@ class PyPip(Package, PythonExtension):
     version("9.0.1", sha256="690b762c0a8460c303c089d5d0be034fb15a5ea2b75bdf565f40421f542fefb0")
 
     extends("python")
-    depends_on("python@3.8:", when="@24.1:", type=("build", "run"))
-    depends_on("python@3.7:", when="@22:", type=("build", "run"))
 
-    # Uses collections.MutableMapping
-    depends_on("python@:3.9", when="@:19.1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.8:", when="@24.1:")
+        depends_on("python@3.7:", when="@22:")
+
+        # Uses pkgutil.ImpImporter
+        depends_on("python@:3.11", when="@:23.1.1")
+
+        # Uses collections.MutableMapping
+        depends_on("python@:3.9", when="@:19.1")
 
     resource(
         name="pip-bootstrap",

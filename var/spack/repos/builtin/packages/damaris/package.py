@@ -45,10 +45,6 @@ class Damaris(CMakePackage):
         "1.3.1", tag="v1.3.1", commit="6cee3690fa7d387acc8f5f650a7b019e13b90284", deprecated=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("fortran", default=True, description="Enables Fortran support")
     variant("hdf5", default=False, description="Enables the HDF5 storage plugin")
     variant("static", default=False, description="Builds a static version of the library")
@@ -66,6 +62,10 @@ class Damaris(CMakePackage):
         description="Enables building of Python enabled Damaris library using Boost::python",
     )
     extends("python", when="+python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("xsd")
     depends_on("xerces-c")

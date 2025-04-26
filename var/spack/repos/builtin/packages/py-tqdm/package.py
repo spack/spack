@@ -11,6 +11,11 @@ class PyTqdm(PythonPackage):
     homepage = "https://github.com/tqdm/tqdm"
     pypi = "tqdm/tqdm-4.45.0.tar.gz"
 
+    version("4.67.1", sha256="f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2")
+    version("4.67.0", sha256="fe5a6f95e6fe0b9755e9469b77b9c3cf850048224ecaa8293d7d2d31f97d869a")
+    version("4.66.6", sha256="4bdd694238bef1485ce839d67967ab50af8f9272aab687c0d7702a01da0be090")
+    version("4.66.5", sha256="e1020aef2e5096702d8a025ac7d16b1577279c9d63f8375b63083e9a5f0fcbad")
+    version("4.66.4", sha256="e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb")
     version("4.66.3", sha256="23097a41eba115ba99ecae40d06444c15d1c0c698d527a01c6c8bd1c5d0647e5")
     version("4.66.1", sha256="d88e651f9db8d8551a62556d3cff9e3034274ca5d66e93197cf2490e2dcb69c7")
     version("4.65.0", sha256="1871fb68a86b8fb3b59ca4cdd3dcccbc7e6d613eeed31f4c332531977b89beb5")
@@ -28,9 +33,20 @@ class PyTqdm(PythonPackage):
     variant("telegram", default=False, description="Enable Telegram bot support")
     variant("notebook", default=False, description="Enable Jupyter Notebook support")
 
-    depends_on("py-setuptools@42:", type=("build", "run"))
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
-    depends_on("py-colorama", when="platform=windows", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("python@3.7:", when="@4.65.0:")
+        depends_on("python@2.7:2,3.4:", when="@4.53.0:")
+        depends_on("python@2.6:2,3.2:", when="@4.8.4:")
 
-    depends_on("py-requests", when="+telegram", type=("build", "run"))
-    depends_on("py-ipywidgets@6:", when="+notebook", type=("build", "run"))
+        # not in original requirements, but pyproject.toml [project] requires py-setuptools@61:
+        depends_on("py-setuptools@61:", when="@4.65.1:")
+        depends_on("py-setuptools@42:")
+
+        depends_on("py-colorama", when="platform=windows")
+
+        depends_on("py-requests", when="+telegram")
+        depends_on("py-ipywidgets@6:", when="+notebook")
+
+    with default_args(type=("build")):
+        depends_on("py-setuptools-scm@3.4:+toml")
+        depends_on("py-wheel", when="@4.53.0:")

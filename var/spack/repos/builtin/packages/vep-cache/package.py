@@ -16,7 +16,7 @@ class VepCache(Package):
 
     license("Apache-2.0", checked_by="teaguesterling")
 
-    vep_versions = ["112", "111", "110"]
+    vep_versions = ["113", "112", "111", "110"]
     depends_on("vep", type="build")
     for major in vep_versions:
         version(major)
@@ -101,7 +101,7 @@ class VepCache(Package):
             "full_path": join_path(root, cache_dir),
         }
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+env"):
             cache = self.vep_cache_config(self.home)
             env.set("VEP_OFFLINE", "1")

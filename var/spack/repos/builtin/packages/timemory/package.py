@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # ----------------------------------------------------------------------------
+import os
 
 from spack.package import *
 
@@ -26,10 +27,6 @@ class Timemory(CMakePackage, PythonExtension):
     version("3.1.0", commit="b12de7eeed699d820693fecd6136daff744f21b6", submodules=True)
     version("3.0.1", commit="ef638e1cde90275ce7c0e12fc4902c27bcbdeefd", submodules=True)
     version("3.0.0", commit="b36b1673b2c6b7ff3126d8261bef0f8f176c7beb", submodules=True)
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build shared libraries")
     variant("static", default=False, description="Build static libraries")
@@ -122,7 +119,7 @@ class Timemory(CMakePackage, PythonExtension):
     variant(
         "cpu_target",
         default="auto",
-        description=("Build for specific cpu architecture (specify " "cpu-model)"),
+        description="Build for specific cpu architecture (specify " "cpu-model)",
     )
     variant(
         "use_arch",
@@ -143,7 +140,7 @@ class Timemory(CMakePackage, PythonExtension):
     variant(
         "statistics",
         default=True,
-        description=("Build components w/ support for statistics " "(min/max/stddev)"),
+        description="Build components w/ support for statistics " "(min/max/stddev)",
     )
     variant(
         "extra_optimizations",
@@ -188,6 +185,10 @@ class Timemory(CMakePackage, PythonExtension):
         description="Enable extern templates for empirical roofline toolkit (ERT)",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     extends("python", when="+python")
     depends_on("cmake@3.15:", type="build")
     depends_on("python@3:", when="+python", type=("build", "run"))
@@ -215,7 +216,7 @@ class Timemory(CMakePackage, PythonExtension):
     depends_on("caliper", when="+caliper")
     depends_on("dyninst", when="+dyninst")
     depends_on("gperftools", when="+gperftools")
-    depends_on("intel-parallel-studio", when="+vtune")
+    depends_on("intel-oneapi-vtune", when="+vtune")
     depends_on("arm-forge", when="+allinea_map")
 
     conflicts(
@@ -334,5 +335,27 @@ class Timemory(CMakePackage, PythonExtension):
             key = "CUDA_ARCH" if spec.satisfies("@:3.0.1") else "TIMEMORY_CUDA_ARCH"
             args.append(self.define_from_variant(key, "cuda_arch"))
             args.append(self.define_from_variant("CMAKE_CUDA_STANDARD", "cudastd"))
+
+        if self.spec.satisfies("+vtune"):
+            ittnotify_include = os.path.join(
+                self["intel-oneapi-vtune"].component_prefix, "include"
+            )
+            ittnotify_libraries = find_libraries(
+                "libittnotify",
+                root=self["intel-oneapi-vtune"].component_prefix,
+                shared=False,
+                recursive=True,
+            )
+            if len(ittnotify_libraries) != 1:
+                vtune_spec = self.spec["intel-oneapi-vtune"]
+                raise InstallError(f"{self.spec} cannot find libittnotify from {vtune_spec}")
+
+            ittnotify_library = ittnotify_libraries.libraries[0]
+            args.extend(
+                [
+                    self.define("ITTNOTIFY_INCLUDE_DIR", ittnotify_include),
+                    self.define("ITTNOTIFY_LIBRARY", ittnotify_library),
+                ]
+            )
 
         return args

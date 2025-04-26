@@ -28,9 +28,6 @@ class Wonton(CMakePackage):
     version("1.2.10", sha256="c5c2c99f040f1fa5a8da21ac5ccbbc5b226d1fd43ce3eb14c76d211601b65a72")
     version("1.2.1", sha256="4f00513d1abe86f256214d2b5171b1575b2cd464df8609307c24cbc4c595c305")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("lapacke", default=True, description="Use LAPACKE solvers")
 
     # Variants for controlling parallelism
@@ -54,9 +51,15 @@ class Wonton(CMakePackage):
     conflicts("+thrust +kokkos")  # Don't enable Kokkos, Thrust simultaneously
 
     # dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("cmake@3.13:", type="build")
 
-    depends_on("netlib-lapack +lapacke", when="+lapacke")
+    depends_on("blas")
+    depends_on("lapack")
+    requires("^netlib-lapack +lapacke", when="+lapacke ^[virtuals=blas,lapack] netlib-lapack")
 
     depends_on("mpi", when="+mpi")
     depends_on("flecsi", when="+flecsi")

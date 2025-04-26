@@ -17,10 +17,10 @@ class Ftgl(CMakePackage):
     version("2.4.0", commit="483639219095ad080538e07ceb5996de901d4e74")
     version("2.3.1", commit="3c0fdf367824b6381f29df3d8b4590240db62ab7")
 
+    variant("shared", default=True, description="Build as a shared library")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-
-    variant("shared", default=True, description="Build as a shared library")
 
     depends_on("cmake@2.8:", type="build")
     depends_on("pkgconfig", type="build")

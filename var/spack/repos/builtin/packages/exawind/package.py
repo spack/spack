@@ -18,16 +18,23 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     license("Apache-2.0")
 
     version("master", branch="main", submodules=True)
-    version("1.1.0", tag="v1.1.0", submodules=True)
-    version("1.0.0", tag="v1.0.0", submodules=True)
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
+    version(
+        "1.2.0", tag="v1.2.0", commit="4c49c7775c580b6bd2556e6c00fd13c08737d5eb", submodules=True
+    )
+    version(
+        "1.1.0", tag="v1.1.0", commit="c8823f19fc8d19ea051df0ff68780e56981a7f94", submodules=True
+    )
+    version(
+        "1.0.0", tag="v1.0.0", commit="85718893d2510c8a2e8c8e94c768ce6a67f94703", submodules=True
+    )
 
     variant("amr_wind_gpu", default=False, description="Enable AMR-Wind on the GPU")
     variant("nalu_wind_gpu", default=False, description="Enable Nalu-Wind on the GPU")
     variant("sycl", default=False, description="Enable SYCL backend for AMR-Wind")
     variant("gpu-aware-mpi", default=False, description="gpu-aware-mpi")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(
@@ -54,7 +61,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
             when="+nalu_wind_gpu+rocm amdgpu_target=%s" % arch,
         )
 
-    depends_on("nalu-wind+hypre+fsi+openfast+tioga")
+    depends_on("nalu-wind+hypre+openfast+tioga")
     depends_on("amr-wind+netcdf+mpi+tiny_profile")
     depends_on("trilinos")
     depends_on("yaml-cpp@0.6:")
@@ -115,7 +122,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if self.spec.satisfies("+rocm+amr_wind_gpu~nalu_wind_gpu"):
             # Manually turn off device self.defines to solve Kokkos issues in Nalu-Wind headers

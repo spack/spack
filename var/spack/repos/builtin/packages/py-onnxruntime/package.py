@@ -6,7 +6,7 @@ from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 
-class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
+class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage, CudaPackage):
     """ONNX Runtime is a performance-focused complete scoring
     engine for Open Neural Network Exchange (ONNX) models, with
     an open extensible architecture to continually address the
@@ -22,6 +22,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
 
     license("MIT")
 
+    version("1.19.2", tag="v1.19.2", commit="ffceed9d44f2f3efb9dd69fa75fea51163c91d91")
+    version("1.19.0", tag="v1.19.0", commit="26250ae74d2c9a3c6860625ba4a147ddfb936907")
     version("1.18.2", tag="v1.18.2", commit="9691af1a2a17b12af04652f4d8d2a18ce9507025")
     version("1.18.1", tag="v1.18.1", commit="387127404e6c1d84b3468c387d864877ed1c67fe")
     version("1.18.0", tag="v1.18.0", commit="45737400a2f3015c11f005ed7603611eaed306a6")
@@ -32,8 +34,6 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("cuda", default=False, description="Build with CUDA support")
 
     # cmake/CMakeLists.txt
     depends_on("cmake@3.26:", when="@1.17:", type="build")
@@ -52,6 +52,8 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
     # requirements.txt
     depends_on("py-coloredlogs", when="@1.17:", type=("build", "run"))
     depends_on("py-flatbuffers", type=("build", "run"))
+    depends_on("py-numpy@1.21.6:", when="@1.19:", type=("build", "run"))
+    depends_on("py-numpy@1.21.6:1", when="@1.18.1:1.18.2", type=("build", "run"))
     depends_on("py-numpy@1.16.6:", type=("build", "run"))
     depends_on("py-numpy@1.21.6:", when="@1.18:", type=("build", "run"))
     depends_on("py-numpy@:1", when="@:1.18", type=("build", "run"))
@@ -64,6 +66,7 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
     depends_on("protobuf@:3.19", when="@:1.11")
     depends_on("py-cerberus", type=("build", "run"))
     depends_on("py-onnx", type=("build", "run"))
+    depends_on("py-onnx@:1.16", type=("build", "run"), when="@:1.18")
     depends_on("py-onnx@:1.15.0", type=("build", "run"), when="@:1.17")
     depends_on("py-onnx@:1.16", type=("build", "run"), when="@:1.18")
     depends_on("zlib-api")
@@ -154,14 +157,14 @@ class PyOnnxruntime(CMakePackage, PythonExtension, ROCmPackage):
                 string=True,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         value = self.spec.variants["dynamic_cpu_arch"].value
         value = self.dynamic_cpu_arch_values.index(value)
         env.set("MLAS_DYNAMIC_CPU_ARCH", str(value))
         if self.spec.satisfies("+rocm"):
             env.set("MIOPEN_PATH", self.spec["miopen-hip"].prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         value = self.spec.variants["dynamic_cpu_arch"].value
         value = self.dynamic_cpu_arch_values.index(value)
         env.set("MLAS_DYNAMIC_CPU_ARCH", str(value))

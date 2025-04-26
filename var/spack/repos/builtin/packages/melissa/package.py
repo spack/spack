@@ -30,11 +30,11 @@ class Melissa(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("no_mpi_api", default=False, description="Enable the deprecated no-MPI API")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.7.2:", type="build")
     depends_on("libzmq@4.1.5:")

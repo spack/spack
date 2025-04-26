@@ -49,7 +49,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
     depends_on("glib@2.58:", when="@1.60:1.72")
     depends_on("glib@2.56:", when="@1.56")
     depends_on("glib@2.49.2:", when="@1.49.2")
-    depends_on("glib@2.48.1", when="@1.48.0")
+    depends_on("glib@2.48.1:", when="@1.48.0")
 
     depends_on("libffi")
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/merge_requests/283
@@ -115,21 +115,25 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
         url = "https://download.gnome.org/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Only needed for sbang.patch above
         if self.spec.satisfies("@:1.60"):
             env.set("SPACK_SBANG", sbang.sbang_install_path())
         env.set("GI_SCANNER_DISABLE_CACHE", "1")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
         env.set("GI_SCANNER_DISABLE_CACHE", "1")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 

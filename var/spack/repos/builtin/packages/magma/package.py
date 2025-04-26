@@ -40,13 +40,13 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
     version("2.3.0", sha256="010a4a057d7aa1e57b9426bffc0958f3d06913c9151463737e289e67dd9ea608")
     version("2.2.0", sha256="df5d4ace417e5bf52694eae0d91490c6bde4cde1b0da98e8d400c5c3a70d83a2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("fortran", default=True, description="Enable Fortran bindings support")
     variant("shared", default=True, description="Enable shared library")
     variant("cuda", default=True, description="Build with CUDA")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")

@@ -41,7 +41,7 @@ class Masurca(Package):
                 m = join_path("global-1", makefile)
                 filter_file("-minline-all-stringops", "", m)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@4:"):
             env.set("DEST", self.prefix)
 

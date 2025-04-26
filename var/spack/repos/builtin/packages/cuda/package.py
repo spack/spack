@@ -690,6 +690,9 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts("arch=darwin-mojave-x86_64")
 
+    # cuda-12.8 libcusolver.so requires log2f@GLIBC_2.27
+    conflicts("glibc@:2.26", when="@12.8:")
+
     variant(
         "dev", default=False, description="Enable development dependencies, i.e to use cuda-gdb"
     )
@@ -715,7 +718,7 @@ class Cuda(Package):
         match = re.search(r"Cuda compilation tools, release .*?, V(\S+)", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:8.0.61"):
             # Perl 5.26 removed current directory from module search path,
             # CUDA 9 has a fix for this, but CUDA 8 and lower don't.
@@ -726,8 +729,11 @@ class Cuda(Package):
             env.set("LIBXML2HOME", libxml2_home)
             env.append_path("LD_LIBRARY_PATH", libxml2_home.lib)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set("CUDAHOSTCXX", dependent_spec.package.compiler.cxx)
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        if "cxx" in dependent_spec:
+            env.set("CUDAHOSTCXX", dependent_spec["cxx"].package.cxx)
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 
@@ -739,7 +745,7 @@ class Cuda(Package):
             cmake_prefix_paths.append(cub_path)
         return cmake_prefix_paths
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CUDA_HOME", self.prefix)
         env.set("NVHPC_CUDA_HOME", self.prefix)
 

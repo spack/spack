@@ -31,6 +31,12 @@ class Spectre(CMakePackage):
 
     version("develop", branch="develop")
     version(
+        "2025.04.21", sha256="09b8412abdbd3853b256b34669c27b0f0e69bf6fc5c48e9bb450a46221e62abd"
+    )
+    version(
+        "2025.03.17", sha256="3b3187a6d0e0f0386ae9bf06b77485771b841886a6e71abb12516c2aa874ae65"
+    )
+    version(
         "2025.01.30", sha256="1b79c297ca85e9c2c6242e3880144587fc8a1791124887a83f428c6301a80fe3"
     )
     version(
@@ -145,10 +151,6 @@ class Spectre(CMakePackage):
         "2021.12.15", sha256="4bfe9e27412e263ffdc6fcfcb84011f16d34a9fdd633ad7fc84a34c898f67e5c"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Configuration variants
     variant(
         "executables",
@@ -220,6 +222,11 @@ class Spectre(CMakePackage):
     conflicts("%clang@:7")
     conflicts("%apple-clang@:12", when="@2023.10.11:")
     conflicts("%apple-clang@:10")
+
+    # Language dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Build dependencies
     depends_on("cmake@3.18:", when="@2023.02.09:", type="build")

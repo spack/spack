@@ -42,6 +42,6 @@ class Targetp(Package):
         install_tree("tmp", prefix.tmp)
         install("targetp", prefix.targetp)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("TARGETP", self.prefix)
         env.prepend_path("PATH", self.prefix)

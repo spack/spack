@@ -36,10 +36,6 @@ class Spla(CMakePackage):
     version("develop", branch="develop")
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("openmp", default=True, when="@:1.5.5", description="Build with OpenMP support")
     variant("static", default=False, description="Build as static library")
     variant("cuda", default=False, description="CUDA backend")
@@ -52,6 +48,10 @@ class Spla(CMakePackage):
         when="@1.5.0:1.5.4",
         msg="Version 1.5.0 to 1.5.4 is not compatible with GCC 13 and later.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("blas")
@@ -67,10 +67,11 @@ class Spla(CMakePackage):
     conflicts("^hip@6.0.0:", when="@:1.6.0 +rocm")  # v1.6.1 includes fix for hip 6.0
 
     # Propagate openmp to blas
-    depends_on("openblas threads=openmp", when="+openmp ^[virtuals=blas] openblas")
-    depends_on("amdblis threads=openmp", when="+openmp ^[virtuals=blas] amdblis")
-    depends_on("blis threads=openmp", when="+openmp ^[virtuals=blas] blis")
-    depends_on("intel-mkl threads=openmp", when="+openmp ^[virtuals=blas] intel-mkl")
+    with when("+openmp"):
+        requires("^openblas threads=openmp", when="^[virtuals=blas] openblas")
+        requires("^amdblis threads=openmp", when="^[virtuals=blas] amdblis")
+        requires("^blis threads=openmp", when="^[virtuals=blas] blis")
+        requires("^intel-oneapi-mkl threads=openmp", when="^[virtuals=blas] intel-oneapi-mkl")
 
     # Fix CMake find module for AMD BLIS,
     # which uses a different library name for the multi-threaded version
@@ -100,7 +101,7 @@ class Spla(CMakePackage):
                 args += ["-DSPLA_HOST_BLAS=BLIS"]
             elif spec["blas"].name == "atlas":
                 args += ["-DSPLA_HOST_BLAS=ATLAS"]
-            elif spec["blas"].name == "intel-mkl":
+            elif spec["blas"].name == "intel-oneapi-mkl":
                 args += ["-DSPLA_HOST_BLAS=MKL"]
             elif spec["blas"].name == "netlib-lapack":
                 args += ["-DSPLA_HOST_BLAS=GENERIC"]

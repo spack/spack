@@ -28,7 +28,7 @@ class Lmbench(MakefilePackage):
         when="target=aarch64:",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["libtirpc"].prefix.include.tirpc)
         env.append_flags("LDFLAGS", "-ltirpc")
 

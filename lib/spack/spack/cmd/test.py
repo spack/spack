@@ -65,6 +65,12 @@ def setup_parser(subparser):
     run_parser.add_argument(
         "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
     )
+    run_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
+    )
 
     cd_group = run_parser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ["clean", "dirty"])
@@ -176,7 +182,7 @@ def test_run(args):
     for spec in specs:
         matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
-            tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
+            tty.warn(f"No {explicit_str}installed packages match spec {spec}")
 
             # TODO: Need to write out a log message and/or CDASH Testing
             #   output that package not installed IF continue to process
@@ -192,7 +198,7 @@ def test_run(args):
     # test_stage_dir
     test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
     test_suite.ensure_stage()
-    tty.msg("Spack test %s" % test_suite.name)
+    tty.msg(f"Spack test {test_suite.name}")
 
     # Set up reporter
     setattr(args, "package", [s.format() for s in test_suite.specs])
@@ -204,6 +210,7 @@ def test_run(args):
             dirty=args.dirty,
             fail_first=args.fail_first,
             externals=args.externals,
+            timeout=args.timeout,
         )
 
 
