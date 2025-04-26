@@ -26,6 +26,9 @@ class Fsl(Package, CudaPackage):
     version("6.0.4", sha256="58b88f38e080b05d70724d57342f58e1baf56e2bd3b98506a72b4446cad5033e")
     version("5.0.10", sha256="ca183e489320de0e502a7ba63230a7f55098917a519e8c738b005d526e700842")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("python", type=("build", "run"))
     depends_on("expat")
     depends_on("libx11")
@@ -186,7 +189,7 @@ class Fsl(Package, CudaPackage):
             script = Executable(join_path(prefix, "etc", "fslconf", "post_install.sh"))
             script("-f", prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not self.stage.source_path:
             self.stage.fetch()
             self.stage.expand_archive()
@@ -199,7 +202,7 @@ class Fsl(Package, CudaPackage):
         if os.path.isfile(fslsetup):
             env.extend(EnvironmentModifications.from_sourcing_file(fslsetup))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Set the environment variables after copying tree
         env.set("FSLDIR", self.prefix)
         fslsetup = join_path(self.prefix, "etc", "fslconf", "fsl.sh")

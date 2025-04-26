@@ -31,10 +31,6 @@ class Hdf5(CMakePackage):
 
     license("custom")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build", when="+cxx")
-    depends_on("fortran", type="build", when="+fortran")
-
     # The 'develop' version is renamed so that we could uninstall (or patch) it
     # without affecting other develop version.
     version("develop-2.0", branch="develop")
@@ -46,10 +42,15 @@ class Hdf5(CMakePackage):
     # Odd versions are considered experimental releases
     # Even versions are maintenance versions
     version(
+        "1.14.6",
+        sha256="e4defbac30f50d64e1556374aa49e574417c9e72c6b1de7a4ff88c4b1bea6e9b",
+        url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_6/downloads/hdf5-1.14.6.tar.gz",
+        preferred=True,
+    )
+    version(
         "1.14.5",
         sha256="ec2e13c52e60f9a01491bb3158cb3778c985697131fc6a342262d32a26e58e44",
         url="https://support.hdfgroup.org/releases/hdf5/v1_14/v1_14_5/downloads/hdf5-1.14.5.tar.gz",
-        preferred=True,
     )
     version(
         "1.14.4-3",
@@ -130,6 +131,10 @@ class Hdf5(CMakePackage):
         values=("default", "v116", "v114", "v112", "v110", "v18", "v16"),
         multi=False,
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build", when="+cxx")
+    depends_on("fortran", type="build", when="+fortran")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("cmake@3.18:", type="build", when="@1.13:")
@@ -345,7 +350,7 @@ class Hdf5(CMakePackage):
             if spec.satisfies("@:1.8.12+cxx~shared"):
                 cmake_flags.append(self.compiler.cxx_pic_flag)
         elif name == "fflags":
-            if spec.satisfies("%cce+fortran"):
+            if spec.satisfies("+fortran%cce"):
                 # Cray compiler generates module files with uppercase names by
                 # default, which is not handled by the CMake scripts. The
                 # following flag forces the compiler to produce module files
@@ -502,20 +507,14 @@ class Hdf5(CMakePackage):
         return results
 
     @when("@:1.8.21,1.10.0:1.10.5+szip")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # According to related github posts and problems running test_install
         # as a stand-alone test, it appears the lib path must be added to
         # LD_LIBRARY_PATH.
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
-
-    @run_before("cmake")
-    def fortran_check(self):
-        if self.spec.satisfies("+fortran") and not self.compiler.fc:
-            msg = "cannot build a Fortran variant without a Fortran compiler"
-            raise RuntimeError(msg)
 
     def cmake_args(self):
         spec = self.spec

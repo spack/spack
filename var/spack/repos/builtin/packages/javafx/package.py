@@ -61,5 +61,5 @@ class Javafx(Package):
         install_tree("legal", prefix.legal)
         install_tree("lib", prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("JAVAFX_HOME", self.prefix.lib)

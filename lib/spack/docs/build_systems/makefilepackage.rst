@@ -91,7 +91,7 @@ there are any other variables you need to set, you can do this in the
 
 .. code-block:: python
 
-   def setup_build_environment(self, env):
+   def setup_build_environment(self, env: EnvironmentModifications) -> None:
        env.set("PREFIX", prefix)
        env.set("BLASLIB", spec["blas"].libs.ld_flags)
 

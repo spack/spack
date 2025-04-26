@@ -121,8 +121,6 @@ class Slurm(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     variant("gtk", default=False, description="Enable GTK+ support")
     variant("mariadb", default=False, description="Use MariaDB instead of MySQL")
 
@@ -147,6 +145,8 @@ class Slurm(AutotoolsPackage):
     # TODO: add support for checkpoint/restart (BLCR)
 
     # TODO: add support for lua
+
+    depends_on("c", type="build")  # generated
 
     depends_on("curl")
     depends_on("glib")
@@ -178,7 +178,7 @@ class Slurm(AutotoolsPackage):
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)("--version", output=str).rstrip()
-        match = re.search(r"slurm\s*([0-9.]+)", output)
+        match = re.search(r"slurm(?:-wlm)?\s*([0-9.]+)", output)
         return match.group(1) if match else None
 
     def flag_handler(self, name, flags):

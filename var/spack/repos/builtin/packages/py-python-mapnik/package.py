@@ -33,7 +33,7 @@ class PyPythonMapnik(PythonPackage):
     depends_on("py-pycairo", type=("build", "run"))
 
     # Package can't find boost_python without the following
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Inform the package that boost python library is of form
         # 'libboost_python27.so' as opposed to 'libboost_python.so'
         py_ver = str(self.spec["python"].version.up_to(2).joined)

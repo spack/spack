@@ -31,11 +31,11 @@ class PerlAlienSvn(PerlPackage):
     depends_on("zlib-api")
     depends_on("libbsd")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # non-interactive build, use defaults
         env.set("PERL_MM_USE_DEFAULT", "1")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # SVN libs are not RPATHed correctly...
         # TODO: extend to other plaforms
         if sys.platform.startswith("linux"):

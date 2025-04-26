@@ -33,9 +33,6 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("xsdkflags", default=False, description="enable XSDK defaults for Tasmanian")
 
     variant("openmp", default=False, description="add OpenMP support to Tasmanian")
@@ -60,6 +57,9 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
         description="CMake build type",
         values=("Debug", "Release"),
     )
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.10:", type=("build", "run"), when="@7.0:")
     depends_on("cmake@3.22:", type=("build", "run"), when="@8.0:")
@@ -93,7 +93,7 @@ class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     # patching a bug in the interpretation of the C++ standard
     patch("tas80_clang17.patch", when="@8.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # needed for the hipcc compiler
         if "+rocm" in self.spec:
             env.set("CXX", self.spec["hip"].hipcc)

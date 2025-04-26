@@ -4,7 +4,7 @@
 import os
 import re
 
-import spack.compilers
+import spack.compilers.config
 from spack.package import *
 
 
@@ -21,6 +21,8 @@ class SpectrumMpi(BundlePackage):
     provides("mpi")
 
     requires("platform=linux")
+
+    depends_on("c", type="build")
 
     executables = ["^ompi_info$"]
 
@@ -48,7 +50,7 @@ class SpectrumMpi(BundlePackage):
         def get_spack_compiler_spec(compilers_found):
             # check using cc for now, as everyone should have that defined.
             path = os.path.dirname(compilers_found["cc"])
-            spack_compilers = spack.compilers.find_compilers([path])
+            spack_compilers = spack.compilers.config.find_compilers([path])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
@@ -115,7 +117,9 @@ class SpectrumMpi(BundlePackage):
             self.spec.mpif77 = os.path.join(self.prefix.bin, "mpif77")
             self.spec.mpifc = os.path.join(self.prefix.bin, "mpif90")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if "%xl" in dependent_spec or "%xl_r" in dependent_spec:
             env.set("MPICC", os.path.join(self.prefix.bin, "mpixlc"))
             env.set("MPICXX", os.path.join(self.prefix.bin, "mpixlC"))
@@ -134,7 +138,7 @@ class SpectrumMpi(BundlePackage):
         env.set("OMPI_F77", dependent_module.spack_f77)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI functions as a compiler we need to setup the compilers
         # in the run environment, like any compiler
         if "%xl" in self.spec or "%xl_r" in self.spec:

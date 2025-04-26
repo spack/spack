@@ -27,6 +27,7 @@ class Ruby(AutotoolsPackage, NMakePackage):
     version("3.3.4", sha256="fe6a30f97d54e029768f2ddf4923699c416cdbc3a6e96db3e2d5716c7db96a34")
     version("3.3.2", sha256="3be1d100ebf2a0ce60c2cd8d22cd9db4d64b3e04a1943be2c4ff7b520f2bcb5b")
     version("3.3.0", sha256="96518814d9832bece92a85415a819d4893b307db5921ae1f0f751a9a89a56b7d")
+    version("3.2.5", sha256="ef0610b498f60fb5cfd77b51adb3c10f4ca8ed9a17cb87c61e5bea314ac34a16")
     version("3.1.0", sha256="50a0504c6edcb4d61ce6b8cfdbddaa95707195fab0ecd7b5e92654b2a9412854")
     version("3.0.2", sha256="5085dee0ad9f06996a8acec7ebea4a8735e6fac22f22e2d98c3f2bc3bef7e6f1")
     version("3.0.1", sha256="369825db2199f6aeef16b408df6a04ebaddb664fb9af0ec8c686b0ce7ab77727")
@@ -37,10 +38,10 @@ class Ruby(AutotoolsPackage, NMakePackage):
     version("2.5.3", sha256="9828d03852c37c20fa333a0264f2490f07338576734d910ee3fd538c9520846c")
     version("2.2.0", sha256="7671e394abfb5d262fbcd3b27a71bf78737c7e9347fa21c39e58b0bb9c4840fc")
 
+    build_system("autotools", "nmake", default="autotools")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    build_system("autotools", "nmake", default="autotools")
 
     for _platform_condition in ("platform=linux", "platform=darwin"):
         with when(_platform_condition):
@@ -94,7 +95,9 @@ class Ruby(AutotoolsPackage, NMakePackage):
         url = "https://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if dependent_spec.package.extends(self.spec):
             env.prepend_path("GEM_PATH", dependent_spec.prefix)
 
@@ -113,7 +116,9 @@ class Ruby(AutotoolsPackage, NMakePackage):
 
 
 class SetupEnvironment:
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # TODO: do this only for actual extensions.
         # Set GEM_PATH to include dependent gem directories
         for d in dependent_spec.traverse(deptype=("build", "run", "test"), root=True):

@@ -32,6 +32,6 @@ class RRjava(RPackage):
     depends_on("xz")
     depends_on("zlib-api")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.append_flags("JAVAH", "{0}/javah".format(join_path(spec["java"].prefix.bin)))

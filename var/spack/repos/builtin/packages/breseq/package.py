@@ -35,6 +35,6 @@ class Breseq(AutotoolsPackage):
     conflicts("%gcc@:4.8")
     conflicts("%clang@:3.3")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LDFLAGS", "-L{0}".format(self.spec["zlib-api"].prefix.lib))
         env.set("CFLAGS", "-I{0}".format(self.spec["zlib-api"].prefix.include))

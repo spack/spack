@@ -247,7 +247,7 @@ class Openloops(Package):
         description="Number of parallel jobs to run. "
         + "Set to 1 if compiling a large number"
         + "of processes (e.g. lcg.coll)",
-        default=0,
+        default="0",
     )
     depends_on("python", type=("build", "run"))
 
@@ -277,8 +277,6 @@ class Openloops(Package):
             f.write("process_lib_dir = {0}\n".format(self.spec.prefix.proclib))
             f.write("cc = {0}\n".format(env["SPACK_CC"]))
             f.write("cxx = {0}\n".format(env["SPACK_CXX"]))
-            if not self.compiler.fc:
-                raise InstallError(f"{self.spec.compiler} has no Fortran compiler in spack!")
             f.write("fortran_compiler = {0}\n".format(env["SPACK_FC"]))
             if self.spec.satisfies("@1.3.1") and not is_intel:
                 f.write("gfortran_f_flags = -ffree-line-length-none\n")
@@ -300,12 +298,12 @@ class Openloops(Package):
         elif self.spec.satisfies("@2.1.2:2 processes=lcg.coll"):
             copy(join_path(os.path.dirname(__file__), "sft3.coll"), "lcg.coll")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Make sure that calling openloops picks up the scons that is shipped
         # instead of falling back to a potentially unsuitable system version
         env.set("OLPYTHON", self.spec["python"].prefix.bin.python)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Make sure that calling openloops picks up the scons that is shipped
         # instead of falling back to a potentially unsuitable system version
         env.set("OLPYTHON", self.spec["python"].prefix.bin.python)

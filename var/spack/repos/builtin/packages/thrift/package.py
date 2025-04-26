@@ -34,13 +34,13 @@ class Thrift(Package):
     version("0.10.0", sha256="2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b")
     version("0.9.3", sha256="b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("pic", default=True, description="Build position independent code")
     variant("c", default=True, description="Build support for C-family languages")
     variant("java", default=False, description="Build support for java")
     variant("python", default=True, description="Build support for python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
     depends_on("autoconf", type="build")
@@ -80,7 +80,7 @@ class Thrift(Package):
         when="@0.16.0",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+pic" in self.spec:
             env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
             env.append_flags("CXXFLAGS", self.compiler.cxx_pic_flag)

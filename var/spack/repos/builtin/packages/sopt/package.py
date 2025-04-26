@@ -59,7 +59,7 @@ class Sopt(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+tests" in self.spec:
             env.prepend_path("PATH", self.spec.prefix.tests)
         if "+examples" in self.spec:

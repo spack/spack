@@ -30,16 +30,16 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     version("0.2", tag="v0.2", commit="113004cb41757b819325a4b3a8a7dfcea5156531")
     version("0.1", tag="v0.1", commit="74e0540e2478136394f75869675056eb6aba67cc")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("occa", default=False, description="Enable OCCA backends")
     variant("debug", default=False, description="Enable debug build")
     variant("libxsmm", default=False, description="Enable LIBXSMM backend", when="@0.3:")
     variant("magma", default=False, description="Enable MAGMA backend", when="@0.6:")
 
     conflicts("+rocm", when="@:0.7")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     with when("+rocm"):
         depends_on("hip@3.8.0:", when="@0.8:")
@@ -55,6 +55,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
         depends_on("occa~cuda", when="~cuda")
 
     depends_on("libxsmm", when="+libxsmm")
+    depends_on("blas", when="+libxsmm", type="link")
 
     depends_on("magma", when="+magma")
 
@@ -136,6 +137,7 @@ class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
 
             if spec.satisfies("+libxsmm"):
                 makeopts += ["XSMM_DIR=%s" % spec["libxsmm"].prefix]
+                makeopts += ["BLAS_LIB=%s" % spec["blas"].libs]
 
             if spec.satisfies("+magma"):
                 makeopts += ["MAGMA_DIR=%s" % spec["magma"].prefix]

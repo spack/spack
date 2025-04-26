@@ -44,10 +44,6 @@ class SuiteSparse(Package):
     version("4.5.5", sha256="80d1d9960a6ec70031fecfe9adfe5b1ccd8001a7420efb50d6fa7326ef14af91")
     version("4.5.3", sha256="b6965f9198446a502cde48fb0e02236e75fa5700b94c7306fc36599d57b563f4")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "pic",
         default=True,
@@ -65,6 +61,10 @@ class SuiteSparse(Package):
     # flags does not seem to be used, which leads to linking errors on Linux.
     # Support for TBB has been removed in version 5.11
     variant("tbb", default=False, description="Build with Intel TBB", when="@4.5.3:5.10")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("gmake", type="build")
 
@@ -220,10 +220,8 @@ class SuiteSparse(Package):
             make_args += [f"CFLAGS+={self.compiler.c11_flag}"]
 
         # 64bit blas in UMFPACK:
-        if (
-            spec.satisfies("^openblas+ilp64")
-            or spec.satisfies("^intel-mkl+ilp64")
-            or spec.satisfies("^intel-parallel-studio+mkl+ilp64")
+        if spec.satisfies("^[virtuals=lapack] openblas+ilp64") or spec.satisfies(
+            "^[virtuals=lapack] intel-oneapi-mkl+ilp64"
         ):
             make_args.append('UMFPACK_CONFIG=-DLONGBLAS="long long"')
 
@@ -272,7 +270,7 @@ class SuiteSparse(Package):
                 ]
             make_args += [f"CMAKE_OPTIONS={' '.join(cmake_args)}"]
 
-        if spec.satisfies("%gcc platform=darwin"):
+        if spec.satisfies("platform=darwin %gcc"):
             make_args += ["LDLIBS=-lm"]
 
         if "%cce" in spec:

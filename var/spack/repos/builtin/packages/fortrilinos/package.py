@@ -48,11 +48,11 @@ class Fortrilinos(CMakePackage):
     )
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("hl", default=True, description="Build high-level Trilinos wrappers")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Trilinos version dependencies
     depends_on("trilinos@14.0", when="@2.3")
@@ -68,14 +68,6 @@ class Fortrilinos(CMakePackage):
     depends_on(
         "trilinos+amesos2+anasazi+belos+kokkos+ifpack2+muelu+nox+tpetra" "+stratimikos", when="+hl"
     )
-
-    @run_before("cmake")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies, require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
-            raise InstallError("ForTrilinos requires a Fortran compiler")
 
     def cmake_args(self):
         return [

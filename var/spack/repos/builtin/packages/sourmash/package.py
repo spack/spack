@@ -28,7 +28,7 @@ class Sourmash(PythonPackage):
     depends_on("py-deprecation@2.0.6:", type=("build", "run"))
     depends_on("py-cachetools@4:5", type=("build", "run"))
     depends_on("py-bitstring@3.1.9:4", type=("build", "run"))
-    depends_on("py-importlib_metadata@3.6:", when="^python@:3.9", type=("build", "run"))
+    depends_on("py-importlib-metadata@3.6:", when="^python@:3.9", type=("build", "run"))
 
     def install(self, spec, prefix):
         # build rust libs

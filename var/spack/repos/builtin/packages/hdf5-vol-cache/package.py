@@ -30,7 +30,7 @@ class Hdf5VolCache(CMakePackage):
                 flags.append("-Wno-error=incompatible-function-pointer-types")
         return (flags, None, None)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
     def cmake_args(self):

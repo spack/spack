@@ -24,6 +24,8 @@ class Mpileaks(Package):
     depends_on("mpi")
     depends_on("callpath")
 
+    depends_on("c", type="build")
+
     # Will be used to try raising an exception
     libs = None
 
@@ -31,5 +33,5 @@ class Mpileaks(Package):
         touch(prefix.mpileaks)
         mkdirp(prefix.man)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FOOBAR", self.name)

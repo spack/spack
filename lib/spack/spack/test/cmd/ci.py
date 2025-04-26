@@ -22,7 +22,11 @@ import spack.environment as ev
 import spack.hash_types as ht
 import spack.main
 import spack.paths as spack_paths
+import spack.repo
+import spack.spec
+import spack.stage
 import spack.util.spack_yaml as syaml
+import spack.version
 from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
@@ -182,9 +186,9 @@ spack:
     assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
     assert "stages" in yaml_contents
-    assert len(yaml_contents["stages"]) == 5
+    assert len(yaml_contents["stages"]) == 6
     assert yaml_contents["stages"][0] == "stage-0"
-    assert yaml_contents["stages"][4] == "stage-rebuild-index"
+    assert yaml_contents["stages"][5] == "stage-rebuild-index"
 
     assert "rebuild-index" in yaml_contents
     rebuild_job = yaml_contents["rebuild-index"]
@@ -867,11 +871,7 @@ spack:
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
             ci.copy_stage_logs_to_artifacts(concrete_spec, str(logs_dir))
-            assert "spack-build-out.txt" in os.listdir(logs_dir)
-
-            dl_dir = scratch / "download_dir"
-            buildcache_cmd("download", "--spec-file", json_path, "--path", str(dl_dir))
-            assert len(os.listdir(dl_dir)) == 2
+            assert "spack-build-out.txt.gz" in os.listdir(logs_dir)
 
 
 def test_push_to_build_cache_exceptions(monkeypatch, tmp_path, capsys):
@@ -1841,3 +1841,229 @@ spack:
 
     assert pipeline_doc.startswith("unittestpipeline")
     assert "externaltest" in pipeline_doc
+
+
+@pytest.fixture
+def fetch_versions_match(monkeypatch):
+    """Fake successful checksums returned from downloaded tarballs."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        pkg_cls = spack.repo.PATH.get_pkg_class(package_name)
+        return {v: pkg_cls.versions[v]["sha256"] for v in url_by_version}
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+
+
+@pytest.fixture
+def fetch_versions_invalid(monkeypatch):
+    """Fake successful checksums returned from downloaded tarballs."""
+
+    def get_checksums_for_versions(url_by_version, package_name, **kwargs):
+        return {
+            v: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+            for v in url_by_version
+        }
+
+    monkeypatch.setattr(spack.stage, "get_checksums_for_versions", get_checksums_for_versions)
+
+
+@pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
+def test_ci_validate_standard_versions_valid(capfd, mock_packages, fetch_versions_match, versions):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list)
+
+    out, err = capfd.readouterr()
+    for version in versions:
+        assert f"Validated diff-test@{version}" in out
+
+
+@pytest.mark.parametrize("versions", [["2.1.4"], ["2.1.4", "2.1.5"]])
+def test_ci_validate_standard_versions_invalid(
+    capfd, mock_packages, fetch_versions_invalid, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v in versions]
+
+    assert spack.cmd.ci.validate_standard_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in versions:
+        assert f"Invalid checksum found diff-test@{version}" in err
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6)]])
+def test_ci_validate_git_versions_valid(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list)
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Validated diff-test@{version}" in out
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -3)], [("1.1", -5), ("2.0", -5)]])
+def test_ci_validate_git_versions_bad_tag(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Mismatched tag <-> commit found for diff-test@{version}" in err
+
+
+@pytest.mark.parametrize("versions", [[("1.0", -2)], [("1.1", -4), ("2.0", -6), ("3.0", -6)]])
+def test_ci_validate_git_versions_invalid(
+    capfd, monkeypatch, mock_packages, mock_git_version_info, versions
+):
+    spec = spack.spec.Spec("diff-test")
+    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    version_list = [spack.version.Version(v) for v, _ in versions]
+
+    repo_path, filename, commits = mock_git_version_info
+    version_commit_dict = {
+        spack.version.Version(v): {
+            "tag": f"v{v}",
+            "commit": "abcdefabcdefabcdefabcdefabcdefabcdefabc",
+        }
+        for v, c in versions
+    }
+
+    pkg_class = spec.package_class
+
+    monkeypatch.setattr(pkg_class, "git", repo_path)
+    monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
+
+    assert spack.cmd.ci.validate_git_versions(pkg, version_list) is False
+
+    out, err = capfd.readouterr()
+    for version in version_list:
+        assert f"Invalid commit for diff-test@{version}" in err
+
+
+def mock_packages_path(path):
+    def packages_path():
+        return path
+
+    return packages_path
+
+
+@pytest.fixture
+def verify_standard_versions_valid(monkeypatch):
+    def validate_standard_versions(pkg, versions):
+        for version in versions:
+            print(f"Validated {pkg.name}@{version}")
+        return True
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_standard_versions", validate_standard_versions)
+
+
+@pytest.fixture
+def verify_git_versions_valid(monkeypatch):
+    def validate_git_versions(pkg, versions):
+        for version in versions:
+            print(f"Validated {pkg.name}@{version}")
+        return True
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_git_versions", validate_git_versions)
+
+
+@pytest.fixture
+def verify_standard_versions_invalid(monkeypatch):
+    def validate_standard_versions(pkg, versions):
+        for version in versions:
+            print(f"Invalid checksum found {pkg.name}@{version}")
+        return False
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_standard_versions", validate_standard_versions)
+
+
+@pytest.fixture
+def verify_git_versions_invalid(monkeypatch):
+    def validate_git_versions(pkg, versions):
+        for version in versions:
+            print(f"Invalid commit for {pkg.name}@{version}")
+        return False
+
+    monkeypatch.setattr(spack.cmd.ci, "validate_git_versions", validate_git_versions)
+
+
+def test_ci_verify_versions_valid(
+    monkeypatch,
+    mock_packages,
+    mock_git_package_changes,
+    verify_standard_versions_valid,
+    verify_git_versions_valid,
+    tmpdir,
+):
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
+
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-3])
+    assert "Validated diff-test@2.1.5" in out
+    assert "Validated diff-test@2.1.6" in out
+
+
+def test_ci_verify_versions_standard_invalid(
+    monkeypatch,
+    mock_packages,
+    mock_git_package_changes,
+    verify_standard_versions_invalid,
+    verify_git_versions_invalid,
+):
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
+
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
+    assert "Invalid checksum found diff-test@2.1.5" in out
+    assert "Invalid commit for diff-test@2.1.6" in out
+
+
+def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
+    repo, _, commits = mock_git_package_changes
+    spack.repo.PATH.put_first(repo)
+
+    monkeypatch.setattr(spack.repo, "packages_path", mock_packages_path(repo.packages_path))
+
+    pkg_class = spack.spec.Spec("diff-test").package_class
+    monkeypatch.setattr(pkg_class, "manual_download", True)
+
+    out = ci_cmd("verify-versions", commits[-1], commits[-2])
+    assert "Skipping manual download package: diff-test" in out

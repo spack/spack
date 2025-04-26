@@ -23,8 +23,10 @@ class Nim(Package):
     maintainers("Buldram")
 
     version("devel", branch="devel")
+    version("2.2.4", sha256="f82b419750fcce561f3f897a0486b180186845d76fb5d99f248ce166108189c7")
     version("2.2.2", sha256="7fcc9b87ac9c0ba5a489fdc26e2d8480ce96a3ca622100d6267ef92135fd8a1f")
     version("2.2.0", sha256="ce9842849c9760e487ecdd1cdadf7c0f2844cafae605401c7c72ae257644893c")
+    version("2.0.16", sha256="b2e70c6c011b5507093090a8887fa252773208fd047ee38f8562e2569e5c378a")
     version("2.0.14", sha256="d420b955833294b7861e3fb65021dac26d1c19c528c4d6e139ccd379e2c15a43")
     version("2.0.12", sha256="c4887949c5eb8d7f9a9f56f0aeb2bf2140fabf0aee0f0580a319e2a09815733a")
     version("2.0.4", sha256="71526bd07439dc8e378fa1a6eb407eda1298f1f3d4df4476dca0e3ca3cbe3f09")

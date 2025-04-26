@@ -49,7 +49,7 @@ class Beast2(Package):
                         r"(beast\.pkgmgmt.*\b)|(viz.*\b)", "{0} {1} \\1".format(javafx, modules), i
                     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BEAST", self.prefix)
 
     def install(self, spec, prefix):

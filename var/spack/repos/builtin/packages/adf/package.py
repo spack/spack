@@ -25,7 +25,7 @@ class Adf(Package):
     license_files = ["license.txt"]
     license_vars = ["SCMLICENSE"]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ADFHOME", self.prefix)
         env.set("ADFBIN", self.prefix.bin)
         env.set("ADFRESOURCES", self.prefix.atomicdata)

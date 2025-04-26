@@ -40,11 +40,13 @@ import collections
 import collections.abc
 import os
 import re
+import warnings
 from typing import Any, Callable, List, Optional, Tuple, Type, Union
 
 import llnl.util.tty.color
 
 import spack.deptypes as dt
+import spack.error
 import spack.fetch_strategy
 import spack.package_base
 import spack.patch
@@ -95,9 +97,6 @@ DepType = Union[Tuple[str, ...], str]
 WhenType = Optional[Union[spack.spec.Spec, str, bool]]
 Patcher = Callable[[Union[Type[spack.package_base.PackageBase], Dependency]], None]
 PatchesType = Union[Patcher, str, List[Union[Patcher, str]]]
-
-
-SUPPORTED_LANGUAGES = ("fortran", "cxx", "c")
 
 
 def _make_when_spec(value: WhenType) -> Optional[spack.spec.Spec]:
@@ -308,7 +307,8 @@ def _depends_on(
     deps_by_name = pkg.dependencies.setdefault(when_spec, {})
     dependency = deps_by_name.get(spec.name)
 
-    if spec.dependencies():
+    edges = spec.edges_to_dependencies()
+    if edges and not all(x.depflag == dt.BUILD for x in edges):
         raise DirectiveError(
             f"the '^' sigil cannot be used in 'depends_on' directives. Please reformulate "
             f"the directive below as multiple directives:\n\n"
@@ -385,9 +385,6 @@ def depends_on(
 
     """
     dep_spec = spack.spec.Spec(spec)
-    if dep_spec.name in SUPPORTED_LANGUAGES:
-        assert type == "build", "languages must be of 'build' type"
-        return _language(lang_spec_str=spec, when=when)
 
     def _execute_depends_on(pkg: Type[spack.package_base.PackageBase]):
         _depends_on(pkg, dep_spec, when=when, type=type, patches=patches)
@@ -474,8 +471,7 @@ def extends(spec, when=None, type=("build", "run"), patches=None):
         if dep_spec.name == "python" and not pkg.name == "python-venv":
             _depends_on(pkg, spack.spec.Spec("python-venv"), when=when, type=("build", "run"))
 
-        # TODO: the values of the extendees dictionary are not used. Remove in next refactor.
-        pkg.extendees[dep_spec.name] = (dep_spec, None)
+        pkg.extendees[dep_spec.name] = (dep_spec, when_spec)
 
     return _execute_extends
 
@@ -626,7 +622,7 @@ def patch(
     return _execute_patch
 
 
-def conditional(*values: List[Any], when: Optional[WhenType] = None):
+def conditional(*values: Union[str, bool], when: Optional[WhenType] = None):
     """Conditional values that can be used in variant declarations."""
     # _make_when_spec returns None when the condition is statically false.
     when = _make_when_spec(when)
@@ -638,7 +634,7 @@ def conditional(*values: List[Any], when: Optional[WhenType] = None):
 @directive("variants")
 def variant(
     name: str,
-    default: Optional[Any] = None,
+    default: Optional[Union[bool, str, Tuple[str, ...]]] = None,
     description: str = "",
     values: Optional[Union[collections.abc.Sequence, Callable[[Any], bool]]] = None,
     multi: Optional[bool] = None,
@@ -668,11 +664,29 @@ def variant(
         DirectiveError: If arguments passed to the directive are invalid
     """
 
+    # This validation can be removed at runtime and enforced with an audit in Spack v1.0.
+    # For now it's a warning to let people migrate faster.
+    if not (
+        default is None
+        or type(default) in (bool, str)
+        or (type(default) is tuple and all(type(x) is str for x in default))
+    ):
+        if isinstance(default, (list, tuple)):
+            did_you_mean = f"default={','.join(str(x) for x in default)!r}"
+        else:
+            did_you_mean = f"default={str(default)!r}"
+        warnings.warn(
+            f"default value for variant '{name}' is not a boolean or string: default={default!r}. "
+            f"Did you mean {did_you_mean}?",
+            stacklevel=3,
+            category=spack.error.SpackAPIWarning,
+        )
+
     def format_error(msg, pkg):
         msg += " @*r{{[{0}, variant '{1}']}}"
         return llnl.util.tty.color.colorize(msg.format(pkg.name, name))
 
-    if name in spack.variant.reserved_names:
+    if name in spack.variant.RESERVED_NAMES:
 
         def _raise_reserved_name(pkg):
             msg = "The name '%s' is reserved by Spack" % name
@@ -683,7 +697,11 @@ def variant(
     # Ensure we have a sequence of allowed variant values, or a
     # predicate for it.
     if values is None:
-        if str(default).upper() in ("TRUE", "FALSE"):
+        if (
+            default in (True, False)
+            or type(default) is str
+            and default.upper() in ("TRUE", "FALSE")
+        ):
             values = (True, False)
         else:
             values = lambda x: True
@@ -716,12 +734,15 @@ def variant(
     # or the empty string, as the former indicates that a default
     # was not set while the latter will make the variant unparsable
     # from the command line
+    if isinstance(default, tuple):
+        default = ",".join(default)
+
     if default is None or default == "":
 
         def _raise_default_not_set(pkg):
             if default is None:
-                msg = "either a default was not explicitly set, " "or 'None' was used"
-            elif default == "":
+                msg = "either a default was not explicitly set, or 'None' was used"
+            else:
                 msg = "the default cannot be an empty string"
             raise DirectiveError(format_error(msg, pkg))
 

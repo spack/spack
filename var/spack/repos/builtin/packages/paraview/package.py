@@ -34,10 +34,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master", submodules=True)
     version(
-        "5.13.2",
-        sha256="4e116250f8e1a9c480f97c5696c9cd72b4d4998b039ca46da8b224f27445f13e",
+        "5.13.3",
+        sha256="3bd31bb56e07aa2af2a379895745bbc430c565518a363d935f2efc35b076df09",
         preferred=True,
     )
+    version("5.13.2", sha256="4e116250f8e1a9c480f97c5696c9cd72b4d4998b039ca46da8b224f27445f13e")
     version("5.13.1", sha256="a16503ce37b999c2967d84234596e7bf67ac98221851a288bb1399c7e1dc2004")
     version("5.13.0", sha256="886f530bebd6b24c6a7f8a5f4b1afa72c53d4737ccaa4b5fd5946b4e5a758c91")
     version("5.12.1", sha256="927f880c13deb6dde4172f4727d2b66f5576e15237b35778344f5dd1ddec863e")
@@ -64,10 +65,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     version("5.1.2", sha256="ff02b7307a256b7c6e8ad900dee5796297494df7f9a0804fe801eb2f66e6a187")
     version("5.0.1", sha256="caddec83ec284162a2cbc46877b0e5a9d2cca59fb4ab0ea35b0948d2492950bb")
     version("4.4.0", sha256="c2dc334a89df24ce5233b81b74740fc9f10bc181cd604109fd13f6ad2381fc73")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant(
         "development_files",
@@ -204,6 +201,10 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             msg="Paraview only accepts one architecture value",
         )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.21:", type="build", when="+rocm")
 
@@ -299,6 +300,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("zlib-api")
     depends_on("libcatalyst@2:", when="+libcatalyst")
     depends_on("hip@5.2:", when="+rocm")
+    # CUDA thrust is already include in the CUDA pkg
+    depends_on("rocthrust", when="@5.13: +rocm ^cmake@3.24:")
     for target in ROCmPackage.amdgpu_targets:
         depends_on(
             "kokkos@:3.7.01 +rocm amdgpu_target={0}".format(target),
@@ -359,11 +362,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # intel oneapi doesn't compile some code in catalyst
     patch("catalyst-etc_oneapi_fix.patch", when="@5.10.0:5.10.1%oneapi")
 
-    # Classic Intel compilers don't compile some code in vtkFFT.txx
-    # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/11928
-    # Applying it for every compiler is fine.
-    patch("vtk-fft-icc.patch", when="@5.12.0:5.13.2")
-
     # Patch for paraview 5.8: ^hdf5@1.13.2:
     # Even with ~hdf5, hdf5 is part of the dependency tree due to netcdf-c
     # https://gitlab.kitware.com/vtk/vtk/-/merge_requests/9690
@@ -384,10 +382,19 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     patch("kits_with_catalyst_5_12.patch", when="@5.12.0")
 
+    # https://github.com/Kitware/VTK-m/commit/c805a6039ea500cb96158cfc11271987c9f67aa4
+    patch("vtkm-remove-unused-method-from-mir-tables.patch", when="@5.13.2 %oneapi@2025:")
+
+    # https://github.com/Kitware/VTK-m/commit/48e385af319543800398656645327243a29babfb
+    patch("vtkm-fix-problems-in-class-member-names.patch", when="@5.13.2 %oneapi@2025:")
+
     generator("ninja", "make", default="ninja")
     # https://gitlab.kitware.com/paraview/paraview/-/issues/21223
     conflicts("generator=ninja", when="%xl")
     conflicts("generator=ninja", when="%xl_r")
+
+    # Versions 5.13.0-5.13.2 do not compile with Intel classic compilers
+    conflicts("%intel", when="@5.13:5.13.2")
 
     def url_for_version(self, version):
         _urlfmt = "http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}"
@@ -407,7 +414,9 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         else:
             return "paraview-{0}".format(self.spec.version.up_to(2))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:
@@ -438,9 +447,13 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
                 if self.spec["hdf5"].satisfies("@1.12:"):
                     flags.append("-DH5_USE_110_API")
 
+            if self.spec.satisfies("%oneapi@2025:"):
+                flags.append("-Wno-error=missing-template-arg-list-after-template-kw")
+                flags.append("-Wno-missing-template-arg-list-after-template-kw")
+
         return flags, None, None
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
         # - libs  under lib
@@ -748,19 +761,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_smoke_test(self):
         """Simple smoke test for ParaView"""
-        spec = self.spec
-
-        pvserver = Executable(spec["paraview"].prefix.bin.pvserver)
+        pvserver = Executable(self.prefix.bin.pvserver)
         pvserver("--help")
 
     def test_pvpython(self):
         """Test pvpython"""
-        spec = self.spec
-
-        if "~python" in spec:
+        if "~python" in self.spec:
             raise SkipTest("Package must be installed with +python")
 
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvpython = Executable(self.prefix.bin.pvpython)
         pvpython("-c", "import paraview")
 
     def test_mpi_ensemble(self):
@@ -771,8 +780,8 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             raise SkipTest("Package must be installed with +mpi and +python")
 
         mpirun = spec["mpi"].prefix.bin.mpirun
-        pvserver = spec["paraview"].prefix.bin.pvserver
-        pvpython = Executable(spec["paraview"].prefix.bin.pvpython)
+        pvserver = self.prefix.bin.pvserver
+        pvpython = Executable(self.prefix.bin.pvpython)
 
         with working_dir("smoke_test_build", create=True):
             with Popen(

@@ -24,5 +24,5 @@ class Mii(MakefilePackage):
 
     depends_on("c", type="build")  # generated
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PREFIX", self.prefix)

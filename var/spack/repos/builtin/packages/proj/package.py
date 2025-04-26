@@ -74,9 +74,6 @@ class Proj(CMakePackage, AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("tiff", default=True, when="@7:", description="Enable TIFF support")
     variant("curl", default=True, when="@7:", description="Enable curl support")
     variant("shared", default=True, description="Enable shared libraries")
@@ -108,6 +105,9 @@ class Proj(CMakePackage, AutotoolsPackage):
         when="@6.2:9.1",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # https://proj.org/install.html#build-requirements
     with when("build_system=cmake"):
         # https://github.com/OSGeo/PROJ/pull/3374
@@ -134,7 +134,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
         # If an incompatible version of PROJ is found in PROJ_LIB, it can
         # cause the package to fail at run-time. See the following for details:
@@ -144,7 +144,7 @@ class Proj(CMakePackage, AutotoolsPackage):
 
 
 class AnyBuilder(BaseBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
     @run_after("install")

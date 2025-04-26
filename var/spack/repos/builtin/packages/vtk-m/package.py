@@ -30,10 +30,11 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("release", branch="release")
     version(
-        "2.2.0",
-        sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5",
+        "2.3.0",
+        sha256="d105ee2de5cfa600f1b4b3d2061f97bebd581a0ae1c86c6174af4e8128f83c54",
         preferred=True,
     )
+    version("2.2.0", sha256="f40d6b39ca1bcecd232571c92ce606627811909f4e21972d1823e605f686bcf5")
     version("2.1.0", sha256="7b224f1f91e5ef140e193338bf091133b1e9f40d323bccdc8bb80bfc2675e6ea")
     version("2.0.0", sha256="21c8b2cb8f3d4116a4f90c1d08c9f5e27b25c7a0951f7b403eced94576f84880")
     version("1.9.0", sha256="f9862d9d24deae32063ba1ea3d9a42900ac0cdd7f98412d960249a7cac35d47f")
@@ -51,9 +52,6 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     version("1.3.0", sha256="2d05a6545abfaa7594ef344389617fdca48c7f5ebddc617038544317b70ba19e")
     version("1.2.0", sha256="44596e88b844e7626248fb8e96a38be25a0e585a22256b1c859208b23ef45171")
     version("1.1.0", sha256="55f42c417d3a41893230b2fd3b5c192daeee689a2193de10bf22a1ef5c24c7ad")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     variant("shared", default=False, description="build shared libs")
 
@@ -87,6 +85,9 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("tbb", default=(sys.platform == "darwin"), description="build TBB support")
     variant("sycl", default=False, description="Build with SYCL backend")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")  # CMake >= 3.12
     depends_on("cmake@3.18:", when="+rocm", type="build")  # CMake >= 3.18
@@ -165,7 +166,7 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     # VTK-M PR#3258
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3258
-    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2:")
+    patch("mr3258-fix-typo-thrust-dependency-with-rocm.patch", when="@2.2.0")
 
     # VTK-M PR#3259
     # https://gitlab.kitware.com/vtk/vtk-m/-/merge_requests/3259
@@ -276,20 +277,16 @@ class VtkM(CMakePackage, CudaPackage, ROCmPackage):
 
     def test_smoke_test(self):
         """Build and run ctests"""
-        spec = self.spec
-
-        if "+examples" not in spec:
+        if "+examples" not in self.spec:
             raise SkipTest("Package must be installed with +examples")
 
         testdir = "smoke_test_build"
         with working_dir(testdir, create=True):
-            cmake = Executable(spec["cmake"].prefix.bin.cmake)
-            ctest = Executable(spec["cmake"].prefix.bin.ctest)
-            cmakeExampleDir = spec["vtk-m"].prefix.share.doc.VTKm.examples.smoke_test
-
-            cmake(*([cmakeExampleDir, "-DVTKm_ROOT=" + spec["vtk-m"].prefix]))
-            cmake(*(["--build", "."]))
-            ctest(*(["--verbose"]))
+            cmake = Executable(self.spec["cmake"].prefix.bin.cmake)
+            ctest = Executable(self.spec["cmake"].prefix.bin.ctest)
+            cmake(self.prefix.share.doc.VTKm.examples.smoke_test, f"-DVTKm_ROOT={self.prefix}")
+            cmake("--build", ".")
+            ctest("--verbose")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

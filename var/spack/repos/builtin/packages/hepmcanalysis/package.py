@@ -34,7 +34,7 @@ class Hepmcanalysis(MakefilePackage):
             "config.mk",
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HepMCdir", self.spec["hepmc"].prefix)
         env.set("FastJetdir", self.spec["fastjet"].prefix)
         env.set("CLHEPdir", self.spec["clhep"].prefix)

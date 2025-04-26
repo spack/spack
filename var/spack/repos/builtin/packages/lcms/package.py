@@ -53,7 +53,7 @@ class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
             / f"VC{self.pkg.compiler.visual_studio_version}"
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "INCLUDE",
             ";".join([dep.prefix.include for dep in self.spec.dependencies(deptype="link")]),

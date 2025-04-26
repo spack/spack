@@ -51,7 +51,7 @@ class PyPipits(PythonPackage):
     def install_db(self):
         install_tree(join_path(self.stage.source_path, "refdb"), self.prefix.refdb)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set(
             "PIPITS_UNITE_REFERENCE_DATA_CHIMERA",
             join_path(

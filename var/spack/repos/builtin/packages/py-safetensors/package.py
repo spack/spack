@@ -22,3 +22,5 @@ class PySafetensors(PythonPackage):
     depends_on("py-maturin@1", type="build", when="@0.4.3:")
     depends_on("py-setuptools", when="@0.3.1", type="build")
     depends_on("py-setuptools-rust", when="@0.3.1", type="build")
+
+    depends_on("c", type="build")

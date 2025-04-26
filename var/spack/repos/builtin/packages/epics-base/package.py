@@ -38,15 +38,17 @@ class EpicsBase(MakefilePackage):
         perl = which("perl", required=True)
         return perl("%s/perl/EpicsHostArch.pl" % self.prefix.lib, output=str, error=str).strip()
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("EPICS_BASE", self.prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         epics_host_arch = self.get_epics_host_arch()
         env.set("EPICS_HOST_ARCH", epics_host_arch)
         env.set("EPICS_BASE", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         epics_host_arch = self.get_epics_host_arch()
         env.set("EPICS_HOST_ARCH", epics_host_arch)
         env.set("EPICS_BASE", self.prefix)

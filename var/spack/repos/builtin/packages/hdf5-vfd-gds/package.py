@@ -38,5 +38,5 @@ class Hdf5VfdGds(CMakePackage, CudaPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)

@@ -68,7 +68,7 @@ class Parallelmergetree(CMakePackage):
 
     # The C++ headers of gcc-11 don't provide <algorithm> as side effect of others
     @when("%gcc@11:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", "-include algorithm")
 
     def cmake_args(self):

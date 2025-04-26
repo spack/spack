@@ -42,12 +42,11 @@ class Rsyslog(AutotoolsPackage):
     depends_on("byacc", type="build")
     depends_on("flex", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def autoreconf(self, spec, prefix):
         Executable("./autogen.sh")()
 
     def configure_args(self):
-        args = ["--with-systemdsystemunitdir=" + self.spec["rsyslog"].prefix.lib.systemd.system]
-        return args
+        return [f"--with-systemdsystemunitdir={self.prefix.lib.systemd.system}"]

@@ -7,7 +7,7 @@ from spack.package import *
 
 
 class G4tendl(Package):
-    """Geant4 data for incident particles [optional]"""
+    """Optional Geant4 data for incident particles."""
 
     homepage = "https://geant4.web.cern.ch"
     url = "https://geant4-data.web.cern.ch/geant4-data/datasets/G4TENDL.1.3.tar.gz"
@@ -26,7 +26,9 @@ class G4tendl(Package):
         install_path = join_path(prefix.share, "data", self.g4datasetname)
         install_tree(self.stage.source_path, install_path)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         install_path = join_path(self.prefix.share, "data", self.g4datasetname)
         env.set("G4PARTICLEHPDATA", install_path)
 

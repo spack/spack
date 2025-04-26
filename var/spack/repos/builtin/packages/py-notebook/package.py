@@ -12,6 +12,8 @@ class PyNotebook(PythonPackage):
     homepage = "https://github.com/jupyter/notebook"
     pypi = "notebook/notebook-6.1.4.tar.gz"
 
+    version("6.5.7", sha256="04eb9011dfac634fbd4442adaf0a8c27cd26beef831fe1d19faf930c327768e4")
+    version("6.5.6", sha256="b4625a4b7a597839dd3156b140d5ba2c7123761f98245a3290f67a8b8ee048d9")
     version("6.5.4", sha256="517209568bd47261e2def27a140e97d49070602eea0d226a696f42a7f16c9a4e")
     version("6.4.12", sha256="6268c9ec9048cff7a45405c990c29ac9ca40b0bc3ec29263d218c5e01f2b4e86")
     version("6.4.11", sha256="709b1856a564fe53054796c80e17a67262071c86bfbdfa6b96aaa346113c555a")
@@ -53,6 +55,10 @@ class PyNotebook(PythonPackage):
     depends_on("py-tornado@4.0:6", when="@:5.7.4", type=("build", "run"))
     depends_on("py-pyzmq@17:", when="@6:", type=("build", "run"))
     depends_on("py-argon2-cffi", when="@6.1:", type=("build", "run"))
+    depends_on("py-traitlets@5.10.1:", when="@6.5.6:", type=("build", "run"))
+    # https://github.com/jupyter/notebook/issues/7048
+    # Maybe the lower bound on 6 is wrong, but py-traitlets@5.10+ is incompatible  w/ 6.5.4
+    depends_on("py-traitlets@4.2.1:5.9.0", when="@6:6.5.5", type=("build", "run"))
     depends_on("py-traitlets@4.2.1:", when="@5:", type=("build", "run"))
     depends_on("py-traitlets", type=("build", "run"))
     depends_on("py-jupyter-core@4.6.1:", when="@6.0.3:", type=("build", "run"))

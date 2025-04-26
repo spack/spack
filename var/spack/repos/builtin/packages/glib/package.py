@@ -19,7 +19,7 @@ class Glib(MesonPackage):
     """
 
     homepage = "https://developer.gnome.org/glib/"
-    url = "https://download.gnome.org/sources/glib/2.82/glib-2.82.2.tar.xz"
+    url = "https://download.gnome.org/sources/glib/2.82/glib-2.82.5.tar.xz"
     list_url = "https://download.gnome.org/sources/glib"
     list_depth = 1
 
@@ -28,6 +28,7 @@ class Glib(MesonPackage):
     license("LGPL-2.1-or-later")
 
     # Even minor versions are stable, odd minor versions are development, only add even numbers
+    version("2.82.5", sha256="05c2031f9bdf6b5aba7a06ca84f0b4aced28b19bf1b50c6ab25cc675277cbc3f")
     version("2.82.2", sha256="ab45f5a323048b1659ee0fbda5cecd94b099ab3e4b9abf26ae06aeb3e781fd63")
     version("2.78.3", sha256="609801dd373796e515972bf95fc0b2daa44545481ee2f465c4f204d224b2bc21")
     version("2.78.0", sha256="44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30")
@@ -66,15 +67,15 @@ class Glib(MesonPackage):
     version("2.60.7", sha256="8b12c0af569afd3b71200556ad751bad4cf4bf7bc4b5f880638459a42ca86310")
     version("2.58.3", sha256="8f43c31767e88a25da72b52a40f3301fefc49a665b56dc10ee7cc9565cbe7481")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("libmount", default=False, description="Build with libmount support")
     variant(
         "tracing",
         values=any_combination_of("dtrace", "systemtap"),
         description="Enable tracing support",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type="build"):
         depends_on("meson@1.4:", when="@2.83:")

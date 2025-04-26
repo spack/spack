@@ -144,7 +144,6 @@ class DirectiveMeta(type):
         Package class, and it's how Spack gets information from the
         packages to the core.
         """
-        global directive_names
 
         if isinstance(dicts, str):
             dicts = (dicts,)

@@ -14,6 +14,8 @@ class PythonVenv(Package):
     homepage = "https://docs.python.org/3/library/venv.html"
     has_code = False
 
+    tags = ["build-tools"]
+
     maintainers("haampie")
 
     version("1.0")
@@ -52,7 +54,7 @@ class PythonVenv(Package):
     def command(self):
         """Returns a python Executable instance"""
         python_name = "python" if self.spec.satisfies("platform=windows") else "python3"
-        return which(python_name, path=self.bindir)
+        return which(python_name, path=self.bindir, required=True)
 
     def _get_path(self, name) -> str:
         return self.command(
@@ -81,7 +83,9 @@ class PythonVenv(Package):
     def libs(self):
         return LibraryList([])
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
         # Packages may be installed in platform-specific or platform-independent site-packages

@@ -60,10 +60,6 @@ class FoamExtend(Package):
     version("3.1", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.1.git", deprecated=True)
     version("3.0", git="http://git.code.sf.net/p/foam-extend/foam-extend-3.0.git", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # variant('int64', default=False,
     #         description='Compile with 64-bit label')
     variant("float32", default=False, description="Compile with 32-bit scalar (single-precision)")
@@ -76,6 +72,10 @@ class FoamExtend(Package):
     variant(
         "source", default=True, description="Install library/application sources and tutorials"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("python")
@@ -115,7 +115,7 @@ class FoamExtend(Package):
     # - End of definitions / setup -
     #
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Add environment variables to the generated module file.
         These environment variables come from running:
 
@@ -155,10 +155,10 @@ class FoamExtend(Package):
                         "FOAM_RUN",
                         "(FOAM|WM)_.*USER_.*",
                     ],
-                    whitelist=[  # Whitelist these
-                        "MPI_ARCH_PATH",  # Can be needed for compilation
+                    whitelist=[
+                        "MPI_ARCH_PATH",
                         "PYTHON_BIN_DIR",
-                    ],
+                    ],  # Whitelist these  # Can be needed for compilation
                 )
 
                 env.extend(mods)
@@ -176,7 +176,9 @@ class FoamExtend(Package):
             for d in ["wmake", self.archbin]:  # bin added automatically
                 env.prepend_path("PATH", join_path(self.projectdir, d))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Location of the OpenFOAM project.
         This is identical to the WM_PROJECT_DIR value, but we avoid that
         variable since it would mask the normal OpenFOAM cleanup of

@@ -265,6 +265,8 @@ class Openfoam(Package):
 
     version("develop", branch="develop", submodules="True")
     version("master", branch="master", submodules="True")
+    version("2412", sha256="c353930105c39b75dac7fa7cfbfc346390caa633a868130fd8c9816ef5f732cd")
+    version("2406", sha256="8d1450fb89eec1e7cecc55c3bb7bc486ccbf63d069379d1d5d7518fa16a4686a")
     version("2312", sha256="f113183a4d027c93939212af8967053c5f8fe76fb62e5848cb11bbcf8e829552")
     version("2306", sha256="d7fba773658c0f06ad17f90199565f32e9bf502b7bb03077503642064e1f5344")
     version(
@@ -329,9 +331,6 @@ class Openfoam(Package):
     version("1706", sha256="7779048bb53798d9a5bd2b2be0bf302c5fd3dff98e29249d6e0ef7eeb83db79a")
     version("1612", sha256="2909c43506a68e1f23efd0ca6186a6948ae0fc8fe1e39c78cc23ef0d69f3569d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("int64", default=False, description="With 64-bit labels")
     variant("knl", default=False, description="Use KNL compiler settings")
     variant("kahip", default=False, description="With kahip decomposition")
@@ -354,6 +353,9 @@ class Openfoam(Package):
         multi=False,
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi")
 
     # After 1712, could suggest openmpi+thread_multiple for collated output
@@ -371,7 +373,8 @@ class Openfoam(Package):
     # Earlier versions of OpenFOAM may not work with CGAL 5.6. I do
     # not know which OpenFOAM added support for 5.x and conservatively
     # use 2312 in the check.
-    depends_on("cgal", when="@2312:")
+    # cgal@6 needs c++17, but OpenFOAM forces c++14
+    depends_on("cgal@:5", when="@2312:2412")
     depends_on("cgal@:4", when="@:2306")
 
     # The flex restriction is ONLY to deal with a spec resolution clash
@@ -379,6 +382,9 @@ class Openfoam(Package):
     depends_on("flex@:2.6.1,2.6.4:")
     depends_on("cmake", type="build")
     depends_on("m4", type="build")
+    depends_on("json-c")
+    depends_on("libyaml")
+    depends_on("readline")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
@@ -460,7 +466,7 @@ class Openfoam(Package):
             fmt = "v{0}/OpenFOAM-v{1}.tgz"
         return self.list_url + fmt.format(version.up_to(1), version)
 
-    def setup_minimal_environment(self, env):
+    def setup_minimal_environment(self, env: EnvironmentModifications):
         """Sets a minimal openfoam environment."""
         tty.info("OpenFOAM minimal env {0}".format(self.prefix))
         env.set("FOAM_PROJECT_DIR", self.projectdir)
@@ -468,11 +474,11 @@ class Openfoam(Package):
         for d in ["wmake", self.archbin]:  # bin added automatically
             env.prepend_path("PATH", join_path(self.projectdir, d))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Sets the build environment (prior to unpacking the sources)."""
         pass
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Sets the run environment (post-installation).
         The environment comes from running:
 
@@ -510,9 +516,9 @@ class Openfoam(Package):
                         "FOAM_RUN",
                         "(FOAM|WM)_.*USER_.*",
                     ],
-                    whitelist=[  # Whitelist these
-                        "MPI_ARCH_PATH"  # Can be required for compilation
-                    ],
+                    whitelist=[
+                        "MPI_ARCH_PATH"
+                    ],  # Whitelist these  # Can be required for compilation
                 )
 
                 env.extend(mods)
@@ -525,7 +531,9 @@ class Openfoam(Package):
             # pre-build or minimal environment
             self.setup_minimal_environment(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Use full OpenFOAM environment when building.
         Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
         masking the normal OpenFOAM cleanup of previous versions.
@@ -533,7 +541,9 @@ class Openfoam(Package):
         self.setup_run_environment(env)
         env.set("FOAM_PROJECT_DIR", self.projectdir)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Use full OpenFOAM environment when running.
         Mirror WM_PROJECT_DIR value as FOAM_PROJECT_DIR to avoid
         masking the normal OpenFOAM cleanup of previous versions.
@@ -918,7 +928,12 @@ class OpenfoamArch:
 
     #: Map spack compiler names to OpenFOAM compiler names
     #  By default, simply capitalize the first letter
-    compiler_mapping = {"aocc": "Amd", "fj": "Fujitsu", "intel": "Icc", "oneapi": "Icx"}
+    compiler_mapping = {
+        "aocc": "Amd",
+        "fj": "Fujitsu",
+        "intel": "Icc",
+        "intel-oneapi-compilers": "Icx",
+    }
 
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants

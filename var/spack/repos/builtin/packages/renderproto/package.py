@@ -16,5 +16,6 @@ class Renderproto(AutotoolsPackage, XorgPackage):
 
     version("0.11.1", sha256="a0a4be3cad9381ae28279ba5582e679491fc2bec9aab8a65993108bf8dbce5fe")
 
+    depends_on("c", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
