@@ -28,7 +28,7 @@ class CrayMvapich2(MpichEnvironmentModifications, Package):
 
     requires("platform=linux", msg="Cray MVAPICH2 is only available on Cray")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.has_virtual_dependency("c"):
             env.set("MPICC", self["c"].cc)
 

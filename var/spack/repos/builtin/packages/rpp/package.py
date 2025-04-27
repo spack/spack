@@ -181,13 +181,13 @@ class Rpp(CMakePackage):
     with when("~hip"):
         depends_on("rocm-opencl@5:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+add_tests"):
             env.set("TURBO_JPEG_PATH", self.spec["libjpeg-turbo"].prefix)
         if self.spec.satisfies("@6.1:"):
             env.prepend_path("LD_LIBRARY_PATH", self.spec["hsa-rocr-dev"].prefix.lib)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
             env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")

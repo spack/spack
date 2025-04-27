@@ -129,6 +129,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
+    # https://github.com/pika-org/pika/pull/1428
+    conflicts("^boost@1.88:", when="@:0.33")
     depends_on("fmt@9:", when="@0.11:")
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")

@@ -32,7 +32,7 @@ class Blat(Package):
             flags.append("-fcommon")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MACHTYPE", "x86_64")
 
     def install(self, spec, prefix):

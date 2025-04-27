@@ -63,7 +63,7 @@ class Fzf(GoPackage):
         base = "refs/tags/v" if self.spec.satisfies("@:0.53.0") else ""
         return f"https://github.com/junegunn/fzf/archive/{base}{version}.tar.gz"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set up the build environment for fzf."""
         # Setup build env from GoPackage builder
         super().setup_build_environment(env)

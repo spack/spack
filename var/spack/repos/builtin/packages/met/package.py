@@ -87,7 +87,7 @@ class Met(AutotoolsPackage):
             url = "https://github.com/dtcenter/MET/archive/refs/tags/v{0}.tar.gz"
             return url.format(version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         cppflags = []
         ldflags = []
@@ -181,5 +181,5 @@ class Met(AutotoolsPackage):
         return args
 
 
-#    def setup_run_environment(self, env):
+#    def setup_run_environment(self, env: EnvironmentModifications) -> None:
 #        env.set('MET_BASE', self.prefix)

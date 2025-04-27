@@ -365,6 +365,6 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # for seissol-launch
         env.prepend_path("PATH", self.prefix.share)

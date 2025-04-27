@@ -36,7 +36,7 @@ class NcclTests(MakefilePackage, CudaPackage):
             targets.append("MPI=1")
         return targets
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cuda_arch = self.spec.variants["cuda_arch"].value
         cuda_gencode = " ".join(self.cuda_flags(cuda_arch))
         env.set("NVCC_GENCODE", cuda_gencode)

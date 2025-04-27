@@ -80,7 +80,7 @@ class Eigen(CMakePackage, ROCmPackage):
     # TODO: latex and doxygen needed to produce docs with make doc
     # TODO: Other dependencies might be needed to test this package
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.prefix.include.eigen3)
 
     def cmake_args(self):

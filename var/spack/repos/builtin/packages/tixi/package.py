@@ -56,7 +56,7 @@ class Tixi(CMakePackage):
             self.define_from_variant("TIXI_ENABLE_FORTRAN", "fortran"),
         ]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Allow to import tixi3wrapper in python"""
 
         if "+python" in self.spec:

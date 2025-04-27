@@ -573,12 +573,14 @@ class SimmetrixSimmodsuite(Package):
             condition = "@{0}+{1}".format(sim_version, feature)
             simmetrix_resource(_name, url, sha256, condition)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         archlib = join_path(self.prefix.lib, self.oslib)
         env.append_path("CMAKE_PREFIX_PATH", archlib)
         simmetrix_setkernelcmakeprefixpath(self.spec, archlib, env)

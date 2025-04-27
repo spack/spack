@@ -264,5 +264,5 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             filter_file("-MF ", "", "Configurations/unix-Makefile.tmpl", string=True)
             filter_file(r"-MT \$\@ ", "", "Configurations/unix-Makefile.tmpl", string=True)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PERL", self.spec["perl"].prefix.bin.perl)

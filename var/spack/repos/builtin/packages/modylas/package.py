@@ -35,7 +35,7 @@ class Modylas(AutotoolsPackage):
     build_directory = "source"
     configure_directory = "source"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+mpi"):
             env.set("FC", self.spec["mpi"].mpifc, force=True)
         fflags = ["-O3", self.compiler.openmp_flag]

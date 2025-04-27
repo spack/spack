@@ -24,6 +24,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
+import spack.builder
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -613,32 +614,40 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     job_spec, and attempts to copy the files into the directory given
     by job_log_dir.
 
-    Args:
+    Parameters:
         job_spec: spec associated with spack install log
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
-
-    try:
-        package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
-    except spack.error.SpackError as e:
-        tty.error(f"Cannot copy logs: {str(e)}")
+    if not job_spec.concrete:
+        tty.warn("Cannot copy artifacts for non-concrete specs")
         return
 
-    # Get the package's archived files
-    archive_files = []
-    archive_root = package_metadata_root / "archived-files"
-    if archive_root.is_dir():
-        archive_files = [f for f in archive_root.rglob("*") if f.is_file()]
-    else:
-        msg = "Cannot copy package archived files: archived-files must be a directory"
-        tty.warn(msg)
+    package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    if not os.path.isdir(package_metadata_root):
+        # Fallback to using the stage directory
+        job_pkg = job_spec.package
 
+        package_metadata_root = pathlib.Path(job_pkg.stage.path)
+        archive_files = spack.builder.create(job_pkg).archive_files
+        tty.warn("Package not installed, falling back to use stage dir")
+        tty.debug(f"stage dir: {package_metadata_root}")
+    else:
+        # Get the package's archived files
+        archive_files = []
+        archive_root = package_metadata_root / "archived-files"
+        if os.path.isdir(archive_root):
+            archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
+        else:
+            tty.debug(f"No archived files detected at {archive_root}")
+
+    # Try zipped and unzipped versions of the build log
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
+    build_log = package_metadata_root / "spack-build-out.txt"
     build_env_mods = package_metadata_root / "spack-build-env.txt"
 
-    for f in [build_log_zipped, build_env_mods, *archive_files]:
-        copy_files_to_artifacts(str(f), job_log_dir)
+    for f in [build_log_zipped, build_log, build_env_mods, *archive_files]:
+        copy_files_to_artifacts(str(f), job_log_dir, compress_artifacts=True)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
@@ -651,11 +660,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        msg = f"Cannot copy test logs: job test stage ({test_stage}) does not exist"
-        tty.error(msg)
+        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
-    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
+    copy_files_to_artifacts(
+        os.path.join(test_stage, "*", "*.txt"), job_test_dir, compress_artifacts=True
+    )
 
 
 def download_and_extract_artifacts(url, work_dir) -> str:

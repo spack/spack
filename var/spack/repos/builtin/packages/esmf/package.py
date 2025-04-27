@@ -30,6 +30,7 @@ class Esmf(MakefilePackage, PythonExtension):
     # Develop is a special name for spack and is always considered the newest version
     version("develop", branch="develop")
     # generate chksum with 'spack checksum esmf@x.y.z'
+    version("8.8.1", sha256="b0acb59d4f000bfbdfddc121a24819bd2a50997c7b257b0db2ceb96f3111b173")
     version("8.8.0", sha256="f89327428aeef6ad34660b5b78f30d1c55ec67efb8f7df1991fdaa6b1eb3a27c")
     version("8.7.0", sha256="d7ab266e2af8c8b230721d4df59e61aa03c612a95cc39c07a2d5695746f21f56")
     version("8.6.1", sha256="dc270dcba1c0b317f5c9c6a32ab334cb79468dda283d1e395d98ed2a22866364")
@@ -161,7 +162,7 @@ class Esmf(MakefilePackage, PythonExtension):
             os.path.join("src/addon/esmpy/pyproject.toml"),
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
 
 
@@ -193,7 +194,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
                 version.dotted
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # Installation instructions can be found at:
         # http://www.earthsystemmodeling.org/esmf_releases/last_built/ESMF_usrdoc/node9.html
@@ -439,7 +440,9 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
     def check(self):
         make("check", parallel=False)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
 
     def install(self, pkg, spec, prefix):

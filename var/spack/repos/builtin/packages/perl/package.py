@@ -470,7 +470,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec):
+    def _setup_dependent_env(self, env: EnvironmentModifications, dependent_spec: Spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
@@ -483,10 +483,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -505,7 +509,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return
@@ -519,10 +523,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.set("MACOSX_DEPLOYMENT_TARGET", "10.16")
 
         # This is how we tell perl the locations of bzip and zlib.
-        env.set("BUILD_BZIP2", 0)
+        env.set("BUILD_BZIP2", "0")
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
-        env.set("BUILD_ZLIB", 0)
+        env.set("BUILD_ZLIB", "0")
         env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
         env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 

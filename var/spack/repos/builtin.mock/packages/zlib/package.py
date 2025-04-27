@@ -35,7 +35,7 @@ class Zlib(Package):
         shared = "+shared" in self.spec
         return find_libraries(["libz"], root=self.prefix, recursive=True, shared=shared)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+pic" in self.spec:
             env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
         if "+optimize" in self.spec:

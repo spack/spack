@@ -27,7 +27,7 @@ class PerlSerealDecoder(PerlPackage):
     depends_on("perl-test-warn", type=("build", "link", "test"))
     depends_on("zstd", type=("build", "link", "run", "test"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # These are not currently available in Spack
         env.set("SEREAL_USE_BUNDLED_CSNAPPY", "1")
         env.set("SEREAL_USE_BUNDLED_MINIZ", "1")

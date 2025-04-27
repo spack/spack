@@ -933,7 +933,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             return (None, flags, None)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ["clang", "apple-clang"]:
             for lld in "ld.lld-{0}".format(self.compiler.version.version[0]), "ld.lld":
@@ -948,7 +948,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             # set the SDKROOT so the bootstrap compiler finds its C++ headers
             env.set("SDKROOT", macos_sdk_path())
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+clang"):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

@@ -61,7 +61,7 @@ class Wps(Package):
 
     patch("for_aarch64.patch", when="target=aarch64:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("WRF_DIR", self.spec["wrf"].prefix)
         env.set("NETCDF", self.spec["netcdf-c"].prefix)
         # This gets used via the applied patch files
@@ -74,7 +74,7 @@ class Wps(Package):
             env.set("FCFLAGS", args)
             env.set("FFLAGS", args)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("PATH", self.prefix)
         env.append_path("PATH", self.prefix.util)
 

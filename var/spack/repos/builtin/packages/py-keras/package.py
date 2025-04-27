@@ -159,7 +159,7 @@ class PyKeras(PythonPackage):
             url = "https://files.pythonhosted.org/packages/source/k/keras/Keras-{}.tar.gz"
         return url.format(version)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@3:"):
             env.set("KERAS_BACKEND", self.spec.variants["backend"].value)
 

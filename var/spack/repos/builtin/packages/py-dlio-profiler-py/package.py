@@ -53,7 +53,7 @@ class PyDlioProfilerPy(PythonPackage):
     depends_on("ninja", type="build")
     depends_on("cmake@3.12:", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.0.6:"):
             env.set("DLIO_PROFILER_INSTALL_DIR", self.prefix)
             env.set("DLIO_PROFILER_PYTHON_SITE", python_purelib)

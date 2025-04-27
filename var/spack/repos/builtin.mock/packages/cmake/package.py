@@ -36,11 +36,13 @@ class Cmake(Package):
         url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         env.set("for_install", "for_install")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         env.set("from_cmake", "from_cmake")
 

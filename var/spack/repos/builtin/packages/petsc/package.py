@@ -770,17 +770,19 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # configure fails if these env vars are set outside of Spack
         env.unset("PETSC_DIR")
         env.unset("PETSC_ARCH")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Set PETSC_DIR in the module file
         env.set("PETSC_DIR", self.prefix)
         env.unset("PETSC_ARCH")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Set up PETSC_DIR for everyone using PETSc package
         env.set("PETSC_DIR", self.prefix)
         env.unset("PETSC_ARCH")

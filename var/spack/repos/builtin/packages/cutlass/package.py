@@ -53,7 +53,7 @@ class Cutlass(CMakePackage, CudaPackage):
         "https://developer.nvidia.com/cuda-gpus",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CUDACXX", self.spec["cuda"].prefix.bin.nvcc)
 
     def cmake_args(self):

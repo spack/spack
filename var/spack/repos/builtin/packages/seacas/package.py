@@ -318,7 +318,7 @@ class Seacas(CMakePackage):
     # Based on install-tpl.sh script, cereal seems to only be used when faodel enabled
     depends_on("cereal", when="@2021-04-02: +faodel")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib)
 
     def cmake_args(self):

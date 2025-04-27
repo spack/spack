@@ -22,7 +22,7 @@ class Hping(AutotoolsPackage):
     depends_on("libpcap")
     depends_on("tcl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("TCLSH", self.spec["tcl"].prefix.bin.tclsh)
 
     @run_before("configure")
@@ -37,5 +37,5 @@ class Hping(AutotoolsPackage):
         mkdirp(prefix.sbin)
         make("install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

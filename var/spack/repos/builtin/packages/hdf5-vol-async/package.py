@@ -41,7 +41,7 @@ class Hdf5VolAsync(CMakePackage):
     depends_on("openmpi +thread_multiple", when="^[virtuals=mpi] openmpi@:2")
     depends_on("mvapich2 threads=multiple", when="^[virtuals=mpi] mvapich2")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
         env.set("MPICH_MAX_THREAD_SAFETY", "multiple")
 

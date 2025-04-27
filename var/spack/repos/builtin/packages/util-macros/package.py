@@ -29,6 +29,8 @@ class UtilMacros(AutotoolsPackage, XorgPackage):
         if self.spec.satisfies("@:1.19"):
             return spack.url.substitute_version(self.urls[0].replace("xz", "bz2"), version)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Adds the ACLOCAL path for autotools."""
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)

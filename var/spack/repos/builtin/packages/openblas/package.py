@@ -441,7 +441,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # When building OpenBLAS with threads=openmp, `make all`
         # runs tests, so we set the max number of threads at runtime
         # accordingly

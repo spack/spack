@@ -116,7 +116,7 @@ class Lcio(CMakePackage):
             return
         return url
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("LCIO", self.prefix)
         env.prepend_path("PYTHONPATH", self.prefix.python)
         # needed for the python bindings to find "Exceptions.h"

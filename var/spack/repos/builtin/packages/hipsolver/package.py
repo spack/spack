@@ -144,7 +144,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
             ver = None
         return ver
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+asan"):
             self.asan_on(env)
 

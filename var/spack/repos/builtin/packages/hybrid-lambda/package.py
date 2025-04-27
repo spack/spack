@@ -44,6 +44,6 @@ class HybridLambda(AutotoolsPackage):
             filter_file(r"INSTALL = /bin/install -c", "INSTALL = /bin/install -C", "Makefile")
 
     @on_package_attributes(run_tests=True)
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # build testcases with cppunit
         env.prepend_path("LD_LIBRARY_PATH", self.spec["cppunit"].libs.directories[0])

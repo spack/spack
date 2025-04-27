@@ -48,5 +48,5 @@ class MincToolkit(CMakePackage):
             "-DMT_BUILD_ELASTIX=OFF",
         ]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MINC_TOOLKIT", self.prefix)

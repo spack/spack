@@ -621,7 +621,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if self.spec.satisfies("@:13.1.0 +cuda"):
             # older releases of  Trilinos doesn't perform the memory fence so
             # it relies on blocking CUDA kernel launch. This is needed
@@ -635,7 +637,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # Assumes build-time globals have been set already
         return spack_cxx
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+cuda" in spec and "+wrapper" in spec:
             if "+mpi" in spec:
@@ -1121,7 +1123,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             )
             filter_file(r"-lpytrilinos", "", "%s/Makefile.export.Trilinos" % self.prefix.include)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+exodus" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 

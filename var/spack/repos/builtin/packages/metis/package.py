@@ -88,7 +88,7 @@ class Metis(CMakePackage, MakefilePackage):
 
 
 class SetupEnvironment:
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Ignore warnings/errors re unrecognized omp pragmas on %intel
         if "%intel@14:" in self.spec:
             env.append_flags("CFLAGS", "-diag-disable 3180")

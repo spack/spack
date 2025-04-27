@@ -474,9 +474,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     variant(
         "fabrics",
-        values=disjoint_sets(
-            ("auto",), FABRICS  # shared memory transports
-        ).with_non_feature_values("auto", "none"),
+        values=disjoint_sets(("auto",), FABRICS).with_non_feature_values(
+            "auto", "none"
+        ),  # shared memory transports
         description="List of fabrics that are enabled; " "'auto' lets openmpi determine",
     )
 
@@ -887,7 +887,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI is both a runtime and a compiler, we have to setup the
         # compiler components as part of the run environment.
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
@@ -901,7 +901,9 @@ with '-Wl,-commons,use_dylibs' and without
         if self.spec.satisfies("@1.7:"):
             env.set("MPIFC", join_path(self.prefix.bin, "mpifort"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Use the spack compiler wrappers under MPI
         dependent_module = dependent_spec.package.module
         for var_name, attr_name in (

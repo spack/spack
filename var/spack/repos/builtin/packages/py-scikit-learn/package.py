@@ -134,7 +134,7 @@ class PyScikitLearn(PythonPackage):
             name = "scikit-learn"
         return url.format(name, version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Enable parallel builds of the sklearn backend
         env.append_flags("SKLEARN_BUILD_PARALLEL", str(make_jobs))
 

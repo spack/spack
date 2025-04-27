@@ -92,7 +92,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 
     # Need to make sure that locale is UTF-8 in order to process source files in UTF-8.
     @when("@59:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LC_ALL", "en_US.UTF-8")
 
     def configure_args(self):
@@ -114,7 +114,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
 class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
     # Need to make sure that locale is UTF-8 in order to process source files in UTF-8.
     @when("@59:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LC_ALL", "en_US.UTF-8")
 
     def msbuild_args(self):

@@ -169,7 +169,7 @@ class SstElements(AutotoolsPackage):
         args.append("--with-sst-core=%s" % spec["sst-core"].prefix)
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Setup runtime environment for SST Elements."""
 
         if "+pin" in self.spec:

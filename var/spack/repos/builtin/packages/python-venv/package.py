@@ -83,7 +83,9 @@ class PythonVenv(Package):
     def libs(self):
         return LibraryList([])
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on."""
         # Packages may be installed in platform-specific or platform-independent site-packages

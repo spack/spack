@@ -50,7 +50,7 @@ class E3smScorpio(CMakePackage):
 
         return opts
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NetCDF_C_PATH", self.spec["netcdf-c"].prefix)
         env.set("NetCDF_Fortran_PATH", self.spec["netcdf-fortran"].prefix)
         if self.spec.satisfies("+mpi"):

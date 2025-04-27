@@ -40,7 +40,7 @@ class Turbine(AutotoolsPackage):
     depends_on("libtool", type="build", when="@master")
     depends_on("m4", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         env.set("CC", spec["mpi"].mpicc)

@@ -424,7 +424,7 @@ class Cudnn(Package):
             url = "https://developer.download.nvidia.com/compute/redist/cudnn/v{0}/cudnn-{1}-{2}-v{3}.tgz"
             return url.format(directory, cuda, sys_key, ver)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Package is not compiled, and does not work unless LD_LIBRARY_PATH is set
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 

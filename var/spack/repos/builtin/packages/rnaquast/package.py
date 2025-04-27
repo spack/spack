@@ -33,5 +33,5 @@ class Rnaquast(Package):
         install_tree(".", prefix.bin)
         os.rename("%s/rnaQUAST.py" % prefix.bin, "%s/rnaQUAST" % prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", prefix.bin)

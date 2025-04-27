@@ -32,6 +32,6 @@ class Logstash(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # do not use the bundled jdk
         env.set("LS_JAVA_HOME", self.spec["java"].home)

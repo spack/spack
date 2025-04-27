@@ -59,7 +59,7 @@ class Plink(Package):
             install("plink", prefix.bin)
 
     @when("@1.9-beta6.27:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLASFLAGS", self.spec["blas"].libs.ld_flags)
         env.set("ZLIB", self.spec["zlib-api"].libs.ld_flags)
 

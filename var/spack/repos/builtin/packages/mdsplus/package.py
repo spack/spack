@@ -57,7 +57,7 @@ class Mdsplus(AutotoolsPackage):
         bash = which("bash")
         bash("./bootstrap")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MDSPLUS_DIR", self.prefix)
         if "+python" in self.spec:
             env.prepend_path("PYTHONPATH", "{0}/python".format(self.prefix))

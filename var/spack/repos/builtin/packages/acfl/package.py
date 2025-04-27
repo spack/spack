@@ -458,7 +458,7 @@ class Acfl(Package, CompilerPackage):
         hlist.directories = [incdir]
         return hlist
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         arm_dir = get_acfl_prefix(self.spec)
         armpl_dir = get_armpl_prefix(self.spec)
 

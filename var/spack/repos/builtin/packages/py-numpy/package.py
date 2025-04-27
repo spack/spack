@@ -21,6 +21,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.5", sha256="a9c0d994680cd991b1cb772e8b297340085466a6fe964bc9d4e80f5e2f43c291")
     version("2.2.4", sha256="9ba03692a45d3eef66559efe1d1096c4b9b75c0986b5dff5530c378fb8331d4f")
     version("2.2.3", sha256="dbdc15f0c81611925f382dfa97b3bd0bc2c1ce19d4fe50482cb0ddc12ba30020")
     version("2.2.2", sha256="ed6906f61834d687738d25988ae117683705636936cc605be0bb208b23df4d8f")
@@ -486,7 +487,7 @@ class PyNumpy(PythonPackage):
         self.blas_lapack_site_cfg()
 
     @when("@1.26:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%msvc"):
             # For meson build system, compiler paths must be in quotes
             # to prevent paths from being split by spaces.
@@ -494,7 +495,7 @@ class PyNumpy(PythonPackage):
             env.set("CXX", f'"{self.compiler.cxx}"')
 
     @when("@:1.25")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         spec = self.spec
         # https://github.com/numpy/numpy/pull/13132

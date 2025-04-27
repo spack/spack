@@ -85,7 +85,7 @@ class Ampl(Package):
     def url_for_version(self, version):
         return "file://{0}/ampl.linux-intel64.{1}.tgz".format(os.getcwd(), version)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)
         if self.spec.satisfies("+ide"):
             env.prepend_path("PATH", join_path(self.prefix, "amplide"))

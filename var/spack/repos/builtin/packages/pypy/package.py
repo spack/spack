@@ -75,7 +75,7 @@ class Pypy(Package):
             tklib_build.filter("linklibs = .*", f"linklibs = {libs.names}")
             tklib_build.filter("libdirs = .*", f"libdirs = {libs.directories}")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://doc.pypy.org/en/latest/build.html#set-environment-variables-that-will-affect-translation
         env.set("PYPY_USESSION_DIR", self.stage.source_path)
         env.prepend_path("PYTHONPATH", self.stage.source_path)

@@ -59,7 +59,7 @@ class Wi4mpi(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WI4MPI_ROOT", self.prefix)
         env.set("WI4MPI_VERSION", str(self.version))
         env.set("WI4MPI_CC", self.compiler.cc)

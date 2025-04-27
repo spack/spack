@@ -54,7 +54,7 @@ class Rosco(CMakePackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ROSCO_DISCON", self.prefix.lib + "/libdiscon.so")
         env.set("ROSCO_DISCON_DIR", self.prefix.lib)
 

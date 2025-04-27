@@ -56,7 +56,7 @@ class Delphes(CMakePackage):
         args.append(f"-DCMAKE_CXX_STANDARD={self.spec['root'].variants['cxxstd'].value}")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # make the cards distributed with delphes more easily accessible
         env.set("DELPHES_DIR", self.prefix)
         env.set("DELPHES", self.prefix)

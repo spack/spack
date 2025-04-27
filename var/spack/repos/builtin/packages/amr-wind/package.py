@@ -276,7 +276,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         "openfast@4.0.0:4.0.1", msg="OpenFAST 4.0.0:4.0.1 contains a bug. Use OpenFAST >= 4.0.2."
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Avoid compile errors with Intel interprocedural optimization
         if self.spec.satisfies("%intel"):
             env.append_flags("CXXFLAGS", "-no-ipo")

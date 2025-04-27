@@ -44,7 +44,7 @@ class Eigenexa(AutotoolsPackage):
             version, "tar.gz" if version >= Version("2.7") else ".tgz"
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("FC", self.spec["mpi"].mpifc, force=True)
         env.set("F77", self.spec["mpi"].mpif77, force=True)
         env.set("CC", self.spec["mpi"].mpicc, force=True)

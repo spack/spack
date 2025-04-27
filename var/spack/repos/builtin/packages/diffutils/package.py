@@ -41,7 +41,7 @@ class Diffutils(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("iconv")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%fj"):
             env.append_flags("CFLAGS", "-Qunused-arguments")
 

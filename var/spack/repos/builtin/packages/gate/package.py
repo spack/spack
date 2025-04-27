@@ -61,11 +61,11 @@ class Gate(CMakePackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         gc_default_platform = self.spec.variants["default_platform"].value
         env.set("GC_DEFAULT_PLATFORM", gc_default_platform)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GC_GATE_EXE_DIR", self.prefix.bin)
         env.set(
             "GC_CONDOR_SCRIPT", join_path(self.prefix, "share", "jobsplitter", "condor.script")

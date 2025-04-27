@@ -29,7 +29,7 @@ class Prism(MakefilePackage):
 
     patch("Makefile.patch", when="target=aarch64:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PRISM_DIR", self.prefix)
 
     def install(self, spec, prefix):

@@ -35,7 +35,7 @@ class Cbench(MakefilePackage):
     conflicts("%xl")
     conflicts("%xl_r")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The location of the Cbench source tree
         env.set("CBENCHOME", self.stage.source_path)
 

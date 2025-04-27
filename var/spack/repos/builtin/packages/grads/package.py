@@ -83,7 +83,7 @@ class Grads(AutotoolsPackage):
 
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SUPPLIBS", "/")
 
         # Recent versions configure scripts break without PKG_CONFIG set
@@ -92,7 +92,7 @@ class Grads(AutotoolsPackage):
         if "+hdf4" in self.spec and "~shared" in self.spec["hdf"]:
             env.set("LIBS", self.spec["hdf:transitive"].libs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GADDIR", self.prefix.data)
 
     @run_after("install")

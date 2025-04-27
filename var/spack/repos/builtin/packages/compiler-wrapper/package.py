@@ -141,7 +141,9 @@ class CompilerWrapper(Package):
         (cray_dir / "crayCC").symlink_to(installed_script)
         (cray_dir / "CC").symlink_to(installed_script)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if sys.platform == "win32":
             return
 

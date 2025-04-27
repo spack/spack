@@ -47,6 +47,11 @@ class CompilerPackage(spack.package_base.PackageBase):
     #: Relative path to compiler wrappers
     compiler_wrapper_link_paths: Dict[str, str] = {}
 
+    #: Optimization flags
+    opt_flags: Sequence[str] = []
+    #: Flags for generating debug information
+    debug_flags: Sequence[str] = []
+
     def __init__(self, spec: "spack.spec.Spec"):
         super().__init__(spec)
         msg = f"Supported languages for {spec} are not a subset of possible supported languages"

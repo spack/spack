@@ -210,10 +210,12 @@ class Extrae(AutotoolsPackage):
             else:
                 make("install", parallel=False)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # set EXTRAE_HOME in the module file
         env.set("EXTRAE_HOME", self.prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # set EXTRAE_HOME for everyone using the Extrae package
         env.set("EXTRAE_HOME", self.prefix)

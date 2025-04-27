@@ -119,12 +119,12 @@ class CbtfArgonavis(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix + "/extras/CUPTI/lib64")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix + "/extras/CUPTI/lib64")

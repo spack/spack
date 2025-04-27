@@ -210,5 +210,5 @@ class PyYt(PythonPackage):
         # yt("--help")
         python(join_path(self.prefix.bin, "yt"), "--help")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MAX_BUILD_CORES", str(make_jobs))

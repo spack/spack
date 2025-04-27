@@ -147,7 +147,7 @@ class Exciting(MakefilePackage):
         install_tree("species", prefix.species)
         install_tree("tools", prefix.tools)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WNHOME", self.prefix)
         env.set("EXCITINGROOT", self.prefix)
         env.set("EXCITINGBIN", self.prefix.bin)

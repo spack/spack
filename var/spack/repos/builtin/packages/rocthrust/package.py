@@ -91,7 +91,7 @@ class Rocthrust(CMakePackage):
         with working_dir(self.build_directory):
             make("test")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
 
     def cmake_args(self):

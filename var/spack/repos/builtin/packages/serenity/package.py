@@ -175,7 +175,7 @@ class Serenity(CMakePackage):
             args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # set up environment like if we sourced dev/templates/serenity.sh
         env.set("SERENITY_HOME", self.prefix)
         env.set("SERENITY_BIN", self.prefix.bin)
