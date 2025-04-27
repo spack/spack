@@ -23,13 +23,13 @@ class Crow(CMakePackage):
     variant(
         "asio",
         default="standalone",
-        description="Asio implementation to use",
+        description="Asio variant to use: the non-boost Asio or Boost.Asio",
         values=("standalone", "boost"),
     )
     variant(
         "ssl",
         default=False,
-        description="Enable support for HTTPS and WebSocket Secure using OpenSSL",
+        description="Enable support for HTTPS and encrypted WebSocket connections using OpenSSL",
     )
     variant(
         "compression", default=False, description="Enable support for HTTP compression using zlib"
@@ -45,8 +45,8 @@ class Crow(CMakePackage):
 
     def cmake_args(self):
         return [
-            "-DCROW_BUILD_EXAMPLES:BOOL=OFF",
-            "-DCROW_BUILD_TESTS:BOOL=OFF",
+            self.define("CROW_BUILD_EXAMPLES", False),
+            self.define("CROW_BUILD_TESTS", False),
             self.define("CROW_USE_BOOST", self.spec.satisfies("asio=boost")),
             self.define_from_variant("CROW_ENABLE_SSL", "ssl"),
             self.define_from_variant("CROW_ENABLE_COMPRESSION", "compression"),
