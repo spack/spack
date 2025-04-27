@@ -29,6 +29,8 @@ class LuaSol2(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
+    depends_on("cmake@3.26.0:", when="@3.5.0:", type="build")
+
     # Lua is not needed when building, since sol2 is headers-only
     depends_on("lua", type=("link", "run"))
 
