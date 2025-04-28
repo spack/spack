@@ -840,13 +840,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in cls.__mro__:
-            namespace = getattr(cls, "namespace", None)
-            if namespace:
-                fullnames.append("%s.%s" % (namespace, cls.name))
-            if namespace == "builtin":
-                # builtin packages cannot inherit from other repos
+        for base in cls.__mro__:
+            if not base.__module__.startswith(f"{spack.repo.ROOT_PYTHON_NAMESPACE}."):
                 break
+            fullnames.append(base.fullname)
         return fullnames
 
     @classproperty
@@ -866,7 +863,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")
 
             if version < (2, 0):
-                # spack.pkg.builtin.package_name
+                # spack.pkg.builtin.package_name.
                 _, _, pkg_module = module.rpartition(".")
             else:
                 # spack_repo.builtin.packages.package_name.package
