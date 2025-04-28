@@ -140,7 +140,7 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                 if "comms=none" in spec:
                     host_compiler = ""
                 else:
-                    host_compiler = f"-ccbin {spec["mpi"].mpicxx}"
+                    host_compiler = f"-ccbin {spec['mpi'].mpicxx}"
                 env.set("CXX", join_path(spec["cuda"].prefix, "bin", "nvcc"))
                 env.append_flags(
                     "CXXFLAGS", f"-gencode {arch_config} -cudart shared {host_compiler}"
@@ -153,12 +153,12 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                     mpi_ldflags = ""
                 else:
                     mpi_include = spec["mpi"].headers.cpp_flags
-                    mpi_ldflags = f"{spec["mpi"].libs.ld_flags} -lmpi"
+                    mpi_ldflags = f"{spec['mpi'].libs.ld_flags} -lmpi"
                 env.set("CXX", join_path(spec["hip"].prefix, "bin", "hipcc"))
                 env.set("LDFLAGS", f"{mpi_ldflags} -lamdhip64")
                 env.append_flags(
                     "CXXFLAGS",
-                    f"--offload-arch={archs} {spec["hip"].headers.cpp_flags} {mpi_include}",
+                    f"--offload-arch={archs} {spec['hip'].headers.cpp_flags} {mpi_include}",
                 )
         else:
             if "comms=none" not in spec:
@@ -179,8 +179,8 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         spec = self.spec
         args = []
 
-        args.append(f"--with-gmp={self.spec["gmp"].prefix}")
-        args.append(f"--with-mpfr={self.spec["mpfr"].prefix}")
+        args.append(f"--with-gmp={self.spec['gmp'].prefix}")
+        args.append(f"--with-mpfr={self.spec['mpfr'].prefix}")
 
         args.extend(self.enable_or_disable("gparity"))
         args.extend(self.enable_or_disable("accelerator-aware-mpi"))
@@ -188,10 +188,10 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         args.extend(self.enable_or_disable("Sp"))
         args.extend(self.enable_or_disable("unified", variant="unified-device-memory"))
 
-        args.append(f"--enable-tracing={spec.variants["tracing"].value}")
-        args.append(f"--enable-Nc={spec.variants["Nc"].value}")
-        args.append(f"--enable-alloc-align={spec.variants["alloc-align"].value}")
-        args.append(f"--enable-shm={spec.variants["shared-memory"].value}")
+        args.append(f"--enable-tracing={spec.variants['tracing'].value}")
+        args.append(f"--enable-Nc={spec.variants['Nc'].value}")
+        args.append(f"--enable-alloc-align={spec.variants['alloc-align'].value}")
+        args.append(f"--enable-shm={spec.variants['shared-memory'].value}")
 
         if spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl") or spec.satisfies(
             "^[virtuals=fftw-api] intel-oneapi-mkl"
@@ -210,7 +210,7 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         # TODO: Add sycl support
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             args.append("--enable-simd=GPU")
-            args.append(f"--enable-gen-simd-width={spec.variants["gen-simd-width"].value}")
+            args.append(f"--enable-gen-simd-width={spec.variants['gen-simd-width'].value}")
             if spec.satisfies("+cuda"):
                 args.append("--enable-accelerator=cuda")
 
@@ -240,7 +240,7 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
                 args.extend(
                     [
                         "--enable-simd=GEN",
-                        f"--enable-gen-simd-width={spec.variants["gen-simd-width"].value}",
+                        f"--enable-gen-simd-width={spec.variants['gen-simd-width'].value}",
                     ]
                 )
 
