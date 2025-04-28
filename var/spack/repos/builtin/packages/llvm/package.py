@@ -953,8 +953,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
 
         if self.spec.satisfies("%intel-oneapi-compilers"):
             intel_libs = find_libraries(
-                ["libsvml", "libimf", "libirc"],
-                self.spec["intel-oneapi-runtime"].prefix.lib
+                ["libsvml", "libimf", "libirc"], self.spec["intel-oneapi-runtime"].prefix.lib
             )
             env.append_flags("LDFLAGS", intel_libs.ld_flags)
 
