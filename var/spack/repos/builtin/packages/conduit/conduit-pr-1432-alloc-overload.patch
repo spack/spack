@@ -1,0 +1,55 @@
+From cbae30ac46f8de167e91d924f95db4a161425313 Mon Sep 17 00:00:00 2001
+From: Cyrus Harrison <cyrush@llnl.gov>
+Date: Mon, 28 Apr 2025 11:36:36 -0700
+Subject: [PATCH] test preserve of old memset and memcpy to support overloads
+
+---
+ src/libs/conduit/conduit_utils.cpp | 17 +++++++++++++++++
+ src/libs/conduit/conduit_utils.hpp |  6 ++++++
+ 2 files changed, 23 insertions(+)
+
+diff --git a/src/libs/conduit/conduit_utils.cpp b/src/libs/conduit/conduit_utils.cpp
+index 6400b36ef..1499b29c6 100644
+--- a/src/libs/conduit/conduit_utils.cpp
++++ b/src/libs/conduit/conduit_utils.cpp
+@@ -240,6 +240,23 @@ namespace detail
+     };
+ }
+ 
++//-----------------------------------------------------------------------------
++void set_memcpy_handler(void(*conduit_hnd_copy)(void*,
++                                                const void *,
++                                                size_t))
++{
++    detail::AllocManager::instance().set_memcpy_handler(handle_memcpy_type(conduit_hnd_copy));
++}
++
++//-----------------------------------------------------------------------------
++void
++set_memset_handler(void(*conduit_hnd_memset)(void*,
++                                             int,
++                                             size_t))
++{
++    detail::AllocManager::instance().set_memset_handler(handle_memset_type(conduit_hnd_memset));
++}
++
+ //-----------------------------------------------------------------------------
+ void
+ set_memcpy_handler(handle_memcpy_type conduit_hnd_memcpy)
+diff --git a/src/libs/conduit/conduit_utils.hpp b/src/libs/conduit/conduit_utils.hpp
+index 672ea898c..af1102efe 100644
+--- a/src/libs/conduit/conduit_utils.hpp
++++ b/src/libs/conduit/conduit_utils.hpp
+@@ -288,6 +288,12 @@ namespace utils
+     // won't be tied into all of the places where source and dest pointers
+     // need to be located.
+     //
++    void CONDUIT_API set_memcpy_handler(void(*conduit_hnd_copy)(void*,
++                                                                const void *,
++                                                                size_t));
++    void CONDUIT_API set_memset_handler(void(*conduit_hnd_memset)(void*,
++                                                                  int,
++                                                                  size_t));
+     void CONDUIT_API set_memcpy_handler(handle_memcpy_type);
+     void CONDUIT_API set_memset_handler(handle_memset_type);
+ 
