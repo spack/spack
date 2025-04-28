@@ -566,6 +566,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             elif "~" + variant in self.spec:
                 env.set(keyword + "_" + var, "OFF")
 
+        # https://github.com/pytorch/pytorch/issues/151592
+        if self.spec.satisfies("@:2.6"):
+            env.set("PACKAGE_TYPE", "conda")
+
         # Build in parallel to speed up build times
         env.set("MAX_JOBS", str(make_jobs))
 
