@@ -95,7 +95,6 @@ class Podio(CMakePackage):
         description="Build the RDataSource for reading podio collections",
         when="@1.0.2:",
     )
-    variant("rpath", default=False, description="Set RPATH for PODIO libraries")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -139,7 +138,7 @@ class Podio(CMakePackage):
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
-            self.define_from_variant("PODIO_SET_RPATH", "rpath"),
+            self.define("PODIO_SET_RPATH", True),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
