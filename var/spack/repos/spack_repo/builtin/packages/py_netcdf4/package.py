@@ -58,9 +58,6 @@ class PyNetcdf4(PythonPackage):
         depends_on("netcdf-c+mpi")
         depends_on("hdf5+mpi")
 
-    # cython needs to use the MPI compilers to build against the MPI hdf5 it finds
-    depends_on("mpi", when="+mpi", type="build")
-
     # The installation script tries to find hdf5 using pkg-config. However, the
     # version of hdf5 installed with Spack does not have pkg-config files.
     # Therefore, if pkg-config finds hdf5.pc at all (e.g. provided by
@@ -113,7 +110,3 @@ class PyNetcdf4(PythonPackage):
         env.set("NETCDF4_INCDIR", self.spec["netcdf-c"].prefix.include)
         env.set("NETCDF4_LIBDIR", self.spec["netcdf-c"].prefix.lib)
 
-        # ensure cython uses the MPI compiler
-        if self.spec.satisfies("+mpi"):
-            env.set("CC", self.spec["mpi"].mpicc)
-            env.set("CXX", self.spec["mpi"].mpicxx)
