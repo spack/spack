@@ -17,6 +17,12 @@ class PyBlack(PythonPackage):
     license("MIT", checked_by="tgamblin")
     maintainers("spack/spack-releasers")
 
+    version("25.1.0", sha256="33496d5cd1222ad73391352b4ae8da15253c5de89b93a80b3e2c8d9a19ec2666")
+    version("24.10.0", sha256="846ea64c97afe3bc677b761787993be4991810ecc7a4a937816dd6bddedc4875")
+    version("24.8.0", sha256="2500945420b6784c38b9ee885af039f5e7471ef284ab03fa35ecdde4688cd83f")
+    version("24.4.2", sha256="c872b53057f000085da66a19c55d68f6f8ddcac2642392ad3a355878406fbd4d")
+    version("24.4.1", sha256="5241612dc8cad5b6fd47432b8bd04db80e07cfbc53bb69e9ae18985063bcb8dd")
+    version("24.4.0", sha256="f07b69fda20578367eaebbd670ff8fc653ab181e1ff95d84497f9fa20e7d0641")
     version("24.3.0", sha256="a0c9c4a0771afc6919578cec71ce82a3e31e054904e7197deacbc9382671c41f")
     version("24.2.0", sha256="bce4f25c27c3435e4dace4815bcb2008b87e167e3bf4ee47ccdc5ce906eb4894")
     version("24.1.1", sha256="48b5760dcbfe5cf97fd4fba23946681f3a81514c6ab8a45b50da67ac8fbc6c7b")
@@ -63,7 +69,9 @@ class PyBlack(PythonPackage):
 
         depends_on("py-colorama@0.4.3:", when="+colorama")
         depends_on("py-uvloop@0.15.2:", when="+uvloop")
-        depends_on("py-aiohttp@3.7.4:", when="+d")
+        with when("+d"):
+            depends_on("py-aiohttp@3.10:", when="@24.10:")
+            depends_on("py-aiohttp@3.7.4:")
         depends_on("py-ipython@7.8:", when="+jupyter")
         depends_on("py-tokenize-rt@3.2:", when="+jupyter")
 

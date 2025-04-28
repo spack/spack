@@ -59,6 +59,7 @@ class Mpitrampoline(CMakePackage):
     version("1.0.1", sha256="4ce91b99fb6d2dab481b5e477b6b6a0709add48cf0f287afbbb440fdf3232500")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
     depends_on("fortran", type="build")  # generated
 
     variant("shared", default=True, description="Build a shared version of the library")
@@ -80,7 +81,7 @@ class Mpitrampoline(CMakePackage):
         libraries = ["libmpitrampoline"]
         return find_libraries(libraries, root=self.prefix.lib, shared=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
         env.set("MPITRAMPOLINE_CC", self.compiler.cc)
@@ -91,7 +92,9 @@ class Mpitrampoline(CMakePackage):
         env.set("MPIF77", join_path(self.prefix.bin, "mpifc"))
         env.set("MPIF90", join_path(self.prefix.bin, "mpifc"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         dependent_module = dependent_spec.package.module
         # Use the Spack compiler wrappers under MPI
         env.set("MPITRAMPOLINE_CC", dependent_module.spack_cc)

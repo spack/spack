@@ -56,9 +56,6 @@ class Fms(CMakePackage):
         "2020.04.01", sha256="2c409242de7dea0cf29f8dbf7495698b6bcac1eeb5c4599a728bdea172ffe37c"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # https://github.com/NOAA-GFDL/FMS/issues/1417
     patch(
         "https://github.com/NOAA-GFDL/FMS/commit/c9bba516ba1115d4a7660fba92f9d67cf3fd32ad.patch?full_index=1",
@@ -127,6 +124,9 @@ class Fms(CMakePackage):
         default=True,
         description="Enable compiler definition -DINTERNAL_FILE_NML.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")

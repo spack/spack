@@ -95,7 +95,7 @@ class PyOnnx(PythonPackage):
             "setup.py",
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Build in a similar directory as the CMake packages
         env.set(
             "CMAKE_BUILD_DIR", join_path(self.stage.path, f"spack-build-{self.spec.dag_hash(7)}")

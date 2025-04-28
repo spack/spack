@@ -31,9 +31,6 @@ class Interproscan(Package):
         url="ftp://ftp.ebi.ac.uk/pub/software/unix/iprscan/4/RELEASE/4.8/iprscan_v4.8.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     resource(
         when="@5.63-95.0 +databases",
         name="databases",
@@ -81,6 +78,9 @@ class Interproscan(Package):
         default=False,
         description="Fetch and include databases in the install. Greatly increases install size.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("java@8.0:8.9", type=("build", "run"), when="@5:5.36-99.0")
     depends_on("java@11", type=("build", "run"), when="@5.37-76.0:")

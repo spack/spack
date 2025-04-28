@@ -21,9 +21,9 @@ class PyTransformerEngine(PythonPackage):
     version("1.4", tag="v1.4", submodules=True)
     version("main", branch="main", submodules=True)
 
-    depends_on("cxx", type="build")  # generated
-
     variant("userbuffers", default=True, description="Enable userbuffers, this option needs MPI.")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.18:")
@@ -42,7 +42,7 @@ class PyTransformerEngine(PythonPackage):
     with default_args(type=("build", "link", "run")):
         depends_on("py-torch+cuda+cudnn")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NVTE_FRAMEWORK", "pytorch")
         if self.spec.satisfies("+userbuffers"):
             env.set("NVTE_WITH_USERBUFFERS", "1")

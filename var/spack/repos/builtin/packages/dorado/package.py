@@ -38,7 +38,7 @@ class Dorado(CMakePackage, CudaPackage):
 
     patch("cmake-htslib.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.spec["libdeflate"].prefix.lib64)
         env.prepend_path("LIBRARY_PATH", self.spec["libdeflate"].prefix.lib64)
 

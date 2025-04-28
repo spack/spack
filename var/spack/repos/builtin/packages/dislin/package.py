@@ -36,17 +36,19 @@ class Dislin(Package):
 
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DISLIN", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DISLIN", self.prefix)
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["motif"].prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["mesa"].prefix.lib)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix)
 
     def install(self, spec, prefix):

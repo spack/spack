@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
-
+import glob
+import os.path
 import platform
 
 from spack.package import *
@@ -19,6 +20,16 @@ from spack.package import *
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    "25.3": {
+        "Linux-aarch64": (
+            "a2b86cf5141c0a9b0925999521693981451a8d2403367c36c46238163be6f2bb",
+            "https://developer.download.nvidia.com/hpc-sdk/25.3/nvhpc_2025_253_Linux_aarch64_cuda_multi.tar.gz",
+        ),
+        "Linux-x86_64": (
+            "e2b2c911478a5db6a15d1fd258a8c4004dbfccf6f32f4132fe142a24fb7e6f8f",
+            "https://developer.download.nvidia.com/hpc-sdk/25.3/nvhpc_2025_253_Linux_x86_64_cuda_multi.tar.gz",
+        ),
+    },
     "25.1": {
         "Linux-aarch64": (
             "0e1d694d54d44559155024d5bab4ca6764eba52d3f27b89f5c252416976e0360",
@@ -446,9 +457,7 @@ class Nvhpc(Package, CompilerPackage):
         if pkg:
             version(ver, sha256=pkg[0], url=pkg[1])
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("gcc languages=c,c++,fortran", type="run")
 
     variant("blas", default=True, description="Enable BLAS")
     variant(
@@ -469,7 +478,8 @@ class Nvhpc(Package, CompilerPackage):
     provides("lapack", when="+lapack")
     provides("mpi", when="+mpi")
 
-    requires("%gcc", msg="nvhpc must be installed with %gcc")
+    provides("c", "cxx")
+    provides("fortran")
 
     # For now we only detect compiler components
     # It will require additional work to detect mpi/lapack/blas components
@@ -480,6 +490,28 @@ class Nvhpc(Package, CompilerPackage):
     compiler_version_argument = "--version"
     compiler_version_regex = r"nv[^ ]* (?:[^ ]+ Dev-r)?([0-9.]+)(?:-[0-9]+)?"
 
+    debug_flags = ["-g", "-gopt"]
+    opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-O4"]
+
+    pic_flag = "-fpic"
+    openmp_flag = "-mp"
+
+    compiler_wrapper_link_paths = {
+        "c": os.path.join("nvhpc", "nvc"),
+        "cxx": os.path.join("nvhpc", "nvc++"),
+        "fortran": os.path.join("nvhpc", "nvfortran"),
+    }
+
+    implicit_rpath_libs = ["libnvc", "libnvf"]
+    stdcxx_libs = ("-c++libs",)
+
+    def _standard_flag(self, *, language, standard):
+        flags = {
+            "cxx": {"11": "--c++11", "14": "--c++14", "17": "--c++17"},
+            "c": {"99": "-c99", "11": "-c11"},
+        }
+        return flags[language][standard]
+
     @classmethod
     def determine_variants(cls, exes, version_str):
         # TODO: use other exes to determine default_cuda/install_type/blas/lapack/mpi variants
@@ -488,7 +520,7 @@ class Nvhpc(Package, CompilerPackage):
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NVHPC_SILENT", "true")
         env.set("NVHPC_ACCEPT_EULA", "accept")
         env.set("NVHPC_INSTALL_DIR", self.prefix)
@@ -509,11 +541,11 @@ class Nvhpc(Package, CompilerPackage):
 
         makelocalrc_args = [
             "-gcc",
-            self.compiler.cc,
+            self["gcc"].cc,
             "-gpp",
-            self.compiler.cxx,
+            self["gcc"].cxx,
             "-g77",
-            self.compiler.f77,
+            self["gcc"].fortran,
             "-x",
             compilers_bin,
         ]
@@ -527,7 +559,7 @@ class Nvhpc(Package, CompilerPackage):
         # Update localrc to use Spack gcc
         makelocalrc(*makelocalrc_args)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )
@@ -555,7 +587,9 @@ class Nvhpc(Package, CompilerPackage):
             env.prepend_path("PATH", mpi_prefix.bin)
             env.prepend_path("LD_LIBRARY_PATH", mpi_prefix.lib)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )
@@ -608,6 +642,24 @@ class Nvhpc(Package, CompilerPackage):
             libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)
+
+    def _cc_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _cxx_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc++")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _fortran_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvfortran")
+        if not candidates:
+            return None
+        return candidates[0]
 
     # Avoid binding stub libraries by absolute path
     non_bindable_shared_objects = ["stubs"]

@@ -19,10 +19,6 @@ class Clamr(CMakePackage):
 
     version("master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "graphics",
         default="opengl",
@@ -35,6 +31,10 @@ class Clamr(CMakePackage):
         values=("single", "mixed", "full"),
         description="single, mixed, or full double precision values",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.1:", type="build")
     depends_on("mpi")

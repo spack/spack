@@ -25,7 +25,7 @@ class PlinkNg(Package):
         template = "https://www.cog-genomics.org/static/bin/plink2_src_{0}.zip"
         return template.format(ver)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         zlib = join_path(self.spec["zlib-api"].prefix.lib, "libz.a")
         env.set("ZLIB", zlib)
 

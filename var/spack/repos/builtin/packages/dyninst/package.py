@@ -34,14 +34,14 @@ class Dyninst(CMakePackage):
     version("10.2.0", sha256="4212b93bef4563c7de7dce4258e899bcde52315a571087e87fde9f8040123b43")
     version("10.1.0", sha256="4a121d70c1bb020408a7a697d74602e18250c3c85800f230566fcccd593c0129")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("openmp", default=True, description="Enable OpenMP support for ParseAPI ")
 
     variant("static", default=False, description="Build static libraries")
 
     variant("stat_dysect", default=False, description="Patch for STAT's DySectAPI")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on(
         "boost+atomic+chrono+date_time+filesystem+system+thread+timer+container+random+exception"
@@ -63,7 +63,6 @@ class Dyninst(CMakePackage):
         # package layout. Need to use tbb provided config instead.
         conflicts("^intel-tbb@2021.1:")
         conflicts("^intel-oneapi-tbb@2021.1:")
-        conflicts("^intel-parallel-studio")
 
     depends_on("tbb")
     requires("^[virtuals=tbb] intel-tbb@2019.9:", when="@13.0.0:")

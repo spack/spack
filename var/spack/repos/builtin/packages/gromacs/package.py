@@ -529,9 +529,8 @@ class Gromacs(CMakePackage, CudaPackage):
     )
 
     # If the Intel suite is used for Lapack, it must be used for fftw and vice-versa
-    for _intel_pkg in INTEL_MATH_LIBRARIES:
-        requires(f"^[virtuals=fftw-api] {_intel_pkg}", when=f"^[virtuals=lapack]   {_intel_pkg}")
-        requires(f"^[virtuals=lapack]   {_intel_pkg}", when=f"^[virtuals=fftw-api] {_intel_pkg}")
+    requires("^[virtuals=fftw-api] intel-oneapi-mkl", when="^[virtuals=lapack] intel-oneapi-mkl")
+    requires("^[virtuals=lapack] intel-oneapi-mkl", when="^[virtuals=fftw-api] intel-oneapi-mkl")
 
     patch("gmxDetectCpu-cmake-3.14.patch", when="@2018:2019.3^cmake@3.14.0:")
     patch("gmxDetectSimd-cmake-3.14.patch", when="@5.0:2017^cmake@3.14.0:")
@@ -626,7 +625,7 @@ class Gromacs(CMakePackage, CudaPackage):
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cufftmp"):
             env.append_path(
                 "LD_LIBRARY_PATH",
@@ -738,7 +737,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             ):
                 with open(".".join([os.environ["SPACK_CXX"], "cfg"]), "r") as f:
                     options.append("-DCMAKE_CXX_FLAGS={}".format(f.read()))
-            elif self.spec.satisfies("^gcc"):
+            elif self.spec["cxx"].name == "gcc":
                 options.append("-DGMX_GPLUSPLUS_PATH=%s/g++" % self.spec["gcc"].prefix.bin)
 
         if self.spec.satisfies("+double"):
@@ -911,9 +910,8 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             )
             options.append(f"-DNVSHMEM_ROOT={nvshmem_root}")
 
-        if self.spec["lapack"].name in INTEL_MATH_LIBRARIES:
-            # fftw-api@3 is provided by intel-mkl or intel-parallel-studio
-            # we use the mkl interface of gromacs
+        if self.spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl"):
+            # fftw-api@3 is provided by intel-oneapi-mkl
             options.append("-DGMX_FFT_LIBRARY=mkl")
             if self.spec.satisfies("@:2022"):
                 options.append(
@@ -954,7 +952,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_VERSION_STRING_OF_FORK=spack")
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cufftmp"):
             env.append_path(
                 "LD_LIBRARY_PATH",

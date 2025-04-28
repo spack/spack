@@ -65,7 +65,7 @@ class LuaLuajitOpenresty(LuaImplPackage):
         # on some platforms for the final link stage to work
         src_makefile.filter("^TARGET_LD = .*", f"TARGET_LD = {spack_cxx}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "LUA_PATH",
             os.path.join(self.spec.prefix, "share", f"luajit-{self.version[0:2]}", "?.lua"),

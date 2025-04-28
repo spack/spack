@@ -92,10 +92,10 @@ class Genie(Package):
         else:
             return url.format(version.underscored)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GENIE", self.stage.source_path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GENIE", self.prefix)
 
     def install(self, spec, prefix):

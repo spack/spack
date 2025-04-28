@@ -77,7 +77,7 @@ class Lmod(AutotoolsPackage):
 
     parallel = False
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         stage_lua_path = join_path(self.stage.source_path, "src", "?.lua")
         env.append_path("LUA_PATH", stage_lua_path.format(version=self.version), separator=";")
 

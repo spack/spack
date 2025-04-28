@@ -63,7 +63,7 @@ class PyPyproj(PythonPackage):
     depends_on("proj@6.0:7", when="@2.0:2.1")
     depends_on("proj")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://pyproj4.github.io/pyproj/stable/installation.html#pyproj-build-environment-variables
         env.set("PROJ_VERSION", self.spec["proj"].version)
         env.set("PROJ_DIR", self.spec["proj"].prefix)

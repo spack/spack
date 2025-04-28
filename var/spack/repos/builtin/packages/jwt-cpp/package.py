@@ -15,15 +15,13 @@ class JwtCpp(CMakePackage):
 
     license("MIT")
 
+    version("0.7.1", sha256="e52f247d5e62fac5da6191170998271a70ce27f747f2ce8fde9b09f96a5375a4")
     version("0.7.0", sha256="b9eb270e3ba8221e4b2bc38723c9a1cb4fa6c241a42908b9a334daff31137406")
     version("0.6.0", sha256="0227bd6e0356b211341075c7997c837f0b388c01379bd256aa525566a5553f03")
     version("0.5.2", sha256="d3188f9611597eb1bb285169879e1d87202bf10a08e4e7734c9f2097bfd4a850")
     version("0.5.1", sha256="d8f5ffb361824630b3b6f4aad26c730c915081071040c232ac57947d6177ef4f")
     version("0.5.0", sha256="079a273f070dd11213e301712319a65881e51ab81535cc436d5313191df852a2")
     version("0.4.0", sha256="f0dcc7b0e8bef8f9c3f434e7121f9941145042c9fe3055a5bdd709085a4f2be4")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     # TODO: jwt-cpp>=0.5.0 has an embedded copy of picojson which can be packaged seperately
 
@@ -37,6 +35,9 @@ class JwtCpp(CMakePackage):
         when="@0.5.0:",
         description="SSL library to use",
     )
+
+    depends_on("c", type="build", when="@:0.7.0")
+    depends_on("cxx", type="build")
 
     depends_on("openssl@1.0.2:", when="@0.4.0:0.4.99")
     depends_on("openssl@1.0.2:", when="@0.5.0:0.5.99 ssl=openssl")

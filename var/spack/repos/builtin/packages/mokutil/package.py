@@ -25,7 +25,7 @@ class Mokutil(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("efivar")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("C_INCLUDE_PATH", self.spec["efivar"].prefix.include.efivar)
 
     def install(self, spec, prefix):

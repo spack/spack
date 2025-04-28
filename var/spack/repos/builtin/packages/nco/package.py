@@ -14,8 +14,11 @@ class Nco(AutotoolsPackage):
 
     maintainers("altheaden", "xylar")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
+    version("5.3.3", sha256="f9185e115e246fe884dcae0804146b56df7257f53de7ba190fea66977ccd5a64")
     version("5.3.2", sha256="645179433e0f54e7e6fefa9fcc74c1866ad55dd69f0fccbc262c550fcc186385")
     version("5.3.1", sha256="c527e991e1befcc839a14151a2982a20340ab1523ce98b66ef3efa2878ee039b")
     version("5.3.0", sha256="661d12f4eb678ca301bf6000f1c1d0fb0e32a69def237dc14f3253e9fc1aaf6a")
@@ -62,14 +65,14 @@ class Nco(AutotoolsPackage):
     version("4.6.1", sha256="7433fe5901f48eb5170f24c6d53b484161e1c63884d9350600070573baf8b8b0")
     version("4.5.5", sha256="bc6f5b976fdfbdec51f2ebefa158fa54672442c2fd5f042ba884f9f32c2ad666")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # https://github.com/nco/nco/issues/43
     patch("NUL-0-NULL.patch", when="@:4.6.7")
 
     variant("doc", default=False, description="Build/install NCO TexInfo-based documentation")
     variant("openmp", default=True, description="Include OpenMP support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # See "Compilation Requirements" at:
     # http://nco.sourceforge.net/#bld
@@ -89,7 +92,7 @@ class Nco(AutotoolsPackage):
         config_args += self.enable_or_disable("openmp")
         return config_args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("NETCDF_INC", spec["netcdf-c"].prefix.include)
         env.set("NETCDF_LIB", spec["netcdf-c"].prefix.lib)

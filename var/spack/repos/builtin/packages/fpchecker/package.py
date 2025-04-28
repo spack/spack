@@ -17,6 +17,8 @@ class Fpchecker(CMakePackage):
 
     maintainers("ilagunap")
 
+    tags = ["e4s"]
+
     license("Apache-2.0")
 
     version("master", branch="master")

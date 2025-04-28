@@ -85,7 +85,7 @@ class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
             config_args.append("LDFLAGS=-lrt")
         return config_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         mpidir = join_path(self.prefix.libexec, "osu-micro-benchmarks", "mpi")
         env.prepend_path("PATH", join_path(mpidir, "startup"))
         env.prepend_path("PATH", join_path(mpidir, "pt2pt"))

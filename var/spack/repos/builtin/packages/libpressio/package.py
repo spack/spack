@@ -173,9 +173,6 @@ class Libpressio(CMakePackage, CudaPackage):
     version("0.27.0", sha256="387ee5958de2d986095cda2aaf39d0bf319d02eaeeea2a565aea97e6a6f31f36")
     version("0.26.0", sha256="c451591d106d1671c9ddbb5c304979dd2d083e0616b2aeede62e7a6b568f828c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "pybind", default=False, description="build support for pybind metrics", when="@0.96.0:"
     )
@@ -224,6 +221,9 @@ class Libpressio(CMakePackage, CudaPackage):
         "cusz", default=False, description="build support for the cusz compressor", when="@0.86.0:"
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # cufile was only added to the .run file installer for cuda in 11.7.1
     # dispite being in the APT/RPM packages for much longer
     # a external install the cufile libraries could use an earlier version
@@ -262,7 +262,7 @@ class Libpressio(CMakePackage, CudaPackage):
     depends_on("zfp", when="+zfp")
     depends_on("petsc", when="+petsc")
     depends_on("mpi@2:", when="+mpi")
-    depends_on("lua-sol2", when="+lua")
+    depends_on("lua-sol2@:3.3.0", when="+lua")
     depends_on("libdistributed@0.0.11:", when="+libdistributed")
     depends_on("libdistributed@0.4.0:", when="@0.85.0:+libdistributed")
     depends_on("pkgconfig", type="build")
@@ -395,7 +395,7 @@ class Libpressio(CMakePackage, CudaPackage):
             args.append("-DHDF5_ROOT=" + self.spec["hdf5"].prefix)
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+hdf5") and self.spec.satisfies("+json"):
             env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib64)
 

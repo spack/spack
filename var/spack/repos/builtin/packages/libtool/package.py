@@ -89,7 +89,9 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
             filter_file("-fno-builtin", "-Mnobuiltin", "configure")
             filter_file("-fno-builtin", "-Mnobuiltin", "libltdl/configure")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.append_path("ACLOCAL_PATH", self.prefix.share.aclocal)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -116,12 +118,12 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
             join_path(self.prefix.bin, "libtoolize"), join_path(self.prefix.bin, "glibtoolize")
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Wrapper until spack has a real implementation of setup_test_environment()"""
         if self.run_tests:
             self.setup_test_environment(env)
 
-    def setup_test_environment(self, env):
+    def setup_test_environment(self, env: EnvironmentModifications):
         """When Fortran is not provided, a few tests need to be skipped"""
         if self.compiler.f77 is None:
             env.set("F77", "no")

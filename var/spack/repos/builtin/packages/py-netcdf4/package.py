@@ -27,6 +27,7 @@ class PyNetcdf4(PythonPackage):
 
     variant("mpi", default=True, description="Parallel IO support")
 
+    depends_on("c", type="build")
     depends_on("python", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@1.7.1:", type=("build", "link", "run"))
     depends_on("py-cython@0.29:", when="@1.6.5:", type="build")
@@ -79,7 +80,7 @@ class PyNetcdf4(PythonPackage):
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
         # system versions

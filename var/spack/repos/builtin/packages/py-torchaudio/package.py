@@ -156,9 +156,9 @@ class PyTorchaudio(PythonPackage):
                 flags.append("-Wl,-ld_classic")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # tools/setup_helpers/extension.py
-        env.set("BUILD_SOX", 0)
+        env.set("BUILD_SOX", "0")
 
         if self.spec.satisfies("@2.1:"):
             env.set("FFMPEG_ROOT", self.spec["ffmpeg"].prefix)
@@ -167,11 +167,11 @@ class PyTorchaudio(PythonPackage):
             env.set("USE_FFMPEG", "0")
 
         if "+cuda" in self.spec["py-torch"]:
-            env.set("USE_CUDA", 1)
+            env.set("USE_CUDA", "1")
         else:
-            env.set("USE_CUDA", 0)
+            env.set("USE_CUDA", "0")
 
         if "+rocm" in self.spec["py-torch"]:
-            env.set("USE_ROCM", 1)
+            env.set("USE_ROCM", "1")
         else:
-            env.set("USE_ROCM", 0)
+            env.set("USE_ROCM", "0")

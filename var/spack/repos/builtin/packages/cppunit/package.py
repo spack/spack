@@ -20,8 +20,6 @@ class Cppunit(AutotoolsPackage):
     version("1.14.0", sha256="3d569869d27b48860210c758c4f313082103a5e58219a7669b52bfd29d674780")
     version("1.13.2", sha256="3f47d246e3346f2ba4d7c9e882db3ad9ebd3fcbd2e8b732f946e0e3eeb9f429f")
 
-    depends_on("cxx", type="build")
-
     # https://github.com/cms-sw/cmsdist/blob/IB/CMSSW_12_6_X/master/cppunit-1.14-defaulted-function-deleted.patch
     # https://cgit.freedesktop.org/libreoffice/cppunit/commit/?h=cppunit-1.15.1&id=834f3a287387bd6230c98b0c5375aff568c75e02
     patch("cppunit-1.14-defaulted-function-deleted.patch", when="@1.15_20220904")
@@ -42,11 +40,14 @@ class Cppunit(AutotoolsPackage):
         description="Build shared libs, static libs or both",
     )
 
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+
     depends_on("autoconf", type="build", when="@master,1.15_20220904")
     depends_on("automake", type="build", when="@master,1.15_20220904")
     depends_on("libtool", type="build", when="@master,1.15_20220904")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstd = self.spec.variants["cxxstd"].value
         cxxstdflag = (
             "" if cxxstd == "default" else getattr(self.compiler, "cxx{0}_flag".format(cxxstd))

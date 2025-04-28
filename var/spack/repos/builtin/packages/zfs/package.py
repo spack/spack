@@ -27,5 +27,5 @@ class Zfs(AutotoolsPackage):
     depends_on("libtirpc")
     depends_on("util-linux")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["util-linux"].prefix.include)

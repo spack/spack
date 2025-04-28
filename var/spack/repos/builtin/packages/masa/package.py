@@ -25,12 +25,12 @@ class Masa(AutotoolsPackage):
     version("0.43.0", tag="0.43.0")
     version("0.42.0", tag="0.42.0")
 
+    variant("fortran", default=False, description="Compile with Fortran interfaces")
+    variant("python", default=False, description="Compile with Python interfaces")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build", when="+fortran")
-
-    variant("fortran", default=False, description="Compile with Fortran interfaces")
-    variant("python", default=False, description="Compile with Python interfaces")
 
     depends_on("gettext")
     depends_on("metaphysicl")
@@ -53,7 +53,7 @@ class Masa(AutotoolsPackage):
 
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Unfortunately can't use this because MASA overwrites it
         # env.set('CXXFLAGS', self.compiler.cxx11_flag)
         env.set("CXX", "{0} {1}".format(self.compiler.cxx, self.compiler.cxx11_flag))

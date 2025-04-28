@@ -22,6 +22,8 @@ class Tmscore(Package):
 
     variant("fast-math", default=False, description="Enable fast math")
 
+    depends_on("cxx", type="build")
+
     phases = ["build", "install"]
 
     def build(self, spec, prefix):

@@ -84,7 +84,7 @@ class Vep(Package):
     def vep_installer_path(self):
         return f"{self.vep_scripts_path.INSTALL}.pl"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("VEP_HOME", self.home)
         if self.spec.satisfies("+bundled_htslib"):
             env.prepend_path("PATH", self.vep_lib_path.htslib)

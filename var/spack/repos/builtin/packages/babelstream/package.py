@@ -25,6 +25,8 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
     version("main", branch="main")
     maintainers("tomdeakin", "kaanolgu", "tom91136")
     # Previous maintainers: "robj0nes"
+
+    depends_on("c", type="build")
     depends_on("cxx", type="build", when="languages=cxx")
     depends_on("fortran", type="build", when="languages=fortran")
     # Languages
@@ -829,7 +831,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             for key in config:
                 inc.write("{0} = {1}\n".format(key, config[key]))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ######################################
         # Build and Installation Directories #
         ######################################

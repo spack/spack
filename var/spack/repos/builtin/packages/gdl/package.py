@@ -19,10 +19,6 @@ class Gdl(CMakePackage):
     version("0.9.9", sha256="ad5de3fec095a5c58b46338dcc7367d2565c093794ab1bbcf180bba1a712cf14")
     version("0.9.8", sha256="0e22df7314feaf18a76ae39ee57eea2ac8c3633bc095acbc25e1e07277d7c98b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("graphicsmagick", default=False, description="Enable GraphicsMagick")
 
     variant("hdf4", default=False, description="Enable HDF4")
@@ -34,6 +30,10 @@ class Gdl(CMakePackage):
     variant("x11", default=False, description="Enable X11")
 
     extends("python", when="+python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
     depends_on("graphicsmagick", when="+graphicsmagick")

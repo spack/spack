@@ -57,14 +57,18 @@ class Tempo(AutotoolsPackage):
             cp("-r", "ephem", join_path(self.prefix, "ephem"))
             cp("-r", "tzpar", join_path(self.prefix, "tzpar"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("TEMPO", self.prefix)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("TEMPO", self.prefix)
 
         # For LWA-10-17-2020 version
         env.set("TEMPO_DIR", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("TEMPO", self.prefix)

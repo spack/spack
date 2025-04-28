@@ -52,7 +52,7 @@ class Bart(MakefilePackage, CudaPackage):
         if spec["blas"].name == "openblas":
             env["OPENBLAS"] = "1"
 
-        elif spec["blas"].name in INTEL_MATH_LIBRARIES:
+        elif spec.satisfies("^[virtuals=blas] intel-oneapi-mkl"):
             env["MKL"] = "1"
             env["MKL_BASE"] = spec["mkl"].prefix.mkl
         else:
@@ -85,5 +85,5 @@ class Bart(MakefilePackage, CudaPackage):
             install("python/bartview.py", join_path(prefix.bin, "bartview"))
             filter_file(r"#!/usr/bin/python", "#!/usr/bin/env python", prefix.bin.bartview)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("TOOLBOX_PATH", self.prefix)

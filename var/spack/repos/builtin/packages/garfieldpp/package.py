@@ -44,7 +44,7 @@ class Garfieldpp(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)
 
@@ -56,6 +56,8 @@ class Garfieldpp(CMakePackage):
         env.prepend_path("LD_LIBRARY_PATH", self.spec["root"].prefix.lib.root)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["gsl"].prefix.lib.root)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("GARFIELD_INSTALL", self.prefix)
         env.set("HEED_DATABASE", self.prefix.share.Heed.database)

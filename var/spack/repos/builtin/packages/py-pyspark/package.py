@@ -55,7 +55,7 @@ class PyPyspark(PythonPackage):
         ]:
             depends_on(f"py-py4j@{py4j_version}:", when=f"@{pyspark_version}")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PYSPARK_PYTHON", python.path)
         env.set("PYSPARK_DRIVER_PYTHON", python.path)
         if self.spec.satisfies("+pandas ^java@11:"):

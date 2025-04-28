@@ -56,10 +56,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
         "2020.10.00", sha256="ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab"
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch("omp.patch", when="@2023.11.05")
 
     variant(
@@ -68,6 +64,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     variant("openmp", default=True, description="Build with OpenMP support.")
     variant("shared", default=True, description="Build shared library")
     variant("sycl", default=False, description="Build with SYCL backend")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # The runtime dependency on cmake is needed by the stand-alone tests (spack test).
     depends_on("cmake", type="run")

@@ -32,5 +32,5 @@ class RProj(RPackage):
     depends_on("libtiff@4", type=("build", "run"))
     depends_on("curl", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.spec["proj"].prefix.lib)

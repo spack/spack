@@ -103,9 +103,6 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         version("2.0.1", sha256="2564c91ed8ed36274ee31002a25798f5babc4221e879cb5013867733d80f9920")
         version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # Optional dependencies
     variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
     variant(
@@ -259,6 +256,9 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     build_system(
         conditional("cmake", when="@3.5:"), conditional("autotools", when="@:3.5"), default="cmake"
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with when("build_system=cmake"):
         generator("ninja")
@@ -512,7 +512,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str).rstrip()
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+java"):
             class_paths = find(self.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
@@ -639,7 +639,7 @@ class CMakeBuilder(CMakeBuilder):
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.

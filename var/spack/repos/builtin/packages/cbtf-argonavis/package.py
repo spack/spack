@@ -21,9 +21,6 @@ class CbtfArgonavis(CMakePackage):
     version("1.9.4", branch="1.9.4")
     version("1.9.3", branch="1.9.3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "crayfe",
         default=False,
@@ -39,6 +36,9 @@ class CbtfArgonavis(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo"),
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.0.2:", type="build")
 
@@ -119,12 +119,12 @@ class CbtfArgonavis(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix + "/extras/CUPTI/lib64")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         env.prepend_path("LD_LIBRARY_PATH", self.spec["cuda"].prefix + "/extras/CUPTI/lib64")

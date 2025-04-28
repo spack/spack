@@ -149,7 +149,7 @@ class Survey(CMakePackage):
     def site_packages_dir(self):
         return join_path(self.python_lib_dir, "site-packages")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         # Set SURVEY_MPI_IMPLEMENTATON to the appropriate mpi implementation

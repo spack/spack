@@ -18,10 +18,6 @@ class Op2Dsl(MakefilePackage, CudaPackage):
     version("master", branch="master")
     version("1.1.0", tag="v1.1.0", commit="22c13b425976e32a6c904f3a5a95ffb761680eb3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     build_directory = "op2"
 
     variant("mpi", default=False, description="Enable MPI support")
@@ -33,6 +29,10 @@ class Op2Dsl(MakefilePackage, CudaPackage):
     variant(
         "scotch", default=True, when="+mpi", description="Enable PT-Scotch partitioning support"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
 

@@ -138,7 +138,7 @@ class Jube(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-pyyaml", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if not self.spec.variants["resource_manager"].value == "none":
             env.prepend_path(
                 "JUBE_INCLUDE_PATH",

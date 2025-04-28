@@ -49,7 +49,7 @@ class Visit(CMakePackage):
     git = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.2.1/visit3.2.1.tar.gz"
 
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     maintainers("cyrush")
     license("BSD-3-Clause")
@@ -77,10 +77,6 @@ class Visit(CMakePackage):
     version("3.2.1", sha256="779d59564c63f31fcbfeff24b14ddd6ac941b3bb7d671d31765a770d193f02e8")
     version("3.1.1", sha256="0b60ac52fd00aff3cf212a310e36e32e13ae3ca0ddd1ea3f54f75e4d9b6c6cf0")
     version("3.0.1", sha256="a506d4d83b8973829e68787d8d721199523ce7ec73e7594e93333c214c2c12bd")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     root_cmakelists_dir = "src"
     # Prefer ninja generator
@@ -126,6 +122,10 @@ class Visit(CMakePackage):
     conflicts(
         "+gui", when="^[virtuals=gl] osmesa", msg="GUI cannot be activated with OSMesa front-end"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.14.7:", type="build")
     depends_on("cmake@3.24:", type="build", when="@3.4:")
