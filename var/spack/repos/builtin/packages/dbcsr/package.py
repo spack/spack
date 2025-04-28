@@ -47,7 +47,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         default=False,
         description=(
             "CP2K (resp. DBCSR) has specific parameter sets for"
-            " different GPU models. Enable thisunit_tests when building"
+            " different GPU models. Enable this when building"
             " with cuda_arch=35 for a K20x instead of a K40"
         ),
     )
@@ -164,7 +164,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("WITH_EXAMPLES", "examples"),
             self.define_from_variant("WITH_G2G", "g2g"),
-            self.define_from_variant("BUILD_TESTING", "test"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
 
         if self.spec.satisfies("+cuda"):

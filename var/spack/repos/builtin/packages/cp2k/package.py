@@ -215,7 +215,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("blas")
     depends_on("lapack")
-    depends_on("fftw-api@3", when="+fftw3")
+    depends_on("fftw-api@3")
     depends_on("greenx", when="+greenx")
     depends_on("hdf5+hl+fortran", when="+hdf5")
     depends_on("trexio", when="+trexio")
