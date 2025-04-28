@@ -50,7 +50,6 @@ import spack.util.environment
 import spack.util.executable
 import spack.util.naming
 import spack.util.path
-import spack.util.spack_yaml
 import spack.util.web
 import spack.variant
 from spack.compilers.adaptor import DeprecatedCompiler
@@ -511,11 +510,6 @@ class DisableRedistribute:
         self.binary = binary
 
 
-#: Maps repo.yaml file paths to their package API, to avoid re-reading the file. This is
-#: needed to compute the package name from its module name for v2.0 and later.
-REPO_TO_PACKAGE_API: Dict[str, Tuple[int, int]] = {}
-
-
 class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     """This is the superclass for all spack packages.
 
@@ -857,38 +851,28 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classproperty
     def name(cls):
-        """The name of this package.
-
-        The name of a package depends on the repo version. In v1.x on the package name is its
-        module name. In v2.x it needs translation.
-        """
+        """The name of this package."""
         if cls._name is None:
-            from spack.repo import _parse_package_api_version
+            # We cannot know the exact package API version, but we can distinguish between v1
+            # v2 based on the module prefix (spack.pkg. vs spack_repo.). We don't want to figure
+            # out the exact package API version since it requires parsing the repo.yaml.
+            module = cls.__module__
 
-            repo_yaml = os.path.join(
-                os.path.dirname(cls.module.__file__), os.pardir, os.pardir, "repo.yaml"
-            )
-
-            version = REPO_TO_PACKAGE_API.get(repo_yaml)
-
-            if version is None:
-                try:
-                    with open(repo_yaml, encoding="utf-8") as f:
-                        version = _parse_package_api_version(spack.util.spack_yaml.load(f)["repo"])
-                except Exception:
-                    version = (1, 0)
-
-                REPO_TO_PACKAGE_API[repo_yaml] = version
-
-            components = cls.module.__name__.split(".")
-
-            if version[0] == 1:
-                name = components[-1]
+            if module.startswith("spack.pkg."):
+                version = (1, 0)
+            elif module.startswith("spack_repo."):
+                version = (2, 0)
             else:
-                assert components[-1] == "package"
-                name = components[-2]
+                raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")
 
-            cls._name = spack.util.naming.mod_to_pkg_name(name, version)
+            if version < (2, 0):
+                # spack.pkg.builtin.package_name
+                _, _, pkg_module = module.rpartition(".")
+            else:
+                # spack_repo.builtin.packages.package_name.package
+                pkg_module = module.rsplit(".", 2)[-2]
+
+            cls._name = spack.util.naming.mod_to_pkg_name(pkg_module, version)
         return cls._name
 
     @classproperty
