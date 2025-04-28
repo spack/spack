@@ -52,7 +52,7 @@ class Cosma(CMakePackage):
     with when("+rocm"):
         variant("rccl", default=False, description="Use rocm rccl")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
     depends_on("c", type="build")
     depends_on("fortran", type="build")
 
