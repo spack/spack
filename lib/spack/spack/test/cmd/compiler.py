@@ -10,6 +10,7 @@ import spack.cmd.compiler
 import spack.compilers.config
 import spack.config
 import spack.main
+import spack.paths
 import spack.util.pattern
 import spack.version
 
@@ -159,7 +160,7 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     assert "gcc@8.4.0" in output
 
     if not os.path.exists(spack.paths.packages_path):
-       pytest.xfail("TODO/RepoSplit: Checking llvm requires llvm package solution")
+        pytest.xfail("TODO/RepoSplit: Checking llvm requires llvm package solution")
 
     assert "llvm@11.0.0" in output
 
