@@ -109,4 +109,3 @@ class PyNetcdf4(PythonPackage):
         env.set("NETCDF4_DIR", self.spec["netcdf-c"].prefix)
         env.set("NETCDF4_INCDIR", self.spec["netcdf-c"].prefix.include)
         env.set("NETCDF4_LIBDIR", self.spec["netcdf-c"].prefix.lib)
-
