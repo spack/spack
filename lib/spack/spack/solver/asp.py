@@ -2233,6 +2233,10 @@ class SpackSolverSetup:
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
                         context=context,
                     )
+
+                    # Conditions don't handle conditional dependencies directly
+                    # Those are handled separately here
+                    self.generate_conditional_dep_conditions(spec, member_id)
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
                     # would be impaired. If a rule does not apply for a specific package, just
@@ -3383,42 +3387,45 @@ class SpackSolverSetup:
             # Create subcondition with any conditional dependencies
             # self.spec_clauses does not do anything with conditional
             # dependencies
-            for dspec in spec.traverse_edges():
-                # Ignore unconditional deps
-                if dspec.when == spack.spec.Spec():
-                    continue
-
-                # Cannot use "virtual_node" attr as key for condition
-                # because reused specs do not track virtual nodes.
-                # Instead, track whether the parent uses the virtual
-                def virtual_handler(input_spec, requirements):
-                    ret = remove_facts("virtual_node")(input_spec, requirements)
-                    for edge in input_spec.traverse_edges(root=False, cover="edges"):
-                        if spack.repo.PATH.is_virtual(edge.spec.name):
-                            ret.append(fn.attr("uses_virtual", edge.parent.name, edge.spec.name))
-                    return ret
-
-                context = ConditionContext()
-                context.source = ConstraintOrigin.append_type_suffix(
-                    dspec.parent.name, ConstraintOrigin.CONDITIONAL_SPEC
-                )
-                # Default is to remove node-like attrs, override here
-                context.transform_required = virtual_handler
-                context.transform_imposed = lambda x, y: y
-
-                subcondition_id = self.condition(
-                    dspec.when,
-                    dspec.spec,
-                    required_name=dspec.parent.name,
-                    context=context,
-                    msg=f"Conditional dependency in literal ^[when={dspec.when}]{dspec.spec}",
-                )
-                self.gen.fact(fn.subcondition(subcondition_id, condition_id))
+            self.generate_conditional_dep_conditions(spec, condition_id)
 
             if self.concretize_everything:
                 self.gen.fact(fn.solve_literal(trigger_id))
 
         self.effect_rules()
+
+    def generate_conditional_dep_conditions(self, spec, condition_id):
+        for dspec in spec.traverse_edges():
+            # Ignore unconditional deps
+            if dspec.when == spack.spec.Spec():
+                continue
+
+            # Cannot use "virtual_node" attr as key for condition
+            # because reused specs do not track virtual nodes.
+            # Instead, track whether the parent uses the virtual
+            def virtual_handler(input_spec, requirements):
+                ret = remove_facts("virtual_node")(input_spec, requirements)
+                for edge in input_spec.traverse_edges(root=False, cover="edges"):
+                    if spack.repo.PATH.is_virtual(edge.spec.name):
+                        ret.append(fn.attr("uses_virtual", edge.parent.name, edge.spec.name))
+                return ret
+
+            context = ConditionContext()
+            context.source = ConstraintOrigin.append_type_suffix(
+                dspec.parent.name, ConstraintOrigin.CONDITIONAL_SPEC
+            )
+            # Default is to remove node-like attrs, override here
+            context.transform_required = virtual_handler
+            context.transform_imposed = lambda x, y: y
+
+            subcondition_id = self.condition(
+                dspec.when,
+                dspec.spec,
+                required_name=dspec.parent.name,
+                context=context,
+                msg=f"Conditional dependency in literal ^[when={dspec.when}]{dspec.spec}",
+            )
+            self.gen.fact(fn.subcondition(subcondition_id, condition_id))
 
     def validate_and_define_versions_from_requirements(
         self, *, allow_deprecated: bool, require_checksum: bool
