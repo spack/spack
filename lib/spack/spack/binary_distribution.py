@@ -696,6 +696,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
     cache_class.push_local_file_as_blob(
         index_json_path, cache_prefix, "index", BuildcacheComponent.INDEX, compression="none"
     )
+    cache_class.maybe_push_layout_json(cache_prefix)
 
 
 def _read_specs_and_push_index(
@@ -903,6 +904,7 @@ def generate_key_index(mirror_url: str, tmpdir: str) -> None:
             component_type=BuildcacheComponent.KEY_INDEX,
             compression="none",
         )
+        cache_class.maybe_push_layout_json(mirror_url)
     except Exception as e:
         raise GenerateIndexError(
             f"Encountered problem pushing key index to {key_prefix}: {e}"
