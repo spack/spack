@@ -951,6 +951,13 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             # set the SDKROOT so the bootstrap compiler finds its C++ headers
             env.set("SDKROOT", macos_sdk_path())
 
+        if self.spec.satisfies("%intel-oneapi-compilers"):
+            intel_libs = find_libraries(
+                ["libsvml", "libimf", "libirc"],
+                self.spec["intel-oneapi-runtime"].prefix.lib
+            )
+            env.append_flags("LDFLAGS", intel_libs.ld_flags)
+
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+clang"):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
