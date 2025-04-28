@@ -64,7 +64,7 @@ class PyRpy2(PythonPackage):
 
     depends_on("py-backports-zoneinfo", type=("build", "run"), when="@3.5.17: ^python@:3.8")
 
-    depends_on("iconv", type=("build", "link"))
+    depends_on("iconv")
 
     # These are from 2019 and predate the pyproject.toml config that currently exists
     with when("@3.0.0:3.0.4"):
