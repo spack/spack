@@ -53,6 +53,8 @@ class Cosma(CMakePackage):
         variant("rccl", default=False, description="Use rocm rccl")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
