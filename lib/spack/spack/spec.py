@@ -3178,6 +3178,7 @@ class Spec:
                 depflag=dep_spec_copy.depflag,
                 virtuals=dep_spec_copy.virtuals,
                 direct=dep_spec_copy.direct,
+                when=dep_spec_copy.when,
             )
             changed = True
 
