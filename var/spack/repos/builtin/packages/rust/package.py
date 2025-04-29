@@ -102,22 +102,36 @@ class Rust(Package):
     conflicts("%oneapi", msg="Rust not compatible with Intel oneAPI compilers")
 
     extendable = True
-    executables = ["^rustc$", "^cargo$"]
+    executables = [r"^rustc(-[\d.]*)?$", r"^cargo(-[\d.]*)?$"]
 
     phases = ["configure", "build", "install"]
 
     @classmethod
-    def determine_spec_details(cls, prefix, exes_in_prefix):
-        rustc_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "rustc"]
-        cargo_candidates = [x for x in exes_in_prefix if os.path.basename(x) == "cargo"]
-        # Both rustc and cargo must be present
-        if not (rustc_candidates and cargo_candidates):
-            return
-        output = Executable(rustc_candidates[0])("--version", output=str, error=str)
-        match = re.match(r"rustc (\S+)", output)
-        if match:
-            version_str = match.group(1)
-            return Spec.from_detection(f"rust@{version_str}", external_path=prefix)
+    def determine_version(csl, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.match(r"(rustc|cargo) (\S+)", output)
+        return match.group(2) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        rustc_candidates = [x for x in exes if "rustc" in os.path.basename(x)]
+        cargo_candidates = [x for x in exes if "cargo" in os.path.basename(x)]
+        extra_attributes = {}
+        if rustc_candidates:
+            extra_attributes.setdefault("compilers", {})["rust"] = rustc_candidates[0]
+
+        if cargo_candidates:
+            extra_attributes["cargo"] = cargo_candidates[0]
+
+        return "", extra_attributes
+
+    @classmethod
+    def validate_detected_spec(cls, spec, extra_attributes):
+        if "cargo" not in extra_attributes:
+            raise RuntimeError(f"discarding {spec} since 'cargo' is missing")
+
+        if not extra_attributes.get("compilers", {}).get("rust"):
+            raise RuntimeError(f"discarding {spec} since 'rustc' is missing")
 
     def setup_dependent_package(self, module, dependent_spec):
         module.cargo = Executable(os.path.join(self.spec.prefix.bin, "cargo"))
