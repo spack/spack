@@ -90,7 +90,7 @@ class Srilm(MakefilePackage):
         install_tree("include", prefix.include)
         install_tree("man", prefix.man)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Most executable files are in a subfolder named based on
         # the detected machine type. Unfortunately we cannot use
         # `machine_type` at this point but we can just guess as

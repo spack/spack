@@ -71,7 +71,7 @@ class Occa(Package):
             # Run-time CUDA compiler:
             s_env.set("OCCA_CUDA_COMPILER", join_path(cuda_dir, "bin", "nvcc"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # The environment variable CXX is automatically set to the Spack
         # compiler wrapper.
@@ -113,11 +113,13 @@ class Occa(Package):
         env.set("OCCA_VERBOSE", "1")
         self._setup_runtime_flags(env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # The 'env' is included in the Spack generated module files.
         self._setup_runtime_flags(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Export OCCA_* variables for everyone using this package from within
         # Spack.
         self._setup_runtime_flags(env)

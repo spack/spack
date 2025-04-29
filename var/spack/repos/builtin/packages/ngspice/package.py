@@ -168,6 +168,6 @@ class Ngspice(AutotoolsPackage):
                 flags.append("-g")
         return (None, None, flags)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "build=lib" in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

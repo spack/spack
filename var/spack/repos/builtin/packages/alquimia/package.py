@@ -14,6 +14,8 @@ class Alquimia(CMakePackage):
 
     maintainers("smolins", "balay")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-LBNL")
 
     version("master")

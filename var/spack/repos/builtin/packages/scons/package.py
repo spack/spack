@@ -55,13 +55,17 @@ class Scons(PythonPackage):
             name = "scons"
         return url.format(name[0], name, version)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib.scons)
 
     def setup_dependent_package(self, module, dspec):

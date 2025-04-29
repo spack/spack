@@ -28,6 +28,8 @@ class Xyce(CMakePackage):
     url = "https://github.com/Xyce/Xyce/archive/Release-7.2.0.tar.gz"
     maintainers("kuberry", "tbird2001")
 
+    tags = ["e4s"]
+
     license("GPL-3.0-or-later")
 
     version("master", branch="master")

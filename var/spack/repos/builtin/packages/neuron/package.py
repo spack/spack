@@ -185,7 +185,7 @@ class Neuron(CMakePackage):
             nrnmakefile = join_path(self.prefix, "share/coreneuron/nrnivmodl_core_makefile")
             filter_file("(?:^|\\s)CXX\\s*=.+", "CXX = {0}".format(cxx_compiler), nrnmakefile)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "lib"))
         if self.spec.satisfies("+python"):

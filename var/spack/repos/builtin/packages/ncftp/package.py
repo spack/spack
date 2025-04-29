@@ -26,7 +26,7 @@ class Ncftp(AutotoolsPackage):
         else:
             return url.format(f"ncftp-{version}")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%gcc@10:"):
             # https://bugs.gentoo.org/722550
             env.set("CFLAGS", "-fcommon")

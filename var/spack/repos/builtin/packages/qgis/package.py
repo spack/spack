@@ -301,7 +301,7 @@ class Qgis(CMakePackage):
             args.append("-DWITH_GRASS7=OFF")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+bindings" in self.spec:
             # python module isn't located at the standard path
             env.prepend_path("PYTHONPATH", self.prefix.share.qgis.python)

@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class Draco(CMakePackage):
+class Draco(CMakePackage, CudaPackage, ROCmPackage):
     """Draco is an object-oriented component library geared towards numerically
     intensive, radiation (particle) transport applications built for parallel
     computing hardware. It consists of semi-independent packages and a robust
@@ -19,6 +19,7 @@ class Draco(CMakePackage):
     license("BSD-3-Clause-Open-MPI")
 
     version("develop", branch="develop")
+    version("7.20.0", sha256="5b695f686c914dfac7cc144ffba37f24b1fb1e53058fbcb6df0ea94fe9971ea6")
     version("7.19.0", sha256="04b33cfea244052efcdd40d2b9dd79348749d34647aaf4dfcb15cdfdbe989783")
     version("7.18.0", sha256="b210e202a06ffdaf149193b5cba164411fd508e20e573e1dfc46d1f56e3fffaa")
     version("7.14.1", sha256="b05c75f1b8ea1d4fac4900d897fb1c948b470826b174ed8b97b32c6da9f030bf")
@@ -44,6 +45,12 @@ class Draco(CMakePackage):
     version("6.20.1", sha256="b1c51000c9557e0818014713fce70d681869c50ed9c4548dcfb2e9219c354ebe")
     version("6.20.0", sha256="a6e3142c1c90b09c4ff8057bfee974369b815122b01d1f7b57888dcb9b1128f6")
 
+    variant(
+        "build_type",
+        default="Release",
+        description="CMake build type",
+        values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel"),
+    )
     variant("caliper", default=False, description="Enable caliper timers support")
     variant("cuda", default=False, description="Enable Cuda/GPU support")
     variant("eospac", default=True, description="Enable EOSPAC support")
@@ -54,6 +61,9 @@ class Draco(CMakePackage):
     variant("pythontools", default=False, description="Enable support for extra python tools")
     variant("qt", default=False, description="Enable Qt support")
     variant("superlu-dist", default=True, description="Enable SuperLU-DIST support")
+    variant(
+        "openmp", default=True, when="@7.16.0:", description="Enable OpenMP support if available"
+    )
 
     depends_on("cmake@3.9:", when="@:6", type="build")
     depends_on("cmake@3.11:", when="@7.0.0:7.1", type="build")
@@ -71,7 +81,6 @@ class Draco(CMakePackage):
 
     # Optional dependencies
     depends_on("caliper", when="+caliper")
-    depends_on("cuda@11.0:", when="+cuda")
     depends_on("eospac@6.3:", when="+eospac")
     depends_on("lapack", when="+lapack")
     depends_on("libquo@1.3.1:", when="@7.4.0:+libquo")
@@ -82,7 +91,13 @@ class Draco(CMakePackage):
     depends_on("superlu-dist@:5", when="@:7.6+superlu-dist")
     depends_on("py-matplotlib", when="+pythontools", type=("run"))
 
+    # Hardware-specific variants
+    depends_on("cuda@11.0:", when="+cuda")
+
     conflicts("+cuda", when="@:7.6")
+    # HIP support existed pre-7.18, but was not exposed via Spack recipe:
+    conflicts("+rocm", when="@:7.18.0")
+    conflicts("+cuda", when="+rocm", msg="+cuda and +rocm cannot both be set")
     conflicts("+caliper", when="@:7.7")
     with when("@7.19.0:"):
         conflicts("gcc@:9.0")
@@ -103,23 +118,41 @@ class Draco(CMakePackage):
         return url.format(version.underscored)
 
     def cmake_args(self):
+        spec = self.spec
         options = []
         options.extend(
             [
                 "-Wno-dev",
                 self.define("BUILD_TESTING", self.run_tests),
-                "-DUSE_CUDA={0}".format("ON" if "+cuda" in self.spec else "OFF"),
                 "-DUSE_QT={0}".format("ON" if "+qt" in self.spec else "OFF"),
             ]
         )
-        if self.spec.satisfies("+fast_fma"):
+        # OpenMP toggle exposed via CMake for 7.16+
+        if spec.satisfies("@7.16.0:"):
+            options.extend(["-DUSE_OPENMP={0}".format("ON" if "+openmp" in self.spec else "OFF")])
+        # "rocm" variant introduced at 7.18
+        if spec.satisfies("@7.18.0:"):
+            options.extend(
+                ["-DUSE_GPU={0}".format("ON" if ("+cuda" in spec) or ("+rocm" in spec) else "OFF")]
+            )
+        elif spec.satisfies("@7.15.0:7.17.99"):
+            options.extend(["-DUSE_GPU={0}".format("ON" if "+cuda" in spec else "OFF")])
+        else:
+            options.extend(["-DUSE_CUDA={0}".format("ON" if "+cuda" in spec else "OFF")])
+
+        # FMA option
+        if "+fast_fma" in self.spec:
             options.extend(
                 [
                     "-DDRACO_ROUNDOFF_MODE={0}".format(
-                        "FAST" if "build_type=Release" in self.spec else "ACCURATE"
+                        "FAST" if "build_type=Release" in spec else "ACCURATE"
                     )
                 ]
             )
+        # OneAPI-specific logic
+        if spec.satisfies("%oneapi"):
+            # Known issues with oneapi+IPO for packages that depend on draco.
+            options.extend(["-DUSE_IPO=OFF"])
         return options
 
     def check(self):

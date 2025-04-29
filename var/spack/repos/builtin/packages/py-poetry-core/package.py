@@ -40,8 +40,10 @@ class PyPoetryCore(PythonPackage):
         return url.format(letter, version)
 
     # https://github.com/python-poetry/poetry/issues/5547
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GIT_DIR", join_path(self.stage.source_path, ".git"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("GIT_DIR", join_path(dependent_spec.package.stage.source_path, ".git"))

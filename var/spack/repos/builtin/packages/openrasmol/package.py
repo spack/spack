@@ -42,7 +42,7 @@ class Openrasmol(MakefilePackage):
                 f.write("#define CcCmd {0}\n".format(spack_cc))
                 f.write("#endif\n")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("XFORMSLIB_DIR", self.spec["xforms"].prefix)
         env.set("CBFLIB_DIR", self.spec["cbflib"].prefix)
         env.set("CQRLIB_DIR", self.spec["cqrlib"].prefix)

@@ -306,7 +306,7 @@ class Hdf5(CMakePackage):
         return find_libraries(libraries, root=self.prefix, shared=shared, recursive=True)
 
     @when("@:1.8.21,1.10.0:1.10.5+szip")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SZIP_INSTALL", self.spec["szip"].prefix)
 
     @run_before("cmake")

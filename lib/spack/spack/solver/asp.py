@@ -3862,6 +3862,17 @@ class SpecBuilder:
         )
         self._specs[node].extra_attributes = spec_info.get("extra_attributes", {})
 
+        # Annotate compiler specs from externals
+        external_spec = spack.spec.Spec(spec_info["spec"])
+        external_spec_deps = external_spec.dependencies()
+        if len(external_spec_deps) > 1:
+            raise InvalidExternalError(
+                f"external spec {spec_info['spec']} cannot have more than one dependency"
+            )
+        elif len(external_spec_deps) == 1:
+            compiler_str = external_spec_deps[0]
+            self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
+
         # If this is an extension, update the dependencies to include the extendee
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
@@ -4764,4 +4775,8 @@ class InvalidSpliceError(spack.error.SpackError):
 
 
 class NoCompilerFoundError(spack.error.SpackError):
+    """Raised when there is no possible compiler"""
+
+
+class InvalidExternalError(spack.error.SpackError):
     """Raised when there is no possible compiler"""

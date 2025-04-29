@@ -101,12 +101,12 @@ class Go(Package):
         match = re.search(r"go version go(\S+)", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # We need to set CC/CXX_FOR_TARGET, otherwise cgo will use the
         # internal Spack wrappers and fail.
         env.set("CC_FOR_TARGET", self["c"].cc)
         env.set("CXX_FOR_TARGET", self["cxx"].cxx)
-        env.set("GOMAXPROCS", make_jobs)
+        env.set("GOMAXPROCS", str(make_jobs))
 
     def build(self, spec, prefix):
         # Build script depend on bash

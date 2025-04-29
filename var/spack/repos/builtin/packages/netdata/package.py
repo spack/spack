@@ -35,7 +35,7 @@ class Netdata(AutotoolsPackage):
     depends_on("uuid")
     depends_on("zlib-api")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     @run_after("install")

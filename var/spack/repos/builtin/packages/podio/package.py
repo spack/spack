@@ -138,12 +138,13 @@ class Podio(CMakePackage):
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
+            self.define("PODIO_SET_RPATH", True),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:0.99"):
             # After 0.99 podio installs its python bindings into a more standard place
             env.prepend_path("PYTHONPATH", self.prefix.python)
@@ -157,7 +158,9 @@ class Podio(CMakePackage):
         # Frame header needs to be available for python bindings
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if self.spec.satisfies("@:0.99"):
             env.prepend_path("PYTHONPATH", self.prefix.python)
 

@@ -74,7 +74,7 @@ class PyWaves(PythonPackage):
         "waves.scons_extensions",
     ]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PREFIX", self.prefix)
         env.set("PKG_NAME", "waves"),
         if not self.spec.version.isdevelop():

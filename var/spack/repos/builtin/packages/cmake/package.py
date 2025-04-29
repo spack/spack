@@ -355,7 +355,9 @@ class Cmake(Package):
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
                 filter_file("mpifc)", "mpifc mpifrt)", f, string=True)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # CMake 4.0.0 breaks compatibility with CMake projects requiring a CMake
         # < 3.5. However, many projects that specify a minimum requirement for
         # versions older than 3.5 are actually compatible with newer CMake

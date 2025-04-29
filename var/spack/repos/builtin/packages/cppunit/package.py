@@ -47,7 +47,7 @@ class Cppunit(AutotoolsPackage):
     depends_on("automake", type="build", when="@master,1.15_20220904")
     depends_on("libtool", type="build", when="@master,1.15_20220904")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstd = self.spec.variants["cxxstd"].value
         cxxstdflag = (
             "" if cxxstd == "default" else getattr(self.compiler, "cxx{0}_flag".format(cxxstd))

@@ -42,6 +42,6 @@ class PyTfdlpack(CMakePackage, PythonExtension):
         with working_dir("python"):
             pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Prevent TensorFlow from taking over the whole GPU
         env.set("TF_FORCE_GPU_ALLOW_GROWTH", "true")

@@ -80,7 +80,7 @@ class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):
     #   https://github.com/facebookresearch/faiss/issues/2300
     patch("fixes-in-v1.7.2.patch", when="@1.7.2")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+python"):
             env.prepend_path("PYTHONPATH", python_platlib)
             if self.spec.satisfies("platform=darwin"):

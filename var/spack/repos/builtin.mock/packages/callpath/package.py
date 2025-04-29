@@ -22,5 +22,5 @@ class Callpath(Package):
         mkdirp(prefix)
         touch(join_path(prefix, "dummyfile"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FOOBAR", self.name)

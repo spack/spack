@@ -625,7 +625,7 @@ class Gromacs(CMakePackage, CudaPackage):
                     r"-gencode;arch=compute_20,code=sm_21;?", "", "cmake/gmxManageNvccConfig.cmake"
                 )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cufftmp"):
             env.append_path(
                 "LD_LIBRARY_PATH",
@@ -952,7 +952,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
             options.append("-DGMX_VERSION_STRING_OF_FORK=spack")
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cufftmp"):
             env.append_path(
                 "LD_LIBRARY_PATH",

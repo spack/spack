@@ -32,7 +32,7 @@ class Flecsph(CMakePackage):
     depends_on("googletest", type="test")
     depends_on("pkgconfig", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_ROOT", self.spec["hdf5"].prefix)
 
     def cmake_args(self):

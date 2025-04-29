@@ -20,6 +20,8 @@ class Spack(Package):
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
     maintainers("haampie")
 
+    tags = ["e4s"]
+
     license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")
@@ -143,7 +145,7 @@ class Spack(Package):
         depends_on("py-sphinx-rtd-theme", type="run")
         depends_on("graphviz", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPACK_PYTHON", self.spec["python"].command.path)
 
     def install(self, spec, prefix):

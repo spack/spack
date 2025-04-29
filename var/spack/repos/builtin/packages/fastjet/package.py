@@ -148,5 +148,5 @@ class Fastjet(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":
-            flags.append(f"-std=c++{self.spec.variants['cxxstd'].value}")
+            flags.append(f"-O2 -Wall -std=c++{self.spec.variants['cxxstd'].value}")
         return (None, flags, None)

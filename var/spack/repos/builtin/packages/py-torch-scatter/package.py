@@ -28,12 +28,12 @@ class PyTorchScatter(PythonPackage):
     # Undocumented dependencies
     depends_on("py-torch", type=("build", "link", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+cuda" in self.spec["py-torch"]:
-            env.set("FORCE_CUDA", 1)
-            env.set("FORCE_ONLY_CUDA", 0)
-            env.set("FORCE_ONLY_CPU", 0)
+            env.set("FORCE_CUDA", "1")
+            env.set("FORCE_ONLY_CUDA", "0")
+            env.set("FORCE_ONLY_CPU", "0")
         else:
-            env.set("FORCE_CUDA", 0)
-            env.set("FORCE_ONLY_CUDA", 0)
-            env.set("FORCE_ONLY_CPU", 1)
+            env.set("FORCE_CUDA", "0")
+            env.set("FORCE_ONLY_CUDA", "0")
+            env.set("FORCE_ONLY_CPU", "1")

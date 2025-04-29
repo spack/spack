@@ -19,6 +19,8 @@ class PyPandas(PythonPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "rgommers")
 
+    tags = ["e4s"]
+
     version("2.2.3", sha256="4f18ba62b61d7e192368b84517265a99b4d7ee8912f8708660fb4a366cc82667")
     version("2.2.2", sha256="9e79019aba43cb4fda9e4d983f8e88ca0373adbb697ae9c6c43093218de28b54")
     version("2.2.1", sha256="0ab90f87093c13f3e8fa45b48ba9f39181046e8f3317d3aadb2fffbb1b978572")

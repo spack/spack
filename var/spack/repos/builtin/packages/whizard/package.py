@@ -117,7 +117,7 @@ class Whizard(AutotoolsPackage):
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # whizard uses some environment variables to detect dependencies at
         # configure time if they are not installed to standard system prefixes
         if self.spec.satisfies("+lcio"):

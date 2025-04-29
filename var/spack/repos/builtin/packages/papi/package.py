@@ -106,7 +106,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
     configure_directory = "src"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+lmsensors" in spec and self.version >= Version("6"):
             env.set("PAPI_LMSENSORS_ROOT", spec["lm-sensors"].prefix)

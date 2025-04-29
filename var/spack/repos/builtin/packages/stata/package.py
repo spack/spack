@@ -39,7 +39,7 @@ class Stata(Package):
         return "file://{0}/Stata{1}Linux64.tar.gz".format(os.getcwd(), version)
 
     # STATA is simple and needs really just the PATH set.
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["libpng"].prefix.lib)
 

@@ -47,12 +47,14 @@ class Mutationpp(CMakePackage):
         if "+examples" in self.spec and os.path.isdir("examples"):
             install_tree("examples", self.prefix.examples)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MPP_DIRECTORY", self.prefix)
         if os.path.isdir(self.prefix.data):
             env.set("MPP_DATA_DIRECTORY", self.prefix.data)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("MPP_DIRECTORY", self.prefix)
         if os.path.isdir(self.prefix.data):
             env.set("MPP_DATA_DIRECTORY", self.prefix.data)

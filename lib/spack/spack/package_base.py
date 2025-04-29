@@ -14,7 +14,6 @@ import copy
 import functools
 import glob
 import hashlib
-import importlib
 import io
 import os
 import re
@@ -28,7 +27,7 @@ from typing_extensions import Literal
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-from llnl.util.lang import classproperty, memoized
+from llnl.util.lang import ClassProperty, classproperty, memoized
 
 import spack.config
 import spack.dependency
@@ -701,10 +700,10 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     _verbose = None
 
     #: Package homepage where users can find more information about the package
-    homepage: Optional[str] = None
+    homepage: ClassProperty[Optional[str]] = None
 
     #: Default list URL (place to find available versions)
-    list_url: Optional[str] = None
+    list_url: ClassProperty[Optional[str]] = None
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
@@ -818,12 +817,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classproperty
     def module(cls):
-        """Module object (not just the name) that this package is defined in.
+        """Module instance that this package class is defined in.
 
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return importlib.import_module(cls.__module__)
+        return sys.modules[cls.__module__]
 
     @classproperty
     def namespace(cls):

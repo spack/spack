@@ -16,6 +16,8 @@ class Hdf5VolDaos(CMakePackage):
 
     maintainers("hyoklee", "soumagne")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("master", branch="master", submodules=True)
@@ -41,7 +43,7 @@ class Hdf5VolDaos(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.prefix.lib)
 
     def check(self):

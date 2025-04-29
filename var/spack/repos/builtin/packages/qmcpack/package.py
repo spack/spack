@@ -234,7 +234,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         return targets
 
     # QMCPACK prefers taking MPI compiler wrappers as CMake compilers.
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+mpi" in spec:
             env.set("CC", spec["mpi"].mpicc)
@@ -403,7 +403,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         with working_dir(self.build_directory):
             install_tree("bin", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set-up runtime environment for QMCPACK.
         Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 

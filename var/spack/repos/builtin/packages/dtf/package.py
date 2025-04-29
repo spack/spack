@@ -36,7 +36,7 @@ class Dtf(AutotoolsPackage):
 
     configure_directory = "pnetcdf"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         dtf_srcdir = join_path(self.stage.source_path, "libdtf")
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
         env.append_path("LD_LIBRARY_PATH", dtf_srcdir)

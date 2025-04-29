@@ -138,5 +138,5 @@ class Nest(CMakePackage):
             for f in find_headers("*.{0}".format(suffix), self.stage.source_path, recursive=True):
                 install(f, path_headers)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NEST_INSTALL_DIR", self.spec.prefix)

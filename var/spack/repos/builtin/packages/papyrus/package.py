@@ -30,7 +30,7 @@ class Papyrus(CMakePackage):
 
     test_requires_compiler = True
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:

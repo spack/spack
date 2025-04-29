@@ -33,7 +33,7 @@ class Sysstat(AutotoolsPackage):
     depends_on("gettext")
     depends_on("lm-sensors")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("rcdir", self.spec.prefix.etc)
         env.append_flags("sa_dir", self.spec.prefix.log.sa)
         env.append_flags("conf_dir", self.spec.prefix.etc.sysconfig)

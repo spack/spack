@@ -23,5 +23,5 @@ class Xcdf(CMakePackage):
     depends_on("python@3.7:", when="@3.01:")
     depends_on("py-pybind11", when="@3.01:", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib)

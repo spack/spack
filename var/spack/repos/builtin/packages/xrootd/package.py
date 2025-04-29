@@ -246,7 +246,7 @@ class Xrootd(CMakePackage):
         return options
 
     @when("@:5.1.99")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstdflag = ""
         if self.spec.variants["cxxstd"].value == "98":
             cxxstdflag = self.compiler.cxx98_flag

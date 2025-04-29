@@ -40,6 +40,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier", "RMeli", "abussy")
 
+    tags = ["e4s"]
+
     license("GPL-2.0-or-later")
 
     version("2025.1", sha256="65c8ad5488897b0f995919b9fa77f2aba4b61677ba1e3c19bb093d5c08a8ce1d")
@@ -328,7 +330,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
         depends_on("sirius@7.5:", when="@2024.1:")
-        depends_on("sirius@7.6: +pugixml", when="@2024.2:")
+        depends_on("sirius@7.6:7.7 +pugixml", when="@2024.2:")
+        depends_on("sirius@7.7: +pugixml", when="@2025.2:")
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")

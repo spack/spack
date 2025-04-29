@@ -51,7 +51,7 @@ class H5bench(CMakePackage):
     depends_on("parallel-netcdf", when="+e3sm")
     depends_on("parallel-netcdf", when="+all")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_HOME", self.spec["hdf5"].prefix)
 
     def cmake_args(self):

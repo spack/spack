@@ -104,7 +104,7 @@ class Duckdb(MakefilePackage):
     def duckdb_extension_prefix(self):
         return self.prefix.lib.duckdb
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cmake_args = []  # Future use
         if self.spec.satisfies("+ninjabuild"):
             env.set("GEN", "ninja")

@@ -251,7 +251,7 @@ class Tau(Package):
         compiler_options.append(useropt)
         return compiler_options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LIBRARY_PATH", self.spec["zlib-api"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
 
@@ -450,7 +450,7 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         pattern = join_path(self.prefix.lib, "Makefile.*")
         files = glob.glob(pattern)
 

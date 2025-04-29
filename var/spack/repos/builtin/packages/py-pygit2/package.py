@@ -43,7 +43,7 @@ class PyPygit2(PythonPackage):
     depends_on("py-cached-property", when="@1.1:1.5", type=("build", "run"))
     depends_on("py-cached-property", when="@1.6: ^python@:3.7", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         # https://www.pygit2.org/install.html
         env.set("LIBGIT2", spec["libgit2"].prefix)

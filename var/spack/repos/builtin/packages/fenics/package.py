@@ -182,10 +182,10 @@ class Fenics(CMakePackage):
         ]
 
     # set environment for bulding python interface
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DOLFIN_DIR", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DOLFIN_DIR", self.prefix)
 
     # build python interface of dolfin

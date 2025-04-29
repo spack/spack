@@ -17,6 +17,8 @@ class PyHorovod(PythonPackage, CudaPackage):
     license("Apache-2.0")
     maintainers("adamjstewart", "aweits", "tgaddair", "thomas-bouvier")
 
+    tags = ["e4s"]
+
     version("master", branch="master")
     version("0.28.1", tag="v0.28.1", commit="1d217b59949986d025f6db93c49943fb6b6cc78f")
     version("0.28.0", tag="v0.28.0", commit="587d72004736209a93ebda8cec0acdb7870db583")
@@ -236,7 +238,7 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         return modules
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/horovod/horovod/blob/master/docs/install.rst#environment-variables
 
         # Build system
@@ -247,29 +249,29 @@ class PyHorovod(PythonPackage, CudaPackage):
 
         # Frameworks
         if "frameworks=tensorflow" in self.spec:
-            env.set("HOROVOD_WITH_TENSORFLOW", 1)
+            env.set("HOROVOD_WITH_TENSORFLOW", "1")
         else:
-            env.set("HOROVOD_WITHOUT_TENSORFLOW", 1)
+            env.set("HOROVOD_WITHOUT_TENSORFLOW", "1")
         if "frameworks=pytorch" in self.spec:
-            env.set("HOROVOD_WITH_PYTORCH", 1)
+            env.set("HOROVOD_WITH_PYTORCH", "1")
         else:
-            env.set("HOROVOD_WITHOUT_PYTORCH", 1)
+            env.set("HOROVOD_WITHOUT_PYTORCH", "1")
         if "frameworks=mxnet" in self.spec:
-            env.set("HOROVOD_WITH_MXNET", 1)
+            env.set("HOROVOD_WITH_MXNET", "1")
             env.set("MXNET_INCLUDE_PATH", self.spec["mxnet"].prefix.include)
             env.set("MXNET_LIBRARY_PATH", join_path(self.spec["mxnet"].libs[0]))
         else:
-            env.set("HOROVOD_WITHOUT_MXNET", 1)
+            env.set("HOROVOD_WITHOUT_MXNET", "1")
 
         # Controllers
         if "controllers=mpi" in self.spec or "tensor_ops=mpi" in self.spec:
-            env.set("HOROVOD_WITH_MPI", 1)
+            env.set("HOROVOD_WITH_MPI", "1")
         else:
-            env.set("HOROVOD_WITHOUT_MPI", 1)
+            env.set("HOROVOD_WITHOUT_MPI", "1")
         if "controllers=gloo" in self.spec or "tensor_ops=gloo" in self.spec:
-            env.set("HOROVOD_WITH_GLOO", 1)
+            env.set("HOROVOD_WITH_GLOO", "1")
         else:
-            env.set("HOROVOD_WITHOUT_GLOO", 1)
+            env.set("HOROVOD_WITHOUT_GLOO", "1")
 
         # Tensor Operations
         if "tensor_ops=nccl" in self.spec:

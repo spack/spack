@@ -1429,7 +1429,7 @@ class SpecAnnotations:
     def __repr__(self) -> str:
         result = f"SpecAnnotations().with_spec_format({self.original_spec_format})"
         if self.compiler_node_attribute:
-            result += f"with_compiler({str(self.compiler_node_attribute)})"
+            result += f".with_compiler({str(self.compiler_node_attribute)})"
         return result
 
 
@@ -3394,7 +3394,7 @@ class Spec:
             return True
 
         # If we have no dependencies, we can't satisfy any constraints.
-        if not self._dependencies:
+        if not self._dependencies and self.original_spec_format() >= 5 and not self.external:
             return False
 
         # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
@@ -3405,6 +3405,7 @@ class Spec:
         # verify the edge properties, cause everything is encoded in the hash of the nodes that
         # will be verified later.
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
+        mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # If we are checking for ^mpi we need to verify if there is any edge
             if spack.repo.PATH.is_virtual(rhs_edge.spec.name):
@@ -3426,13 +3427,27 @@ class Spec:
                     except KeyError:
                         return False
 
-                candidates = current_node.dependencies(
-                    name=rhs_edge.spec.name,
-                    deptype=rhs_edge.depflag,
-                    virtuals=rhs_edge.virtuals or None,
-                )
-                if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
-                    return False
+                if current_node.original_spec_format() < 5 or (
+                    current_node.original_spec_format() >= 5 and current_node.external
+                ):
+                    compiler_spec = current_node.annotations.compiler_node_attribute
+                    if compiler_spec is None:
+                        return False
+
+                    mock_nodes_from_old_specfiles.add(compiler_spec)
+                    # This checks that the single node compiler spec satisfies the request
+                    # of a direct dependency. The check is not perfect, but based on heuristic.
+                    if not compiler_spec.satisfies(rhs_edge.spec):
+                        return False
+
+                else:
+                    candidates = current_node.dependencies(
+                        name=rhs_edge.spec.name,
+                        deptype=rhs_edge.depflag,
+                        virtuals=rhs_edge.virtuals or None,
+                    )
+                    if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
+                        return False
 
                 continue
 
@@ -3472,8 +3487,9 @@ class Spec:
                     return False
 
         # Edges have been checked above already, hence deps=False
+        lhs_nodes = [x for x in self.traverse(root=False)] + sorted(mock_nodes_from_old_specfiles)
         return all(
-            any(lhs.satisfies(rhs, deps=False) for lhs in self.traverse(root=False))
+            any(lhs.satisfies(rhs, deps=False) for lhs in lhs_nodes)
             for rhs in other.traverse(root=False)
         )
 
@@ -3947,6 +3963,8 @@ class Spec:
                     except AttributeError:
                         if part == "compiler":
                             return "none"
+                        elif part == "specfile_version":
+                            return f"v{current.original_spec_format()}"
 
                         raise SpecFormatStringError(
                             f"Attempted to format attribute {attribute}. "

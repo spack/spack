@@ -29,5 +29,5 @@ class NfsGanesha(CMakePackage):
 
     root_cmakelists_dir = "src"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["ntirpc"].prefix.include.ntirpc)

@@ -25,7 +25,7 @@ class UcscBedclip(Package):
     depends_on("openssl")
     depends_on("zlib-api")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MYSQLLIBS", "-lmysqlclient")
         env.set("L", "-lssl")
         env.set("BINDIR", "bin")

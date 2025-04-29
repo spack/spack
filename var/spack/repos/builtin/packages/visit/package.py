@@ -49,7 +49,7 @@ class Visit(CMakePackage):
     git = "https://github.com/visit-dav/visit.git"
     url = "https://github.com/visit-dav/visit/releases/download/v3.2.1/visit3.2.1.tar.gz"
 
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     maintainers("cyrush")
     license("BSD-3-Clause")

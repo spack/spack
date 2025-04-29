@@ -14,6 +14,8 @@ class Nco(AutotoolsPackage):
 
     maintainers("altheaden", "xylar")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("5.3.3", sha256="f9185e115e246fe884dcae0804146b56df7257f53de7ba190fea66977ccd5a64")
@@ -90,7 +92,7 @@ class Nco(AutotoolsPackage):
         config_args += self.enable_or_disable("openmp")
         return config_args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("NETCDF_INC", spec["netcdf-c"].prefix.include)
         env.set("NETCDF_LIB", spec["netcdf-c"].prefix.lib)

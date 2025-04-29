@@ -33,7 +33,7 @@ class Antlr(AutotoolsPackage):
     extends("python", when="+python")
     depends_on("java", type=("build", "run"), when="+java")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+pic"):
             env.set("CXXFLAGS", "-fPIC")
 

@@ -42,7 +42,7 @@ class Gpgme(AutotoolsPackage):
         """Fix the build when incompatible Qt libraries are installed on the host"""
         return ["--enable-languages=cpp"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Build tests create a public keyring in ~/.gnupg if $HOME is not redirected"""
         if self.run_tests:
             env.set("HOME", self.build_directory)

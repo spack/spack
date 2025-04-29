@@ -56,7 +56,7 @@ class PyPynio(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """
         These environment variables are how the setup.py knows which options
         to turn on, and how to find them.

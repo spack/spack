@@ -45,7 +45,7 @@ class Xnedit(MakefilePackage):
     depends_on("motif")
     depends_on("pcre")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LDFLAGS", "-Wl,--copy-dt-needed-entries")
 
     def build(self, spec, prefix):

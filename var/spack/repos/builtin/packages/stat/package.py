@@ -14,6 +14,8 @@ class Stat(AutotoolsPackage):
     git = "https://github.com/llnl/stat.git"
     maintainers("lee218llnl")
 
+    tags = ["e4s"]
+
     version("develop", branch="develop")
     version(
         "4.2.1",

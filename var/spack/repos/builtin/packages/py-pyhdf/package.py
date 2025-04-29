@@ -35,7 +35,7 @@ class PyPyhdf(PythonPackage):
     depends_on("py-numpy@:1.24", when="@0.10.4", type=("build", "run"))
     depends_on("jpeg", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         inc_dirs = []
         lib_dirs = []
         # Strip -I and -L from spec include_flags / search_flags

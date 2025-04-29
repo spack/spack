@@ -43,7 +43,7 @@ class Libproxy(CMakePackage):
             args.append(self.define("PYTHON3_SITEPKG_DIR", python_platlib))
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+python"):
             libs = self.spec["libproxy"].libs.directories[0]
             if self.spec.satisfies("platform=darwin"):

@@ -212,7 +212,7 @@ class Mysql(CMakePackage):
         # prepend to PATH the temporary folder where it resides.
         env.prepend_path("PATH", dtrace_copy_path)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cxxstd = self.spec.variants["cxxstd"].value
         flag = getattr(self.compiler, "cxx{0}_flag".format(cxxstd))
         if flag:

@@ -27,7 +27,7 @@ class PyPyopengl(PythonPackage):
     depends_on("glu", when="+glu", type="link")
     depends_on("freeglut+shared", when="+glut", type="link")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # PyOpenGL uses ctypes.cdll (or similar), which searches LD_LIBRARY_PATH
         lib_dirs = self.spec["gl"].libs.directories
         if "^glx" in self.spec:
@@ -46,7 +46,9 @@ class PyPyopengl(PythonPackage):
         else:
             env.prepend_path("LD_LIBRARY_PATH", libs)
 
-    def setup_dependent_build_environment_(self, env, dependent_spec):
+    def setup_dependent_build_environment_(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ):
         self.setup_run_environment(env)
 
     # only test import available module

@@ -138,7 +138,7 @@ class Flamemaster(CMakePackage):
 
     root_cmakelists_dir = "Repository"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LAPACK_HOME", self.spec["lapack"].prefix)
         env.set("BLIS_HOME", self.spec["blas"].prefix)
 

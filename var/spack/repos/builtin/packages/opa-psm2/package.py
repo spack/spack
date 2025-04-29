@@ -43,7 +43,7 @@ class OpaPsm2(MakefilePackage, CudaPackage):
         sha256="fe31fda9aaee13acb87d178af2282446196d2cc0b21163034573706110b2e2d6",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DESTDIR", self.prefix)
         if "%intel" in self.spec:
             # this variable must be set when we use the Intel compilers to

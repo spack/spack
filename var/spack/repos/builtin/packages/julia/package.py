@@ -331,7 +331,7 @@ class Julia(MakefilePackage):
             time = (os.path.getatime(f), os.path.getmtime(f))
             os.utime(os.path.join("base", "Makefile"), time)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # this is a bit ridiculous, but we are setting runtime linker paths to
         # dependencies so that libwhich can locate them.
         if self.spec.satisfies("platform=linux"):

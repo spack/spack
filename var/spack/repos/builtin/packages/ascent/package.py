@@ -176,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("conduit@:0.7.2", when="@:0.7.1")
     depends_on("conduit@0.8.2:", when="@0.8:")
     depends_on("conduit@0.8.6:", when="@0.9:")
-    depends_on("conduit@0.9.1:", when="@0.9.3:")
+    depends_on("conduit@0.9.1:0.9.3", when="@0.9.3:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")
@@ -350,7 +350,7 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
                 $<$<OR:$<COMPILE_LANGUAGE:CXX>,$<COMPILE_LANGUAGE:HIP>>:-std=c++17>)"""
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
     ####################################################################

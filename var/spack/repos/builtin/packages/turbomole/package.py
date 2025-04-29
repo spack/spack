@@ -115,7 +115,7 @@ class Turbomole(Package):
             install("mpirun_scripts/ricc2", join_path(dst, "mpirun_scripts"))
             install("mpirun_scripts/ridft", join_path(dst, "mpirun_scripts"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         molecontrol_version = "MoleControl_2.5"
 
         tm_arch = self.get_tm_arch()

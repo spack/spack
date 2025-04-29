@@ -173,27 +173,27 @@ class PyTorchvision(PythonPackage):
                 flags.append("-Wl,-ld_classic")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The only documentation on building is what is found in setup.py and:
         # https://github.com/pytorch/vision/blob/main/CONTRIBUTING.md#development-installation
 
         # By default, version is read from `version.txt`, but this includes an `a0`
         # suffix used for alpha builds. Override the version for stable releases.
         if not self.spec.satisfies("@main"):
-            env.set("BUILD_VERSION", self.version)
+            env.set("BUILD_VERSION", str(self.version))
 
         # Used by ninja
-        env.set("MAX_JOBS", make_jobs)
+        env.set("MAX_JOBS", str(make_jobs))
 
         if "^cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
 
         for gpu in ["cuda", "mps"]:
-            env.set(f"FORCE_{gpu.upper()}", int(f"+{gpu}" in self.spec["py-torch"]))
+            env.set(f"FORCE_{gpu.upper()}", str(f"+{gpu}" in self.spec["py-torch"]))
 
         extensions = ["png", "jpeg", "webp", "nvjpeg", "video_codec", "ffmpeg"]
         for extension in extensions:
-            env.set(f"TORCHVISION_USE_{extension.upper()}", int(f"+{extension}" in self.spec))
+            env.set(f"TORCHVISION_USE_{extension.upper()}", str(f"+{extension}" in self.spec))
 
         include = []
         library = []

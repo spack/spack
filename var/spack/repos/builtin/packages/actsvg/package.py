@@ -50,6 +50,7 @@ class Actsvg(CMakePackage):
     depends_on("boost +program_options", when="+examples")
     depends_on("googletest", when="+examples")
     depends_on("python@3.8:", when="+python")
+    depends_on("py-pybind11@2.10:", when="+python @0.4.42:")
 
     def cmake_args(self):
         args = [
@@ -58,5 +59,8 @@ class Actsvg(CMakePackage):
             self.define_from_variant("ACTSVG_BUILD_PYTHON_BINDINGS", "python"),
             self.define_from_variant("ACTSVG_BUILD_WEB", "web"),
             self.define("ACTSVG_BUILD_TESTING", self.run_tests),
+            self.define("ACTSVG_USE_SYSTEM_LIBS", True),
+            # The pybind11 loading does not respect `ACTSVG_USE_SYSTEM_LIBS`.
+            self.define("ACTSVG_USE_SYSTEM_PYBIND11", True),
         ]
         return args

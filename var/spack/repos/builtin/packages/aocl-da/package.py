@@ -86,13 +86,13 @@ class AoclDa(CMakePackage):
         depends_on("py-pytest", type="test")
         depends_on("py-scikit-learn", type=("test", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%aocc"):
             cc = self.compiler.cc
             compiler_install_dir = os.path.dirname(os.path.dirname(cc))
             env.append_path("LD_LIBRARY_PATH", join_path(compiler_install_dir, "lib"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", join_path(self.prefix, "python_package"))
 
     def cmake_args(self):

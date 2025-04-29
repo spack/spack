@@ -18,6 +18,6 @@ class Smartmontools(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.usr.lib)

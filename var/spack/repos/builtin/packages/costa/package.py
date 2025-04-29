@@ -50,7 +50,7 @@ class Costa(CMakePackage):
             )
         return "https://github.com/eth-cscs/COSTA/archive/refs/tags/v{0}.tar.gz".format(version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         return
 
     def costa_scalapack_cmake_arg(self):

@@ -59,7 +59,7 @@ class Parflow(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Setup the run environment for ParFlow package."""
         # ParFlow requires a PARFLOW_DIR env variable for correct execution
         env.set("PARFLOW_DIR", self.spec.prefix)

@@ -55,7 +55,7 @@ class FluxPmix(AutotoolsPackage):
             with open(rcfile, "w") as fp:
                 fp.write('plugin.load("' + pluginpath + '")')
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.prepend_path("FLUX_SHELL_RC_PATH", join_path(self.prefix.etc, "flux/shell/lua.d"))
         if spec.satisfies("@0.3.0:"):

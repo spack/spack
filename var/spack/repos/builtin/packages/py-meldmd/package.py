@@ -80,7 +80,7 @@ class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):
         if self.spec.satisfies("^openmm@7.6.0:"):
             filter_file("simtk.openmm", "openmm", "plugin/python/meldplugin.i", string=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("OPENMM_PLUGIN_DIR", self.prefix.lib.plugins)
 
     @run_after("install")

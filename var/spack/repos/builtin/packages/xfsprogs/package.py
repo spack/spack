@@ -52,7 +52,7 @@ class Xfsprogs(AutotoolsPackage):
                 flags.append("-lintl")
         return build_system_flags(name, flags)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("C_INCLUDE_PATH", self.spec["util-linux"].prefix.include.blkid)
 
     def configure_args(self):
@@ -65,5 +65,5 @@ class Xfsprogs(AutotoolsPackage):
         make("install")
         make("install-dev")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

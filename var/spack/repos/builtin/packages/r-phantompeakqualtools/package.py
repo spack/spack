@@ -34,5 +34,5 @@ class RPhantompeakqualtools(RPackage):
 
     conflicts("%gcc@6:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BOOST_ROOT", self.spec["boost"].prefix)

@@ -42,7 +42,7 @@ class Pass(MakefilePackage):
     # Optional dependencies
     depends_on("xclip", when="+xclip")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set required environment variables for build."""
         env.set("PREFIX", self.prefix)
         env.set("WITH_ALLCOMP", "yes")

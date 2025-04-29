@@ -23,7 +23,8 @@ class Soqt(CMakePackage):
     depends_on("cmake@3:", type="build")
 
     depends_on("coin3d")
-    depends_on("opengl")
+    depends_on("gl")
+    depends_on("glu")
 
     variant(
         "static_defaults",

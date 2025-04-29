@@ -118,7 +118,7 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
             "rocrand amdgpu_target={0}".format(tgt), when="+rocm amdgpu_target={0}".format(tgt)
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             self.asan_on(env)

@@ -200,7 +200,7 @@ class Oommf(Package):
             for f in install_files:
                 install(os.path.join(oommfdir, f), prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Set OOMMF_ROOT so that oommf.tcl can find its files.
         oommfdir = self.get_oommf_path(self.prefix)
         env.set("OOMMF_ROOT", oommfdir)

@@ -150,6 +150,6 @@ class Onednn(CMakePackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+acl"):
             env.set("ACL_ROOT_DIR", self.spec["armcomputelibrary"].prefix)

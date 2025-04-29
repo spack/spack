@@ -52,5 +52,5 @@ class Express(CMakePackage):
                 "%s" % self.spec["bamtools"].libs,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["bamtools"].prefix.include.bamtools)

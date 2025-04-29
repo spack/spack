@@ -62,7 +62,9 @@ class SalomeMed(CMakePackage):
             string=True,
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("HDF5_ROOT_DIR", self.spec["hdf5"].prefix)
 
     def cmake_args(self):

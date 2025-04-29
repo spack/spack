@@ -23,7 +23,12 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     maintainers("jcphill")
 
     version("master", branch="master")
-    version("3.0", sha256="301c64f0f1db860f7336efdb26223ccf66b5ab42bfc9141df8d81ec1e20bf472")
+    version("3.0.1", sha256="3be0854545c45e58afb439a96708e127aef435d30113cc89adbab8f4b6888733")
+    version(
+        "3.0",
+        sha256="301c64f0f1db860f7336efdb26223ccf66b5ab42bfc9141df8d81ec1e20bf472",
+        deprecated=True,
+    )
     version(
         "3.0b7",
         sha256="b18ff43b0f55ec59e137c62eba1812589dd88b2122c3a05ea652781667f438b4",
