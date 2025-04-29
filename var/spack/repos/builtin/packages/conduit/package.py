@@ -210,8 +210,6 @@ class Conduit(CMakePackage):
     # Cmake will support fj compiler and this patch will be removed
     patch("fj_flags.patch", when="%fj")
     patch("bpparametis.patch", when="@0.8.1")
-    # avoid std::function vs function pointer issue with some compilers
-    patch("conduit-pr-1432-alloc-overload.patch", when="@0.9.4")
 
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
