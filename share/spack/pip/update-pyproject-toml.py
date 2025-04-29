@@ -7,7 +7,7 @@ import toml
 
 def update_value(fqn, value):
     if fqn == ".project.name":
-        new_val = "spack-package-manager-mlcurry"
+        new_val = "spack-package-manager"
     elif fqn == ".project.scripts.spack":
         new_val = "spack." + value
     elif re.match(r"^(lib|bin|var)/spack", value):
