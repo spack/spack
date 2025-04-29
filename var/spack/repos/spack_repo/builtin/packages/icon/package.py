@@ -205,10 +205,12 @@ class Icon(AutotoolsPackage):
                 "-arch=sm_{0}".format(self.nvidia_targets[gpu]),
                 "-ccbin={0}".format(spack_cxx),
             ]
-            flags["ICON_LDFLAGS"].extend(self.compiler.stdcxx_libs)
             libs += self.spec["cuda"].libs
         else:
             args.append("--disable-gpu")
+
+        if gpu in self.nvidia_targets or "+comin" in self.spec:
+            flags["ICON_LDFLAGS"].extend(self.compiler.stdcxx_libs)
 
         if self.compiler.name == "gcc":
             flags["CFLAGS"].append("-g")
