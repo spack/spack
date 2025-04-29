@@ -194,10 +194,6 @@ else:
     required_executables = ["/usr/bin/g++", "patchelf"]
 
 
-# TODO/RepoSplit: spack.store.MatchError when looking for specs in store;
-# TODO/RepoSplit: concretization errors:
-# TODO/RepoSplit:   info: atom does not occur in any rule head:
-# TODO/RepoSplit:     compiler_supports_target()
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.usefixtures(
@@ -212,9 +208,6 @@ def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
     Test the creation and installation of buildcaches with default rpaths
     into the default directory layout scheme.
     """
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: concretization errors; specs not installed")
-
     gspec = spack.concretize.concretize_one("garply")
     cspec = spack.concretize.concretize_one("corge")
     sy_spec = spack.concretize.concretize_one("symly")
@@ -238,13 +231,13 @@ def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Test installing from build caches
-    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-u", cspec.name)
+    buildcache_cmd("install", "-uo", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-fu", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     buildcache_cmd("keys", "-f")
     buildcache_cmd("list")
@@ -253,10 +246,6 @@ def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
     buildcache_cmd("list", "-l", "-v")
 
 
-# TODO/RepoSplit: spack.store.MatchError when looking for specs in store;
-# TODO/RepoSplit: concretization errors:
-# TODO/RepoSplit:   info: atom does not occur in any rule head:
-# TODO/RepoSplit:     compiler_supports_target()
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -268,25 +257,18 @@ def test_default_rpaths_install_nondefault_layout(temporary_mirror_dir):
     Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme.
     """
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: concretization errors; specs not installed")
-
     cspec = spack.concretize.concretize_one("corge")
     # This guy tests for symlink relocation
     sy_spec = spack.concretize.concretize_one("symly")
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
 
     # Test force install in non-default install path scheme
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
-# TODO/RepoSplit: spack.store.MatchError when looking for specs in store;
-# TODO/RepoSplit: concretization errors:
-# TODO/RepoSplit:   info: atom does not occur in any rule head:
-# TODO/RepoSplit:     compiler_supports_target()
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -302,32 +284,25 @@ def test_relative_rpaths_install_default_layout(temporary_mirror_dir):
     Test the creation and installation of buildcaches with relative
     rpaths into the default directory layout scheme.
     """
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: concretization errors; 'corge' not installed")
-
     gspec = spack.concretize.concretize_one("garply")
     cspec = spack.concretize.concretize_one("corge")
 
     # Install buildcache created with relativized rpaths
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # Uninstall the package and deps
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Install build cache
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
-# TODO/RepoSplit: spack.store.MatchError when looking for specs in store;
-# TODO/RepoSplit: concretization errors:
-# TODO/RepoSplit:   info: atom does not occur in any rule head:
-# TODO/RepoSplit:     compiler_supports_target()
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -339,13 +314,10 @@ def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
     Test the installation of buildcaches with relativized rpaths
     into the non-default directory layout scheme.
     """
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: concretization errors; 'corge' not installed")
-
     cspec = spack.concretize.concretize_one("corge")
 
     # Test install in non-default install path scheme and relative path
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
 def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
@@ -382,10 +354,6 @@ def test_push_and_fetch_keys(mock_gnupghome, tmp_path):
         assert new_keys[0] == fpr
 
 
-# TODO/RepoSplit: spack.store.MatchError when looking for specs in store;
-# TODO/RepoSplit: concretization errors:
-# TODO/RepoSplit:   info: atom does not occur in any rule head:
-# TODO/RepoSplit:     compiler_supports_target()
 @pytest.mark.requires_executables(*required_executables)
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
@@ -397,9 +365,6 @@ def test_built_spec_cache(temporary_mirror_dir):
     and uses it to populate the binary_distribution built spec cache, when
     this test calls get_mirrors_for_spec, it is testing the popluation of
     that cache from a buildcache index."""
-
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: concretization errors; no mirror results")
 
     buildcache_cmd("list", "-a", "-l")
 
