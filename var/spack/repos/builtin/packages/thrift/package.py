@@ -2,18 +2,18 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
-from spack.pkg.builtin.boost import Boost
 
 
-class Thrift(Package):
+class Thrift(CMakePackage, AutotoolsPackage):
     """Software framework for scalable cross-language services development.
 
     Thrift combines a software stack with a code generation engine to
     build services that work efficiently and seamlessly between C++,
     Java, Python, PHP, Ruby, Erlang, Perl, Haskell, C#, Cocoa,
     JavaScript, Node.js, Smalltalk, OCaml and Delphi and other languages.
-
     """
 
     homepage = "https://thrift.apache.org"
@@ -25,6 +25,7 @@ class Thrift(Package):
 
     license("Apache-2.0")
 
+    version("0.21.0", sha256="9a24f3eba9a4ca493602226c16d8c228037db3b9291c6fc4019bfe3bd39fc67c")
     version("0.18.1", sha256="04c6f10e5d788ca78e13ee2ef0d2152c7b070c0af55483d6b942e29cff296726")
     version("0.17.0", sha256="b272c1788bb165d99521a2599b31b97fa69e5931d099015d91ae107a0b0cc58f")
     version("0.16.0", sha256="f460b5c1ca30d8918ff95ea3eb6291b3951cf518553566088f3f2be8981f6209")
@@ -34,45 +35,58 @@ class Thrift(Package):
     version("0.10.0", sha256="2289d02de6e8db04cbbabb921aeb62bfe3098c4c83f36eec6c31194301efa10b")
     version("0.9.3", sha256="b0740a070ac09adde04d43e852ce4c320564a292f26521c46b78e0641564969e")
 
-    variant("pic", default=True, description="Build position independent code")
-    variant("c", default=True, description="Build support for C-family languages")
+    variant("openssl", default=False, description="Build with OpenSSL")
+    variant("cpp", default=True, description="Build C++ library")
+    with when("+cpp"):
+        variant("shared", default=True, description="Build shared libraries")
+        variant("libevent", default=False, description="Build with libevent support")
+        variant("qt5", default=False, description="Build with Qt5 support")
+        variant("zlib", default=False, description="Build with ZLIB support")
+    variant("c_glib", default=False, description="Build C (GLib) library")
     variant("java", default=False, description="Build support for java")
+    variant("javascript", default=False, description="Build Javascript library")
+    variant("nodejs", default=False, description="Build NodeJS library")
     variant("python", default=True, description="Build support for python")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    build_system("cmake", "autotools", default="autotools")
 
-    depends_on("pkgconfig", type="build")
-    depends_on("autoconf", type="build")
-    depends_on("automake", type="build")
-    depends_on("libtool", type="build")
-    depends_on("boost@1.53:")
+    with default_args(type="build"):
+        depends_on("c")
+        depends_on("cxx")
 
-    # TODO: replace this with an explicit list of components of Boost,
-    # for instance depends_on('boost +filesystem')
-    # See https://github.com/spack/spack/pull/22303 for reference
-    depends_on(Boost.with_default_variants)
-    depends_on("bison", type="build")
-    depends_on("flex", type="build")
-    depends_on("openssl")
+        depends_on("pkgconfig")
+        depends_on("bison")
+        depends_on("flex")
 
-    # Variant dependencies
-    depends_on("zlib-api", when="+c")
-    depends_on("libevent", when="+c")
+        with when("build_system=cmake"):
+            depends_on("cmake@3.4:", when="@0.13:")
+            depends_on("cmake@3.1:", when="@0.11:")
+            depends_on("cmake@2.8.12:")
 
-    depends_on("java@7:", when="+java")
-    depends_on("ant", when="+java")
+        with when("build_system=autotools"):
+            depends_on("autoconf")
+            depends_on("automake")
+            depends_on("libtool")
 
-    extends("python", when="+python")
-    depends_on("python@:3.11.9", when="+python")
-    depends_on("py-setuptools", type=("build", "run"), when="+python")
-    depends_on("py-six@1.7.2:", type=("build", "run"), when="@0.10.0:+python")
-    depends_on("py-tornado", type=("build", "run"), when="+python")
-    depends_on("py-twisted", type=("build", "run"), when="+python")
-    depends_on("py-zope-interface", type=("build", "run"), when="+python")
-    depends_on("py-pure-sasl", type=("build", "run"), when="+python")
-    depends_on("scons", type=("build", "run"), when="+python")
-    depends_on("gmake", type="build")
+    depends_on("glib@2:", when="+c_glib")
+    depends_on("openssl", when="+openssl")
+    depends_on("libevent@2:", when="+libevent")
+    depends_on("qt@5", when="+qt5")
+    depends_on("zlib-api@1.2.3:", when="+zlib")
+
+    with when("+java"):
+        depends_on("ant@1.8:", type="build")
+        depends_on("gradle", type="build")
+        depends_on("java@7:")
+
+    depends_on("npm", when="+javascript", type="build")
+    depends_on("npm", when="+nodejs", type="build")
+
+    with when("+python"):
+        extends("python")
+        depends_on("py-pip", type="build")
+        depends_on("py-setuptools", type="build")
+        depends_on("py-six@1.7.2:", type=("build", "run"))
 
     patch(
         "https://github.com/apache/thrift/pull/2511.patch?full_index=1",
@@ -80,32 +94,64 @@ class Thrift(Package):
         when="@0.16.0",
     )
 
-    def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        if "+pic" in self.spec:
-            env.append_flags("CFLAGS", self.compiler.cc_pic_flag)
-            env.append_flags("CXXFLAGS", self.compiler.cxx_pic_flag)
 
-    def install(self, spec, prefix):
-        env["PY_PREFIX"] = prefix
+class CMakeBuilder(CMakeBuilder):
+    def setup_build_environment(self, env: EnvironmentModifications):
+        # Don't install extensions to /usr
+        env.set("PY_PREFIX", self.prefix)
+        env.set("JAVA_PREFIX", self.prefix)
 
-        # configure options
-        options = ["--prefix=%s" % prefix]
+    def cmake_args(self):
+        return [
+            self.define_from_variant("BUILD_JAVASCRIPT", "javascript"),
+            self.define_from_variant("BUILD_NODEJS", "nodejs"),
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define("BUILD_TESTING", False),
+            self.define("WITH_AS3", False),
+            self.define_from_variant("WITH_CPP", "cpp"),
+            self.define_from_variant("WITH_C_GLIB", "c_glib"),
+            self.define_from_variant("WITH_JAVA", "java"),
+            self.define_from_variant("WITH_JAVASCRIPT", "javascript"),
+            self.define_from_variant("WITH_NODEJS", "nodejs"),
+            self.define_from_variant("WITH_PYTHON", "python"),
+            self.define_from_variant("WITH_ZLIB", "zlib"),
+        ]
 
-        options.append("--with-boost=%s" % spec["boost"].prefix)
-        options.append("--enable-tests=no")
 
-        options.append("--with-nodejs=no")
-        options.append("--with-c=%s" % ("yes" if "+c" in spec else "no"))
-        options.append("--with-python=%s" % ("yes" if "+python" in spec else "no"))
-        options.append("--with-java=%s" % ("yes" if "+java" in spec else "no"))
-        options.append("--with-go=no")
-        options.append("--with-lua=no")
-        options.append("--with-php=no")
-        options.append("--with-kotlin=no")
-        options.append("--with-ruby=no")
-        options.append("--with-qt4=no")
+class AutotoolsBuilder(AutotoolsBuilder):
+    def setup_build_environment(self, env: EnvironmentModifications):
+        # Don't install extensions to /usr
+        env.set("PY_PREFIX", self.prefix)
+        env.set("JAVA_PREFIX", self.prefix)
 
-        configure(*options)
-
-        make()
-        make("install")
+    def configure_args(self):
+        return [
+            *self.enable_or_disable("shared"),
+            "--enable-tests=no",
+            *self.with_or_without("cpp"),
+            *self.with_or_without("libevent"),
+            *self.with_or_without("zlib"),
+            *self.with_or_without("qt5"),
+            *self.with_or_without("c_glib"),
+            *self.with_or_without("openssl", "prefix"),
+            *self.with_or_without("java"),
+            "--without-kotlin",
+            "--without-erlang",
+            *self.with_or_without("nodejs"),
+            "--without-nodets",
+            "--without-lua",
+            *self.with_or_without("python"),
+            "--without-py3",
+            "--without-perl",
+            "--without-php",
+            "--without-php_extension",
+            "--without-dart",
+            "--without-ruby",
+            "--without-go",
+            "--without-swift",
+            "--without-rs",
+            "--without-cl",
+            "--without-haxe",
+            "--without-netstd",
+            "--without-d",
+        ]

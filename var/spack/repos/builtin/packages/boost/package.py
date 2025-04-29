@@ -29,6 +29,7 @@ class Boost(Package):
     license("BSL-1.0")
 
     version("develop", branch="develop", submodules=True)
+    version("1.88.0", sha256="46d9d2c06637b219270877c9e16155cbd015b6dc84349af064c088e9b5b12f7b")
     version("1.87.0", sha256="af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89")
     version("1.86.0", sha256="1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b")
     version("1.85.0", sha256="7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617")
@@ -134,6 +135,7 @@ class Boost(Package):
         "log",
         "math",
         "mpi",
+        "mqtt5",
         "nowide",
         "program_options",
         "python",
@@ -735,6 +737,8 @@ class Boost(Package):
         with_libs = {f"{lib}" for lib in Boost.all_libs if f"+{lib}" in spec}
 
         # Remove libraries that the release version does not support
+        if not spec.satisfies("@1.88.0:"):
+            with_libs.discard("mqtt5")
         if not spec.satisfies("@1.85.0:"):
             with_libs.discard("charconv")
         if not spec.satisfies("@1.84.0:"):

@@ -16,6 +16,8 @@ class Variorum(CMakePackage):
 
     maintainers("slabasan", "rountree")
 
+    tags = ["e4s"]
+
     license("MIT")
 
     version("dev", branch="dev")

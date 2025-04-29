@@ -36,7 +36,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/axom"
     git = "https://github.com/LLNL/axom.git"
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     test_requires_compiler = True
 

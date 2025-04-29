@@ -19,7 +19,10 @@ class Purify(CMakePackage):
     maintainers("tkoskela", "mmcleod89", "20DM")
     license("GPL-2.0")
 
+    version("5.0.1", sha256="a5f4b1bac1e46d858b5dbb1237ef3babd9c1f23f5b9f081cca3992da61bbc124")
+    version("5.0.0", sha256="64e150427c94f6edfcc5a630f14c8939db73349ff7b32f43504ce8211b5fd6fa")
     version("4.2.0", sha256="4d674007efc727628839fb6c8864e74f22adb39ee6405d3dab273f65b31b37e6")
+    version("dev", branch="development")
 
     variant("tests", default=True, description="Build tests")
     variant("openmp", default=True, description="Enable multithreading with OpenMP")
@@ -27,6 +30,13 @@ class Purify(CMakePackage):
     variant("benchmarks", default=False, description="Build benchmarks")
     variant("docs", default=False, description="Enable multithreading with OpenMP")
     variant("coverage", default=False, description="Enable code coverage")
+    variant("hdf5", default=False, description="Enable hdf5 I/O")
+    variant(
+        "onnxrt",
+        when="@5.0.0:",
+        default=False,
+        description="Build with Tensorflow support using onnx in SOPT",
+    )
 
     depends_on("cmake@3")
     depends_on("eigen@3.4:3")
@@ -40,10 +50,15 @@ class Purify(CMakePackage):
     depends_on("sopt+mpi", when="+mpi")
     depends_on("sopt~openmp", when="~openmp")
     depends_on("sopt+openmp", when="+openmp")
+    depends_on("sopt~onnxrt", when="~onnxrt")
+    depends_on("sopt+onnxrt", when="+onnxrt")
     depends_on("catch2@3.4:3", when="+tests")
     depends_on("mpi", when="+mpi")
     depends_on("benchmark@1.8~performance_counters", when="+benchmarks")
     depends_on("doxygen@1.9:1.12+graphviz", when="+docs")
+    depends_on("py-onnxruntime@1.17.1:", when="+onnxrt")
+    depends_on("hdf5+cxx", when="+hdf5")
+    depends_on("highfive", when="+hdf5")
 
     def cmake_args(self):
         args = [
@@ -53,6 +68,8 @@ class Purify(CMakePackage):
             self.define_from_variant("openmp", "openmp"),
             self.define_from_variant("dompi", "mpi"),
             self.define_from_variant("coverage", "coverage"),
+            self.define_from_variant("onnxrt", "onnxrt"),
+            self.define_from_variant("hdf5", "hdf5"),
         ]
         return args
 

@@ -15,6 +15,8 @@ class Minigan(Package):
 
     license("BSD-3-Clause")
 
+    tags = ["proxy-app"]
+
     version("1.0.0", sha256="ef6d5def9c7040af520acc64b7a8b6c8ec4b7901721b11b0cb25a583ea0c8ae3")
 
     depends_on("python", type=("build", "run"))

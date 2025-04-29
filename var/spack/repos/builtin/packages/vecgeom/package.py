@@ -123,6 +123,12 @@ class Vecgeom(CMakePackage, CudaPackage):
         sha256="f172b0a9ee1de4931b106d8500d1a60d5688c9bce324cf12ca107ec866a16c56",
         when="@1.2.7:1.2.10 +cuda ^cuda@:11",
     )
+    # Fix -Wmissing-template-arg-list-after-template-kw
+    patch(
+        "https://gitlab.cern.ch/VecGeom/VecGeom/-/merge_requests/1251.diff",
+        sha256="b9419c6666389b69ee2c9125d10f25b423fce339495413ac4762ae6f32bdea63",
+        when="@:1.2.10 ^apple-clang@17:",
+    )
 
     def std_when(values):
         for v in values:

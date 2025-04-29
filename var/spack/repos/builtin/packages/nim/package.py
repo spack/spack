@@ -22,7 +22,7 @@ class Nim(Package):
 
     maintainers("Buldram")
 
-    version("devel", branch="devel")
+    version("develop", branch="devel")
     version("2.2.4", sha256="f82b419750fcce561f3f897a0486b180186845d76fb5d99f248ce166108189c7")
     version("2.2.2", sha256="7fcc9b87ac9c0ba5a489fdc26e2d8480ce96a3ca622100d6267ef92135fd8a1f")
     version("2.2.0", sha256="ce9842849c9760e487ecdd1cdadf7c0f2844cafae605401c7c72ae257644893c")
@@ -58,16 +58,14 @@ class Nim(Package):
         )
 
     variant(
-        "sqlite", default=False, when="@0:1.7.3", description="Install SQLite for std/db_sqlite"
+        "sqlite", default=False, when="@:1.7.3", description="Install SQLite for std/db_sqlite"
     )
 
     depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
-    depends_on("gmake", type="build", when="@devel,0.20:")
+    depends_on("gmake", type="build", when="@0.20:")
     depends_on("pcre", type="link")
     depends_on("openssl", type="link")
-    depends_on("openssl@1", type="link", when="@0:1.6.9")
+    depends_on("openssl@1", type="link", when="@:1.6.9")
     depends_on("sqlite@3:", type="link", when="+sqlite")
 
     # CVE-2021-46872
@@ -93,7 +91,7 @@ class Nim(Package):
     patch(
         "https://github.com/nim-lang/nimble/commit/89954f8b03b05970aea78c8fe1241138f5bbeae8.patch?full_index=1",
         sha256="5e6f7e2d2dac5d2ed70b5047418d9b43e156de35737f9fad0052ae30dd539b03",
-        when="@0:1.2.9,1.4.0:1.4.3",
+        when="@:1.2.9,1.4.0:1.4.3",
         working_dir="dist/nimble",
     )
 
@@ -101,7 +99,7 @@ class Nim(Package):
         name="csources_v2",
         git="https://github.com/nim-lang/csources_v2.git",
         commit="86742fb02c6606ab01a532a0085784effb2e753e",
-        when="@devel",
+        when="@develop",
     )
 
     phases = ["build", "install"]
@@ -117,25 +115,22 @@ class Nim(Package):
                 for path in filter_system_paths(libdirs):
                     quoted_path = shlex.quote(path)
                     if '"""' in quoted_path:
-                        raise InstallError(
-                            "Quoted dependency path " + quoted_path + ' contains """'
-                        )
+                        raise InstallError(f'Quoted dependency path {quoted_path} contains """')
 
                     if not scope:
                         f.write("\nwhen not defined(vcc):\n")  # TODO: Implement for msvc
                         scope = True
 
-                    f.write('  {.passl: """-Xlinker -rpath -Xlinker ' + quoted_path + '""".}\n')
+                    f.write(f'  {{.passl: """-Xlinker -rpath -Xlinker {quoted_path}""".}}\n')
 
-        spec = self.spec
-        append_rpath("lib/wrappers/pcre.nim", spec["pcre"].libs.directories)
-        append_rpath("lib/wrappers/openssl.nim", spec["openssl"].libs.directories)
-        if spec.satisfies("+sqlite"):
-            append_rpath("lib/wrappers/sqlite3.nim", spec["sqlite"].libs.directories)
+        append_rpath("lib/wrappers/pcre.nim", self.spec["pcre"].libs.directories)
+        append_rpath("lib/wrappers/openssl.nim", self.spec["openssl"].libs.directories)
+        if self.spec.satisfies("+sqlite"):
+            append_rpath("lib/wrappers/sqlite3.nim", self.spec["sqlite"].libs.directories)
 
         # Musl defines SysThread as a struct *pthread_t rather than an unsigned long as glibc does.
         if self.spec.satisfies("^[virtuals=libc] musl"):
-            if self.spec.satisfies("@devel,1.9.3:"):
+            if self.spec.satisfies("@1.9.3:"):
                 pthreadModule = "lib/std/private/threadtypes.nim"
             elif self.spec.satisfies("@:0.19.6"):
                 pthreadModule = "lib/system/threads.nim"
@@ -150,7 +145,7 @@ class Nim(Package):
             )
 
     def build(self, spec, prefix):
-        if spec.satisfies("@devel"):
+        if spec.satisfies("@develop"):
             with working_dir("csources_v2"):
                 make()
 
@@ -169,12 +164,12 @@ class Nim(Package):
         koch("boot", "-d:release", *nim_flags)
         koch("tools", *nim_flags)
 
-        if spec.satisfies("@devel"):
+        if spec.satisfies("@develop"):
             koch("geninstall")
 
-    def install(self, spec, prefix):
         filter_file("1/nim", "1", "install.sh")
 
+    def install(self, spec, prefix):
         Executable("./install.sh")(prefix)
-
         install_tree("bin", prefix.bin)
+        install_tree("dist", prefix.dist)

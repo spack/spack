@@ -436,7 +436,7 @@ def display_specs(specs, args=None, **kwargs):
         all_headers (bool): show headers even when arch/compiler aren't defined
         status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
-
+        specfile_format (bool): specfile format of the current spec
     """
 
     def get_arg(name, default=None):
@@ -458,6 +458,7 @@ def display_specs(specs, args=None, **kwargs):
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
     status_fn = get_arg("status_fn", None)
+    specfile_format = get_arg("specfile_format", False)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -478,6 +479,9 @@ def display_specs(specs, args=None, **kwargs):
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
         format_string = nfmt + "{@version}" + vfmt + ffmt
+
+    if specfile_format:
+        format_string = "[{specfile_version}] " + format_string
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""

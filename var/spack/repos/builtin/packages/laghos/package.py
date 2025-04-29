@@ -12,7 +12,7 @@ class Laghos(MakefilePackage):
     discretization and explicit high-order time-stepping.
     """
 
-    tags = ["proxy-app", "ecp-proxy-app"]
+    tags = ["proxy-app", "ecp-proxy-app", "e4s"]
 
     homepage = "https://computing.llnl.gov/projects/co-design/laghos"
     url = "https://github.com/CEED/Laghos/archive/v1.0.tar.gz"

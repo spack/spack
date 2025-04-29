@@ -6,11 +6,16 @@ from typing import Optional
 
 import spack.package_base
 import spack.util.url
+from spack.directives import conflicts
 
 
 class XorgPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for x.org
     packages."""
+
+    # x.org packages are not supported on windows or darwin
+    conflicts("platform=windows")
+    conflicts("platform=darwin")
 
     #: Path of the package in a x.org mirror
     xorg_mirror_path: Optional[str] = None

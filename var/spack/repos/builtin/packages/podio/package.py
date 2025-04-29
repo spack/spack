@@ -138,6 +138,7 @@ class Podio(CMakePackage):
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
+            self.define("PODIO_SET_RPATH", True),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
