@@ -95,10 +95,9 @@ class Icon(AutotoolsPackage):
     # Optimization Features:
     variant("mixed-precision", default=False, description="Enable mixed-precision dynamical core")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on("python", type="build")
     depends_on("perl", type="build")
     depends_on("cmake@3.18:", type="build")
