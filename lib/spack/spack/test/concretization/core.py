@@ -3566,3 +3566,32 @@ def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
         s = default_mock_concretization(f"mvdefaults {c}")
         assert not s.satisfies("^pkg-b")
+
+
+def test_variants_are_associated_with_compilers(mock_packages, mutable_config, tmp_path):
+    """Tests that % behaves as ^ for variants, i.e. that variants after %<package> are
+    associated with <package>
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+    packages:
+      llvm::
+        buildable: false
+        externals:
+        - spec: "llvm+clang~lld@20"
+          prefix: {tmp_path / 'llvm-20'}
+    """
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Check the abstract spec is formed correctly
+    abstract_spec = Spec("pkg-a %llvm@20 +clang +lld")
+    assert abstract_spec["llvm"].satisfies("@20 +clang +lld")
+
+    # Check that we can't concretize the spec, since llvm is not buildable
+    with pytest.raises(spack.error.SpackError):
+        spack.concretize.concretize_one(abstract_spec)
+
+    # Check we can instead concretize if we use ~lld
+    s = spack.concretize.concretize_one("pkg-a %llvm@20 +clang ~lld")
+    assert s["c"].external and s["c"].satisfies("@20 +clang ~lld")
