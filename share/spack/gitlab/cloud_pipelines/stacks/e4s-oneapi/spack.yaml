@@ -173,7 +173,7 @@ spack:
   - vtk-m ~openmp                   # +openmp: https://github.com/spack/spack/issues/31830
   - zfp
   # --
-  - paraview +qt                  # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - paraview +qt                  # concretize: paraview: Qt support requires GLX on non Windows; llvm-17.0.6: https://github.com/spack/spack/issues/49625
   - py-cinemasci                  # llvm-14.0.6: https://github.com/spack/spack/issues/49625
   - visit                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
   # --
