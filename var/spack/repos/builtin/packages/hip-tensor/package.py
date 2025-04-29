@@ -34,6 +34,7 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     for ver in [
