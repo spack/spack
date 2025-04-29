@@ -461,7 +461,7 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch(
         "https://github.com/open-mpi/ompi/commit/d10e9765bdd28e62621395aef6bbb7710bae2e82.patch?full_index=1",
         sha256="38529b557df029d6a987fa7e337db40b0ac1c1bb921776b95aacaa40e945cd21",
-        when="@5.0.7",
+        when="@4.1.8,5.0.7",
     )
     FABRICS = (
         "psm",
