@@ -1020,11 +1020,17 @@ class TestConcretize:
             ("bowtie@1.4.0", "%gcc@10.2.1"),
             # Version with conflicts and no valid gcc select another compiler
             ("bowtie@1.3.0", "%clang@15.0.0"),
-            # If a higher gcc is available, with a worse os, still prefer that
-            ("bowtie@1.2.2", "%gcc@11.1.0"),
+            # If a higher gcc is available, with a worse os, still prefer that,
+            # assuming the two operating systems are compatible
+            ("bowtie@1.2.2 %gcc", "%gcc@11.1.0"),
         ],
     )
-    def test_compiler_conflicts_in_package_py(self, spec_str, expected_str, gcc11_with_flags):
+    def test_compiler_conflicts_in_package_py(
+        self, spec_str, expected_str, gcc11_with_flags, mutable_config
+    ):
+        mutable_config.set(
+            "concretizer:os_compatible", {"debian6": ["redhat6"], "redhat6": ["debian6"]}
+        )
         with spack.config.override("packages", {"gcc": {"externals": [gcc11_with_flags]}}):
             s = spack.concretize.concretize_one(spec_str)
             assert s.satisfies(expected_str)
