@@ -233,6 +233,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         multi=False,
         description="C++ language standard",
     )
+    variant("memalloc", default=True, description="enable group/batch allocation for some small objects")
 
     conflicts("+shared", when="@:3.3.2")
     conflicts("~static~shared")
@@ -586,7 +587,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         options = [
             "PREFIX=%s" % prefix,
-            "MFEM_USE_MEMALLOC=YES",
+            "MFEM_USE_MEMALLOC=%s" % yes_no("+memalloc"),
             "MFEM_DEBUG=%s" % yes_no("+debug"),
             # NOTE: env["CXX"] is the spack c++ compiler wrapper. The real
             # compiler is defined by env["SPACK_CXX"].

@@ -111,6 +111,8 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     varmsg = "Build development tools (such as Sphinx, Doxygen, etc...)"
     variant("devtools", default=False, description=varmsg)
 
+    variant("debug", default=False, description="defines AXOM_DEBUG, adding additional runtime error checking")
+
     # -----------------------------------------------------------------------
     # Dependencies
     # -----------------------------------------------------------------------
@@ -613,6 +615,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
         options.append(self.define_from_variant("AXOM_ENABLE_TOOLS", "tools"))
         if self.spec.satisfies("~raja") or self.spec.satisfies("+umpire"):
             options.append("-DAXOM_ENABLE_MIR:BOOL=OFF")
+        options.append(self.define_from_variant("AXOM_DEBUG_DEFINE", "debug"))
 
         return options
 
