@@ -276,12 +276,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     with when("@6:"):
         with when("+qt"):
             depends_on("qt-base+opengl+sql")
+<<<<<<< HEAD:var/spack/repos/spack_repo/builtin/packages/paraview/package.py
             depends_on("qt-base+opengl")
+=======
+>>>>>>> 6e8c42c614f (Add missing Qt Base component to ParaView dep):var/spack/repos/builtin/packages/paraview/package.py
             depends_on("qt-5compat")
             depends_on("qt-svg")
 
         # ParaView@6: and later will depend on OSMesa as a fallback for
-        # OpenGL unless using Qt which requires Apple-GL or GLX or WGL
+        # OpenGL.
         # The search order for GL is:
         # * the system rendering default (WGL/AGL/GLX)
         # * EGL
