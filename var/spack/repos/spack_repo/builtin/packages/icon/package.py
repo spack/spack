@@ -14,11 +14,16 @@ class Icon(AutotoolsPackage):
 
     homepage = "https://www.icon-model.org"
     url = "https://gitlab.dkrz.de/icon/icon-model/-/archive/icon-2024.01-public/icon-model-icon-2024.01-public.tar.gz"
+    git = "https://gitlab.dkrz.de/icon/icon-model.git"
+    submodules = True
 
     maintainers("skosukhin", "Try2Code")
 
     license("BSD-3-Clause", checked_by="skosukhin")
 
+    version(
+        "2025.04", tag="icon-2025.04-public", commit="1be2ca66ea0de149971d2e77e88a9f11c764bd22"
+    )
     version("2024.10", sha256="5c461c783eb577c97accd632b18140c3da91c1853d836ca2385f376532e9bad1")
     version("2024.07", sha256="f53043ba1b36b8c19d0d2617ab601c3b9138b90f8ff8ca6db0fd079665eb5efa")
     version("2024.01-1", sha256="3e57608b7e1e3cf2f4cb318cfe2fdb39678bd53ca093955d99570bd6d7544184")
