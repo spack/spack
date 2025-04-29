@@ -35,7 +35,11 @@ class Executable:
         self.ignore_quotes = False
 
     def add_default_arg(self, *args: str) -> None:
-        """Add default argument(s) to the command."""
+        """Add default argument(s) to the command if not already present."""
+        for i in range(len(self.exe) - len(args) + 1):
+            if self.exe[i : i + len(args)] == args:
+                return
+
         self.exe.extend(args)
 
     def with_default_args(self, *args: str) -> "Executable":
