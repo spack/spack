@@ -107,7 +107,8 @@ class Hipsparselt(CMakePackage, ROCmPackage):
             "ROCM_AGENT_ENUMERATOR_PATH",
             f"{self.spec['rocminfo'].prefix}/bin/rocm_agent_enumerator",
         )
-        env.set("ROCM_SMI_PATH", f"{self.spec['rocm-smi-lib'].prefix}/bin/rocm-smi")
+        if self.spec.satisfies("@6.3:"):
+            env.set("ROCM_SMI_PATH", f"{self.spec['rocm-smi-lib'].prefix}/bin/rocm-smi")
 
     def cmake_args(self):
         args = [
