@@ -95,7 +95,7 @@ class Libxsmm(MakefilePackage):
     # A recent `as` is needed to compile libxmss until version 1.17
     # (<https://github.com/spack/spack/issues/28404>), but not afterwards
     # (<https://github.com/spack/spack/pull/21671#issuecomment-779882282>).
-    depends_on("binutils+ld+gas@2.33:", type="build", when="@:1.17")
+    depends_on("binutils+ld+gas@2.33:", type="build")
 
     # Version 2.0 supports both x86_64 and aarch64
     requires("target=x86_64:", "target=aarch64:")

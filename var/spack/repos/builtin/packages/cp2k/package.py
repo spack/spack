@@ -112,7 +112,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         description="Use SPLA off-loading functionality. Only relevant when CUDA or ROCM"
         " are enabled",
     )
-    variant("fftw3", default=True, description="Enable FFTW3 support")
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
     variant("dftd4", when="@2024.2:", default=False, description="Enable DFT-D4 support")
@@ -1057,8 +1056,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 ]
 
         args += [
+            "-DCP2K_USE_FFTW3=ON",
             self.define_from_variant("CP2K_USE_MPI", "mpi"),
-            self.define_from_variant("CP2K_USE_FFTW3", "fftw3"),
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
             self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
@@ -1088,6 +1087,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_GREENX", "greenx"),
         ]
 
+        if spec.satisfies("^[virtuals=fftw-api] fftw+openmp"):
+            args += ["-DCP2K_USE_FFTW3_WITH_OPENMP=ON"]
+
         # we force the use elpa openmp threading support. might need to be revisited though
         args += [
             self.define(
@@ -1099,8 +1101,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
             args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
 
-        args += ["-DCP2K_USE_FFTW3=ON"]
-
         if spec.satisfies("smm=libxsmm"):
             args += ["-DCP2K_USE_LIBXSMM=ON"]
         else:
@@ -1110,6 +1110,9 @@ class CMakeBuilder(cmake.CMakeBuilder):
         blas = spec["blas"]
 
         if blas.name == "intel-oneapi-mkl":
+            if spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
+                args += ["-DCP2K_USE_FFTW3_WITH_MKL=ON"]
+
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [
