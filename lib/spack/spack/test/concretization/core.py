@@ -1735,7 +1735,6 @@ class TestConcretize:
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
         builder = spack.repo.MockRepositoryBuilder(str(tmpdir), namespace="myrepo")
         builder.add_package("pkg-c")
-        print(builder.root)
         with spack.repo.use_repositories(builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
             assert s.namespace == "myrepo"

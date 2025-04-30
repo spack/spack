@@ -856,15 +856,10 @@ class RepoPath:
 
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Find a class for the spec's package and return the class object."""
-        try:
-            for p in self.python_paths():
-                if p not in sys.path:
-                    sys.path.insert(0, p)
-            return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
-        finally:
-            for p in self.python_paths():
-                if p in sys.path:
-                    sys.path.remove(p)
+        for p in self.python_paths():
+            if p not in sys.path:
+                sys.path.insert(0, p)
+        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
     @autospec
     def dump_provenance(self, spec, path):
@@ -1364,10 +1359,9 @@ class Repo:
             fullname += ".package"
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
-
+        if self.python_path and self.python_path not in sys.path:
+            sys.path.insert(0, self.python_path)
         try:
-            if self.python_path and self.python_path not in sys.path:
-                sys.path.insert(0, self.python_path)
             with REPOS_FINDER.switch_repo(self._finder or self):
                 module = importlib.import_module(fullname)
         except ImportError as e:
@@ -1375,9 +1369,6 @@ class Repo:
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
-        finally:
-            if self.python_path and self.python_path in sys.path:
-                sys.path.remove(self.python_path)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
