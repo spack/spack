@@ -46,6 +46,9 @@ class Actsvg(CMakePackage):
         "web", default=True, when="@0.4.36:", description="Build the webpage builder interface"
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("boost +program_options", type="test")
     depends_on("boost +program_options", when="+examples")
     depends_on("googletest", when="+examples")

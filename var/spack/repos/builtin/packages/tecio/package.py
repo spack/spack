@@ -27,6 +27,9 @@ class Tecio(CMakePackage):
     depends_on("boost@1.69.0:+system", type="build")
     depends_on("mpi", when="+mpi")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     @property
     def root_cmakelists_dir(self):
         if self.spec.satisfies("+mpi"):

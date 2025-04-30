@@ -41,6 +41,8 @@ class HermesShm(CMakePackage):
     depends_on("yaml-cpp")
     depends_on("doxygen@1.9.3:", type="build")
     depends_on("libelf")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Machine variants
     variant("ares", default=False, description="Build in ares")

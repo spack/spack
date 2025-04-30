@@ -59,6 +59,8 @@ class Purify(CMakePackage):
     depends_on("py-onnxruntime@1.17.1:", when="+onnxrt")
     depends_on("hdf5+cxx", when="+hdf5")
     depends_on("highfive", when="+hdf5")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     def cmake_args(self):
         args = [

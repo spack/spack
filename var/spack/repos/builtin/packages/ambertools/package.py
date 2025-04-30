@@ -20,6 +20,9 @@ class Ambertools(CMakePackage):
 
     version("22jlmrcc", sha256="1571d4e0f7d45b2a71dce5999fa875aea8c90ee219eb218d7916bf30ea229121")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("flex", type="build")
     depends_on("bison", type="build")
     depends_on("tcsh", type="build")
