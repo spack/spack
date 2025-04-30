@@ -35,14 +35,51 @@ class PyCarputils(PythonPackage):
 
     depends_on("git", type=("build", "run"))
 
-    depends_on("py-numpy@1.14.5:", type=("build", "run"))
-    depends_on("py-setuptools@41.6.0:", type=("build", "run"))
-    depends_on("py-python-dateutil@2.8.1:", type=("build", "run"))
-    depends_on("py-scipy@1.5.0:", type=("build", "run"))
-    depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
-    depends_on("py-pandas", type=("build", "run"))
-    depends_on("py-tables@3.8.0:", type=("build", "run"))
-    depends_on("py-six@1.12.0:", type=("build", "run"))
-    depends_on("py-pydoe@0.3.8", type=("build", "run"))
-    depends_on("py-ruamel-yaml@0.17.4:", type=("build", "run"))
-    depends_on("py-common", type=("build", "run"))
+    with when("@oc16.0:"):
+        depends_on("py-common@0.1.2", type=("build", "run"))
+        depends_on("py-ruamel-yaml@0.17.4:", type=("build", "run"))
+        depends_on("py-pydoe@0.3.8", type=("build", "run"))
+        depends_on("py-setuptools@41.6.0:", type=("build", "run"))
+
+        depends_on("py-scipy@1.11:", type=("build", "run"))
+        depends_on("py-scipy@1.11", when="^python@3.9:3.11", type=("build", "run"))
+        depends_on("py-scipy@1.9.2", when="^python@3.8", type=("build", "run"))
+        depends_on("py-scipy@1.7.3", when="^python@3.7", type=("build", "run"))
+        depends_on("py-scipy@1.5", when="^python@3.6", type=("build", "run"))
+        depends_on("py-scipy@1.4", when="^python@3.5", type=("build", "run"))
+        
+        depends_on("py-numpy@1.26:", type=("build", "run"))
+        depends_on("py-numpy@1.21.6:1.26", when="^python@3.9:3.11", type=("build", "run"))
+        depends_on("py-numpy@1.18.5:1.25", when="^python@3.8", type=("build", "run"))
+        depends_on("py-numpy@1.16.5:1.22", when="^python@3.7", type=("build", "run"))
+        depends_on("py-numpy@1.14.5:1.19.3", when="^python@3.6", type=("build", "run"))
+        depends_on("py-numpy@1.13.3:1.17.3", when="^python@3.5", type=("build", "run"))
+
+        depends_on("py-tables@3.9:", type=("build", "run"))
+        depends_on("py-tables@3.6.1", when="^python@:3.8", type=("build", "run"))
+
+        depends_on("py-pandas", type=("build", "run"))
+        depends_on("py-pandas@:1.1.4", when="^python@:3.9", type=("build", "run"))
+
+        depends_on("py-python-dateutil", type=("build", "run"))
+        depends_on("py-python-dateutil@2.8.1", when="^python@:3.9", type=("build", "run"))
+
+        depends_on("py-six@1.16", when="^python@3.12:", type=("build", "run"))
+        depends_on("py-six@1.14.0", when="^python@:3.11", type=("build", "run"))
+
+        depends_on("py-matplotlib", type=("build", "run"))
+        depends_on("py-matplotlib@:3.7", when="^python@:3.11", type=("build", "run"))
+
+    with when("@:oc15.0"):
+        # Historical dependencies
+        depends_on("py-numpy@1.14.5:", type=("build", "run"))
+        depends_on("py-setuptools@41.6.0:", type=("build", "run"))
+        depends_on("py-python-dateutil@2.8.1:", type=("build", "run"))
+        depends_on("py-scipy@1.5.0:", type=("build", "run"))
+        depends_on("py-matplotlib@3.0.0:", type=("build", "run"))
+        depends_on("py-pandas", type=("build", "run"))
+        depends_on("py-tables@3.8.0:", type=("build", "run"))
+        depends_on("py-six@1.12.0:", type=("build", "run"))
+        depends_on("py-pydoe@0.3.8", type=("build", "run"))
+        depends_on("py-ruamel-yaml@0.17.4:", type=("build", "run"))
+        depends_on("py-common", type=("build", "run"))
