@@ -612,7 +612,7 @@ def test_find_concretized_not_installed(
 
 
 @pytest.mark.usefixtures("install_mockery", "mock_fetch", "mutable_mock_env_path")
-def test_phil_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
+def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     repo_path, filename, commits = mock_git_version_info
     file_url = pathlib.Path(repo_path).as_uri()
 

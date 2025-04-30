@@ -2577,7 +2577,7 @@ class TestConcretize:
         assert s.satisfies("~opt")
         assert s.prefix == "/tmp/prefix2"
 
-    def test_phil_git_based_version_must_exist_to_use_ref(self):
+    def test_git_based_version_must_exist_to_use_ref(self):
         # gmake should fail, only has sha256
         with pytest.raises(spack.error.UnsatisfiableSpecError) as e:
             spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
@@ -3127,7 +3127,7 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         (f"git-ref-package@git.{'a' * 40}=2.1.6 commit={'a' * 40}", None),
     ],
 )
-def test_phil_spec_containing_commit_variant(spec_str, error_type):
+def test_spec_containing_commit_variant(spec_str, error_type):
     spec = spack.spec.Spec(spec_str)
     if error_type is None:
         spack.concretize.concretize_one(spec)
@@ -3146,7 +3146,7 @@ def test_phil_spec_containing_commit_variant(spec_str, error_type):
         ("git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", None),
     ],
 )
-def test_phil_spec_with_commit_interacts_with_lookup(
+def test_spec_with_commit_interacts_with_lookup(
     mock_git_version_info, monkeypatch, spec_str, error_type
 ):
     # This test will be short lived. Technically we could do further checks with a Lookup
@@ -3164,7 +3164,7 @@ def test_phil_spec_with_commit_interacts_with_lookup(
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
 @pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
-def test_phil_relationship_git_versions_and_commit_variant(version_str):
+def test_relationship_git_versions_and_commit_variant(version_str):
     """
     Confirm that GitVersions auto assign and populates the commit variant correctly
     """
@@ -3178,7 +3178,7 @@ def test_phil_relationship_git_versions_and_commit_variant(version_str):
 
 
 @pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
-def test_phil_abstract_commit_spec_reuse():
+def test_abstract_commit_spec_reuse():
     commit = "abcd" * 10
     spec_str_1 = f"git-ref-package@develop commit={commit}"
     spec_str_2 = f"git-ref-package commit={commit}"
@@ -3196,7 +3196,7 @@ def test_phil_abstract_commit_spec_reuse():
     "installed_commit, incoming_commit, reusable",
     [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
 )
-def test_phil_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
+def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
     # install a non-default variant to test if reuse picks it
     if installed_commit:
         spec_str_1 = f"git-ref-package@develop commit={installed_commit} ~opt"

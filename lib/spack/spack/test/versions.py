@@ -815,7 +815,7 @@ def test_version_list_with_range_and_concrete_version_is_not_concrete():
     "git_ref, std_version",
     (("foo", "develop"), ("a" * 40, "develop"), ("a" * 40, None), ("v1.2.0", "1.2.0")),
 )
-def test_phil_git_versions_store_ref_requests(git_ref, std_version):
+def test_git_versions_store_ref_requests(git_ref, std_version):
     """
     User requested ref's should be known on creation
     Commit and standard version may not be known until concretization
