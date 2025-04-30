@@ -70,11 +70,13 @@ class RocmValidationSuite(CMakePackage):
         sha256="bd63baeb4dea00ac4104ef7e9fab907bc04a1eccb93036478c005d0ac11034de",
         when="@6.3",
     )
+    patch("010-add-drm-include-path.patch", when="@6.4")
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
     depends_on("yaml-cpp~shared")
     depends_on("googletest")
     depends_on("doxygen", type="build")
+    depends_on("libdrm", when="@6.4:")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
