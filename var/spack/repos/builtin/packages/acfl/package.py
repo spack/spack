@@ -11,6 +11,7 @@ _os_map_before_23 = {
     "ubuntu18.04": "Ubuntu-18.04",
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-20.04",
+    "ubuntu24.04": "Ubuntu-20.04",
     "sles15": "SLES-15",
     "centos7": "RHEL-7",
     "centos8": "RHEL-8",
@@ -24,6 +25,7 @@ _os_map_before_23 = {
 _os_map = {
     "ubuntu20.04": "Ubuntu-20.04",
     "ubuntu22.04": "Ubuntu-22.04",
+    "ubuntu24.04": "Ubuntu-22.04",
     "debian12": "Ubuntu-22.04",
     "sles15": "SLES-15",
     "centos8": "RHEL-8",
@@ -458,7 +460,7 @@ class Acfl(Package, CompilerPackage):
         hlist.directories = [incdir]
         return hlist
 
-    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+    def setup_run_environment(self, env):
         arm_dir = get_acfl_prefix(self.spec)
         armpl_dir = get_armpl_prefix(self.spec)
 
