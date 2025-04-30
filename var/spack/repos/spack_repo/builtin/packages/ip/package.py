@@ -120,4 +120,7 @@ class Ip(CMakePackage):
     @when("@4:")
     def check(self):
         with working_dir(self.build_directory):
-            ctest("-L", "NO_INPUT_DATA")
+            if self.spec.satisfies("@5.2:"):
+                ctest("-L", "NO_INPUT_DATA")
+            else:
+                ctest()
