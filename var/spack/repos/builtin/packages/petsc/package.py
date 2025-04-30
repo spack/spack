@@ -264,16 +264,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
 
-    variant("clean",  default=False, description="Remove build files after installation")
-    variant("sowing", default=False, description="Build and install Sowing (Fortran documentation tool)")
-    variant("c2html", default=False, description="Build and install c2html (C to HTML converter)")
-    variant("warn", default=False, description="Enable all compile time warnings")
-    variant("mpiexec", default="srun",
-        description="Specify the command for running MPI programs, if not set, let petsc build system figure this out",
-        values=("mpiexec", "srun", "aprun", "jsrun", "mpirun"),
-    )
-    variant("tests", default=True, description="Build and run tests")
-
     with when("+rocm"):
         # https://github.com/spack/spack/issues/37416
         conflicts("^rocprim@5.3.0:5.3.2")
@@ -518,10 +508,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             compiler_opts = [
                 "--with-cc=%s" % self.spec["mpi"].mpicc,
-                "--with-cxx=%s" % self.spec["mpi"].mpicxx
-              ]
-            if "mpiexec" in self.spec.variants:
-                compiler_opts.append("--with-mpiexec=%s" % self.spec.variants["mpiexec"].value)
+                "--with-cxx=%s" % self.spec["mpi"].mpicxx,
+            ]
             if "+fortran" in self.spec:
                 compiler_opts.append("--with-fc=%s" % self.spec["mpi"].mpifc)
             else:
@@ -564,20 +552,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 "--with-debugging=%s" % ("1" if "+debug" in spec else "0"),
                 "--with-openmp=%s" % ("1" if "+openmp" in spec else "0"),
                 "--with-64-bit-indices=%s" % ("1" if "+int64" in spec else "0"),
-                "--with-64-blas-indices=%s" % ("1" if "+int64" in spec else "0"),
-                "--known-64-blas-indices=%s" % ("1" if "+int64" in spec else "0"),
-                "--with-sowing=%s" % ("1" if "+sowing" in spec else "0"),
-                "--with-c2html=%s" % ("1" if "+c2html" in spec else "0"),
-                "--ignoreWarnings=%s" % ("1" if "+warn" in spec  else "0"),
             ]
         )
-        if "+clean" in spec:
-            options.append("--with-clean")
-        if '~sowing' in spec:
-            options.extend([
-                "--with-fortran-bindings=0",
-                "--with-fortran-kernels=0"
-            ])
 
         # Make sure we use exactly the same Blas/Lapack libraries
         # across the DAG. To that end list them explicitly
@@ -791,7 +767,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         self.revert_kokkos_nvcc_wrapper()
         make("install", parallel=False)
 
-        if self.run_tests and "+tests" in spec:
+        if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
@@ -830,15 +806,14 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     def setup_build_tests(self):
         """Copy the build test files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if self.spec.satisfies("+tests"):
-            if not self.spec.satisfies("@3.13:"):
-                tty.warn("Stand-alone tests only available for v3.13:")
-                return
+        if not self.spec.satisfies("@3.13:"):
+            tty.warn("Stand-alone tests only available for v3.13:")
+            return
 
-            cache_extra_test_sources(
-                self,
-                [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")],
-            )
+        cache_extra_test_sources(
+            self,
+            [join_path("src", "ksp", "ksp", "tutorials"), join_path("src", "snes", "tutorials")],
+        )
 
     def get_runner(self):
         """Set key environment variables and return runner and options."""

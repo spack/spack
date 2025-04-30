@@ -57,9 +57,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
     )
     variant("shared", default=True, description="Build shared libraries")
     variant("parmetis", default=True, description="Enable ParMETIS library")
-    variant("examples", default=True, description="Enable Examples")
-    variant("tests", default=True, description="Enable Tests")
-    variant("python", default=False, description="Enable python")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -144,10 +141,6 @@ class SuperluDist(CMakePackage, CudaPackage, ROCmPackage):
             append_define("CMAKE_Fortran_COMPILER", spec["mpi"].mpifc)
 
         append_from_variant("BUILD_SHARED_LIBS", "shared")
-
-        append_from_variant("enable_python", "python")
-        append_from_variant("enable_tests", "tests")
-        append_from_variant("enable_examples", "examples")
         return cmake_args
 
     def flag_handler(self, name, flags):

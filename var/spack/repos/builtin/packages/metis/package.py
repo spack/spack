@@ -59,8 +59,6 @@ class Metis(CMakePackage, MakefilePackage):
     with when("build_system=makefile"):
         variant("debug", default=False, description="Compile in debug mode")
 
-    variant("install_extra_headers", default=True, description="Installs Gklib and libmetis headers for dependencies to use, required in most situations")
-
     def patch(self):
         if not self.spec.satisfies("build_system=cmake"):
             return
@@ -239,14 +237,13 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
 
     @run_after("install")
     def install_headers(self):
-        if self.spec.satisfies("+install_extra_headers"):
-            with working_dir(self.build_directory):
-                # install all headers, which will be needed for ParMETIS and other programs
-                directories = ["GKlib", "libmetis", "programs"]
-                for directory in directories:
-                    inc_dist = join_path(self.prefix.include, directory)
-                    mkdirp(inc_dist)
-                    install(join_path(self.stage.source_path, directory, "*.h"), inc_dist)
+        with working_dir(self.build_directory):
+            # install all headers, which will be needed for ParMETIS and other programs
+            directories = ["GKlib", "libmetis", "programs"]
+            for directory in directories:
+                inc_dist = join_path(self.prefix.include, directory)
+                mkdirp(inc_dist)
+                install(join_path(self.stage.source_path, directory, "*.h"), inc_dist)
 
     def check(self):
         # On some systems, the installed binaries for METIS cannot
