@@ -6,6 +6,7 @@ import pathlib
 
 import pytest
 
+import spack
 import spack.package_base
 import spack.paths
 import spack.repo
