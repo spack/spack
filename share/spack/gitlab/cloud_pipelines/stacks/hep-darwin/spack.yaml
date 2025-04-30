@@ -1,0 +1,34 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: when_possible
+    static_analysis: true
+
+  packages:
+    all:
+      require:
+      - "%gcc"
+      - target=aarch64
+      providers:
+        blas: [openblas]
+        mpi: [mpich]
+        tbb: [intel-tbb]
+      variants: +mpi
+    root:
+      require: +arrow ~daos +davix +dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
+      # note: root cxxstd=20 not concretizable within sherpa
+
+  specs:
+  # CPU
+  - root ~cuda
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        variables:
+          CI_GPG_KEY_ROOT: /etc/protected-runner
+
+  cdash:
+    build-group: HEP darwin

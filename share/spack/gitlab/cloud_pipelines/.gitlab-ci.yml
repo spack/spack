@@ -703,25 +703,48 @@ ml-darwin-aarch64-mps-build:
 ########################################
 # High Energy Physics (HEP) - Linux x86_64 (CPU)
 ########################################
-.hep:
+.hep-x86_64_v3:
   extends: [ ".linux_x86_64_v3" ]
   variables:
-    SPACK_CI_STACK_NAME: hep
+    SPACK_CI_STACK_NAME: hep-x86_64_v3
 
-hep-generate:
-  extends: [ ".hep", ".generate-x86_64"]
+hep-x86_64_v3-generate:
+  extends: [ ".hep-x86_64_v3", ".generate-x86_64"]
   image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4:2024.03.01
 
-hep-build:
-  extends: [ ".hep", ".build" ]
+hep-x86_64_v3-build:
+  extends: [ ".hep-x86_64_v3", ".build" ]
   trigger:
     include:
       - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: hep-generate
+        job: hep-x86_64_v3-generate
     strategy: depend
   needs:
     - artifacts: True
-      job: hep-generate
+      job: hep-x86_64_v3-generate
+
+########################################
+# High Energy Physics (HEP) - Linux x86_64 (CPU)
+########################################
+.hep-darwin:
+  extends: [ ".darwin_aarch64" ]
+  variables:
+    SPACK_CI_STACK_NAME: hep-darwin
+
+hep-darwin-generate:
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
+  extends: [ ".hep-darwin", ".generate-x86_64"]
+
+hep-darwin-build:
+  extends: [ ".hep-darwin", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: hep-darwin-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: hep-darwin-generate
 
 ########################################
 # AWS ParallelCluster
