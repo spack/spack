@@ -136,20 +136,7 @@ def solve(parser, args):
     setup_only = set(show) == {"asp"}
     unify = spack.config.get("concretizer:unify")
     allow_deprecated = spack.config.get("config:deprecated", False)
-    if unify != "when_possible":
-        # set up solver parameters
-        # Note: reuse and other concretizer prefs are passed as configuration
-        result = solver.solve(
-            specs,
-            out=output,
-            timers=args.timers,
-            stats=args.stats,
-            setup_only=setup_only,
-            allow_deprecated=allow_deprecated,
-        )
-        if not setup_only:
-            _process_result(result, show, required_format, kwargs)
-    else:
+    if unify == "when_possible":
         for idx, result in enumerate(
             solver.solve_in_rounds(
                 specs,
@@ -164,5 +151,31 @@ def solve(parser, args):
                 tty.msg("")
             else:
                 print("% END ROUND {0}\n".format(idx))
+            if not setup_only:
+                _process_result(result, show, required_format, kwargs)
+    elif unify:
+        # set up solver parameters
+        # Note: reuse and other concretizer prefs are passed as configuration
+        result = solver.solve(
+            specs,
+            out=output,
+            timers=args.timers,
+            stats=args.stats,
+            setup_only=setup_only,
+            allow_deprecated=allow_deprecated,
+        )
+        if not setup_only:
+            _process_result(result, show, required_format, kwargs)
+    else:
+        for spec in specs:
+            tty.msg("SOLVING SPEC:", spec)
+            result = solver.solve(
+                [spec],
+                out=output,
+                timers=args.timers,
+                stats=args.stats,
+                setup_only=setup_only,
+                allow_deprecated=allow_deprecated,
+            )
             if not setup_only:
                 _process_result(result, show, required_format, kwargs)

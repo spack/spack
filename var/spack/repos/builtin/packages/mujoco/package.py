@@ -40,7 +40,7 @@ class Mujoco(Package):
     def install(self, spec, prefix):
         copy_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", prefix.include)
         env.prepend_path("LD_LIBRARY_PATH", prefix.bin)
         if platform.system() == "Darwin":

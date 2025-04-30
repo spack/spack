@@ -17,6 +17,8 @@ class MsrSafe(MakefilePackage):
 
     maintainers("kyotsukete", "rountree")
 
+    tags = ["e4s"]
+
     license("GPL-2.0-only", checked_by="kyotsukete")
 
     variant(

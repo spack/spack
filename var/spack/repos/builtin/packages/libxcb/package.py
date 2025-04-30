@@ -69,5 +69,5 @@ class Libxcb(AutotoolsPackage, XorgPackage):
     # If a newer release can be verified to build with LC_ALL=en_US.ISO-8859-1,
     # then we can limit the following function, e.g.
     # when("@:1.17")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LC_ALL", "C.UTF-8")

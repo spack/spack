@@ -42,12 +42,12 @@ class Mercurial(PythonPackage):
     depends_on("py-pygments", type=("build", "run"))
     depends_on("py-certifi", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Python 3 support is still experimental, explicitly allow
-        env.set("HGALLOWPYTHON3", True)
-        env.set("HGPYTHON3", True)
+        env.set("HGALLOWPYTHON3", "True")
+        env.set("HGPYTHON3", "True")
         # Setuptools is still opt-in, explicitly enable
-        env.set("FORCE_SETUPTOOLS", True)
+        env.set("FORCE_SETUPTOOLS", "True")
 
     @run_after("install")
     def post_install(self):

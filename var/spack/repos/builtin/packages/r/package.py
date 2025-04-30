@@ -23,6 +23,7 @@ class R(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("4.4.3", sha256="0d93d224442dea253c2b086f088db6d0d3cfd9b592cd5496e8cb2143e90fc9e8")
     version("4.4.2", sha256="1578cd603e8d866b58743e49d8bf99c569e81079b6a60cf33cdf7bdffeb817ec")
     version("4.4.1", sha256="b4cb675deaaeb7299d3b265d218cde43f192951ce5b89b7bb1a5148a36b2d94d")
     version("4.4.0", sha256="ace4125f9b976d2c53bcc5fca30c75e30d4edc401584859cbadb080e72b5f030")
@@ -69,13 +70,13 @@ class R(AutotoolsPackage):
     version("3.1.3", sha256="07e98323935baa38079204bfb9414a029704bb9c0ca5ab317020ae521a377312")
     version("3.1.2", sha256="bcd150afcae0e02f6efb5f35a6ab72432be82e849ec52ce0bb89d8c342a8fa7a")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     variant("X", default=False, description="Enable X11 support (TCLTK, PNG, JPEG, TIFF, CAIRO)")
     variant("memory_profiling", default=False, description="Enable memory profiling")
     variant("rmath", default=False, description="Build standalone Rmath library")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("blas")
     depends_on("lapack")
@@ -177,7 +178,10 @@ class R(AutotoolsPackage):
 
         # R uses LAPACK in Fortran, which requires libmkl_gf_* when gfortran is used.
         # TODO: cleaning this up seem to require both compilers as dependencies and use variants.
-        if spec["lapack"].name in INTEL_MATH_LIBRARIES and "gfortran" in self.compiler.fc:
+        if (
+            spec.satisfies("^[virtuals=lapack] intel-oneapi-mkl")
+            and "gfortran" in self.compiler.fc
+        ):
             xlp64 = "ilp64" if spec["lapack"].satisfies("+ilp64") else "lp64"
             blas_flags = blas_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
             lapack_flags = lapack_flags.replace(f"mkl_intel_{xlp64}", f"mkl_gf_{xlp64}")
@@ -191,14 +195,12 @@ class R(AutotoolsPackage):
             f"LDFLAGS=-Wl,-rpath,{extra_rpath}",
             f"--with-blas={blas_flags}",
             f"--with-lapack={lapack_flags}",
-            # cannot disable docs with a normal configure option
             "ac_cv_path_PDFLATEX=",
             "ac_cv_path_PDFTEX=",
             "ac_cv_path_TEX=",
             "ac_cv_path_TEXI2DVI=",
+            f"--with-libintl-prefix={spec['gettext'].prefix}",
         ]
-
-        config_args.append("--with-libintl-prefix={0}".format(spec["gettext"].prefix))
 
         if "+X" in spec:
             config_args.append("--with-cairo")
@@ -267,7 +269,9 @@ class R(AutotoolsPackage):
     def r_lib_dir(self):
         return join_path("rlib", "R", "library")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Set R_LIBS to include the library dir for the
         # extension and any other R extensions it depends on.
         r_libs_path = []
@@ -289,14 +293,16 @@ class R(AutotoolsPackage):
         env.set("MAKEFLAGS", "-j{0}".format(make_jobs))
         env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # For run time environment set only the path for dependent_spec and
         # prepend it to R_LIBS
         env.set("R_HOME", join_path(self.prefix, "rlib", "R"))
         if dependent_spec.package.extends(self.spec):
             env.prepend_path("R_LIBS", join_path(dependent_spec.prefix, self.r_lib_dir))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "rlib", "R", "lib"))
         env.prepend_path("PKG_CONFIG_PATH", join_path(self.prefix, "rlib", "pkgconfig"))
         env.set("R_HOME", join_path(self.prefix, "rlib", "R"))

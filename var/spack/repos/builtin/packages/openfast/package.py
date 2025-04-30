@@ -17,7 +17,7 @@ class Openfast(CMakePackage):
 
     version("develop", branch="dev")
     version("master", branch="main")
-    version("4.0.2", tag="v4.0.2", commit="fc1110183bcc87b16d93129edabdce6d30e3a497")
+    version("4.0.4", tag="v4.0.4", commit="d28a823169e75029d73362b07a2942d0a454f03b")
     version("3.5.5", tag="v3.5.5", commit="b48e032303c12df6949c67ebffb7050b888db000")
     version("3.5.4", tag="v3.5.4", commit="6a63db76978b0f703165391291963beb517d5a9e")
     version("3.5.3", tag="v3.5.3", commit="6a7a543790f3cad4a65b87242a619ac5b34b4c0f")
@@ -38,12 +38,10 @@ class Openfast(CMakePackage):
     version("1.0.0", tag="v1.0.0", commit="e788b9b18bd5ed96ea59d4bc0812d461bc430cfe")
 
     with default_args(deprecated=True):
+        version("4.0.3", tag="v4.0.3", commit="20632d7728da024478956b545876eb24a48dadbe")
+        version("4.0.2", tag="v4.0.2", commit="fc1110183bcc87b16d93129edabdce6d30e3a497")
         version("4.0.1", tag="v4.0.1", commit="89358f1843b62071ee1a8ca943c1b5277bcbd45a")
         version("4.0.0", tag="v4.0.0", commit="da685d4997fd17ea845812c785325efa72edcf47")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     patch("hub_seg_fault.patch", when="@2.7:3.2")
     patch("openmp.patch", when="@3.5.3:3.5.4")
@@ -58,6 +56,10 @@ class Openfast(CMakePackage):
     variant("rosco", default=False, description="Build ROSCO controller")
     variant("fastfarm", default=False, description="Enable FAST.Farm capabilities")
     variant("fpe-trap", default=False, description="Enable FPE trap in compiler options")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")

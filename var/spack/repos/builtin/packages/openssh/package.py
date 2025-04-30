@@ -57,12 +57,12 @@ class Openssh(AutotoolsPackage):
         version("6.7p1", sha256="b2f8394eae858dabbdef7dac10b99aec00c95462753e80342e530bbb6f725507")
         version("6.6p1", sha256="48c1f0664b4534875038004cc4f3555b8329c2a81c1df48db5c517800de203bb")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "gssapi", default=True, description="Enable authentication via Kerberos through GSSAPI"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("krb5+shared", when="+gssapi")
     depends_on("openssl@:1.0", when="@:7.7p1")
@@ -145,7 +145,7 @@ class Openssh(AutotoolsPackage):
         """Install generates etc/sshd_config, but it fails in parallel mode"""
         make("install", parallel=False)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Until spack supports a real implementation of setup_test_environment()"""
         if self.run_tests:
             self.setup_test_environment(env)
@@ -158,7 +158,7 @@ class Openssh(AutotoolsPackage):
         if self.spec.satisfies("@:7 %gcc@10:") or self.spec.satisfies("@:7 %clang@11:"):
             env.append_flags("CFLAGS", "-fcommon")
 
-    def setup_test_environment(self, env):
+    def setup_test_environment(self, env: EnvironmentModifications):
         """Configure the regression test suite like Debian's openssh-tests package"""
         p = self.prefix
         j = join_path

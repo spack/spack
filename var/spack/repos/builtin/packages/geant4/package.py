@@ -21,6 +21,8 @@ class Geant4(CMakePackage):
 
     maintainers("drbenmorgan", "sethrj")
 
+    version("11.3.2", sha256="077edca6aa3b3940f351cf9a948457cad3fb117f215b88c52cce315e1a07fd7a")
+    version("11.3.1", sha256="9059da076928f25cab1ff1f35e0f611a4d7fe005e374e9b8d7f3ff2434b7af54")
     version("11.3.0", sha256="d9d71daff8890a7b5e0e33ea9a65fe6308ad6713000b43ba6705af77078e7ead")
     version("11.2.2", sha256="3a8d98c63fc52578f6ebf166d7dffaec36256a186d57f2520c39790367700c8d")
     version("11.2.1", sha256="76c9093b01128ee2b45a6f4020a1bcb64d2a8141386dea4674b5ae28bcd23293")
@@ -48,9 +50,6 @@ class Geant4(CMakePackage):
     version("10.4.0", sha256="e919b9b0a88476e00c0b18ab65d40e6a714b55ee4778f66bac32a5396c22aa74")
     version("10.3.3", sha256="bcd36a453da44de9368d1d61b0144031a58e4b43a6d2d875e19085f2700a89d8")
     version("10.0.4", sha256="97f3744366b00143d1eed52f8786823034bbe523f45998106f798af61d83f863")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     _cxxstd_values = (
         conditional("11", "14", when="@:10"),
@@ -110,6 +109,9 @@ class Geant4(CMakePackage):
     variant(
         "data", default=True, sticky=True, description="Enable downloading of the data directory"
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.16:", type="build", when="@11.0.0:")
     depends_on("cmake@3.8:", type="build", when="@10.6.0:")

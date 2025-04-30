@@ -21,6 +21,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.5", sha256="a9c0d994680cd991b1cb772e8b297340085466a6fe964bc9d4e80f5e2f43c291")
     version("2.2.4", sha256="9ba03692a45d3eef66559efe1d1096c4b9b75c0986b5dff5530c378fb8331d4f")
     version("2.2.3", sha256="dbdc15f0c81611925f382dfa97b3bd0bc2c1ce19d4fe50482cb0ddc12ba30020")
     version("2.2.2", sha256="ed6906f61834d687738d25988ae117683705636936cc605be0bb208b23df4d8f")
@@ -183,6 +184,13 @@ class PyNumpy(PythonPackage):
         depends_on("py-setuptools@:63", when="@:1.25")
         depends_on("py-setuptools@:59", when="@:1.22.1")
 
+    # https://github.com/spack/spack/issues/49983
+    patch(
+        "https://github.com/numpy/numpy/pull/28713.patch?full_index=1",
+        sha256="e80ed84d31a03ecdebcaa4acd9f725298633b8f2c254beb30e0d44c039921783",
+        when="@2.0:2.2",
+    )
+
     # Add Fujitsu Fortran compiler
     patch("add_fj_compiler.patch", when="@1.19.3:1.19.5%fj")
     patch("add_fj_compiler2.patch", when="@1.19.0:1.19.2%fj")
@@ -289,10 +297,10 @@ class PyNumpy(PythonPackage):
         blas = spec["blas"].libs.names[0]
         lapack = spec["lapack"].libs.names[0]
 
-        if spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if spec["blas"].name == "intel-oneapi-mkl":
             blas = "mkl-dynamic-lp64-seq"
 
-        if spec["lapack"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if spec["lapack"].name == "intel-oneapi-mkl":
             lapack = "mkl-dynamic-lp64-seq"
 
         if spec["blas"].name in ["blis", "amdblis"]:
@@ -389,11 +397,7 @@ class PyNumpy(PythonPackage):
 
         # Tell numpy where to find BLAS/LAPACK libraries
         with open("site.cfg", "w") as f:
-            if (
-                "^intel-mkl" in spec
-                or "^intel-parallel-studio+mkl" in spec
-                or "^intel-oneapi-mkl" in spec
-            ):
+            if "^intel-oneapi-mkl" in spec:
                 f.write("[mkl]\n")
                 # FIXME: as of @1.11.2, numpy does not work with separately
                 # specified threading and interface layers. A workaround is a
@@ -483,7 +487,7 @@ class PyNumpy(PythonPackage):
         self.blas_lapack_site_cfg()
 
     @when("@1.26:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%msvc"):
             # For meson build system, compiler paths must be in quotes
             # to prevent paths from being split by spaces.
@@ -491,17 +495,13 @@ class PyNumpy(PythonPackage):
             env.set("CXX", f'"{self.compiler.cxx}"')
 
     @when("@:1.25")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         spec = self.spec
         # https://github.com/numpy/numpy/pull/13132
         # https://numpy.org/doc/1.25/user/building.html#accelerated-blas-lapack-libraries
         # https://numpy.org/doc/1.25/user/building.html#blas
-        if (
-            spec["blas"].name == "intel-mkl"
-            or spec["blas"].name == "intel-parallel-studio"
-            or spec["blas"].name == "intel-oneapi-mkl"
-        ):
+        if spec["blas"].name == "intel-oneapi-mkl":
             blas = "mkl"
         elif spec["blas"].name == "blis" or spec["blas"].name == "amdblis":
             blas = "blis"
@@ -517,11 +517,7 @@ class PyNumpy(PythonPackage):
         env.set("NPY_BLAS_ORDER", blas)
 
         # https://numpy.org/doc/1.25/user/building.html#lapack
-        if (
-            spec["lapack"].name == "intel-mkl"
-            or spec["lapack"].name == "intel-parallel-studio"
-            or spec["lapack"].name == "intel-oneapi-mkl"
-        ):
+        if spec["lapack"].name == "intel-oneapi-mkl":
             lapack = "mkl"
         elif spec["lapack"].name == "openblas":
             lapack = "openblas"

@@ -32,7 +32,7 @@ class TestsSos(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CC", "oshcc")
         env.set("CXX", "oshc++")
         env.set("FC", "oshfort")

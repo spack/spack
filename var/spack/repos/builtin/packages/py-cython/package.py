@@ -114,7 +114,9 @@ class PyCython(PythonPackage):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # If cython is used as a dep, ensure it's used even when pre-generated
         # C files are distributed in the tarball. Cython is a small build dep, and
         # the time generating C-files is typically less than compiling them. So it's

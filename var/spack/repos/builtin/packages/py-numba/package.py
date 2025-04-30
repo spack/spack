@@ -42,10 +42,10 @@ class PyNumba(PythonPackage):
         deprecated=True,
     )
 
+    variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("tbb", default=False, description="Build with Intel Threading Building Blocks")
 
     # Be careful that the bounds given in setup.py are exclusive on the upper bound
     # i.e., [min, max)
@@ -86,6 +86,6 @@ class PyNumba(PythonPackage):
     # See https://reviews.llvm.org/D44140
     conflicts("^llvm@6.0.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("~tbb"):
             env.set("NUMBA_DISABLE_TBB", "yes")

@@ -25,8 +25,6 @@ class Zsh(AutotoolsPackage):
     version("5.3.1", sha256="fc886cb2ade032d006da8322c09a7e92b2309177811428b121192d44832920da")
     version("5.1.1", sha256="74e9453b5470b3c0970f9f93cfd603d241c3d7b1968adc0e4b3951073e8d3dec")
 
-    depends_on("c", type="build")  # generated
-
     # Testing for terminal related things causes failures in e.g. Jenkins.
     # See e.g. https://www.zsh.org/mla/users/2003/msg00845.html,
     # although the name of the option has evolved since then.
@@ -37,6 +35,8 @@ class Zsh(AutotoolsPackage):
         description="enable etc dir local to install, for global zsh scripts",
     )
     variant("lmod", default=False, description="setup zshrc env for lmod support")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("pcre")
     depends_on("ncurses")

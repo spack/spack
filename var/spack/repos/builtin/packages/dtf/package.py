@@ -20,12 +20,12 @@ class Dtf(AutotoolsPackage):
 
     version("master", branch="master")
 
+    variant("cxx", default=True, description="Build pnetcdf the C++ Interface")
+    variant("fortran", default=True, description="Build pnetcdf the Fortran Interface")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("cxx", default=True, description="Build pnetcdf the C++ Interface")
-    variant("fortran", default=True, description="Build pnetcdf the Fortran Interface")
 
     depends_on("mpi")
     depends_on("m4", type="build")
@@ -36,7 +36,7 @@ class Dtf(AutotoolsPackage):
 
     configure_directory = "pnetcdf"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         dtf_srcdir = join_path(self.stage.source_path, "libdtf")
         env.append_path("LD_LIBRARY_PATH", self.prefix.lib)
         env.append_path("LD_LIBRARY_PATH", dtf_srcdir)

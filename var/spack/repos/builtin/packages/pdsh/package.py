@@ -17,11 +17,11 @@ class Pdsh(AutotoolsPackage):
 
     version("2.31", sha256="0ee066ce395703285cf4f6cf00b54b7097d12457a4b1c146bc6f33d8ba73caa7")
 
-    depends_on("c", type="build")  # generated
-
     variant("ssh", default=True, description="Build with ssh module")
 
     variant("static_modules", default=True, description="Build with static modules")
+
+    depends_on("c", type="build")  # generated
 
     def configure_args(self):
         args = []

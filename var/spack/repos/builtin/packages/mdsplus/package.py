@@ -25,12 +25,12 @@ class Mdsplus(AutotoolsPackage):
         submodules=True,
     )
 
+    variant("java", default=True, description="Build java libraries and applications")
+    variant("python", default=True, description="Install python module")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("java", default=True, description="Build java libraries and applications")
-    variant("python", default=True, description="Install python module")
 
     # Autotools needed for building
     depends_on("autoconf", type="build")
@@ -57,7 +57,7 @@ class Mdsplus(AutotoolsPackage):
         bash = which("bash")
         bash("./bootstrap")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MDSPLUS_DIR", self.prefix)
         if "+python" in self.spec:
             env.prepend_path("PYTHONPATH", "{0}/python".format(self.prefix))

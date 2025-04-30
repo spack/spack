@@ -24,6 +24,8 @@ class Gptune(CMakePackage):
     git = "https://github.com/gptune/GPTune.git"
     maintainers("liuyangzhuan")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")
@@ -31,13 +33,13 @@ class Gptune(CMakePackage):
     version("3.0.0", sha256="e19bfc3033fff11ff8c20cae65b88b7ca005d2c4e4db047f9f23226126ec92fa")
     version("2.1.0", sha256="737e0a1d83f66531098beafa73dd479f12def576be83b1c7b8ea5f1615d60a53")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("superlu", default=False, description="Build the SuperLU_DIST example")
     variant("hypre", default=False, description="Build the Hypre example")
     variant("mpispawn", default=True, description="MPI spawning-based interface")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", type=("build", "link", "run"))
     depends_on("cmake@3.17:", type="build")
@@ -195,7 +197,7 @@ class Gptune(CMakePackage):
         cp = which("cp")
         cp(script_path, join_path(python_platlib, "gptune"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GPTUNE_INSTALL_PATH", python_platlib)
 
     cmd = {"bash": which("bash"), "cp": which("cp"), "git": which("git"), "rm": which("rm")}

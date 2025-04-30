@@ -20,7 +20,7 @@ class Apktool(Package):
 
     depends_on("java@8:", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LC_ALL", "en_US.UTF-8")
 
     def install(self, spec, prefix):

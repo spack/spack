@@ -18,6 +18,7 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSL-1.0")
 
+    version("0.33.0", sha256="08db88294e6eaccb80f1c4012e7ba0e197b6354b6fbc3bfdb7734cb9dce6fe08")
     version("0.32.0", sha256="19217e3eecff30a7038f5712b6e161db09f12d7077550e8f66add74b3e524d29")
     version("0.31.0", sha256="bdbd8e36afb367cc2c7172e5a819c756e4ee20e74dfdec4905f2e84bf097eb7c")
     version("0.30.1", sha256="b0f3689a3edd30f8d674e19b5134fc5013813f843c45797c1015163e51989ac0")
@@ -57,8 +58,6 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
     version("0.2.0", sha256="712bb519f22bdc9d5ee4ac374d251a54a0af4c9e4e7f62760b8ab9a177613d12")
     version("0.1.0", sha256="aa0ae2396cd264d821a73c4c7ecb118729bb3de042920c9248909d33755e7327")
     version("main", branch="main")
-
-    depends_on("cxx", type="build")
 
     generator("ninja")
 
@@ -109,6 +108,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
         when="@0.9:",
     )
 
+    depends_on("cxx", type="build")
+
     # Build dependencies
     depends_on("cmake@3.18:", type="build")
     depends_on("cmake@3.22:", when="@0.8:", type="build")
@@ -128,6 +129,8 @@ class Pika(CMakePackage, CudaPackage, ROCmPackage):
 
     # Other dependencies
     depends_on("boost@1.71:")
+    # https://github.com/pika-org/pika/pull/1428
+    conflicts("^boost@1.88:", when="@:0.33")
     depends_on("fmt@9:", when="@0.11:")
     # https://github.com/pika-org/pika/issues/686
     conflicts("^fmt@10:", when="@:0.15 +cuda")

@@ -51,9 +51,6 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     version("4.3.3.1", sha256="f2ee78eb310637c007f001e7c18e2d773d23f3455242bde89647137b7344c2e2")
     version("4.3.3", sha256="3f16e21bc3dfeb3973252b9addf5defb48994f84fc9c9356081f871526a680e7")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     with when("build_system=cmake"):
         # TODO: document why we need to revert https://github.com/Unidata/netcdf-c/pull/1731
         #  with the following patch:
@@ -140,6 +137,8 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("szip", default=True, description="Enable Szip compression plugin")
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
+
+    depends_on("c", type="build")
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:
@@ -283,7 +282,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     build_system("cmake", "autotools", default=default_build_system)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@4.9.0:+shared"):
             # Both HDF5 and NCZarr backends honor the same environment variable:
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
@@ -304,7 +303,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 
 class AnyBuilder(BaseBuilder):
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,

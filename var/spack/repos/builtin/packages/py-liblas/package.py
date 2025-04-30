@@ -18,7 +18,7 @@ class PyLiblas(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("liblas")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env_var = "LD_LIBRARY_PATH"
         if self.spec.satisfies("platform=darwin"):
             env_var = "DYLD_FALLBACK_LIBRARY_PATH"

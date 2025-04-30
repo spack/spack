@@ -17,10 +17,9 @@ class PyScikitBuild(PythonPackage):
     homepage = "https://scikit-build.readthedocs.io/en/latest/"
     pypi = "scikit-build/scikit_build-0.17.6.tar.gz"
 
-    maintainers("coreyjadams")
-
     license("MIT")
 
+    version("0.18.1", sha256="a4152ac5a084d499c28a7797be0628d8366c336e2fb0e1a063eb32e55efcb8e7")
     version("0.17.6", sha256="b51a51a36b37c42650994b5047912f59b22e3210b23e321f287611f9ef6e5c9d")
     version("0.15.0", sha256="e723cd0f3489a042370b9ea988bbb9cfd7725e8b25b20ca1c7981821fcf65fb9")
     version("0.12.0", sha256="f851382c469bcd9a8c98b1878bcfdd13b68556279d2fd9a329be41956ae5a7fe")
@@ -30,17 +29,28 @@ class PyScikitBuild(PythonPackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    depends_on("python@3.7:", when="@0.17.6:")
+    # 0.18.1 fixes disutils for python 3.12+
+    # https://github.com/scikit-build/scikit-build/commit/77451ffb1b43e3908edfc813f22c9559421c1372
+    depends_on("python@:3.11", when="@:0.17.6")
+
     depends_on("py-hatchling", when="@0.17:", type="build")
     depends_on("py-hatch-fancy-pypi-readme", when="@0.17:", type="build")
     depends_on("py-hatch-vcs", when="@0.17:", type="build")
     depends_on("py-distro", when="@0.11:", type=("build", "run"))
     depends_on("py-packaging", type=("build", "run"))
-    depends_on("py-setuptools@42:", when="@0.15:", type=("build", "run"))
+
     depends_on("py-setuptools@28:", type=("build", "run"))
+    depends_on("py-setuptools@42:", type=("build", "run"), when="@0.15:")
+
     depends_on("py-tomli", when="@0.17: ^python@:3.10", type=("build", "run"))
     depends_on("py-typing-extensions@3.7:", when="@0.17: ^python@:3.7", type=("build", "run"))
     depends_on("py-wheel@0.32:", when="@0.17:", type=("build", "run"))
     depends_on("py-wheel@0.29:", type=("build", "run"))
+
+    # https://github.com/scikit-build/scikit-build/releases/tag/0.18.0
+    # https://github.com/scikit-build/scikit-build/blob/0.18.1/skbuild/constants.py#L52
+    depends_on("cmake@3.5:", type=("build", "run"), when="@0.18:")
 
     # Historical dependencies
     depends_on("py-setuptools-scm+toml", when="@0.15", type="build")

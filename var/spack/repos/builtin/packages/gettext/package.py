@@ -31,9 +31,6 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     version("0.19.8.1", sha256="105556dbc5c3fbbc2aa0edb46d22d055748b6f5c7cd7a8d99f8e7eb84e938be4")
     version("0.19.7", sha256="378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # Recommended variants
     variant("curses", default=True, description="Use libncurses")
     variant("libxml2", default=True, description="Use libxml2")
@@ -46,6 +43,9 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
     # Optional variants
     variant("libunistring", default=False, description="Use libunistring")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("iconv")
     # Recommended dependencies

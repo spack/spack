@@ -14,7 +14,6 @@ from typing import Dict, List
 
 from llnl.util.lang import dedupe
 
-import spack.paths
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
@@ -267,9 +266,6 @@ class Python(Package):
         version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
         version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer
@@ -308,6 +304,9 @@ class Python(Package):
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")
@@ -516,7 +515,7 @@ class Python(Package):
                 string=True,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # TODO: Python has incomplete support for Python modules with mixed
@@ -692,7 +691,7 @@ class Python(Package):
         config_args.append("--without-ensurepip")
 
         if "+pic" in spec:
-            cflags.append(self.compiler.cc_pic_flag)
+            cflags.append(self["c"].pic_flag)
 
         if "+ssl" in spec:
             config_args.append("--with-openssl={0}".format(spec["openssl"].prefix))
@@ -810,9 +809,9 @@ class Python(Package):
 
         filenames = [self.get_sysconfigdata_name(), self.config_vars["makefile_filename"]]
 
-        filter_file(spack_cc, self.compiler.cc, *filenames, **kwargs)
-        if spack_cxx and self.compiler.cxx:
-            filter_file(spack_cxx, self.compiler.cxx, *filenames, **kwargs)
+        filter_file(spack_cc, self["c"].cc, *filenames, **kwargs)
+        if spack_cxx:
+            filter_file(spack_cxx, self["cxx"].cxx, *filenames, **kwargs)
 
     @run_after("install")
     def symlink(self):
@@ -1265,10 +1264,17 @@ print(json.dumps(config))
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
+        # The logic below is linux specific, and used to inject the compiler wrapper to
+        # compile Python extensions. Thus, it is not needed on Windows.
+        if sys.platform == "win32":
+            return
+
         # We need to make sure that the extensions are compiled and linked with
         # the Spack wrapper. Paths to the executables that are used for these
         # operations are normally taken from the sysconfigdata file, which we
@@ -1288,16 +1294,24 @@ print(json.dumps(config))
         # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
         # used for linking, in a consistent manner.
 
-        for compile_var, link_var in [("CC", "LDSHARED"), ("CXX", "LDCXXSHARED")]:
+        for language, compile_var, link_var in [
+            ("c", "CC", "LDSHARED"),
+            ("cxx", "CXX", "LDCXXSHARED"),
+        ]:
+            if not dependent_spec.has_virtual_dependency(language):
+                continue
+
+            compiler_wrapper_pkg = dependent_spec["compiler-wrapper"].package
+            compiler_pkg = dependent_spec[language].package
+
             # First, we get the values from the sysconfigdata:
             config_compile = self.config_vars[compile_var]
             config_link = self.config_vars[link_var]
 
             # The dependent environment will have the compilation command set to
             # the following:
-            new_compile = join_path(
-                spack.paths.build_env_path,
-                dependent_spec.package.compiler.link_paths[compile_var.lower()],
+            new_compile = str(
+                compiler_wrapper_pkg.bin_dir() / compiler_pkg.compiler_wrapper_link_paths[language]
             )
 
             # Normally, the link command starts with the compilation command:
@@ -1323,7 +1337,9 @@ print(json.dumps(config))
             if config_link != new_link and sys.platform != "win32":
                 env.set(link_var, new_link)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """

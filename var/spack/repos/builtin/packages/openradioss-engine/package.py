@@ -26,14 +26,14 @@ class OpenradiossEngine(CMakePackage):
     maintainers("kjrstory")
     version("main", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("mpi", default=False, description="Enable MPI support")
     variant("sp", default=False, description="Using single precision option")
     variant("debug", default=False, description="Debug Option")
     variant("static_link", default=True, description="Static_link Option")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("openmpi", when="+mpi")
     depends_on("cmake@2.8:", type="build")
@@ -119,7 +119,7 @@ class OpenradiossEngine(CMakePackage):
             join_path(prefix, "extlib", "hm_reader"),
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("OPENRADIOSS_PATH", self.prefix)
         env.set("RAD_CFG_PATH", join_path(self.prefix, "hm_cfg_files"))
         env.set("RAD_H3D_PATH", join_path(self.prefix, "extlib", "h3d", "lib", "linux64"))

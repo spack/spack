@@ -10,7 +10,7 @@ class Xbraid(MakefilePackage):
 
     homepage = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/software"
     url = "https://github.com/XBraid/xbraid/archive/v2.2.0.tar.gz"
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     version("3.1.0", sha256="3419b22918c65555e8c552b70a0837a251a74c471dac8e4a7b2272bf7d955c88")
     version("3.0.0", sha256="06988c0599cd100d3b3f3ebb183c9ad34a4021922e0896815cbedc659aaadce6")

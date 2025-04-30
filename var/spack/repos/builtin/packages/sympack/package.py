@@ -80,7 +80,7 @@ class Sympack(CMakePackage, CudaPackage):
         ]
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "network=auto" not in spec:
             env.set("UPCXX_NETWORK", spec.variants["network"].value)

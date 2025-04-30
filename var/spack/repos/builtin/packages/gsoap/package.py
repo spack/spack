@@ -42,6 +42,8 @@ class Gsoap(AutotoolsPackage, SourceforgePackage):
         )
 
     depends_on("openssl")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("pkgconfig", type="build")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
@@ -53,8 +55,10 @@ class Gsoap(AutotoolsPackage, SourceforgePackage):
     def configure_args(self):
         return ["--enable-ipv6"]
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("PKG_CONFIG_PATH", "%s/lib/ldconfig" % self.prefix)
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        env.prepend_path("PKG_CONFIG_PATH", "%s/lib/ldconfig" % self.prefix)
 
     def flag_handler(self, name, flags):
         if name in ["cflags", "cxxflags", "cppflags"]:

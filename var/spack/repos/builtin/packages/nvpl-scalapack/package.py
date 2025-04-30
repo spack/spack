@@ -16,6 +16,8 @@ class NvplScalapack(Package):
 
     maintainers("RMeli")
 
+    tags = ["e4s"]
+
     version("0.2.1", sha256="dada4d1ecf044d90609b9e62750b383d11be9b22c87e109414bcc07dce3c83c9")
 
     provides("scalapack")

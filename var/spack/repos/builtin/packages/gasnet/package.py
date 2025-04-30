@@ -90,10 +90,6 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
     # Do NOT add older versions here.
     # GASNet-EX releases over 2 years old are not supported.
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("gmake", type="build")
-
     # The optional network backends:
     variant(
         "conduits",
@@ -140,6 +136,10 @@ class Gasnet(Package, CudaPackage, ROCmPackage):
         + "memory kind on Intel GPUs in some conduits",
         when="@2023.9.0:",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     depends_on("mpi", when="conduits=mpi")
     depends_on("libfabric", when="conduits=ofi")

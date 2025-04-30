@@ -75,7 +75,7 @@ class Freebayes(MesonPackage):
         return join_path(self.build_directory, "vcflib")
 
     @when("@1.3.4:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.run_tests:
             env.prepend_path("PATH", self.vcflib_builddir)
             env.prepend_path("PATH", self.build_directory)

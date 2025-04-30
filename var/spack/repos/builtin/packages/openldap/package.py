@@ -26,9 +26,6 @@ class Openldap(AutotoolsPackage):
     version("2.4.49", sha256="e3b117944b4180f23befe87d0dcf47f29de775befbc469dcf4ac3dab3311e56e")
     version("2.4.48", sha256="d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("client_only", default=True, description="Client only installation")
     variant("icu", default=False, description="Build with unicode support")
     # Below, tls=none is not an option from programming point of view
@@ -48,6 +45,9 @@ class Openldap(AutotoolsPackage):
     variant("dynamic", default=True, description="Enable linking built binaries with dynamic libs")
     variant("wt", default=False, description="Enable WiredTiger backend", when="@2.5.0:")
     conflicts("~static", when="~shared")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("icu4c", when="+icu")
 

@@ -23,11 +23,11 @@ class StadenIoLib(AutotoolsPackage):
         url="https://sourceforge.net/projects/staden/files/io_lib/1.14.8/io_lib-1.14.8.tar.gz/download",
     )
 
-    depends_on("c", type="build")
-
     variant("libdeflate", default=False, description="Build with libdeflate")
     variant("curl", default=False, description="Build with curl support")
     variant("shared", default=True, description="Build shared libraries")
+
+    depends_on("c", type="build")
 
     depends_on("zlib-api", when="~libdeflate")
     depends_on("libdeflate", when="+libdeflate")

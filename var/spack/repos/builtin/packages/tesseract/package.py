@@ -71,7 +71,7 @@ class Tesseract(AutotoolsPackage):
     def configure_args(self):
         return self.enable_or_disable("doc")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SCROLLVIEW_PATH", prefix.share.tessdata)
 
     @when("@5.5.0:")

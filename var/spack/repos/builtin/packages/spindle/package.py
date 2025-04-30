@@ -32,5 +32,5 @@ class Spindle(AutotoolsPackage):
     # spindle_logd.cc:65:76: error: narrowing conversion of '223' from 'int' to 'char'
     # spindle_logd.cc:65:76: error: narrowing conversion of '191' from 'int' to 'char'
     @when("@0.8.1 %gcc")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CPPFLAGS", "-Wno-narrowing")

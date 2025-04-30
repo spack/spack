@@ -41,6 +41,6 @@ class Geant3(CMakePackage):
         args.append(self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"))
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("platform=darwin"):
             env.unset("MACOSX_DEPLOYMENT_TARGET")

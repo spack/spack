@@ -25,7 +25,7 @@ class JxrlibDebian(MakefilePackage):
 
     depends_on("c", type="build")  # generated
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DIR_INSTALL", self.prefix)
         if self.spec.satisfies("+shared"):
             env.set("SHARED", "True")

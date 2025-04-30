@@ -35,7 +35,7 @@ class PyHtgettoken(PythonPackage):
     depends_on("py-paramiko", type=("build", "run"))
     depends_on("py-urllib3", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         dir = os.environ.get("XDG_RUNTIME_DIR", "/tmp")
         uid = os.environ.get("UID", str(os.geteuid()))
         file = join_path(dir, "bt_u" + uid)

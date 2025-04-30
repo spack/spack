@@ -35,5 +35,5 @@ class Plantuml(Package):
         plantuml_wrapper = join_path(os.path.dirname(__file__), "plantuml")
         install(plantuml_wrapper, prefix.bin.plantuml)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PLANTUML_JAR_LOCATION", join_path(self.prefix.bin, "plantuml.jar"))

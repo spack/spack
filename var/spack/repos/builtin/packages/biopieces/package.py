@@ -63,7 +63,7 @@ class Biopieces(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Note: user will need to set environment variables on their own,
         # dependent on where they will want data to be located:
         #    BP_DATA - Contains genomic data etc.

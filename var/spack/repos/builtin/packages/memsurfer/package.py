@@ -37,7 +37,7 @@ class Memsurfer(PythonPackage):
     depends_on("vtk@8.1.2 ~ffmpeg~mpi+opengl2~qt~xdmf+python")
 
     # memsurfer's setup needs path to these deps to build extension modules
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("VTK_ROOT", self.spec["vtk"].prefix)
         env.set("CGAL_ROOT", self.spec["cgal"].prefix)
         env.set("BOOST_ROOT", self.spec["boost"].prefix)

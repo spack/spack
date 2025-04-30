@@ -20,6 +20,8 @@ class Spack(Package):
     url = "https://github.com/spack/spack/releases/download/v0.16.2/spack-0.16.2.tar.gz"
     maintainers("haampie")
 
+    tags = ["e4s"]
+
     license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")
@@ -40,10 +42,6 @@ class Spack(Package):
     version("0.16.2", sha256="ed3e5d479732b0ba82489435b4e0f9088571604e789f7ab9bc5ce89030793350")
     version("0.16.1", sha256="8d893036b24d9ee0feee41ac33dd66e4fc68d392918f346f8a7a36a69c567567")
     version("0.16.0", sha256="064b2532c70916c7684d4c7c973416ac32dd2ea15f5c392654c75258bfc8c6c2")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     variant("development_tools", default=False, description="Build development dependencies")
     variant(
@@ -67,6 +65,10 @@ class Spack(Package):
 
     # This should be read as "require at least curl", not "require curl".
     requires("fetchers=curl", when="@:0.16", msg="Curl is required for Spack < 0.17")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Python
     depends_on("python@2.6.0:2.7,3.5:", type="run")
@@ -143,7 +145,7 @@ class Spack(Package):
         depends_on("py-sphinx-rtd-theme", type="run")
         depends_on("graphviz", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPACK_PYTHON", self.spec["python"].command.path)
 
     def install(self, spec, prefix):

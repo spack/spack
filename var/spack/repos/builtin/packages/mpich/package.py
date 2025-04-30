@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-import spack.compilers
+import spack.compilers.config
 import spack.package_base
 from spack.package import *
 
@@ -16,7 +16,9 @@ class MpichEnvironmentModifications(spack.package_base.PackageBase):
     MPICH, and derivatives.
     """
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         dependent_module = dependent_spec.package.module
         for var_name, attr_name in (
             ("MPICH_CC", "spack_cc"),
@@ -25,16 +27,14 @@ class MpichEnvironmentModifications(spack.package_base.PackageBase):
             ("MPICH_F90", "spack_fc"),
             ("MPICH_F77", "spack_f77"),
         ):
-            if not hasattr(dependent_module, attr_name):
-                continue
+            if hasattr(dependent_module, attr_name):
+                env.set(var_name, getattr(dependent_module, attr_name))
 
-            env.set(var_name, getattr(dependent_module, attr_name))
-
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("F90")
         env.unset("F90FLAGS")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_mpi_wrapper_variables(env)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -384,7 +384,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
     @classmethod
     def determine_variants(cls, exes, version):
         def get_spack_compiler_spec(compiler):
-            spack_compilers = spack.compilers.find_compilers([os.path.dirname(compiler)])
+            spack_compilers = spack.compilers.config.find_compilers([os.path.dirname(compiler)])
             actual_compiler = None
             # check if the compiler actually matches the one we want
             for spack_compiler in spack_compilers:
@@ -495,7 +495,7 @@ supported, and netmod is ignored if device is ch3:sock.""",
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         MpichEnvironmentModifications.setup_build_environment(self, env)
         if "pmi=cray" in self.spec:
             env.set("CRAY_PMI_INCLUDE_OPTS", "-I" + self.spec["cray-pmi"].headers.directories[0])
@@ -509,25 +509,6 @@ supported, and netmod is ignored if device is ch3:sock.""",
         # Else bootstrap with autotools
         bash = which("bash")
         bash("./autogen.sh")
-
-    @run_before("autoreconf")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        # The user can work around this by disabling Fortran explicitly
-        # with ~fortran
-
-        f77 = self.compiler.f77
-        fc = self.compiler.fc
-
-        fortran_missing = f77 is None or fc is None
-
-        if "+fortran" in self.spec and fortran_missing:
-            raise InstallError(
-                "mpich +fortran requires Fortran compilers. Configure "
-                "Fortran compiler or disable Fortran support with ~fortran"
-            )
 
     def configure_args(self):
         spec = self.spec

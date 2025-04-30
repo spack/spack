@@ -56,10 +56,6 @@ class Tau(Package):
     version("2.24", sha256="5d28e8b26561c7cd7d0029b56ec0f95fc26803ac0b100c98e00af0b02e7f55e2")
     version("2.23.1", sha256="31a4d0019cec6ef57459a9cd18a220f0130838a5f1a0b5ea7879853f5a38cf88")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Disable some default dependencies on Darwin/OSX
     darwin_default = False
     if sys.platform != "darwin":
@@ -136,6 +132,10 @@ class Tau(Package):
         default=False,
         description="Do not add -no-pie while linking with Ubuntu.",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("gmake", type="build")
     depends_on("cmake@3.14:", type="build", when="%clang")
@@ -251,7 +251,7 @@ class Tau(Package):
         compiler_options.append(useropt)
         return compiler_options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LIBRARY_PATH", self.spec["zlib-api"].prefix.lib)
         env.prepend_path("LIBRARY_PATH", self.spec["hwloc"].prefix.lib)
 
@@ -450,7 +450,7 @@ class Tau(Package):
                 if os.path.isdir(src) and not os.path.exists(dest):
                     os.symlink(join_path(subdir, d), dest)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         pattern = join_path(self.prefix.lib, "Makefile.*")
         files = glob.glob(pattern)
 

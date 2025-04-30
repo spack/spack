@@ -31,7 +31,7 @@ class Qd(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%nvhpc"):
             env.append_flags("FCFLAGS", "-fPIC")
 

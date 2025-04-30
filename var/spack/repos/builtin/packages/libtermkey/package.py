@@ -27,7 +27,7 @@ class Libtermkey(MakefilePackage):
     depends_on("pkgconfig", type="build")
     depends_on("unibilium")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LIBTOOL", self.spec["libtool"].prefix.bin.join("libtool"))
 
     def build(self, spec, prefix):

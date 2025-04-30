@@ -18,11 +18,17 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/Umpire.git"
     tags = ["radiuss", "e4s"]
 
-    maintainers("davidbeckingsale", "adrienbernede")
+    maintainers("adrienbernede", "davidbeckingsale", "kab163")
 
     license("MIT")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2025.03.0",
+        tag="v2025.03.0",
+        commit="1ed0669c57f041baa1f1070693991c3a7a43e7ee",
+        submodules=False,
+    )
     version(
         "2024.07.0",
         tag="v2024.07.0",
@@ -147,10 +153,6 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "0.1.3", tag="v0.1.3", commit="cc347edeb17f5f30f694aa47f395d17369a2e449", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Some projects importing both camp and umpire targets end up with conflicts in BLT targets
     # import. This is not addressing the root cause, which will be addressed in BLT@5.4.0 and will
     # require adapting umpire build system.
@@ -193,6 +195,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("c", default=True, description="Build C API")
     variant("mpi", default=False, description="Enable MPI support")
     variant("ipc_shmem", default=False, description="Enable POSIX shared memory")
+    variant("mpi3_shmem", default=False, description="Enable MPI3 shared memory")
     variant(
         "sqlite_experimental",
         default=False,
@@ -220,6 +223,10 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("sanitizer_tests", default=False, description="Enable address sanitizer tests")
     variant("fmt_header_only", default=True, description="Link to header-only fmt target")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.23:", when="@2024.07.0:", type="build")
     depends_on("cmake@3.23:", when="@2022.10.0: +rocm", type="build")
     depends_on("cmake@3.20:", when="@2022.10.0:2024.02.1", type="build")
@@ -229,6 +236,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.8:", type="build")
 
     depends_on("blt", type="build")
+    depends_on("blt@0.7.0:", type="build", when="@2025.03.0:")
     depends_on("blt@0.6.2:", type="build", when="@2024.02.1:")
     depends_on("blt@0.6.1", type="build", when="@2024.02.0")
     depends_on("blt@0.5.3", type="build", when="@2023.06.0")
@@ -256,9 +264,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("sqlite", when="+sqlite_experimental")
     depends_on("mpi", when="+mpi")
 
-    depends_on("fmt@9.1:", when="@2024.02.0:")
+    depends_on("fmt@9.1:11.0", when="@2024.02.0:")
     # For some reason, we need c++ 17 explicitly only with intel
-    depends_on("fmt@9.1: cxxstd=17", when="@2024.02.0: %intel@19.1")
+    depends_on("fmt@9.1:11.0 cxxstd=17", when="@2024.02.0: %intel@19.1")
 
     with when("@5.0.0:"):
         with when("+cuda"):
@@ -291,6 +299,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
         "+rocm", when="+omptarget", msg="Cant support both rocm and openmp device backends at once"
     )
     conflicts("+ipc_shmem", when="@:5.0.1")
+    conflicts("+mpi3_shmem", when="@:2024.07.0")
+    conflicts("+mpi3_shmem", when="~mpi")
+    conflicts("+ipc_shmem", when="+mpi3_shmem")
 
     conflicts("+sqlite_experimental", when="@:6.0.0")
     conflicts("+sanitizer_tests", when="~asan")
@@ -386,6 +397,9 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         entries = super().initconfig_mpi_entries()
         entries.append(cmake_cache_option("ENABLE_MPI", spec.satisfies("+mpi")))
+        entries.append(
+            cmake_cache_option("UMPIRE_ENABLE_MPI3_SHARED_MEMORY", spec.satisfies("+mpi3_shmem"))
+        )
 
         return entries
 
@@ -486,7 +500,7 @@ class Umpire(CachedCMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         return []
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for library in ["lib", "lib64"]:
             lib_path = join_path(self.prefix, library)
             if os.path.exists(lib_path):

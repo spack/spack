@@ -31,6 +31,9 @@ class RTidyr(RPackage):
     version("0.7.2", sha256="062cea2e2b57fffd500e4ce31cba6d593e65684fc0897ea49ea38d257c76009c")
     version("0.5.1", sha256="dbab642ac7231cbfe3e2a0d4553fb4ffb3699c6d6b432be2bb5812dfbbdbdace")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.3.0:")
     depends_on("r@3.6:", type=("build", "run"), when="@1.3.1:")

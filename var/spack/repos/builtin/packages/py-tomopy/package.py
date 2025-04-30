@@ -27,8 +27,6 @@ class PyTomopy(PythonPackage):
     depends_on("cuda", when="@master")
     # The shared opencv is not found by during runtest. Not using GOT/PLT is faster too
     depends_on("opencv+imgproc~shared@3.4:", when="@master")
-    # During the runtest, the shared MKL libs aren't found yet:
-    # depends_on('intel-mkl~shared')
     depends_on("cmake@3.17:", type=("build"))
     depends_on("ninja", type=("build"))
     depends_on("py-setuptools-scm", type=("build"))

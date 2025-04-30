@@ -23,9 +23,6 @@ class Sparskit(MakefilePackage):
         url="http://www-users.cs.umn.edu/~saad/software/SPARSKIT/SPARSKIT2.tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # The library uses blas routine which needs to be known when the lib is used.
     # A dependent package should add self.spec['blas'].libs.ld_flags
     # at the end of its link line.
@@ -34,6 +31,9 @@ class Sparskit(MakefilePackage):
 
     variant("pic", default=True, description="Compile with position independent code.")
     variant("debug", default=False, description="Builds a debug version of the library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # We provide the standard Make flags here:
     # https://spack.readthedocs.io/en/latest/packaging_guide.html?highlight=flag_handler#compiler-flags

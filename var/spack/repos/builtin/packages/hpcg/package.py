@@ -20,8 +20,6 @@ class Hpcg(AutotoolsPackage):
     version("develop", branch="master")
     version("3.1", sha256="33a434e716b79e59e745f77ff72639c32623e7f928eeb7977655ffcaade0f4a4")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("openmp", default=True, description="Enable OpenMP support")
 
     patch(
@@ -55,6 +53,8 @@ class Hpcg(AutotoolsPackage):
         when="%clang",
     )
 
+    depends_on("cxx", type="build")  # generated
+
     depends_on("mpi@1.1:")
 
     arch = "{0}-{1}".format(platform.system(), platform.processor())
@@ -68,6 +68,7 @@ class Hpcg(AutotoolsPackage):
             and not spec.satisfies("%arm")
             and not spec.satisfies("%intel")
             and not spec.satisfies("%oneapi")
+            and not spec.satisfies("%fj")
             and not spec.satisfies("%clang")
         ):
             CXXFLAGS += " -ftree-vectorizer-verbose=0 "

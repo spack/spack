@@ -21,5 +21,5 @@ class Prodigal(MakefilePackage):
     def install(self, spec, prefix):
         make("INSTALLDIR={0}".format(self.prefix), "install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)

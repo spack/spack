@@ -58,8 +58,6 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     version("0.3.0", sha256="8dd143441a28e0c7662cd92694e9a4894b61fd48508ac1d77435f342bc226dcf")
 
-    depends_on("cxx", type="build")  # generated
-
     # Primary features
 
     variant("dace", default=False, sticky=True, description="Enable DaCe backend.")
@@ -127,6 +125,8 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")
     depends_on("cmake@3.21.0:", type="build")
@@ -348,7 +348,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.extend(get_blas_entries(spec))
         return entries
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)

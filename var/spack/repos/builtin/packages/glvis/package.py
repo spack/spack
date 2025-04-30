@@ -13,7 +13,7 @@ class Glvis(MakefilePackage):
 
     homepage = "https://glvis.org"
     git = "https://github.com/glvis/glvis.git"
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     maintainers("v-dobrev", "tzanio", "tomstitt", "goxberry")
 
@@ -92,9 +92,6 @@ class Glvis(MakefilePackage):
         extension="tar.gz",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "screenshots",
         default="png",
@@ -102,6 +99,9 @@ class Glvis(MakefilePackage):
         description="Backend used for screenshots",
     )
     variant("fonts", default=True, description="Use antialiased fonts via freetype & fontconfig")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mfem@develop", when="@develop")
     depends_on("mfem@4.4.0:", when="@4.2")
