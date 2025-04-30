@@ -782,7 +782,7 @@ class DependencySpec:
         parent = self.parent.name if self.parent else None
         child = self.spec.name if self.spec else None
         virtuals_string = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
-        when_string = f"when={self.when}" if self.when != Spec() else ""
+        when_string = f"when='{self.when}'" if self.when != Spec() else ""
         edge_attrs = filter(lambda x: bool(x), (virtuals_string, when_string))
         return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
 
@@ -1638,9 +1638,9 @@ class Spec:
         virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
 
         conditions = [str(c) for c in dep_conditions if c != Spec()]
-        when_str = f"when={','.join(conditions)}" if conditions else ""
+        when_str = f"when='{','.join(conditions)}'" if conditions else ""
 
-        result = f"{when_str} {deptypes_str} {virtuals_str}".strip()
+        result = " ".join(filter(lambda x: bool(x), (when_str, deptypes_str, virtuals_str)))
         if result:
             result = f"[{result}]"
         return result
