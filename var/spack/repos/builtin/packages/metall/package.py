@@ -71,11 +71,11 @@ class Metall(CMakePackage):
             args = ["-DINSTALL_HEADER_ONLY=ON"]
             return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Configure the directories for test
         if self.run_tests:
             env.set("METALL_TEST_DIR", join_path(self.build_directory, "build_test"))
 
     # 'spack load metall' sets METALL_ROOT environmental variable
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("METALL_ROOT", self.prefix)

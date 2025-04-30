@@ -34,10 +34,6 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
         "0.4.2", tag="0.4.2", commit="55e056fbae8f25f3da4aab0a0d864d72c2a445ff", submodules=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("cuda", default=True, description="Build with CUDA")
     variant("openmp", default=True, description="Build with OpenMP")
     variant(
@@ -47,6 +43,10 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
         values=["pytorch", "mxnet", "tensorflow"],
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@3.5:", type="build")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
@@ -139,7 +139,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
             # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
             install_tree(prefix.dgl, prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # https://docs.dgl.ai/install/backend.html
         backend = self.spec.variants["backend"].value
         env.set("DGLBACKEND", backend)

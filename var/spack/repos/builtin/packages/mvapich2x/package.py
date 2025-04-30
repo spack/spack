@@ -198,7 +198,7 @@ class Mvapich2x(MpichEnvironmentModifications, AutotoolsPackage):
             cflags = cflags + "-I/opt/xpmem/include"
         return cflags
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "pmi_version=pmi1" in self.spec:
             env.set("SLURM_MPI_TYPE", "pmi1")
         if "pmi_version=pmi2" in self.spec:
@@ -210,7 +210,9 @@ class Mvapich2x(MpichEnvironmentModifications, AutotoolsPackage):
         # add its compiler paths to the run environment.
         self.setup_mpi_wrapper_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_mpi_wrapper_variables(env)
         MpichEnvironmentModifications.setup_dependent_build_environment(self, env, dependent_spec)
 

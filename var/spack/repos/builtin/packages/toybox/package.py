@@ -62,11 +62,11 @@ class Toybox(MakefilePackage):
         when="@=0.7.4",
     )
 
-    def setup_build_environment(self, env):
-        env.set("NOSTRIP", 1)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("NOSTRIP", "1")
 
         if not self.spec.satisfies("@=0.8.9"):
-            env.set("V", 1)  # Verbose
+            env.set("V", "1")  # Verbose
 
         if self.spec.satisfies("+static"):
             env.append_flags("LDFLAGS", "--static")

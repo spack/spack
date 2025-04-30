@@ -29,6 +29,7 @@ class Binder(CMakePackage):
     version("1.1.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
     version("1.0.0", tag="v1.0.0", commit="3de7949343197295250f988716d511a264b21324")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     # Add dependencies

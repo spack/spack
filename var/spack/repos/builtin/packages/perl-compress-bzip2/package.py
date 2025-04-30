@@ -20,7 +20,7 @@ class PerlCompressBzip2(PerlPackage):
     depends_on("c", type="build")
     depends_on("bzip2", type=("build", "test", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BZLIB_INCLUDE", self.spec["bzip2"].prefix.include)
         env.set("BZLIB_LIB", self.spec["bzip2"].prefix.lib)
         env.set("BZLIB_BIN", self.spec["bzip2"].prefix.bin)

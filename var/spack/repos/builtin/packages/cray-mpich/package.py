@@ -74,15 +74,20 @@ class CrayMpich(MpichEnvironmentModifications, Package, CudaPackage, ROCmPackage
                 libdir = get_path_args_from_module_line(line)[0]
                 return os.path.dirname(os.path.normpath(libdir))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+wrappers"):
             self.setup_mpi_wrapper_variables(env)
             return
 
-        env.set("MPICC", self.compiler.cc)
-        env.set("MPICXX", self.compiler.cxx)
-        env.set("MPIFC", self.compiler.fc)
-        env.set("MPIF77", self.compiler.f77)
+        if self.spec.has_virtual_dependency("c"):
+            env.set("MPICC", self["c"].cc)
+
+        if self.spec.has_virtual_dependency("cxx"):
+            env.set("MPICXX", self["cxx"].cxx)
+
+        if self.spec.has_virtual_dependency("fortran"):
+            env.set("MPIFC", self["fortran"].fortran)
+            env.set("MPIF77", self["fortran"].fortran)
 
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec

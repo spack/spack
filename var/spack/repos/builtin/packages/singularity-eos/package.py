@@ -188,7 +188,7 @@ class SingularityEos(CMakePackage, CudaPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64
         else:

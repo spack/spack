@@ -12,6 +12,12 @@ spack:
       - "%gcc"
       - target=x86_64_v3
       variants: +mpi
+    c:
+      require: gcc
+    cxx:
+      require: gcc
+    fortran:
+      require: gcc
     mpi:
       require:
       - mpich
@@ -61,8 +67,9 @@ spack:
     paraview:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require:
-      - "+examples ~qt ^[virtuals=gl] osmesa target=x86_64_v3"
-      - 'target=x86_64_v3 %gcc'
+      - "+examples"
+      - "~qt ^[virtuals=gl] osmesa" # Headless
+      - "target=x86_64_v3 %gcc"
 
   specs:
   # CPU

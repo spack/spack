@@ -22,6 +22,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # Most recent tagged snapshot is the preferred version when profiling.
     version(
+        "1.1.1", tag="v1.1.1", commit="d8762e05150b2040a27f69d8bf6603f22190a869", submodules=True
+    )
+    version(
         "1.1.0", tag="v1.1.0", commit="7ccfa86a71fdb670ae690199ac676f3c1365799a", submodules=True
     )
     version(
@@ -72,10 +75,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
     version("master", branch="master")
     version("develop", branch="develop")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
+    variant(
+        "axom",
+        default=False,
+        description="Enable/Disable AXOM to use Sidre for scalable checkpointing",
+    )
     variant("jsrun", default=False, description="Enable/Disable jsrun command for testing")
     variant("shared", default=False, description="Enable/Disable shared libraries")
     variant("mpi", default=True, description="Enable/Disable MPI")
@@ -94,6 +98,11 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
         when="+cuda @0.7.1:",
         description="Enable/disable cuSovler LU refactorization",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("lapack")
     depends_on("blas")
     depends_on("cmake@3.18:", type="build")
@@ -142,14 +151,19 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
     # RAJA > 0.14 and Umpire > 6.0 require c++ std 14
     # We are working on supporting newer Umpire/RAJA versions
-    depends_on("raja@0.14", when="@0.5:+raja")
+    depends_on("raja@2024.07.0", when="@1.1.1:+raja")
+    depends_on("raja@0.14", when="@0.5:1.1.0+raja")
     depends_on("raja@:0.13", when="@0.3.99:0.4+raja")
-    depends_on("umpire@6", when="@0.5:+raja")
+    depends_on("umpire@2024.07.0", when="@1.1.1:+raja")
+    depends_on("umpire@6", when="@0.5:1.1.0+raja")
     depends_on("umpire@:5", when="@0.3.99:0.4+raja")
-    depends_on("camp@0.2.3:0.2", when="@0.3.99:+raja")
+    depends_on("camp@0.2.3:0.2", when="@0.3.99:1.1.0+raja")
+    depends_on("camp@2024.07.0", when="@1.1.1+raja")
 
     # This is no longer a requirement in RAJA > 0.14
     depends_on("umpire+cuda~shared", when="+raja+cuda ^raja@:0.14")
+
+    depends_on("axom", when="+axom")
 
     conflicts(
         "+shared",
@@ -202,6 +216,7 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("HIOP_USE_MPI", "mpi"),
                 self.define_from_variant("HIOP_DEEPCHECKS", "deepchecking"),
                 self.define_from_variant("HIOP_USE_CUDA", "cuda"),
+                self.define_from_variant("HIOP_USE_AXOM", "axom"),
                 self.define_from_variant("HIOP_USE_HIP", "rocm"),
                 self.define_from_variant("HIOP_USE_RAJA", "raja"),
                 self.define_from_variant("HIOP_USE_UMPIRE", "raja"),
@@ -270,6 +285,9 @@ class Hiop(CMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("+sparse"):
             args.append(self.define("HIOP_COINHSL_DIR", spec["coinhsl"].prefix))
+
+        if spec.satisfies("+axom"):
+            args.append(self.define("AXOM_DIR", spec["axom"].prefix))
 
         return args
 

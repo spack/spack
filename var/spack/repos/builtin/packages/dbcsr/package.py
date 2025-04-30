@@ -31,10 +31,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     version("2.1.0", sha256="9e58fd998f224632f356e479d18b5032570d00d87b86736b6a6ac2d03f8d4b3c")
     version("2.0.1", sha256="61d5531b661e1dab043353a1d67939ddcde3893d3dc7b0ab3d05074d448b485c")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
+    variant("tests", default=False, description="Build DBCSR unit tests")
+    variant("tests", default=True, description="Build DBCSR unit tests", when="@2.1:2.2")
     variant("mpi", default=True, description="Compile with MPI")
     variant("openmp", default=False, description="Build with OpenMP support")
     variant("shared", default=True, description="Build shared library")
@@ -60,6 +58,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("g2g", default=False, description="GPU-aware MPI with CUDA/HIP")
     conflicts("+g2g", when="~cuda ~rocm", msg="GPU-aware MPI requires +cuda or +rocm")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("blas")
     depends_on("lapack")
@@ -162,11 +164,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("WITH_EXAMPLES", "examples"),
             self.define_from_variant("WITH_G2G", "g2g"),
+            self.define_from_variant("BUILD_TESTING", "tests"),
         ]
-
-        # Switch necessary as a result of a bug.
-        if spec.satisfies("@2.1:2.2"):
-            args += ["-DBUILD_TESTING=ON"]
 
         if self.spec.satisfies("+cuda"):
             cuda_arch = self.spec.variants["cuda_arch"].value[0]

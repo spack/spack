@@ -46,5 +46,5 @@ class Astral(Package):
         filter_file("^java", java, script, **kwargs)
         filter_file("astral.jar", join_path(prefix.tools, jar_file), script, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ASTRAL_HOME", self.prefix.tools)

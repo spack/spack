@@ -33,5 +33,5 @@ class PyDeepsigBiocomp(PythonPackage):
         for d in ("models", "tools"):
             mv(d, share_dir)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DEEPSIG_ROOT", self.prefix.share.deepsig)

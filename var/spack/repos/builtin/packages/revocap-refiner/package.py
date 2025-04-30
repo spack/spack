@@ -19,6 +19,10 @@ class RevocapRefiner(MakefilePackage):
 
     parallel = False
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     # add space between literal and identifier.
     patch("add_space.patch")
     # remove unused function getIndices.

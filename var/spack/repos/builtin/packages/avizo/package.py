@@ -62,7 +62,7 @@ class Avizo(Package):
     license_files = ["share/license/password.dat"]
     license_vars = ["MCSLMD_LICENSE_FILE"]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MCSLMD_LICENSE_FILE", join_path(self.prefix.share.license, "password.dat"))
 
     def install(self, spec, prefix):

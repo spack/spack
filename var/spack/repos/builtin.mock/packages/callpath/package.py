@@ -13,6 +13,8 @@ class Callpath(Package):
     version("0.9", md5="0123456789abcdef0123456789abcdef")
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
+    depends_on("c", type="build")
+
     depends_on("dyninst")
     depends_on("mpi")
 
@@ -20,5 +22,5 @@ class Callpath(Package):
         mkdirp(prefix)
         touch(join_path(prefix, "dummyfile"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FOOBAR", self.name)

@@ -23,6 +23,7 @@ from llnl.util.filesystem import (
 
 import spack.error
 import spack.phase_callbacks
+import spack.spec
 from spack.build_environment import dso_suffix
 from spack.error import InstallError
 from spack.util.environment import EnvironmentModifications
@@ -1016,7 +1017,7 @@ class IntelPackage(Package):
         debug_print(result)
         return result
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
@@ -1049,7 +1050,9 @@ class IntelPackage(Package):
             env.set("F77", self.prefix.bin.ifort)
             env.set("F90", self.prefix.bin.ifort)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: spack.spec.Spec
+    ) -> None:
         # NB: This function is overwritten by 'mpi' provider packages:
         #
         # var/spack/repos/builtin/packages/intel-mpi/package.py
@@ -1061,7 +1064,12 @@ class IntelPackage(Package):
         # Handle everything in a callback version.
         self._setup_dependent_env_callback(env, dependent_spec)
 
-    def _setup_dependent_env_callback(self, env, dependent_spec, compilers_of_client={}):
+    def _setup_dependent_env_callback(
+        self,
+        env: EnvironmentModifications,
+        dependent_spec: spack.spec.Spec,
+        compilers_of_client={},
+    ) -> None:
         # Expected to be called from a client's
         # setup_dependent_build_environment(),
         # with args extended to convey the client's compilers as needed.

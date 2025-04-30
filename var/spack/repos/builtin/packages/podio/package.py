@@ -70,9 +70,6 @@ class Podio(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     _cxxstd_values = (conditional("17", when="@:1.2"), conditional("20", when="@0.14.1:"))
     variant(
         "cxxstd",
@@ -99,6 +96,9 @@ class Podio(CMakePackage):
         when="@1.0.2:",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("root@6.08.06: cxxstd=17", when="cxxstd=17")
     depends_on("root@6.14:", when="+datasource")
     depends_on("root@6.28.04: +root7", when="+rntuple")
@@ -111,6 +111,7 @@ class Podio(CMakePackage):
     depends_on("py-pyyaml", type=("build", "run"))
     depends_on("py-jinja2@2.10.1:", type=("build", "run"))
     depends_on("sio", type=("build", "link"), when="+sio")
+    depends_on("fmt@9:", type=("build", "link"), when="@1.3:")
     depends_on("catch2@3.0.1:", type=("test"), when="@:0.16.5")
     depends_on("catch2@3.1:", type=("test"), when="@0.16.6:")
     depends_on("catch2@3.4:", type=("test"), when="@0.17.1: cxxstd=20")
@@ -137,12 +138,13 @@ class Podio(CMakePackage):
             self.define_from_variant("ENABLE_SIO", "sio"),
             self.define_from_variant("ENABLE_RNTUPLE", "rntuple"),
             self.define_from_variant("ENABLE_DATASOURCE", "datasource"),
+            self.define("PODIO_SET_RPATH", True),
             self.define("CMAKE_CXX_STANDARD", self.spec.variants["cxxstd"].value),
             self.define("BUILD_TESTING", self.run_tests),
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:0.99"):
             # After 0.99 podio installs its python bindings into a more standard place
             env.prepend_path("PYTHONPATH", self.prefix.python)
@@ -156,7 +158,9 @@ class Podio(CMakePackage):
         # Frame header needs to be available for python bindings
         env.prepend_path("ROOT_INCLUDE_PATH", self.prefix.include)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if self.spec.satisfies("@:0.99"):
             env.prepend_path("PYTHONPATH", self.prefix.python)
 

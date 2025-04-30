@@ -26,9 +26,9 @@ class Librsvg(AutotoolsPackage):
     version("2.44.14", sha256="6a85a7868639cdd4aa064245cc8e9d864dad8b8e9a4a8031bb09a4796bc4e303")
     version("2.40.21", sha256="f7628905f1cada84e87e2b14883ed57d8094dca3281d5bcb24ece4279e9a92ba")
 
-    depends_on("c", type="build")  # generated
-
     variant("doc", default=False, description="Build documentation with gtk-doc")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("gobject-introspection", type="build")
     depends_on("pkgconfig", type="build")
@@ -67,18 +67,22 @@ class Librsvg(AutotoolsPackage):
         url += "{0}/librsvg-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
         # librsvg uses pthread_atfork() but does not use -pthread on Ubuntu 18.04 %gcc@8
         env.append_flags("LDFLAGS", "-pthread")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
 
     def configure_args(self):

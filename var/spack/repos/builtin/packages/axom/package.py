@@ -8,7 +8,6 @@ import socket
 from os.path import join as pjoin
 
 from spack.package import *
-from spack.util.executable import which_string
 
 
 def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
@@ -37,7 +36,7 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/axom"
     git = "https://github.com/LLNL/axom.git"
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     test_requires_compiler = True
 
@@ -60,10 +59,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("0.3.1", tag="v0.3.1", commit="cbefc0457a229d8acfb70622360d0667e90e50a2")
     version("0.3.0", tag="v0.3.0", commit="20068ccab4b4f70055918b4f17960ec3ed6dbce8")
     version("0.2.9", tag="v0.2.9", commit="9e9a54ede3326817c05f35922738516e43b5ec3d")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
 
     # https://github.com/spack/spack/issues/31829
     patch("examples-oneapi.patch", when="@0.6.1 +examples %oneapi")
@@ -117,6 +112,10 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
     # Dependencies
     # -----------------------------------------------------------------------
     # Basics
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.14:", type="build")
     depends_on("cmake@3.18:", type="build", when="@0.7.0:")
     depends_on("cmake@3.21:", type="build", when="+rocm")
@@ -456,19 +455,6 @@ class Axom(CachedCMakePackage, CudaPackage, ROCmPackage):
             entries.append(cmake_cache_option("ENABLE_MPI", True))
             if spec["mpi"].name == "spectrum-mpi":
                 entries.append(cmake_cache_string("BLT_MPI_COMMAND_APPEND", "mpibind"))
-
-            # Replace /usr/bin/srun path with srun flux wrapper path on TOSS 4
-            # TODO: Remove this logic by adding `using_flux` case in
-            #  spack/lib/spack/spack/build_systems/cached_cmake.py:196 and remove hard-coded
-            #  path to srun in same file.
-            if "toss_4" in self._get_sys_type(spec):
-                srun_wrapper = which_string("srun")
-                mpi_exec_index = [
-                    index for index, entry in enumerate(entries) if "MPIEXEC_EXECUTABLE" in entry
-                ]
-                if mpi_exec_index:
-                    del entries[mpi_exec_index[0]]
-                entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE", srun_wrapper))
         else:
             entries.append(cmake_cache_option("ENABLE_MPI", False))
 

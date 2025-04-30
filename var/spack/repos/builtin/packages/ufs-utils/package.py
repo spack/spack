@@ -75,5 +75,5 @@ class UfsUtils(CMakePackage):
             "-DMPI_Fortran_COMPILER=%s" % self.spec["mpi"].mpifc,
         ]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("ESMFMKFILE", join_path(self.spec["esmf"].prefix.lib, "esmf.mk"))

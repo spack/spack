@@ -61,8 +61,6 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             "1.0.2u", sha256="ecd0c6ffb493dd06707d38b14bb4d8c2288bb7033735606569d8f90f89669d16"
         )
 
-    depends_on("c", type="build")  # generated
-
     # On Cray DVS mounts, we can't make symlinks to /etc/ssl/openssl.cnf,
     # either due to a bug or because DVS is not intended to be POSIX compliant.
     # Therefore, stick to system agnostic certs=mozilla.
@@ -82,6 +80,9 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     variant("shared", default=True, description="Build shared library version")
     with when("platform=windows"):
         variant("dynamic", default=False, description="Link with MSVC's dynamic runtime library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
 
     depends_on("zlib-api")
     depends_on("perl@5.14.0:", type=("build", "test"))
@@ -130,7 +131,7 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
         if spec.satisfies("@1.0"):
             options.append("no-krb5")
         # clang does not support the .arch directive in assembly files.
-        if "clang" in self.compiler.cc and spec.target.family == "aarch64":
+        if "clang" in self["c"].cc and spec.target.family == "aarch64":
             options.append("no-asm")
         elif "%nvhpc" in spec:
             # Last tested on nvidia@22.3 for x86_64:
@@ -188,18 +189,20 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
 
         if spec.satisfies("platform=windows"):
             host_make = nmake
+            make_args = {}
         else:
             host_make = make
+            make_args = {"parallel": False}
 
         host_make()
 
         if self.run_tests:
-            host_make("test", parallel=False)  # 'VERBOSE=1'
+            host_make("test", **make_args)  # 'VERBOSE=1'
 
         install_tgt = "install" if self.spec.satisfies("+docs") else "install_sw"
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        host_make(install_tgt, parallel=False)
+        host_make(install_tgt, **make_args)
 
     @run_after("install")
     def link_system_certs(self):
@@ -261,5 +264,5 @@ class Openssl(Package):  # Uses Fake Autotools, should subclass Package
             filter_file("-MF ", "", "Configurations/unix-Makefile.tmpl", string=True)
             filter_file(r"-MT \$\@ ", "", "Configurations/unix-Makefile.tmpl", string=True)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PERL", self.spec["perl"].prefix.bin.perl)

@@ -33,6 +33,6 @@ class Libmaus2(AutotoolsPackage):
         ),
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%gcc@8.0:8.9") or self.spec.satisfies("%fj"):
             env.append_flags("LDFLAGS", "-lstdc++fs")

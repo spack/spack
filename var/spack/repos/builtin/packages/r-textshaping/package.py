@@ -20,6 +20,9 @@ class RTextshaping(RPackage):
     version("0.4.0", sha256="35e940786bb278560de61bb55d4f46f8c86c878d0461613ceb8c98ba9b239d7a")
     version("0.3.6", sha256="80e2c087962f55ce2811fbc798b09f5638c06c6b28c10cd3cb3827005b902ada")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r-cpp11@0.2.1:", type=("build", "run"))
     depends_on("r-lifecycle", type=("build", "run"), when="@0.4.0:")

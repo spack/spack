@@ -16,6 +16,7 @@ class Vecmem(CMakePackage, CudaPackage):
 
     license("MPL-2.0-no-copyleft-exception")
 
+    version("1.15.0", sha256="53e03599efd5a22284b62e10338b69345d8188182a12fefe228005069d1ddd74")
     version("1.14.0", sha256="3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783")
     version("1.13.0", sha256="fc21cea04140e1210c83a32579b0a7194601889b6c895404214ac55ce547342b")
     version("1.12.0", sha256="59a5ef061fc9949c3159cb920a717dee7aa1e9a98b3672495200071d3d4b61cf")
@@ -59,10 +60,10 @@ class Vecmem(CMakePackage, CudaPackage):
     version("0.2.0", sha256="33aea135989684e325cb097e455ff0f9d1a9e85ff32f671e3b3ed6cc036176ac")
     version("0.1.0", sha256="19e24e3262aa113cd4242e7b94e2de34a4b362e78553730a358f64351c6a0a01")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("hip", default=False, description="Build the vecmem::hip library")
     variant("sycl", default=False, description="Build the vecmem::sycl library")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17:", type="build")
     depends_on("hip", when="+hip")
@@ -77,7 +78,7 @@ class Vecmem(CMakePackage, CudaPackage):
     # and we can choose between always depending on googletest, or using FetchContent
     # depends_on("googletest", type="test")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+sycl"):
             env.set("SYCLCXX", self.compiler.cxx)
             if self.spec.satisfies("%oneapi"):

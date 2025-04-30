@@ -16,11 +16,11 @@ class Ssmtp(AutotoolsPackage):
 
     version("2.64", sha256="22c37dc90c871e8e052b2cab0ad219d010fa938608cd66b21c8f3c759046fa36")
 
-    depends_on("c", type="build")  # generated
-
     variant("ssl", default=True, description="Enable support for secure connection to mail server")
     variant("inet6", default=True, description="Enable support for IPv6 transport")
     variant("md5auth", default=True, description="Enable support for MD5 authentication")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libnsl")
     depends_on("openssl", when="+ssl")
@@ -28,7 +28,7 @@ class Ssmtp(AutotoolsPackage):
     patch("install.patch")
 
     @when("+ssl")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The configure script is generated with a very old version of
         # autoconf, which cannot accept LIBS as a command-line argument
         env.set("LIBS", self.spec["openssl"].libs.link_flags)

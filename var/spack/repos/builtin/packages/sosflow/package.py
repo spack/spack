@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack.package import *
 
@@ -23,15 +24,15 @@ class Sosflow(CMakePackage):
     depends_on("pkgconfig")
     depends_on("mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("SOS_HOST_KNOWN_AS", "SPACK-SOS-BUILD")
         env.set("SOS_HOST_NODE_NAME", "SPACK-SOS-NODE")
         env.set("SOS_HOST_DETAILED", "SPACK-SOS-DETAILED")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SOS_ROOT", self.spec.prefix)
         env.set("SOS_BUILD_DIR", self.spec.prefix)
         env.set("SOS_CMD_PORT", "22500")
-        env.set("SOS_WORK", env["HOME"])
-        env.set("SOS_EVPATH_MEETUP", env["HOME"])
+        env.set("SOS_WORK", os.environ["HOME"])
+        env.set("SOS_EVPATH_MEETUP", os.environ["HOME"])
         env.set("SOS_ENV_SET", "true")

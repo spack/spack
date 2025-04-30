@@ -68,5 +68,5 @@ class Metplus(Package):
 
         install_tree(self.stage.source_path, prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.ush)

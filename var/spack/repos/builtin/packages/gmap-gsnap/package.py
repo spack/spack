@@ -102,5 +102,5 @@ class GmapGsnap(AutotoolsPackage):
             with working_dir(simd):
                 make("install")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PERL", self.spec["perl"].prefix.bin.perl)

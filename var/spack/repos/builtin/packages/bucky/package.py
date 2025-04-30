@@ -19,6 +19,8 @@ class Bucky(MakefilePackage):
 
     requires("%gcc", msg="bucky can only be compiled with GCC")
 
+    depends_on("cxx", type="build")
+
     build_directory = "src"
 
     def edit(self, spec, prefix):

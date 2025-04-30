@@ -134,7 +134,7 @@ class ClingoBootstrap(Clingo):
         use_mods.append_flags("LDFLAGS", use_flag)
         cmake.add_default_envmod(use_mods)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if (
             self.spec.satisfies("%gcc") or self.spec.satisfies("%clang")
         ) and "+static_libstdcpp" in self.spec:

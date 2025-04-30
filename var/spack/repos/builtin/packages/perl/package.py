@@ -169,9 +169,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-
     extendable = True
+
+    depends_on("c", type="build")  # generated
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")
@@ -337,7 +337,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     def nmake_arguments(self):
         args = []
         if self.spec.satisfies("%msvc"):
-            args.append("CCTYPE=%s" % self.compiler.short_msvc_version)
+            args.append("CCTYPE=%s" % self["msvc"].short_msvc_version)
         else:
             raise RuntimeError("Perl unsupported for non MSVC compilers on Windows")
         args.append("INST_TOP=%s" % windows_sfn(self.prefix.replace("/", "\\")))
@@ -384,7 +384,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/spack/spack/pull/3081 and
         # https://github.com/spack/spack/pull/4416
         if spec.satisfies("%intel"):
-            config_args.append("-Accflags={0}".format(self.compiler.cc_pic_flag))
+            config_args.append("-Accflags={0}".format(self["c"].pic_flag))
 
         if "+shared" in spec:
             config_args.append("-Duseshrplib")
@@ -470,7 +470,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 maker()
                 maker("install")
 
-    def _setup_dependent_env(self, env, dependent_spec):
+    def _setup_dependent_env(self, env: EnvironmentModifications, dependent_spec: Spec):
         """Set PATH and PERL5LIB to include the extension and
         any other perl extensions it depends on,
         assuming they were installed with INSTALL_BASE defined."""
@@ -483,10 +483,14 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self._setup_dependent_env(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
@@ -505,7 +509,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Add variables for library directory
             module.perl_lib_dir = dependent_spec.prefix.lib.perl5
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if sys.platform == "win32":
             env.append_path("PATH", self.prefix.bin)
             return
@@ -519,10 +523,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             env.set("MACOSX_DEPLOYMENT_TARGET", "10.16")
 
         # This is how we tell perl the locations of bzip and zlib.
-        env.set("BUILD_BZIP2", 0)
+        env.set("BUILD_BZIP2", "0")
         env.set("BZIP2_INCLUDE", spec["bzip2"].prefix.include)
         env.set("BZIP2_LIB", spec["bzip2"].libs.directories[0])
-        env.set("BUILD_ZLIB", 0)
+        env.set("BUILD_ZLIB", "0")
         env.set("ZLIB_INCLUDE", spec["zlib-api"].prefix.include)
         env.set("ZLIB_LIB", spec["zlib-api"].libs.directories[0])
 
@@ -543,9 +547,10 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             "-MModule::Loaded", "-MConfig", "-e", "print is_loaded(Config)", output=str
         )
 
+        c_compiler = self["c"].cc
         with self.make_briefly_writable(config_dot_pm):
             match = "cc *=>.*"
-            substitute = "cc => '{cc}',".format(cc=self.compiler.cc)
+            substitute = "cc => '{cc}',".format(cc=c_compiler)
             filter_file(match, substitute, config_dot_pm, **kwargs)
 
         # And the path Config_heavy.pl
@@ -554,11 +559,11 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
         with self.make_briefly_writable(config_heavy):
             match = "^cc=.*"
-            substitute = "cc='{cc}'".format(cc=self.compiler.cc)
+            substitute = "cc='{cc}'".format(cc=c_compiler)
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ld=.*"
-            substitute = "ld='{ld}'".format(ld=self.compiler.cc)
+            substitute = "ld='{ld}'".format(ld=c_compiler)
             filter_file(match, substitute, config_heavy, **kwargs)
 
             match = "^ccflags='"

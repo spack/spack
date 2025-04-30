@@ -17,10 +17,6 @@ class Picsar(MakefilePackage):
 
     version("develop", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("prod", default=True, description="Production mode (without FFTW)")
     variant(
         "prod_spectral", default=False, description="Production mode with spectral solver and FFTW"
@@ -30,6 +26,10 @@ class Picsar(MakefilePackage):
     variant("sde", default=False, description="sde profiling")
     variant("map", default=False, description="Allinea Map profiling")
     variant("library", default=False, description="Create static and dynamic library")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("mpi")
     depends_on("fftw@3.0: +mpi", when="+prod_spectral")

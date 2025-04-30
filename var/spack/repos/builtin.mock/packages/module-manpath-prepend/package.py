@@ -11,6 +11,6 @@ class ModuleManpathPrepend(Package):
 
     version("1.0", "0123456789abcdef0123456789abcdef")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("MANPATH", "/path/to/man")
         env.prepend_path("MANPATH", "/path/to/share/man")

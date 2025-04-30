@@ -51,10 +51,10 @@ def test_rfc_remote_local_path_no_dest():
         _ = rfc_util.local_path(path, "")
 
 
-compilers_sha256 = (
-    "381732677538143a8f900406c0654f2730e2919a11740bdeaf35757ab3e1ef3e"
-    if sys.platform == "win32"
-    else "e91148ed5a0da7844e9f3f9cfce0fa60cce509461886bc3b006ee9eb711f69df"
+packages_yaml_sha256 = (
+    "8b69d9c6e983dfb8bac2ddc3910a86265cffdd9c85f905c716d426ec5b0d9847"
+    if sys.platform != "win32"
+    else "182a5cdfdd88f50be23e55607b46285854c664c064e5a9f3f1e0200ebca6a1db"
 )
 
 
@@ -67,7 +67,8 @@ compilers_sha256 = (
             ValueError,
             "Requires sha256",
         ),
-        (f"{gitlab_url}/compilers.yaml", compilers_sha256, None, ""),
+        # This is the packages.yaml in lib/spack/spack/test/data/config
+        (f"{gitlab_url}/packages.yaml", packages_yaml_sha256, None, ""),
         (f"{gitlab_url}/packages.yaml", "abcdef", ValueError, "does not match"),
         (f"{github_url.format('blob')}/README.md", "", OSError, "No such"),
         (github_url.format("tree"), "", OSError, "No such"),

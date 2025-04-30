@@ -69,7 +69,7 @@ class Miniforge3(Package):
                 r"#!/usr/bin/env python", rf"#!{self.prefix.bin.python}", self.prefix.bin.mamba
             )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
         env.extend(EnvironmentModifications.from_sourcing_file(filename))
 

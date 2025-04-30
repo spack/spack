@@ -22,6 +22,7 @@ class ImprovedRdock(MakefilePackage):
 
     version("main", branch="main")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("popt")
@@ -59,7 +60,7 @@ class ImprovedRdock(MakefilePackage):
             set_executable(shfile)
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("RBT_ROOT", self.prefix)
 
     def test_rdock(self):

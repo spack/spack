@@ -14,6 +14,8 @@ class Hdf5VolLog(AutotoolsPackage):
     git = "https://github.com/DataLib-ECP/vol-log-based.git"
     maintainers("hyoklee", "lrknox")
 
+    tags = ["e4s"]
+
     version("master-1.1", branch="master")
 
     version("1.4.0", tag="logvol.1.4.0", commit="786d2cc4da8b4a0827ee00b1b0ab3968ef942f99")
@@ -28,7 +30,7 @@ class Hdf5VolLog(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("HDF5_PLUGIN_PATH", self.spec.prefix.lib)
 
     def configure_args(self):

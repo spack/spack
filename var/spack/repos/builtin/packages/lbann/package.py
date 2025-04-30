@@ -18,7 +18,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     homepage = "https://software.llnl.gov/lbann/"
     url = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
     git = "https://github.com/LLNL/lbann.git"
-    tags = ["ecp", "radiuss"]
+    tags = ["ecp", "radiuss", "e4s"]
 
     maintainers("bvanessen")
 
@@ -33,8 +33,6 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
         sha256="3734a76794991207e2dd2221f05f0e63a86ddafa777515d93d99d48629140f1a",
         deprecated=True,
     )
-
-    depends_on("cxx", type="build")  # generated
 
     variant(
         "build_type",
@@ -118,6 +116,9 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+lld", when="+gold")
     conflicts("+gold", when="platform=darwin", msg="gold does not work on Darwin")
     conflicts("+lld", when="platform=darwin", msg="lld does not work on Darwin")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.17.0:", type="build")
     depends_on("cmake@3.21.0:", type="build", when="@0.103:")
@@ -249,7 +250,7 @@ class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     generator("ninja")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", "-fno-omit-frame-pointer")
         if self.spec.satisfies("%apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)

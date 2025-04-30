@@ -14,6 +14,8 @@ class Alquimia(CMakePackage):
 
     maintainers("smolins", "balay")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-LBNL")
 
     version("master")
@@ -21,11 +23,11 @@ class Alquimia(CMakePackage):
     version("1.0.10", commit="b2c11b6cde321f4a495ef9fcf267cb4c7a9858a0")  # tag v.1.0.10
     version("1.0.9", commit="2ee3bcfacc63f685864bcac2b6868b48ad235225")  # tag v.1.0.9
 
+    variant("shared", default=True, description="Enables the build of shared libraries")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=True, description="Enables the build of shared libraries")
 
     depends_on("mpi")
     depends_on("hdf5")

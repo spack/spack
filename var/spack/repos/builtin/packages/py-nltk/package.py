@@ -1066,7 +1066,7 @@ class PyNltk(PythonPackage):
         placement="tagsets",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+data" in self.spec:
             env.prepend_path("NLTK_DATA", self.prefix.nltk_data)
 

@@ -37,9 +37,6 @@ class Ngspice(AutotoolsPackage):
     version("29", sha256="8d6d0ffbc15f248eb6ec3bde3b9d1397fbc95cb677e1c6a14ff46065c7f95c4a")
     version("27", sha256="0c08c7d57a2e21cf164496f3237f66f139e0c78e38345fbe295217afaf150695")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # kicad needs build=lib, i.e. --with--ngshared
     variant(
         "build",
@@ -64,6 +61,9 @@ class Ngspice(AutotoolsPackage):
     variant("fft", default=True, description="Use external fftw lib")
     variant("osdi", default=False, description="Use osdi/OpenVAF")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("fftw-api@3", when="+fft")
     with when("+fft+openmp"):
         depends_on("acfl threads=openmp", when="^[virtuals=fftw-api] acfl")
@@ -72,12 +72,7 @@ class Ngspice(AutotoolsPackage):
         depends_on("cray-fftw+openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw+openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw+openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=openmp", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=openmp", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=openmp",
-            when="^[virtuals=fftw-api] intel-parallel-studio",
-        )
 
     with when("+fft~openmp"):
         depends_on("acfl threads=none", when="^[virtuals=fftw-api] acfl")
@@ -86,11 +81,7 @@ class Ngspice(AutotoolsPackage):
         depends_on("cray-fftw~openmp", when="^[virtuals=fftw-api] cray-fftw")
         depends_on("fftw~openmp", when="^[virtuals=fftw-api] fftw")
         depends_on("fujitsu-fftw~openmp", when="^[virtuals=fftw-api] fujitsu-fftw")
-        depends_on("intel-mkl threads=none", when="^[virtuals=fftw-api] intel-mkl")
         depends_on("intel-oneapi-mkl threads=none", when="^[virtuals=fftw-api] intel-oneapi-mkl")
-        depends_on(
-            "intel-parallel-studio threads=none", when="^[virtuals=fftw-api] intel-parallel-studio"
-        )
 
     depends_on("readline", when="+readline build=bin")
 
@@ -177,6 +168,6 @@ class Ngspice(AutotoolsPackage):
                 flags.append("-g")
         return (None, None, flags)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "build=lib" in self.spec:
             env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

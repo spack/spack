@@ -19,7 +19,7 @@ class Webbench(MakefilePackage):
 
     depends_on("ntirpc")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["ntirpc"].prefix.include.ntirpc)
 
     def edit(self, spec, prefix):

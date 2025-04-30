@@ -157,9 +157,6 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         extension="tar.gz",
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("gmake", type="build")
-
     variant("static", default=True, description="Build static library")
     variant("shared", default=False, description="Build shared library")
     variant("mpi", default=True, sticky=True, description="Enable MPI parallelism")
@@ -281,6 +278,9 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     # See https://github.com/mfem/mfem/issues/2957
     conflicts("^mpich@4:", when="@:4.3+mpi")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     depends_on("mpi", when="+mpi")
     depends_on("hipsparse", when="@4.4.0:+rocm")
@@ -520,7 +520,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
     phases = ["configure", "build", "install"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("MFEM_DIR")
         env.unset("MFEM_BUILD_DIR")
         # Workaround for changes made by the 'kokkos-nvcc-wrapper' package
@@ -663,8 +663,8 @@ class Mfem(Package, CudaPackage, ROCmPackage):
 
         if cxxflags:
             # Add opt/debug flags if they are not present in global cxx flags
-            opt_flag_found = any(f in self.compiler.opt_flags for f in cxxflags)
-            debug_flag_found = any(f in self.compiler.debug_flags for f in cxxflags)
+            opt_flag_found = any(f in self["cxx"].opt_flags for f in cxxflags)
+            debug_flag_found = any(f in self["cxx"].debug_flags for f in cxxflags)
 
             if "+debug" in spec:
                 if not debug_flag_found:

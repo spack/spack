@@ -77,13 +77,13 @@ class GoogleCloudCli(Package):
     def url_for_version(self, version):
         return f"https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-{self.system}-{self.machine}.{self.ext}"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://cloud.google.com/sdk/gcloud/reference/topic/startup
         env.set("CLOUDSDK_PYTHON", self.spec["python"].command.path)
         # ~70 dependencies with no hints as to what versions are supported, just use bundled deps
         env.set("CLOUDSDK_PYTHON_SITEPACKAGES", "0")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_build_environment(env)
 
     def install(self, spec, prefix):

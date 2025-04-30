@@ -25,6 +25,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     )
 
     version(
+        "2025.1.0",
+        url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/dc93af13-2b3f-40c3-a41b-2bc05a707a80/intel-onemkl-2025.1.0.803_offline.sh",
+        sha256="80a4b1338b48b3fbee55a8dc784f92e5e88d618f1b99d80f5f207a00c86a6638",
+        expand=False,
+    )
+    version(
         "2025.0.1",
         url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/246ea40e-5aa7-42a4-81fa-0c029dc8650f/intel-onemkl-2025.0.1.16_offline.sh",
         sha256="bd86677aa17499c89ca7a3c3c83b73f0644147e4f1d2a218b45a7349cf582f4a",
@@ -180,14 +186,13 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     # If a +cluster then mpi_family must be set
     with when("+cluster"):
         conflicts("mpi_family=none")
-        requires("mpi_family=mpich", when="^intel-oneapi-mpi")
-        requires("mpi_family=mpich", when="^intel-mpi")
-        requires("mpi_family=mpich", when="^mpich")
-        requires("mpi_family=mpich", when="^mvapich")
-        requires("mpi_family=mpich", when="^mvapich2")
-        requires("mpi_family=mpich", when="^cray-mpich")
-        requires("mpi_family=openmpi", when="^openmpi")
-        requires("mpi_family=openmpi", when="^hpcx-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] intel-oneapi-mpi")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mpich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] mvapich2")
+        requires("mpi_family=mpich", when="^[virtuals=mpi] cray-mpich")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] openmpi")
+        requires("mpi_family=openmpi", when="^[virtuals=mpi] hpcx-mpi")
 
     provides("fftw-api@3")
     provides("scalapack", when="+cluster")
@@ -229,7 +234,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Only if environment modifications are desired (default is +envmods)
         if self.spec.satisfies("+envmods"):
             env.set("MKLROOT", self.component_prefix)

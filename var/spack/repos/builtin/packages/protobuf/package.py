@@ -80,9 +80,6 @@ class Protobuf(CMakePackage):
     version("3.1.0", sha256="fb2a314f4be897491bb2446697be693d489af645cb0e165a85e7e64e07eb134d")
     version("3.0.2", sha256="a0a265bcc9d4e98c87416e59c33afc37cede9fb277292523739417e449b18c1e")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("shared", default=True, description="Enables the build of shared libraries")
     variant(
         "build_type",
@@ -90,6 +87,9 @@ class Protobuf(CMakePackage):
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo"),
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("abseil-cpp@20230125.3:", when="@3.22.5:")
     # https://github.com/protocolbuffers/protobuf/issues/11828#issuecomment-1433557509

@@ -30,12 +30,12 @@ class Pasta(PythonPackage):
         destination=".",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         tools = join_path(self.prefix, "sate-tools-linux")
         env.set("PASTA_TOOLS_DEVDIR", tools)
         env.set("PASTA_TOOLS_RUNDIR", self.prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PASTA_TOOLS_RUNDIR", self.prefix.bin)
 
     @run_before("install")

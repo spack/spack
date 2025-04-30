@@ -73,6 +73,6 @@ class Orthofinder(Package):
             shutil.rmtree(prefix.bin.scripts_of.bin)
         os.rename("%s/orthofinder.py" % prefix.bin, "%s/orthofinder" % prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", prefix.bin)
         env.prepend_path("PATH", prefix.bin.tools)

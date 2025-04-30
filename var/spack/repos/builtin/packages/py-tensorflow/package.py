@@ -44,6 +44,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     license("Apache-2.0")
     maintainers("adamjstewart", "aweits")
+    tags = ["e4s"]
 
     version(
         "2.18.0-rocm-enhanced",
@@ -187,9 +188,6 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("mkl", default=False, description="Build with MKL support")
     variant("jemalloc", default=False, description="Build with jemalloc as malloc support")
     variant("gcp", default=False, description="Build with Google Cloud Platform support")
@@ -222,6 +220,9 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         default=sys.platform.startswith("linux"),
         description="Build kernels into separate shared objects",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     extends("python")
 
@@ -575,7 +576,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         return (flags, None, None)
 
     # https://www.tensorflow.org/install/source
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # Please specify the location of python
