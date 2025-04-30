@@ -140,13 +140,11 @@ class GitRefLookup(AbstractRefLookup):
 
         # Lookup commit info
         with working_dir(dest):
-            # we need to update the local tags if they changed on the
-            # remote instance, simply adding '-f' is not sufficient
+            # TODO: we need to update the local tags if they changed on the
+            # remote instance, simply adding '-f' may not be sufficient
             # (if commits are deleted on the remote, this command alone
-            # doesn't properly update the local rev-list)
-            # so we do two fetches - one to get the updated tags, one to get the references
-            self.fetcher.git("fetch", "--tags", "-f", output=os.devnull, error=os.devnull)
-            self.fetcher.git("fetch", output=os.devnull, error=os.devnull)
+            # won't properly update the local rev-list)
+            self.fetcher.git("fetch", "--tags", output=os.devnull, error=os.devnull)
 
             # Ensure ref is a commit object known to git
             # Note the brackets are literals, the ref replaces the format string
