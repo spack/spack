@@ -117,6 +117,13 @@ class Whizard(AutotoolsPackage):
         msg="The fortran compiler needs to support Fortran 2008. For more detailed information see https://whizard.hepforge.org/compilers.html",
     )
 
+    def flag_handler(self, name, flags):
+        if name == "cxxflags":
+            #  Whizard can indirectly depend on ROOT, and must use its C++ standard
+            if self.spec.satisfies("^root"):
+                flags.extend(["-std=c++" + self.spec["root"].variants["cxxstd"].value])
+        return (flags, None, None)
+
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # whizard uses some environment variables to detect dependencies at
         # configure time if they are not installed to standard system prefixes
