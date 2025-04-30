@@ -2735,11 +2735,6 @@ class TestConcretize:
             spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
             assert "Cannot use commit variant with" in e.value.message
 
-    @pytest.mark.skip("not supporting on this branch")
-    def test_phil_commit_variant_in_absence_of_version_selects_max_infinity_version(self):
-        spec = spack.concretize.concretize_one(f"git-ref-package commit={'a' * 40}")
-        assert spec.satisfies("@develop")
-
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -3320,7 +3315,7 @@ def test_phil_spec_with_commit_interacts_with_lookup(
 @pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
 def test_phil_relationship_git_versions_and_commit_variant(version_str):
     """
-    Confirm that GitVersions auto assign and poopulate the commit variant correctly
+    Confirm that GitVersions auto assign and populates the commit variant correctly
     """
     # This should be a short lived test and can be deleted when we remove GitVersions
     spec = spack.spec.Spec(f"git-ref-package@{version_str}")
@@ -3329,6 +3324,46 @@ def test_phil_relationship_git_versions_and_commit_variant(version_str):
         assert spec.version.commit_sha == spec.variants["commit"].value
     else:
         assert "commit" not in spec.variants
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+def test_phil_abstract_commit_spec_reuse():
+    commit = "abcd" * 10
+    spec_str_1 = f"git-ref-package@develop commit={commit}"
+    spec_str_2 = f"git-ref-package commit={commit}"
+    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.spec.Spec(spec_str_2)
+        spec2 = spack.concretize.concretize_one(spec2)
+        assert spec1.dag_hash() == spec2.dag_hash()
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "installed_commit, incoming_commit, reusable",
+    [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
+)
+def test_phil_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
+    # install a non-default variant to test if reuse picks it
+    if installed_commit:
+        spec_str_1 = f"git-ref-package@develop commit={installed_commit} ~opt"
+    else:
+        spec_str_1 = "git-ref-package@develop ~opt"
+
+    if incoming_commit:
+        spec_str_2 = f"git-ref-package@develop commit={incoming_commit}"
+    else:
+        spec_str_2 = "git-ref-package@develop"
+
+    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.spec.Spec(spec_str_2)
+        spec2 = spack.concretize.concretize_one(spec2)
+        assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
 def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):

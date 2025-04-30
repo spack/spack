@@ -349,7 +349,6 @@ def test_phil_package_condtional_variants_may_depend_on_commit(mock_packages, co
     assert conditional_variant.value
 
 
-@pytest.mark.skip("not supporting on this branch")
 def test_phil_commit_variant_finds_matches_for_commit_versions(mock_packages, config):
     """
     test conditional dependence on `when='commit=<sha>'`
@@ -357,4 +356,4 @@ def test_phil_commit_variant_finds_matches_for_commit_versions(mock_packages, co
     that commit is associated with the stable version of git-ref-package
     """
     spec = spack.concretize.concretize_one(Spec("git-ref-commit-dep+commit-selector"))
-    assert spec.satisfies("^git-ref-package@stable")
+    assert spec.satisfies(f"^git-ref-package commit={'c' * 40}")

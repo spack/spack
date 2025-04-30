@@ -356,10 +356,6 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      Vsha == Psha,
      VersionA != VersionB.
 
-% rule that says if a spec has a commit choose the max version that can accept a commit
-
-% rule that says if a constraint is on a commit and a version matches that commit then the constraint is on the version
-
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.

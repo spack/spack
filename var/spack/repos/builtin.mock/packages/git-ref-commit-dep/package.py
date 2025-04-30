@@ -15,6 +15,7 @@ class GitRefCommitDep(AutotoolsPackage):
     url = git
 
     version("develop", branch="develop")
+    version("main", branch="main")
     version("1.0.0", sha256="a5d504c0d52e2e2721e7e7d86988dec2e290d723ced2307145dedd06aeb6fef2")
 
     variant("commit-selector", default=False, description="test grabbing a specific commit")
