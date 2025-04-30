@@ -841,7 +841,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
         for base in cls.__mro__:
-            if not base.__module__.startswith(f"{spack.repo.ROOT_PYTHON_NAMESPACE}."):
+            if not spack.repo.is_package_module(base.__module__):
                 break
             fullnames.append(base.fullname)
         return fullnames
@@ -851,13 +851,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """The name of this package."""
         if cls._name is None:
             # We cannot know the exact package API version, but we can distinguish between v1
-            # v2 based on the module prefix (spack.pkg. vs spack_repo.). We don't want to figure
-            # out the exact package API version since it requires parsing the repo.yaml.
+            # v2 based on the module. We don't want to figure out the exact package API version
+            # since it requires parsing the repo.yaml.
             module = cls.__module__
 
-            if module.startswith("spack.pkg."):
+            if module.startswith(spack.repo.PKG_MODULE_PREFIX_V1):
                 version = (1, 0)
-            elif module.startswith("spack_repo."):
+            elif module.startswith(spack.repo.PKG_MODULE_PREFIX_V2):
                 version = (2, 0)
             else:
                 raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")

@@ -47,10 +47,15 @@ import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
 
-#: Package modules are imported as spack.pkg.<repo-namespace>.<pkg-name>
-ROOT_PYTHON_NAMESPACE = "spack.pkg"
+PKG_MODULE_PREFIX_V1 = "spack.pkg."
+PKG_MODULE_PREFIX_V2 = "spack_repo."
 
 _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
+
+
+def is_package_module(fullname: str) -> bool:
+    """Check if the given module is a package module."""
+    return fullname.startswith(PKG_MODULE_PREFIX_V1) or fullname.startswith(PKG_MODULE_PREFIX_V2)
 
 
 def python_package_for_repo(namespace: str) -> str:
@@ -63,7 +68,7 @@ def python_package_for_repo(namespace: str) -> str:
     Args:
         namespace: repo namespace
     """
-    return f"{ROOT_PYTHON_NAMESPACE}.{namespace}"
+    return f"{PKG_MODULE_PREFIX_V1}{namespace}"
 
 
 def namespace_from_fullname(fullname: str) -> str:
@@ -77,11 +82,10 @@ def namespace_from_fullname(fullname: str) -> str:
     Args:
         fullname: full name for the Python module
     """
-    prefix_and_dot = f"{ROOT_PYTHON_NAMESPACE}."
-    if fullname.startswith(prefix_and_dot):
+    if fullname.startswith(PKG_MODULE_PREFIX_V1):
         namespace, _, _ = fullname.rpartition(".")
-        return namespace[len(prefix_and_dot) :]
-    elif fullname.startswith("spack_repo.") and fullname.endswith(".package"):
+        return namespace[len(PKG_MODULE_PREFIX_V1) :]
+    elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
         return ".".join(fullname.split(".")[1:-3])
     return fullname
 
@@ -130,7 +134,7 @@ class ReposFinder:
             raise RuntimeError('cannot reload module "{0}"'.format(fullname))
 
         # Preferred API from https://peps.python.org/pep-0451/
-        if not fullname.startswith(ROOT_PYTHON_NAMESPACE):
+        if not fullname.startswith(PKG_MODULE_PREFIX_V1) and fullname != "spack.pkg":
             return None
 
         loader = self.compute_loader(fullname)
@@ -166,7 +170,7 @@ class ReposFinder:
         # No repo provides the namespace, but it is a valid prefix of
         # something in the RepoPath.
         if is_repo_path and current_repo.by_namespace.is_prefix(
-            fullname[len(ROOT_PYTHON_NAMESPACE) + 1 :]
+            fullname[len(PKG_MODULE_PREFIX_V1) :]
         ):
             return SpackNamespaceLoader()
 
@@ -846,9 +850,21 @@ class RepoPath:
         assert isinstance(spec, spack.spec.Spec) and spec.concrete, msg
         return self.repo_for_pkg(spec).get(spec)
 
+    def python_paths(self) -> List[str]:
+        """Return a list of all the Python paths in the repos."""
+        return [repo.python_path for repo in self.repos if repo.python_path]
+
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Find a class for the spec's package and return the class object."""
-        return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+        try:
+            for p in self.python_paths():
+                if p not in sys.path:
+                    sys.path.insert(0, p)
+            return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
+        finally:
+            for p in self.python_paths():
+                if p in sys.path:
+                    sys.path.remove(p)
 
     @autospec
     def dump_provenance(self, spec, path):
@@ -1021,6 +1037,9 @@ class Repo:
             os.path.isdir(self.packages_path), f"No directory '{subdirectory}' found in '{root}'"
         )
 
+        # The parent dir of spack_repo/ which should be added to sys.path for api v2.x
+        self.python_path: Optional[str] = None
+
         if self.package_api < (2, 0):
             check(
                 "namespace" in config,
@@ -1055,6 +1074,13 @@ class Repo:
             else:
                 self.namespace = derived_namespace
 
+            # strip the namespace directories from the root path to get the python path
+            # e.g. /my/pythonpath/spack_repo/x/y/z -> /my/pythonpath
+            python_path = self.root
+            for _ in self.namespace.split("."):
+                python_path = os.path.dirname(python_path)
+            self.python_path = os.path.dirname(python_path)
+
             # check that all subdirectories are valid module names
             check(
                 all(nm.valid_module_name(x, self.package_api) for x in self.namespace.split(".")),
@@ -1065,7 +1091,7 @@ class Repo:
         if self.package_api < (2, 0):
             self.full_namespace = python_package_for_repo(self.namespace)
         else:
-            self.full_namespace = f"spack_repo.{self.namespace}.packages"
+            self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}.packages"
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
@@ -1339,12 +1365,9 @@ class Repo:
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
-        if self.package_api >= (2, 0):
-            parent = os.path.dirname(os.path.dirname(self.root))
-            if parent not in sys.path:
-                sys.path.insert(0, parent)
-
         try:
+            if self.python_path and self.python_path not in sys.path:
+                sys.path.insert(0, self.python_path)
             with REPOS_FINDER.switch_repo(self._finder or self):
                 module = importlib.import_module(fullname)
         except ImportError as e:
@@ -1352,6 +1375,9 @@ class Repo:
         except Exception as e:
             msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
+        finally:
+            if self.python_path and self.python_path in sys.path:
+                sys.path.remove(self.python_path)
 
         cls = getattr(module, class_name)
         if not isinstance(cls, type):
