@@ -168,7 +168,7 @@ def solve(parser, args):
             _process_result(result, show, required_format, kwargs)
     else:
         for spec in specs:
-            print("SOLVING SPEC:", spec)
+            tty.msg("SOLVING SPEC:", spec)
             result = solver.solve(
                 [spec],
                 out=output,
