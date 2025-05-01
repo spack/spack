@@ -49,7 +49,8 @@ class Heyoka(CMakePackage):
     )
 
     # Dependencies
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
 
     # Build dependencies
     depends_on("cmake@3.18:", type="build")
