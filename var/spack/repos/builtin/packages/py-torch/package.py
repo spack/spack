@@ -346,6 +346,13 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         when="@2.6:",
     )
 
+    # Fixes 'FindBLAS.cmake' error: unknown command check_function_exists
+    patch(
+        "https://github.com/pytorch/pytorch/pull/145849.patch?full_index=1",
+        sha256="5675ab543b786b8f360de451b27b3eb5d3ce8499d6c1a207f4a854f0c473ab03",
+        when="@:2.6",
+    )
+
     # https://github.com/pytorch/pytorch/issues/90448
     patch(
         "https://github.com/pytorch/pytorch/pull/97270.patch?full_index=1",
