@@ -132,7 +132,7 @@ class Rocwmma(CMakePackage):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))
 
     patch("0001-add-rocm-smi-lib-path-for-building-tests.patch", when="@5.6:6.3")
-    patch("0001-add-rocm-smi-lib-path-for-building-tests-6.4.patch", when="@6.4:")
+    patch("0002-use-find-package-rocm-smi.patch", when="@6.4:")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
