@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 82d10fd..e3df292 100644
+index eced8d8..c017349 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -142,16 +142,20 @@ find_package( hip REQUIRED )
+@@ -132,13 +132,16 @@ find_package( hip REQUIRED )
  find_package( hiprtc REQUIRED )
  find_package( OpenMP REQUIRED )
  
@@ -26,7 +26,3 @@ index 82d10fd..e3df292 100644
  
  add_library(rocwmma INTERFACE)
  target_link_libraries(rocwmma INTERFACE hip::device hip::host OpenMP::OpenMP_CXX ${ROCM_SMI_LIBRARY})
-+target_include_directories(rocwmma INTERFACE ${ROCM_SMI_INCLUDE_DIR})
- 
- rocm_install_targets(
-   TARGETS rocwmma
