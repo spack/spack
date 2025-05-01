@@ -288,7 +288,7 @@ class Executable:
 
                 raise ProcessError(
                     "Command in %s exited with status %d:" % (os.getcwd(), proc.returncode),
-                    long_msg
+                    long_msg,
                 )
         except OSError as e:
             message = "Command: " + cmd_line_string
