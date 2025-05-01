@@ -1,0 +1,29 @@
+diff --git a/./configure b/./configure-new
+index 488d93f..ebcdaf5 100755
+--- a/./configure
++++ b/./configure-new
+@@ -26542,7 +26542,7 @@ else
+ 	if test "$cross_compiling" = yes; then
+ 
+ 		case x$ac_cv_sizeof_bool in
+-		(x1) cf_cv_type_of_bool="unsigned char";;
++		(x1) cf_cv_type_of_bool="bool";;
+ 		(x2) cf_cv_type_of_bool="unsigned short";;
+ 		(x4) cf_cv_type_of_bool="unsigned int";;
+ 		(x8) cf_cv_type_of_bool="unsigned long";;
+@@ -26579,12 +26579,13 @@ int main(void)
+ 	FILE *fp = fopen("cf_test.out", "w");
+ 	if (fp != 0) {
+ 		bool x = true;
+-		if ((bool)(-x) >= 0)
++                if (sizeof(x) == sizeof(bool)) fputs("bool", fp);
++		else{ if ((bool)(-x) >= 0)
+ 			fputs("unsigned ", fp);
+ 		if (sizeof(x) == sizeof(int))       fputs("int",  fp);
+ 		else if (sizeof(x) == sizeof(char)) fputs("char", fp);
+ 		else if (sizeof(x) == sizeof(short))fputs("short",fp);
+-		else if (sizeof(x) == sizeof(long)) fputs("long", fp);
++		else if (sizeof(x) == sizeof(long)) fputs("long", fp);}
+ 		fclose(fp);
+ 	}
+ 	${cf_cv_main_return:-return}(0);
