@@ -337,3 +337,16 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_pkg_name_can_only_be_derived_when_package_module():
+    """When the module prefix is not spack_repo (or legacy spack.pkg) we cannot derive
+    a package name."""
+    ExamplePackage = type(
+        "ExamplePackage",
+        (spack.package_base.PackageBase,),
+        {"__module__": "not.a.spack.repo.packages.example_package.package"},
+    )
+
+    with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
+        ExamplePackage.name
