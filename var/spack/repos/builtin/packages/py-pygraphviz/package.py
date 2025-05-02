@@ -15,6 +15,10 @@ class PyPygraphviz(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("1.14", sha256="c10df02377f4e39b00ae17c862f4ee7e5767317f1c6b2dfd04cea6acc7fc2bea")
+    version("1.13", sha256="6ad8aa2f26768830a5a1cfc8a14f022d13df170a8f6fdfd68fd1aa1267000964")
+    version("1.12", sha256="8b0b9207954012f3b670e53b8f8f448a28d12bdbbcf69249313bd8dbe680152f")
+    version("1.11", sha256="a97eb5ced266f45053ebb1f2c6c6d29091690503e3a5c14be7f908b37b06f2d4")
     version("1.10", sha256="457e093a888128903251a266a8cc16b4ba93f3f6334b3ebfed92c7471a74d867")
     version("1.7", sha256="a7bec6609f37cf1e64898c59f075afd659106cf9356c5f387cecaa2e0cdb2304")
 
