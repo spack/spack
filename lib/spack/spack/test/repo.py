@@ -498,6 +498,7 @@ repo:
     repo = spack.repo.Repo(str(repo_yaml_dir), cache=cache)
 
     assert repo.namespace == "foo.bar.baz"
+    assert repo.full_namespace == "spack_repo.foo.bar.baz.packages"
     assert repo.root == str(repo_yaml_dir)
     assert repo.packages_path == str(repo_yaml_dir / "packages")
     assert repo.python_path == str(tmp_path)
@@ -511,6 +512,7 @@ def test_subdir_current_dir(tmp_path: pathlib.Path):
     cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo = spack.repo.Repo(str(root), cache=cache)
     assert repo.subdirectory == "."
+    assert repo.full_namespace == "spack_repo.foo.bar"
     assert not os.path.exists(os.path.join(root, "packages"))
     assert os.path.samefile(repo.packages_path, root)
     assert repo.package_path("foo") == os.path.join(root, ".", "foo", "package.py")
