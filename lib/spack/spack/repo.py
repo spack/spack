@@ -944,13 +944,14 @@ def _parse_package_api_version(
 def _validate_and_normalize_subdir(subdir: Any, root: str, package_api: Tuple[int, int]) -> str:
     if not isinstance(subdir, str):
         raise BadRepoError(f"Invalid subdirectory '{subdir}' in '{root}'. Must be a string")
-    subdir = "." if subdir == "" else subdir
 
     if package_api < (2, 0):
         return subdir  # In v1.x we did not validate subdir names
 
-    if subdir == ".":  # Allow the current directory for backwards compatibility
-        return subdir
+    if subdir in (".", ""):
+        raise BadRepoError(
+            f"Invalid subdirectory '{subdir}' in '{root}'. Use a symlink packages -> . instead"
+        )
 
     # Otherwise we expect a directory name (not path) that can be used as a Python module.
     if os.sep in subdir:
