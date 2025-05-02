@@ -86,7 +86,7 @@ class SpackNamespaceLoader:
 
 
 class ReposFinder:
-    """MetaPathFinder class that loads a Python module corresponding to a Spack package.
+    """MetaPathFinder class that loads a Python module corresponding to an API v1 Spack package.
 
     Returns a loader based on the inspection of the current repository list.
     """
