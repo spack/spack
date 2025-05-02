@@ -92,15 +92,13 @@ class RocprofilerSystems(CMakePackage):
 
     # hard dependencies
     depends_on("cmake@3.16:", type="build")
-    depends_on("dyninst@:12", when="%gcc@:12")
+    depends_on("dyninst@:12")
     depends_on("libunwind", type=("build", "run"))
     depends_on("papi+shared", when="+papi")
     depends_on("mpi", when="+mpi")
     depends_on("tau", when="+tau")
     depends_on("caliper", when="+caliper")
     depends_on("python@3:", when="+python", type=("build", "run"))
-    depends_on("boost", when="%gcc@13:", type="build")
-    depends_on("libiberty", when="%gcc@13:", type="build")
     depends_on("m4", when="+rocm")
     depends_on("texinfo", when="+rocm")
     depends_on("libunwind", when="+rocm")
@@ -113,9 +111,6 @@ class RocprofilerSystems(CMakePackage):
             depends_on(f"hip@{ver}", when=f"@{ver}")
             depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
             depends_on(f"rocprofiler-dev@{ver}", when=f"@{ver}")
-
-    # adds additional includes which are required for gcc-13+ build
-    patch("gcc_13_fix.patch", when="%gcc@13:")
 
     def cmake_args(self):
         spec = self.spec
@@ -141,7 +136,6 @@ class RocprofilerSystems(CMakePackage):
             self.define_from_variant("ROCPROFSYS_STRIP_LIBRARIES", "strip"),
             self.define_from_variant("ROCPROFSYS_INSTALL_PERFETTO_TOOLS", "perfetto_tools"),
             # timemory arguments
-            self.define("TIMEMORY_UNITY_BUILD", False),
             self.define("TIMEMORY_BUILD_CALIPER", False),
             self.define_from_variant("TIMEMORY_USE_TAU", "tau"),
             self.define_from_variant("TIMEMORY_USE_CALIPER", "caliper"),
