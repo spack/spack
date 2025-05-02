@@ -481,3 +481,24 @@ def test_valid_module_name_v2():
     # underscore is not allowed unless followed by reserved name or digit
     assert not valid_module_name("_zlib", api)
     assert not valid_module_name("_false", api)
+
+
+def test_namespace_is_optional_in_v2(tmp_path: pathlib.Path):
+    """Test that a repo without a namespace is valid in v2."""
+    repo_yaml_dir = tmp_path / "spack_repo" / "foo" / "bar" / "baz"
+    (repo_yaml_dir / "packages").mkdir(parents=True)
+    (repo_yaml_dir / "repo.yaml").write_text(
+        """\
+repo:
+  api: v2.0
+"""
+    )
+
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    repo = spack.repo.Repo(str(repo_yaml_dir), cache=cache)
+
+    assert repo.namespace == "foo.bar.baz"
+    assert repo.root == str(repo_yaml_dir)
+    assert repo.packages_path == str(repo_yaml_dir / "packages")
+    assert repo.python_path == str(tmp_path)
+    assert repo.package_api == (2, 0)
