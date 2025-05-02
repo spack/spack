@@ -122,6 +122,7 @@ class RocprofilerSystems(CMakePackage):
             self.define("ROCPROFSYS_BUILD_LIBUNWIND", False),
             self.define("ROCPROFSYS_BUILD_STATIC_LIBGCC", False),
             self.define("ROCPROFSYS_BUILD_STATIC_LIBSTDCXX", False),
+            self.define("ROCPROFSYS_BUILD_DYNINST", False),
             self.define_from_variant("ROCPROFSYS_BUILD_LTO", "ipo"),
             self.define_from_variant("ROCPROFSYS_USE_HIP", "rocm"),
             self.define_from_variant("ROCPROFSYS_USE_MPI", "mpi"),
@@ -154,11 +155,6 @@ class RocprofilerSystems(CMakePackage):
             args.append(
                 self.define("libunwind_INCLUDE_DIR", self.spec["libunwind"].prefix.include)
             )
-        if spec.satisfies("%gcc@13:"):
-            args.append(self.define("ROCPROFSYS_BUILD_DYNINST", True))
-            args.append(self.define("DYNINST_BUILD_TBB", True))
-        else:
-            args.append(self.define("ROCPROFSYS_BUILD_DYNINST", False))
         return args
 
     def flag_handler(self, name, flags):
