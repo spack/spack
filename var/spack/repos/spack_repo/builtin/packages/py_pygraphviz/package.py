@@ -26,3 +26,11 @@ class PyPygraphviz(PythonPackage):
     depends_on("python@3.8:", when="@1.10:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("graphviz")
+
+    def url_for_version(self, version):
+        url = "https://files.pythonhosted.org/packages/source/p/pygraphviz/pygraphviz-{}.{}"
+        if version >= Version("1.12"):
+            fext = "tar.gz"
+        else:
+            fext = "zip"
+        return url.format(version, fext)
