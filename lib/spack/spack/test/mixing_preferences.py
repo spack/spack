@@ -138,7 +138,6 @@ class GccRuntime(Package):
 
     # Without this line, you get the concretizer version of a segfault
     tags = ["runtime"]
-    requires("%gcc")
 
     provides("fortran-rt", "libgfortran")
     provides("libgfortran@3", when="%gcc@:6")
@@ -146,6 +145,7 @@ class GccRuntime(Package):
     provides("libgfortran@5", when="%gcc@8:")
 
     depends_on("libc", type="link", when="platform=linux")
+    depends_on("gcc", type="build")
 """,
 )
 
@@ -262,13 +262,13 @@ class IntelOneapiRuntime(Package):
     has_code = False
 
     tags = ["runtime"]
-    requires("%oneapi")
 
     depends_on("gcc-runtime", type="link")
 
     provides("fortran-rt", "libifcore@5", when="%oneapi@2021:")
 
     depends_on("libc", type="link", when="platform=linux")
+    depends_on("intel-oneapi-compilers", type="build")
 """,
 )
 
@@ -400,9 +400,9 @@ def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_run
     set_up_compiler_cfg()
     Spec("gcc@11.0.0").concretized()
     # No deps
-    # out = solve("--show=asp", "x1 %gcc@11.0.0")
-    # with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
-    #    f.write(out)
+    #out = solve("--show=asp", "x1 %gcc@11.0.0")
+    #with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
+    #   f.write(out)
     Spec("x4 %gcc@11.0.0").concretized()
     Spec("x1 %gcc@11.0.0").concretized()
     #Spec("x1 ^[virtuals=c] gcc@11.0.0").concretized()
