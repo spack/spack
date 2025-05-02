@@ -75,7 +75,7 @@ class Conquest(MakefilePackage):
 
         lapack_ld = self.spec["lapack"].libs.ld_flags
         blas_ld = self.spec["blas"].libs.ld_flags
-        fftw_ld = self.spec["fftw"].libs.ld_flags
+        fftw_ld = self.spec["fftw-api"].libs.ld_flags
         libxc_ld = self.spec["libxc"].libs.ld_flags
 
         # Starting from 1.3 there's automated logic in the Makefile that picks
