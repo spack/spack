@@ -1105,6 +1105,10 @@ class Repo:
         self._repo_index: Optional[RepoIndex] = None
         self._cache = cache
 
+    @property
+    def package_api_str(self) -> str:
+        return f"v{self.package_api[0]}.{self.package_api[1]}"
+
     def finder(self, value: RepoPath) -> None:
         self._finder = value
 

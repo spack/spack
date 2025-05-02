@@ -4,6 +4,7 @@
 
 import os
 import sys
+from typing import List
 
 import llnl.util.tty as tty
 
@@ -136,7 +137,7 @@ def repo_remove(args):
 def repo_list(args):
     """show registered repositories and their namespaces"""
     roots = spack.config.get("repos", scope=args.scope)
-    repos = []
+    repos: List[spack.repo.Repo] = []
     for r in roots:
         try:
             repos.append(spack.repo.from_path(r))
@@ -144,17 +145,14 @@ def repo_list(args):
             continue
 
     if sys.stdout.isatty():
-        msg = "%d package repositor" % len(repos)
-        msg += "y." if len(repos) == 1 else "ies."
-        tty.msg(msg)
+        tty.msg(f"{len(repos)} package repositor" + ("y." if len(repos) == 1 else "ies."))
 
     if not repos:
         return
 
     max_ns_len = max(len(r.namespace) for r in repos)
     for repo in repos:
-        fmt = "%%-%ds%%s" % (max_ns_len + 4)
-        print(fmt % (repo.namespace, repo.root))
+        print(f"{repo.namespace:<{max_ns_len + 4}}{repo.package_api_str:<8}{repo.root}")
 
 
 def repo(parser, args):
