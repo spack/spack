@@ -58,19 +58,6 @@ def is_package_module(fullname: str) -> bool:
     return fullname.startswith(PKG_MODULE_PREFIX_V1) or fullname.startswith(PKG_MODULE_PREFIX_V2)
 
 
-def python_package_for_repo(namespace: str) -> str:
-    """Returns the full namespace of a repository, given its relative one
-
-    For instance:
-
-        python_package_for_repo("builtin") == "spack.pkg.builtin"
-
-    Args:
-        namespace: repo namespace
-    """
-    return f"{PKG_MODULE_PREFIX_V1}{namespace}"
-
-
 def namespace_from_fullname(fullname: str) -> str:
     """Return the repository namespace only for the full module name.
 
@@ -1085,7 +1072,7 @@ class Repo:
 
         # Set up 'full_namespace' to include the super-namespace
         if self.package_api < (2, 0):
-            self.full_namespace = python_package_for_repo(self.namespace)
+            self.full_namespace = f"{PKG_MODULE_PREFIX_V1}{self.namespace}"
         else:
             self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}.{self.subdirectory}"
 
