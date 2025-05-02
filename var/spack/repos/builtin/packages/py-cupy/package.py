@@ -17,6 +17,9 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     homepage = "https://cupy.dev/"
     pypi = "cupy/cupy-8.0.0.tar.gz"
 
+    version("13.4.0", sha256="d4b60e5a1d3b89be40fad0845bb9fc467a653abe8660f752416fd38d24ab7fdb")
+    version("13.3.0", sha256="9a2a17af2b99cce91dd1366939c3805e3f51f9de5046df64f29ccbad3bdf78ed")
+    version("13.2.0", sha256="e4dbd2b2ed4159a5cc0c0f98a710a014950eb2c16eeb455e956128f3b3bd0d51")
     version("13.1.0", sha256="5caf62288481a27713384523623045380ff42e618be4245f478238ed1786f32d")
     version("12.1.0", sha256="f6d31989cdb2d96581da12822e28b102f29e254427195c2017eac327869b7320")
     version("12.0.0", sha256="61ddbbef73d50d606bd5087570645f3c91ec9176c2566784c1d486d6a3404545")
@@ -28,12 +31,16 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
 
     variant("all", default=False, description="Enable optional py-scipy, optuna, and cython")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("python@3.7:", when="@:11", type=("build", "run"))
     depends_on("python@3.8:", when="@12:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-cython@0.29.22:2", type="build")
+    depends_on("py-cython@0.29.22:2", type="build", when="@:13.3")
+    depends_on(
+        "py-cython@3:3.0.10,3.0.12:", type="build", when="@13.4:"
+    )  # 3.0.11 broken likely because of cython#6335, fixed in 3.0.12
     depends_on("py-fastrlock@0.5:", type=("build", "run"))
     depends_on("py-numpy@1.20:1.25", when="@:11", type=("build", "run"))
     depends_on("py-numpy@1.20:1.26", when="@12:", type=("build", "run"))
@@ -47,7 +54,10 @@ class PyCupy(PythonPackage, CudaPackage, ROCmPackage):
     # Based on https://github.com/cupy/cupy/releases
     depends_on("cuda@:11.9", when="@:11 +cuda")
     depends_on("cuda@:12.1", when="@12:12.1.0 +cuda")
-    depends_on("cuda@:12.4", when="@13: +cuda")
+    depends_on("cuda@:12.1", when="@13.0 +cuda")
+    depends_on("cuda@:12.4", when="@13.1:13.2 +cuda")
+    depends_on("cuda@:12.6", when="@13.3 +cuda")
+    depends_on("cuda@:12.8", when="@13.4: +cuda")
 
     for a in CudaPackage.cuda_arch_values:
         depends_on("nccl +cuda cuda_arch={0}".format(a), when="+cuda cuda_arch={0}".format(a))
