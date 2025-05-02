@@ -837,7 +837,7 @@ class BaseModuleFileWriter:
         # Filter out false-ish values
         choices = list(filter(lambda x: bool(x), choices))
         # ... and return the first match
-        return choices.pop(0)
+        return spack.util.path.canonicalize_path(choices.pop(0))
 
     def write(self, overwrite=False):
         """Writes the module file.
