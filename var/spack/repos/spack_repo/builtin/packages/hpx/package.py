@@ -280,6 +280,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
         if spec.satisfies("instrumentation=apex"):
             args += [
+                self.define("HPX_WITH_FETCH_APEX", True),
                 self.define("APEX_WITH_OTF2", True),
                 self.define("OTF2_ROOT", spec["otf2"].prefix),
             ]
@@ -287,5 +288,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             # it seems like there was a bug in the default version of APEX in 1.5.x
             if spec.satisfies("@1.5"):
                 args += [self.define("HPX_WITH_APEX_TAG", "v2.3.0")]
+            else:
+                args += [self.define("HPX_WITH_APEX_TAG", "develop")]
 
         return args
