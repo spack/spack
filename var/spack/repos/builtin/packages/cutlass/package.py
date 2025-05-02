@@ -14,6 +14,8 @@ class Cutlass(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="master")
+    version("3.9.1", sha256="7ffed3d7363a485c7d8ade63b3944c0a1e3e4cf2f22007f6d1cc3849c96bdc88")
+    version("3.9.0", sha256="0ea98a598d1f77fade5187ff6ec6d9e6ef3acd267ee68850aae6e800dcbd69c7")
     version("3.8.0", sha256="14a5e6314f23e41295d8377b6fa6028b35392757a0ee4538a4eacaaa5d7eee37")
     version("3.7.0", sha256="dfcafb7435a1b114ce32faee4f3257e276caf08f55fea04fa8bf3efa3a83c814")
     version("3.6.0", sha256="7576f3437b90d0de5923560ccecebaa1357e5d72f36c0a59ad77c959c9790010")
@@ -58,7 +60,7 @@ class Cutlass(CMakePackage, CudaPackage):
         "https://developer.nvidia.com/cuda-gpus",
     )
 
-    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+    def setup_build_environment(self, env):
         env.set("CUDACXX", self.spec["cuda"].prefix.bin.nvcc)
 
     def cmake_args(self):
