@@ -1700,7 +1700,10 @@ class UnknownPackageError(UnknownEntityError):
 
                 # We need to compare the base package name
                 pkg_name = name.rsplit(".", 1)[-1]
-                similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+                try:
+                    similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+                except Exception:
+                    similar = []
 
                 if 1 <= len(similar) <= 5:
                     long_msg += "\n\nDid you mean one of the following packages?\n  "
