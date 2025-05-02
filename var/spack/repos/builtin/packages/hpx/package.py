@@ -97,7 +97,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cxx", type="build")
 
     depends_on("python", type=("build", "test", "run"))
-    depends_on("pkgconfig", type="build")
     depends_on("git", type="build")
     depends_on("cmake", type="build")
 
