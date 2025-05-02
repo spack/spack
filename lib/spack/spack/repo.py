@@ -941,6 +941,29 @@ def _parse_package_api_version(
     )
 
 
+def _validate_and_normalize_subdir(subdir: Any, root: str, package_api: Tuple[int, int]) -> str:
+    if not isinstance(subdir, str):
+        raise BadRepoError(f"Invalid subdirectory '{subdir}' in '{root}'. Must be a string")
+    subdir = "." if subdir == "" else subdir
+
+    if package_api < (2, 0):
+        return subdir  # In v1.x we did not validate subdir names
+
+    if subdir == ".":  # Allow the current directory for backwards compatibility
+        return subdir
+
+    # Otherwise we expect a directory name (not path) that can be used as a Python module.
+    if os.sep in subdir:
+        raise BadRepoError(
+            f"Invalid subdirectory '{subdir}' in '{root}'. Expected a directory name, not a path"
+        )
+    if not nm.valid_module_name(subdir, package_api):
+        raise BadRepoError(
+            f"Invalid subdirectory '{subdir}' in '{root}'. Must be a valid Python module name"
+        )
+    return subdir
+
+
 class Repo:
     """Class representing a package repository in the filesystem.
 
@@ -994,30 +1017,14 @@ class Repo:
         config = self._read_config()
 
         self.package_api = _parse_package_api_version(config)
+        self.subdirectory = _validate_and_normalize_subdir(
+            config.get("subdirectory", packages_dir_name), root, self.package_api
+        )
+        self.packages_path = os.path.join(self.root, self.subdirectory)
 
-        subdirectory: str = config.get("subdirectory", packages_dir_name)
-
-        check(isinstance(subdirectory, str), f"Invalid subdirectory '{subdirectory}' in '{root}'")
-
-        # From Package API v2.x we do not allow absolute paths and nested subdirectories. Users
-        # can put a symlink to a directory at the `subdirectory` location instead. This is to
-        # ensure packages can be imported directly as Python modules without a custom finder.
-        if self.package_api >= (2, 0):
-            check(
-                os.sep not in subdirectory,
-                f"Invalid subdirectory '{subdirectory}' in '{root}'."
-                " Expected a directory name, not a path",
-            )
-            check(
-                nm.valid_module_name(subdirectory, self.package_api),
-                f"Invalid subdirectory '{subdirectory}' in '{root}'."
-                " Must be a valid Python module name",
-            )
-
-        self.subdirectory = subdirectory
-        self.packages_path = os.path.join(self.root, subdirectory)
         check(
-            os.path.isdir(self.packages_path), f"No directory '{subdirectory}' found in '{root}'"
+            os.path.isdir(self.packages_path),
+            f"No directory '{self.subdirectory}' found in '{root}'",
         )
 
         # The parent dir of spack_repo/ which should be added to sys.path for api v2.x
@@ -1073,6 +1080,8 @@ class Repo:
         # Set up 'full_namespace' to include the super-namespace
         if self.package_api < (2, 0):
             self.full_namespace = f"{PKG_MODULE_PREFIX_V1}{self.namespace}"
+        elif self.subdirectory == ".":
+            self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}"
         else:
             self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}.{self.subdirectory}"
 
@@ -1500,6 +1509,9 @@ def create_repo(
         raise BadRepoError(f"Cannot create new repo in {root}: directory is not empty.")
 
     config_path = os.path.join(repo_yaml_dir, repo_config_name)
+
+    subdir = _validate_and_normalize_subdir(subdir, root, package_api)
+
     packages_path = os.path.join(repo_yaml_dir, subdir)
 
     try:
