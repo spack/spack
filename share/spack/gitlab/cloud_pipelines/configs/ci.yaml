@@ -22,7 +22,7 @@ ci:
       script::
       - - if [ -n "$SPACK_EXTRA_MIRROR" ]; then spack mirror add local "${SPACK_EXTRA_MIRROR}/${SPACK_CI_STACK_NAME}"; fi
         - spack config blame mirrors
-      - - spack --color=always --backtrace ci rebuild -j ${SPACK_BUILD_JOBS} --tests > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
+      - - spack --color=always --backtrace ci rebuild -j ${SPACK_BUILD_JOBS} --tests --timeout 300 > >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_out.txt) 2> >(tee ${SPACK_ARTIFACTS_ROOT}/user_data/pipeline_err.txt >&2)
       after_script:
       - - cat /proc/loadavg || true
         - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
@@ -42,7 +42,7 @@ ci:
           aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - signing-job:
-      image: { "name": "ghcr.io/spack/notary:latest", "entrypoint": [""] }
+      image: { "name": "ghcr.io/spack/notary:0.0.1", "entrypoint": [""] }
       tags: ["aws"]
       script:
       - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_BUILDCACHE_DESTINATION}/build_cache /tmp

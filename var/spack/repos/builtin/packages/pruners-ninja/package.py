@@ -13,6 +13,8 @@ class PrunersNinja(AutotoolsPackage):
     url = "https://github.com/PRUNERS/NINJA/releases/download/v1.0.0/NINJA-1.0.0.tar.gz"
     git = "https://github.com/PRUNERS/NINJA.git"
 
+    tags = ["e4s"]
+
     license("GPL-3.0-or-later")
 
     version("master", branch="master")

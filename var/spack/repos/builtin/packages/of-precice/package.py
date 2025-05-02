@@ -94,5 +94,5 @@ export CPLUS_INCLUDE_PATH
         # Place directly under 'lib' (no bin)
         install_tree(join_path(self.build_userdir, "lib"), join_path(self.prefix, "lib"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "lib"))

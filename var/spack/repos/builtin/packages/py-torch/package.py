@@ -23,7 +23,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
     maintainers("adamjstewart")
 
+    tags = ["e4s"]
+
     version("main", branch="main")
+    version("2.7.0", tag="v2.7.0", commit="134179474539648ba7dee1317959529fbd0e7f89")
     version("2.6.0", tag="v2.6.0", commit="1eba9b3aa3c43f86f4a2c807ac8e12c4a7767340")
     version("2.5.1", tag="v2.5.1", commit="a8d6afb511a69687bbb2b7e88a3cf67917e1697e")
     version("2.5.0", tag="v2.5.0", commit="32f585d9346e316e554c8d9bf7548af9f62141fc")
@@ -68,9 +71,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     version(
         "1.4.1", tag="v1.4.1", commit="74044638f755cd8667bedc73da4dbda4aa64c948", deprecated=True
     )
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
 
     is_darwin = sys.platform == "darwin"
 
@@ -151,6 +151,9 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
 
     # Required dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # Based on PyPI wheel availability
     with default_args(type=("build", "link", "run")):
         depends_on("python@3.9:3.13", when="@2.5:")
@@ -175,7 +178,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-typing-extensions@4.8:", when="@2.2:")
         depends_on("py-typing-extensions@3.6.2.1:", when="@1.7:")
         depends_on("py-setuptools")
-        depends_on("py-sympy@1.13.1", when="@2.5:")
+        depends_on("py-sympy@1.13.3:", when="@2.7:")
+        depends_on("py-sympy@1.13.1", when="@2.5:2.6")
         depends_on("py-sympy", when="@2:")
         depends_on("py-networkx", when="@2:")
         depends_on("py-jinja2", when="@2:")
@@ -194,7 +198,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("blas")
     depends_on("lapack")
 
-    # Third party dependencies
+    # third_party
     depends_on("fp16@2020-05-14", when="@1.6:")
     depends_on("fxdiv@2020-04-17", when="@1.6:")
     depends_on("nvtx@3.1.0", when="@2.6:")
@@ -263,7 +267,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("py-pybind11@2.10.0:", when="@1.13:1")
         depends_on("py-pybind11@2.6.2:", when="@1.8:1.12")
         depends_on("py-pybind11@2.3.0:", when="@:1.7")
-    depends_on("sleef@3.6.0_2024-03-20", when="@2.4:")
+    depends_on("sleef@3.7.0_2024-12-06", when="@2.7:")
+    depends_on("sleef@3.6.0_2024-03-20", when="@2.4:2.6")
     depends_on("sleef@3.5.1_2020-12-22", when="@1.8:2.3")
     depends_on("sleef@3.4.0_2019-07-30", when="@1.6:1.7")
 
@@ -323,12 +328,29 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     conflicts("%gcc@:9.3", when="@2.2:", msg="C++17 support required")
 
+    # https://github.com/pytorch/pytorch/issues/151592
+    patch("macos_rpath.patch", when="@2.7:")
+
+    # https://github.com/pytorch/pytorch/issues/151316
+    patch(
+        "https://github.com/pytorch/pytorch/pull/151344.patch?full_index=1",
+        sha256="edaadfd5f8acee67fee1c77b34145640a1239c9546d77420f3887af24889799e",
+        when="@2.7.0",
+    )
+    patch("apple_clang_17.patch", when="@1.12:2.6")
+
     # https://github.com/pytorch/pytorch/issues/146239
     patch(
-        "https://github.com/pytorch/pytorch/pull/140275.patch?full_index=1",
-        sha256="65f56305a27d47d7065711d1131c6ac1611fabcb55b129c27ed6beabe4b94fe0",
+        "https://github.com/pytorch/pytorch/pull/146637.patch?full_index=1",
+        sha256="f93aa66e2cf9c0febdbcf72f44213a213e570e5f860186e81c92c8d2af0857c0",
         when="@2.6:",
-        reverse=True,
+    )
+
+    # Fixes 'FindBLAS.cmake' error: unknown command check_function_exists
+    patch(
+        "https://github.com/pytorch/pytorch/pull/145849.patch?full_index=1",
+        sha256="5675ab543b786b8f360de451b27b3eb5d3ce8499d6c1a207f4a854f0c473ab03",
+        when="@:2.6",
     )
 
     # https://github.com/pytorch/pytorch/issues/90448
@@ -524,7 +546,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             )
             env.set("TORCH_CUDA_ARCH_LIST", ";".join(torch_cuda_arch))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set environment variables used to control the build.
 
         PyTorch's ``setup.py`` is a thin wrapper around ``cmake``.
@@ -553,8 +575,12 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             elif "~" + variant in self.spec:
                 env.set(keyword + "_" + var, "OFF")
 
+        # https://github.com/pytorch/pytorch/issues/151592
+        if self.spec.satisfies("@:2.6"):
+            env.set("PACKAGE_TYPE", "conda")
+
         # Build in parallel to speed up build times
-        env.set("MAX_JOBS", make_jobs)
+        env.set("MAX_JOBS", str(make_jobs))
 
         # Spack logs have trouble handling colored output
         env.set("COLORIZE_OUTPUT", "OFF")
@@ -644,8 +670,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("DEBUG", "OFF")
 
         if not self.spec.satisfies("@main"):
-            env.set("PYTORCH_BUILD_VERSION", self.version)
-            env.set("PYTORCH_BUILD_NUMBER", 0)
+            env.set("PYTORCH_BUILD_VERSION", str(self.version))
+            env.set("PYTORCH_BUILD_NUMBER", str(0))
 
         # BLAS to be used by Caffe2
         # Options defined in cmake/Dependencies.cmake and cmake/Modules/FindBLAS.cmake
@@ -662,14 +688,10 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         elif self.spec["lapack"].name in ["libflame", "amdlibflame"]:
             env.set("BLAS", "FLAME")
             env.set("WITH_BLAS", "FLAME")
-        elif self.spec["blas"].name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        elif self.spec["blas"].name == "intel-oneapi-mkl":
             env.set("BLAS", "MKL")
             env.set("WITH_BLAS", "mkl")
-            # help find MKL
-            if self.spec["mkl"].name == "intel-oneapi-mkl":
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
-            else:
-                env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl)
+            env.set("INTEL_MKL_DIR", self.spec["mkl"].prefix.mkl.latest)
         elif self.spec["blas"].name == "openblas":
             env.set("BLAS", "OpenBLAS")
             env.set("WITH_BLAS", "open")
@@ -709,7 +731,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         else:
             env.set("BUILD_CUSTOM_PROTOBUF", "OFF")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.torch_cuda_arch_list(env)
 
     @run_before("install")

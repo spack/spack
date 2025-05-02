@@ -49,8 +49,6 @@ class Edm4hep(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     _cxxstd_values = (conditional("17", when="@:0.99.0"), conditional("20", when="@0.10:"))
     variant(
         "cxxstd",
@@ -66,6 +64,8 @@ class Edm4hep(CMakePackage):
         description="Build edm4hep with JSON support and edm4hep2json",
         when="@0.99.2:",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.3:", type="build")
     depends_on("cmake@3.23:", type="build", when="@0.10.3:")
@@ -93,6 +93,14 @@ class Edm4hep(CMakePackage):
 
     conflicts("%clang@:16", when="@0.99.1:", msg="Incomplete consteval support in clang")
 
+    # Fix missing nljson import
+    # NOTE that downstream packages (dd4hep) may fail for 0.99 and before
+    patch(
+        "https://patch-diff.githubusercontent.com/raw/key4hep/EDM4hep/pull/379.patch?full_index=1",
+        when="@0.99.1",
+        sha256="c4be2f27c7bda4d033f92fee14e48ddf59fbe606d208e8288d9bdb3dec5ad5c2",
+    )
+
     def cmake_args(self):
         args = [
             self.define_from_variant("CMAKE_CXX_STANDARD", "cxxstd"),
@@ -101,7 +109,7 @@ class Edm4hep(CMakePackage):
         ]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.spec["edm4hep"].libs.directories[0])
         if self.spec.satisfies("@:0.10.5"):
             env.prepend_path("PYTHONPATH", self.prefix.python)

@@ -27,5 +27,5 @@ class Tassel(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CLASSPATH", self.prefix.bin.lib)

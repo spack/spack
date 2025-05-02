@@ -36,9 +36,6 @@ class PortsOfCall(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # todo: disable cmake default?
-    depends_on("cxx", type="build")
-
     variant(
         "portability_strategy",
         description="Portability strategy backend",
@@ -56,6 +53,9 @@ class PortsOfCall(CMakePackage):
         default="None",
         when="@1.7.0: +test",
     )
+
+    depends_on("c", type="build")  # todo: disable cmake default?
+    depends_on("cxx", type="build")
 
     depends_on("cmake@3.12:", type="build")
     depends_on("catch2@3.0.1:", when="+test", type=("build", "test"))

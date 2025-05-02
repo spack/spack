@@ -32,8 +32,6 @@ class PyCartopy(PythonPackage):
     version("0.17.0", sha256="424bd9e9ddef6e48cbdee694ce589ec431be8591f15b6cb93cb2b333a29b2c61")
     version("0.16.0", sha256="f23dffa101f43dd91e866a49ebb5f5048be2a24ab8a921a5c07edabde746d9a4")
 
-    depends_on("cxx", type="build")
-
     variant("epsg", default=False, when="@:0.19", description="Add support for epsg.io")
     variant(
         "ows",
@@ -41,6 +39,8 @@ class PyCartopy(PythonPackage):
         description="Add support for Open Geospatial Consortium (OGC) web service",
     )
     variant("plotting", default=False, description="Add plotting functionality")
+
+    depends_on("cxx", type="build")
 
     # Based on wheel availability on PyPI
     with default_args(type=("build", "link", "run")):
@@ -144,7 +144,7 @@ class PyCartopy(PythonPackage):
             name = "Cartopy"
         return url.format(name, version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed for `spack install --test=root py-cartopy`
         library_dirs = []
         for dep in self.spec.dependencies(deptype="link"):
@@ -163,5 +163,7 @@ class PyCartopy(PythonPackage):
     setup_run_environment = setup_build_environment
 
     # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_build_environment(env)

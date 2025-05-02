@@ -24,5 +24,5 @@ class PyIsal(PythonPackage):
     depends_on("py-setuptools@51:", type="build")
     depends_on("libisal")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PYTHON_ISAL_LINK_DYNAMIC", "true")

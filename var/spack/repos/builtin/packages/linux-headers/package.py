@@ -31,7 +31,7 @@ class LinuxHeaders(Package):
         url = "https://www.kernel.org/pub/linux/kernel/v{0}.x/linux-{1}.tar.xz"
         return url.format(version.up_to(1), version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # This variable is used in the Makefile. If it is defined on the
         # system, it can break the build if there is no build recipe for
         # that specific ARCH

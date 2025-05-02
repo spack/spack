@@ -50,9 +50,6 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     version("2019.12.28", commit="b4e1877ff96069fd8ed0fdf0e36283a5b4b62240", deprecated=True)
     version("2019.08.14", commit="6ea44ed3f93ede2d0a48937f288a2d41188a277c", deprecated=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # Options for MPI and hpcprof-mpi.  We always support profiling
     # MPI applications.  These options add hpcprof-mpi, the MPI
     # version of hpcprof.  Cray is a separate option for old systems
@@ -132,6 +129,9 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         conditional("autotools", when="@:2024.01"),
         default="autotools",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("@2024.01: build_system=autotools"):
         depends_on("autoconf", type="build")
@@ -267,7 +267,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     # module file.  The run dependencies are all curried into hpctoolkit
     # and we don't want to risk exposing a package if the application
     # uses a different version of the same package.
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.clear()
         env.prepend_path("PATH", spec.prefix.bin)
@@ -281,7 +281,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
     def test_sort(self):
         """build and run selection sort unit test"""
         exe = "tst-sort"
-        cxx = which(os.environ["CXX"])
+        cxx = Executable(self["cxx"].cxx)
         cxx(self.test_suite.current_test_data_dir.join("sort.cpp"), "-o", exe)
 
         hpcrun = which("hpcrun")

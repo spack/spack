@@ -194,7 +194,7 @@ class Picard(Package):
         filter_file("^java", java, script, **kwargs)
         filter_file("picard.jar", join_path(prefix.bin, "picard.jar"), script, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """The Picard docs suggest setting this as a convenience."""
         env.prepend_path("PICARD", join_path(self.prefix.bin, "picard.jar"))
 

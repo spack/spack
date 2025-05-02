@@ -22,10 +22,6 @@ class Madx(CMakePackage):
     version("5.08.00", sha256="0b3fe2aca8899289ef7bfb98d745f13b8c4082e239f54f2662c9cad8d1e63a53")
     version("5.07.00", sha256="77c0ec591dc3ea76cf57c60a5d7c73b6c0d66cca1fa7c4eb25a9071e8fc67e60")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("x11", default=True, description="Turn on plotting using X11")
 
     # patch for gcc-11 to avoid error due to variable shadowing
@@ -34,6 +30,10 @@ class Madx(CMakePackage):
         sha256="d09c26f10b6b69d2cb209fee317f90804d92b419026d5181007559119daf33f6",
         when="@:5.07.00",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@2.8:", type="build")
 

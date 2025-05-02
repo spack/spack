@@ -79,9 +79,6 @@ class Cmake(Package):
     version("3.0.2", sha256="6b4ea61eadbbd9bec0ccb383c29d1f4496eacc121ef7acf37c7a24777805693e")
     version("2.8.10.2", sha256="ce524fb39da06ee6d47534bbcec6e0b50422e18b62abc4781a4ba72ea2910eb1")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant(
         "build_type",
         default="Release",
@@ -125,6 +122,9 @@ class Cmake(Package):
     # Statically linked binaries error on install when CMAKE_INSTALL_RPATH is set
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/9623
     patch("mr-9623.patch", when="@3.22.0:3.30")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("ninja", when="platform=windows")
     depends_on("gmake", type=("build", "run"), when="platform=linux")
@@ -245,16 +245,6 @@ class Cmake(Package):
         match = re.search(r"cmake.*version\s+(\S+)", output)
         return match.group(1) if match else None
 
-    def flag_handler(self, name, flags):
-        if name == "cxxflags" and self.compiler.name == "fj":
-            cxx11plus_flags = (self.compiler.cxx11_flag, self.compiler.cxx14_flag)
-            cxxpre11_flags = self.compiler.cxx98_flag
-            if any(f in flags for f in cxxpre11_flags):
-                raise ValueError("cannot build cmake pre-c++11 standard")
-            elif not any(f in flags for f in cxx11plus_flags):
-                flags.append(self.compiler.cxx11_flag)
-        return (flags, None, None)
-
     def bootstrap_args(self):
         spec = self.spec
         args = []
@@ -364,6 +354,17 @@ class Cmake(Package):
                 filter_file("mpcc_r)", "mpcc_r mpifcc)", f, string=True)
                 filter_file("mpc++_r)", "mpc++_r mpiFCC)", f, string=True)
                 filter_file("mpifc)", "mpifc mpifrt)", f, string=True)
+
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
+        # CMake 4.0.0 breaks compatibility with CMake projects requiring a CMake
+        # < 3.5. However, many projects that specify a minimum requirement for
+        # versions older than 3.5 are actually compatible with newer CMake
+        # and do not use CMake 3.4 or older features. This allows those
+        # projects to use a newer CMake
+        if self.spec.satisfies("@4:"):
+            env.set("CMAKE_POLICY_VERSION_MINIMUM", "3.5")
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before cmake packages's install() methods."""

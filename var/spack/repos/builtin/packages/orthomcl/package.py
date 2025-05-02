@@ -25,5 +25,5 @@ class Orthomcl(Package):
         install_tree("doc", prefix.doc)
         install_tree("lib", prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PERL5LIB", self.prefix.lib)

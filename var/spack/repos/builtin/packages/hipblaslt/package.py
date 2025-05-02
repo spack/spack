@@ -16,6 +16,7 @@ class Hipblaslt(CMakePackage):
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
+    version("6.3.3", sha256="f32d666b37bdbecbf924cc98653fa3d30a0de629039d4dad44d35a2082e39e5a")
     version("6.3.2", sha256="cc4875b1a5cf1708a7576c42aff6b4cb790cb7337f5dc2df33119a4aadcef027")
     version("6.3.1", sha256="9a18a2e44264a21cfe58ed102fd3e34b336f23d6c191ca2da726e8e0883ed663")
     version("6.3.0", sha256="e570996037ea42eeca4c9b8b0b77a202d40be1a16068a6245595c551d80bdcad")
@@ -28,10 +29,6 @@ class Hipblaslt(CMakePackage):
     version("6.0.2", sha256="e281a1a7760fab8c3e0baafe17950cf43c422184e3226e3c14eb06e50c69d421")
     version("6.0.0", sha256="6451b6fdf7f24787628190bbe8f2208c929546b68b692d8355d2f18bea7ca7db")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -41,6 +38,11 @@ class Hipblaslt(CMakePackage):
         sticky=True,
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
+
     for ver in [
         "6.0.0",
         "6.0.2",
@@ -53,6 +55,7 @@ class Hipblaslt(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -61,7 +64,7 @@ class Hipblaslt(CMakePackage):
     for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4"]:
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"hipblas-common@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
@@ -79,7 +82,7 @@ class Hipblaslt(CMakePackage):
     patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1:6.2")
     patch("0001-Set-LLVM-Path-6.3.Patch", when="@6.3:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("@6.3.0:"):
             env.set(

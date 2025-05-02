@@ -17,6 +17,7 @@ class Rocdecode(CMakePackage):
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
+    version("6.3.3", sha256="e72f53674527b7a6c3cba3b7555fee32117f0875107fd9e632a2ec1d5ce03489")
     version("6.3.2", sha256="39ff3c21c81a73910dcfe6a147edaddecc21575a3077f0f99971c8d2f6d0e7d5")
     version("6.3.1", sha256="94da1a61167abaf3f983ae5d62bffb22bb8ba3eb1c9d9fc7c68ed9a066aa4e52")
     version("6.3.0", sha256="931f49ff86fa34929b03cec8e7becde78d0c49c1c3a23a13203fecd2b392b242")
@@ -38,7 +39,18 @@ class Rocdecode(CMakePackage):
 
     depends_on("libva", type="build", when="@6.2:")
 
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in [
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+    ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
 
     def patch(self):

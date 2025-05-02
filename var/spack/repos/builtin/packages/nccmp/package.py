@@ -13,6 +13,8 @@ class Nccmp(CMakePackage):
 
     maintainers("ulmononian", "climbfuji")
 
+    tags = ["e4s"]
+
     license("GPL-2.0-only")
 
     version("1.9.1.0", sha256="5aa8d6cbc54d26f77e3d0511690cfafa57514a4145f75e8cabce782126509c91")

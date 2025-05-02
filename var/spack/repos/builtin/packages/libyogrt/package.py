@@ -29,9 +29,6 @@ class Libyogrt(AutotoolsPackage):
     version("1.20-3", sha256="61a8f28f452aef0e09d700dbaaffd91ae3855f7ac221c7ebe478a028df635e31")
     version("1.20-2", sha256="bf22a82ab3bfede780be3fb6c132cc354234f8d57d3cccd58fe594f074ed7f95")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # libyogrt supports the following schedulers:
     #     flux, lcrm, lsf, moab, slurm, AIX+slurm
 
@@ -47,6 +44,10 @@ class Libyogrt(AutotoolsPackage):
         values=["system", "flux", "lsf", "slurm"],
         multi=False,
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("flux-core@0.21.0:", when="scheduler=flux")
     depends_on("lsf", when="scheduler=lsf")
     depends_on("slurm", when="scheduler=slurm")

@@ -18,12 +18,12 @@ class Netgen(AutotoolsPackage):
 
     version("5.3.1", sha256="cb97f79d8f4d55c00506ab334867285cde10873c8a8dc783522b47d2bc128bf9")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="enable mpi support")
     variant("oce", default=False, description="enable oce geometry kernel")
     variant("gui", default=False, description="enable gui")
     variant("metis", default=False, description="use metis for partitioning")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zlib-api")
     depends_on("mpi", when="+mpi")

@@ -15,6 +15,7 @@ class Rocal(CMakePackage):
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
+    version("6.3.3", sha256="aaccd951f176356561d8ab8210696d80a94553fd48ace72993a7cfac4b98d6cf")
     version("6.3.2", sha256="ceae8a86770c1f5d8cb56f4c38d6b354e16bda6b877cf93417d6a3e4e33354c6")
     version("6.3.1", sha256="e332c9c2b2eb4081d7dd8a66a141f95fe8c7fccbbfdd0fea7572a62a28a62bbb")
     version("6.3.0", sha256="162a0c15e6e7e09c0e13a9d01a493ba3199b77919addf396cd5d273ebf44d759")
@@ -28,7 +29,7 @@ class Rocal(CMakePackage):
     depends_on("ffmpeg@4.4:")
     depends_on("abseil-cpp", when="@6.3:")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
         depends_on(f"mivisionx@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         depends_on(f"rpp@{ver}", when=f"@{ver}")

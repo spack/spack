@@ -37,7 +37,7 @@ class PyPysam(PythonPackage):
     depends_on("htslib@:1.6", when="@:0.13")
     depends_on("htslib")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LDFLAGS", self.spec["curl"].libs.search_flags)
         # this flag is supposed to be removed by cy_build.py, but for some reason isn't
         if self.spec.platform == "darwin":

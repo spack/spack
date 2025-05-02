@@ -19,10 +19,10 @@ class E2fsprogs(AutotoolsPackage):
     version("1.45.6", sha256="d785164a2977cd88758cb0cac5c29add3fe491562a60040cfb193abcd0f9609b")
     version("1.45.5", sha256="0fd76e55c1196c1d97a2c01f2e84f463b8e99484541b43ff4197f5a695159fd3")
 
+    variant("fuse2fs", default=False, description="Build fuse2fs")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("fuse2fs", default=False, description="Build fuse2fs")
 
     depends_on("texinfo", type="build")
     depends_on("fuse", when="+fuse2fs")
@@ -45,7 +45,7 @@ class E2fsprogs(AutotoolsPackage):
         when="@:1.47.0 +fuse2fs",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def configure_args(self):

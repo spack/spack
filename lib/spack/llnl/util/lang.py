@@ -15,7 +15,19 @@ import types
 import typing
 import warnings
 from datetime import datetime, timedelta
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 # Ignore emacs backups when listing modules
 ignore_modules = r"^\.#|~$"
@@ -73,7 +85,7 @@ def index_by(objects, *funcs):
     if isinstance(f, str):
         f = lambda x: getattr(x, funcs[0])
     elif isinstance(f, tuple):
-        f = lambda x: tuple(getattr(x, p) for p in funcs[0])
+        f = lambda x: tuple(getattr(x, p, None) for p in funcs[0])
 
     result = {}
     for o in objects:
@@ -1016,11 +1028,8 @@ class GroupedExceptionHandler:
     def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            "{0} raised {1}: {2}{3}".format(
-                context,
-                exc.__class__.__name__,
-                exc,
-                "\n{0}".format("".join(tb)) if with_tracebacks else "",
+            "\n\t{0} raised {1}: {2}\n{3}".format(
+                context, exc.__class__.__name__, exc, f"\n{''.join(tb)}" if with_tracebacks else ""
             )
             for context, exc, tb in self.exceptions
         ]
@@ -1050,17 +1059,26 @@ class GroupedExceptionForwarder:
         return True
 
 
-class classproperty:
+ClassPropertyType = TypeVar("ClassPropertyType")
+
+
+class classproperty(Generic[ClassPropertyType]):
     """Non-data descriptor to evaluate a class-level property. The function that performs
-    the evaluation is injected at creation time and take an instance (could be None) and
-    an owner (i.e. the class that originated the instance)
+    the evaluation is injected at creation time and takes an owner (i.e., the class that
+    originated the instance).
     """
 
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
+
+
+#: A type alias that represents either a classproperty descriptor or a constant value of the same
+#: type. This allows derived classes to override a computed class-level property with a constant
+#: value while retaining type compatibility.
+ClassProperty = Union[ClassPropertyType, classproperty[ClassPropertyType]]
 
 
 class DeprecatedProperty:

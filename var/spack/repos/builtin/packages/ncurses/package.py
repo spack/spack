@@ -31,9 +31,6 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     version("6.0", sha256="f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260")
     version("5.9", sha256="9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("symlinks", default=False, description="Enables symlinks. Needed on AFS filesystem.")
     variant(
         "termlib",
@@ -51,6 +48,9 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     )
 
     conflicts("abi=6", when="@:5.9", msg="6 is not compatible with this release")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("pkgconfig", type="build")
 
@@ -101,14 +101,14 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             results.append(variants)
         return results
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("TERMINFO")
 
     def flag_handler(self, name, flags):
         if name == "cflags":
-            flags.append(self.compiler.cc_pic_flag)
+            flags.append(self["c"].pic_flag)
         elif name == "cxxflags":
-            flags.append(self.compiler.cxx_pic_flag)
+            flags.append(self["cxx"].pic_flag)
 
         # ncurses@:6.0 fails in definition of macro 'mouse_trafo' without -P
         if self.spec.satisfies("@:6.0 %gcc@5.0:"):
@@ -118,7 +118,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         # ncurses@:6.0 uses dynamic exception specifications not allowed in c++17
         if self.spec.satisfies("@:5"):
             if name == "cxxflags":
-                flags.append(self.compiler.cxx14_flag)
+                flags.append(self["cxx"].standard_flag(language="cxx", standard="14"))
 
         return (flags, None, None)
 

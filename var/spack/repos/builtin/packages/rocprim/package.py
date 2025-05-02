@@ -16,6 +16,7 @@ class Rocprim(CMakePackage):
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.3.3", sha256="15e4f8dfc71175c568f8afa87e3e0e3c7ad0680c8bca0d9db3a39936ec185813")
     version("6.3.2", sha256="fbb4839992eaba838f798408636da30f0d61b669513dae185ab790c5fa5595c4")
     version("6.3.1", sha256="37690d9f326d68379d52a21fe9184061d38b15263a566f1f182d539e4b3277d5")
     version("6.3.0", sha256="d97c6edcf1f636721f8c023b54f3fad968b48b0709a95ecd640ec0ab1057069e")
@@ -39,8 +40,6 @@ class Rocprim(CMakePackage):
         version("5.3.3", sha256="21a6b352ad3f5b2b7d05a5ed55e612feb3c5c19d34fdb8f80260b6d25af18b2d")
         version("5.3.0", sha256="4885bd662b038c6e9f058a756fd838203dbd00227bfef6adaf31496010b100e4")
 
-    depends_on("cxx", type="build")  # generated
-
     amdgpu_targets = ROCmPackage.amdgpu_targets
 
     variant(
@@ -54,6 +53,8 @@ class Rocprim(CMakePackage):
     conflicts("+asan", when="os=rhel9")
     conflicts("+asan", when="os=centos7")
     conflicts("+asan", when="os=centos8")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.10.2:", type="build")
     depends_on("numactl", type="link")
@@ -81,6 +82,7 @@ class Rocprim(CMakePackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"comgr@{ver}", when=f"@{ver}")
@@ -91,7 +93,7 @@ class Rocprim(CMakePackage):
     # the patch is meant for 5.3.0 only.this is already in the 5.3.3+ releases
     patch("fix-device-merge-mismatched-param-5.3.0.patch", when="@5.3.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")

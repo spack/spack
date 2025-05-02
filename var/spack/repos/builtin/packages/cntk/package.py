@@ -21,14 +21,14 @@ class Cntk(Package):
     version("master", branch="master")
     version("2.0", sha256="3adee17f166e2a682dfb551ca017ae5c3836ca9772c0af14215a7e76254f201c")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("opencv", default=False, description="Enable OpenCV support.")
     variant("kaldi", default=False, description="Enable Kaldi support.")
     variant("asgd", default=True, description="Enable DataParallelASGD powered by Multiverso.")
     variant("1bitsgd", default=False, description="Enable 1bitsgd support.")
     variant("cuda", default=False, description="Enable CUDA support.")
     variant("debug", default=False, description="Debug build.")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libzip")
     depends_on("openblas")

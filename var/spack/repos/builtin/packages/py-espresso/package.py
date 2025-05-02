@@ -48,6 +48,9 @@ class PyEspresso(CMakePackage):
 
     variant("hdf5", default=True, description="Enable HDF5 backend")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("cmake@3.0:", type="build")
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi")

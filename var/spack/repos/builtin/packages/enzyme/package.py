@@ -61,7 +61,9 @@ class Enzyme(CMakePackage):
 
         return find_libraries(libs, root=self.prefix, recursive=True)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Get the LLVMEnzyme and ClangEnzyme lib paths
         llvm, clang = self.libs
 

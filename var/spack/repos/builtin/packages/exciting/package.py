@@ -23,10 +23,6 @@ class Exciting(MakefilePackage):
     version("oxygen", branch="oxygen_release", preferred=True)
     version("14", sha256="a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # as-of-yet unpublished fix to version 14
     patch("dfgather.patch", when="@14", working_dir="src/src_xs", level=0)
     # Patch to add aarch64 in config.guess
@@ -36,17 +32,19 @@ class Exciting(MakefilePackage):
     variant("mkl", default=False, description="Use MKL")
     variant("omp", default=True, description="Use OpenMP")
     variant("scalapack", default=False, description="Use ScaLAPACK")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw", when="~mkl")
     depends_on("mkl", when="+mkl")
     depends_on("mpi", when="+mpi")
     depends_on("scalapack", when="+scalapack")
-    # conflicts('%gcc@10:', msg='exciting cannot be built with GCC 10')
 
-    requires("%intel", when="^mkl", msg="Intel MKL only works with the Intel compiler")
-    requires("%intel", when="^intel-mkl", msg="Intel MKL only works with the Intel compiler")
-    requires("%intel", when="^intel-mpi", msg="Intel MPI only works with the Intel compiler")
+    conflicts("%intel")
 
     def patch(self):
         """Fix bad logic in m_makespectrum.f90 for the Oxygen release"""
@@ -149,7 +147,7 @@ class Exciting(MakefilePackage):
         install_tree("species", prefix.species)
         install_tree("tools", prefix.tools)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("WNHOME", self.prefix)
         env.set("EXCITINGROOT", self.prefix)
         env.set("EXCITINGBIN", self.prefix.bin)

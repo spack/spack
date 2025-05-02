@@ -24,8 +24,6 @@ class G2c(CMakePackage):
     version("1.6.4", sha256="5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d")
     version("1.6.2", sha256="b5384b48e108293d7f764cdad458ac8ce436f26be330b02c69c2a75bb7eb9a2c")
 
-    depends_on("c", type="build")
-
     variant("aec", default=True, description="Use AEC library")
     variant("png", default=True, description="Use PNG library")
     variant("jasper", default=True, description="Use Jasper library")
@@ -33,30 +31,26 @@ class G2c(CMakePackage):
     variant("pic", default=True, description="Build with position-independent-code")
     variant(
         "libs",
-        default=("shared", "static"),
+        default="shared,static",
         values=("shared", "static"),
         multi=True,
         description="Build shared libs, static libs or both",
         when="@1.7:",
     )
     variant(
-        "pthreads",
-        default=False,
-        description="Turn on thread-safety with pthreads",
-        when="@develop",
+        "pthreads", default=False, description="Turn on thread-safety with pthreads", when="@2:"
     )
     variant(
-        "utils",
-        default=True,
-        description="Build and install some utility programs",
-        when="@develop",
+        "utils", default=True, description="Build and install some utility programs", when="@2:"
     )
     variant(
         "build_v2_api",
-        default=False,
+        default=True,
         description="Build new g2c API, experimental until 2.0.0 release",
-        when="@develop",
+        when="@2:",
     )
+
+    depends_on("c", type="build")
 
     depends_on("libaec", when="+aec")
     depends_on("libpng", when="+png")
@@ -64,6 +58,7 @@ class G2c(CMakePackage):
     depends_on("openjpeg", when="+openjpeg")
     depends_on("libxml2@2.9:", when="+build_v2_api")
 
+    conflicts("+utils ~build_v2_api", msg="+utils requires G2C API")
     conflicts("+jasper +openjpeg", msg="Either Jasper or OpenJPEG should be used, not both")
 
     def cmake_args(self):
@@ -83,7 +78,7 @@ class G2c(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:1.6"):
             shared = False
         else:

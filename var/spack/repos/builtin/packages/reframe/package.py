@@ -112,11 +112,11 @@ class Reframe(Package):
     version("2.17.2", sha256="092241cdc15918040aacb922c806aecb59c5bdc3ff7db034a4f355d39aecc101")
     version("2.17.1", sha256="0b0d32a892607840a7d668f5dcea6f03f7022a26b23e5042a0faf5b8c41cb146")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("docs", default=False, description="Build ReFrame's man page documentation")
     variant("gelf", default=False, description="Add graylog handler support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # ReFrame requires git up to version 3.1, see:
     # https://github.com/eth-cscs/reframe/issues/1464
@@ -181,7 +181,7 @@ class Reframe(Package):
                         shutil.move("reframe.settings.8", "man8")
         install_tree(self.stage.source_path, self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix)
         if self.spec.satisfies("@3.0:"):
             if "+docs" in self.spec:

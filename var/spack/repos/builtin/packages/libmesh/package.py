@@ -133,6 +133,9 @@ class Libmesh(AutotoolsPackage):
         "variant.",
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("boost", when="+boost")
 
     # TODO: replace this with an explicit list of components of Boost,
@@ -321,5 +324,7 @@ class Libmesh(AutotoolsPackage):
 
         return options
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.append_flags("PERL", self.spec["perl"].command.path)

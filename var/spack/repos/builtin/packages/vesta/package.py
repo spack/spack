@@ -20,7 +20,7 @@ class Vesta(Package):
 
     conflicts("%gcc@:5.3")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix)
 

@@ -31,15 +31,15 @@ class SalomeMedcoupling(CMakePackage):
     version("9.4.0", tag="V9_4_0", commit="984fe46c4076f08f42ef43e290e3cd1aea5a8182")
     version("9.3.0", tag="V9_3_0", commit="32521cd6e5c113de5db7953a80149e5ab492120a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("static", default=False, description="Enable static library build")
     variant("mpi", default=False, description="Enable MPI")
     variant("int64", default=False, description="Use 64 bits indices")
     variant("partitioner", default=False, description="Enable partitioner")
     variant("metis", default=False, description="Enable Metis")
     variant("scotch", default=False, description="Enable Scotch")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("libxml2@2.9.1:")
     depends_on("libtirpc")
@@ -77,14 +77,14 @@ class SalomeMedcoupling(CMakePackage):
     def check(self):
         pass
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+metis" in self.spec:
             env.set("METIS_ROOT_DIR", self.spec["metis"].prefix)
 
         if "+scotch" in self.spec:
             env.set("SCOTCH_ROOT_DIR", self.spec["scotch"].prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         python_ver = self.spec["python"].version.up_to(2)
         env.prepend_path(
             "PYTHONPATH", join_path(self.prefix.lib, f"python{python_ver}", "site-packages")

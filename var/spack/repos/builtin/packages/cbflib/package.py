@@ -30,7 +30,7 @@ class Cbflib(MakefilePackage):
     patch("cbf_f16.patch")
     patch("cbf_int.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ce = Executable(self.compiler.cc)
         ce(
             "-E",

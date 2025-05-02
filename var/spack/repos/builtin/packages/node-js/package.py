@@ -69,9 +69,6 @@ class NodeJs(Package):
             "14.10.0", sha256="7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e"
         )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("debug", default=False, description="Include debugger support")
     variant("doc", default=False, description="Compile with documentation")
     variant(
@@ -87,6 +84,9 @@ class NodeJs(Package):
     variant(
         "zlib", default=True, description="Build with Spacks zlib instead of the bundled version"
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # https://github.com/nodejs/node/blob/master/BUILDING.md#unix-and-macos
     depends_on("gmake@3.81:", type="build")
@@ -164,7 +164,7 @@ class NodeJs(Package):
         match = re.match(r"v([\d.]+)\s*", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Force use of experimental Python 3 support
         env.set("PYTHON", self.spec["python"].command.path)
         env.set("NODE_GYP_FORCE_PYTHON", self.spec["python"].command.path)

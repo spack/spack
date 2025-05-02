@@ -18,9 +18,6 @@ class Libsixel(MesonPackage):
 
     version("1.10.3", sha256="028552eb8f2a37c6effda88ee5e8f6d87b5d9601182ddec784a9728865f821e0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("img2sixel", default=True, description="build binary img2sixel")
     variant("sixel2png", default=True, description="build binary sixel2png")
     variant("gd", default=True, description="build with libgd")
@@ -28,6 +25,9 @@ class Libsixel(MesonPackage):
     variant("png", default=False, description="build with libpng")
     variant("libcurl", default=False, description="build with libcurl")
     variant("gdk-pixbuf2", default=False, description="build with gdk-pixbuf2")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("curl", when="+libcurl")
     depends_on("libgd", when="+gd")

@@ -50,7 +50,7 @@ class Gurobi(Package):
         gurobi_shell = join_path("linux64", "bin", "gurobi.sh")
         filter_file(r":\$PYTHONPATH", "", gurobi_shell)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("GUROBI_HOME", self.prefix)
         env.set("GRB_LICENSE_FILE", join_path(self.prefix, "gurobi.lic"))
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

@@ -110,9 +110,9 @@ main(int argc, char* argv[])
             f.write(corge_h)
         with open("%s/corge/corgegator.cc" % self.stage.source_path, "w", encoding="utf-8") as f:
             f.write(corgegator_cc)
-        gpp = which("/usr/bin/g++")
+        gpp = which("g++")
         if sys.platform == "darwin":
-            gpp = which("/usr/bin/clang++")
+            gpp = which("clang++")
         gpp(
             "-Dcorge_EXPORTS",
             "-I%s" % self.stage.source_path,

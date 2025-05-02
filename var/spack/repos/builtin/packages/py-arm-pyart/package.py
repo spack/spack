@@ -21,8 +21,6 @@ class PyArmPyart(PythonPackage):
 
     version("1.12.7", sha256="b7b23ecef270c60b017d94603941f0c117de072a10125c5f58c0685d801f9161")
 
-    depends_on("c", type="build")  # generated
-
     variant("cartopy", description="Plot grids on maps", default=False)
     variant("cylp", description="Linear programming solver", default=False)
     variant("gdal", description="Output GeoTIFFs from grid objects", default=False)
@@ -32,6 +30,8 @@ class PyArmPyart(PythonPackage):
 
     conflicts("~hdf5", when="+wradlib")
     conflicts("~gdal", when="+wradlib")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("python@3.6:3.10", type=("build", "run"))
 
@@ -65,7 +65,7 @@ class PyArmPyart(PythonPackage):
 
     patch("StringIO.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+rsl" in self.spec:
             env.set("RSL_PATH", self.spec["rsl"].prefix)
         else:

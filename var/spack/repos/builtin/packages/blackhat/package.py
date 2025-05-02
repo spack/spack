@@ -30,5 +30,5 @@ class Blackhat(AutotoolsPackage):
     def configure_args(self):
         return ["--with-QDpath=" + self.spec["qd"].prefix, "--enable-pythoninterface=no"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", "-Wno-deprecated")

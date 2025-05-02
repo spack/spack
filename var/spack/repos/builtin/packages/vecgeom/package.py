@@ -88,9 +88,6 @@ class Vecgeom(CMakePackage, CudaPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     _cxxstd_values = (conditional("11", "14", when="@:1.1"), "17", conditional("20", when="@1.2:"))
     variant(
         "cxxstd",
@@ -105,6 +102,9 @@ class Vecgeom(CMakePackage, CudaPackage):
     variant("root", default=False, description="Support ROOT geometry construction")
     variant("shared", default=True, description="Build shared libraries")
     variant("surface", default=False, when="@2:", description="Use surface frame representation")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("veccore")
     depends_on("veccore@0.8.1:", when="+cuda")
@@ -122,6 +122,12 @@ class Vecgeom(CMakePackage, CudaPackage):
         "https://gitlab.cern.ch/VecGeom/VecGeom/-/commit/0bf9b675ab70eb5cb9409ff73c1152fd1326dbf4.diff",
         sha256="f172b0a9ee1de4931b106d8500d1a60d5688c9bce324cf12ca107ec866a16c56",
         when="@1.2.7:1.2.10 +cuda ^cuda@:11",
+    )
+    # Fix -Wmissing-template-arg-list-after-template-kw
+    patch(
+        "https://gitlab.cern.ch/VecGeom/VecGeom/-/merge_requests/1251.diff",
+        sha256="b9419c6666389b69ee2c9125d10f25b423fce339495413ac4762ae6f32bdea63",
+        when="@:1.2.10 ^apple-clang@17:",
     )
 
     def std_when(values):

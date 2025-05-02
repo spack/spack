@@ -14,6 +14,7 @@ class PySegmentationModelsPytorch(PythonPackage):
     license("MIT")
     maintainers("adamjstewart")
 
+    version("0.5.0", sha256="cabba8aced6ef7bdcd6288dd9e1dc2840848aa819d539c455bd07aeceb2fdf96")
     version("0.4.0", sha256="8833e63f0846090667be6fce05a2bbebbd1537776d3dea72916aa3db9e22e55b")
     with default_args(deprecated=True):
         version("0.3.4", sha256="f4aee7f6add479bd3c3953e855b7055fc657dc6800bf7fc8ab733fd7f8acb163")
@@ -29,18 +30,12 @@ class PySegmentationModelsPytorch(PythonPackage):
         depends_on("py-setuptools")
 
     with default_args(type=("build", "run")):
-        depends_on("py-efficientnet-pytorch@0.6.1:", when="@0.4:")
-        depends_on("py-efficientnet-pytorch@0.7.1", when="@0.3")
-        depends_on("py-efficientnet-pytorch@0.6.3", when="@:0.2")
         depends_on("py-huggingface-hub@0.24:", when="@0.4:")
         depends_on("py-huggingface-hub@0.24.6:", when="@0.3.4:0.3")
         depends_on("py-numpy@1.19.3:", when="@0.4:")
         depends_on("pil@8:", when="@0.4:")
         depends_on("pil", when="@0.3:")
-        depends_on("py-pretrainedmodels@0.7.1:", when="@0.4:")
-        depends_on("py-pretrainedmodels@0.7.4", when="@:0.3")
-        depends_on("py-six@1.5:", when="@0.4:")
-        depends_on("py-six", when="@0.3.4:")
+        depends_on("py-safetensors@0.3.1:", when="@0.5:")
         depends_on("py-timm@0.9:", when="@0.4:")
         depends_on("py-timm@0.9.7", when="@0.3.4")
         depends_on("py-timm@0.9.2", when="@0.3.3")
@@ -51,3 +46,12 @@ class PySegmentationModelsPytorch(PythonPackage):
         depends_on("py-torchvision@0.5:")
         depends_on("py-tqdm@4.42.1:", when="@0.4:")
         depends_on("py-tqdm", when="@0.3:")
+
+        # Historical dependencies
+        depends_on("py-efficientnet-pytorch@0.6.1:", when="@0.4")
+        depends_on("py-efficientnet-pytorch@0.7.1", when="@0.3")
+        depends_on("py-efficientnet-pytorch@0.6.3", when="@0.2")
+        depends_on("py-pretrainedmodels@0.7.1:", when="@0.4")
+        depends_on("py-pretrainedmodels@0.7.4", when="@:0.3")
+        depends_on("py-six@1.5:", when="@0.4")
+        depends_on("py-six", when="@0.3.4")

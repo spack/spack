@@ -65,7 +65,7 @@ class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("libxsmm@1.18:+shared blas=0", when="+libxsmm", type=("run"))
 
     # Explicitly add dependencies to environment variables
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         deps = ["metis", "scotch", "libxsmm", "hip", "rocblas"]
         pyfr_library_path = []
         for dep in deps:

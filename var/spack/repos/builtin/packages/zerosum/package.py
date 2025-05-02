@@ -20,9 +20,6 @@ class Zerosum(CMakePackage):
 
     version("main", branch="main")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("perfstubs", default=True, description="Enable PerfStubs support")
     variant("hwloc", default=True, description="Enable HWLOC support")
     variant("mpi", default=True, description="Enable MPI support")
@@ -39,6 +36,9 @@ class Zerosum(CMakePackage):
     # file or in a subclass and a superclass, the _last_ definition is used
     # for all attributes except for the when clauses."
     variant("ompt", default=True, description="Enable OpenMP Tools support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake", type="build")
     depends_on("hwloc", when="+hwloc")

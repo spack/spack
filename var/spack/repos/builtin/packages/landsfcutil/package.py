@@ -31,7 +31,7 @@ class Landsfcutil(CMakePackage):
         args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         for suffix in ("4", "d"):
             lib = find_libraries(
                 "liblandsfcutil_" + suffix, root=self.prefix, shared=False, recursive=True

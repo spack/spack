@@ -173,7 +173,7 @@ class Augustus(MakefilePackage):
             files = glob.glob("*.py")
             filter_file(pattern, repl, *files, backup=False)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         htslib = self.spec["htslib"].prefix
         bamtools = self.spec["bamtools"].prefix
 
@@ -184,6 +184,6 @@ class Augustus(MakefilePackage):
             env.set("HTSLIB_INSTALL_DIR", htslib)
             env.set("BAMTOOLS_INSTALL_DIR", bamtools)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("AUGUSTUS_CONFIG_PATH", join_path(self.prefix, "config"))
         env.prepend_path("PATH", join_path(self.prefix, "scripts"))

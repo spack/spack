@@ -13,10 +13,15 @@ class Erlang(AutotoolsPackage):
     """
 
     homepage = "https://erlang.org/"
-    url = "https://erlang.org/download/otp_src_23.3.tar.gz"
+    url = "https://github.com/erlang/otp/releases/download/OTP-23.3/otp_src_23.3.tar.gz"
 
-    license("Apache-2.0")
+    license("Apache-2.0", checked_by="wdconinc")
 
+    version("27.3", sha256="efe76126938f237c0d3a0e2e8753c5cb823235d4d53708833bbc0968d76c39b8")
+    version("27.2.4", sha256="2b98483f73570203015c1d1f87f29c2d0208a8fc7220af2225cf1eb3dfd508f6")
+    version("27.0.1", sha256="26d894e2f0dda9d13560af08ea589afc01569df6b5486e565beb5accb99c9cf4")
+    version("26.2.5.9", sha256="fb626d82c6a4fb7a85db8f8f12c8689ad669791d58982f91b05d226785b56175")
+    version("26.2.5.2", sha256="e49708cf1f602863e394869af48df4abcb39e3633b96cb4babde3ee7aa724872")
     version("26.0", sha256="4e411587bd7d18ee2d5a0e7207f638e14036152633db57d2cf49c84a9c92d945")
     version("25.3", sha256="aeaa546e0c38e338010d16348d8c67f7fc8c02df728a88d8499838d8c9131e1c")
     version("25.2", sha256="0df1243afde953647df95785f8e75541fd0ea8ac70c0f639c977513be1761f63")
@@ -37,3 +42,9 @@ class Erlang(AutotoolsPackage):
     depends_on("m4", type="build")
     depends_on("libtool", type="build")
     depends_on("ncurses", type="link")
+
+    def url_for_version(self, version):
+        if self.spec.satisfies("@:26.0"):
+            return f"https://erlang.org/download/otp_src_{version}.tar.gz"
+        else:
+            return f"https://github.com/erlang/otp/releases/download/OTP-{version}/otp_src_{version}.tar.gz"

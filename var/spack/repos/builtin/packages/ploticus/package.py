@@ -28,7 +28,7 @@ class Ploticus(MakefilePackage):
             "https://sourceforge.net/projects/ploticus/files/ploticus/2.42/ploticus242_src.tar.gz"
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PLOTICUS_PREFABS", self.prefix.prefabs)
 
     def edit(self, spec, prefix):

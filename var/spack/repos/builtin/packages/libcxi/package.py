@@ -23,6 +23,12 @@ class Libcxi(AutotoolsPackage):
 
     depends_on("c", type="build")
 
+    with default_args(type="build", when="@main"):
+        depends_on("autoconf")
+        depends_on("automake")
+        depends_on("libtool")
+        depends_on("pkgconfig")
+
     depends_on("cassini-headers")
     depends_on("cxi-driver")
 
@@ -54,7 +60,7 @@ class Libcxi(AutotoolsPackage):
         sh = which("sh")
         sh("autogen.sh")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CFLAGS", f"-I{self.spec['cassini-headers'].prefix.include}")
 
     def configure_args(self):
@@ -65,9 +71,15 @@ class Libcxi(AutotoolsPackage):
 
         if self.spec.satisfies("+level_zero"):
             args.append(f"--with-ze={self.spec['oneapi-level-zero'].prefix}")
+        else:
+            args.append("--without-ze")
         if self.spec.satisfies("+cuda"):
             args.append(f"--with-cuda={self.spec['cuda'].prefix}")
+        else:
+            args.append("--without-cuda")
         if self.spec.satisfies("+rocm"):
             args.append(f"--with-rocm={self.spec['hip'].prefix}")
+        else:
+            args.append("--without-rocm")
 
         return args

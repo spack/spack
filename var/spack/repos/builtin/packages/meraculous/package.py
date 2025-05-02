@@ -38,6 +38,6 @@ class Meraculous(CMakePackage, SourceforgePackage):
         edit = FileFilter("CMakeLists.txt")
         edit.filter(r"-static-libstdc\+\+", "")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MERACULOUS_ROOT", self.prefix)
         env.prepend_path("PERL5LIB", self.prefix.lib)

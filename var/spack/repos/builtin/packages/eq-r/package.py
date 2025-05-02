@@ -36,7 +36,7 @@ class EqR(AutotoolsPackage):
 
     configure_directory = "src"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("CC", spec["mpi"].mpicc)
         env.set("CXX", spec["mpi"].mpicxx)
