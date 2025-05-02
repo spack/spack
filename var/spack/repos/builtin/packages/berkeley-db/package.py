@@ -96,6 +96,9 @@ class BerkeleyDb(AutotoolsPackage):
         ):
             config_args.append("--disable-atomicsupport")
 
+        if spec.satisfies("@:18.1.40 %gcc@15"):
+            config_args.append("CFLAGS=-std=c17")
+
         return config_args
 
     def check_exe_version(self, exe):
