@@ -8,12 +8,9 @@ import re
 import string
 from typing import List, Tuple
 
-import spack.error
-
 __all__ = [
     "pkg_name_to_class_name",
     "valid_module_name",
-    "validate_module_name",
     "possible_spack_module_names",
     "simplify_name",
     "NamespaceTrie",
@@ -185,20 +182,6 @@ def valid_module_name(mod_name: str, package_api: Tuple[int, int]) -> bool:
         return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
     else:
         return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
-
-
-def validate_module_name(mod_name: str, package_api: Tuple[int, int]) -> None:
-    """Raise an exception if mod_name is not valid."""
-    if not valid_module_name(mod_name, package_api):
-        raise InvalidModuleNameError(mod_name)
-
-
-class InvalidModuleNameError(spack.error.SpackError):
-    """Raised when we encounter a bad module name."""
-
-    def __init__(self, name):
-        super().__init__("Invalid module name: " + name)
-        self.name = name
 
 
 class NamespaceTrie:
