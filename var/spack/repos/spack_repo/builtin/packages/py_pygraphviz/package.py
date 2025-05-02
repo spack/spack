@@ -36,11 +36,11 @@ class PyPygraphviz(PythonPackage):
             fext = "zip"
         return url.format(version, fext)
 
-    # some how graphviz isn't detected during install. 
+    # some how graphviz isn't detected during install.
     @run_before("install")
     def fix_setup(self):
         inc_dir = self["graphviz"].prefix.include
         lib_dir = self["graphviz"].prefix.lib
         fsetup = FileFilter(join_path(self.build_directory, "setup.py"))
-        fsetup.filter( "include_dirs=[],", f"include_dirs = [\"{inc_dir}\"],", string=True )
-        fsetup.filter( "library_dirs=[],", f"library_dirs = [\"{lib_dir}\"],", string=True )
+        fsetup.filter("include_dirs=[],", f'include_dirs = ["{inc_dir}"],', string=True)
+        fsetup.filter("library_dirs=[],", f'library_dirs = ["{lib_dir}"],', string=True)
