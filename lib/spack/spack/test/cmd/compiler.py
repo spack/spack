@@ -148,7 +148,9 @@ done
 # TODO/RepoSplit:   package so llvm@11.0.0 is in the output.
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_prefer_no_suffix(
+    mock_packages, no_packages_yaml, working_env, compilers_dir
+):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
     clang_path = compilers_dir / "clang"
     shutil.copy(clang_path, clang_path.parent / "clang-gpu")
@@ -158,10 +160,6 @@ def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers
     output = compiler("find", "--scope=site")
 
     assert "gcc@8.4.0" in output
-
-    if not os.path.exists(spack.paths.packages_path):
-        pytest.xfail("TODO/RepoSplit: Checking llvm requires llvm package solution")
-
     assert "llvm@11.0.0" in output
 
     compilers = spack.compilers.config.all_compilers_from(no_packages_yaml, scope="site")
