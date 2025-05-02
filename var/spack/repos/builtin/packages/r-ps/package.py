@@ -27,5 +27,7 @@ class RPs(RPackage):
     version("1.1.0", sha256="5d5240d5bf1d48c721b3fdf47cfc9dbf878e388ea1f057b764db05bffdc4a9fe")
     version("1.0.0", sha256="9bdaf64aaa44ae11866868402eb75bf56c2e3022100476d9b9dcd16ca784ffd8")
 
+    depends_on("c", type="build")
+
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.4:", type=("build", "run"), when="@1.7.0:")

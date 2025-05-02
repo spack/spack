@@ -14,7 +14,6 @@ import copy
 import functools
 import glob
 import hashlib
-import importlib
 import io
 import os
 import re
@@ -818,12 +817,12 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
     @classproperty
     def module(cls):
-        """Module object (not just the name) that this package is defined in.
+        """Module instance that this package class is defined in.
 
         We use this to add variables to package modules.  This makes
         install() methods easier to write (e.g., can call configure())
         """
-        return importlib.import_module(cls.__module__)
+        return sys.modules[cls.__module__]
 
     @classproperty
     def namespace(cls):

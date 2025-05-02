@@ -14,7 +14,11 @@ class ParquetCpp(CMakePackage):
 
     license("Apache-2.0")
 
-    version("1.4.0", sha256="52899be6c9dc49a14976d4ad84597243696c3fa2882e5c802b56e912bfbcc7ce")
+    version(
+        "1.4.0",
+        sha256="52899be6c9dc49a14976d4ad84597243696c3fa2882e5c802b56e912bfbcc7ce",
+        deprecated=True,
+    )
 
     depends_on("arrow")
 
@@ -27,7 +31,7 @@ class ParquetCpp(CMakePackage):
     depends_on(Boost.with_default_variants)
     depends_on("cmake@3.2.0:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("thrift+pic")
+    depends_on("thrift")
 
     variant("pic", default=True, description="Build position independent code")
     variant(

@@ -26,6 +26,9 @@ class RReadxl(RPackage):
     version("1.1.0", sha256="b63d21fc6510acb373e96deaec45e966a523ec75cbec75a089529297ed443116")
     version("1.0.0", sha256="fbd62f07fed7946363698a57be88f4ef3fa254ecf456ef292535849c787fc7ad")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.4:", type=("build", "run"), when="@1.4.0:")
     depends_on("r@3.5:", type=("build", "run"), when="@1.4.2:")
     depends_on("r@3.6:", type=("build", "run"), when="@1.4.3:")

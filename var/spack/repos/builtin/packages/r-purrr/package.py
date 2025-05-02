@@ -22,6 +22,9 @@ class RPurrr(RPackage):
     version("0.3.1", sha256="c2a3c9901192efd8a04976676f84885a005db88deb1432e4750900c7b3b7883b")
     version("0.2.4", sha256="ed8d0f69d29b95c2289ae52be08a0e65f8171abb6d2587de7b57328bf3b2eb71")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.2:", type=("build", "run"), when="@0.3.3:")
     depends_on("r@3.4.0:", type=("build", "run"), when="@1.0.1:")

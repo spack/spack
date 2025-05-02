@@ -14,6 +14,8 @@ class Nco(AutotoolsPackage):
 
     maintainers("altheaden", "xylar")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("5.3.3", sha256="f9185e115e246fe884dcae0804146b56df7257f53de7ba190fea66977ccd5a64")

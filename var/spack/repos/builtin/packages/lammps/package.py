@@ -18,7 +18,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     url = "https://github.com/lammps/lammps/archive/patch_1Sep2017.tar.gz"
     git = "https://github.com/lammps/lammps.git"
 
-    tags = ["ecp", "ecp-apps"]
+    tags = ["ecp", "ecp-apps", "e4s"]
 
     maintainers("rbberger")
 

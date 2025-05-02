@@ -176,7 +176,7 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("conduit@:0.7.2", when="@:0.7.1")
     depends_on("conduit@0.8.2:", when="@0.8:")
     depends_on("conduit@0.8.6:", when="@0.9:")
-    depends_on("conduit@0.9.1:", when="@0.9.3:")
+    depends_on("conduit@0.9.1:0.9.3", when="@0.9.3:")
     depends_on("conduit+python", when="+python")
     depends_on("conduit~python", when="~python")
     depends_on("conduit+mpi", when="+mpi")

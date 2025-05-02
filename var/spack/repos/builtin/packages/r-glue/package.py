@@ -29,6 +29,9 @@ class RGlue(RPackage):
     version("1.3.0", sha256="789e5a44c3635c3d3db26666e635e88adcf61cd02b75465125d95d7a12291cee")
     version("1.2.0", sha256="19275b34ee6a1bcad05360b7eb996cebaa1402f189a5dfb084e695d423f2296e")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.2:", type=("build", "run"), when="@1.4.2:")
     depends_on("r@3.4:", type=("build", "run"), when="@1.6.0:")

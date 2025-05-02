@@ -20,6 +20,8 @@ class NetcdfFortran(AutotoolsPackage):
 
     maintainers("skosukhin", "WardF")
 
+    tags = ["e4s"]
+
     license("Apache-2.0")
 
     version("4.6.1", sha256="b50b0c72b8b16b140201a020936aa8aeda5c79cf265c55160986cd637807a37a")
@@ -35,8 +37,8 @@ class NetcdfFortran(AutotoolsPackage):
     variant("shared", default=True, description="Enable shared library")
     variant("doc", default=False, description="Enable building docs")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("netcdf-c")
     depends_on("netcdf-c@4.7.4:", when="@4.5.3:")  # nc_def_var_szip required

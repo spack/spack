@@ -18,6 +18,7 @@ class PyTorchvision(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.22.0", sha256="83ed8855cdfb138aba6f116f8fd8da8b83463170dad67a70f60327915ed12014")
     version("0.21.0", sha256="0a4a967bbb7f9810f792cd0289a07fb98c8fb5d1303fae8b63e3a6b05d720058")
     version("0.20.1", sha256="7e08c7f56e2c89859310e53d898f72bccc4987cd83e08cfd6303513da15a9e71")
     version("0.20.0", sha256="b59d9896c5c957c6db0018754bbd17d079c5102b82b9be0b438553b40a7b6029")
@@ -82,6 +83,7 @@ class PyTorchvision(PythonPackage):
 
         # https://github.com/pytorch/vision#installation
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.7.0", when="@0.22.0")
         depends_on("py-torch@2.6.0", when="@0.21.0")
         depends_on("py-torch@2.5.1", when="@0.20.1")
         depends_on("py-torch@2.5.0", when="@0.20.0")
@@ -165,13 +167,6 @@ class PyTorchvision(PythonPackage):
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
-
-    def flag_handler(self, name, flags):
-        # https://github.com/pytorch/vision/issues/8653
-        if name == "ldflags":
-            if self.spec.satisfies("%apple-clang@15:"):
-                flags.append("-Wl,-ld_classic")
-        return (flags, None, None)
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The only documentation on building is what is found in setup.py and:

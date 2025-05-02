@@ -36,6 +36,8 @@ class Paradiseo(CMakePackage):
 
     # Required dependencies
     depends_on("cmake@2.8:", type="build")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Optional dependencies
     depends_on("mpi", when="+mpi")

@@ -85,9 +85,7 @@ class Apptainer(SingularityBase):
         options = []
         if spec.satisfies("@1.1.0: +suid"):
             options.append("--with-suid")
-        if spec.satisfies("+libsubid"):
-            options.append("--with-libsubid")
-        else:
+        if spec.satisfies("@1.4: ~libsubid"):
             options.append("--without-libsubid")
         return options
 

@@ -30,6 +30,8 @@ class Express(CMakePackage):
     )
     depends_on("bamtools")
     depends_on("zlib-api")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # patch from the debian package repo:
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=811859

@@ -21,6 +21,8 @@ class Zoltan(AutotoolsPackage):
 
     license("Unlicense")
 
+    maintainers("tukss")
+
     version("3.901", sha256="030c22d9f7532d3076e40cba1f03a63b2ee961d8cc9a35149af4a3684922a910")
     version("3.83", sha256="17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c")
 
@@ -153,6 +155,8 @@ class Zoltan(AutotoolsPackage):
                     f"--with-scotch-libdir={scotch_prefix.lib}",
                 ]
             )
+            config_libs.append(spec["scotch"].libs.ld_flags)
+            config_ldflags.append(spec["scotch"].libs.ld_flags)
 
         if spec.satisfies("+mpi"):
             config_args.extend(

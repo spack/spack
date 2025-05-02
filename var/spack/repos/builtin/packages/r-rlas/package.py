@@ -24,3 +24,4 @@ class RRlas(RPackage):
     depends_on("r-rcpp", type=("build", "run"))
     depends_on("r-data-table", type=("build", "run"))
     depends_on("boost@:1.84+filesystem+program_options+numpy+python+regex+serialization+thread")
+    depends_on("cxx", type="build")
