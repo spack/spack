@@ -132,7 +132,7 @@ class Tau(Package):
         default=False,
         description="Do not add -no-pie while linking with Ubuntu.",
     )
-
+    variant("openacc", default=False, description="Activates OpenACC support")
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
@@ -414,6 +414,9 @@ class Tau(Package):
             options.append("-pythonlib=%s" % lib_path)
         if "+disable-no-pie" in spec:
             options.append("-disable-no-pie-on-ubuntu")
+
+        if "+openacc" in spec:
+            options.append("-openacc")
 
         if "+dyninst" in spec:
             options.append("-dyninst=%s" % spec["dyninst"].prefix)
