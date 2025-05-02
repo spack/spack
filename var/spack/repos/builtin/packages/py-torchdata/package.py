@@ -70,5 +70,5 @@ class PyTorchdata(PythonPackage):
     depends_on("py-pybind11", when="@0.4:0.9")
     depends_on("aws-sdk-cpp", when="@0.4:0.9")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("USE_SYSTEM_LIBS", "ON")

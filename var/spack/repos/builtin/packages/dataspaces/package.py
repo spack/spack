@@ -34,6 +34,8 @@ class Dataspaces(AutotoolsPackage):
     variant("ptag", default="250", description="Cray UGNI protection tag", values=is_string)
     variant("mpi", default=True, description="Use MPI for collective communication")
 
+    depends_on("c", type="build")
+
     depends_on("m4", type="build")
     depends_on("automake", type="build")
     depends_on("autoconf", type="build")
@@ -44,7 +46,7 @@ class Dataspaces(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+mpi"):
             env.set("CC", self.spec["mpi"].mpicc)
             env.set("FC", self.spec["mpi"].mpifc)

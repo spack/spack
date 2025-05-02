@@ -75,7 +75,7 @@ class StarCcmPlus(Package):
             "-DNODOC={0}".format("false" if "+docs" in spec else "true"),
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # using Version.up_to strips out the 0 padding
         version = re.sub("_.*$", "", format(self.spec.version))
         env.prepend_path(

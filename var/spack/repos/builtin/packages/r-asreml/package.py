@@ -38,5 +38,5 @@ class RAsreml(RPackage):
     def url_for_version(self, version):
         return f"file://{os.getcwd()}//asreml_{version}_x86_64-pc-linux-gnu.tar.gz"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("vsni_LICENSE", join_path(self.prefix, "vsni.lic"))

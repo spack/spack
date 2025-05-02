@@ -205,7 +205,7 @@ class ArmForge(Package):
             probe = join_path(prefix, "bin", "forge-probe")
             subprocess.call([probe, "--install", "global"])
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Only PATH is needed for Forge.
         # Adding lib to LD_LIBRARY_PATH can cause conflicts with Forge's internal libs.
         env.clear()

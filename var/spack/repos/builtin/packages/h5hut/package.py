@@ -18,12 +18,12 @@ class H5hut(AutotoolsPackage):
     version("2.0.0rc7", sha256="bc058c4817c356b7b7acfe386c586923103b90bdfa83575db3a91754767e6fab")
     version("master", branch="master")
 
+    variant("fortran", default=True, description="Enable Fortran support")
+    variant("mpi", default=True, description="Enable MPI support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("fortran", default=True, description="Enable Fortran support")
-    variant("mpi", default=True, description="Enable MPI support")
 
     depends_on("autoconf", type="build", when="build_system=autotools")
     depends_on("automake", type="build", when="build_system=autotools")
@@ -37,13 +37,6 @@ class H5hut(AutotoolsPackage):
     # If built in parallel, the following error message occurs:
     # install: .libs/libH5hut.a: No such file or directory
     parallel = False
-
-    @run_before("configure")
-    def validate(self):
-        """Checks if Fortran compiler is available."""
-
-        if self.spec.satisfies("+fortran") and not self.compiler.fc:
-            raise RuntimeError("Cannot build Fortran variant without a Fortran compiler.")
 
     def flag_handler(self, name, flags):
         build_system_flags = []

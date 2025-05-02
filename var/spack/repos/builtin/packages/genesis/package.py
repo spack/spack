@@ -29,9 +29,6 @@ class Genesis(AutotoolsPackage, CudaPackage):
         url="https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2",
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     resource(
         when="@1.6.0",
         name="user_guide",
@@ -54,6 +51,9 @@ class Genesis(AutotoolsPackage, CudaPackage):
     variant("hmdisk", default=False, description="Enable huge molecule on hard disk.")
 
     conflicts("%apple-clang", when="+openmp")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build", when="@1.5.1 %fj")
     depends_on("autoconf", type="build", when="@master")
@@ -92,7 +92,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
             options.append("--host=Fugaku")
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("FC", self.spec["mpi"].mpifc, force=True)
         env.set("F77", self.spec["mpi"].mpif77, force=True)
         env.set("CC", self.spec["mpi"].mpicc, force=True)

@@ -31,10 +31,6 @@ class LlvmDoe(CMakePackage, CudaPackage):
     version("pragma-omp-tile", branch="sollve/pragma-omp-tile")
     version("13.0.0", branch="llvm.org/llvmorg-13.0.0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
     # to save space, build with `build_type=Release`.
@@ -106,6 +102,10 @@ class LlvmDoe(CMakePackage, CudaPackage):
     extends("python", when="+python")
 
     # Build dependency
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.4.3:", type="build")
     depends_on("cmake@3.13.4:", type="build", when="@12:")
     depends_on("python", when="~python", type="build")
@@ -375,7 +375,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
             return (None, flags, None)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ["clang", "apple-clang"]:
             for lld in "ld.lld-{0}".format(self.compiler.version.version[0]), "ld.lld":
@@ -386,7 +386,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
                     os.symlink(bin, sym)
             env.prepend_path("PATH", self.stage.path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+clang"):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

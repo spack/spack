@@ -21,6 +21,9 @@ class RFs(RPackage):
     version("1.5.0", sha256="36df1653571de3c628a4f769c4627f6ac53d0f9e4106d9d476afb22ae9603897")
     version("1.3.1", sha256="d6934dca8f835d8173e3fb9fd4d5e2740c8c04348dd2bcc57df1b711facb46bc")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1:", type=("build", "run"))
     depends_on("r@3.4:", type=("build", "run"), when="@1.6.2:")
     depends_on("r@3.6:", type=("build", "run"), when="@1.6.4:")

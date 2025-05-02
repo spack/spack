@@ -48,5 +48,5 @@ class PyPyfftw(PythonPackage):
             name = "pyFFTW"
         return url.format(name, version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("LDFLAGS", self.spec["fftw"].libs.search_flags)

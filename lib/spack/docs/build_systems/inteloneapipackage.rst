@@ -33,9 +33,6 @@ For more information on a specific package, do::
 
   spack info --all <package-name>
 
-Intel no longer releases new versions of Parallel Studio, which can be
-used in Spack via the :ref:`intelpackage`. All of its components can
-now be found in oneAPI.
 
 Examples
 ========
@@ -50,34 +47,8 @@ Install the oneAPI compilers::
 
   spack install intel-oneapi-compilers
 
-Add the compilers to your ``compilers.yaml`` so spack can use them::
 
-  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
-
-Verify that the compilers are available::
-
-  spack compiler list
-
-Note that 2024 and later releases do not include ``icc``. Before 2024,
-the package layout was different::
-  
-  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin/intel64
-  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin
-
-The ``intel-oneapi-compilers`` package includes 2 families of
-compilers:
-
-* ``intel``: ``icc``, ``icpc``, ``ifort``. Intel's *classic*
-  compilers. 2024 and later releases contain ``ifort``, but not
-  ``icc`` and ``icpc``.
-* ``oneapi``: ``icx``, ``icpx``, ``ifx``. Intel's new generation of
-  compilers based on LLVM.
-
-To build the ``patchelf`` Spack package with ``icc``, do::
-
-  spack install patchelf%intel
-
-To build with with ``icx``, do ::
+To build the ``patchelf`` Spack package with ``icx``, do::
 
   spack install patchelf%oneapi
 
@@ -91,15 +62,6 @@ compilers are installed with Spack like in example above.
 Install the oneAPI compilers::
 
   spack install intel-oneapi-compilers
-
-Add the compilers to your ``compilers.yaml`` so Spack can use them::
-
-  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
-  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/bin
-
-Verify that the compilers are available::
-
-  spack compiler list
 
 Clone `spack-configs <https://github.com/spack/spack-configs>`_ repo and activate Intel oneAPI CPU environment::
 
@@ -149,7 +111,7 @@ Compilers
 ---------
 
 To use the compilers, add some information about the installation to
-``compilers.yaml``. For most users, it is sufficient to do::
+``packages.yaml``. For most users, it is sufficient to do::
 
   spack compiler add /opt/intel/oneapi/compiler/latest/bin
 
@@ -157,7 +119,7 @@ Adapt the paths above if you did not install the tools in the default
 location. After adding the compilers, using them is the same
 as if you had installed the ``intel-oneapi-compilers`` package.
 Another option is to manually add the configuration to
-``compilers.yaml`` as described in :ref:`Compiler configuration
+``packages.yaml`` as described in :ref:`Compiler configuration
 <compiler-config>`.
 
 Before 2024, the directory structure was different::
@@ -199,16 +161,6 @@ You can also use Spack-installed libraries. For example::
 
 Will update your environment CPATH, LIBRARY_PATH, and other
 environment variables for building an application with oneMKL.
-
-More information
-================
-
-This section describes basic use of oneAPI, especially if it has
-changed compared to Parallel Studio. See :ref:`intelpackage` for more
-information on :ref:`intel-virtual-packages`,
-:ref:`intel-unrelated-packages`,
-:ref:`intel-integrating-external-libraries`, and
-:ref:`using-mkl-tips`.
 
 
 .. _`Intel installers`: https://software.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top.html

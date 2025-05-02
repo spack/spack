@@ -85,7 +85,7 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on("libpciaccess")
 
     @when("@:1.19")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/406
         env.set("CPPFLAGS", "-fcommon")
 

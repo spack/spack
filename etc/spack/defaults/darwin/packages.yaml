@@ -15,17 +15,18 @@
 # -------------------------------------------------------------------------
 packages:
   all:
-    compiler:
-    - apple-clang
-    - clang
-    - gcc
     providers:
+      c: [apple-clang, llvm, gcc]
+      cxx: [apple-clang, llvm, gcc]
       elf: [libelf]
+      fortran: [gcc]
       fuse: [macfuse]
       gl: [apple-gl]
       glu: [apple-glu]
       unwind: [apple-libunwind]
       uuid: [apple-libuuid]
+  apple-clang:
+    buildable: false
   apple-gl:
     buildable: false
     externals:
@@ -50,3 +51,12 @@ packages:
     # although the version number used here isn't critical
     - spec: apple-libuuid@1353.100.2
       prefix: /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+  c:
+    prefer:
+    - apple-clang
+  cxx:
+    prefer:
+    - apple-clang
+  fortran:
+    prefer:
+    - gcc

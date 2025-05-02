@@ -35,6 +35,7 @@ class Root(CMakePackage):
     version("develop", branch="master")
 
     # Production version
+    version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
     version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
     version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
     version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
@@ -93,10 +94,6 @@ class Root(CMakePackage):
     version("6.06.06", sha256="0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b")
     version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
     version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build", when="+fortran")
 
     # ###################### Patches ##########################
 
@@ -182,7 +179,7 @@ class Root(CMakePackage):
         patch(
             "https://github.com/root-project/root/pull/15925.diff?full_index=1",
             sha256="1937290a4d54cd2e3e8a8d23d93b8dedaca9ed8dcfdcfa2f0d16629ff53fb3b7",
-            when="@6.28: +python",
+            when="@6.28:6.32 +python",
         )
 
     # ###################### Variants ##########################
@@ -193,6 +190,9 @@ class Root(CMakePackage):
     variant("arrow", default=False, description="Enable Arrow interface")
     variant("cuda", when="@6.08.00:", default=False, description="Enable CUDA support")
     variant("cudnn", when="@6.20.02:", default=False, description="Enable cuDNN support")
+    variant(
+        "daos", default=False, description="Enable RNTuple support for DAOS storage", when="@6.26:"
+    )
     variant("davix", default=True, description="Compile with external Davix")
     variant("dcache", default=False, description="Enable support for dCache")
     variant("emacs", default=False, description="Enable Emacs support")
@@ -323,6 +323,10 @@ class Root(CMakePackage):
 
     # ###################### Dependencies ######################
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
+
     depends_on("cmake@3.4.3:", type="build", when="@:6.16")
     depends_on("cmake@3.9:", type="build", when="@6.18.00:")
     depends_on("cmake@3.16:", type="build", when="@6.26.00:")
@@ -388,6 +392,7 @@ class Root(CMakePackage):
     depends_on("cuda", when="+cuda")
     depends_on("cuda", when="+cudnn")
     depends_on("cudnn", when="+cudnn")
+    depends_on("daos", when="+daos")
     depends_on("davix @0.7.1:", when="+davix")
     depends_on("dcap", when="+dcache")
     depends_on("cfitsio", when="+fits")
@@ -500,6 +505,7 @@ class Root(CMakePackage):
     # See https://github.com/root-project/root/issues/11135
     conflicts("+ipo", msg="LTO is not a supported configuration for building ROOT")
 
+    @when("+root7 +geom +webgui")
     def patch(self):
         filter_file(
             r"#include <sstream>",
@@ -559,6 +565,7 @@ class Root(CMakePackage):
                     variants.append("~%s" % variantname[1:])
 
         _add_variant(v, f, "cocoa", "+aqua")
+        _add_variant(v, f, "daos", "+daos")
         _add_variant(v, f, "davix", "+davix")
         _add_variant(v, f, "dcache", "+dcache")
         _add_variant(v, f, "fftw3", "+fftw")
@@ -705,6 +712,7 @@ class Root(CMakePackage):
             define_from_variant("cocoa", "aqua"),
             define("dataframe", True),
             define_from_variant("davix"),
+            define_from_variant("daos"),
             define_from_variant("dcache"),
             define_from_variant("fftw3", "fftw"),
             define_from_variant("fitsio", "fits"),
@@ -756,6 +764,7 @@ class Root(CMakePackage):
             define("tcmalloc", False),
             define_from_variant("tmva"),
             define_from_variant("unuran"),
+            define("use_gsl_cblas", False),
             define_from_variant("vc"),
             define_from_variant("vdt"),
             define_from_variant("veccore"),
@@ -820,7 +829,7 @@ class Root(CMakePackage):
 
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         if "lz4" in spec:
@@ -869,7 +878,7 @@ class Root(CMakePackage):
             return "LD_LIBRARY_PATH"
         return "ROOT_LIBRARY_PATH"
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ROOTSYS", self.prefix)
         env.set("ROOT_VERSION", "v{0}".format(self.version.up_to(1)))
         env.prepend_path("PYTHONPATH", self.prefix.lib.root)

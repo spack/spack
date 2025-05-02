@@ -72,6 +72,8 @@ class Nix(AutotoolsPackage):
     depends_on("openssl")
     depends_on("sqlite@3.6.19:")
     depends_on("xz")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # gcc 4.9+ and higher supported with c++14
     conflicts("%gcc@:4.8")

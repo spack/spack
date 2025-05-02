@@ -67,6 +67,8 @@ class HdfEos2(AutotoolsPackage):
 
     conflicts("~static", when="~shared", msg="At least one of +static or +shared must be set")
 
+    depends_on("c", type="build")
+
     # Build dependencies
     depends_on("hdf")
     # Because hdf always depends on zlib and jpeg in spack, the tests below in configure_args
@@ -127,7 +129,7 @@ class HdfEos2(AutotoolsPackage):
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Add flags to LDFLAGS for any dependencies that need it
         extra_ldflags = []
         # hdf might have link dependency on rpc, if so need to add flags

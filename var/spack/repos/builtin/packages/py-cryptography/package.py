@@ -81,6 +81,6 @@ class PyCryptography(PythonPackage):
     # See reference: https://doc.rust-lang.org/cargo/reference/config.html#netgit-fetch-with-cli
     depends_on("git", type="build", when="@35:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@35:"):
             env.set("CARGO_NET_GIT_FETCH_WITH_CLI", "true")

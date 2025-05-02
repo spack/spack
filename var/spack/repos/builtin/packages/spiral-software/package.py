@@ -25,9 +25,6 @@ class SpiralSoftware(CMakePackage):
     version("8.4.0", sha256="d0c58de65c678130eeee6b8b8b48061bbe463468990f66d9b452225ce46dee19")
     version("8.3.0", sha256="41cf0e7f14f9497e98353baa1ef4ca6204ce5ca525db8093f5bb44e89992abdf")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     extendable = True
 
     # No dependencies.  Spiral pacakges are listed here as variants.  If a
@@ -58,6 +55,9 @@ class SpiralSoftware(CMakePackage):
     )
 
     # Dependencies
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     for pkg in ["fftx", "simt", "mpi", "jit", "hcol"]:
         depends_on(f"spiral-package-{pkg}", when=f"+{pkg}")
 
@@ -110,11 +110,15 @@ class SpiralSoftware(CMakePackage):
             if f"+{pkg}" in spec:
                 self.spiral_package_install(spec, prefix, pkg)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("SPIRAL_HOME", self.prefix)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("SPIRAL_HOME", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SPIRAL_HOME", self.prefix)

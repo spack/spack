@@ -22,7 +22,7 @@ class PyFrozendict(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # C extension is not supported for 3.11+. See also
         # https://github.com/Marco-Sulla/python-frozendict/issues/68
         if self.spec.satisfies("^python@3.11:"):

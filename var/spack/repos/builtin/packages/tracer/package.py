@@ -18,9 +18,9 @@ class Tracer(MakefilePackage):
     version("develop", branch="master")
     version("2.2", tag="v2.2", commit="fdd1b07a1a0faca14aac53dcbcbccc44237ae7cb")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("otf2", default=True, description="Use OTF2 traces for simulation")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("mpi")
     depends_on("codes")

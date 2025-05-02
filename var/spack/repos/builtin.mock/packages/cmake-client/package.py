@@ -29,6 +29,8 @@ class CmakeClient(CMakePackage):
     variant("single", description="", default="blue", values=("blue", "red", "green"), multi=False)
     variant("truthy", description="", default=True)
 
+    depends_on("c", type="build")
+
     callback_counter = 0
 
     flipped = False
@@ -65,7 +67,9 @@ class CmakeClient(CMakePackage):
             "link arg on dependency spec not readable from " "setup_build_environment.",
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable
         check(
             from_cmake == "from_cmake",

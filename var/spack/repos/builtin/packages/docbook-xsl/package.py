@@ -67,10 +67,12 @@ class DocbookXsl(Package):
                         catalog,
                     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         catalog = self.catalog
         env.prepend_path("XML_CATALOG_FILES", catalog, separator=" ")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         catalog = self.catalog
         env.prepend_path("XML_CATALOG_FILES", catalog, separator=" ")

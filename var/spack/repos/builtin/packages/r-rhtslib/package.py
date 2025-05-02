@@ -55,7 +55,7 @@ class RRhtslib(RPackage):
     patch("find_deps-1.16.patch", when="@1.16:1.28.0")
 
     @when("@1.12:")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BZIP2_INCLUDE", self.spec["bzip2"].headers.include_flags)
         env.set("XZ_INCLUDE", self.spec["xz"].headers.include_flags)
         env.set("BZIP2_LIB", self.spec["bzip2"].libs.search_flags)

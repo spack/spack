@@ -86,9 +86,6 @@ class KokkosLegacy(Package):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("debug", default=False, description="Build debug version of Kokkos")
 
     variant("serial", default=True, description="enable Serial backend (default)")
@@ -227,6 +224,9 @@ class KokkosLegacy(Package):
         msg="Kokkos build system has issue (#1296) when CUDA enabled"
         " in version 2.5.00 through 2.7.00.",
     )
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Specify that v1.x is required as v2.x has API changes
     depends_on("hwloc@:1")

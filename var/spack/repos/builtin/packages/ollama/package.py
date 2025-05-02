@@ -36,7 +36,7 @@ class Ollama(GoPackage, CudaPackage):
 class GoBuilder(spack.build_systems.go.GoBuilder):
     phases = ("generate", "build", "install")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             # These variables are consumed by gen_linux.sh which is called by
             # "go generate".

@@ -22,7 +22,7 @@ class Etcd(Package):
     depends_on("go@1.19:")
     depends_on("gmake", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Point GOPATH at the top of the staging dir for the build step.
         env.prepend_path("GOPATH", self.stage.path)
 

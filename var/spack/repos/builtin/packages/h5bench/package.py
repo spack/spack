@@ -32,10 +32,6 @@ class H5bench(CMakePackage):
         "1.0", commit="9d3438c1bc66c5976279ef203bd11a8d48ade724", submodules=True, deprecated=True
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("metadata", default=False, when="@1.2:", description="Enables metadata benchmark")
     variant("amrex", default=False, when="@1.2:", description="Enables AMReX benchmark")
     variant("exerciser", default=False, when="@1.2:", description="Enables exerciser benchmark")
@@ -44,6 +40,10 @@ class H5bench(CMakePackage):
     variant("async", default=False, when="@1.2:", description="Enables ASYNC VOL Connector")
     variant("all", default=False, when="@1.2:", description="Enables all h5bench benchmarks")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.10:", type="build")
     depends_on("mpi")
     depends_on("hdf5+mpi@1.12.0:1,develop-1.12:")
@@ -51,7 +51,7 @@ class H5bench(CMakePackage):
     depends_on("parallel-netcdf", when="+e3sm")
     depends_on("parallel-netcdf", when="+all")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_HOME", self.spec["hdf5"].prefix)
 
     def cmake_args(self):

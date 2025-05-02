@@ -23,5 +23,5 @@ class PyGoogleCrc32c(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("google-crc32c", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CRC32C_INSTALL_PREFIX", self.spec["google-crc32c"].prefix)

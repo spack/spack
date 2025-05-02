@@ -15,6 +15,8 @@ class Sollve(CMakePackage):
     homepage = "https://www.bnl.gov/compsci/projects/SOLLVE/"
     git = "https://github.com/SOLLVE/llvm.git"
 
+    tags = ["e4s"]
+
     # NOTE: The debug version of LLVM is an order of magnitude larger than
     # the release version, and may take up 20-30 GB of space. If you want
     # to save space, build with `build_type=Release`.
@@ -54,6 +56,9 @@ class Sollve(CMakePackage):
     variant("python", default=False, description="Install python bindings")
     variant("argobots", default=True, description="Use Argobots in BOLT")
     extends("python", when="+python")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # Build dependency
     depends_on("cmake@3.4.3:", type="build")
@@ -241,10 +246,10 @@ class Sollve(CMakePackage):
             )
             raise RuntimeError(explanation)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

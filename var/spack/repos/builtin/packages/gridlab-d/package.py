@@ -23,13 +23,13 @@ class GridlabD(AutotoolsPackage):
     # Using only develop as other branches and releases did not build properly.
     version("develop", branch="develop")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("mysql", default=False, description="Enable MySQL support for Gridlab-D.")
     variant("helics", default=False, description="Enable Helics support for Gridlab-D.")
 
     # Add dependencies.
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -52,7 +52,7 @@ class GridlabD(AutotoolsPackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Need to add GLPATH otherwise Gridlab-D will not run.
         env.set("GLPATH", join_path(self.prefix, "lib", "gridlabd"))
         env.prepend_path("GLPATH", join_path(self.prefix, "share", "gridlabd"))

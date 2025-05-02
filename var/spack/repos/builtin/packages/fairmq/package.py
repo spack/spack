@@ -26,8 +26,6 @@ class Fairmq(CMakePackage):
         version("1.6.0", tag="v1.6.0", commit="42d27af20fb5cbbbc0b0fdfef1c981d51a8baf87")
         version("1.5.0", tag="v1.5.0", commit="c8fde17b6a10a467035590fd800bb693f50c4826")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "autobind", default=True, when="@1.7:", description="Override the channel autoBind default"
     )
@@ -48,6 +46,8 @@ class Fairmq(CMakePackage):
     variant("examples", default=False, description="Build and install usage examples.")
 
     generator("make", "ninja", default="ninja")
+
+    depends_on("cxx", type="build")  # generated
 
     with default_args(type="build"):
         depends_on("cmake@3.15:")

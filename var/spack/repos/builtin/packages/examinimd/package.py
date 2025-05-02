@@ -33,6 +33,8 @@ class Examinimd(MakefilePackage):
 
     conflicts("+openmp", when="+pthreads")
 
+    depends_on("cxx", type="build")
+
     depends_on("kokkos-legacy")
     depends_on("mpi", when="+mpi")
 

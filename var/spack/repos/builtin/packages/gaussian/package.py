@@ -52,7 +52,7 @@ class Gaussian(Package):
             bsd_install = Executable(join_path("bsd", "install"))
             bsd_install()
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("g" + self.ver + "root", self.prefix)
 
         env.prepend_path("GAUSS_EXEDIR", self.g_root)

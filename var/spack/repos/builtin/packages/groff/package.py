@@ -24,9 +24,6 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     version("1.22.4", sha256="e78e7b4cb7dec310849004fa88847c44701e8d133b5d4c13057d876c1bad0293")
     version("1.22.3", sha256="3a48a9d6c97750bfbd535feeb5be0111db6406ddb7bb79fc680809cda6d828a5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # TODO: add html variant, spack doesn't have netpbm and its too
     # complicated for me to find out at this point in time.
     # See brew scripts for groff for guidance:
@@ -42,6 +39,9 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     )
 
     conflicts("+uchardet", when="@:1.22.3")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     depends_on("m4", type="build")
     depends_on("gawk", type="build")
@@ -89,10 +89,10 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
             args.append("--without-libiconv-prefix")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+x"):
             dir = join_path(self.prefix.lib, "X11", "app-defaults")
-            env.set_path("XFILESEARCHPATH", dir)
+            env.prepend_path("XFILESEARCHPATH", dir)
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":

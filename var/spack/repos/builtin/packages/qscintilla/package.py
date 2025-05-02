@@ -23,10 +23,10 @@ class Qscintilla(QMakePackage):
     version("2.13.3", sha256="711d28e37c8fccaa8229e8e39a5b3b2d97f3fffc63da10b71c71b84fa3649398")
     version("2.12.0", sha256="2116181cce3076aa4897e36182532d0e6768081fb0cf6dcdd5be720519ab1434")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("designer", default=False, description="Enable pluging for Qt-Designer")
     variant("python", default=False, description="Build python bindings")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("qmake")
     with when("+python"):
@@ -59,10 +59,10 @@ class Qscintilla(QMakePackage):
 
     # When INSTALL_ROOT is unset, qscintilla is installed under qt_prefix
     # giving 'Nothing Installed Error'
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("INSTALL_ROOT", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("QT_PLUGIN_PATH", self.prefix.plugins)
 
     # Fix install prefix

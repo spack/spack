@@ -56,7 +56,6 @@ class PyDevito(PythonPackage):
 
     depends_on("mpi", type=("build", "run"), when="+mpi")
 
-    depends_on("intel-parallel-studio", type="run", when="%intel@:2021.1.1")
     depends_on("intel-oneapi-compilers", type="run", when="%intel@2021.1.2:")
 
     patch("4.8.1.patch", when="@4.8.1")
@@ -66,6 +65,6 @@ class PyDevito(PythonPackage):
         # Add file `__init__py` to examples/ so it is picked up by setuptools
         touch("examples/__init__.py")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Make benchmark.py available
         env.prepend_path("DEVITO_HOME", self.prefix)

@@ -22,10 +22,10 @@ class AwsOfiRccl(AutotoolsPackage):
     version("cxi", branch="cxi", preferred=True)
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-
     variant("trace", default=False, description="Enable printing trace messages")
     variant("tests", default=False, description="Build tests")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("libfabric")
     depends_on("hip")
@@ -36,11 +36,13 @@ class AwsOfiRccl(AutotoolsPackage):
     depends_on("libtool", type="build")
 
     # To enable this plug-in to work with RCCL add it to the LD_LIBRARY_PATH
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     # To enable this plug-in to work with RCCL add it to the LD_LIBRARY_PATH
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def configure_args(self):

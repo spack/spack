@@ -38,7 +38,7 @@ class Freesurfer(Package):
             version, version
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         source_file = join_path(self.prefix, "SetUpFreeSurfer.sh")
         env.prepend_path("PATH", self.prefix.bin)
         env.set("FREESURFER_HOME", self.prefix)

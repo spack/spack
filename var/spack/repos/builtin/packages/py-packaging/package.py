@@ -12,6 +12,8 @@ class PyPackaging(PythonPackage):
     pypi = "packaging/packaging-19.2.tar.gz"
 
     license("BSD-2-Clause")
+
+    version("25.0", sha256="d443872c98d677bf60f6a1f2f8c1cb748e8fe762d2bf9d3148b5599295b0fc4f")
     version("24.2", sha256="c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f")
     version("24.1", sha256="026ed72c8ed3fcce5bf8950572258698927fd1dbda10a5e981cdf0ac37f4f002")
     version("23.2", sha256="048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5")

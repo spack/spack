@@ -19,9 +19,9 @@ class Flecsph(CMakePackage):
     maintainers("JulienLoiseau")
     version("master", branch="master", submodules=True, preferred=True)
 
-    depends_on("cxx", type="build")  # generated
-
     variant("debug_tree", default=False, description="Enable debug for Ntree")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.15:", type="build")
     depends_on("boost@1.70.0: +atomic +filesystem +regex +system")
@@ -32,7 +32,7 @@ class Flecsph(CMakePackage):
     depends_on("googletest", type="test")
     depends_on("pkgconfig", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_ROOT", self.spec["hdf5"].prefix)
 
     def cmake_args(self):

@@ -24,7 +24,7 @@ class Ipcalc(MakefilePackage):
 
     depends_on("geoip-api-c")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LIBPATH", self.spec["geoip-api-c"].prefix.lib)
 
     def install(self, spec, prefix):

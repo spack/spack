@@ -44,7 +44,7 @@ class Breakdancer(CMakePackage):
 
     parallel = False
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # get the perl tools in the path
         env.prepend_path("PATH", self.prefix.lib)
 

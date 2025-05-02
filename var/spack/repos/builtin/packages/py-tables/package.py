@@ -26,12 +26,12 @@ class PyTables(PythonPackage):
     version("3.3.0", sha256="8383ccf02e041a5d55494a09fc5514140b4653055a2732c981b5fd0f7408822c")
     version("3.2.2", sha256="3564b351a71ec1737b503b001eb7ceae1f65d5d6e3ffe1ea75aafba10f37fa84")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("zlib", default=True, description="Support for zlib compression")
     variant("bzip2", default=True, description="Support for bzip2 compression")
     variant("lzo", default=True, description="Support for lzo compression")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # pyproject.toml
     depends_on("py-setuptools@61:", when="@3.9:", type="build")
@@ -76,7 +76,7 @@ class PyTables(PythonPackage):
     # Historical dependencies
     depends_on("py-six@1.9:", when="@:3.5", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)
         if "+bzip2" in self.spec:
             env.set("BZIP2_DIR", self.spec["bzip2"].prefix)

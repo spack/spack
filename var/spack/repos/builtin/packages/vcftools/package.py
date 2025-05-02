@@ -82,5 +82,5 @@ class Vcftools(AutotoolsPackage):
             kwargs = {"ignore_absent": True, "backup": False, "string": False}
             filter_file(match, substitute, *files, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PERL5LIB", self.prefix.lib)

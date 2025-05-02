@@ -18,8 +18,6 @@ class Spherepack(Package):
     depends_on("gmake", type="build")
 
     def install(self, spec, prefix):
-        if self.compiler.fc is None:
-            raise InstallError("SPHEREPACK requires a Fortran 90 compiler")
         make("MAKE=make", "F90=f90 -O2 -fallow-argument-mismatch", "AR=ar", "libspherepack")
         make("MAKE=make", "F90=f90 -O2 -fallow-argument-mismatch", "AR=ar", "testspherepack")
         install_tree("lib", prefix.lib)

@@ -26,6 +26,6 @@ class Gadap(AutotoolsPackage):
     # libdap uses namespacing in recent versions, so we need to patch this source
     patch("cxx-updates.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CFLAGS", "-fPIC")
         env.set("CXXFLAGS", "-fPIC")

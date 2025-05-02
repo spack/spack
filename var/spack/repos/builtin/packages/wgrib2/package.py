@@ -82,9 +82,6 @@ class Wgrib2(MakefilePackage, CMakePackage):
         extension="tar.gz",
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     def url_for_version(self, version):
         if version >= Version("3.2.0"):
             url_fmt = "https://github.com/NOAA-EMC/wgrib2/archive/refs/tags/v{0}.tar.gz"
@@ -173,6 +170,9 @@ class Wgrib2(MakefilePackage, CMakePackage):
     conflicts("+netcdf3", when="+netcdf")
     conflicts("+openmp", when="%apple-clang")
 
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("ip@5.1:", when="@3.5: +ipolates")
     depends_on("lapack", when="@3.5: +ipolates")
     depends_on("libaec@1.0.6:", when="@3.2: +aec")
@@ -244,7 +244,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             value = int(spec.variants[variant_name].value)
             makefile.filter(r"^%s=.*" % makefile_option, "{}={}".format(makefile_option, value))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.compiler.name in ["oneapi", "intel"]:
             comp_sys = "intel_linux"
         elif self.spec.compiler.name in ["gcc", "clang", "apple-clang"]:

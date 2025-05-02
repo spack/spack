@@ -27,10 +27,10 @@ class Uriparser(CMakePackage):
         deprecated=True,
     )
 
+    variant("docs", default=False, description="Build API documentation")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
-
-    variant("docs", default=False, description="Build API documentation")
 
     depends_on("cmake@3.3:", type="build")
     depends_on("googletest@1.8.1", type="link")

@@ -30,7 +30,7 @@ class Idl(Package):
         install_script = Executable("./install.sh")
         install_script("-s", input="silent/idl_answer_file")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # set necessary environment variables
         env.prepend_path("EXELIS_DIR", self.prefix)
         env.prepend_path("IDL_DIR", self.prefix.idl)

@@ -28,7 +28,7 @@ class Fpocket(MakefilePackage):
 
 
 class MakefileBuilder(makefile.MakefileBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.pkg.compiler.name == "gcc":
             env.set("CXX", "g++")
 

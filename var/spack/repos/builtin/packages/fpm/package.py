@@ -43,7 +43,7 @@ class Fpm(Package):
     depends_on("c", type="build")
     depends_on("fortran", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.4.0"):
             env.set("FPM_C_COMPILER", self.compiler.cc)
 

@@ -20,7 +20,7 @@ class Gams(Package):
     def url_for_version(self, version):
         return "file://{0}/linux_x64_64_sfx.exe".format(os.getcwd())
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path(
             "PATH", join_path(self.prefix, "gams{0}_linux_x64_64_sfx".format(self.version))
         )

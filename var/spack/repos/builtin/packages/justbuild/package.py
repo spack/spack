@@ -48,7 +48,7 @@ class Justbuild(Package):
 
     sanity_check_is_file = [join_path("bin", "just"), join_path("bin", "just-mr")]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         ar = which("ar")
         if self.spec.version < Version("1.2.1"):
             family = ', "COMPILER_FAMILY":"unknown"'

@@ -57,9 +57,6 @@ class VtkH(CMakePackage, CudaPackage):
     version("0.5.3", sha256="0c4aae3bd2a5906738a6806de2b62ea2049ac8b40ebe7fc2ba25505272c2d359")
     version("0.5.2", sha256="db2e6250c0ece6381fc90540317ad7b5869dbcce0231ce9be125916a77bfdb25")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("shared", default=True, description="Build vtk-h as shared libs")
     variant("mpi", default=True, description="build mpi support")
     # set to false for systems that implicitly link mpi
@@ -68,6 +65,9 @@ class VtkH(CMakePackage, CudaPackage):
     variant("openmp", default=(sys.platform != "darwin"), description="build openmp support")
     variant("logging", default=False, description="Build vtk-h with logging enabled")
     variant("contourtree", default=False, description="Enable contour tree support")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Certain CMake versions have been found to break for our use cases
     depends_on("cmake@3.14.1:3.14.99,3.18.2:", type="build")
@@ -112,8 +112,9 @@ class VtkH(CMakePackage, CudaPackage):
         # if on llnl systems, we can use the SYS_TYPE
         if "SYS_TYPE" in env:
             sys_type = env["SYS_TYPE"]
-        host_config_path = "{0}-{1}-{2}-vtkh-{3}.cmake".format(
-            socket.gethostname(), sys_type, spec.compiler, spec.dag_hash()
+        compiler_str = f"{self['cxx'].name}-{self['cxx'].version}"
+        host_config_path = (
+            f"{socket.gethostname()}-{sys_type}-{compiler_str}-vtkh-{spec.dag_hash()}.cmake"
         )
         dest_dir = spec.prefix
         host_config_path = os.path.abspath(join_path(dest_dir, host_config_path))

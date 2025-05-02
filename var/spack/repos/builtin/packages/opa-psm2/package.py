@@ -29,9 +29,9 @@ class OpaPsm2(MakefilePackage, CudaPackage):
     version("10.2-235", sha256="052031ab87abadc2c11971e6aa53be363b38d58a496a6e54a820ca5bcd6545a5")
     version("10.2-175", sha256="61b694191eca66e15e7ae1659bfacb10813e569d4e27182a88fb00b5661fb365")
 
-    depends_on("c", type="build")  # generated
-
     variant("avx2", default=True, description="Enable AVX2 instructions")
+
+    depends_on("c", type="build")  # generated
 
     depends_on("numactl")
     depends_on("cuda@8:", when="+cuda")
@@ -43,7 +43,7 @@ class OpaPsm2(MakefilePackage, CudaPackage):
         sha256="fe31fda9aaee13acb87d178af2282446196d2cc0b21163034573706110b2e2d6",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("DESTDIR", self.prefix)
         if "%intel" in self.spec:
             # this variable must be set when we use the Intel compilers to

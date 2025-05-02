@@ -34,7 +34,7 @@ class RV8(RPackage):
     conflicts("@3.4.0", when="target=aarch64:")
     conflicts("@3.4.0", when="%gcc@5:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if (spec.platform == "darwin") or (
             spec.platform == "linux" and spec.target.family == "x86_64"

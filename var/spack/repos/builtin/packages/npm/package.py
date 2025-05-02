@@ -121,14 +121,18 @@ class Npm(Package):
             ".",
         )
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
         if not os.path.isdir(npm_config_cache_dir):
             mkdirp(npm_config_cache_dir)
         env.set("npm_config_cache", npm_config_cache_dir)
         env.set("npm_config_install_links", "true")
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         npm_config_cache_dir = "%s/npm-cache" % dependent_spec.prefix
         env.set("npm_config_cache", npm_config_cache_dir)
         env.set("npm_config_install_links", "true")
