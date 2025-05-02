@@ -23,6 +23,9 @@ class LinaroForge(Package):
 
     if platform.machine() == "aarch64":
         version(
+            "24.1.3", sha256="e79975611ae17b17481ec6626e9932bd0901cffcc6919bed523e3dc58dddefcd"
+        )
+        version(
             "24.1.2", sha256="c3821b2e792d07b1b09f1ca81d1a27590b1bef62d5c48d6f7271debef62b6398"
         )
         version(
@@ -100,6 +103,9 @@ class LinaroForge(Package):
             "22.0.4", sha256="f4cb5bcbaa67f9209299fe4653186a2829760b8b16a2883913aa43766375b04c"
         )
     elif platform.machine() == "x86_64":
+        version(
+            "24.1.3", sha256="94ac68bbde8b56897d507c1ed27ff113bc8bf5167a2c513510a7ac7aed139d50"
+        )
         version(
             "24.1.2", sha256="794fed7cb60dd96fd68f0f414f6a8d15920cd2bd5a8795978150ca27c55a547d"
         )
