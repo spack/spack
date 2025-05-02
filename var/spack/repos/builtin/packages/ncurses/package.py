@@ -60,7 +60,6 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     patch("sed_pgi.patch", when="@:6.0")
     patch("nvhpc_fix_preprocessor_flag.patch", when="@6.0:6.2%nvhpc")
     patch("rxvt_unicode_6_4.patch", when="@6.1:")
-    patch("c23_bool.patch", when="@6.5 %gcc@15:")
 
     @classmethod
     def determine_version(cls, exe):
@@ -121,6 +120,11 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             if name == "cxxflags":
                 flags.append(self["cxx"].standard_flag(language="cxx", standard="14"))
 
+        #python uses ncurses under c11. don't use c23 bool.
+        if self.spec.satisfies("@:6.5 %gcc@15:"):
+            if name == "cflags":
+                flags.append("-std=c17")
+
         return (flags, None, None)
 
     def configure(self, spec, prefix):
@@ -162,10 +166,6 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         abi = self.spec.variants["abi"].value
         if abi != "none":
             opts.append("--with-abi-version=" + abi)
-
-        #gcc15 uses c23 as default, making bool a keyword. Use this.
-        if spec.satisfies("@6.5 %gcc@15.1.0"):
-            opts.append("--with-bool=bool")
 
         prefix = "--prefix={0}".format(prefix)
 
