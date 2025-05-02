@@ -42,7 +42,7 @@ class Rsyslog(AutotoolsPackage):
     depends_on("byacc", type="build")
     depends_on("flex", type="build")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def autoreconf(self, spec, prefix):

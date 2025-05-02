@@ -37,7 +37,7 @@ class Vmd(Package):
     depends_on("patchelf", type="build")
     depends_on("gmake", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("VMDINSTALLBINDIR", self.prefix.bin)
         env.set("VMDINSTALLLIBRARYDIR", self.prefix.lib64)
 
@@ -58,5 +58,5 @@ class Vmd(Package):
         )
         patchelf("--set-rpath", rpath, join_path(self.prefix, "lib64", "vmd_LINUXAMD64"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PLUGINDIR", self.spec.prefix.lib64.plugins)

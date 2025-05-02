@@ -39,7 +39,7 @@ class TrilinosCatalystIossAdapter(CMakePackage):
         "ParaViewCatalystIossAdapter",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.python)
 
     def cmake_args(self):

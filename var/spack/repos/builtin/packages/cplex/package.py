@@ -52,7 +52,7 @@ class Cplex(Package):
             for key in config:
                 input_file.write("{0}={1}\n".format(key, config[key]))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix, "cplex/bin/x86-64_linux"))
         env.prepend_path("LD_LIBRARY_PATH", join_path(self.prefix, "cplex/bin/x86-64_linux"))
         env.prepend_path("MATLABPATH", join_path(self.prefix, "cplex/matlab/x86-64_linux"))

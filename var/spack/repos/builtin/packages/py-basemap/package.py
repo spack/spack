@@ -35,7 +35,7 @@ class PyBasemap(PythonPackage):
     # directories (i.e., matplotlib and basemap)
     depends_on("py-setuptools", type=("build", "run"))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GEOS_DIR", self.spec["geos"].prefix)
 
     def install(self, spec, prefix):

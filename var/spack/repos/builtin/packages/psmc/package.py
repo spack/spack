@@ -20,7 +20,7 @@ class Psmc(MakefilePackage):
 
     depends_on("zlib-api", type="link")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.bin.utils)
 
     def build(self, spec, prefix):

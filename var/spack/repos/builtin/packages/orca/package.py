@@ -83,7 +83,7 @@ class Orca(Package):
             mpirun_srun = join_path(os.path.dirname(__file__), "mpirun_srun.sh")
             install(mpirun_srun, prefix.bin.mpirun)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.bin)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["libevent"].prefix.lib)
         env.prepend_path("LD_LIBRARY_PATH", self.spec["libpciaccess"].prefix.lib)

@@ -57,7 +57,7 @@ class Hybpiper(PythonPackage, Package):
     depends_on("spades")
     depends_on("spades@3.15.4:", when="@2.1:")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("HYBPIPER_HOME", self.prefix)
 
     @when("@:1.3.1")

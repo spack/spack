@@ -165,10 +165,10 @@ class Texlive(AutotoolsPackage):
             mtxrun = Executable(mtxrun_lua)
         mtxrun("--generate")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix.bin, self.tex_arch()))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", join_path(self.prefix.bin, self.tex_arch()))
 
     executables = [r"^tex$"]

@@ -13,6 +13,8 @@ class PyDarshan(PythonPackage):
 
     maintainers("jeanbez", "shanedsnyder")
 
+    tags = ["e4s"]
+
     # NOTE: don't forget to update the version array further down that sets the appropriate
     #       darshan-util dependency
     version("3.4.6.0", sha256="a105ec5c9bcd4a20469470ca51db8016336ede34a1c33f4488d1ba263a73c378")

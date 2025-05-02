@@ -4286,7 +4286,7 @@ def test_env_include_packages_url(
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
-    sha256 = "a422e35b3a18869d0611a4137b37314131749ecdc070a7cd7183f488da81201a"
+    sha256 = "8b69d9c6e983dfb8bac2ddc3910a86265cffdd9c85f905c716d426ec5b0d9847"
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
         f.write(

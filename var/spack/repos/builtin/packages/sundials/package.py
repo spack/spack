@@ -25,6 +25,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # Versions
     # ==========================================================================
     version("develop", branch="develop")
+    version("7.3.0", tag="v7.3.0", commit="e941546af1a5b5e492dcac0a1872540e9961c556")
     version("7.2.1", tag="v7.2.1", commit="5c53be85c88f63c5201c130b8cb2c686615cfb03")
     version("7.2.0", tag="v7.2.0", commit="0eff39663606f2ff280c4059a947ed62ae38180a")
     version("7.1.1", tag="v7.1.1", commit="c28eaa3764a03705d61decb6025b409360e9d53f")
@@ -62,10 +63,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     version("3.0.0", sha256="28b8e07eecfdef66e2c0d0ea0cb1b91af6e4e94d71008abfe80c27bf39f63fde")
     version("2.7.0", sha256="d39fcac7175d701398e4eb209f7e92a5b30a78358d4a0c0fcc23db23c11ba104")
     version("2.6.2", sha256="d8ed0151509dd2b0f317b318a4175f8b95a174340fc3080b8c20617da8aa4d2f")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
 
     # ==========================================================================
     # Variants
@@ -224,6 +221,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     # ==========================================================================
     # Dependencies
     # ==========================================================================
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Build dependencies
     depends_on("cmake@3.18:", type="build")

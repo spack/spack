@@ -23,5 +23,5 @@ class PyCdo(PythonPackage):
     depends_on("py-xarray", type=("build", "run"))
     depends_on("py-six", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CDO", self.spec["cdo"].prefix.bin.cdo)

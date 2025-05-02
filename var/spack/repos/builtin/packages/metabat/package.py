@@ -43,7 +43,7 @@ class Metabat(CMakePackage):
     depends_on("zlib-api", type="link")
     depends_on("ncurses", type="link")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BOOST_ROOT", self.spec["boost"].prefix)
 
     def install_args(self, spec, prefix):

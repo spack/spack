@@ -43,7 +43,7 @@ class PyMpi4py(PythonPackage):
     depends_on("py-cython@0.27:3", when="@master", type="build")
     depends_on("mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MPICC", self.spec["mpi"].mpicc)
 
     @run_before("install")

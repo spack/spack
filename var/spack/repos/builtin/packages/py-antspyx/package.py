@@ -55,5 +55,5 @@ class PyAntspyx(PythonPackage):
         when="@0.3.7",  # ANTs dependency needs updating for every version
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("ITK_DIR", self.spec["itk"].prefix)

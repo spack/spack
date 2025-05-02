@@ -18,11 +18,17 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/LLNL/CHAI.git"
     tags = ["ecp", "e4s", "radiuss"]
 
-    maintainers("davidbeckingsale", "adayton1", "adrienbernede")
+    maintainers("adayton1", "adrienbernede", "davidbeckingsale", "kab163")
 
     license("BSD-3-Clause")
 
     version("develop", branch="develop", submodules=False)
+    version(
+        "2025.03.0",
+        tag="v2025.03.0",
+        commit="79f6414a00a89070054ac97baed47d21d10c83a4",
+        submodules=False,
+    )
     version(
         "2024.07.0",
         tag="v2024.07.0",
@@ -97,14 +103,11 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     version("1.0", tag="v1.0", commit="501a098ad879dc8deb4a74fcfe8c08c283a10627", submodules=True)
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # Patching Umpire for dual BLT targets import changed MPI target name in Umpire link interface
     # We propagate the patch here.
     patch("change_mpi_target_name_umpire_patch.patch", when="@2022.10.0:2023.06.0")
 
-    variant("enable_pick", default=False, description="Enable pick method")
+    variant("enable_pick", default=False, when="@:2024", description="Enable pick method")
     variant(
         "separable_compilation",
         default=True,
@@ -124,6 +127,9 @@ class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="Tests to run",
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("cmake", type="build")
     depends_on("cmake@3.23:", type="build", when="@2024.07.0:")

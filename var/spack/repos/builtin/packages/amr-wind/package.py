@@ -257,6 +257,9 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("fftw", when="@2.1: +waves2amr")
     depends_on("fftw", when="@3.3.1: +fft")
 
+    depends_on("rocrand", when="+rocm")
+    depends_on("rocprim", when="+rocm")
+
     for arch in CudaPackage.cuda_arch_values:
         depends_on("hypre+cuda cuda_arch=%s" % arch, when="+cuda+hypre cuda_arch=%s" % arch)
     for arch in ROCmPackage.amdgpu_targets:
@@ -273,7 +276,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
         "openfast@4.0.0:4.0.1", msg="OpenFAST 4.0.0:4.0.1 contains a bug. Use OpenFAST >= 4.0.2."
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Avoid compile errors with Intel interprocedural optimization
         if self.spec.satisfies("%intel"):
             env.append_flags("CXXFLAGS", "-no-ipo")

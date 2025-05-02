@@ -55,7 +55,7 @@ class Aotriton(CMakePackage):
                 string=True,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set environment variables used to control the build"""
         if self.spec.satisfies("%clang"):
             env.set("TRITON_HIP_LLD_PATH", self.spec["llvm-amdgpu"].prefix / bin / ld.lld)

@@ -42,10 +42,6 @@ class SstElements(AutotoolsPackage):
     version("develop", branch="devel")
     version("master", branch="master")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Contact SST developers (https://github.com/sstsimulator)
     # if your use case requires support for:
     #   - balar
@@ -64,6 +60,10 @@ class SstElements(AutotoolsPackage):
     variant("otf", default=False, description="Build with OTF")
     variant("otf2", default=False, description="Build with OTF2")
     variant("ariel_mpi", default=False, description="Build Ariel with MPI Support")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("python@:3.11", type=("build", "run"))
     depends_on("sst-core")
@@ -169,7 +169,7 @@ class SstElements(AutotoolsPackage):
         args.append("--with-sst-core=%s" % spec["sst-core"].prefix)
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Setup runtime environment for SST Elements."""
 
         if "+pin" in self.spec:

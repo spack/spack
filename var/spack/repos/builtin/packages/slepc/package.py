@@ -21,6 +21,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     test_requires_compiler = True
 
     version("main", branch="main")
+    version("3.23.0", sha256="78252f7b2f540c5fdadadee0fd21f3e6eff810f82cb45482f327b524c8db63d0")
     version("3.22.2", sha256="b60e58b2fa5eb7db05ce5e3a585811b43b1cc7cf89c32266e37b05f0cefd8899")
     version("3.22.1", sha256="badb5cb038d09dbf1cc8f34d194673ab011c69cc46888101955c786d21c8d8c9")
     version("3.22.0", sha256="45eb4d085875b50108c91fd9168ed17bc9158cc3b1e530ac843b26d9981c3db0")
@@ -106,13 +107,13 @@ class Slepc(Package, CudaPackage, ROCmPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("arpack", default=True, description="Enables Arpack wrappers")
     variant("blopex", default=False, description="Enables BLOPEX wrappers")
     variant("hpddm", default=False, description="Enables HPDDM wrappers")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # NOTE: make sure PETSc and SLEPc use the same python.
     depends_on("python@2.6:2.8,3.4:", type="build")
@@ -121,6 +122,7 @@ class Slepc(Package, CudaPackage, ROCmPackage):
     # Cannot mix release and development versions of SLEPc and PETSc:
     depends_on("petsc@main", when="@main")
     for ver in [
+        "3.23",
         "3.22",
         "3.21",
         "3.20",
@@ -231,12 +233,14 @@ class Slepc(Package, CudaPackage, ROCmPackage):
 
         make("install", parallel=False)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # set SLEPC_DIR & PETSC_DIR in the module file
         env.set("SLEPC_DIR", self.prefix)
         env.set("PETSC_DIR", self.spec["petsc"].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Set up SLEPC_DIR for dependent packages built with SLEPc
         env.set("SLEPC_DIR", self.prefix)
 

@@ -25,6 +25,9 @@ class RSystemfonts(RPackage):
     version("1.0.3", sha256="647c99d5ea6f90a49768ea7b10b39816af6be85168475273369fd973a20dbbba")
     version("1.0.1", sha256="401db4d9e78e3a5e00b7a0b4fbad7fbb1c584734469b65fe5b7ebe1851c7a797")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.2.0:", type=("build", "run"))
     depends_on("r-cpp11@0.2.1:", type=("build", "run"))
     depends_on("r-lifecycle", type=("build", "run"), when="@1.1.0:")

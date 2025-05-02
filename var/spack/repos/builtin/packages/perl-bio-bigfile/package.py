@@ -64,7 +64,7 @@ class PerlBioBigfile(PerlPackage):
             f"--extra_linker_flags={' '.join(libs)}",
         ]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # These variables are exected by by the Build.PL file
         # even though we override the results via PERL_MB_OPT
         kent_pkg = self["kentutils"]

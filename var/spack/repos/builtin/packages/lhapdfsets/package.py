@@ -64,10 +64,12 @@ class Lhapdfsets(BundlePackage):
                 tar("xfz", _filename)
                 os.remove(_filename)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("LHAPDF_DATA_PATH", self.prefix.share.lhapdfsets)
 
     @classmethod

@@ -18,8 +18,8 @@ class Omnitrace(CMakePackage):
 
     license("MIT")
 
-    version("amd-mainline", branch="amd-mainline", submodules=True)
-    version("amd-staging", branch="amd-staging", submodules=True)
+    version("amd-mainline", branch="amd-mainline", submodules=True, deprecated=True)
+    version("amd-staging", branch="amd-staging", submodules=True, deprecated=True)
     version(
         "rocm-6.3.0",
         git="https://github.com/ROCm/rocprofiler-systems",
@@ -76,10 +76,6 @@ class Omnitrace(CMakePackage):
         version("1.3.0", commit="4dd144a32c8b83c44e132ef53f2b44fe4b4d5569", submodules=True)
         version("1.2.0", commit="f82845388aab108ed1d1fc404f433a0def391bb3", submodules=True)
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "rocm",
         default=True,
@@ -126,6 +122,10 @@ class Omnitrace(CMakePackage):
     extends("python", when="+python")
 
     # hard dependencies
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("cmake@3.16:", type="build")
     depends_on("dyninst@11.0.1:", type=("build", "run"))
     depends_on("libunwind", type=("build", "run"))
@@ -211,7 +211,7 @@ class Omnitrace(CMakePackage):
                 flags.append("-lintl")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+tau" in self.spec:
             import glob
 

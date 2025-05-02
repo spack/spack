@@ -26,10 +26,6 @@ class Unifyfs(AutotoolsPackage):
     version("1.0.1", sha256="d92800778661b15ab50275c4efe345a6c60d8f1802a0d5909fda38db91b12116")
     version("1.0", sha256="c9ad0d15d382773841a3dab89c661fbdcfd686ec37fa263eb22713f6404258f5")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "auto-mount",
         default=True,
@@ -50,6 +46,10 @@ class Unifyfs(AutotoolsPackage):
         description="Enable support for LD_PRELOAD library",
     )
     variant("spath", default=True, description="Use spath library to normalize relative paths")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("autoconf", type="build")
     depends_on("automake@1.15:", type="build")
@@ -104,7 +104,7 @@ class Unifyfs(AutotoolsPackage):
                 flags.append("-std=gnu99")
         return (None, None, flags)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # GCC11 generates a bogus array bounds error:
         # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
         if "%gcc@11" in self.spec:

@@ -27,9 +27,6 @@ class Ncl(Package):
     version("6.5.0", sha256="133446f3302eddf237db56bf349e1ebf228240a7320699acc339a3d7ee414591")
     version("6.4.0", sha256="0962ae1a1d716b182b3b27069b4afe66bf436c64c312ddfcf5f34d4ec60153c8")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch("for_aarch64.patch", when="target=aarch64:")
 
     # Use Spack config file, which we generate during the installation:
@@ -71,6 +68,9 @@ class Ncl(Package):
 
     # The following variant is typically set for little-endian targets
     variant("byteswapped", default=True, description="Use byteswapped mode for binary data.")
+
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     # Non-optional dependencies according to the manual:
     depends_on("jpeg")
@@ -161,9 +161,6 @@ class Ncl(Package):
             )
 
     def install(self, spec, prefix):
-        if (self.compiler.fc is None) or (self.compiler.cc is None):
-            raise InstallError("NCL package requires both " "C and Fortran compilers.")
-
         self.prepare_site_config()
         self.prepare_install_config()
         self.prepare_src_tree()
@@ -202,7 +199,7 @@ class Ncl(Package):
                 )
                 filter_file("^(set cairolib[ ]*=).*", r'\1 "-lcairo -lfreetype"', wrapper)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NCARG_ROOT", self.spec.prefix)
 
         # We cannot rely on Spack knowledge of esmf when NCL is an external

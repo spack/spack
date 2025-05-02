@@ -50,6 +50,6 @@ class SnapKorf(MakefilePackage):
         install_tree("HMM", prefix.HMM)
         install_tree("DNA", prefix.DNA)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ZOE", self.prefix)
         env.prepend_path("PATH", self.prefix)

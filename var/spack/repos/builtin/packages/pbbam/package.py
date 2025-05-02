@@ -40,9 +40,11 @@ class Pbbam(MesonPackage):
 
         return options
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BOOST_ROOT", self.spec["boost"].prefix)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("PacBioBAM_LIBRARIES", self.prefix.lib)
         env.set("PacBioBAM_INCLUDE_DIRS", self.prefix.include)

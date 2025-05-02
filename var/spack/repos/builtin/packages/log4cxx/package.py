@@ -50,6 +50,8 @@ class Log4cxx(CMakePackage):
     depends_on("expat")
     depends_on("zlib-api")
     depends_on("zip")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     def cmake_args(self):
         return [

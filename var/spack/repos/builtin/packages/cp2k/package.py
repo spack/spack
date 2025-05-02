@@ -40,6 +40,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("dev-zero", "mtaillefumier", "RMeli", "abussy")
 
+    tags = ["e4s"]
+
     license("GPL-2.0-or-later")
 
     version("2025.1", sha256="65c8ad5488897b0f995919b9fa77f2aba4b61677ba1e3c19bb093d5c08a8ce1d")
@@ -55,10 +57,6 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     version("8.1", sha256="7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772")
     version("7.1", sha256="ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb")
     version("master", branch="master", submodules="True")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
 
     generator("ninja")
 
@@ -117,7 +115,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     variant("pytorch", default=False, description="Enable libtorch support")
     variant("quip", default=False, description="Enable quip support")
     variant("dftd4", when="@2024.2:", default=False, description="Enable DFT-D4 support")
-    variant("mpi_f08", default=False, description="Use MPI F08 module")
+    variant("mpi_f08", default=False, description="Use MPI F08 module", when="+mpi")
     variant("smeagol", default=False, description="Enable libsmeagol support", when="@2025.2:")
     variant(
         "pw_gpu", default=True, description="Enable FFT calculations on GPU", when="@2025.2: +cuda"
@@ -161,6 +159,13 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         description="Enable TrexIO support",
         when="@2025.2: build_system=cmake",
     )
+    variant(
+        "greenx",
+        default=False,
+        description="Enable green X support",
+        when="@2025.2: build_system=cmake",
+    )
+
     variant("deepmd", default=False, description="Enable DeepMD-kit support")
     conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
@@ -200,13 +205,17 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
     )
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("python@3", type="build")
     depends_on("pkgconfig", type="build", when="build_system=cmake")
 
     depends_on("blas")
     depends_on("lapack")
     depends_on("fftw-api@3")
-
+    depends_on("greenx", when="+greenx")
     depends_on("hdf5+hl+fortran", when="+hdf5")
     depends_on("trexio", when="+trexio")
 
@@ -328,7 +337,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius@7.3:", when="@9.1")
         depends_on("sirius@7.4:7.5", when="@2023.2")
         depends_on("sirius@7.5:", when="@2024.1:")
-        depends_on("sirius@7.6: +pugixml", when="@2024.2:")
+        depends_on("sirius@7.6:7.7 +pugixml", when="@2024.2:")
+        depends_on("sirius@7.7: +pugixml", when="@2025.2:")
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
@@ -495,7 +505,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         }
 
         dflags = ["-DNDEBUG"] if spec.satisfies("@:2023.2") else []
-        if fftw.name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if fftw.name == "intel-oneapi-mkl":
             cppflags = ["-D__FFTW3_MKL", "-I{0}".format(fftw_header_dir)]
         else:
             cppflags = ["-D__FFTW3", "-I{0}".format(fftw_header_dir)]
@@ -634,7 +644,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
                 )
             else:
                 libs.append(elpa.libs.ld_flags)
-
             if spec.satisfies("@:4"):
                 if elpa.satisfies("@:2014.5"):
                     cppflags.append("-D__ELPA")
@@ -705,7 +714,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
         if spec.satisfies("platform=darwin"):
             cppflags.extend(["-D__NO_STATM_ACCESS"])
 
-        if spec["blas"].name in ("intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"):
+        if spec["blas"].name == "intel-oneapi-mkl":
             cppflags += ["-D__MKL"]
         elif spec["blas"].name == "accelerate":
             cppflags += ["-D__ACCELERATE"]
@@ -725,8 +734,6 @@ class MakefileBuilder(makefile.MakefileBuilder):
             else:
                 mpi = spec["mpi:cxx"].libs
 
-            # while intel-mkl has a mpi variant and adds the scalapack
-            # libs to its libs, intel-oneapi-mkl does not.
             if spec["scalapack"].name == "intel-oneapi-mkl":
                 mpi_impl = "openmpi" if spec["mpi"].name in ["openmpi", "hpcx-mpi"] else "intelmpi"
                 scalapack = [
@@ -1049,6 +1056,8 @@ class CMakeBuilder(cmake.CMakeBuilder):
                 ]
 
         args += [
+            "-DCP2K_USE_FFTW3=ON",
+            self.define_from_variant("CP2K_USE_MPI", "mpi"),
             self.define_from_variant("CP2K_ENABLE_REGTESTS", "enable_regtests"),
             self.define_from_variant("CP2K_USE_ELPA", "elpa"),
             self.define_from_variant("CP2K_USE_DLAF", "dlaf"),
@@ -1075,7 +1084,11 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_HDF5", "hdf5"),
             self.define_from_variant("CP2K_USE_DEEPMD", "deepmd"),
             self.define_from_variant("CP2K_USE_TREXIO", "trexio"),
+            self.define_from_variant("CP2K_USE_GREENX", "greenx"),
         ]
+
+        if spec.satisfies("^[virtuals=fftw-api] fftw+openmp"):
+            args += ["-DCP2K_USE_FFTW3_WITH_OPENMP=ON"]
 
         # we force the use elpa openmp threading support. might need to be revisited though
         args += [
@@ -1088,8 +1101,6 @@ class CMakeBuilder(cmake.CMakeBuilder):
         if "spla" in spec and (spec.satisfies("+cuda") or spec.satisfies("+rocm")):
             args += ["-DCP2K_USE_SPLA_GEMM_OFFLOADING=ON"]
 
-        args += ["-DCP2K_USE_FFTW3=ON"]
-
         if spec.satisfies("smm=libxsmm"):
             args += ["-DCP2K_USE_LIBXSMM=ON"]
         else:
@@ -1098,7 +1109,10 @@ class CMakeBuilder(cmake.CMakeBuilder):
         lapack = spec["lapack"]
         blas = spec["blas"]
 
-        if blas.name in ["intel-mkl", "intel-parallel-studio", "intel-oneapi-mkl"]:
+        if blas.name == "intel-oneapi-mkl":
+            if spec.satisfies("^[virtuals=fftw-api] intel-oneapi-mkl"):
+                args += ["-DCP2K_USE_FFTW3_WITH_MKL=ON"]
+
             args += ["-DCP2K_BLAS_VENDOR=MKL"]
             if sys.platform == "darwin":
                 args += [

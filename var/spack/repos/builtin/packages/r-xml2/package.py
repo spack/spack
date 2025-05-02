@@ -22,6 +22,9 @@ class RXml2(RPackage):
     version("1.2.1", sha256="5615bbc94607efc3bc192551992b349091df802ae34b855cfa817733f2690605")
     version("1.1.1", sha256="00f3e3b66b76760c19da5f6dddc98e6f30de36a96b211e59e1a3f4ff58763116")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1.0:", type=("build", "run"))
     depends_on("r@3.6.0:", type=("build", "run"), when="@1.3.6:")
     depends_on("libxml2")

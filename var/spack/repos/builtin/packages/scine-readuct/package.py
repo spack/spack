@@ -20,8 +20,6 @@ class ScineReaduct(CMakePackage):
 
     version("4.1.0", sha256="9cec0192a444403d6a8fd096509798c49fbd1eec298ec7194aba915e31f50782")
 
-    depends_on("cxx", type="build")  # generated
-
     resource(
         name="dev",
         url="https://github.com/qcscine/development-utils/archive/refs/tags/5.0.1.tar.gz",
@@ -30,6 +28,8 @@ class ScineReaduct(CMakePackage):
     )
 
     variant("python", default=False, description="Build Python extension module")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("boost+system+filesystem+program_options cxxstd=17 @1.65.0:")
     depends_on("eigen@3:")

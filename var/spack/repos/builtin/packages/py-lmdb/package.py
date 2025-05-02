@@ -23,5 +23,5 @@ class PyLmdb(PythonPackage):
     depends_on("py-setuptools", type="build")
     depends_on("lmdb")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LMDB_FORCE_SYSTEM", "1")

@@ -8,6 +8,7 @@ from llnl.util.filesystem import find
 import spack.builder
 import spack.package_base
 import spack.spec
+import spack.util.environment
 import spack.util.executable
 import spack.util.prefix
 from spack.directives import build_system, depends_on, extends
@@ -114,5 +115,7 @@ class LuaBuilder(spack.builder.Builder):
     def _luarocks_config_path(self):
         return os.path.join(self.pkg.stage.source_path, "spack_luarocks.lua")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         env.set("LUAROCKS_CONFIG", self._luarocks_config_path())

@@ -32,7 +32,9 @@ class SalomeConfiguration(Package):
     patch("SalomeMacros.patch", working_dir="./cmake")
     patch("FindSalomeHDF5.patch", working_dir="./cmake", when="@:9.7.0")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("CONFIGURATION_ROOT_DIR", self.prefix)
 
     def install(self, spec, prefix):

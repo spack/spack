@@ -60,9 +60,6 @@ class Libtiff(CMakePackage, AutotoolsPackage):
         version("4.0.4", sha256="8cb1d90c96f61cdfc0bcf036acc251c9dbe6320334da941c7a83cfe1576ef890")
         version("3.9.7", sha256="f5d64dd4ce61c55f5e9f6dc3920fbe5a41e02c2e607da7117a35eb5c320cef6a")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # GUI
     variant(
         "opengl",
@@ -96,6 +93,9 @@ class Libtiff(CMakePackage, AutotoolsPackage):
 
     variant("shared", default=True, description="Build shared")
     variant("pic", default=False, description="Enable position-independent code (PIC)")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     with when("build_system=cmake"):
         depends_on("cmake@3.9:", when="@4.3:", type="build")

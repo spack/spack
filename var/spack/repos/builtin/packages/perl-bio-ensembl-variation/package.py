@@ -50,7 +50,7 @@ class PerlBioEnsemblVariation(Package):
 
     phases = ("build", "install")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+ld"):
             env.set("HTSLIB_DIR", self.spec["htslib"].prefix.include)
 

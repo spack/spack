@@ -31,11 +31,11 @@ class Lhapdf(AutotoolsPackage):
     version("6.3.0", sha256="864468439c7662bbceed6c61c7132682ec83381a23c9c9920502fdd7329dd816")
     version("6.2.3", sha256="37200a1ab70247250a141dfed7419d178f9a83bd23a4f8a38e203d4e27b41308")
 
+    variant("python", default=True, description="Build python bindings")
+
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
-
-    variant("python", default=True, description="Build python bindings")
 
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
@@ -49,7 +49,7 @@ class Lhapdf(AutotoolsPackage):
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("gettext", type="build", when="+python")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Add -lintl if provided by gettext, otherwise libintl is provided by the system's glibc:
         if (
             self.spec.satisfies("+python")

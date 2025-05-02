@@ -29,9 +29,6 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     version("22.03", tag="22.03")
     version("2020-10-19", commit="8a1ed9e8d35dfad26fb973996319965e4224dcdd", deprecated=True)
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("cuda", default=True, description="Build with CUDA")
 
     # Based on the table of the readme on github
@@ -62,6 +59,9 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     requires("^cudnn@8.5:", when="+cudnn_gbn_lib")
     requires("^cudnn@8.4:", when="+fused_conv_bias_relu")
     requires("^nccl@2.10:", when="+nccl_p2p_cuda")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     with default_args(type=("build")):
         depends_on("py-setuptools")
@@ -105,14 +105,14 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
             )
             env.set("TORCH_CUDA_ARCH_LIST", torch_cuda_arch)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
             self.torch_cuda_arch_list(env)
         else:
             env.unset("CUDA_HOME")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.torch_cuda_arch_list(env)
 
     @when("^py-pip@:23.0")

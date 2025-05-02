@@ -55,7 +55,7 @@ class Tecplot(Package):
         force_symlink("../tecplotlm.lic", join_path(self.prefix, lic360))
         force_symlink("../tecplotlm.lic", join_path(self.prefix, licChorus))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Add Chorus bin
         binChorus = "chorus_{0}/bin".format(self.version)
         env.prepend_path("PATH", join_path(self.prefix, binChorus))

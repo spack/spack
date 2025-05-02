@@ -38,12 +38,13 @@ class Vbfnlo(AutotoolsPackage):
         )
     version("2.7.1", sha256="13e33d73d8a8ef64094621f87e6f94e01712e76cc19a86298d0b52cfcb9decca")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Documentation is broken on some systems:
     # See https://github.com/vbfnlo/vbfnlo/issues/2
     variant("doc", default=False, description="Build documentation")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("hepmc")
     depends_on("gsl")
@@ -57,7 +58,7 @@ class Vbfnlo(AutotoolsPackage):
     depends_on("tcsh", type="build")
 
     @when("@2.7.1")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("F77")
 
     def configure_args(self):

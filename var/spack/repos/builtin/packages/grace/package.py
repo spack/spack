@@ -63,7 +63,7 @@ class Grace(AutotoolsPackage):
         args.append("--enable-netcdf")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Grace installs a subfolder in the prefix directory
         # so we account for that...
         env.prepend_path("PATH", self.prefix.grace.bin)

@@ -23,10 +23,6 @@ class Pism(CMakePackage):
     version("0.7.x", branch="stable0.7")
     version("icebin", branch="efischer/dev")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant("extra", default=False, description="Build extra executables (testing/verification)")
     variant("shared", default=True, description="Build shared Pism libraries")
     variant("python", default=False, description="Build python bindings", when="@1.1:")
@@ -76,6 +72,10 @@ class Pism(CMakePackage):
     #        definitions. Disable to get shared pointers from the std
     #        namespace (might be needed with some compilers)." ON)
     # option (Pism_USE_TAO "Use TAO in inverse solvers." OFF)
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("fftw")
     depends_on("gsl")

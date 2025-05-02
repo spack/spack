@@ -17,6 +17,8 @@ class Gaudi(CMakePackage, CudaPackage):
     tags = ["hep"]
 
     version("master", branch="master")
+    version("39.4", sha256="dd698e0788811fa8325ed5f37ecf3fd9bde55720489224a517b52360819564d7")
+    version("39.3", sha256="009a306a7413f3207f0d5fa19034186c0bb3c8de0c807d38f515338a41a8a0bc")
     version("39.2", sha256="9697f5092df49187e3d30256c821a4400534e77ddaa2d976ba4bb22745c904d6")
     version("39.1", sha256="acdeddcc2383a127b1ad4b0bdaf9f1c6699b64105e0c1d8095c560c96c157885")
     version("39.0", sha256="faa3653e2e6c769292c0592e3fc35cd98a2820bd6fc0c967cac565808b927262")
@@ -43,8 +45,6 @@ class Gaudi(CMakePackage, CudaPackage):
     version("36.1", sha256="9f718c832313676249e5c3ac76ba4346978ee2328f8cdcb29176498b080402e9")
     version("36.0", sha256="8a0458cef5b616532f9db7cca9fa0e892e602b64c9e93dc0cc6d972e03034830")
     version("35.0", sha256="c01b822f9592a7bf875b9997cbeb3c94dea97cb13d523c12649dbbf5d69b5fa6")
-
-    depends_on("cxx", type="build")
 
     conflicts("%gcc@:10", when="@39:", msg="Gaudi needs a c++20 capable compiler for this version")
     conflicts("+cuda", when="@:39.1", msg="Gaudi CUDA is only available in version 39.2 and later")
@@ -85,6 +85,7 @@ class Gaudi(CMakePackage, CudaPackage):
     patch("includes.patch", when="@37:38")
 
     # These dependencies are needed for a minimal Gaudi build
+    depends_on("cxx", type="build")
     depends_on("aida")
     # The boost components that are required for Gaudi
     boost_libs = "+".join(
@@ -142,7 +143,7 @@ class Gaudi(CMakePackage, CudaPackage):
     #       ROOT does not like being exposed to LLVM symbols.
 
     # The Intel VTune dependency is taken aside because it requires a license
-    depends_on("intel-parallel-studio -mpi +vtune", when="+vtune")
+    depends_on("intel-oneapi-vtune", when="+vtune")
 
     def patch(self):
         # ensure an empty pytest.ini is present to prevent finding one
@@ -180,7 +181,7 @@ class Gaudi(CMakePackage, CudaPackage):
             args.append(self.define("GAUDI_CXX_STANDARD", "20"))
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # environment as in Gaudi.xenv
         env.prepend_path("PATH", self.prefix.scripts)
         env.prepend_path("PYTHONPATH", self.prefix.python)

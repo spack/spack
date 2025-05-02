@@ -42,10 +42,10 @@ class Librsb(AutotoolsPackage):
     variant("serial", default=False, description="Disable OpenMP support.")
     variant("verbose", default=False, description="Extra Library Verbosity. Good for learning.")
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+asan"):
-            spack_env.set("LSAN_OPTIONS", "verbosity=1:log_threads=1")
-            spack_env.set("ASAN_OPTS", "detect_leaks=0")
+            env.set("LSAN_OPTIONS", "verbosity=1:log_threads=1")
+            env.set("ASAN_OPTS", "detect_leaks=0")
 
     def configure_args(self):
         args = [

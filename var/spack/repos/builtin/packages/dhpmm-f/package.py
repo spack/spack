@@ -15,6 +15,9 @@ class DhpmmF(MakefilePackage):
 
     version("alpha", sha256="35321ecbc749f2682775ffcd27833afc8c8eb4fa7753ce769727c9d1fe097848")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("blas", type="link")
     depends_on("lapack", type="link")
 

@@ -25,15 +25,15 @@ class Libcatalyst(CMakePackage):
     version("master", branch="master")
     version("2.0.0", sha256="5842b690bd8afa635414da9b9c5e5d79fa37879b0d382428d0d8e26ba5374828")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-    depends_on("pkgconfig", type="build")
-
     variant("mpi", default=False, description="Enable MPI support")
     variant("conduit", default=False, description="Use external Conduit for Catalyst")
     variant("fortran", default=False, description="Enable Fortran wrapping")
     variant("python", default=False, description="Enable Python wrapping")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+    depends_on("pkgconfig", type="build")
 
     depends_on("mpi", when="+mpi")
     depends_on("conduit", when="+conduit")
@@ -53,7 +53,7 @@ class Libcatalyst(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+conduit"):
             env.prepend_path("CMAKE_PREFIX_PATH", spec["conduit"].prefix)

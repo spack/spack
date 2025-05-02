@@ -25,5 +25,5 @@ class PyBitshuffle(PythonPackage):
     # setup.py:220
     depends_on("hdf5@1.8.11:~mpi")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("HDF5_DIR", self.spec["hdf5"].prefix)

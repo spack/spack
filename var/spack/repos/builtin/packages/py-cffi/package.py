@@ -75,7 +75,7 @@ class PyCffi(PythonPackage):
                 return (flags, None, None)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # This sets the compiler (and flags) that distutils will use
         # to create the final shared library.  It will use the
         # compiler specified by the environment variable 'CC' for all

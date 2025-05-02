@@ -14,8 +14,9 @@ class PyTypingExtensions(PythonPackage):
     homepage = "https://github.com/python/typing_extensions"
     pypi = "typing_extensions/typing_extensions-3.7.4.tar.gz"
 
-    license("0BSD")
+    license("0BSD AND PSF-2.0")
 
+    version("4.13.2", sha256="e6c81219bd689f51865d9e372991c540bda33a0379d5573cddb9a3a23f7caaef")
     version("4.12.2", sha256="1a7ead55c7e559dd4dee8856e3a88b41225abfe1ce8df57b7c13915fe121ffb8")
     version("4.8.0", sha256="df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef")
     version("4.6.3", sha256="d91d5919357fe7f681a9f2b5b4cb2a5f1ef0a1e9f59c4d8ff0d3491e05c0ffd5")
@@ -33,6 +34,8 @@ class PyTypingExtensions(PythonPackage):
     depends_on("python@3.8:", when="@4.8:", type=("build", "run"))
     # Needed to ensure that Spack can bootstrap with Python 3.6
     depends_on("python@3.7:", when="@4.2:", type=("build", "run"))
+
+    depends_on("py-flit-core@3.11:3", when="@4.13.2:", type="build")
     depends_on("py-flit-core@3.4:3", when="@4:", type="build")
 
     # Historical dependencies

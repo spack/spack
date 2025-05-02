@@ -32,7 +32,7 @@ class Zookeeper(Package):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("ZOOBINDIR", self.prefix.bin)
         env.set("ZOOCFGDIR", ".")
         env.set("ZOO_LOG_DIR", ".")

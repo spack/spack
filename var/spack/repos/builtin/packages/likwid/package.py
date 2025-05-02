@@ -41,10 +41,6 @@ class Likwid(Package):
     version("4.3.1", sha256="4b40a96717da54514274d166f9b71928545468091c939c1d74109733279eaeb1")
     version("4.3.0", sha256="86fc5f82c80fcff1a643394627839ec79f1ca2bcfad30000eb7018da592588b4")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     patch(
         "https://github.com/RRZE-HPC/likwid/commit/e0332ace8fe8ca7dcd4b4477a25e37944f173a5c.patch?full_index=1",
         when="@5.0.1",
@@ -91,6 +87,10 @@ class Likwid(Package):
     # functionality and functions are prefixed with "likwid_".
     # Note: extra functionality was included in upstream hwloc
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("lua", when="@:4")
     depends_on("lua@5.2:", when="@5:5.0.1")
     depends_on("lua", when="@5.0.2:")
@@ -113,7 +113,7 @@ class Likwid(Package):
         filter_file("^#!/usr/bin/perl -w", "#!/usr/bin/env perl", *files)
         filter_file("^#!/usr/bin/perl", "#!/usr/bin/env perl", *files)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             libs = find_libraries(
                 "libcupti", root=self.spec["cuda"].prefix, shared=True, recursive=True
