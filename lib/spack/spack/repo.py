@@ -1027,6 +1027,7 @@ class Repo:
                 " Must be a valid Python module name",
             )
 
+        self.subdirectory = subdirectory
         self.packages_path = os.path.join(self.root, subdirectory)
         check(
             os.path.isdir(self.packages_path), f"No directory '{subdirectory}' found in '{root}'"
@@ -1086,7 +1087,7 @@ class Repo:
         if self.package_api < (2, 0):
             self.full_namespace = python_package_for_repo(self.namespace)
         else:
-            self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}.packages"
+            self.full_namespace = f"{PKG_MODULE_PREFIX_V2}{self.namespace}.{self.subdirectory}"
 
         # Keep name components around for checking prefixes.
         self._names = self.full_namespace.split(".")
