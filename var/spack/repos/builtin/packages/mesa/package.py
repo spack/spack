@@ -129,6 +129,9 @@ class Mesa(MesonPackage):
         depends_on("libxt")
         depends_on("xrandr")
         depends_on("glproto@1.4.14:")
+        # In @24.3:, "libxshmfence@1.1:" is needed when:
+        # (with_dri_platform == 'drm') or (with_any_vk), see mesa's meson.build.
+        depends_on("libxshmfence@1.1:", when="@24.3:")
 
     # version specific issue
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
