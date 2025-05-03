@@ -68,7 +68,9 @@ fi
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
-def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executable):
+def test_compiler_find_without_paths(
+    mock_packages, no_packages_yaml, working_env, mock_executable
+):
     """Tests that 'spack compiler find' looks into PATH by default, if no specific path
     is given.
     """
@@ -81,7 +83,7 @@ def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executa
 
 
 @pytest.mark.regression("37996")
-def test_compiler_remove(mutable_config):
+def test_compiler_remove(mock_packages, mutable_config):
     """Tests that we can remove a compiler from configuration."""
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -94,7 +96,7 @@ def test_compiler_remove(mutable_config):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config):
+def test_removing_compilers_from_multiple_scopes(mock_packages, mutable_config):
     # Duplicate "site" scope into "user" scope
     site_config = spack.config.get("packages", scope="site")
     spack.config.set("packages", site_config, scope="user")
@@ -110,7 +112,7 @@ def test_removing_compilers_from_multiple_scopes(mutable_config):
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_add(mutable_config, mock_executable):
+def test_compiler_add(mock_packages, mutable_config, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
@@ -171,7 +173,7 @@ def test_compiler_find_prefer_no_suffix(
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_path_order(mock_packages, no_packages_yaml, working_env, compilers_dir):
     """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
     new_dir = compilers_dir / "first_in_path"
     new_dir.mkdir()
@@ -237,7 +239,7 @@ def test_compiler_list_empty(no_packages_yaml, working_env, compilers_dir):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    external, expected, no_packages_yaml, working_env, compilers_dir
+    mock_packages, external, expected, no_packages_yaml, working_env, compilers_dir
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
