@@ -337,11 +337,11 @@ def set_up_compiler_cfg():
 packages:
   gcc::
     externals:
-    - spec: "gcc@11.0.0 languages='c,c++,fortran' os=debian6 target=x86_64"
+    - spec: "gcc@11.0.0 os=debian6 target=x86_64"
       prefix: /path1
       extra_attributes:
         compilers:
-          cc: /path1/bin/gcc
+          c: /path1/bin/gcc
           cxx: /path1/bin/g++
           fortran: /path1/bin/gfortran
   intel-oneapi-compilers::
@@ -350,7 +350,7 @@ packages:
       prefix: /path2
       extra_attributes:
         compilers:
-          cc: /path2/bin/clang
+          c: /path2/bin/clang
           cxx: /path2/bin/clang++
           fortran: /path2/bin/flang
 """
