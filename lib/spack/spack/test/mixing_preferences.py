@@ -3,9 +3,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 import pytest
 
 import archspec.cpu
+
+from llnl.util.filesystem import copy_tree
 
 import spack.compilers.libraries
 import spack.config
@@ -14,6 +18,7 @@ import spack.operating_systems
 import spack.platforms
 import spack.repo
 import spack.solver.asp
+import spack.store
 import spack.util.spack_yaml as syaml
 from spack.main import SpackCommand
 from spack.platforms._platform import Platform
@@ -110,7 +115,7 @@ class CompilerWrapper(Package):
     def install(self, spec, prefix):
         # Not actually installed
         pass
-"""
+""",
 )
 
 
@@ -223,7 +228,7 @@ class IntelOneapiCompilers(CompilerPackage):
 
     provides("c")
     provides("cxx")
-    provides("fortran")   
+    provides("fortran")
 
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
@@ -288,7 +293,18 @@ class IntelOneapiRuntime(Package):
 def _create_test_repo(tmpdir, mutable_config):
     yield create_test_repo(
         tmpdir,
-        [_pkgx1, _pkgx2, _pkgx3, _pkgx4, _glibc, _gcc, _gcc_runtime, _oneapi, _intel_runtime, _compiler_wrapper],
+        [
+            _pkgx1,
+            _pkgx2,
+            _pkgx3,
+            _pkgx4,
+            _glibc,
+            _gcc,
+            _gcc_runtime,
+            _oneapi,
+            _intel_runtime,
+            _compiler_wrapper,
+        ],
     )
 
 
@@ -296,6 +312,7 @@ def _create_test_repo(tmpdir, mutable_config):
 def enable_runtimes(monkeypatch):
     def yes_we_are_using_it():
         return True
+
     monkeypatch.setattr(spack.solver.asp, "using_libc_compatibility", yes_we_are_using_it)
 
 
@@ -334,10 +351,13 @@ class TestLinux(Platform):
 def pretend_linux(monkeypatch, tmpdir):
     pretend_glibc = Spec("glibc@=2.28")
     pretend_glibc.external_path = str(tmpdir.join("fake-libc").ensure(dir=True))
+
     def give_me_a_libc(*args, **kwargs):
         return pretend_glibc
 
-    monkeypatch.setattr(spack.compilers.libraries.CompilerPropertyDetector, "default_libc", give_me_a_libc)
+    monkeypatch.setattr(
+        spack.compilers.libraries.CompilerPropertyDetector, "default_libc", give_me_a_libc
+    )
     fake_linux = TestLinux()
     with spack.platforms.use_platform(fake_linux):
         yield
@@ -368,11 +388,6 @@ packages:
     update_cfg_section("packages", test_cfg)
 
 
-import spack.store
-import os
-from llnl.util.filesystem import copy_tree
-
-
 @pytest.fixture(scope="function")
 def empty_mock_store(
     tmpdir_factory,
@@ -386,7 +401,7 @@ def empty_mock_store(
 
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.store.use_store(str(store_path)) as store:
+            with spack.store.use_store(str(store_path)):
                 with spack.repo.use_repositories(mock_repo_path):
                     store_path.chmod(mode=0o755, rec=1)
                     store_path.chmod(mode=0o755, rec=1)
@@ -407,7 +422,9 @@ def empty_database(empty_mock_store):
         store.db.last_seen_verifier = ""
 
 
-def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_runtimes, empty_database):
+def test_diamond_nomixing(
+    concretize_scope, test_repo, pretend_linux, enable_runtimes, empty_database
+):
     set_up_compiler_cfg()
     # First try gcc itself
     Spec("gcc@11.0.0").concretized()
