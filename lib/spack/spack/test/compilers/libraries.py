@@ -47,6 +47,9 @@ def mock_gcc(mutable_config):
         }
     }
 
+    compilers_before = spack.config.get("compilers", [])
+    supported_compilers = spack.compilers.config.supported_compilers()
+
     # Ensure have at least one gcc compiler
     with spack.config.override("compilers", [_gcc_compiler_definition]):
         compilers = spack.compilers.config.all_compilers()
@@ -69,7 +72,9 @@ class TestCompilerPropertyDetector:
         ],
     )
     @pytest.mark.not_on_windows("Not supported on Windows")
-    def test_compile_dummy_c_source(self, mock_gcc, monkeypatch, language, flagname):
+    def test_compile_dummy_c_source(
+        self, mock_packages, mock_gcc, monkeypatch, language, flagname
+    ):
         monkeypatch.setattr(spack.util.executable.Executable, "__call__", call_compiler)
         for key in list(mock_gcc.extra_attributes["compilers"]):
             if key == language:
@@ -87,18 +92,18 @@ class TestCompilerPropertyDetector:
             monkeypatch.setitem(mock_gcc.extra_attributes["flags"], flagname, "--correct-flag")
             assert detector._compile_dummy_c_source() == with_flag_output
 
-    def test_compile_dummy_c_source_no_path(self, mock_gcc):
+    def test_compile_dummy_c_source_no_path(self, mock_packages, mock_gcc):
         mock_gcc.extra_attributes["compilers"] = {}
         detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
         assert detector._compile_dummy_c_source() is None
 
-    def test_compile_dummy_c_source_no_verbose_flags(self, mock_gcc, monkeypatch):
+    def test_compile_dummy_c_source_no_verbose_flags(self, mock_packages, mock_gcc, monkeypatch):
         monkeypatch.setattr(mock_gcc.package, "verbose_flags", "")
         detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
         assert detector._compile_dummy_c_source() is None
 
     @pytest.mark.not_on_windows("Module files are not supported on Windows")
-    def test_compile_dummy_c_source_load_env(self, mock_gcc, monkeypatch, tmp_path):
+    def test_compile_dummy_c_source_load_env(self, mock_packages, mock_gcc, monkeypatch, tmp_path):
         gcc = tmp_path / "gcc"
         gcc.write_text(
             f"""#!/bin/sh
@@ -126,7 +131,7 @@ class TestCompilerPropertyDetector:
         assert detector._compile_dummy_c_source() == without_flag_output
 
     @pytest.mark.not_on_windows("Not supported on Windows")
-    def test_implicit_rpaths(self, mock_gcc, dirs_with_libfiles, monkeypatch):
+    def test_implicit_rpaths(self, mock_packages, mock_gcc, dirs_with_libfiles, monkeypatch):
         lib_to_dirs, all_dirs = dirs_with_libfiles
 
         detector = spack.compilers.libraries.CompilerPropertyDetector(mock_gcc)
@@ -139,7 +144,7 @@ class TestCompilerPropertyDetector:
         retrieved_rpaths = detector.implicit_rpaths()
         assert set(retrieved_rpaths) == set(lib_to_dirs["libstdc++"] + lib_to_dirs["libgfortran"])
 
-    def test_compiler_environment(self, working_env, mock_gcc, monkeypatch):
+    def test_compiler_environment(self, mock_packages, working_env, mock_gcc, monkeypatch):
         """Test whether environment modifications are applied in compiler_environment"""
         monkeypatch.delenv("TEST", raising=False)
         mock_gcc.extra_attributes["environment"] = {"set": {"TEST": "yes"}}
