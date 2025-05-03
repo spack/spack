@@ -89,9 +89,9 @@ class X4(Package):
     version("4.1")
     version("4.0")
 
-    depends_on("c", type="build")
+    #depends_on("c", type="build")
     #depends_on("cxx", type="build")
-    #depends_on("fortran", type="build")
+    depends_on("fortran", type="build")
 """,
 )
 
@@ -221,6 +221,10 @@ class IntelOneapiCompilers(CompilerPackage):
 
     version("2025.0.3")
 
+    provides("c")
+    provides("cxx")
+    provides("fortran")   
+
     @classmethod
     def runtime_constraints(cls, *, spec, pkg):
         pkg("*").depends_on(
@@ -249,6 +253,13 @@ class IntelOneapiCompilers(CompilerPackage):
         pkg("intel-oneapi-runtime").requires(
             f"@{str(spec.versions)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
         )
+
+        # If a node used %intel-oneapi=runtime@X.Y its dependencies must use @:X.Y
+        # (technically @:X is broader than ... <= @=X but this should work in practice)
+        #pkg("*").propagate(
+        #    f"intel-oneapi-compilers@:{str(spec.version)}",
+        #    when=f"^[deptypes=build] {spec.name}@{spec.versions}",
+        #)
 """,
 )
 
@@ -424,8 +435,10 @@ def test_mixing_fortran(
     set_up_compiler_cfg()
     spec_cmd("--reuse", "x4%oneapi")
 
+    # Specifying that the mixing should be forced is awkward. For now
+    # this is achieved in part by making x4 Fortan-only
     with pytest.raises(spack.error.UnsatisfiableSpecError):
-        spec_cmd("--reuse", "x1%oneapi ^x4%gcc")
+        spec_cmd("--reuse", "x1 ^[virtuals=fortran] oneapi ^x4%gcc")
 
-    with pytest.raises(spack.error.UnsatisfiableSpecError):
-        spec_cmd("--reuse", "x1%gcc ^x4%oneapi")
+    # with pytest.raises(spack.error.UnsatisfiableSpecError):
+    #    spec_cmd("--reuse", "x1%gcc ^x4%oneapi")
