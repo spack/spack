@@ -248,6 +248,56 @@ def test_redistribute_override_when():
     assert cls.disable_redistribute[spec_key].source
 
 
+# import pytest
+# from spack.spec import Spec
+# from spack.directives import remove_directive
+
+# class TestRemoveDirective:
+#     def test_no_matches(self):
+#         spec = Spec('gcc@9.3.0')
+#         when_spec = Spec('gcc@9.3.0')
+#         directive_spec = Spec('gcc@9.2.0')
+#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
+#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_spec, 'version')]}})
+#         remove_func(pkg)
+#         assert pkg.test_directive == {}
+
+#     def test_matches(self):
+#         spec = Spec('gcc@9.3.0')
+#         when_spec = Spec('gcc@9.3.0')
+#         directive_spec = Spec('gcc@9.2.0')
+#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
+#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_spec, 'version')]}})
+#         remove_func(pkg)
+#         assert pkg.test_directive == {}
+
+#     def test_no_directive(self):
+#         spec = Spec('gcc@9.3.0')
+#         when_spec = Spec('gcc@9.3.0')
+#         directive_spec = Spec('gcc@9.2.0')
+#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
+#         pkg = type('Package', (), {})
+#         remove_func(pkg)
+#         assert pkg.test_directive == {}
+
+#     def test_multiple_specs_match_no_directive(self):
+#         spec = Spec('gcc@9.3.0')
+#         when_spec = Spec('gcc@9.3.0')
+#         directive_specs = [Spec('gcc@9.2.0'), Spec('gcc@9.1.0')]
+#         remove_func = remove_directive('test_directive', directive_specs, when_spec)
+#         pkg = type('Package', (), {})
+#         remove_func(pkg)
+#         assert pkg.test_directive == {}
+
+#     def test_multiple_specs_match(self):
+#         spec = Spec('gcc@9.3.0')
+#         when_spec = Spec('gcc@9.3.0')
+#         directive_specs = [Spec('gcc@9.2.0'), Spec('gcc@9.1.0')]
+#         remove_func = remove_directive('test_directive', directive_specs, when_spec)
+#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_specs[0], 'version'), (directive_specs[1], 'version')]}})
+#         remove_func(pkg)
+#         assert pkg.test_directive == {}
+
 _pkgx = (
     "x",
     """\
