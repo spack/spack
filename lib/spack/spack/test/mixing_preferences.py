@@ -398,14 +398,16 @@ def empty_database(empty_mock_store):
 
 def test_diamond_nomixing(concretize_scope, test_repo, pretend_linux, enable_runtimes, empty_database):
     set_up_compiler_cfg()
+    # First try gcc itself
     Spec("gcc@11.0.0").concretized()
-    # No deps
-    #out = solve("--show=asp", "x1 %gcc@11.0.0")
-    #with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
-    #   f.write(out)
+    # out = solve("--show=asp", "x1 %gcc@11.0.0")
+    # with open("/Users/scheibel1/Desktop/spack/spack/x1.asp", "w") as f:
+    #    f.write(out)
+    # Then try a package w/ no deps
     Spec("x4 %gcc@11.0.0").concretized()
+    # Then try a package with deps
     Spec("x1 %gcc@11.0.0").concretized()
-    #Spec("x1 ^[virtuals=c] gcc@11.0.0").concretized()
+    # Spec("x1 ^[virtuals=c] gcc@11.0.0").concretized()
 
 
 def test_mixing_fortran(
