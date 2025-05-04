@@ -60,7 +60,7 @@ class PyNumcodecs(PythonPackage):
     # those libraries without any way to use the system versions.
     # https://github.com/zarr-developers/numcodecs/issues/464
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # This package likes to compile natively by checking cpu features and then setting flags
         # -msse2 and -mavx2, which we want to avoid in Spack. This could go away if the package
         # supports external libraries.

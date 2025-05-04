@@ -49,5 +49,5 @@ class Aspect(CMakePackage):
     def cmake_args(self):
         return [self.define_from_variant("ASPECT_USE_FP_EXCEPTIONS", "fpe")]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("Aspect_DIR", self.prefix)

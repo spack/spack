@@ -42,7 +42,7 @@ class Sw4(MakefilePackage):
     depends_on("fftw@3: +mpi", when="+fftw")
     depends_on("llvm-openmp", when="+openmp %apple-clang")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["mpi"].mpicxx)
         env.set("FC", self.spec["mpi"].mpifc)
         # openmp is enabled by default

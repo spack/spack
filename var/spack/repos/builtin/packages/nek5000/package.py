@@ -26,6 +26,7 @@ class Nek5000(Package):
         "fluid",
         "ecp",
         "ecp-apps",
+        "e4s",
     ]
 
     version("develop", branch="master")
@@ -47,12 +48,6 @@ class Nek5000(Package):
     depends_on("mpi", when="+mpi")
 
     patch("add_fjfortran.patch", when="%fj")
-
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.f77:
-            msg = "Cannot build Nek5000 without a Fortran 77 compiler."
-            raise RuntimeError(msg)
 
     @run_after("install")
     def check_install(self):

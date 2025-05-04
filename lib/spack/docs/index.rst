@@ -75,6 +75,7 @@ or refer to the full manual below.
    packages_yaml
    build_settings
    environments
+   env_vars_yaml
    containers
    mirrors
    module_file_support

@@ -139,7 +139,7 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
             # Work around installation bug: https://github.com/dmlc/dgl/issues/1379
             install_tree(prefix.dgl, prefix.lib)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # https://docs.dgl.ai/install/backend.html
         backend = self.spec.variants["backend"].value
         env.set("DGLBACKEND", backend)

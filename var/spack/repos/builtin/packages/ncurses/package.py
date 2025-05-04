@@ -101,7 +101,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             results.append(variants)
         return results
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("TERMINFO")
 
     def flag_handler(self, name, flags):

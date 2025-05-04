@@ -18,8 +18,8 @@ class Omnitrace(CMakePackage):
 
     license("MIT")
 
-    version("amd-mainline", branch="amd-mainline", submodules=True)
-    version("amd-staging", branch="amd-staging", submodules=True)
+    version("amd-mainline", branch="amd-mainline", submodules=True, deprecated=True)
+    version("amd-staging", branch="amd-staging", submodules=True, deprecated=True)
     version(
         "rocm-6.3.0",
         git="https://github.com/ROCm/rocprofiler-systems",
@@ -211,7 +211,7 @@ class Omnitrace(CMakePackage):
                 flags.append("-lintl")
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if "+tau" in self.spec:
             import glob
 

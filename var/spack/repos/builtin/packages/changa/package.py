@@ -52,7 +52,7 @@ class Changa(AutotoolsPackage, CudaPackage):
 
     parallel = False
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CHARM_DIR", self.spec["charmpp"].prefix)
 
     def configure_args(self):

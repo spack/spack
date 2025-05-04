@@ -55,7 +55,7 @@ class Nvshmem(MakefilePackage, CudaPackage):
     depends_on("gdrcopy", when="+gdrcopy")
     depends_on("nccl", when="+nccl")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CUDA_HOME", self.spec["cuda"].prefix)
         env.set("NVSHMEM_PREFIX", self.prefix)
 

@@ -138,8 +138,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("blosc", default=True, description="Enable Blosc compression plugin")
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:
@@ -283,7 +282,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
     build_system("cmake", "autotools", default=default_build_system)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@4.9.0:+shared"):
             # Both HDF5 and NCZarr backends honor the same environment variable:
             env.append_path("HDF5_PLUGIN_PATH", self.prefix.plugins)
@@ -304,7 +303,9 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
 
 
 class AnyBuilder(BaseBuilder):
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Some packages, e.g. ncview, refuse to build if the compiler path returned by nc-config
         # differs from the path to the compiler that the package should be built with. Therefore,
         # we have to shadow nc-config from self.prefix.bin, which references the real compiler,

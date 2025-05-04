@@ -142,7 +142,9 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
         "openfast@4.0.0:4.0.1", msg="OpenFAST 4.0.0:4.0.1 contains a bug. Use OpenFAST >= 4.0.2."
     )
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         spec = self.spec
         if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
             env.set("CUDA_LAUNCH_BLOCKING", "1")
@@ -150,7 +152,7 @@ class NaluWind(CMakePackage, CudaPackage, ROCmPackage):
             env.set("HIP_LAUNCH_BLOCKING", "1")
             env.set("HIP_MANAGED_FORCE_DEVICE_ALLOC", "1")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.append_flags("CXXFLAGS", "-DUSE_STK_SIMD_NONE")
         if spec.satisfies("+cuda"):

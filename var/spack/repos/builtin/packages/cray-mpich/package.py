@@ -74,7 +74,7 @@ class CrayMpich(MpichEnvironmentModifications, Package, CudaPackage, ROCmPackage
                 libdir = get_path_args_from_module_line(line)[0]
                 return os.path.dirname(os.path.normpath(libdir))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+wrappers"):
             self.setup_mpi_wrapper_variables(env)
             return

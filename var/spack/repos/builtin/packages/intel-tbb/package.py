@@ -195,7 +195,7 @@ class IntelTbb(CMakePackage, MakefilePackage):
 class SetupEnvironment:
     # We set OS here in case the user has it set to something else
     # that TBB doesn't expect.
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("OS", platform.system())
 
 

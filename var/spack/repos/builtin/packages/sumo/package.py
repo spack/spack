@@ -48,5 +48,5 @@ class Sumo(CMakePackage):
         url = "https://github.com/eclipse/sumo/archive/v{0}.tar.gz"
         return url.format(version.underscored)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("SUMO_HOME", self.prefix)

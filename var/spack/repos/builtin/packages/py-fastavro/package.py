@@ -26,9 +26,9 @@ class PyFastavro(PythonPackage):
     version("0.23.3", sha256="4e4bebe7b43b5cdad030bdbeb7f7f0ccb537ea025a9e28c7a4826876872fc84b")
     version("0.23.2", sha256="3b31707d6eaa1e98fc60536d0b3483bafb78be39bf9f0a1affe1b353e70bd5b2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Use cython for building as *.c files are missing from repo
-        env.set("FASTAVRO_USE_CYTHON", 1)
+        env.set("FASTAVRO_USE_CYTHON", "1")
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")

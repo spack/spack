@@ -30,7 +30,7 @@ class Fstrack(MakefilePackage):
 
     parallel = False
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Compilers
         env.set("F90", spack_fc)
 

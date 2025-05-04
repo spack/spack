@@ -45,7 +45,7 @@ class Benchmark(CMakePackage):
 
     variant(
         "build_type",
-        default="RelWithDebInfo",
+        default="Release",
         description="The build type to build",
         values=("Debug", "Release", "RelWithDebInfo", "MinSizeRel", "Coverage"),
     )

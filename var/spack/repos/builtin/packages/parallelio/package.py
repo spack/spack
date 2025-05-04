@@ -124,7 +124,7 @@ class Parallelio(CMakePackage):
             version.underscored
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("PIO_VERSION_MAJOR", "2")
         valid_values = "netcdf"
         if self.spec.satisfies("+mpi"):

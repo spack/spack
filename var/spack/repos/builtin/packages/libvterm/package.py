@@ -30,7 +30,7 @@ class Libvterm(MakefilePackage):
         url = "https://launchpad.net/libvterm/trunk/v{0}/+download/libvterm-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LIBTOOL", self.spec["libtool"].prefix.bin.join("libtool"))
 
     def build(self, spec, prefix):

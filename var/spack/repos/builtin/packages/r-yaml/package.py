@@ -25,3 +25,5 @@ class RYaml(RPackage):
     version("2.1.19", sha256="e5db035693ac765e4b5fe1fc2e9711f8ca73e398e3f2bf27cc60def59ccd7f11")
     version("2.1.14", sha256="41a559846f6d44cc2dbcb3fc0becbc50d2766d3dc2aad7cfb97c1f9759ec0875")
     version("2.1.13", sha256="26f69aa2008bcacf3b2f95ef82a4667eaec2f2da8487646f71f1e2635d2d7fa2")
+
+    depends_on("c", type="build")

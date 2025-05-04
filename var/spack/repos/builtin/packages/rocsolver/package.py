@@ -43,8 +43,8 @@ class Rocsolver(CMakePackage):
 
     license("BSD-2-Clause")
 
-    version("develop", branch="develop")
-    version("master", branch="master")
+    version("develop", branch="develop", deprecated=True)
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="0e8bb906513555d349b6a20cb17976402f5ea6702668efcdda595a2e2d516b46")
     version("6.3.2", sha256="834f532c54bdf0e4900e73ffb0544068071976175559c8bf3c50d7a3b7230a3a")
     version("6.3.1", sha256="ffa70c4dedeb20a33cf79d4ae3e95ade2ae5202f819459b19a0ebf62c380bba0")
@@ -154,7 +154,7 @@ class Rocsolver(CMakePackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")

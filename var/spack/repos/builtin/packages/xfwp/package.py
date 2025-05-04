@@ -24,5 +24,5 @@ class Xfwp(AutotoolsPackage, XorgPackage):
 
     # Fixes this and a long list of other compilation errors:
     # io.c:1039:7: error: implicit declaration of function 'swab'
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CPPFLAGS", "-D_GNU_SOURCE")

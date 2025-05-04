@@ -179,7 +179,7 @@ class Athena(AutotoolsPackage):
 
     patch("missing-separator.patch")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         env.set("OPT", "-O3")

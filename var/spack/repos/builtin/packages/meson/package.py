@@ -178,7 +178,9 @@ class Meson(PythonPackage):
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str).rstrip()
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # https://github.com/pybind/pybind11/issues/595
         if self.spec.satisfies("platform=darwin"):
             env.set("STRIP", "strip -x")

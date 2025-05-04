@@ -38,6 +38,6 @@ class Varscan(Package):
         filter_file("^java", java, script, **kwargs)
         filter_file("varscan.jar", join_path(prefix.jar, jar_file), script, **kwargs)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("VARSCAN_HOME", self.prefix.jar)
         env.set("CLASSPATH", self.prefix.jar)

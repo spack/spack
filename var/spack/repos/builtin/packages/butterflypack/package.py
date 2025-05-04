@@ -24,6 +24,8 @@ class Butterflypack(CMakePackage):
     url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v2.2.0.tar.gz"
     maintainers("liuyangzhuan")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")

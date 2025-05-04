@@ -88,7 +88,7 @@ class Uqtk(CMakePackage):
 
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+python" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix)
             env.prepend_path("PYTHONPATH", "{0}/PyUQTk".format(self.prefix))

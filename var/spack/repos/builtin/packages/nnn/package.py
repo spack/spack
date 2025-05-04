@@ -57,7 +57,7 @@ class Nnn(MakefilePackage):
         description="Add pipe to close and restore preview-tui for internal undetached edits",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("PREFIX", self.prefix)
         if "+pcre" in spec:

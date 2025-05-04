@@ -29,5 +29,5 @@ class Cachefilesd(MakefilePackage):
     def install(self, spec, prefix):
         make("DESTDIR={0}".format(prefix), "install")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)

@@ -23,7 +23,7 @@ class Ampliconnoise(MakefilePackage):
 
     patch("Fix-return-type.patch")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.Scripts)
         env.set("PYRO_LOOKUP_FILE", os.path.join(self.prefix, "Data", "LookUp_E123.dat"))
         env.set("SEQ_LOOKUP_FILE", os.path.join(self.prefix, "Data", "Tran.dat"))

@@ -305,11 +305,6 @@ class Eccodes(CMakePackage):
             msg.format("shared" if shared else "static", self.spec.name, self.spec.prefix)
         )
 
-    @run_before("cmake")
-    def check_fortran(self):
-        if "+fortran" in self.spec and self.compiler.fc is None:
-            raise InstallError("Fortran interface requires a Fortran compiler!")
-
     def cmake_args(self):
         jp2k = self.spec.variants["jp2k"].value
 

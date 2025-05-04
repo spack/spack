@@ -18,6 +18,7 @@ class PyTorchvision(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("0.22.0", sha256="83ed8855cdfb138aba6f116f8fd8da8b83463170dad67a70f60327915ed12014")
     version("0.21.0", sha256="0a4a967bbb7f9810f792cd0289a07fb98c8fb5d1303fae8b63e3a6b05d720058")
     version("0.20.1", sha256="7e08c7f56e2c89859310e53d898f72bccc4987cd83e08cfd6303513da15a9e71")
     version("0.20.0", sha256="b59d9896c5c957c6db0018754bbd17d079c5102b82b9be0b438553b40a7b6029")
@@ -48,36 +49,13 @@ class PyTorchvision(PythonPackage):
     version("0.9.1", sha256="79964773729880e0eee0e6af13f336041121d4cc8491a3e2c0e5f184cac8a718")
     version("0.9.0", sha256="9351ed92aded632f8c7f59dfadac13c191a834babe682f5785ea47e6fcf6b472")
     version("0.8.2", sha256="9a866c3c8feb23b3221ce261e6153fc65a98ce9ceaa71ccad017016945c178bf")
-    version(
-        "0.8.1",
-        sha256="c46734c679c99f93e5c06654f4295a05a6afe6c00a35ebd26a2cce507ae1ccbd",
-        deprecated=True,
-    )
-    version(
-        "0.8.0",
-        sha256="b5f040faffbfc7bac8d4687d8665bd1196937334589b3fb5fcf15bb69ca25391",
-        deprecated=True,
-    )
-    version(
-        "0.7.0",
-        sha256="fa0a6f44a50451115d1499b3f2aa597e0092a07afce1068750260fa7dd2c85cb",
-        deprecated=True,
-    )
-    version(
-        "0.6.1",
-        sha256="8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656",
-        deprecated=True,
-    )
-    version(
-        "0.6.0",
-        sha256="02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7",
-        deprecated=True,
-    )
-    version(
-        "0.5.0",
-        sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d",
-        deprecated=True,
-    )
+    with default_args(deprecated=True):
+        version("0.8.1", sha256="c46734c679c99f93e5c06654f4295a05a6afe6c00a35ebd26a2cce507ae1ccbd")
+        version("0.8.0", sha256="b5f040faffbfc7bac8d4687d8665bd1196937334589b3fb5fcf15bb69ca25391")
+        version("0.7.0", sha256="fa0a6f44a50451115d1499b3f2aa597e0092a07afce1068750260fa7dd2c85cb")
+        version("0.6.1", sha256="8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656")
+        version("0.6.0", sha256="02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7")
+        version("0.5.0", sha256="eb9afc93df3d174d975ee0914057a9522f5272310b4d56c150b955c287a4d74d")
 
     desc = "Enable support for native encoding/decoding of {} formats in torchvision.io"
     variant("png", default=True, description=desc.format("PNG"))
@@ -105,6 +83,7 @@ class PyTorchvision(PythonPackage):
 
         # https://github.com/pytorch/vision#installation
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.7.0", when="@0.22.0")
         depends_on("py-torch@2.6.0", when="@0.21.0")
         depends_on("py-torch@2.5.1", when="@0.20.1")
         depends_on("py-torch@2.5.0", when="@0.20.0")
@@ -145,6 +124,8 @@ class PyTorchvision(PythonPackage):
     depends_on("ninja", type="build")
 
     # setup.py
+    # https://setuptools.pypa.io/en/latest/history.html#v77-0-0
+    depends_on("py-setuptools@:76", type="build", when="@:0.21.0")
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))
     # https://github.com/pytorch/vision/issues/8460
@@ -187,34 +168,27 @@ class PyTorchvision(PythonPackage):
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
 
-    def flag_handler(self, name, flags):
-        # https://github.com/pytorch/vision/issues/8653
-        if name == "ldflags":
-            if self.spec.satisfies("%apple-clang@15:"):
-                flags.append("-Wl,-ld_classic")
-        return (flags, None, None)
-
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The only documentation on building is what is found in setup.py and:
         # https://github.com/pytorch/vision/blob/main/CONTRIBUTING.md#development-installation
 
         # By default, version is read from `version.txt`, but this includes an `a0`
         # suffix used for alpha builds. Override the version for stable releases.
         if not self.spec.satisfies("@main"):
-            env.set("BUILD_VERSION", self.version)
+            env.set("BUILD_VERSION", str(self.version))
 
         # Used by ninja
-        env.set("MAX_JOBS", make_jobs)
+        env.set("MAX_JOBS", str(make_jobs))
 
         if "^cuda" in self.spec:
             env.set("CUDA_HOME", self.spec["cuda"].prefix)
 
         for gpu in ["cuda", "mps"]:
-            env.set(f"FORCE_{gpu.upper()}", int(f"+{gpu}" in self.spec["py-torch"]))
+            env.set(f"FORCE_{gpu.upper()}", str(f"+{gpu}" in self.spec["py-torch"]))
 
         extensions = ["png", "jpeg", "webp", "nvjpeg", "video_codec", "ffmpeg"]
         for extension in extensions:
-            env.set(f"TORCHVISION_USE_{extension.upper()}", int(f"+{extension}" in self.spec))
+            env.set(f"TORCHVISION_USE_{extension.upper()}", str(f"+{extension}" in self.spec))
 
         include = []
         library = []

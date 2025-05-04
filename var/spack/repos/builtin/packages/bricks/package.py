@@ -21,6 +21,8 @@ class Bricks(CMakePackage):
     # List of GitHub accounts to notify when the package is updated.
     maintainers("ztuowen", "drhansj")
 
+    tags = ["e4s"]
+
     license("MIT")
 
     version("r0.1", branch="r0.1")

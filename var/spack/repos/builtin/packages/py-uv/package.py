@@ -25,7 +25,7 @@ class PyUv(PythonPackage):
     depends_on("cmake", type="build", when="@:0.6.3")
 
     @when("@:0.6.3")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CMAKE", self.spec["cmake"].prefix.bin.cmake)
 
     executables = ["^uv$"]

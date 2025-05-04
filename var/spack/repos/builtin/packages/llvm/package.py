@@ -55,6 +55,10 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     version("main", branch="main")
 
     # Latest stable
+    version("20.1.4", sha256="65e3a582c4c684fa707a56ff643427bce3633eceaceae3295d81c0e830f44b89")
+    version("20.1.3", sha256="b40c0d185b98c2ee3c0cb2f14cde65a06008b33dfb471cc7ad868f8ca3f7f897")
+    version("20.1.2", sha256="9ee597456405ddf4809bcf66a4765137a68a85361347ca2a4bb13d9176e932ab")
+    version("20.1.1", sha256="edde69aa3e48a3892a8f01332ff79cfb6179151b42503c4ba77d2cd408b013bf")
     version("20.1.0", sha256="08bc382733777dda3c96259e3732ff96c1df98d0470c4f85b163274eae687f4f")
 
     # Previous stable series releases
@@ -801,7 +805,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     def determine_variants(cls, exes, version_str):
         # Do not need to reuse more general logic from CompilerPackage
         # because LLVM has kindly named compilers
-        variants, compilers = ["+clang"], {}
+        variants, compilers = {"+clang"}, {}
         lld_found, lldb_found = False, False
         for exe in sorted(exes, key=len):
             name = os.path.basename(exe)
@@ -809,18 +813,18 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 compilers.setdefault("cxx", exe)
             elif "clang" in name:
                 compilers.setdefault("c", exe)
-            elif "flang" in name:
-                variants.append("+flang")
+            elif "flang" in name and "fortran" not in compilers:
+                variants.add("+flang")
                 compilers.setdefault("fortran", exe)
             elif "ld.lld" in name:
                 lld_found = True
             elif "lldb" in name:
                 lldb_found = True
 
-        variants.append("+lld" if lld_found else "~lld")
-        variants.append("+lldb" if lldb_found else "~lldb")
+        variants.add("+lld" if lld_found else "~lld")
+        variants.add("+lldb" if lldb_found else "~lldb")
 
-        return "".join(variants), {"compilers": compilers}
+        return "".join(sorted(variants)), {"compilers": compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
@@ -933,7 +937,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             return (None, flags, None)
         return (flags, None, None)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """When using %clang, add only its ld.lld-$ver and/or ld.lld to our PATH"""
         if self.compiler.name in ["clang", "apple-clang"]:
             for lld in "ld.lld-{0}".format(self.compiler.version.version[0]), "ld.lld":
@@ -948,7 +952,13 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             # set the SDKROOT so the bootstrap compiler finds its C++ headers
             env.set("SDKROOT", macos_sdk_path())
 
-    def setup_run_environment(self, env):
+        if self.spec.satisfies("%intel-oneapi-compilers"):
+            intel_libs = find_libraries(
+                ["libsvml", "libimf", "libirc"], self.spec["intel-oneapi-runtime"].prefix.lib
+            )
+            env.append_flags("LDFLAGS", intel_libs.ld_flags)
+
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+clang"):
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))

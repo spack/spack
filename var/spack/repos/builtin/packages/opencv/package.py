@@ -18,6 +18,8 @@ class Opencv(CMakePackage, CudaPackage):
 
     maintainers("bvanessen", "adamjstewart")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("master", branch="master")

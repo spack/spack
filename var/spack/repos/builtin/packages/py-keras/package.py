@@ -20,6 +20,7 @@ class PyKeras(PythonPackage):
     pypi = "keras/keras-3.0.0.tar.gz"
 
     maintainers("adamjstewart")
+    tags = ["e4s"]
     license("Apache-2.0")
 
     version("3.9.2", sha256="322aab6418ee3de1e2bd0871b60a07f0e444e744a7e8cba79af8b42408879ecf")
@@ -159,7 +160,7 @@ class PyKeras(PythonPackage):
             url = "https://files.pythonhosted.org/packages/source/k/keras/Keras-{}.tar.gz"
         return url.format(version)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@3:"):
             env.set("KERAS_BACKEND", self.spec.variants["backend"].value)
 

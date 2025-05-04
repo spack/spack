@@ -13,7 +13,7 @@ class Glvis(MakefilePackage):
 
     homepage = "https://glvis.org"
     git = "https://github.com/glvis/glvis.git"
-    tags = ["radiuss"]
+    tags = ["radiuss", "e4s"]
 
     maintainers("v-dobrev", "tzanio", "tomstitt", "goxberry")
 

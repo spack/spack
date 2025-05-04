@@ -134,7 +134,7 @@ class Proj(CMakePackage, AutotoolsPackage):
         conditional("autotools", when="@:8"), conditional("cmake", when="@5:"), default="cmake"
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # PROJ_LIB doesn't need to be set. However, it may be set by conda.
         # If an incompatible version of PROJ is found in PROJ_LIB, it can
         # cause the package to fail at run-time. See the following for details:
@@ -144,7 +144,7 @@ class Proj(CMakePackage, AutotoolsPackage):
 
 
 class AnyBuilder(BaseBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PROJ_LIB", join_path(self.pkg.stage.source_path, "nad"))
 
     @run_after("install")

@@ -64,7 +64,7 @@ class W3emc(CMakePackage):
     depends_on("sigio", when="@2.7.3")
     depends_on("netcdf-fortran", when="@2.7.3")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@:2.9"):
             suffixes = ("4", "d", "8")
             shared = False

@@ -137,7 +137,7 @@ class Bufr(CMakePackage):
             pydir = join_path(os.path.dirname(lib[0]), f"python{pyver}", "site-packages")
             env.prepend_path("PYTHONPATH", pydir)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         suffixes = ["4"]
         if not self.spec.satisfies("@12:"):
             suffixes += ["8", "d"]
@@ -145,7 +145,7 @@ class Bufr(CMakePackage):
             self._setup_bufr_environment(env, suffix)
 
     @on_package_attributes(run_tests=True)
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_path("LD_LIBRARY_PATH", join_path(self.build_directory, "src"))
 
     def check(self):

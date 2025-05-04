@@ -183,7 +183,7 @@ class Eckit(CMakePackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Bug fix for macOS - cmake's find_package doesn't add "libtinfo.dylib" to the
         # ncurses libraries, but the ncurses pkgconfig explicitly sets it. We need to
         # add the correct spec['ncurses'].libs.ld_flags to LDFLAGS to compile eckit

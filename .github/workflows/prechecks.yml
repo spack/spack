@@ -25,14 +25,16 @@ jobs:
       with:
         python-version: '3.13'
         cache: 'pip'
+        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python Packages
       run: |
-        pip install --upgrade pip setuptools
         pip install -r .github/workflows/requirements/style/requirements.txt
     - name: vermin (Spack's Core)
-      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
+      run: |
+        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
-      run: vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
+      run: |
+        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
 
   # Run style checks on the files that have been changed
   style:
@@ -40,23 +42,20 @@ jobs:
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       with:
-        fetch-depth: 0
+        fetch-depth: 2
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.13'
         cache: 'pip'
+        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python packages
       run: |
-        pip install --upgrade pip setuptools
         pip install -r .github/workflows/requirements/style/requirements.txt
-    - name: Setup git configuration
-      run: |
-        # Need this for the git tests to succeed.
-        git --version
-        . .github/workflows/bin/setup_git.sh
     - name: Run style tests
       run: |
-          share/spack/qa/run-style-tests
+        bin/spack style --base HEAD^1
+        bin/spack license verify
+        pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib
 
   audit:
     uses: ./.github/workflows/audit.yaml
@@ -103,21 +102,3 @@ jobs:
           spack -d bootstrap now --dev
           spack -d style -t black
           spack unit-test -V
-
-  # Further style checks from pylint
-  pylint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-      - name: Install Python packages
-        run: |
-          pip install --upgrade pip setuptools pylint
-      - name: Pylint (Spack Core)
-        run: |
-          pylint -j 4 --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib

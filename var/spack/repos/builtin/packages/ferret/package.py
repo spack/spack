@@ -30,6 +30,7 @@ class Ferret(Package):
     variant("datasets", default=False, description="Install Ferret standard datasets")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")
     depends_on("fortran", type="build")  # generated
 
     depends_on("hdf5+hl")
@@ -186,7 +187,7 @@ class Ferret(Package):
             mkdir(self.prefix.fer_dsets)
             install_tree("fer_dsets", self.prefix.fer_dsets)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("FER_DIR", self.prefix)
         env.set(
             "FER_GO", " ".join([".", self.prefix.go, self.prefix.examples, self.prefix.contrib])

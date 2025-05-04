@@ -106,7 +106,7 @@ class Papi(AutotoolsPackage, ROCmPackage):
 
     configure_directory = "src"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+lmsensors" in spec and self.version >= Version("6"):
             env.set("PAPI_LMSENSORS_ROOT", spec["lm-sensors"].prefix)
@@ -176,12 +176,6 @@ class Papi(AutotoolsPackage, ROCmPackage):
             options.append("--with-debug=yes")
 
         return options
-
-    @run_before("configure")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "PAPI requires a Fortran compiler to build"
-            raise RuntimeError(msg)
 
     @run_before("configure")
     def component_configure(self):

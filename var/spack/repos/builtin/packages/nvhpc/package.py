@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # Copyright (c) 2020, NVIDIA CORPORATION. All rights reserved.
+import glob
 import os.path
 import platform
 
@@ -519,7 +520,7 @@ class Nvhpc(Package, CompilerPackage):
     def _version_prefix(self):
         return join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NVHPC_SILENT", "true")
         env.set("NVHPC_ACCEPT_EULA", "accept")
         env.set("NVHPC_INSTALL_DIR", self.prefix)
@@ -558,7 +559,7 @@ class Nvhpc(Package, CompilerPackage):
         # Update localrc to use Spack gcc
         makelocalrc(*makelocalrc_args)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )
@@ -586,7 +587,9 @@ class Nvhpc(Package, CompilerPackage):
             env.prepend_path("PATH", mpi_prefix.bin)
             env.prepend_path("LD_LIBRARY_PATH", mpi_prefix.lib)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         prefix = Prefix(
             join_path(self.prefix, "Linux_%s" % self.spec.target.family, self.version, "compilers")
         )
@@ -639,6 +642,24 @@ class Nvhpc(Package, CompilerPackage):
             libs.append("libnvf")
 
         return find_libraries(libs, root=prefix, recursive=True)
+
+    def _cc_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _cxx_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvc++")
+        if not candidates:
+            return None
+        return candidates[0]
+
+    def _fortran_path(self):
+        candidates = glob.glob(f"{self.prefix}/**/{self.spec.version}/compilers/bin/nvfortran")
+        if not candidates:
+            return None
+        return candidates[0]
 
     # Avoid binding stub libraries by absolute path
     non_bindable_shared_objects = ["stubs"]

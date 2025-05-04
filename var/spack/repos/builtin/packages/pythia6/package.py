@@ -146,7 +146,7 @@ class Pythia6(CMakePackage):
             "pyhepc.f",
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%gcc@10:"):
             env.append_flags("CFLAGS", "-fcommon")
             env.append_flags("FFLAGS", "-fcommon")

@@ -256,7 +256,7 @@ class Bazel(Package):
         match = re.search(r"Build label: ([\d.]+)", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # fix the broken linking (on power9)
         # https://github.com/bazelbuild/bazel/issues/10327
         env.set("BAZEL_LINKOPTS", "")

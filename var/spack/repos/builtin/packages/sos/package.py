@@ -65,6 +65,10 @@ class Sos(AutotoolsPackage):
     variant("hard-polling", default=False, description="Enable hard polling of wait calls")
     variant("fortran", default=False, description="Enable fortran API")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("autoconf", type="build")
     depends_on("automake", type="build")
     depends_on("libtool", type="build")
@@ -78,7 +82,9 @@ class Sos(AutotoolsPackage):
     # them from using the spack wrappers
     filter_compiler_wrappers("oshcc", "oshc++", "oshcc", "oshfort", relative_root="bin")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Enable the osh wrappers to use spack wrappers when inside spack
         # with env variables
         env.set("SHMEM_CC", spack_cc)

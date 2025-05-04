@@ -59,7 +59,7 @@ class Mpibind(AutotoolsPackage):
         autoreconf("--install", "--verbose", "--force")
 
     @when("+flux")
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Load the mpibind plugin into Flux"""
         env.prepend_path("FLUX_SHELL_RC_PATH", join_path(self.prefix, "share", "mpibind"))
 

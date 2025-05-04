@@ -24,6 +24,8 @@ class Lci(CMakePackage):
     license("MIT")
 
     version("master", branch="master")
+    version("1.7.9", sha256="49f212d034e7d0b63af29e76b17935a3221830090af02c0e0912cea8a7a58d91")
+    version("1.7.8", sha256="9d54dd669b54e715162c5184a0e5cc64fd479e9fda60b2a490197d901368afda")
     version("1.7.7", sha256="c310f699b7b4317a2f5c3557f85c240fe3c85d2d06618dd248434ef807d53779")
     version("1.7.6", sha256="c88ccea2ad277ed38fc23187771b52b6fb212ed4429114717bfa8887ed21665c")
     version("1.7.5", sha256="13e4084c9e7aaf55966ba5aa0423164b8fd21ee7526fc62017b3c9b3db99cb83")

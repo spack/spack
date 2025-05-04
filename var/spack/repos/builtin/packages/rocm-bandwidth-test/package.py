@@ -16,7 +16,7 @@ class RocmBandwidthTest(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="d33f656eb6ba7db78b41c4bcf6d830b511dc97c6d645760e6d05edd07fcaefba")
     version("6.3.2", sha256="3754831244d7c4f6314fc25b3e929adf9abe44c9cb60621dd8ae5d1aa930ae55")
     version("6.3.1", sha256="98002e4104929a62a308114ed82fba530880359a17f90ebd62a2ca49c2baac78")

@@ -145,7 +145,7 @@ class Openssh(AutotoolsPackage):
         """Install generates etc/sshd_config, but it fails in parallel mode"""
         make("install", parallel=False)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Until spack supports a real implementation of setup_test_environment()"""
         if self.run_tests:
             self.setup_test_environment(env)
@@ -158,7 +158,7 @@ class Openssh(AutotoolsPackage):
         if self.spec.satisfies("@:7 %gcc@10:") or self.spec.satisfies("@:7 %clang@11:"):
             env.append_flags("CFLAGS", "-fcommon")
 
-    def setup_test_environment(self, env):
+    def setup_test_environment(self, env: EnvironmentModifications):
         """Configure the regression test suite like Debian's openssh-tests package"""
         p = self.prefix
         j = join_path

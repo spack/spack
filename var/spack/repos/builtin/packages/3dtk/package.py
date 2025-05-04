@@ -21,6 +21,9 @@ class _3dtk(CMakePackage):
     version("trunk", svn="https://svn.code.sf.net/p/slam6d/code/trunk", preferred=True)
     version("1.2", svn="https://svn.code.sf.net/p/slam6d/code/branches/3dtk-release-1.2")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     variant("cgal", default=False, description="Compile with CGAL support")
     variant("opengl", default=True, description="Compile with OpenGL support")
     variant("opencv", default=True, description="Compile with OpenCV support")
@@ -68,7 +71,7 @@ class _3dtk(CMakePackage):
 
     patch("homebrew.patch", when="platform=darwin")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["eigen"].prefix.include)
 
     def cmake_args(self):

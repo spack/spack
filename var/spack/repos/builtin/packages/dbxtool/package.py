@@ -21,7 +21,7 @@ class Dbxtool(MakefilePackage):
     depends_on("efivar")
     depends_on("popt")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.spec["efivar"].prefix.include.efivar)
 
     def install(self, spec, prefix):

@@ -37,10 +37,10 @@ class Openmolcas(CMakePackage):
 
     patch("CMakeLists.txt.patch", when="target=aarch64:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("MOLCAS", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("MOLCAS", self.prefix)
         if self.spec.version >= Version("21.02"):
             env.append_path("PATH", self.prefix)

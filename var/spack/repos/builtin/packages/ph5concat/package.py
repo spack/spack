@@ -25,7 +25,7 @@ class Ph5concat(AutotoolsPackage):
 
     variant("profiling", default=False, description="Enable profiling support")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LIBS", "-ldl -lz")
 
     def configure_args(self):

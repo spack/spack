@@ -68,6 +68,10 @@ class Vasp(MakefilePackage, CudaPackage):
     variant("shmem", default=True, description="Enable use_shmem build flag")
     variant("hdf5", default=False, when="@6.2:", description="Enabled HDF5 support")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("rsync", type="build")
     depends_on("blas")
     depends_on("lapack")
@@ -322,9 +326,9 @@ class Vasp(MakefilePackage, CudaPackage):
 
         os.rename(make_include, "makefile.include")
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda %nvhpc"):
-            spack_env.set("NVHPC_CUDA_HOME", self.spec["cuda"].prefix)
+            env.set("NVHPC_CUDA_HOME", self.spec["cuda"].prefix)
 
     def build(self, spec, prefix):
         if spec.satisfies("@:6.2"):

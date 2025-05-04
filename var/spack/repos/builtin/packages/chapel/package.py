@@ -749,11 +749,11 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
             self.update_lib_path(env, self.spec["hsa-rocr-dev"].prefix)
         self.setup_chpl_comm(env, self.spec)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         self.unset_chpl_env_vars(env)
         self.setup_env_vars(env)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         self.setup_env_vars(env)
         chpl_home = join_path(self.prefix.share, "chapel", self._output_version_short)
         env.prepend_path("PATH", join_path(chpl_home, "util"))

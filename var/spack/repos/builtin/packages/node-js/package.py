@@ -164,7 +164,7 @@ class NodeJs(Package):
         match = re.match(r"v([\d.]+)\s*", output)
         return match.group(1) if match else None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Force use of experimental Python 3 support
         env.set("PYTHON", self.spec["python"].command.path)
         env.set("NODE_GYP_FORCE_PYTHON", self.spec["python"].command.path)

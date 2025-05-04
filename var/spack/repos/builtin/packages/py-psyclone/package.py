@@ -84,6 +84,6 @@ class PyPsyclone(PythonPackage):
         with working_dir("src"):
             pytest()
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Allow testing with installed executables
         env.prepend_path("PATH", self.prefix.bin)

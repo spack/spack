@@ -33,7 +33,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
 
     license("Apache-2.0")
 
-    version("master", branch="amd-stg-open")
+    version("master", branch="amd-stg-open", deprecated=True)
     version("6.3.3", sha256="4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d")
     version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
     version("6.3.1", sha256="e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c")
@@ -329,11 +329,13 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     compiler_version_regex = r"roc-(\d+[._]\d+[._]\d+)"
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     # Make sure that the compiler paths are in the LD_LIBRARY_PATH
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
         # Required for enabling asan on dependent packages
         for root, _, files in os.walk(self.prefix):
@@ -358,7 +360,9 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
             )
 
     # Required for enabling asan on dependent packages
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         for root, _, files in os.walk(self.prefix):
             if "libclang_rt.asan-x86_64.so" in files:
                 env.prepend_path("LD_LIBRARY_PATH", root)

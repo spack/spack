@@ -13,6 +13,8 @@ class ScorecCore(CMakePackage):
     homepage = "https://www.scorec.rpi.edu/"
     git = "https://github.com/SCOREC/core.git"
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause")
 
     version("develop")

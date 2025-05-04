@@ -199,7 +199,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Environment setup
     #
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Bohrium needs an extra include dir apart from
         # the self.prefix.include dir
         env.prepend_path("CPATH", self.prefix.include.bohrium)

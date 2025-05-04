@@ -418,6 +418,8 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
 
     # External Kokkos
     with when("@14.4: +kokkos"):
+        depends_on("kokkos~cuda", when="~cuda")
+        depends_on("kokkos~rocm", when="~rocm")
         depends_on("kokkos+wrapper", when="+wrapper")
         depends_on("kokkos~wrapper", when="~wrapper")
         depends_on("kokkos+cuda_relocatable_device_code~shared", when="+cuda_rdc")
@@ -425,12 +427,12 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         depends_on("kokkos-kernels~shared", when="+cuda_rdc")
         depends_on("kokkos-kernels~shared", when="+rocm_rdc")
         depends_on("kokkos~complex_align")
-        depends_on("kokkos@=4.5.01", when="@master:")
+        depends_on("kokkos@=4.6.00", when="@master:")
         depends_on("kokkos@=4.5.01", when="@16.1")
         depends_on("kokkos@=4.3.01", when="@16.0")
         depends_on("kokkos@=4.2.01", when="@15.1:15")
         depends_on("kokkos@=4.1.00", when="@14.4:15.0")
-        depends_on("kokkos-kernels@=4.5.01", when="@master:")
+        depends_on("kokkos-kernels@=4.6.00", when="@master:")
         depends_on("kokkos-kernels@=4.5.01", when="@16.1")
         depends_on("kokkos-kernels@=4.3.01", when="@16.0")
         depends_on("kokkos-kernels@=4.2.01", when="@15.1:15")
@@ -554,6 +556,13 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     # https://github.com/trilinos/Trilinos/pull/11600
     patch("13.4.1-patch11600.patch", when="@13.4.1 %oneapi@2025:")
 
+    # https://github.com/trilinos/Trilinos/pull/13921
+    patch("16-1-0-stk-fpe-exceptions.patch", when="@=16.1.0 +stk platform=darwin")
+
+    # https://github.com/trilinos/Trilinos/issues/13916 and
+    # https://github.com/trilinos/Trilinos/pull/13921
+    patch("16-1-0-stk-size_t.patch", when="@=16.1.0 +stk")
+
     def flag_handler(self, name, flags):
         spec = self.spec
         is_cce = spec.satisfies("%cce")
@@ -612,7 +621,9 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         url = "https://github.com/trilinos/Trilinos/archive/refs/tags/trilinos-release-{0}.tar.gz"
         return url.format(version.dashed)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if self.spec.satisfies("@:13.1.0 +cuda"):
             # older releases of  Trilinos doesn't perform the memory fence so
             # it relies on blocking CUDA kernel launch. This is needed
@@ -626,7 +637,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
         # Assumes build-time globals have been set already
         return spack_cxx
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+cuda" in spec and "+wrapper" in spec:
             if "+mpi" in spec:
@@ -1112,7 +1123,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
             )
             filter_file(r"-lpytrilinos", "", "%s/Makefile.export.Trilinos" % self.prefix.include)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "+exodus" in self.spec:
             env.prepend_path("PYTHONPATH", self.prefix.lib)
 

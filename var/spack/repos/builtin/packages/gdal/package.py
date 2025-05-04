@@ -364,7 +364,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("openjpeg", when="+openjpeg")
     depends_on("openssl", when="+openssl")
     depends_on("oracle-instant-client", when="+oracle")
-    depends_on("parquet-cpp", when="+parquet")
+    depends_on("arrow", when="+parquet")
     # depends_on('pcidsk', when='+pcidsk')
     depends_on("pcre2", when="@3.5:+pcre2")
     depends_on("pcre", when="@:3.4+pcre2")
@@ -512,7 +512,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     def determine_version(cls, exe):
         return Executable(exe)("--version", output=str, error=str).rstrip()
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+java"):
             class_paths = find(self.prefix, "*.jar")
             classpath = os.pathsep.join(class_paths)
@@ -639,7 +639,7 @@ class CMakeBuilder(CMakeBuilder):
 
 
 class AutotoolsBuilder(AutotoolsBuilder):
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Needed to install Python bindings to GDAL installation
         # prefix instead of Python installation prefix.
         # See swig/python/GNUmakefile for more details.

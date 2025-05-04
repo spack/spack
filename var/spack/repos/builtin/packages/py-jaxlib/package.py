@@ -206,7 +206,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
             name = "jaxlib"
         return url.format(name, version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("@0.4.38: +rocm") and not spec["hip"].external:
             if spec.satisfies("^hip@6.2:"):

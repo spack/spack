@@ -44,6 +44,7 @@ class Vbfnlo(AutotoolsPackage):
 
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("hepmc")
     depends_on("gsl")
@@ -57,7 +58,7 @@ class Vbfnlo(AutotoolsPackage):
     depends_on("tcsh", type="build")
 
     @when("@2.7.1")
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset("F77")
 
     def configure_args(self):

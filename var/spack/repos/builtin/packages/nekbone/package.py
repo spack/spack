@@ -14,7 +14,7 @@ class Nekbone(Package):
     homepage = "https://github.com/Nek5000/Nekbone"
     git = "https://github.com/Nek5000/Nekbone.git"
 
-    tags = ["proxy-app", "ecp-proxy-app"]
+    tags = ["proxy-app", "ecp-proxy-app", "e4s"]
 
     license("mpich2")
 
@@ -34,12 +34,6 @@ class Nekbone(Package):
     depends_on("fortran", type="build")  # generated
 
     depends_on("mpi", when="+mpi")
-
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "Nekbone can not be built without a Fortran compiler."
-            raise RuntimeError(msg)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

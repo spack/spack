@@ -40,8 +40,8 @@ class PyAmici(PythonPackage):
     depends_on("py-toposort", type=("build", "run"))
     depends_on("py-mpmath", when="@0.16.0:", type=("build", "run"))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLAS_LIBS", " ".join(self.spec["blas"].libs))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("BLAS_LIBS", " ".join(self.spec["blas"].libs))

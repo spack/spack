@@ -156,7 +156,7 @@ class Su2(MesonPackage):
                 join_path(self.build_directory, "subprojects", "Mutationpp"), self.prefix.lib
             )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("su2_run", self.prefix.bin)
         env.set("su2_home", self.prefix)
         env.prepend_path("path", self.prefix.bin)

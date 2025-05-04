@@ -143,7 +143,7 @@ class Amrvis(MakefilePackage):
         with open("GNUmakefile", "w") as file:
             file.writelines(contents)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # We don't want an AMREX_HOME the user may have set already
         env.unset("AMREX_HOME")
         # Help force Amrvis to not pick up random system compilers

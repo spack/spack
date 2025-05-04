@@ -65,6 +65,7 @@ class Dray(Package, CudaPackage):
     # set to false for systems that implicitly link mpi
     variant("blt_find_mpi", default=True, description="Use BLT CMake Find MPI logic")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
@@ -109,7 +110,7 @@ class Dray(Package, CudaPackage):
     depends_on("mfem~shared", when="~shared")
     depends_on("gmake", type="build")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CTEST_OUTPUT_ON_FAILURE", "1")
 
     def install(self, spec, prefix):

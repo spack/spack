@@ -52,7 +52,9 @@ class Cosma(CMakePackage):
     with when("+rocm"):
         variant("rccl", default=False, description="Use rocm rccl")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
@@ -81,7 +83,7 @@ class Cosma(CMakePackage):
 
     patch("fj-ssl2.patch", when="^fujitsu-ssl2")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
             env.set("CUDA_PATH", self.spec["cuda"].prefix)
 

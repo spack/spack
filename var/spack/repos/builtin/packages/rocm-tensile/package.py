@@ -104,7 +104,7 @@ class RocmTensile(CMakePackage):
 
     patch("0003-require-openmp-extras-when-tensile-use-openmp.patch", when="@5.1.0:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         env.append_flags("LDFLAGS", "-pthread")
 

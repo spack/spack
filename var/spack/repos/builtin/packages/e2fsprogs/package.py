@@ -45,7 +45,7 @@ class E2fsprogs(AutotoolsPackage):
         when="@:1.47.0 +fuse2fs",
     )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix.sbin)
 
     def configure_args(self):

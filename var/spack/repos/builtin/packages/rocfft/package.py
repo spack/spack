@@ -19,7 +19,7 @@ class Rocfft(CMakePackage):
     libraries = ["librocfft"]
 
     license("MIT")
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.3.3", sha256="b2edb5c39215b98e0abc485d2b277a0b8c6f87f06e9b0770a60f5568ef52e62e")
     version("6.3.2", sha256="0511d04d2367dcac6b35bc6b449337ba37bb623b8382fb11178fc608b5435437")
     version("6.3.1", sha256="f8aa0e68d8e303725d0be8ae1d7c0113b6ca019a3b9f08572abf8a02db690662")
@@ -125,7 +125,7 @@ class Rocfft(CMakePackage):
         when="@6.0.0",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")

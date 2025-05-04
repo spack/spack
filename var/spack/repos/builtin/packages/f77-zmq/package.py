@@ -27,7 +27,7 @@ class F77Zmq(MakefilePackage):
     depends_on("python@3:", type="build", when="@:4.3.1")
     depends_on("python", type="build", when="@4.3.2:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.append_flags("CFLAGS", "-O3")
         env.append_flags("CFLAGS", "-g")
 

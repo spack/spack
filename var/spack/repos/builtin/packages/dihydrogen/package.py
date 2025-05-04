@@ -125,6 +125,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
 
     # Dependencies
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("catch2@3.0.1:", type=("build", "test"), when="+developer")
@@ -347,7 +348,7 @@ class Dihydrogen(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.extend(get_blas_entries(spec))
         return entries
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+openmp %apple-clang"):
             env.append_flags("CPPFLAGS", self.compiler.openmp_flag)
             env.append_flags("CFLAGS", self.spec["llvm-openmp"].headers.include_flags)

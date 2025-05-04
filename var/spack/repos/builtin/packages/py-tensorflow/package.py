@@ -44,6 +44,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
 
     license("Apache-2.0")
     maintainers("adamjstewart", "aweits")
+    tags = ["e4s"]
 
     version(
         "2.18.0-rocm-enhanced",
@@ -575,7 +576,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         return (flags, None, None)
 
     # https://www.tensorflow.org/install/source
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # Please specify the location of python

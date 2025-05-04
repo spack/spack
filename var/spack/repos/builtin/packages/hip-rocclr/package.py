@@ -22,7 +22,7 @@ class HipRocclr(CMakePackage):
 
     license("MIT")
 
-    version("master", branch="main")
+    version("master", branch="main", deprecated=True)
     version("5.6.1", sha256="cc9a99c7e4de3d9360c0a471b27d626e84a39c9e60e0aff1e8e1500d82391819")
     version("5.6.0", sha256="864f87323e793e60b16905284fba381a7182b960dd4a37fb67420c174442c03c")
     version("5.5.1", sha256="1375fc7723cfaa0ae22a78682186d4804188b0a54990bfd9c0b8eb421b85e37e")

@@ -72,7 +72,7 @@ class Rstudio(CMakePackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("RSTUDIO_TOOLS_ROOT", self.prefix.tools)
 
     def patch(self):

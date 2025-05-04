@@ -86,6 +86,6 @@ class PyNumba(PythonPackage):
     # See https://reviews.llvm.org/D44140
     conflicts("^llvm@6.0.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("~tbb"):
             env.set("NUMBA_DISABLE_TBB", "yes")

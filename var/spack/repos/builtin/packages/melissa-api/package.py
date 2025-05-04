@@ -27,5 +27,5 @@ class MelissaApi(CMakePackage):
     depends_on("libzmq@4.1.5:")
     depends_on("mpi")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix.lib)

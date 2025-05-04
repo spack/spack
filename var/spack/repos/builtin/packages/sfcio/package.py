@@ -31,7 +31,7 @@ class Sfcio(CMakePackage):
         args = [self.define("ENABLE_TESTS", self.run_tests)]
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         lib = find_libraries("libsfcio", root=self.prefix, shared=False, recursive=True)
         # Only one library version, but still need to set _4 to make NCO happy
         for suffix in ("4", ""):

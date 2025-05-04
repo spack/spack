@@ -7,7 +7,7 @@ BUILTIN_TO_LEGACY_COMPILER = {
     "llvm": "clang",
     "intel-oneapi-compilers": "oneapi",
     "llvm-amdgpu": "rocmcc",
-    "intel-oneapi-compiler-classic": "intel",
+    "intel-oneapi-compilers-classic": "intel",
     "acfl": "arm",
 }
 
@@ -15,6 +15,6 @@ LEGACY_COMPILER_TO_BUILTIN = {
     "clang": "llvm",
     "oneapi": "intel-oneapi-compilers",
     "rocmcc": "llvm-amdgpu",
-    "intel": "intel-oneapi-compiler-classic",
+    "intel": "intel-oneapi-compilers-classic",
     "arm": "acfl",
 }

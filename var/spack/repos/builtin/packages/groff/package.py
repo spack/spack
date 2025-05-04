@@ -89,10 +89,10 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
             args.append("--without-libiconv-prefix")
         return args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+x"):
             dir = join_path(self.prefix.lib, "X11", "app-defaults")
-            env.set_path("XFILESEARCHPATH", dir)
+            env.prepend_path("XFILESEARCHPATH", dir)
 
     def flag_handler(self, name, flags):
         if name == "cxxflags":

@@ -104,7 +104,7 @@ class Unifyfs(AutotoolsPackage):
                 flags.append("-std=gnu99")
         return (None, None, flags)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # GCC11 generates a bogus array bounds error:
         # See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=98266
         if "%gcc@11" in self.spec:

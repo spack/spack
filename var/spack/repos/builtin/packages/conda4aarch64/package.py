@@ -26,6 +26,6 @@ class Conda4aarch64(Package):
         bash = which("bash")
         bash(conda_script, "-b", "-f", "-p", self.prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         filename = self.prefix.etc.join("profile.d").join("conda.sh")
         env.extend(EnvironmentModifications.from_sourcing_file(filename))

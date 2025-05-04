@@ -28,6 +28,7 @@ class Yosys(MakefilePackage):
 
     version("master", branch="master")
 
+    version("0.52", commit="fee39a3284c90249e1d9684cf6944ffbbcbb8f90", submodules=True)
     version("0.51", commit="c4b5190229616f7ebf8197f43990b4429de3e420", submodules=True)
     version("0.50", commit="b5170e1394f602c607e75bdbb1a2b637118f2086", submodules=True)
     version("0.49", commit="427b5a251bfb511528a177bfa92567b4b3ada3dd", submodules=True)
@@ -84,7 +85,7 @@ class Yosys(MakefilePackage):
         makefile.filter(r"ENABLE_ABC :=", "ENABLE_ABC ?=")
         makefile.filter(r"ENABLE_CCACHE :=", "ENABLE_CCACHE ?=")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PREFIX", self.prefix)
         env.set("CXXFLAGS", f'-I{self.spec["readline"].prefix.include}')
         env.set(

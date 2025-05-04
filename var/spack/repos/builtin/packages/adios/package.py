@@ -107,33 +107,19 @@ class Adios(AutotoolsPackage):
         sha256="aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05",
     )
 
-    def validate(self, spec):
-        """Checks if incompatible variants have been activated at the same time
-
-        Args:
-            spec: spec of the package
-
-        Raises:
-            RuntimeError: in case of inconsistencies
-        """
-        if "+fortran" in spec and not self.compiler.fc:
-            msg = "cannot build a fortran variant without a fortran compiler"
-            raise RuntimeError(msg)
-
     def with_or_without_hdf5(self, activated):
         if activated:
             return f"--with-phdf5={self.spec['hdf5'].prefix}"
 
         return "--without-phdf5"
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/ornladios/ADIOS/issues/206
         if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FCFLAGS", "-fallow-argument-mismatch")
 
     def configure_args(self):
         spec = self.spec
-        self.validate(spec)
 
         extra_args = [
             # required, otherwise building its python bindings will fail

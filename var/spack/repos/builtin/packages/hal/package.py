@@ -42,7 +42,7 @@ class Hal(MakefilePackage):
             r"^include  \$\{sonLibRootDir\}/include\.mk", "# include  ${sonLibRootDir}/include.mk"
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("sonLibRootDir", self.spec["sonlib"].prefix)
 
     def install(self, spec, prefix):
@@ -102,5 +102,5 @@ class Hal(MakefilePackage):
     # The hal directory is a python library so we set the path
     # to be the installation root
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PYTHONPATH", self.prefix)

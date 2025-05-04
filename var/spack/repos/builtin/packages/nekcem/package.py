@@ -34,12 +34,6 @@ class Nekcem(Package):
     depends_on("blas")
     depends_on("lapack")
 
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.fc:
-            msg = "NekCEM can not be built without a Fortran compiler."
-            raise RuntimeError(msg)
-
     @run_after("install")
     def check_install(self):
         nekcem_test = join_path(self.prefix.bin, "NekCEM", "tests", "2dboxpec")

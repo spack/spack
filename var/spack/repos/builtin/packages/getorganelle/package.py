@@ -30,6 +30,6 @@ class Getorganelle(PythonPackage):
 
     # Allow access to relevant runtime scripts
     # I.e. get_organelle_config.py, get_organelle_from_reads.py, etc.
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", prefix)
         env.prepend_path("PATH", prefix.Utilities)

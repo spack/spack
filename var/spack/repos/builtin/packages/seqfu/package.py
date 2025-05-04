@@ -26,7 +26,7 @@ class Seqfu(Package):
 
     patch("wno_incompatible_pointer_types.patch", when="@:1.21%gcc@14:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("NIMBLE_DIR", ".nimble")
 
     def install(self, spec, prefix):

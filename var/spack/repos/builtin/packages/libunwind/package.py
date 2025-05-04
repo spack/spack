@@ -14,6 +14,8 @@ class Libunwind(AutotoolsPackage):
     git = "https://github.com/libunwind/libunwind"
     maintainers("mwkrentel")
 
+    tags = ["e4s"]
+
     license("MIT")
 
     version("master", branch="master")

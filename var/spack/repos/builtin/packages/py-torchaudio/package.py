@@ -17,6 +17,7 @@ class PyTorchaudio(PythonPackage):
     maintainers("adamjstewart")
 
     version("main", branch="main")
+    version("2.7.0", tag="v2.7.0", commit="654fee8fd17784271be1637eac1293fd834b4e9a")
     version("2.6.0", tag="v2.6.0", commit="d8831425203385077a03c1d92cfbbe3bf2106008")
     version("2.5.1", tag="v2.5.1", commit="1661daf10599ca8889f092ec37814fabbe202bb0")
     version("2.5.0", tag="v2.5.0", commit="56bc006d56a0d4960de6a1e0b6340cba4eda05cd")
@@ -76,6 +77,7 @@ class PyTorchaudio(PythonPackage):
         depends_on("python@:3.8", when="@:0.7.0")
 
         depends_on("py-torch@main", when="@main")
+        depends_on("py-torch@2.7.0", when="@2.7.0")
         depends_on("py-torch@2.6.0", when="@2.6.0")
         depends_on("py-torch@2.5.1", when="@2.5.1")
         depends_on("py-torch@2.5.0", when="@2.5.0")
@@ -149,16 +151,9 @@ class PyTorchaudio(PythonPackage):
                 string=True,
             )
 
-    def flag_handler(self, name, flags):
-        # https://github.com/pytorch/vision/issues/8653
-        if name == "ldflags":
-            if self.spec.satisfies("%apple-clang@15:"):
-                flags.append("-Wl,-ld_classic")
-        return (flags, None, None)
-
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # tools/setup_helpers/extension.py
-        env.set("BUILD_SOX", 0)
+        env.set("BUILD_SOX", "0")
 
         if self.spec.satisfies("@2.1:"):
             env.set("FFMPEG_ROOT", self.spec["ffmpeg"].prefix)
@@ -167,11 +162,11 @@ class PyTorchaudio(PythonPackage):
             env.set("USE_FFMPEG", "0")
 
         if "+cuda" in self.spec["py-torch"]:
-            env.set("USE_CUDA", 1)
+            env.set("USE_CUDA", "1")
         else:
-            env.set("USE_CUDA", 0)
+            env.set("USE_CUDA", "0")
 
         if "+rocm" in self.spec["py-torch"]:
-            env.set("USE_ROCM", 1)
+            env.set("USE_ROCM", "1")
         else:
-            env.set("USE_ROCM", 0)
+            env.set("USE_ROCM", "0")

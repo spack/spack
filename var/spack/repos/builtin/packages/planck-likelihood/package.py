@@ -116,12 +116,14 @@ class PlanckLikelihood(Package):
         for dir in dirs:
             install_tree(dir, join_path(prefix, "share", "clik", dir))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.set("CLIK_PATH", self.prefix)
         env.set("CLIK_DATA", self.prefix.share.clik)
         env.set("CLIK_PLUGIN", "rel2015")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("CLIK_PATH", self.prefix)
         env.set("CLIK_DATA", self.prefix.share.clik)
         env.set("CLIK_PLUGIN", "rel2015")

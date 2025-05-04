@@ -76,20 +76,22 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r"GNU M4\)?\s+(\S+)", output)
         return match.group(1) if match else None
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Inform autom4te if it wasn't built correctly (some external
         # installations such as homebrew). See
         # https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/autom4te-Invocation.html
         env.set("M4", self.prefix.bin.m4)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # The default optimization level for icx/icpx is "-O2",
         # but building m4 with this level breaks the build of dependents.
         # So we set it explicitely to "-O0".
         if self.spec.satisfies("%intel") or self.spec.satisfies("%oneapi"):
             env.append_flags("CFLAGS", "-O0")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("M4", self.prefix.bin.m4)
 
     def configure_args(self):

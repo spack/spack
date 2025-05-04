@@ -358,7 +358,7 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
 
         return (flags, None, None)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "process_managers=slurm" in self.spec:
             if "pmi_version=pmi1" in self.spec:
                 env.set("SLURM_MPI_TYPE", "pmi1")
@@ -372,7 +372,9 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
         # add its compiler paths to the run environment.
         self.setup_mpi_wrapper_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_mpi_wrapper_variables(env)
         MpichEnvironmentModifications.setup_dependent_build_environment(self, env, dependent_spec)
 

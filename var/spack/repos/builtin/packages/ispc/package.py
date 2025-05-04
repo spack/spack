@@ -93,7 +93,7 @@ class Ispc(CMakePackage):
         sha256="3f7dae8d4a683fca2a6157bbcb7cbe9692ff2094b0f4afaf29be121c02b0b3ad",
     )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@1.18.0:"):
             env.append_flags("LDFLAGS", "-lz")
 
