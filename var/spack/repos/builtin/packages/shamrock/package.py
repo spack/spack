@@ -4,6 +4,7 @@
 
 from spack.package import *
 
+
 class Shamrock(CMakePackage):
     """The Shamrock exascale framework for astrophysics"""
 
@@ -40,45 +41,31 @@ class Shamrock(CMakePackage):
 
         spec = self.spec
 
-        args = [
-            "-DSHAMROCK_ENABLE_BACKEND=SYCL",
-        ]
+        args = ["-DSHAMROCK_ENABLE_BACKEND=SYCL"]
 
         # switch based on SYCL provider
         sycl_spec = self.spec["sycl"]
         if sycl_spec.satisfies("intel-oneapi"):
             raise ValueError("Unsupported SYCL provider")
         elif sycl_spec.satisfies("hipsycl"):
-            
-            args+=[
-                "-DSYCL_IMPLEMENTATION=ACPPDirect",
-            ]
+
+            args += ["-DSYCL_IMPLEMENTATION=ACPPDirect"]
 
             if sycl_spec.satisfies("hipsycl@:0.9.4"):
-                args+=[
-                    "-DCMAKE_CXX_COMPILER=syclcc",
-                ]
+                args += ["-DCMAKE_CXX_COMPILER=syclcc"]
             else:
-                args+=[
-                    "-DCMAKE_CXX_COMPILER=acpp",
-                ]
+                args += ["-DCMAKE_CXX_COMPILER=acpp"]
 
             hipsycl_root = self.spec["hipsycl"].prefix
 
-            args+=[
-                f"-DACPP_PATH={hipsycl_root}",
-            ]
+            args += [f"-DACPP_PATH={hipsycl_root}"]
         else:
             raise ValueError("Unsupported SYCL provider")
 
         if "+testing" in spec:
-            args+=[
-                "-DBUILD_TEST=yes",
-            ]
+            args += ["-DBUILD_TEST=yes"]
 
-        args+=[
-            "-DPYTHON_EXECUTABLE={}".format(spec["python"].command.path),
-        ]
+        args += ["-DPYTHON_EXECUTABLE={}".format(spec["python"].command.path)]
 
         return args
 
@@ -97,6 +84,7 @@ class Shamrock(CMakePackage):
 
             # Find all .so files in the build directory
             import glob
+
             so_files = glob.glob(join_path(libdir, "*.so"))
 
             # Install each .so file to the install directory
@@ -107,7 +95,7 @@ class Shamrock(CMakePackage):
             raw_string = "from .shamrock import *\n"
             filename = "__init__.py"
             filepath = join_path(site_packages, filename)
-            with open(filepath, 'w') as f:
+            with open(filepath, "w") as f:
                 f.write(raw_string)
 
     def test_install(self):
@@ -119,8 +107,10 @@ class Shamrock(CMakePackage):
         shamrock("--smi")
         shamrock("--smi", "--sycl-cfg", "0:0")
 
-        python("-c", 
+        python(
+            "-c",
             "import shamrock;"
             "shamrock.change_loglevel(125);"
             "shamrock.sys.init('0:0');"
-            "shamrock.sys.close()")
+            "shamrock.sys.close()",
+        )
