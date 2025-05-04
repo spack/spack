@@ -17,7 +17,7 @@ class Shamrock(CMakePackage):
 
     version("main", branch="main", submodules=True)
 
-    version("2025.05.0", sha256="d5d8d13ffdf80ca5245d091ffc793f3bdeb51ec7")
+    version("2025.05.0", sha256="59d5652467fd9453a65ae7b48e0c9b7d4162edc8df92e09d08dcc5275407a897")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
