@@ -69,6 +69,11 @@ class Magma(CMakePackage, CudaPackage, ROCmPackage):
         "6.1.2",
         "6.2.0",
         "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@2.8.0: +rocm ^hip@{ver}")
     depends_on("python", when="@master", type="build")

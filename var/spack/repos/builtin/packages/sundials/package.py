@@ -404,7 +404,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if "+rocm" in spec:
             args.extend(
                 [
-                    define("CMAKE_C_COMPILER", spec["llvm-amdgpu"].prefix.bin.clang),
+                    define("CMAKE_C_COMPILER", spec["llvm-amdgpu"].prefix.bin.amdclang),
                     define("CMAKE_CXX_COMPILER", spec["hip"].hipcc),
                     define("HIP_PATH", spec["hip"].prefix),
                     define("HIP_CLANG_INCLUDE_PATH", spec["llvm-amdgpu"].prefix.include),

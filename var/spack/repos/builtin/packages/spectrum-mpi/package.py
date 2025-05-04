@@ -128,10 +128,13 @@ class SpectrumMpi(BundlePackage):
             env.set("MPIF90", os.path.join(self.prefix.bin, "mpif90"))
 
         dependent_module = dependent_spec.package.module
-        env.set("OMPI_CC", dependent_module.spack_cc)
-        env.set("OMPI_CXX", dependent_module.spack_cxx)
-        env.set("OMPI_FC", dependent_module.spack_fc)
-        env.set("OMPI_F77", dependent_module.spack_f77)
+        if dependent_spec.satisfies("^c"):
+            env.set("OMPI_CC", dependent_module.spack_cc)
+        if dependent_spec.satisfies("^cxx"):
+            env.set("OMPI_CXX", dependent_module.spack_cxx)
+        if dependent_spec.satisfies("^fortran"):
+            env.set("OMPI_FC", dependent_module.spack_fc)
+            env.set("OMPI_F77", dependent_module.spack_f77)
         env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
 
     def setup_run_environment(self, env):
