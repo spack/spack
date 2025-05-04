@@ -74,7 +74,6 @@ class Shamrock(CMakePackage):
         """Copy the .so files to the python site-packages directory"""
 
         spec = self.spec
-        define = self.define
         libdir = spec.prefix.lib
 
         if self.spec.satisfies("+pybindings"):
