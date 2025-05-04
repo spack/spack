@@ -474,7 +474,7 @@ class ArmplGcc(Package):
 
         armpl_libs += find_system_libraries(["libm"])
 
-        if self.spec.satisfies("+threads"):
+        if self.spec.satisfies("+shared"):
             armpl_libs += find_system_libraries(["libgomp"])
 
         return armpl_libs
