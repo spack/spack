@@ -879,10 +879,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             pumi_libs_names = ["lib" + name for name in pumi_libs_names]
             pumi = spec["pumi"]
             pumi_libs = find_libraries(
-                pumi_libs_names,
-                pumi.prefix,
-                shared=("+shared" in pumi),
-                recursive=True,
+                pumi_libs_names, pumi.prefix, shared=("+shared" in pumi), recursive=True
             )
             pumi_dep_zoltan = ""
             pumi_dep_parmetis = ""
@@ -895,11 +892,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             options += [
                 "PUMI_OPT=-I%s" % spec["pumi"].prefix.include,
                 "PUMI_LIB=%s %s %s"
-                % (
-                    ld_flags_from_library_list(pumi_libs),
-                    pumi_dep_zoltan,
-                    pumi_dep_parmetis,
-                ),
+                % (ld_flags_from_library_list(pumi_libs), pumi_dep_zoltan, pumi_dep_parmetis),
             ]
 
         if "+gslib" in spec:
@@ -1041,9 +1034,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                 rocmcc_bin_dir = os.path.dirname(env["SPACK_CXX"])
                 rocmcc_prefix = os.path.dirname(rocmcc_bin_dir)
                 rocmcc_libflang = find_libraries(
-                    "libflang",
-                    join_path(rocmcc_prefix, "lib/llvm/lib"),
-                    recursive=False,
+                    "libflang", join_path(rocmcc_prefix, "lib/llvm/lib"), recursive=False
                 )
                 hip_libs += rocmcc_libflang
                 # The AMD version of cray-mpich, libmpi_amd.so, needs the rpath
