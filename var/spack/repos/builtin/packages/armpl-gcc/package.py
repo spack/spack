@@ -472,7 +472,7 @@ class ArmplGcc(Package):
             recursive=True,
         )
 
-        armpl_libs += find_system_libraries(["libm"])
+        armpl_libs += find_system_libraries(["libm", "libstdc++"])
 
         if self.spec.satisfies("+shared"):
             armpl_libs += find_system_libraries(["libgomp"])
