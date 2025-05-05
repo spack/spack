@@ -159,8 +159,8 @@ def test_bad_root(tmpdir):
 
 def test_style_is_package(tmpdir):
     """Ensure the is_package() function works."""
-    assert spack.cmd.style.is_package("var/spack/repos/builtin/packages/hdf5/package.py")
-    assert spack.cmd.style.is_package("var/spack/repos/builtin/packages/zlib/package.py")
+    assert spack.cmd.style.is_package("var/spack/spack_repo/builtin/packages/hdf5/package.py")
+    assert spack.cmd.style.is_package("var/spack/spack_repo/builtin/packages/zlib/package.py")
     assert not spack.cmd.style.is_package("lib/spack/spack/spec.py")
     assert not spack.cmd.style.is_package("lib/spack/external/pytest.py")
 
