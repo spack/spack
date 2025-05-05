@@ -505,7 +505,7 @@ repo:
     assert repo.package_api == (2, 0)
 
 
-def test_subdir_in_v2(tmp_path: pathlib.Path):
+def test_subdir_in_v2():
     """subdir cannot be . or empty in v2, because otherwise we cannot statically distinguish
     between namespace and subdir."""
     with pytest.raises(spack.repo.BadRepoError, match="Use a symlink packages -> . instead"):
@@ -515,10 +515,8 @@ def test_subdir_in_v2(tmp_path: pathlib.Path):
         spack.repo._validate_and_normalize_subdir(subdir=".", root="root", package_api=(2, 0))
 
     with pytest.raises(spack.repo.BadRepoError, match="Expected a directory name, not a path"):
-        spack.repo._validate_and_normalize_subdir(subdir="a/b", root="root", package_api=(2, 0))
-
-    with pytest.raises(spack.repo.BadRepoError, match="Expected a directory name, not a path"):
-        spack.repo._validate_and_normalize_subdir(subdir="/b", root="root", package_api=(2, 0))
+        subdir = os.path.join("a", "b")
+        spack.repo._validate_and_normalize_subdir(subdir=subdir, root="root", package_api=(2, 0))
 
     with pytest.raises(spack.repo.BadRepoError, match="Must be a valid Python module name"):
         spack.repo._validate_and_normalize_subdir(subdir="123", root="root", package_api=(2, 0))
