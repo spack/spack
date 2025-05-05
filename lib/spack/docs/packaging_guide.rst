@@ -457,9 +457,9 @@ live in Spack's directory structure.  In general, :ref:`cmd-spack-create`
 handles creating package files for you, so you can skip most of the
 details here.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``var/spack/spack_repo/builtin/packages``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A Spack installation directory is structured like a standard UNIX
 install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
