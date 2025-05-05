@@ -1,6 +1,7 @@
 spack:
   view: false
   packages:
+    target: ["x86_64_v3"]
     all:
       require:
       - target=x86_64_v3

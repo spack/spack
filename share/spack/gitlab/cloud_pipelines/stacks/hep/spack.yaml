@@ -8,6 +8,7 @@ spack:
 
   packages:
     all:
+      target: ["x86_64_v3"]
       require:
       - "%gcc"
       - target=x86_64_v3
