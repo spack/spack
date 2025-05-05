@@ -17,7 +17,8 @@ class Neovim(CMakePackage):
     license("Apache-2.0 AND Vim")
 
     version("master", branch="master")
-    version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
+    version("stable", tag="stable")
+    version("0.11.1", sha256="ffe7f9a7633ed895ff6adb1039af7516cd6453715c8889ad844b6fa39c3df443")
     version("0.11.0", sha256="6826c4812e96995d29a98586d44fbee7c9b2045485d50d174becd6d5242b3319")
     version("0.10.4", sha256="10413265a915133f8a853dc757571334ada6e4f0aa15f4c4cc8cc48341186ca2")
     version("0.10.3", sha256="39fab47d241da7b9418823cc563c689d522c1c4b2def04036393834f3f1ca94c")
