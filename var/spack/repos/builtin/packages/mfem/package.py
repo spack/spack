@@ -1004,7 +1004,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
             if "^hipblas" in spec:  # hipblas is needed @4.8.0:+rocm
                 # note: superlu-dist+rocm needs the hipblas header path too
                 hipblas = spec["hipblas"]
-                hip_headers += hipblas.headers
+                hip_headers += self.all_headers(hipblas)
                 hip_libs += hipblas.libs
             if "%cce" in spec:
                 # We assume the proper Cray CCE module (cce) is loaded:
@@ -1405,3 +1405,12 @@ class Mfem(Package, CudaPackage, ROCmPackage):
         flags += ["-L%s" % dir for dir in pkg_dirs_list if not self.is_sys_lib_path(dir)]
         flags += ["-l%s" % lib for lib in pkg_libs_list]
         return " ".join(flags)
+
+    def all_headers(self, root_spec):
+        all_hdrs = HeaderList([])
+        for dep in root_spec.traverse(deptype="link"):
+            try:
+                all_hdrs += root_spec[dep.name].headers
+            except NoHeadersError:
+                pass
+        return all_hdrs

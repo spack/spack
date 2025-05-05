@@ -263,6 +263,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("hwloc", default=False, description="Activates support for hwloc")
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
+    variant(
+        "fortran-bindings", default=True, when="+fortran", description="Activates fortran bindings"
+    )
 
     with when("+rocm"):
         # https://github.com/spack/spack/issues/37416
@@ -503,6 +506,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             ]
             if "+fortran" in self.spec:
                 compiler_opts.append("--with-fc=%s" % os.environ["FC"])
+                fb = "1" if self.spec.satisfies("+fortran-bindings") else "0"
+                compiler_opts.append(f"--with-fortran-bindings={fb}")
             else:
                 compiler_opts.append("--with-fc=0")
         else:
@@ -512,6 +517,8 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             ]
             if "+fortran" in self.spec:
                 compiler_opts.append("--with-fc=%s" % self.spec["mpi"].mpifc)
+                fb = "1" if self.spec.satisfies("+fortran-bindings") else "0"
+                compiler_opts.append(f"--with-fortran-bindings={fb}")
             else:
                 compiler_opts.append("--with-fc=0")
             if self.spec.satisfies("%intel"):
