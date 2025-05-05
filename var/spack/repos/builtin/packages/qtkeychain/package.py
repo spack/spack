@@ -15,6 +15,7 @@ class Qtkeychain(CMakePackage):
 
     version("0.9.1", sha256="9c2762d9d0759a65cdb80106d547db83c6e9fdea66f1973c6e9014f867c6f28e")
 
+    depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
     depends_on("qt+dbus")
