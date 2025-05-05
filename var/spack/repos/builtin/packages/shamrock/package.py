@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
 import glob
+
+from spack.package import *
 
 
 class Shamrock(CMakePackage):
@@ -28,15 +29,20 @@ class Shamrock(CMakePackage):
     variant("testing", default=True, description="Enables the build of shared libraries")
     variant("pybindings", default=True, description="Install python bindings")
 
-    depends_on("sycl")
-    depends_on("mpi")
-    depends_on("python")
-    extends("python", when="+pybindings")
-
     generator("ninja")
 
-    conflicts("^intel-oneapi-runtime", msg="Shamrock supports it but this package does not yet.")
-    conflicts("sycl@hipsycl", msg="Unsupported SYCL provider")
+    depends_on("sycl")
+    requires(
+        "^[virtuals=sycl] intel-oneapi",
+        "^[virtuals=sycl] hipsycl",
+        # policy="one_of",
+        msg="sycl provider must be one of intel-oneapi or hipsycl",
+    )
+
+    depends_on("mpi")
+    depends_on("python")
+
+    extends("python", when="+pybindings")
 
     def cmake_args(self):
 
@@ -51,8 +57,11 @@ class Shamrock(CMakePackage):
         # switch based on SYCL provider
         sycl_spec = self.spec["sycl"]
         if sycl_spec.satisfies("intel-oneapi"):
-            raise ValueError("Unsupported SYCL provider")
-
+            args += [
+                self.define("SYCL_IMPLEMENTATION", "IntelLLVM"),
+                self.define("CMAKE_CXX_COMPILER", "icpx"),
+                self.define("INTEL_LLVM_PATH", self.spec["intel-oneapi"].prefix),
+            ]
         elif sycl_spec.satisfies("hipsycl"):
             args += [self.define("SYCL_IMPLEMENTATION", "ACPPDirect")]
 
@@ -62,8 +71,6 @@ class Shamrock(CMakePackage):
                 args += [self.define("CMAKE_CXX_COMPILER", "acpp")]
 
             args += [self.define("ACPP_PATH", self.spec["hipsycl"].prefix)]
-        else:
-            raise ValueError("Unsupported SYCL provider")
 
         return args
 
