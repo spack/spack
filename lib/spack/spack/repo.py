@@ -216,7 +216,9 @@ def list_packages(rev: str, repo: "Repo") -> List[str]:
 
     # take the directory names with one-level-deep package files
     package_names = [
-        nm.mod_to_pkg_name(line[0], repo.package_api) for line in package_paths if len(line) == 2
+        nm.pkg_dir_to_pkg_name(line[0], repo.package_api)
+        for line in package_paths
+        if len(line) == 2
     ]
 
     return sorted(set(package_names))
@@ -256,7 +258,7 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
     changed: Set[str] = set()
     for path in lines:
         dir_name, _, _ = path.partition("/")
-        pkg_name = nm.mod_to_pkg_name(dir_name, repo.package_api)
+        pkg_name = nm.pkg_dir_to_pkg_name(dir_name, repo.package_api)
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
 
@@ -407,7 +409,7 @@ class FastPackageChecker(collections.abc.Mapping):
                     continue
 
                 # Store the stat info by package name.
-                cache[nm.mod_to_pkg_name(entry.name, self.package_api)] = sinfo
+                cache[nm.pkg_dir_to_pkg_name(entry.name, self.package_api)] = sinfo
 
         return cache
 
@@ -1123,7 +1125,7 @@ class Repo:
             foo_bar_baz -> foo_bar_baz, foo-bar-baz, foo_bar-baz, foo-bar_baz
         """
         if self.package_api >= (2, 0):
-            if nm.mod_to_pkg_name(import_name, package_api=self.package_api) in self:
+            if nm.pkg_dir_to_pkg_name(import_name, package_api=self.package_api) in self:
                 return import_name
             return None
 
@@ -1265,7 +1267,7 @@ class Repo:
         """Given a package name, get the directory containing its package.py file."""
         _, unqualified_name = self.partition_package_name(pkg_name)
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_mod(unqualified_name, self.package_api)
+            self.packages_path, nm.pkg_name_to_pkg_dir(unqualified_name, self.package_api)
         )
 
     def filename_for_package_name(self, pkg_name: str) -> str:
@@ -1296,7 +1298,7 @@ class Repo:
     def package_path(self, name: str) -> str:
         """Get path to package.py file for this repo."""
         return os.path.join(
-            self.packages_path, nm.pkg_name_to_mod(name, self.package_api), package_file_name
+            self.packages_path, nm.pkg_name_to_pkg_dir(name, self.package_api), package_file_name
         )
 
     def all_package_paths(self) -> Generator[str, None, None]:
@@ -1356,7 +1358,7 @@ class Repo:
         according to Spack's naming convention.
         """
         _, pkg_name = self.partition_package_name(pkg_name)
-        fullname = f"{self.full_namespace}.{nm.pkg_name_to_mod(pkg_name, self.package_api)}"
+        fullname = f"{self.full_namespace}.{nm.pkg_name_to_pkg_dir(pkg_name, self.package_api)}"
         if self.package_api >= (2, 0):
             fullname += ".package"
 
@@ -1662,7 +1664,7 @@ class MockRepositoryBuilder:
 
     def recipe_filename(self, name: str):
         return os.path.join(
-            self.root, "packages", nm.pkg_name_to_mod(name, package_api=(2, 0)), "package.py"
+            self.root, "packages", nm.pkg_name_to_pkg_dir(name, package_api=(2, 0)), "package.py"
         )
 
 

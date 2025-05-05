@@ -89,15 +89,15 @@ def pkg_name_to_class_name(pkg_name: str):
     return class_name
 
 
-def mod_to_pkg_name(dirname: str, package_api: Tuple[int, int]) -> str:
-    """Translate a module name to its corresponding package name"""
+def pkg_dir_to_pkg_name(dirname: str, package_api: Tuple[int, int]) -> str:
+    """Translate a package dir (pkg_dir/package.py) to its corresponding package name"""
     if package_api < (2, 0):
         return dirname
     return dirname.lstrip("_").replace("_", "-")
 
 
-def pkg_name_to_mod(name: str, package_api: Tuple[int, int]) -> str:
-    """Translate a package name to its corresponding module name"""
+def pkg_name_to_pkg_dir(name: str, package_api: Tuple[int, int]) -> str:
+    """Translate a package name to its corresponding package dir (pkg_dir/package.py)"""
     if package_api < (2, 0):
         return name
     name = name.replace("-", "_")

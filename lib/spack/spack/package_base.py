@@ -869,7 +869,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 # spack_repo.builtin.packages.package_name.package
                 pkg_module = module.rsplit(".", 2)[-2]
 
-            cls._name = spack.util.naming.mod_to_pkg_name(pkg_module, version)
+            cls._name = spack.util.naming.pkg_dir_to_pkg_name(pkg_module, version)
         return cls._name
 
     @classproperty

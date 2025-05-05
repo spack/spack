@@ -371,28 +371,32 @@ repo:
 
 def test_mod_to_pkg_name_and_reverse():
     # In repo v1 the dirname/module name is the package name
-    assert spack.util.naming.mod_to_pkg_name("zlib_ng", package_api=(1, 0)) == "zlib_ng"
-    assert spack.util.naming.mod_to_pkg_name("_3example_4", package_api=(1, 0)) == "_3example_4"
-    assert spack.util.naming.pkg_name_to_mod("zlib_ng", package_api=(1, 0)) == "zlib_ng"
-    assert spack.util.naming.pkg_name_to_mod("_3example_4", package_api=(1, 0)) == "_3example_4"
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_name_to_pkg_dir("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
 
     # In repo v2 there is a 1-1 mapping between module and package names
-    assert spack.util.naming.mod_to_pkg_name("_3example_4", package_api=(2, 0)) == "3example-4"
-    assert spack.util.naming.mod_to_pkg_name("zlib_ng", package_api=(2, 0)) == "zlib-ng"
-    assert spack.util.naming.pkg_name_to_mod("zlib-ng", package_api=(2, 0)) == "zlib_ng"
-    assert spack.util.naming.pkg_name_to_mod("3example-4", package_api=(2, 0)) == "_3example_4"
+    assert spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(2, 0)) == "3example-4"
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(2, 0)) == "zlib-ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib-ng", package_api=(2, 0)) == "zlib_ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("3example-4", package_api=(2, 0)) == "_3example_4"
 
     # reserved names need an underscore
-    assert spack.util.naming.mod_to_pkg_name("_finally", package_api=(2, 0)) == "finally"
-    assert spack.util.naming.mod_to_pkg_name("_assert", package_api=(2, 0)) == "assert"
-    assert spack.util.naming.pkg_name_to_mod("finally", package_api=(2, 0)) == "_finally"
-    assert spack.util.naming.pkg_name_to_mod("assert", package_api=(2, 0)) == "_assert"
+    assert spack.util.naming.pkg_dir_to_pkg_name("_finally", package_api=(2, 0)) == "finally"
+    assert spack.util.naming.pkg_dir_to_pkg_name("_assert", package_api=(2, 0)) == "assert"
+    assert spack.util.naming.pkg_name_to_pkg_dir("finally", package_api=(2, 0)) == "_finally"
+    assert spack.util.naming.pkg_name_to_pkg_dir("assert", package_api=(2, 0)) == "_assert"
 
     # reserved names are case sensitive, so true/false/none are ok
-    assert spack.util.naming.mod_to_pkg_name("true", package_api=(2, 0)) == "true"
-    assert spack.util.naming.mod_to_pkg_name("none", package_api=(2, 0)) == "none"
-    assert spack.util.naming.pkg_name_to_mod("true", package_api=(2, 0)) == "true"
-    assert spack.util.naming.pkg_name_to_mod("none", package_api=(2, 0)) == "none"
+    assert spack.util.naming.pkg_dir_to_pkg_name("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_dir_to_pkg_name("none", package_api=(2, 0)) == "none"
+    assert spack.util.naming.pkg_name_to_pkg_dir("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_name_to_pkg_dir("none", package_api=(2, 0)) == "none"
 
 
 def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
