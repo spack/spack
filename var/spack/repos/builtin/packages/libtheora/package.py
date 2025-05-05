@@ -22,15 +22,18 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
 
     version("master", branch="master")
     version("stable", branch="theora-1.1")
+    version("1.2.0", sha256="ebdf77a8f5c0a8f7a9e42323844fa09502b34eb1d1fece7b5f54da41fe2122ec")
     version("1.1.1", sha256="f36da409947aa2b3dcc6af0a8c2e3144bc19db2ed547d64e9171c59c66561c61")
     version("1.1.0", sha256="3d7b4fb1c115f1a530afd430eed2e8861fa57c8b179ec2d5a5d8f1cd0c7a4268")
 
     variant("doc", default=False, description="Build documentation")
+    variant("examples", default=False, description="Build examples")
 
     depends_on("c", type="build")  # generated
 
     depends_on("doxygen", when="+doc", type="build")
-    depends_on("libogg")
+    depends_on("libogg@1.1:", when="@1.1")
+    depends_on("libogg@1.3.4:", when="@1.2:")
     depends_on("libpng")
     with when("build_system=autotools"):
         depends_on("autoconf", type="build")
@@ -49,7 +52,7 @@ class Libtheora(AutotoolsPackage, MSBuildPackage):
         "msbuild", "autotools", default="autotools" if sys.platform != "win32" else "msbuild"
     )
 
-    patch("fix_encoding.patch", when="@1.1:")
+    patch("fix_encoding.patch", when="@1.1")
     patch(
         "https://gitlab.xiph.org/xiph/theora/-/commit/7288b539c52e99168488dc3a343845c9365617c8.diff",
         sha256="e01ef71a1c19783a0b323b90a625e5c360ddb7ee03d2b6c201f1519f1704ea11",
@@ -74,6 +77,7 @@ class AutotoolsBuilder(AutotoolsBuilder):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("doc")
+        args += self.enable_or_disable("examples")
         args += ["LIBS=-lm"]
         return args
 

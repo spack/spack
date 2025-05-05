@@ -1719,7 +1719,7 @@ class TestConcretize:
 
     @pytest.mark.regression("45538")
     def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
-        myrepo = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        myrepo = spack.repo.MockRepositoryBuilder(tmpdir, namespace="mock_repo")
         myrepo.add_package("zlib")
 
         builtin = spack.concretize.concretize_one("zlib")
@@ -1727,21 +1727,19 @@ class TestConcretize:
 
         with spack.repo.use_repositories(myrepo.root, override=False):
             with spack.config.override("concretizer:reuse", True):
-                myrepo = spack.concretize.concretize_one("myrepo.zlib")
+                myrepo = spack.concretize.concretize_one("mock_repo.zlib")
 
-        assert myrepo.namespace == "myrepo"
+        assert myrepo.namespace == "mock_repo"
 
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        builder = spack.repo.MockRepositoryBuilder(str(tmpdir), namespace="myrepo")
         builder.add_package("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
             assert s.namespace == "myrepo"
             PackageInstaller([s.package], fake=True, explicit=True).install()
-
-        del sys.modules["spack.pkg.myrepo.pkg-c"]
-        del sys.modules["spack.pkg.myrepo"]
+        del sys.modules["spack_repo.myrepo.packages.pkg_c"]
         builder.remove("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False) as repos:
             # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly

@@ -18,7 +18,7 @@ spack_version = __version__
 #: version is incremented when the package API is extended in a backwards-compatible way. The major
 #: version is incremented upon breaking changes. This version is changed independently from the
 #: Spack version.
-package_api_version = (1, 0)
+package_api_version = (2, 0)
 
 #: The minimum Package API version that this version of Spack is compatible with. This should
 #: always be a tuple of the form ``(major, 0)``, since compatibility with vX.Y implies

@@ -380,7 +380,7 @@ def run_black(black_cmd, file_list, args):
 def _module_part(root: str, expr: str):
     parts = expr.split(".")
     # spack.pkg is for repositories, don't try to resolve it here.
-    if ".".join(parts[:2]) == spack.repo.ROOT_PYTHON_NAMESPACE:
+    if expr.startswith(spack.repo.PKG_MODULE_PREFIX_V1) or expr == "spack.pkg":
         return None
     while parts:
         f1 = os.path.join(root, "lib", "spack", *parts) + ".py"

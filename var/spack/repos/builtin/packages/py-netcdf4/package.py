@@ -55,8 +55,6 @@ class PyNetcdf4(PythonPackage):
     with when("+mpi"):
         depends_on("netcdf-c+mpi")
         depends_on("hdf5+mpi")
-    # We cannot build py-netcdf4~mpi ^netcdf-c~mpi ^hdf5+mpi
-    conflicts("hdf5+mpi", when="~mpi ^netcdf-c~mpi")
 
     # The installation script tries to find hdf5 using pkg-config. However, the
     # version of hdf5 installed with Spack does not have pkg-config files.
@@ -72,6 +70,7 @@ class PyNetcdf4(PythonPackage):
     # See also: https://github.com/Unidata/netcdf4-python/issues/1389
     with when("@1.7:~mpi"):
         patch("disable_parallel_support.patch", when="^netcdf-c+mpi")
+        patch("disable_parallel_support.patch", when="^hdf5+mpi")
 
     # https://github.com/Unidata/netcdf4-python/pull/1322
     patch(

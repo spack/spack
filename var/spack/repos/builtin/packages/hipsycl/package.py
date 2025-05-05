@@ -38,6 +38,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
     variant("cuda", default=False, description="Enable CUDA backend for SYCL kernels")
     variant("rocm", default=False, description="Enable ROCM backend for SYCL kernels")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     depends_on("cmake@3.5:", type="build")

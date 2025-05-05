@@ -259,9 +259,9 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeyp
     Important attributes of the repo for test coverage are: multiple package
     versions are added with some coming from a tarball and some from git refs.
     """
-    filename = "diff-test/package.py"
+    filename = "diff_test/package.py"
 
-    repo_path, _ = spack.repo.create_repo(str(tmpdir.mkdir("myrepo")))
+    repo_path, _ = spack.repo.create_repo(str(tmpdir), namespace="myrepo")
     repo_cache = spack.util.file_cache.FileCache(str(tmpdir.mkdir("cache")))
 
     repo = spack.repo.Repo(repo_path, cache=repo_cache)

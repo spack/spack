@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.23.1", sha256="f729885710c3b42b818fdb525cbd7e1b8c95c1cc25139a44968aa0e7f9e75418")
     version("3.23.0", sha256="aeebd7094f4d583fd04700e73779caa7d9a3d54742e95eff2c3dd87768a79063")
     version("3.22.5", sha256="984dba48bd26e7b17d42c078fc4f74d59e9cbc437ee25a8635865eeca9f5dd28")
     version("3.22.4", sha256="c32e9c606b858ff587949ddc5f28da8934b00c41ab1f6d9be5001a705bef62ee")
@@ -332,11 +333,6 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     depends_on("gmake", type="build")
 
     # Virtual dependencies
-    # Git repository needs sowing to build Fortran interface
-    depends_on("sowing@master", when="@main")
-
-    # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
-    # with BLAS/LAPACK
     depends_on("blas")
     depends_on("lapack")
     depends_on("mpi", when="+mpi")

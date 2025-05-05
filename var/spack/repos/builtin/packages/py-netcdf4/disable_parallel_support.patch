@@ -1,3 +1,27 @@
+--- a/include/netCDF4.pxi
++++ b/include/netCDF4.pxi
+@@ -4,8 +4,8 @@
+     ctypedef long ptrdiff_t
+ 
+ # hdf5 version info.
+-cdef extern from "H5public.h":
+-    ctypedef int herr_t
++ctypedef int herr_t
++cdef extern \
+     int H5get_libversion( unsigned int *majnum, unsigned int *minnum, unsigned int *relnum ) nogil
+  
+ cdef extern from *:
+--- a/include/netcdf-compat.h
++++ b/include/netcdf-compat.h
+@@ -95,7 +95,7 @@
+ #define HAS_CDF5_FORMAT 0
+ #endif
+ 
+-#if defined(NC_HAS_PARALLEL) && NC_HAS_PARALLEL
++#if 0
+ #include <netcdf_par.h>
+ #define HAS_PARALLEL_SUPPORT 1
+ #else
 --- a/setup.py
 +++ b/setup.py
 @@ -392,7 +392,7 @@
