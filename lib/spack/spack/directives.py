@@ -944,21 +944,6 @@ def requires(*requirement_specs: str, policy="one_of", when=None, msg=None):
     return _execute_requires
 
 
-@directive("languages")
-def _language(lang_spec_str: str, *, when: Optional[Union[str, bool]] = None):
-    """Temporary implementation of language virtuals, until compilers are proper dependencies."""
-
-    def _execute_languages(pkg: Type[spack.package_base.PackageBase]):
-        when_spec = _make_when_spec(when)
-        if not when_spec:
-            return
-
-        languages = pkg.languages.setdefault(when_spec, set())
-        languages.add(lang_spec_str)
-
-    return _execute_languages
-
-
 @directive("conflicts")
 def remove_all_conflicts():
     """Removes all conflicts from a package.
@@ -1001,6 +986,55 @@ def remove_all_versions():
     return _remove_all_versions
 
 
+class RemoveConflicts:
+    name = "conflicts"
+
+    def get_spec(self, directive):
+        return directive[0]
+
+    @staticmethod
+    def sanitize_input(spec, when):
+        when = _make_when_spec(when)
+        if not when:
+            return
+        spec = spack.spec.Spec(spec)
+        return spec, when
+
+    def remove(self, spec: SpecType, when: WhenType = None):
+        removal_spec, removal_when = self.sanitize_input(spec, when)
+        complement_versions = removal_when.versions.complement()
+
+        def _remove(pkg):
+            directive_dict = getattr(pkg, self.name)
+            filtered = directive_dict.copy()
+            for when, directives in directive_dict.items():
+                # print(f"{directives=}")
+                # if isinstance(directives["hdf5"], Dependency):
+                #     print("dependency=", directives["hdf5"])
+                #     dependency = directives["hdf5"].copy()
+
+                #     print(f"{dependency.name=}")
+                for directive in directives:
+                    if self.get_spec(directive) == removal_spec:
+                        if when == removal_when:
+                            filtered[when].remove(directive)
+                        elif when.versions.intersects(removal_when.versions):
+                            new_when_versions = when.versions.intersection(
+                                complement_versions
+                            )
+                            filtered[when].remove(directive)
+                            new_when = when.copy()
+                            new_when.versions = new_when_versions
+                            new_directives = filtered.setdefault(new_when, [])
+                            new_directives.append(directive)
+                        if len(filtered[when]) == 0:
+                            del filtered[when]
+            directive_dict.clear()
+            directive_dict.update(filtered)
+
+        return _remove
+
+
 def remove_directive(directive_name: str, directive_spec: SpecType, when: WhenType = None):
     """Remove a directive from a package."""
     directive_when_spec = _make_when_spec(when)
@@ -1011,52 +1045,27 @@ def remove_directive(directive_name: str, directive_spec: SpecType, when: WhenTy
 
     def _remove_directive(pkg):
         directive_dict = getattr(pkg, directive_name)
-        modified_directives = {}
-        for when_spec, directives in directive_dict.items():
-            for directive, msg in directives:
-                if directive == directive_spec:
+        filtered_directives = directive_dict.copy()
+        for when_spec, specs_and_msgs in directive_dict.items():
+            for spec, msg in specs_and_msgs:
+                if spec == directive_spec:
                     if when_spec == directive_when_spec:
-                        directives.remove((directive, msg))
+                        filtered_directives[when_spec].remove((spec, msg))
                     elif when_spec.versions.intersects(directive_when_spec.versions):
                         new_when_spec_versions = when_spec.versions.intersection(
                             directive_complement_versions
                         )
+                        filtered_directives[when_spec].remove((spec, msg))
                         new_when_spec = when_spec.copy()
                         new_when_spec.versions = new_when_spec_versions
-                        new_directives = modified_directives.setdefault(new_when_spec, [])
-                        new_directives.append((directive_spec, msg))
-                        directives.remove((directive, msg))
-        directive_dict = {key: value for key, value in directive_dict.items() if value}
-        directive_dict.update(modified_directives)
+                        new_directives = filtered_directives.setdefault(new_when_spec, [])
+                        new_directives.append((spec, msg))
+                    if len(filtered_directives[when_spec]) == 0:
+                        del filtered_directives[when_spec]
+        directive_dict.clear()
+        directive_dict.update(filtered_directives)
 
     return _remove_directive
-
-
-# def remove_directive(directive_name: str, directive_spec: SpecType, when: WhenType = None):
-#     """Remove a directive from a package."""
-#     when_spec = _make_when_spec(when) or _make_when_spec(WhenType())
-#     directive_complement_versions = when_spec.versions.complement()
-#     directive_spec = spack.spec.Spec(directive_spec)
-
-#     def _remove_directive(pkg):
-#         directive_dict = getattr(pkg, directive_name)
-#         modified_directives = {}
-#         for when_spec, directives in directive_dict.items():
-#             directives[:] = [
-#                 (d, m)
-#                 for d, m in directives
-#                 if (when_spec == when_spec and d != directive_spec)
-#                 or (
-#                     when_spec.versions.intersects(when_spec.versions)
-#                     and d == directive_spec
-#                     and when_spec.versions.difference(directive_complement_versions)
-#                 )
-#             ]
-#             modified_directives.update({k: v for k, v in directive_dict.items() if not v})
-#         directive_dict.clear()
-#         directive_dict.update(modified_directives)
-
-#     return _remove_directive
 
 
 @directive("conflicts")
@@ -1069,34 +1078,8 @@ def remove_conflict(conflict_spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a conflict to delete
     that does not exist.
     """
-    return remove_directive("conflicts", conflict_spec, when)
-    # conflict_when_spec = _make_when_spec(when)
-    # if not conflict_when_spec:
-    #     return
-    # conflict_complement_versions = conflict_when_spec.versions.complement()
-    # conflict_spec = spack.spec.Spec(conflict_spec)
-
-    # def _remove_conflict(pkg):
-    #     modified_conflicts = {}
-    #     print("type(pkg)={}".format(pkg))
-    #     for when_spec, conflicts in pkg.conflicts.items():
-    #         for conflict, msg in conflicts:
-    #             if conflict == conflict_spec:
-    #                 if when_spec == conflict_when_spec:
-    #                     conflicts.remove((conflict, msg))
-    #                 elif when_spec.versions.intersects(conflict_when_spec.versions):
-    #                     new_when_spec_versions = when_spec.versions.intersection(
-    #                         conflict_complement_versions
-    #                     )
-    #                     new_when_spec = when_spec.copy()
-    #                     new_when_spec.versions = new_when_spec_versions
-    #                     new_conflicts = modified_conflicts.setdefault(new_when_spec, [])
-    #                     new_conflicts.append((conflict_spec, msg))
-    #                     conflicts.remove((conflict, msg))
-    #     pkg.conflicts = {key: value for key, value in pkg.conflicts.items() if value}
-    #     pkg.conflicts.update(modified_conflicts)
-
-    # return _remove_conflict
+    return RemoveConflicts().remove(conflict_spec, when)
+    # return remove_directive("conflicts", conflict_spec, when)
 
 
 @directive("dependencies")
@@ -1109,18 +1092,20 @@ def remove_depends_on(dependency_spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    dependency_when_spec = _make_when_spec(when)
-    dependency_spec = spack.spec.Spec(dependency_spec)
+    # remove_directive.__doc__.format("dependency")
+    return remove_directive("dependencies", dependency_spec, when)
+    # dependency_when_spec = _make_when_spec(when)
+    # dependency_spec = spack.spec.Spec(dependency_spec)
 
-    def _remove_dependency(pkg):
-        try:
-            del pkg.dependencies[dependency_when_spec][dependency_spec.name]
-            if len(pkg.dependencies[dependency_when_spec]) == 0:
-                del pkg.dependencies[dependency_when_spec]
-        except KeyError:
-            pass
+    # def _remove_dependency(pkg):
+    #     try:
+    #         del pkg.dependencies[dependency_when_spec][dependency_spec.name]
+    #         if len(pkg.dependencies[dependency_when_spec]) == 0:
+    #             del pkg.dependencies[dependency_when_spec]
+    #     except KeyError:
+    #         pass
 
-    return _remove_dependency
+    # return _remove_dependency
 
 
 @directive("versions")

@@ -248,55 +248,53 @@ def test_redistribute_override_when():
     assert cls.disable_redistribute[spec_key].source
 
 
-# import pytest
-# from spack.spec import Spec
-# from spack.directives import remove_directive
+class FakePkg:
+    def __init__(self, name, directive_dict):
+        setattr(self, name, directive_dict)
 
-# class TestRemoveDirective:
-#     def test_no_matches(self):
-#         spec = Spec('gcc@9.3.0')
-#         when_spec = Spec('gcc@9.3.0')
-#         directive_spec = Spec('gcc@9.2.0')
-#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
-#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_spec, 'version')]}})
-#         remove_func(pkg)
-#         assert pkg.test_directive == {}
 
-#     def test_matches(self):
-#         spec = Spec('gcc@9.3.0')
-#         when_spec = Spec('gcc@9.3.0')
-#         directive_spec = Spec('gcc@9.2.0')
-#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
-#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_spec, 'version')]}})
-#         remove_func(pkg)
-#         assert pkg.test_directive == {}
+def test_remove_no_directives():
+    directive_name = "some_directive"
+    directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
+    pkg = FakePkg(directive_name, directives)
+    _remove_directive = spack.directives.remove_directive(directive_name, "some_pkg", "@1.0")
+    _remove_directive(pkg)
+    assert getattr(pkg, directive_name) == directives
 
-#     def test_no_directive(self):
-#         spec = Spec('gcc@9.3.0')
-#         when_spec = Spec('gcc@9.3.0')
-#         directive_spec = Spec('gcc@9.2.0')
-#         remove_func = remove_directive('test_directive', directive_spec, when_spec)
-#         pkg = type('Package', (), {})
-#         remove_func(pkg)
-#         assert pkg.test_directive == {}
 
-#     def test_multiple_specs_match_no_directive(self):
-#         spec = Spec('gcc@9.3.0')
-#         when_spec = Spec('gcc@9.3.0')
-#         directive_specs = [Spec('gcc@9.2.0'), Spec('gcc@9.1.0')]
-#         remove_func = remove_directive('test_directive', directive_specs, when_spec)
-#         pkg = type('Package', (), {})
-#         remove_func(pkg)
-#         assert pkg.test_directive == {}
+def test_remove_one_directive():
+    directive_name = "some_directive"
+    directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
+    pkg = FakePkg(directive_name, directives)
+    _remove_directive = spack.directives.remove_directive(directive_name, "pkg1", "@1.0")
+    _remove_directive(pkg)
+    assert getattr(pkg, directive_name) == {}
 
-#     def test_multiple_specs_match(self):
-#         spec = Spec('gcc@9.3.0')
-#         when_spec = Spec('gcc@9.3.0')
-#         directive_specs = [Spec('gcc@9.2.0'), Spec('gcc@9.1.0')]
-#         remove_func = remove_directive('test_directive', directive_specs, when_spec)
-#         pkg = type('Package', (), {'test_directive': {when_spec: [(directive_specs[0], 'version'), (directive_specs[1], 'version')]}})
-#         remove_func(pkg)
-#         assert pkg.test_directive == {}
+
+def test_remove_intersecting_directive():
+    directive_name = "some_directive"
+    directives = {spack.spec.Spec("@3:"): [(spack.spec.Spec("pkg1"), None)]}
+    pkg = FakePkg(directive_name, directives)
+    _remove_directive = spack.directives.remove_directive(directive_name, "pkg1", "@5:")
+    _remove_directive(pkg)
+    assert getattr(pkg, directive_name) == {
+        spack.spec.Spec("@3:4"): [(spack.spec.Spec("pkg1"), None)]
+    }
+
+
+def test_remove_modify_and_leave_directives():
+    directive_name = "some_directive"
+    directives = {
+        spack.spec.Spec("@1:"): [(spack.spec.Spec(val), None) for val in ("pkg1", "pkg2", "pkg3")]
+    }
+    pkg = FakePkg(directive_name, directives)
+    spack.directives.remove_directive(directive_name, "pkg1", "@1:")(pkg)
+    spack.directives.remove_directive(directive_name, "pkg2", "@3:")(pkg)
+    assert getattr(pkg, directive_name) == {
+        spack.spec.Spec("@1:2"): [(spack.spec.Spec("pkg2"), None)],
+        spack.spec.Spec("@1:"): [(spack.spec.Spec("pkg3"), None)],
+    }
+
 
 _pkgx = (
     "x",
@@ -418,13 +416,9 @@ def test_remove_all_depends_on(test_repo):
     assert len(cls.dependencies) == 0
 
 
-@pytest.mark.parametrize(
-    "_create_test_repo",
-    [
-        (
-            (
-                "x",
-                """\
+_pkgx = (
+    "x",
+    """\
 from spack.package import *
 
 class X(Package):
@@ -435,11 +429,10 @@ class X(Package):
     remove_depends_on("hdf5")
     remove_depends_on("netcdf-c", when="@1.0")
 """,
-            ),
-        )
-    ],
-    indirect=True,
 )
+
+
+@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
 def test_remove_depends_on(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert len(cls.dependencies) == 1
