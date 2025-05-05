@@ -5,6 +5,7 @@
 import contextlib
 import datetime
 import functools
+import gzip
 import json
 import os
 import pathlib
@@ -32,6 +33,7 @@ import spack.concretize
 import spack.database
 import spack.deptypes as dt
 import spack.package_base
+import spack.paths
 import spack.repo
 import spack.spec
 import spack.store
@@ -1243,3 +1245,26 @@ def test_query_with_predicate_fn(database):
 
     specs = database.query(predicate_fn=lambda x: not spack.repo.PATH.exists(x.spec.name))
     assert not specs
+
+
+@pytest.mark.regression("49964")
+def test_querying_reindexed_database_specfilev5(tmp_path):
+    """Tests that we can query a reindexed database from before compilers as dependencies,
+    and get appropriate results for %<compiler> and similar selections.
+    """
+    test_path = pathlib.Path(spack.paths.test_path)
+    zipfile = test_path / "data" / "database" / "index.json.v7_v8.json.gz"
+    with gzip.open(str(zipfile), "rt", encoding="utf-8") as f:
+        data = json.load(f)
+
+    index_json = tmp_path / spack.database._DB_DIRNAME / spack.database.INDEX_JSON_FILE
+    index_json.parent.mkdir(parents=True)
+    index_json.write_text(json.dumps(data))
+
+    db = spack.database.Database(str(tmp_path))
+
+    specs = db.query("%gcc")
+
+    assert len(specs) == 8
+    assert len([x for x in specs if x.external]) == 2
+    assert len([x for x in specs if x.original_spec_format() < 5]) == 8

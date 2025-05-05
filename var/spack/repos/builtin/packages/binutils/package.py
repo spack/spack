@@ -25,7 +25,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         "GPL-2.0-or-later AND LGPL-2.1-or-later AND GPL-3.0-or-later AND LGPL-3.0-or-later",
         checked_by="tgamblin",
     )
-
+    version("2.44", sha256="f66390a661faa117d00fab2e79cf2dc9d097b42cc296bf3f8677d1e7b452dc3a")
     version("2.43.1", sha256="becaac5d295e037587b63a42fad57fe3d9d7b83f478eb24b67f9eec5d0f1872f")
     version("2.43", sha256="fed3c3077f0df7a4a1aa47b080b8c53277593ccbb4e5e78b73ffb4e3f265e750")
     version("2.42", sha256="aa54850ebda5064c72cd4ec2d9b056c294252991486350d9a97ab2a6dfdfaf12")
@@ -89,9 +89,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     variant("plugins", default=True, description="enable plugins, needed for gold linker")
     # When you build ld.gold you automatically get ld, even when you add the
     # --disable-ld flag
@@ -138,6 +135,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
     patch("parallel-build-2.36.patch", when="@2.36")
     patch("gold-gcc4.patch", when="@2.42 %gcc@:4.8.5")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # compression libs for debug symbols.
     depends_on("zstd@1.4.0:", when="@2.40:")

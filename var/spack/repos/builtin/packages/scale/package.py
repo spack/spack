@@ -41,8 +41,8 @@ class Scale(MakefilePackage):
 
     parallel = False
 
-    def setup_build_environment(self, build_env):
-        build_env.set("PREFIX", self.prefix)
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("PREFIX", self.prefix)
 
     def build(self, spec, prefix):
         scale_sys_str = ""

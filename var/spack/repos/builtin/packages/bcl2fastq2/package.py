@@ -30,6 +30,9 @@ class Bcl2fastq2(Package):
 
     conflicts("platform=darwin", msg="malloc.h/etc requirements break build on macs")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("boost@1.54.0:1.55")
 
     # TODO: replace this with an explicit list of components of Boost,

@@ -23,6 +23,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version("develop")
+    version("4.1.0", tag="v4.1.0", commit="c32123a5233186b177d75b800b86f1ad3b1a1413")
     version("4.0.0", tag="v4.0.0", commit="0199944fb644b4798446fdfc0549c81666a4a943")
     version("3.17.1", tag="v3.17.1", commit="9d0d968139fc33f71dbf9159f526dd7b47f10a3b")
     version("3.17.0", tag="v3.17.0", commit="9049a90626d1fe3c431f55c56a7197f8a13d5fc6")
@@ -45,9 +46,6 @@ class Qmcpack(CMakePackage, CudaPackage):
     version("3.2.0", tag="v3.2.0", commit="d531f6b35fbab9ab2b80e9222f694b66e08bdd9d")
     version("3.1.1", tag="v3.1.1", commit="07611637f823187ac5133d6e2249cdb86b92b04d")
     version("3.1.0", tag="v3.1.0", commit="146d920cf33590eac6a7a976f88871c1fe6418a6")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     # These defaults match those in the QMCPACK manual
     variant(
@@ -160,6 +158,9 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts("%gcc", when="@:3.4.0 ^[virtuals=blas,lapack] intel-oneapi-mkl", msg=mkl_warning)
     conflicts("%llvm", when="@:3.4.0 ^[virtuals=blas,lapack] intel-oneapi-mkl", msg=mkl_warning)
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     # Dependencies match those in the QMCPACK manual.
     # FIXME: once concretizer can unite unconditional and conditional
     # dependencies, some of the '~mpi' variants below will not be necessary.
@@ -234,7 +235,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         return targets
 
     # QMCPACK prefers taking MPI compiler wrappers as CMake compilers.
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if "+mpi" in spec:
             env.set("CC", spec["mpi"].mpicc)
@@ -403,7 +404,7 @@ class Qmcpack(CMakePackage, CudaPackage):
         with working_dir(self.build_directory):
             install_tree("bin", prefix.bin)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set-up runtime environment for QMCPACK.
         Set PATH and PYTHONPATH for basic analysis scripts for Nexus."""
 

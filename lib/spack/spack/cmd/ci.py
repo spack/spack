@@ -160,6 +160,12 @@ def setup_parser(subparser):
         default=False,
         help="stop stand-alone tests after the first failure",
     )
+    rebuild.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
+    )
     rebuild.set_defaults(func=ci_rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
@@ -447,7 +453,7 @@ def ci_rebuild(args):
 
     # Arguments when installing the root from sources
     deps_install_args = install_args + ["--only=dependencies"]
-    root_install_args = install_args + ["--only=package"]
+    root_install_args = install_args + ["--keep-stage", "--only=package"]
 
     if cdash_handler:
         # Add additional arguments to `spack install` for CDash reporting.
@@ -487,6 +493,9 @@ def ci_rebuild(args):
     # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
 
+    # Clear the stage directory
+    spack.stage.purge()
+
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
     # *not* terminate the build process or preclude creating the build cache.
@@ -521,6 +530,7 @@ def ci_rebuild(args):
                     fail_fast=args.fail_fast,
                     log_file=log_file,
                     repro_dir=repro_dir,
+                    timeout=args.timeout,
                 )
 
             except Exception as err:

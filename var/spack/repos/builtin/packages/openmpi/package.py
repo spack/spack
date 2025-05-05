@@ -406,10 +406,6 @@ class Openmpi(AutotoolsPackage, CudaPackage):
         "1.0", sha256="cf75e56852caebe90231d295806ac3441f37dc6d9ad17b1381791ebb78e21564"
     )  # libmpi.so.0.0.0
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     patch("ad_lustre_rwcontig_open_source.patch", when="@1.6.5")
     patch("llnl-platforms.patch", when="@1.6.5")
     patch("configure.patch", when="@1.10.1")
@@ -461,6 +457,12 @@ class Openmpi(AutotoolsPackage, CudaPackage):
     patch("pmix_getline_pmix_version.patch", when="@5.0.0:5.0.3")
     patch("pmix_getline_pmix_version-prte.patch", when="@5.0.3")
 
+    # OpenMPI 5.0.7 specific patch - see https://github.com/open-mpi/ompi/pull/13106
+    patch(
+        "https://github.com/open-mpi/ompi/commit/d10e9765bdd28e62621395aef6bbb7710bae2e82.patch?full_index=1",
+        sha256="38529b557df029d6a987fa7e337db40b0ac1c1bb921776b95aacaa40e945cd21",
+        when="@5.0.7",
+    )
     FABRICS = (
         "psm",
         "psm2",
@@ -478,9 +480,9 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     variant(
         "fabrics",
-        values=disjoint_sets(
-            ("auto",), FABRICS  # shared memory transports
-        ).with_non_feature_values("auto", "none"),
+        values=disjoint_sets(("auto",), FABRICS).with_non_feature_values(
+            "auto", "none"
+        ),  # shared memory transports
         description="List of fabrics that are enabled; " "'auto' lets openmpi determine",
     )
 
@@ -608,6 +610,10 @@ with '-Wl,-commons,use_dylibs' and without
     provides("mpi@:2.2", when="@1.7.3:1.7.4")
     provides("mpi@:3.0", when="@1.7.5:1.10.7")
     provides("mpi@:3.1", when="@2.0.0:")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     if sys.platform != "darwin":
         depends_on("numactl")
@@ -887,7 +893,7 @@ with '-Wl,-commons,use_dylibs' and without
 
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Because MPI is both a runtime and a compiler, we have to setup the
         # compiler components as part of the run environment.
         env.set("MPICC", join_path(self.prefix.bin, "mpicc"))
@@ -901,7 +907,9 @@ with '-Wl,-commons,use_dylibs' and without
         if self.spec.satisfies("@1.7:"):
             env.set("MPIFC", join_path(self.prefix.bin, "mpifort"))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # Use the spack compiler wrappers under MPI
         dependent_module = dependent_spec.package.module
         for var_name, attr_name in (
@@ -1012,14 +1020,6 @@ with '-Wl,-commons,use_dylibs' and without
         if not activated:
             return "--without-tm"
         return f"--with-tm={self.spec['pbs'].prefix}"
-
-    @run_before("autoreconf")
-    def die_without_fortran(self):
-        # Until we can pass variants such as +fortran through virtual
-        # dependencies depends_on('mpi'), require Fortran compiler to
-        # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) and (self.compiler.fc is None):
-            raise InstallError("OpenMPI requires both C and Fortran compilers!")
 
     @when("@main")
     def autoreconf(self, spec, prefix):

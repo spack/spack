@@ -37,6 +37,8 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.55.1", sha256="eb8bbb42a9a488155bd38f9bc6f6863b8a0acb210852ee71834f160958500243")
+    version("2.55.0", sha256="13ec3d81d53cf18aa18322b74b9a6990ad7e51224f1156be5d1f834ee826f95c")
     version("2.54.2", sha256="70b7be425d07a7be7d9bb0e53b93a372887a048caf23260e0ae602ca6e3670ed")
     version("2.54.1", sha256="2430ded45a98989e9100037f54cf22f5a5083e17196514b3667d3003413e49e1")
     version("2.53.2", sha256="0f294a5289541b0028773f8e5ab2bf04734ec09241baa5a3dcea0e939d40336f")
@@ -160,16 +162,19 @@ class Mapl(CMakePackage):
         deprecated=True,
     )
 
-    depends_on("c", type="build")
-    depends_on("fortran", type="build")
-
     # Versions later than 3.14 remove FindESMF.cmake
     # from ESMA_CMake.
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.58.1",
+        when="@2.55:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.55.0",
-        when="@2.51:",
+        when="@2.51:2.54",
     )
     resource(
         name="esma_cmake",
@@ -280,6 +285,10 @@ class Mapl(CMakePackage):
     conflicts("+pflogger", when="@:2.40.3 %intel@2021.7:")
     conflicts("+extdata2g", when="@:2.40.3 %intel@2021.7:")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
     depends_on("cmake@3.24:", type="build", when="@2.51:")
     depends_on("cmake@3.23:", type="build", when="@2.50")
     depends_on("cmake@3.17:", type="build", when="@:2.49")
@@ -304,14 +313,16 @@ class Mapl(CMakePackage):
     depends_on("udunits", when="@2.48:")
 
     # gFTL dependency
-    depends_on("gftl@1.14.0:", when="@2.48:")
+    depends_on("gftl@1.15.2:", when="@2.55:")
+    depends_on("gftl@1.14.0:", when="@2.48:2.54")
     depends_on("gftl@1.13.0:", when="@2.45:2.47")
     depends_on("gftl@1.11.0:", when="@2.44")
     depends_on("gftl@1.10.0:", when="@2.40:2.43")
     depends_on("gftl@1.5.5:1.9", when="@:2.39")
 
     # gFTL-Shared dependency
-    depends_on("gftl-shared@1.9.0:", when="@2.48:")
+    depends_on("gftl-shared@1.10.0:", when="@2.55:")
+    depends_on("gftl-shared@1.9.0:", when="@2.48:2.54")
     depends_on("gftl-shared@1.8.0:", when="@2.45:2.47")
     depends_on("gftl-shared@1.7.0:", when="@2.44")
     depends_on("gftl-shared@1.6.1:", when="@2.40:2.43")
@@ -325,7 +336,8 @@ class Mapl(CMakePackage):
     depends_on("yafyaml@1.0-beta5", when="@:2.22+extdata2g")
 
     # pflogger dependency
-    depends_on("pflogger@1.15.0: +mpi", when="@2.48:+pflogger")
+    depends_on("pflogger@1.16.1: +mpi", when="@2.55:+pflogger")
+    depends_on("pflogger@1.15.0: +mpi", when="@2.48:2.54+pflogger")
     depends_on("pflogger@1.14.0: +mpi", when="@2.45:2.47+pflogger")
     depends_on("pflogger@1.11.0: +mpi", when="@2.44+pflogger")
     depends_on("pflogger@1.9.5: +mpi", when="@2.40:2.43+pflogger")
@@ -333,14 +345,16 @@ class Mapl(CMakePackage):
     depends_on("pflogger@:1.6 +mpi", when="@:2.22+pflogger")
 
     # fargparse dependency
-    depends_on("fargparse@1.8.0:", when="@2.48:+fargparse")
+    depends_on("fargparse@1.9.0:", when="@2.55:+fargparse")
+    depends_on("fargparse@1.8.0:", when="@2.48:2.54+fargparse")
     depends_on("fargparse@1.7.0:", when="@2.45:2.47+fargparse")
     depends_on("fargparse@1.6.0:", when="@2.44+fargparse")
     depends_on("fargparse@1.5.0:", when="@2.40:43+fargparse")
     depends_on("fargparse@1.4.1:1.4", when="@:2.39+fargparse")
 
     # pfunit dependency
-    depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:+pfunit")
+    depends_on("pfunit@4.11.1: +mpi +fhamcrest", when="@2.55:+pfunit")
+    depends_on("pfunit@4.10: +mpi +fhamcrest", when="@2.48:2.54+pfunit")
     depends_on("pfunit@4.9: +mpi +fhamcrest", when="@2.45:2.47+pfunit")
     depends_on("pfunit@4.8: +mpi +fhamcrest", when="@2.44+pfunit")
     depends_on("pfunit@4.7.3: +mpi +fhamcrest", when="@2.40:+pfunit")
@@ -431,7 +445,7 @@ class Mapl(CMakePackage):
                 "(target_link_libraries[^)]+PUBLIC )", r"\1 %s " % nc_flags, "pfio/CMakeLists.txt"
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # esma_cmake, an internal dependency of mapl, is
         # looking for the cmake argument -DBASEDIR, and
         # if it doesn't find it, it's looking for an

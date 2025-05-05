@@ -27,6 +27,7 @@ class PyNetcdf4(PythonPackage):
 
     variant("mpi", default=True, description="Parallel IO support")
 
+    depends_on("c", type="build")
     depends_on("python", type=("build", "link", "run"))
     depends_on("python@3.8:", when="@1.7.1:", type=("build", "link", "run"))
     depends_on("py-cython@0.29:", when="@1.6.5:", type="build")
@@ -43,12 +44,19 @@ class PyNetcdf4(PythonPackage):
     # https://github.com/Unidata/netcdf4-python/pull/1317
     depends_on("py-numpy@:1", when="@:1.6", type=("build", "link", "run"))
     depends_on("py-mpi4py", when="+mpi", type=("build", "run"))
-    # These forced variant requests are due to py-netcdf4 build scripts
-    # https://github.com/spack/spack/pull/47824#discussion_r1882473998
-    depends_on("netcdf-c~mpi", when="~mpi")
-    depends_on("netcdf-c+mpi", when="+mpi")
-    depends_on("hdf5@1.8.0:+hl~mpi", when="~mpi")
-    depends_on("hdf5@1.8.0:+hl+mpi", when="+mpi")
+
+    depends_on("netcdf-c")
+    depends_on("hdf5")
+    with when("@:1.6~mpi"):
+        # These forced variant requests are due to py-netcdf4 build scripts
+        # https://github.com/spack/spack/pull/47824#discussion_r1882473998
+        depends_on("netcdf-c~mpi")
+        depends_on("hdf5~mpi")
+    with when("+mpi"):
+        depends_on("netcdf-c+mpi")
+        depends_on("hdf5+mpi")
+    # We cannot build py-netcdf4~mpi ^netcdf-c~mpi ^hdf5+mpi
+    conflicts("hdf5+mpi", when="~mpi ^netcdf-c~mpi")
 
     # The installation script tries to find hdf5 using pkg-config. However, the
     # version of hdf5 installed with Spack does not have pkg-config files.
@@ -56,6 +64,14 @@ class PyNetcdf4(PythonPackage):
     # Ubuntu/Debian package manager), it is definitely not what we need. The
     # following patch disables the usage of pkg-config at all.
     patch("disable_pkgconf.patch")
+
+    # Allow building py-netcdf4 ~mpi when netCDF was build with +mpi. This patch
+    # overrides the auto-decect feature (has_parallel_support) in setup.py. The
+    # logic in setup.py changed between 1.6 and 1.7, therefore this patch only
+    # works for versions 1.7.0 and later.
+    # See also: https://github.com/Unidata/netcdf4-python/issues/1389
+    with when("@1.7:~mpi"):
+        patch("disable_parallel_support.patch", when="^netcdf-c+mpi")
 
     # https://github.com/Unidata/netcdf4-python/pull/1322
     patch(
@@ -79,7 +95,7 @@ class PyNetcdf4(PythonPackage):
 
         return flags, None, None
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Ensure installed netcdf and hdf5 libraries are used"""
         # Explicitly set these variables so setup.py won't erroneously pick up
         # system versions

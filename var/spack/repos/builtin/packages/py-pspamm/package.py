@@ -27,6 +27,6 @@ class PyPspamm(PythonPackage):
     def install(self, spec, prefix):
         install_tree(".", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.spec.prefix)
         env.prepend_path("PYTHONPATH", self.spec.prefix)

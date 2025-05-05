@@ -26,7 +26,7 @@ class PyTriton(PythonPackage):
     depends_on("zlib-api", type="link")
     conflicts("^openssl@3.3.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set environment variables used to control the build"""
         if self.spec.satisfies("%clang"):
             env.set("TRITON_BUILD_WITH_CLANG_LLD", "True")

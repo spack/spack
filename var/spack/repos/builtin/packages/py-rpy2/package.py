@@ -31,6 +31,9 @@ class PyRpy2(PythonPackage):
     variant("pandas", default=True, description="Pandas", when="@3.5.17:")
     variant("ipython", default=True, description="iPython", when="@3.5.17:")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     # many of the previous minor and patch versions change dependency versions so future updates
     # should be careful of that
     depends_on("python@3.8:", type=("build", "run"), when="@3.5.17:")
@@ -61,7 +64,7 @@ class PyRpy2(PythonPackage):
 
     depends_on("py-backports-zoneinfo", type=("build", "run"), when="@3.5.17: ^python@:3.8")
 
-    depends_on("iconv", type=("link"))
+    depends_on("iconv")
 
     # These are from 2019 and predate the pyproject.toml config that currently exists
     with when("@3.0.0:3.0.4"):

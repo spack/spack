@@ -18,6 +18,8 @@ class Dealii(CMakePackage, CudaPackage):
 
     maintainers("jppelteret", "luca-heltai")
 
+    tags = ["e4s"]
+
     # Don't add RPATHs to this package for the full build DAG.
     # only add for immediate deps.
     transitive_rpaths = False
@@ -53,10 +55,6 @@ class Dealii(CMakePackage, CudaPackage):
     version("8.3.0", sha256="4ddf72632eb501e1c814e299f32fc04fd680d6fda9daff58be4209e400e41779")
     version("8.2.1", sha256="d75674e45fe63cd9fa294460fe45228904d51a68f744dbb99cd7b60720f3b2a0")
     version("8.1.0", sha256="d666bbda2a17b41b80221d7029468246f2658051b8c00d9c5907cd6434c4df99")
-
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
 
     # Configuration variants
     variant(
@@ -127,6 +125,10 @@ class Dealii(CMakePackage, CudaPackage):
     variant("threads", default=True, description="Compile with multi-threading via TBB")
     variant("trilinos", default=True, description="Compile with Trilinos (only with MPI)")
     variant("vtk", default=True, when="@9.6:", description="Compile with VTK")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Required dependencies: Light version
     depends_on("blas")
@@ -686,10 +688,10 @@ class Dealii(CMakePackage, CudaPackage):
 
         return options
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("DEAL_II_DIR", self.prefix)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         if spec.satisfies("+cuda") and spec.satisfies("+mpi"):
             env.set("CUDAHOSTCXX", spec["mpi"].mpicxx)

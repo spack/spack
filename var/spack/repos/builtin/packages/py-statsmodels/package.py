@@ -20,15 +20,35 @@ class PyStatsmodels(PythonPackage):
     license("BSD-3-Clause")
 
     version("0.14.1", sha256="2260efdc1ef89f39c670a0bd8151b1d0843567781bcafec6cda0534eb47a94f6")
-    version("0.14.0", sha256="6875c7d689e966d948f15eb816ab5616f4928706b180cf470fd5907ab6f647a4")
-    version("0.13.5", sha256="593526acae1c0fda0ea6c48439f67c3943094c542fe769f8b90fe9e6c6cc4871")
-    version("0.13.2", sha256="77dc292c9939c036a476f1770f9d08976b05437daa229928da73231147cde7d4")
-    version("0.13.1", sha256="006ec8d896d238873af8178d5475203844f2c391194ed8d42ddac37f5ff77a69")
-    version("0.13.0", sha256="f2efc02011b7240a9e851acd76ab81150a07d35c97021cb0517887539a328f8a")
-    version("0.12.2", sha256="8ad7a7ae7cdd929095684118e3b05836c0ccb08b6a01fe984159475d174a1b10")
-    version("0.12.1", sha256="a271b4ccec190148dccda25f0cbdcbf871f408fc1394a10a7dc1af4a62b91c8e")
-    version("0.10.2", sha256="9cd2194c6642a8754e85f9a6e6912cdf996bebf6ff715d3cc67f65dadfd37cc9")
-    version("0.10.1", sha256="320659a80f916c2edf9dfbe83512d9004bb562b72eedb7d9374562038697fa10")
+
+    with default_args(deprecated=True):
+        version(
+            "0.14.0", sha256="6875c7d689e966d948f15eb816ab5616f4928706b180cf470fd5907ab6f647a4"
+        )
+        version(
+            "0.13.5", sha256="593526acae1c0fda0ea6c48439f67c3943094c542fe769f8b90fe9e6c6cc4871"
+        )
+        version(
+            "0.13.2", sha256="77dc292c9939c036a476f1770f9d08976b05437daa229928da73231147cde7d4"
+        )
+        version(
+            "0.13.1", sha256="006ec8d896d238873af8178d5475203844f2c391194ed8d42ddac37f5ff77a69"
+        )
+        version(
+            "0.13.0", sha256="f2efc02011b7240a9e851acd76ab81150a07d35c97021cb0517887539a328f8a"
+        )
+        version(
+            "0.12.2", sha256="8ad7a7ae7cdd929095684118e3b05836c0ccb08b6a01fe984159475d174a1b10"
+        )
+        version(
+            "0.12.1", sha256="a271b4ccec190148dccda25f0cbdcbf871f408fc1394a10a7dc1af4a62b91c8e"
+        )
+        version(
+            "0.10.2", sha256="9cd2194c6642a8754e85f9a6e6912cdf996bebf6ff715d3cc67f65dadfd37cc9"
+        )
+        version(
+            "0.10.1", sha256="320659a80f916c2edf9dfbe83512d9004bb562b72eedb7d9374562038697fa10"
+        )
 
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated

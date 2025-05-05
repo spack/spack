@@ -14,6 +14,8 @@ class Libunwind(AutotoolsPackage):
     git = "https://github.com/libunwind/libunwind"
     maintainers("mwkrentel")
 
+    tags = ["e4s"]
+
     license("MIT")
 
     version("master", branch="master")
@@ -27,9 +29,6 @@ class Libunwind(AutotoolsPackage):
     version("1.4.0", sha256="df59c931bd4d7ebfd83ee481c943edf015138089b8e50abed8d9c57ba9338435")
     version("1.3.1", sha256="43997a3939b6ccdf2f669b50fdb8a4d3205374728c2923ddc2354c65260214f8")
     version("1.2.1", sha256="3f3ecb90e28cbe53fba7a4a27ccce7aad188d3210bb1964a923a731a27a75acb")
-
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
 
     variant("docs", default=True, description="Build man page")
     variant(
@@ -77,6 +76,9 @@ class Libunwind(AutotoolsPackage):
         default=False,
         description="Support zlib compressed symbol tables " "(1.5 and later).",
     )
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
 
     # The libunwind releases contain the autotools generated files,
     # but the git repo snapshots do not.

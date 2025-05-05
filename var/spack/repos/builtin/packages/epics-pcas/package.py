@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 from spack.package import *
 
 
@@ -30,5 +32,5 @@ class EpicsPcas(MakefilePackage):
         with open("configure/RELEASE.local", "w") as release_file:
             release_file.write("EPICS_BASE = " + env["EPICS_BASE"] + "\n")
 
-    def setup_run_environment(self, envmod):
-        envmod.prepend_path("PATH", join_path(self.prefix.bin, env["EPICS_HOST_ARCH"]))
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+        env.prepend_path("PATH", join_path(self.prefix.bin, os.environ["EPICS_HOST_ARCH"]))

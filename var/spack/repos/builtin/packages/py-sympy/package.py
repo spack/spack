@@ -12,6 +12,7 @@ class PySympy(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("1.13.3", sha256="b27fd2c6530e0ab39e275fc9b683895367e51d5da91baa8d3d64db2565fec4d9")
     version("1.13.1", sha256="9cebf7e04ff162015ce31c9c6c9144daa34a93bd082f54fd8f12deca4f47515f")
     version("1.13.0", sha256="3b6af8f4d008b9a1a6a4268b335b984b23835f26d1d60b0526ebc71d48a25f57")
     version("1.12", sha256="ebf595c8dac3e0fdc4152c51878b498396ec7f30e7a914d6071e674d49420fb8")

@@ -266,9 +266,6 @@ class Python(Package):
         version("3.8.1", sha256="c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb")
         version("3.8.0", sha256="f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     extendable = True
 
     # Variants to avoid cyclical dependencies for concretizer
@@ -307,6 +304,9 @@ class Python(Package):
     variant("tix", default=False, description="Build Tix module", when="+tkinter")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=linux")
     variant("crypt", default=True, description="Build crypt module", when="@:3.12 platform=darwin")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     if sys.platform != "win32":
         depends_on("gmake", type="build")
@@ -515,7 +515,7 @@ class Python(Package):
                 string=True,
             )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
 
         # TODO: Python has incomplete support for Python modules with mixed
@@ -1264,7 +1264,9 @@ print(json.dumps(config))
             return path.replace(prefix, "")
         return os.path.join("include", "python{}".format(self.version.up_to(2)))
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """
@@ -1335,7 +1337,9 @@ print(json.dumps(config))
             if config_link != new_link and sys.platform != "win32":
                 env.set(link_var, new_link)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         """Set PYTHONPATH to include the site-packages directory for the
         extension and any other python extensions it depends on.
         """

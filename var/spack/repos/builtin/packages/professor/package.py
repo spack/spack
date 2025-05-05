@@ -16,13 +16,13 @@ class Professor(Package):
 
     version("2.3.3", sha256="60c5ba00894c809e2c31018bccf22935a9e1f51c0184468efbdd5d27b211009f")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "interactive",
         default=True,
         description="Install prof-I (Interactive parametrization explorer)",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("yoda")
     depends_on("eigen")
@@ -35,7 +35,7 @@ class Professor(Package):
 
     extends("python")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PROF_VERSION", self.spec.version)
 
     def install(self, spec, prefix):

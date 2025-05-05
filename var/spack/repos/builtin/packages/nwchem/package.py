@@ -15,7 +15,7 @@ class Nwchem(Package):
     url = "https://github.com/nwchemgit/nwchem/releases/download/v7.2.0-release/nwchem-7.2.0-release.revision-d0d141fd-srconly.2023-03-10.tar.bz2"
     git = "https://github.com/nwchemgit/nwchem.git"
 
-    tags = ["ecp", "ecp-apps"]
+    tags = ["ecp", "ecp-apps", "e4s"]
 
     maintainers("jeffhammond")
 
@@ -262,6 +262,6 @@ class Nwchem(Package):
                 f.write(nwchemrc)
             install(".nwchemrc", share_path)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("NWCHEM_BASIS_LIBRARY", join_path(self.prefix, "share/nwchem/libraries/"))
         env.set("NWCHEM_NWPW_LIBRARY", join_path(self.prefix, "share/nwchem/libraryps/"))

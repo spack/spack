@@ -43,20 +43,20 @@ class PyTorchSparse(PythonPackage):
             string=True,
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("@0.6.9:"):
             if "+cuda" in self.spec["py-torch"]:
-                env.set("FORCE_CUDA", 1)
-                env.set("FORCE_ONLY_CUDA", 0)
-                env.set("FORCE_ONLY_CPU", 0)
+                env.set("FORCE_CUDA", "1")
+                env.set("FORCE_ONLY_CUDA", "0")
+                env.set("FORCE_ONLY_CPU", "0")
             else:
-                env.set("FORCE_CUDA", 0)
-                env.set("FORCE_ONLY_CUDA", 0)
-                env.set("FORCE_ONLY_CPU", 1)
+                env.set("FORCE_CUDA", "0")
+                env.set("FORCE_ONLY_CUDA", "0")
+                env.set("FORCE_ONLY_CPU", "1")
         else:
             if "+cuda" in self.spec["py-torch"]:
-                env.set("FORCE_CUDA", 1)
-                env.set("FORCE_CPU", 0)
+                env.set("FORCE_CUDA", "1")
+                env.set("FORCE_CPU", "0")
             else:
-                env.set("FORCE_CUDA", 0)
-                env.set("FORCE_CPU", 1)
+                env.set("FORCE_CUDA", "0")
+                env.set("FORCE_CPU", "1")

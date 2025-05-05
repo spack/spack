@@ -40,10 +40,6 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
     version("2.2", sha256="791a6fc2b23de63b430b3e598bf05b1b25b82ba8bf7e0622fc81ba593b3bb131")
     version("2.1", sha256="49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     provides("mpi")
     provides("mpi@:3.1", when="@2.3:")
     provides("mpi@:3.0", when="@2.1:")
@@ -130,6 +126,10 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
         description="List of the ROMIO file systems to activate",
         values=auto_or_any_combination_of("lustre", "gpfs", "nfs", "ufs"),
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("automake@1.15", type="build")  # needed for torque patch
     depends_on("findutils", type="build")
@@ -358,7 +358,7 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
 
         return (flags, None, None)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if "process_managers=slurm" in self.spec:
             if "pmi_version=pmi1" in self.spec:
                 env.set("SLURM_MPI_TYPE", "pmi1")
@@ -372,7 +372,9 @@ class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):
         # add its compiler paths to the run environment.
         self.setup_mpi_wrapper_variables(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_mpi_wrapper_variables(env)
         MpichEnvironmentModifications.setup_dependent_build_environment(self, env, dependent_spec)
 

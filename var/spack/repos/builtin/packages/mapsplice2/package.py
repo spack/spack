@@ -19,6 +19,9 @@ class Mapsplice2(MakefilePackage):
     patch("Makefile.patch")
     patch("mapsplice_ebwt.patch")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("bowtie")
     depends_on("ncurses", type="link")
     depends_on("samtools", type="link")

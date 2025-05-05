@@ -105,10 +105,12 @@ class WinWdk(Package):
             variants.append("plat=%s" % arch)
         return variants
 
-    def setup_dependent_environment(self):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         # This points to all core build extensions needed to build
         # drivers on Windows
-        os.environ["WDKContentRoot"] = self.prefix
+        env.set("WDKContentRoot", self.prefix)
 
     @run_before("install")
     def rename_downloaded_executable(self):
@@ -116,10 +118,15 @@ class WinWdk(Package):
         This name is not properly formated so that Windows understands it as an executable
         We rename so as to allow Windows to run the WGL installer"""
         installer = glob.glob(os.path.join(self.stage.source_path, "linkid=**"))
-        if len(installer) > 1:
+        fetch_size = len(installer)
+        if fetch_size > 1:
             raise RuntimeError(
-                "Fetch has failed, unable to determine installer path from:\n%s"
-                % "\n".join(installer)
+                "Fetch has failed, ambiguous behavior, fetch has pulled too much. "
+                "Unable to determine installer path from:\n%s" % "\n".join(installer)
+            )
+        elif fetch_size < 1:
+            raise RuntimeError(
+                "Fetch has failed, nothing was fetched from:\n%s" % "\n".join(installer)
             )
         installer = installer[0]
         os.rename(installer, os.path.join(self.stage.source_path, "wdksetup.exe"))

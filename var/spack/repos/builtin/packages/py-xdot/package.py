@@ -51,7 +51,7 @@ class PyXdot(PythonPackage):
         # regenerate the byte-compiled __init__.py
         python("-m", "compileall", dst)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.prepend_path(
             "GI_TYPELIB_PATH", join_path(spec["harfbuzz"].prefix.lib, "girepository-1.0")

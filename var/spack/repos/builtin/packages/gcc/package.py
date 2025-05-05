@@ -40,12 +40,12 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     version("master", branch="master")
 
     # Latest stable
-    version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
+    version("15.1.0", sha256="e2b09ec21660f01fecffb715e0120265216943f038d0e48a9868713e54f06cea")
 
     # Previous stable series releases
-    version("14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840")
 
     # Final releases of previous versions
+    version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
     version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
     version("12.4.0", sha256="704f652604ccbccb14bdabf3478c9511c89788b12cb3bbffded37341916a9175")
     version("11.5.0", sha256="a6e21868ead545cf87f0c01f84276e4b5281d672098591c1c896241f09363478")
@@ -63,6 +63,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     # Deprecated older non-final releases
     with default_args(deprecated=True):
+        version(
+            "14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840"
+        )
+
         version(
             "13.2.0", sha256="e275e76442a6067341a27f04c5c6b83d8613144004c0413528863dc6b5c743da"
         )
@@ -136,9 +140,6 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         version("4.9.1", sha256="d334781a124ada6f38e63b545e2a3b8c2183049515a1abab6d513f109f1d717e")
         version("4.8.4", sha256="4a80aa23798b8e9b5793494b8c976b39b8d9aa2e53cd5ed5534aff662a7f8695")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-
     # We specifically do not add 'all' variant here because:
     # (i) Ada, D, Go, Jit, and Objective-C++ are not default languages.
     # In that respect, the name 'all' is rather misleading.
@@ -193,6 +194,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     variant(
         "profiled", default=False, description="Use Profile Guided Optimization", when="+bootstrap"
     )
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("flex", type="build", when="@master")
 
@@ -378,11 +382,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     #   on XCode 12.5
     conflicts("+bootstrap", when="@:11.1 %apple-clang@12.0.5")
 
-    # aarch64/M1 is supported in GCC 11.3-12.2 and 13
     requires(
-        "@11.3,12.2,13.1:",
+        "@11.3:",
         when="target=aarch64: platform=darwin",
-        msg="Only GCC 11.3-12.2, 13.1+ support macOS M1 (aarch64)",
+        msg="Only GCC 11.3+ support aarch64-darwin",
     )
 
     # Newer binutils than RHEL's is required to run `as` on some instructions
@@ -438,8 +441,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
         # aarch64-darwin support from Iain Sandoe's branch
         patch(
-            "https://github.com/iains/gcc-14-branch/compare/04696df09633baf97cdbbdd6e9929b9d472161d3..gcc-14.2-darwin-r2.patch?full_index=1",
-            sha256="01ea668489f3f0fb2439060f6c333c4c17ef4c19c4c4e6e6aa4b8ea493e97685",
+            "https://github.com/iains/gcc-14-branch/compare/04696df09633baf97cdbbdd6e9929b9d472161d3..a495b2dded281beeafec91074e4e82a5a3df8104.patch?full_index=1",
+            sha256="838cf070bec5468340018bf003f714f6340c562b878f3244303d2b7ba9949ccd",
             when="@14.2.0 target=aarch64:",
         )
         patch(
@@ -449,8 +452,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         )
 
         patch(
-            "https://github.com/iains/gcc-13-branch/compare/b71f1de6e9cf7181a288c0f39f9b1ef6580cf5c8..gcc-13.3-darwin-r1.patch?full_index=1",
-            sha256="d957520afc286ac46aa3c4bf9b64618d02ca0bf1466f32321b5d6beec6a396eb",
+            "https://github.com/iains/gcc-13-branch/compare/b71f1de6e9cf7181a288c0f39f9b1ef6580cf5c8..7808d253bf53c6c6ce63f04a66601b595e2bae08.patch?full_index=1",
+            sha256="e7d4415e66ba09dd65b102a842e62e6f9ba6b41da878e08235e59a3fc53058eb",
             when="@13.3.0 target=aarch64:",
         )
         patch(
@@ -465,8 +468,8 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         )
 
         patch(
-            "https://github.com/iains/gcc-12-branch/compare/2bada4bc59bed4be34fab463bdb3c3ebfd2b41bb..gcc-12.4-darwin-r0.patch?full_index=1",
-            sha256="e242adf240a62ed3005da75a9e304bda980b84ce497f124b4bddc819ee821e2a",
+            "https://github.com/iains/gcc-12-branch/compare/2bada4bc59bed4be34fab463bdb3c3ebfd2b41bb..99533d94172ed7a24c0e54c4ea97e6ae2260409e.patch?full_index=1",
+            sha256="4f59c671b34cc24b57eaa528592a5188f18716cd3cd63c4601fbbda92d397ce2",
             when="@12.4.0 target=aarch64:",
         )
         patch(
@@ -618,7 +621,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     opt_flags = ["-O", "-O0", "-O1", "-O2", "-O3", "-Os", "-Ofast", "-Og"]
 
     implicit_rpath_libs = ["libgcc", "libgfortran"]
-    stdcxx_libs = "-lstdc++"
+    stdcxx_libs = ("-lstdc++",)
 
     def _standard_flag(self, *, language, standard):
         flags = {
@@ -1048,14 +1051,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         set_install_permissions(specs_file)
         tty.info(f"Wrote new spec file to {specs_file}")
 
-    def setup_run_environment(self, env):
-        if self.spec.satisfies("languages=c"):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
+        if self.cc and self.spec.satisfies("languages=c"):
             env.set("CC", self.cc)
 
-        if self.spec.satisfies("languages=c++"):
+        if self.cxx and self.spec.satisfies("languages=c++"):
             env.set("CXX", self.cxx)
 
-        if self.spec.satisfies("languages=fortran"):
+        if self.fortran and self.spec.satisfies("languages=fortran"):
             env.set("FC", self.fortran)
             env.set("F77", self.fortran)
 
@@ -1158,19 +1161,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             spec: spec that will inject runtime dependencies
             pkg: object used to forward information to the solver
         """
-        pkg("*").depends_on(
-            "gcc-runtime",
-            when="%gcc",
-            type="link",
-            description="If any package uses %gcc, it depends on gcc-runtime",
-        )
-        pkg("*").depends_on(
-            f"gcc-runtime@{str(spec.version)}:",
-            when=f"^[deptypes=build] {spec.name}@{spec.versions}",
-            type="link",
-            description=f"If any package uses %{str(spec)}, "
-            f"it depends on gcc-runtime@{str(spec.version)}:",
-        )
+        for language in ("c", "cxx", "fortran"):
+            pkg("*").depends_on(
+                f"gcc-runtime@{spec.version}:",
+                when=f"%[virtuals={language}] {spec.name}@{spec.versions}",
+                type="link",
+                description=f"Inject gcc-runtime when gcc is used as a {language} compiler",
+            )
 
         gfortran_str = "libgfortran@5"
         if spec.satisfies("gcc@:6"):
@@ -1181,21 +1178,17 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for fortran_virtual in ("fortran-rt", gfortran_str):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"^[virtuals=fortran deptypes=build] {spec.name}@{spec.versions}",
+                when=f"%[virtuals=fortran] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
-                f"{str(spec)} and using the 'fortran' language",
+                f"{spec} and using the 'fortran' language",
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
-        pkg("gcc-runtime").requires(
-            f"@{str(spec.versions)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
-        )
+        pkg("gcc-runtime").requires(f"@{spec.versions}", when=f"%{spec.name}@{spec.versions}")
 
         # If a node used %gcc@X.Y its dependencies must use gcc-runtime@:X.Y
         # (technically @:X is broader than ... <= @=X but this should work in practice)
-        pkg("*").propagate(
-            f"gcc@:{str(spec.version)}", when=f"^[deptypes=build] {spec.name}@{spec.versions}"
-        )
+        pkg("*").propagate(f"gcc@:{spec.version}", when=f"%{spec.name}@{spec.versions}")
 
     def _post_buildcache_install_hook(self):
         if not self.spec.satisfies("platform=linux"):

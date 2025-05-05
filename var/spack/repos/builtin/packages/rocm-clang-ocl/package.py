@@ -18,7 +18,7 @@ class RocmClangOcl(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath")
-    version("master", branch="master")
+    version("master", branch="master", deprecated=True)
     version("6.1.2", sha256="cc9942539b5e50b97fa0d2425ba93aae7223635fecba869d8f43b2c26f9482ae")
     version("6.1.1", sha256="21b8a6d521a8e584e18851d27b5ef328a63ea7ee9eb3cc52508b9bfcf975e119")
     version("6.1.0", sha256="c983adad49ab5850307db1282f8bc957b9870d4ce37db8fbb43c52db6c90d0ed")

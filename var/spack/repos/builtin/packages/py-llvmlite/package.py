@@ -77,7 +77,7 @@ class PyLlvmlite(PythonPackage):
     # TODO: investigate
     conflicts("%apple-clang@15:")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("%fj"):
             env.set("CXX_FLTO_FLAGS", "{0}".format(self.compiler.cxx_pic_flag))
             env.set("LD_FLTO_FLAGS", "-Wl,--exclude-libs=ALL")

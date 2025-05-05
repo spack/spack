@@ -39,7 +39,7 @@ class PyBlosc2(PythonPackage):
         depends_on("ninja")
         depends_on("pkgconfig")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         cmake_args = [*CMakeBuilder.std_args(self), CMakeBuilder.define("USE_SYSTEM_BLOSC2", True)]
         # scikit-build does not want a CMAKE_INSTALL_PREFIX
         cmake_args = [arg for arg in cmake_args if "CMAKE_INSTALL_PREFIX" not in arg]

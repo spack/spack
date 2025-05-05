@@ -33,6 +33,9 @@ class RDplyr(RPackage):
     version("0.7.0", sha256="27b3593c09da5e99c0c4fb19ea826edd2cab619f8aaefd0cfd2a4140a0bd9410")
     version("0.5.0", sha256="93d3b829f1c2d38e14a4f2fa7d6398fc6c1a9e4189b3e78bc38a0eb0e864454f")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r@3.1.2:", type=("build", "run"))
     depends_on("r@3.2.0:", type=("build", "run"), when="@0.8.1:")
     depends_on("r@3.3.0:", type=("build", "run"), when="@1.0.3:")

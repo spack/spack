@@ -26,7 +26,7 @@ class Hc(MakefilePackage):
     # /usr/bin/ld: cannot find -lggrd
     parallel = False
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GMTHOME", self.spec["gmt"].prefix)
         env.set("NETCDFHOME", self.spec["netcdf-c"].prefix)
         env.set("HC_HOME", self.prefix)

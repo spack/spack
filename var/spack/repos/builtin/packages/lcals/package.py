@@ -30,6 +30,8 @@ class Lcals(MakefilePackage):
         values=("sse", "avx", "MIC"),
     )
 
+    depends_on("cxx", type="build")
+
     @property
     def build_targets(self):
         targets = []

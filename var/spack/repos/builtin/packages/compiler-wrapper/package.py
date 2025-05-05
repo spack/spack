@@ -141,7 +141,9 @@ class CompilerWrapper(Package):
         (cray_dir / "crayCC").symlink_to(installed_script)
         (cray_dir / "CC").symlink_to(installed_script)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         if sys.platform == "win32":
             return
 
@@ -162,6 +164,7 @@ class CompilerWrapper(Package):
 
         bin_dir = self.bin_dir()
         implicit_rpaths, env_paths = [], []
+        extra_rpaths = []
         for language, attr_name, wrapper_var_name, spack_var_name in _var_list:
             compiler_pkg = dependent_spec[language].package
             if not hasattr(compiler_pkg, attr_name):
@@ -215,11 +218,20 @@ class CompilerWrapper(Package):
             # Check if this compiler has implicit rpaths
             implicit_rpaths.extend(_implicit_rpaths(pkg=compiler_pkg))
 
+            # Add extra rpaths, if they are defined in an external spec
+            extra_rpaths.extend(
+                getattr(compiler_pkg.spec, "extra_attributes", {}).get("extra_rpaths", [])
+            )
+
         if implicit_rpaths:
             # Implicit rpaths are accumulated across all compilers so, whenever they are mixed,
             # the compiler used in ccld mode will account for rpaths from other compilers too.
             implicit_rpaths = lang.dedupe(implicit_rpaths)
             env.set("SPACK_COMPILER_IMPLICIT_RPATHS", ":".join(implicit_rpaths))
+
+        if extra_rpaths:
+            extra_rpaths = lang.dedupe(extra_rpaths)
+            env.set("SPACK_COMPILER_EXTRA_RPATHS", ":".join(extra_rpaths))
 
         env.set("SPACK_ENABLE_NEW_DTAGS", self.enable_new_dtags)
         env.set("SPACK_DISABLE_NEW_DTAGS", self.disable_new_dtags)
@@ -228,32 +240,29 @@ class CompilerWrapper(Package):
             env.prepend_path("SPACK_COMPILER_WRAPPER_PATH", item)
 
     def setup_dependent_package(self, module, dependent_spec):
-        bin_dir = self.bin_dir()
+        def _spack_compiler_attribute(*, language: str) -> str:
+            compiler_pkg = dependent_spec[language].package
+            if sys.platform != "win32":
+                # On non-Windows we return the appropriate path to the compiler wrapper
+                return str(self.bin_dir() / compiler_pkg.compiler_wrapper_link_paths[language])
+
+            # On Windows we return the real compiler
+            if language == "c":
+                return compiler_pkg.cc
+            elif language == "cxx":
+                return compiler_pkg.cxx
+            elif language == "fortran":
+                return compiler_pkg.fortran
 
         if dependent_spec.has_virtual_dependency("c"):
-            compiler_pkg = dependent_spec["c"].package
-            setattr(
-                module, "spack_cc", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["c"])
-            )
+            setattr(module, "spack_cc", _spack_compiler_attribute(language="c"))
 
         if dependent_spec.has_virtual_dependency("cxx"):
-            compiler_pkg = dependent_spec["cxx"].package
-            setattr(
-                module, "spack_cxx", str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["cxx"])
-            )
+            setattr(module, "spack_cxx", _spack_compiler_attribute(language="cxx"))
 
         if dependent_spec.has_virtual_dependency("fortran"):
-            compiler_pkg = dependent_spec["fortran"].package
-            setattr(
-                module,
-                "spack_fc",
-                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-            )
-            setattr(
-                module,
-                "spack_f77",
-                str(bin_dir / compiler_pkg.compiler_wrapper_link_paths["fortran"]),
-            )
+            setattr(module, "spack_fc", _spack_compiler_attribute(language="fortran"))
+            setattr(module, "spack_f77", _spack_compiler_attribute(language="fortran"))
 
     @property
     def disable_new_dtags(self) -> str:

@@ -47,10 +47,6 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         version("2.6.0", sha256="45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c")
         version("2.5.0", sha256="7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329")
 
-    depends_on("c", type="build")
-    depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
-
     # There's not really any consistency about how static and shared libs are
     # implemented across spack.  What we're trying to support is specifically three
     # library build types:
@@ -118,6 +114,10 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
 
     # ifx does not support submodules in separate files
     conflicts("%oneapi@:2022.1.0", when="+fortran")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("cmake@3.12.0:", type="build")
 
@@ -257,7 +257,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
         filter_file("mpc++_r)", "mpcc_r mpiFCC)", f, string=True)
         filter_file("mpf77_r", "mpf77_r mpifrt", f, string=True)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # https://github.com/ornladios/ADIOS2/issues/2228
         if self.spec.satisfies("+fortran %gcc@10:"):
             env.set("FFLAGS", "-fallow-argument-mismatch")
@@ -358,7 +358,7 @@ class Adios2(CMakePackage, CudaPackage, ROCmPackage):
             list(libs_to_seek), root=self.spec.prefix, shared=("+shared" in spec), recursive=True
         )
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         try:
             all_libs = self.libs
             idx = all_libs.basenames.index("libadios2_h5vol.so")

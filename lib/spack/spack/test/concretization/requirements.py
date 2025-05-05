@@ -1239,3 +1239,68 @@ def test_virtual_requirement_respects_any_of(concretize_scope, mock_packages):
 
     with pytest.raises(spack.error.SpackError):
         spack.concretize.concretize_one("mpileaks ^[virtuals=mpi] zmpi")
+
+
+@pytest.mark.parametrize(
+    "packages_yaml,expected_reuse,expected_contraints",
+    [
+        (
+            """
+packages:
+  all:
+    require:
+    - "%gcc"
+    """,
+            True,
+            # To minimize installed specs we reuse pkg-b compiler, since the requirement allows it
+            ["%gcc@9"],
+        ),
+        (
+            """
+packages:
+  all:
+    require:
+    - "%gcc@10"
+    """,
+            False,
+            ["%gcc@10"],
+        ),
+        (
+            """
+packages:
+  all:
+    require:
+    - "%gcc"
+  pkg-a:
+    require:
+    - "%gcc@10"
+    """,
+            True,
+            ["%gcc@10"],
+        ),
+    ],
+)
+@pytest.mark.regression("49847")
+def test_requirements_on_compilers_and_reuse(
+    concretize_scope, mock_packages, packages_yaml, expected_reuse, expected_contraints
+):
+    """Tests that we can require compilers with `%` in configuration files, and still get reuse
+    of specs (even though reused specs have no build dependency in the ASP encoding).
+    """
+    input_spec = "pkg-a"
+
+    reused_spec = spack.concretize.concretize_one("pkg-b@0.9 %gcc@9")
+    reused_nodes = list(reused_spec.traverse())
+    update_packages_config(packages_yaml)
+    root_specs = [Spec(input_spec)]
+
+    with spack.config.override("concretizer:reuse", True):
+        solver = spack.solver.asp.Solver()
+        setup = spack.solver.asp.SpackSolverSetup()
+        result, _, _ = solver.driver.solve(setup, root_specs, reuse=reused_nodes)
+        pkga = result.specs[0]
+    is_pkgb_reused = pkga["pkg-b"].dag_hash() == reused_spec.dag_hash()
+
+    assert is_pkgb_reused == expected_reuse
+    for c in expected_contraints:
+        assert pkga.satisfies(c), print(pkga.tree())

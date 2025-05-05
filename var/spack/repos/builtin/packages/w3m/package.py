@@ -102,7 +102,7 @@ class W3m(AutotoolsPackage):
 
         return args
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.variants["termlib"].value == "ncurses":
             env.append_flags("LDFLAGS", "-ltinfo")
             env.append_flags("LDFLAGS", "-lncurses")

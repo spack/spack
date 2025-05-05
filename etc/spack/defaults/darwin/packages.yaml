@@ -25,6 +25,8 @@ packages:
       glu: [apple-glu]
       unwind: [apple-libunwind]
       uuid: [apple-libuuid]
+  apple-clang:
+    buildable: false
   apple-gl:
     buildable: false
     externals:

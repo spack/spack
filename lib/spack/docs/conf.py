@@ -225,8 +225,10 @@ nitpick_ignore = [
     ("py:class", "llnl.util.lang.T"),
     ("py:class", "llnl.util.lang.KT"),
     ("py:class", "llnl.util.lang.VT"),
+    ("py:class", "llnl.util.lang.ClassPropertyType"),
     ("py:obj", "llnl.util.lang.KT"),
     ("py:obj", "llnl.util.lang.VT"),
+    ("py:obj", "llnl.util.lang.ClassPropertyType"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

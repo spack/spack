@@ -21,6 +21,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     libraries = ["libhipsparse"]
 
     license("MIT")
+    version("6.3.3", sha256="61c26eb93e857c942a03ea4350a403e20191be465041e542ad7da00058e89ead")
     version("6.3.2", sha256="9fbc3468632fdc828d7bae386c2737eb371d78811f53da7348b417fb00d62808")
     version("6.3.1", sha256="d64bc48e0aa5ec2f48853272a9c554b37ec98cb0724135e45f21b1340df7bccb")
     version("6.3.0", sha256="550fd5a480490e631507e8c34b2b0cf9cbc2ad2a5bf84e8ea0a8fad96eecb25a")
@@ -44,9 +45,6 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         version("5.3.3", sha256="d96d0e47594ab12e8c380da2300704c105736a0771940d7d2fae666f2869e457")
         version("5.3.0", sha256="691b32b916952ed9af008aa29f60cc190322b73cfc098bb2eda3ff68c89c7b35")
 
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # default to an 'auto' variant until amdgpu_targets can be given a better default than 'none'
     amdgpu_targets = ROCmPackage.amdgpu_targets
     variant(
@@ -64,6 +62,9 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
+
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
 
     depends_on("hip +cuda", when="+cuda")
 
@@ -93,6 +94,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.0",
         "6.3.1",
         "6.3.2",
+        "6.3.3",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"+rocm @{ver}")
@@ -113,7 +115,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
             ver = None
         return ver
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+asan"):
             self.asan_on(env)
 

@@ -27,10 +27,6 @@ class Aspect(CMakePackage):
     version("2.0.1", sha256="0bf5600c42afce9d39c1d285b0654ecfdeb0f30e9f3421651c95f54ca01ac165")
     version("2.0.0", sha256="d485c07f54248e824bdfa35f3eec8971b65e8b7114552ffa2c771bc0dede8cc0")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     variant(
         "build_type",
         default="Release",
@@ -41,6 +37,10 @@ class Aspect(CMakePackage):
     variant("fpe", default=False, description="Enable floating point exception checks")
     variant("opendap", default=False, description="Enable OPeNDAP support for remote file access")
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("dealii+p4est+trilinos+mpi")
     depends_on("dealii+p4est+trilinos+mpi+sundials", when="@3.0")
     depends_on("dealii-parameter-gui", when="+gui")
@@ -49,5 +49,5 @@ class Aspect(CMakePackage):
     def cmake_args(self):
         return [self.define_from_variant("ASPECT_USE_FP_EXCEPTIONS", "fpe")]
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("Aspect_DIR", self.prefix)

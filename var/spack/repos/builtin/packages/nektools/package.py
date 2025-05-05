@@ -39,13 +39,10 @@ class Nektools(Package):
     version("19.0", sha256="db129877a10ff568d49edc77cf65f9e732eecb1fce10edbd91ffc5ac10c41ad6")
     version("17.0", sha256="4d8d4793ce3c926c54e09a5a5968fa959fe0ba46bd2e6b8043e099528ee35a60")
 
-    depends_on("c", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
     # Variant for MAXNEL, we need to read this from user
     variant(
         "MAXNEL",
-        default=150000,
+        default="150000",
         description="Maximum number of elements for Nek5000 tools.",
         values=is_integral,
     )
@@ -60,6 +57,9 @@ class Nektools(Package):
     variant("prenek", default=True, description="Build prenek tool.")
     variant("visit", default=False, description="Enable support for visit")
 
+    depends_on("c", type="build")  # generated
+    depends_on("fortran", type="build")  # generated
+
     depends_on("libx11", when="+prenek")
     depends_on("libx11", when="+postnek")
     # libxt is needed for X11/Intrinsic.h but not for linking
@@ -67,12 +67,6 @@ class Nektools(Package):
     depends_on("xproto", when="+prenek")
     depends_on("libxt", when="+postnek")
     depends_on("visit", when="+visit")
-
-    @run_before("install")
-    def fortran_check(self):
-        if not self.compiler.f77:
-            msg = "Cannot build Nek5000 without a Fortran 77 compiler."
-            raise RuntimeError(msg)
 
     def install(self, spec, prefix):
         tools_dir = "tools"

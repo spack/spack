@@ -47,7 +47,7 @@ class PySmartredis(PythonPackage):
     patch("sr_0_4_1_no_deps.patch", when="@0.4.1")
     patch("sr_0_4_0_no_deps.patch", when="@0.4.0")
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
         env.set("REDISPP_LIB_DIR", spec["redis-plus-plus"].libs.directories[0])
         env.set("REDISPP_INC_DIR", spec["redis-plus-plus"].headers.directories[0])

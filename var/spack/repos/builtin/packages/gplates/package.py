@@ -21,6 +21,8 @@ class Gplates(CMakePackage):
 
     version("2.3.0", sha256="7d4be9d524d1fcbb6a81de29bd1d4b13133082db23f0808965c5efe30e9538ab")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
     depends_on("cmake@3.5:", when="@2.3:", type="build")
     depends_on("cmake@2.8.8:", when="@2.1", type="build")
     depends_on("cmake@2.6.2:", when="@2.0", type="build")

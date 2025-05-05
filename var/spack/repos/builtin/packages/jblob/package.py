@@ -22,7 +22,7 @@ class Jblob(Package):
 
     depends_on("java@8:", type="run")
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.set("JAVA_HOME", self.spec["java"].prefix)
 
     def install(self, spec, prefix):

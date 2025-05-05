@@ -67,7 +67,7 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
             targets.append(f"CFLAGS={self.compiler.c11_flag}")
         return targets
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # texinfo builds Perl XS modules internally, and by default it overrides the
         # CC that the top-level configure reports. This loses the Spack wrappers unless
         # we set PERL_EXT_CC

@@ -59,8 +59,6 @@ class Pythia8(AutotoolsPackage):
         deprecated=True,
     )
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "cxxstd",
         default="11",
@@ -101,6 +99,8 @@ class Pythia8(AutotoolsPackage):
     variant("openmpi", default=False, description="Multi-threading support via OpenMP")
     variant("mpich", default=False, description="Multi-threading support via MPICH")
     variant("hdf5", default=False, description="Support the use of HDF5 format")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("zlib-api", when="+gzip")
     depends_on("rsync", type="build")
@@ -217,8 +217,12 @@ class Pythia8(AutotoolsPackage):
         env.set("PYTHIA8", self.prefix)
         env.set("PYTHIA8DATA", self.prefix.share.Pythia8.xmldoc)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_common_env(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_common_env(env)

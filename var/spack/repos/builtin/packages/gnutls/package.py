@@ -90,7 +90,7 @@ class Gnutls(AutotoolsPackage):
         url = "https://www.gnupg.org/ftp/gcrypt/gnutls/v{0}/gnutls-{1}.tar.xz"
         return url.format(version.up_to(2), version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+guile"):
             env.set("GUILE", self.spec["guile"].prefix.bin.guile)
 

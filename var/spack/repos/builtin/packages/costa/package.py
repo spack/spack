@@ -27,14 +27,14 @@ class Costa(CMakePackage):
     version("2.1", sha256="c1e86452415083f7470b292d93ec60708b7c8dbafc2bac383636bb4b28135866")
     version("2.0", sha256="de250197f31f7d23226c6956a687c3ff46fb0ff6c621a932428236c3f7925fe4")
 
-    depends_on("cxx", type="build")  # generated
-
     variant("scalapack", default=False, description="Build with ScaLAPACK API")
     variant("shared", default=True, description="Build shared libraries")
     variant("profiling", default=False, description="Enable profiling")
     variant("tests", default=False, description="Enable tests")
     variant("apps", default=False, description="Enable miniapp")
     variant("benchmarks", default=False, description="Enable benchmarks")
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.22:", type="build")
     depends_on("mpi@3:")
@@ -50,7 +50,7 @@ class Costa(CMakePackage):
             )
         return "https://github.com/eth-cscs/COSTA/archive/refs/tags/v{0}.tar.gz".format(version)
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         return
 
     def costa_scalapack_cmake_arg(self):

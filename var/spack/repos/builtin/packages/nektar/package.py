@@ -17,9 +17,6 @@ class Nektar(CMakePackage):
     version("5.4.0", commit="002bf62648ec667e10524ceb8a98bb1c21804130")
     version("5.3.0", commit="f286f809cfeb26cb73828c90a689a048898971d2")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     variant("mpi", default=True, description="Builds with mpi support")
     variant("fftw", default=True, description="Builds with fftw support")
     variant("arpack", default=True, description="Builds with arpack support")
@@ -95,6 +92,9 @@ class Nektar(CMakePackage):
         description="Builds an executable associated with the Vortex Wave solver",
     )
 
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@2.8.8:", type="build", when="~hdf5")
     depends_on("cmake@3.2:", type="build", when="+hdf5")
 
@@ -168,7 +168,7 @@ class Nektar(CMakePackage):
             with working_dir(self.build_directory):
                 python("setup.py", "install", "--prefix", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.append_path(
             "CMAKE_PREFIX_PATH",
             os.path.join(
@@ -179,10 +179,14 @@ class Nektar(CMakePackage):
             "PYTHONPATH", os.path.abspath(os.path.join(self.spec.prefix, "build_tree"))
         )
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_run_environment(env)
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         self.setup_run_environment(env)
 
     def add_files_to_view(self, view, merge_map, skip_if_exists=True):

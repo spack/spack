@@ -17,13 +17,13 @@ class Camellia(CMakePackage):
 
     version("master", branch="master")
 
-    depends_on("cxx", type="build")  # generated
-
     variant(
         "moab",
         default=True,
         description="Compile with MOAB to include support for reading standard mesh formats",
     )
+
+    depends_on("cxx", type="build")  # generated
 
     depends_on(
         "trilinos"

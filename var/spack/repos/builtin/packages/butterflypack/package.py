@@ -24,6 +24,8 @@ class Butterflypack(CMakePackage):
     url = "https://github.com/liuyangzhuan/ButterflyPACK/archive/v2.2.0.tar.gz"
     maintainers("liuyangzhuan")
 
+    tags = ["e4s"]
+
     license("BSD-3-Clause-LBNL")
 
     version("master", branch="master")
@@ -42,12 +44,12 @@ class Butterflypack(CMakePackage):
     version("1.0.1", sha256="e8ada37466a19f49e13456b150700d4c3afaad2ddbe3678f4e933f9d556a24a5")
     version("1.0.0", sha256="86c5eb09a18522367d63ce2bacf67ca1c9813ef351a1443baaab3c53f0d77232")
 
+    variant("shared", default=True, description="Build shared libraries")
+    variant("openmp", default=True, description="add OpenMP support")
+
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
-
-    variant("shared", default=True, description="Build shared libraries")
-    variant("openmp", default=True, description="add OpenMP support")
 
     depends_on("mpi")
     depends_on("blas")

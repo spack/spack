@@ -27,9 +27,6 @@ class Bohrium(CMakePackage, CudaPackage):
     version("0.9.1", sha256="a8675db35ea4587ef12d5885a1aa19b59fd9c3f1366e239059de8b0f3cf51e04")
     version("0.9.0", sha256="6f6379f1555de5a6a19138beac891a470df7df1fc9594e2b9404cf01b6e17d93")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     #
     # Variants
     #
@@ -66,6 +63,9 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Dependencies
     #
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@2.8:", type="build")
     depends_on("boost+system+serialization+filesystem+regex")
 
@@ -199,7 +199,7 @@ class Bohrium(CMakePackage, CudaPackage):
     #
     # Environment setup
     #
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         # Bohrium needs an extra include dir apart from
         # the self.prefix.include dir
         env.prepend_path("CPATH", self.prefix.include.bohrium)

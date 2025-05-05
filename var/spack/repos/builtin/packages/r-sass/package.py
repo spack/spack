@@ -23,6 +23,9 @@ class RSass(RPackage):
     version("0.4.1", sha256="850fcb6bd49085d5afd25ac18da0744234385baf1f13d8c0a320f4da2de608bb")
     version("0.4.0", sha256="7d06ca15239142a49e88bb3be494515abdd8c75f00f3f1b0ee7bccb55019bc2b")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("r-fs", type=("build", "run"))
     depends_on("r-fs@1.2.4:", type=("build", "run"), when="@0.4.7:")
     depends_on("r-rlang@0.4.10:", type=("build", "run"))

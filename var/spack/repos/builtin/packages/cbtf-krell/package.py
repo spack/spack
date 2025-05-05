@@ -23,9 +23,6 @@ class CbtfKrell(CMakePackage):
     version("1.9.4", branch="1.9.4")
     version("1.9.3", branch="1.9.3")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-
     # MPI variants
     variant(
         "openmpi", default=False, description="Build mpi experiment collector for openmpi MPI.."
@@ -57,6 +54,9 @@ class CbtfKrell(CMakePackage):
     )
 
     # Dependencies for cbtf-krell
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
     depends_on("cmake@3.0.2:", type="build")
 
     depends_on("gotcha")
@@ -225,7 +225,7 @@ class CbtfKrell(CMakePackage):
 
         return cmake_args
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Set up the compile and runtime environments for a package."""
 
         # Environment settings for cbtf-krell, bin is automatically

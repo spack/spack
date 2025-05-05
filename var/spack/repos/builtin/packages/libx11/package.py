@@ -63,10 +63,14 @@ class Libx11(AutotoolsPackage, XorgPackage):
 
         return config_args
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XLOCALEDIR", self.prefix.share.X11.locale)
 
-    def setup_dependent_run_environment(self, env, dependent_spec):
+    def setup_dependent_run_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         env.prepend_path("XLOCALEDIR", self.prefix.share.X11.locale)
 
     @property

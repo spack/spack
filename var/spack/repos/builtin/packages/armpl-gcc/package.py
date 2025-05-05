@@ -495,7 +495,7 @@ class ArmplGcc(Package):
         hlist.directories = [incdir]
         return hlist
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         armpl_dir = get_armpl_prefix(self.spec)
         if self.spec.platform == "darwin":
             env.prepend_path("DYLD_LIBRARY_PATH", join_path(armpl_dir, "lib"))
@@ -526,7 +526,9 @@ class ArmplGcc(Package):
             for f in find(join_path(armpl_dir, "pkgconfig"), "*"):
                 symlink(f, f + ".pc")
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def setup_dependent_build_environment(
+        self, env: EnvironmentModifications, dependent_spec: Spec
+    ) -> None:
         armpl_dir = get_armpl_prefix(self.spec)
         if self.spec.satisfies("@:22"):
             # pkgconfig directory is not in standard ("lib", "lib64", "share") location

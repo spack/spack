@@ -33,7 +33,7 @@ class Jmol(Package):
             # no subdirs - tarball was unpacked in spack-src
             install_tree("./", prefix)
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("PATH", self.prefix)
         env.set("JMOL_HOME", self.prefix)
         env.prepend_path("PATH", self.spec["java"].prefix.bin)

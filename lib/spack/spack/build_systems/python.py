@@ -13,9 +13,9 @@ from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 import archspec
 
 import llnl.util.filesystem as fs
-import llnl.util.lang as lang
 import llnl.util.tty as tty
 from llnl.util.filesystem import HeaderList, LibraryList, join_path
+from llnl.util.lang import ClassProperty, classproperty, match_predicate
 
 import spack.builder
 import spack.config
@@ -139,7 +139,7 @@ class PythonExtension(spack.package_base.PackageBase):
             ext_map = view.extensions_layout.extension_map(self.extendee_spec)
             namespaces = set(x.package.py_namespace for x in ext_map.values())
             namespace_re = r"site-packages/{0}/__init__.py".format(self.py_namespace)
-            find_namespace = lang.match_predicate(namespace_re)
+            find_namespace = match_predicate(namespace_re)
             if self.py_namespace in namespaces:
                 conflicts = list(x for x in conflicts if not find_namespace(x))
 
@@ -206,7 +206,7 @@ class PythonExtension(spack.package_base.PackageBase):
                 spec.package.py_namespace for name, spec in ext_map.items() if name != self.name
             )
             if self.py_namespace in remaining_namespaces:
-                namespace_init = lang.match_predicate(
+                namespace_init = match_predicate(
                     r"site-packages/{0}/__init__.py".format(self.py_namespace)
                 )
                 ignore_namespace = True
@@ -324,6 +324,27 @@ class PythonExtension(spack.package_base.PackageBase):
         raise StopIteration("No external python could be detected for %s to depend on" % self.spec)
 
 
+def _homepage(cls: "PythonPackage") -> Optional[str]:
+    """Get the homepage from PyPI if available."""
+    if cls.pypi:
+        name = cls.pypi.split("/")[0]
+        return f"https://pypi.org/project/{name}/"
+    return None
+
+
+def _url(cls: "PythonPackage") -> Optional[str]:
+    if cls.pypi:
+        return f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
+    return None
+
+
+def _list_url(cls: "PythonPackage") -> Optional[str]:
+    if cls.pypi:
+        name = cls.pypi.split("/")[0]
+        return f"https://pypi.org/simple/{name}/"
+    return None
+
+
 class PythonPackage(PythonExtension):
     """Specialized class for packages that are built using pip."""
 
@@ -351,25 +372,9 @@ class PythonPackage(PythonExtension):
 
     py_namespace: Optional[str] = None
 
-    @lang.classproperty
-    def homepage(cls) -> Optional[str]:  # type: ignore[override]
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return f"https://pypi.org/project/{name}/"
-        return None
-
-    @lang.classproperty
-    def url(cls) -> Optional[str]:
-        if cls.pypi:
-            return f"https://files.pythonhosted.org/packages/source/{cls.pypi[0]}/{cls.pypi}"
-        return None
-
-    @lang.classproperty
-    def list_url(cls) -> Optional[str]:  # type: ignore[override]
-        if cls.pypi:
-            name = cls.pypi.split("/")[0]
-            return f"https://pypi.org/simple/{name}/"
-        return None
+    homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
+    url: ClassProperty[Optional[str]] = classproperty(_url)
+    list_url: ClassProperty[Optional[str]] = classproperty(_list_url)
 
     @property
     def python_spec(self) -> Spec:

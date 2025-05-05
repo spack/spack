@@ -25,3 +25,5 @@ class LibpthreadStubs(AutotoolsPackage, XorgPackage):
         sha256="3031f466cf0b06de6b3ccbf2019d15c4fcf75229b7d226a711bc1885b3a82cde",
         url="https://xcb.freedesktop.org/dist/libpthread-stubs-0.3.tar.gz",
     )
+
+    depends_on("c", type="build")
