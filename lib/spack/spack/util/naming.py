@@ -18,7 +18,7 @@ __all__ = [
 
 #: see keyword.kwlist: https://github.com/python/cpython/blob/main/Lib/keyword.py
 RESERVED_NAMES_ONLY_LOWERCASE = frozenset(
-    [
+    (
         "and",
         "as",
         "assert",
@@ -51,7 +51,7 @@ RESERVED_NAMES_ONLY_LOWERCASE = frozenset(
         "while",
         "with",
         "yield",
-    ]
+    )
 )
 
 RESERVED_NAMES_LIST_MIXED_CASE = ("False", "None", "True")
