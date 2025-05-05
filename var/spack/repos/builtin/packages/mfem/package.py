@@ -1037,10 +1037,13 @@ class Mfem(Package, CudaPackage, ROCmPackage):
                     "libflang", join_path(rocmcc_prefix, "lib/llvm/lib"), recursive=False
                 )
                 hip_libs += rocmcc_libflang
-                # The AMD version of cray-mpich, libmpi_amd.so, needs the rpath
-                # to libpmi.so.0
+            if spec.satisfies("^cray-mpich"):
+                # The cray-mpich library, libmpi_*.so, needs the rpath to
+                # libpmi.so.0 and libpmi2.so.0 if that path is not configured
+                # properly on system level.
                 libpmi_lib = find_libraries("libpmi", "/opt/cray/pe/lib64")
-                hip_libs += libpmi_lib
+                if libpmi_lib:
+                    hip_libs += libpmi_lib
 
             if hip_headers:
                 options += ["HIP_OPT=%s" % hip_headers.cpp_flags]
