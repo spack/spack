@@ -56,7 +56,7 @@ var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
 repos_path = os.path.join(var_path, "repos")
-packages_path = os.path.join(repos_path, "builtin")
+packages_path = os.path.join(var_path, "spack_repo", "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #
