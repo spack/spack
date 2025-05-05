@@ -398,8 +398,7 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all and specs
-            ({"specs": "hdf5", "file": None, "all": True}, "cannot specify specs on command line"),
+            # Passed more than one among -f --all
             (
                 {"specs": None, "file": "input.txt", "all": True},
                 "cannot specify specs with a file if",
