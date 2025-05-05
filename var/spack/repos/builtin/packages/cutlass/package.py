@@ -14,6 +14,13 @@ class Cutlass(CMakePackage, CudaPackage):
 
     version("main", branch="main")
     version("master", branch="master")
+    version("3.9.1", sha256="7ffed3d7363a485c7d8ade63b3944c0a1e3e4cf2f22007f6d1cc3849c96bdc88")
+    version("3.9.0", sha256="0ea98a598d1f77fade5187ff6ec6d9e6ef3acd267ee68850aae6e800dcbd69c7")
+    version("3.8.0", sha256="14a5e6314f23e41295d8377b6fa6028b35392757a0ee4538a4eacaaa5d7eee37")
+    version("3.7.0", sha256="dfcafb7435a1b114ce32faee4f3257e276caf08f55fea04fa8bf3efa3a83c814")
+    version("3.6.0", sha256="7576f3437b90d0de5923560ccecebaa1357e5d72f36c0a59ad77c959c9790010")
+    version("3.5.1", sha256="20b7247cda2d257cbf8ba59ba3ca40a9211c4da61a9c9913e32b33a2c5883a36")
+    version("3.5.0", sha256="ef6af8526e3ad04f9827f35ee57eec555d09447f70a0ad0cf684a2e426ccbcb6")
     version("3.4.1", sha256="aebd4f9088bdf2fd640d65835de30788a6c7d3615532fcbdbc626ec3754becd4")
     version("3.4.0", sha256="49f4b854acc2a520126ceefe4f701cfe8c2b039045873e311b1f10a8ca5d5de1")
     version("3.3.0", sha256="99876de94a04d0b9cdee81d4f29659bde1426b416926aef4d9a3a3a7869511a3")
