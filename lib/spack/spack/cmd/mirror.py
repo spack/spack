@@ -608,11 +608,6 @@ def process_mirror_stats(present, mirrored, error):
 
 def mirror_create(args):
     """create a directory to be used as a spack mirror, and fill it with package archives"""
-    if args.specs and args.all:
-        raise SpackError(
-            "cannot specify specs on command line if you chose to mirror all specs with '--all'"
-        )
-
     if args.file and args.all:
         raise SpackError(
             "cannot specify specs with a file if you chose to mirror all specs with '--all'"
