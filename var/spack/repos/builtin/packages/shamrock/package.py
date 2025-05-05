@@ -54,12 +54,12 @@ class Shamrock(CMakePackage):
             raise ValueError("Unsupported SYCL provider")
 
         elif sycl_spec.satisfies("hipsycl"):
-            args += [self.define("SYCL_IMPLEMENTATION","ACPPDirect")]
+            args += [self.define("SYCL_IMPLEMENTATION", "ACPPDirect")]
 
             if sycl_spec.satisfies("hipsycl@:0.9.4"):
-                args += [self.define("CMAKE_CXX_COMPILER","syclcc")]
+                args += [self.define("CMAKE_CXX_COMPILER", "syclcc")]
             else:
-                args += [self.define("CMAKE_CXX_COMPILER","acpp")]
+                args += [self.define("CMAKE_CXX_COMPILER", "acpp")]
 
             args += [self.define("ACPP_PATH", self.spec["hipsycl"].prefix)]
         else:
