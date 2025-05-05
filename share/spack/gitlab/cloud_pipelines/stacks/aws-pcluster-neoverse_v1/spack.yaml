@@ -98,8 +98,10 @@ spack:
       require:
       - "+pmix"
     all:
+      target: ["neoverse_v1"]
       require:
       - "%gcc"
+      - "target=neoverse_v1"
       providers:
         blas: [armpl-gcc, openblas]
         fftw-api: [armpl-gcc, fftw]
