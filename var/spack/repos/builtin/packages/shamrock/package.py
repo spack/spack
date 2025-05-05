@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import glob
 
 
 class Shamrock(CMakePackage):
@@ -32,40 +33,37 @@ class Shamrock(CMakePackage):
     depends_on("python")
     extends("python", when="+pybindings")
 
-    depends_on("ninja", type="build", when="generator=ninja")
+    generator("ninja")
 
     conflicts("^intel-oneapi-runtime", msg="Shamrock supports it but this package does not yet.")
+    conflicts("sycl@hipsycl", msg="Unsupported SYCL provider")
 
     def cmake_args(self):
-        """Main configure step"""
 
         spec = self.spec
 
-        args = ["-DSHAMROCK_ENABLE_BACKEND=SYCL"]
+        args = [
+            self.define("SHAMROCK_ENABLE_BACKEND", "SYCL"),
+            self.define("PYTHON_EXECUTABLE", spec["python"].command.path),
+            self.define_from_variant("BUILD_TEST", "testing"),
+        ]
 
         # switch based on SYCL provider
         sycl_spec = self.spec["sycl"]
         if sycl_spec.satisfies("intel-oneapi"):
             raise ValueError("Unsupported SYCL provider")
-        elif sycl_spec.satisfies("hipsycl"):
 
-            args += ["-DSYCL_IMPLEMENTATION=ACPPDirect"]
+        elif sycl_spec.satisfies("hipsycl"):
+            args += [self.define("SYCL_IMPLEMENTATION","ACPPDirect")]
 
             if sycl_spec.satisfies("hipsycl@:0.9.4"):
-                args += ["-DCMAKE_CXX_COMPILER=syclcc"]
+                args += [self.define("CMAKE_CXX_COMPILER","syclcc")]
             else:
-                args += ["-DCMAKE_CXX_COMPILER=acpp"]
+                args += [self.define("CMAKE_CXX_COMPILER","acpp")]
 
-            hipsycl_root = self.spec["hipsycl"].prefix
-
-            args += [f"-DACPP_PATH={hipsycl_root}"]
+            args += [self.define("ACPP_PATH", self.spec["hipsycl"].prefix)]
         else:
             raise ValueError("Unsupported SYCL provider")
-
-        if "+testing" in spec:
-            args += ["-DBUILD_TEST=yes"]
-
-        args += ["-DPYTHON_EXECUTABLE={}".format(spec["python"].command.path)]
 
         return args
 
@@ -82,8 +80,6 @@ class Shamrock(CMakePackage):
             mkdirp(site_packages)
 
             # Find all .so files in the build directory
-            import glob
-
             so_files = glob.glob(join_path(libdir, "*.so"))
 
             # Install each .so file to the install directory
