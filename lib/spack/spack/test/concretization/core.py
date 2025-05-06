@@ -2332,7 +2332,7 @@ class TestConcretize:
         from cli.
         """
         # 'builtin.mock" and "duplicates.test" share a 'gmake' package
-        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        additional_repo = os.path.join(spack.paths.test_repos_path, "duplicates.test")
         with spack.repo.use_repositories(additional_repo, override=False):
             s = spack.concretize.concretize_one(spec_str)
 
@@ -2576,7 +2576,7 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "duplicates.test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -2811,7 +2811,7 @@ class TestConcreteSpecsByHash:
 
 @pytest.fixture()
 def edges_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "edges.test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -3105,7 +3105,9 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
 
-def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
+def test_concretization_cache_roundtrip(
+    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
     # Force determinism:

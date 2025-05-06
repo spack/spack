@@ -219,7 +219,7 @@ def test_use_repositories_and_import():
     """Tests that use_repositories changes the import search too"""
     import spack.paths
 
-    repo_dir = pathlib.Path(spack.paths.repos_path)
+    repo_dir = pathlib.Path(spack.paths.test_repos_path)
     with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
         import spack.pkg.compiler_runtime.test.gcc_runtime
 
