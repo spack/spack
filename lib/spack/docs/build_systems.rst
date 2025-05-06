@@ -63,7 +63,6 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/cudapackage
    build_systems/custompackage
    build_systems/inteloneapipackage
-   build_systems/intelpackage
    build_systems/rocmpackage
    build_systems/sourceforgepackage
 
@@ -84,7 +83,7 @@ packages. You can quickly find examples by running:
 
 .. code-block:: console
 
-   $ cd var/spack/repos/builtin/packages
+   $ cd var/spack/repos/spack_repo/builtin/packages
    $ grep -l QMakePackage */package.py
 
 

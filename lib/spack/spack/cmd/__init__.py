@@ -330,7 +330,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{ arch=architecture}"
+    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -375,8 +375,13 @@ def iter_groups(specs, indent, all_headers):
     index = index_by(specs, ("architecture", "compiler"))
     ispace = indent * " "
 
+    def _key(item):
+        if item is None:
+            return ""
+        return str(item)
+
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
+    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
@@ -431,7 +436,7 @@ def display_specs(specs, args=None, **kwargs):
         all_headers (bool): show headers even when arch/compiler aren't defined
         status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
-
+        specfile_format (bool): specfile format of the current spec
     """
 
     def get_arg(name, default=None):
@@ -448,12 +453,12 @@ def display_specs(specs, args=None, **kwargs):
     hashes = get_arg("long", False)
     namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
-    full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
     groups = get_arg("groups", True)
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
     status_fn = get_arg("status_fn", None)
+    specfile_format = get_arg("specfile_format", False)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -470,13 +475,13 @@ def display_specs(specs, args=None, **kwargs):
     if format_string is None:
         nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
-        if full_compiler or flags:
-            ffmt += "{%compiler.name}"
-            if full_compiler:
-                ffmt += "{@compiler.version}"
+        if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + ffmt + vfmt
+        format_string = nfmt + "{@version}" + vfmt + ffmt
+
+    if specfile_format:
+        format_string = "[{specfile_version}] " + format_string
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""

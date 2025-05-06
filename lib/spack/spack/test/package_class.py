@@ -16,7 +16,6 @@ import pytest
 import llnl.util.filesystem as fs
 
 import spack.binary_distribution
-import spack.compilers
 import spack.concretize
 import spack.deptypes as dt
 import spack.error
@@ -30,21 +29,28 @@ from spack.error import InstallError
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
 
 
+@pytest.fixture(scope="module")
+def compiler_names(mock_repo_path):
+    return [spec.name for spec in mock_repo_path.providers_for("c")]
+
+
 @pytest.fixture()
-def mpileaks_possible_deps(mock_packages, mpi_names):
+def mpileaks_possible_deps(mock_packages, mpi_names, compiler_names):
     possible = {
-        "callpath": set(["dyninst"] + mpi_names),
+        "callpath": set(["dyninst"] + mpi_names + compiler_names),
         "low-priority-provider": set(),
-        "dyninst": set(["libdwarf", "libelf"]),
+        "dyninst": set(["libdwarf", "libelf"] + compiler_names),
         "fake": set(),
+        "gcc": set(compiler_names),
         "intel-parallel-studio": set(),
-        "libdwarf": set(["libelf"]),
-        "libelf": set(),
-        "mpich": set(),
-        "mpich2": set(),
-        "mpileaks": set(["callpath"] + mpi_names),
+        "libdwarf": set(["libelf"] + compiler_names),
+        "libelf": set(compiler_names),
+        "llvm": {"gcc", "llvm"},
+        "mpich": set(compiler_names),
+        "mpich2": set(compiler_names),
+        "mpileaks": set(["callpath"] + mpi_names + compiler_names),
         "multi-provider-mpi": set(),
-        "zmpi": set(["fake"]),
+        "zmpi": set(["fake"] + compiler_names),
     }
     return possible
 
@@ -76,6 +82,8 @@ def mpi_names(mock_inspector):
             {
                 "fake",
                 "mpileaks",
+                "gcc",
+                "llvm",
                 "multi-provider-mpi",
                 "callpath",
                 "dyninst",
@@ -103,18 +111,21 @@ def mpi_names(mock_inspector):
         ("dtbuild1", {"allowed_deps": dt.LINK}, {"dtbuild1", "dtlink2"}),
     ],
 )
-def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_runtimes, mock_inspector):
+def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_inspector):
     """Tests possible nodes of mpileaks, under different scenarios."""
-    expected.update(mock_runtimes)
     result, *_ = mock_inspector.possible_dependencies(pkg_name, **fn_kwargs)
     assert expected == result
 
 
-def test_possible_dependencies_virtual(mock_inspector, mock_packages, mock_runtimes, mpi_names):
+def test_possible_dependencies_virtual(mock_inspector, mock_packages, mpi_names):
     expected = set(mpi_names)
     for name in mpi_names:
-        expected.update(dep for dep in mock_packages.get_pkg_class(name).dependencies_by_name())
-    expected.update(mock_runtimes)
+        expected.update(
+            dep
+            for dep in mock_packages.get_pkg_class(name).dependencies_by_name()
+            if not mock_packages.is_virtual(dep)
+        )
+    expected.update(s.name for s in mock_packages.providers_for("c"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(
         "mpi", transitive=False, allowed_deps=dt.ALL
@@ -133,7 +144,6 @@ def test_possible_dependencies_with_multiple_classes(
     pkgs = ["dt-diamond", "mpileaks"]
     expected = set(mpileaks_possible_deps)
     expected.update({"dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"})
-    expected.update(mock_packages.packages_with_tags("runtime"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(*pkgs, allowed_deps=dt.ALL)
     assert set(expected) == real_pkgs
@@ -236,22 +246,29 @@ def test_package_exes_and_libs():
 
 
 def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+    UrlsPackage = type(
+        "URLsPackage",
+        (spack.package.Package,),
+        {
+            "__module__": "spack.pkg.builtin.urls_package",
+            "url": "https://www.example.com/url-package-1.0.tgz",
+            "urls": ["https://www.example.com/archive"],
+        },
+    )
 
-    s = spack.spec.Spec("pkg-a")
+    s = spack.spec.Spec("urls-package")
     with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
+        UrlsPackage(s)
 
 
 def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
+    LicensedPackage = type(
+        "LicensedPackage",
+        (spack.package.Package,),
+        {"__module__": "spack.pkg.builtin.licensed_package"},
+    )
 
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
@@ -284,18 +301,15 @@ def test_package_fetcher_fails():
 
 
 def test_package_test_no_compilers(mock_packages, monkeypatch, capfd):
-    def compilers(compiler, arch_spec):
-        return None
-
-    monkeypatch.setattr(spack.compilers, "compilers_for_spec", compilers)
-
+    """Ensures that a test which needs the compiler, and build dependencies, to run, is skipped
+    if no compiler is available.
+    """
     s = spack.spec.Spec("pkg-a")
     pkg = BaseTestPackage(s)
     pkg.test_requires_compiler = True
     pkg.do_test()
     error = capfd.readouterr()[1]
     assert "Skipping tests for package" in error
-    assert "test requires missing compiler" in error
 
 
 def test_package_subscript(default_mock_concretization):
