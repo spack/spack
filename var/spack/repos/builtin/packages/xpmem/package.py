@@ -15,7 +15,7 @@ class Xpmem(AutotoolsPackage):
     # version of the codebase.
     homepage = "https://github.com/hjelmn/xpmem"
     url = "https://github.com/hjelmn/xpmem/archive/v2.6.3.tar.gz"
-    git = "https://github.com/hjelmn/xpmem.git"
+    git = "https://github.com/Cray-HPE/xpmem.git"
 
     maintainers("skosukhin")
 
