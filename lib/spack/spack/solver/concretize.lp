@@ -1149,6 +1149,24 @@ error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant
 % if a variant is set to anything, it is considered 'set'.
 attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Variant, _).
 
+% Setting a concrete variant implies setting a variant
+attr("variant_set", PackageNode, Variant, Value)
+  :- attr("concrete_variant_set", PackageNode, Variant, Value).
+
+attr("concrete_variant_value", PackageNode, Variant, Value)
+  :- attr("concrete_variant_set", PackageNode, Variant, Value).
+
+% Concrete variant values must be in the answer set
+:- attr("concrete_variant_value", PackageNode, Variant, Value), not attr("variant_value", PackageNode, Variant, Value).
+
+% Extra variant values are not allowed, if the variant is concrete
+variant_is_concrete(PackageNode, Variant) :- attr("concrete_variant_value", PackageNode, Variant, Value).
+
+error(100, "extra values")
+:- variant_is_concrete(PackageNode, Variant),
+   attr("variant_value", PackageNode, Variant, Value),
+   not attr("concrete_variant_value", PackageNode, Variant, Value).
+
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may
 % have been built w/different variants from older/different package versions.
