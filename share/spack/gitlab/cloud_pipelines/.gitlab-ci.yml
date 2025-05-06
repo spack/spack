@@ -727,7 +727,7 @@ hep-build:
 # AWS ParallelCluster
 ########################################
 
-.aws-pcluster-generate:
+aws-pcluster-generate:
   image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07", "entrypoint": [""] }
 
 # X86_64_V4 (one pipeline per target)
