@@ -78,6 +78,7 @@ class Detray(CMakePackage):
     variant("vc", default=True, description="Enable the Vc math plugin")
 
     depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.21:", type="build", when="@0.95:")
     depends_on("vecmem@1.6.0:")
     depends_on("vecmem@1.8.0:", when="@0.76:")
     depends_on("covfie@0.10.0:")
