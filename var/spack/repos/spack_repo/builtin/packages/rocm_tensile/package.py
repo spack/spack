@@ -64,6 +64,7 @@ class RocmTensile(CMakePackage):
     )
     variant("openmp", default=True, description="Enable OpenMP")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
