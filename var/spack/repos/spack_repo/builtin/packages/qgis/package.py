@@ -25,6 +25,12 @@ class Qgis(CMakePackage):
         preferred=True,
     )
     version("3.40.1", sha256="53110464c9f5ba5562c437e1563ab36dad2f218e6e7d1c0cfbe5b6effe241c8e")
+    #  version 3.36 isn't building right now.
+    version(
+        "3.36.0",
+        sha256="1b64bc92660bf07edc6b6478fc6a13656149e87d92eabe5c3db9493072506e2c",
+        deprecated=True,
+    )
     version("3.34.15", sha256="afb0bed05ffbc7bcb6d27dd1a8644b1e63ac2cb322baa058ff65b848c760efc2")
     version("3.34.13", sha256="a8873ca9bae346bae48ef3fe3eed702ef1f06d951201464464a64019302ba50b")
     version("3.34.4", sha256="7d1c5fafff13f508a9bcf6244c9666f891351deb1ace2aedcc63504f070c5ce4")
