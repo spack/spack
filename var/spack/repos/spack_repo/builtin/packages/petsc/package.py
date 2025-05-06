@@ -581,7 +581,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-sycl=0")
 
-        if spec.satisfies("^cuda@12.8.0"):
+        if spec.satisfies("@:3.22 ^cuda@12.8:"):
             options.append("CUDAPPFLAGS=-Wno-deprecated-gpu-targets")
 
         if "trilinos" in spec:
