@@ -176,92 +176,72 @@ community without needing deep familiarity with GnuPG or Public Key
 Infrastructure.
 
 
-.. _build_cache_format:
+.. _build_cache_signing:
 
-------------------
-Build Cache Format
-------------------
+-------------------
+Build Cache Signing
+-------------------
 
-A binary package consists of a metadata file unambiguously defining the
-built package (and including other details such as how to relocate it)
-and the installation directory of the package stored as a compressed
-archive file. The metadata files can either be unsigned, in which case
-the contents are simply the json-serialized concrete spec plus metadata,
-or they can be signed, in which case the json-serialized concrete spec
-plus metadata is wrapped in a gpg cleartext signature. Built package
-metadata files are named to indicate the operating system and
-architecture for which the package was built as well as the compiler
-used to build it and the packages name and version. For example::
+For an in-depth description of the layout of a binary mirror, see
+the :ref:`documentation<build_cache_layout>` covering binary caches. The
+key takeaway from that discussion that applies here is that the entry point
+to a binary package is it's manifest.  The manifest refers unambiguously to the
+spec metadata and compressed archive, which are stored as content-addressed
+blobs.
 
-  linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
-
-would contain the concrete spec and binary metadata for a binary package
-of ``zlib@1.2.12``, built for the ``ubuntu`` operating system and ``haswell``
-architecture. The id of the built package exists in the name of the file
-as well (after the package name and version) and in this case begins
-with ``llv2ys``. The id distinguishes a particular built package from all
-other built packages with the same os/arch, compiler, name, and version.
-Below is an example of a signed binary package metadata file. Such a
-file would live in the ``build_cache`` directory of a binary mirror::
+The manifest files can either be signed or unsigned, but are always given
+a name ending with ``.spec.manifest.json`` regardless. The difference between
+signed and unsigned manifests is simply that the signed version is wrapped in
+a gpg cleartext signature, as illustrated below::
 
   -----BEGIN PGP SIGNED MESSAGE-----
   Hash: SHA512
 
   {
-    "spec": {
-      <concrete-spec-contents-omitted>
-    },
-
-    "buildcache_layout_version": 1,
-    "binary_cache_checksum": {
-      "hash_algorithm": "sha256",
-      "hash": "4f1e46452c35a5e61bcacca205bae1bfcd60a83a399af201a29c95b7cc3e1423"
-     }
+    "version": 3,
+    "data": [
+      {
+        "contentLength": 10731083,
+        "mediaType": "application/vnd.spack.install.v2.tar+gzip",
+        "compression": "gzip",
+        "checksumAlgorithm": "sha256",
+        "checksum": "0f24aa6b5dd7150067349865217acd3f6a383083f9eca111d2d2fed726c88210"
+      },
+      {
+        "contentLength": 1000,
+        "mediaType": "application/vnd.spack.spec.v5+json",
+        "compression": "gzip",
+        "checksumAlgorithm": "sha256",
+        "checksum": "fba751c4796536737c9acbb718dad7429be1fa485f5585d450ab8b25d12ae041"
+      }
+    ]
   }
-
   -----BEGIN PGP SIGNATURE-----
-  iQGzBAEBCgAdFiEETZn0sLle8jIrdAPLx/P+voVcifMFAmKAGvwACgkQx/P+voVc
-  ifNoVgv/VrhA+wurVs5GB9PhmMA1m5U/AfXZb4BElDRwpT8ZcTPIv5X8xtv60eyn
-  4EOneGVbZoMThVxgev/NKARorGmhFXRqhWf+jknJZ1dicpqn/qpv34rELKUpgXU+
-  QDQ4d1P64AIdTczXe2GI9ZvhOo6+bPvK7LIsTkBbtWmopkomVxF0LcMuxAVIbA6b
-  887yBvVO0VGlqRnkDW7nXx49r3AG2+wDcoU1f8ep8QtjOcMNaPTPJ0UnjD0VQGW6
-  4ZFaGZWzdo45MY6tF3o5mqM7zJkVobpoW3iUz6J5tjz7H/nMlGgMkUwY9Kxp2PVH
-  qoj6Zip3LWplnl2OZyAY+vflPFdFh12Xpk4FG7Sxm/ux0r+l8tCAPvtw+G38a5P7
-  QEk2JBr8qMGKASmnRlJUkm1vwz0a95IF3S9YDfTAA2vz6HH3PtsNLFhtorfx8eBi
-  Wn5aPJAGEPOawEOvXGGbsH4cDEKPeN0n6cy1k92uPEmBLDVsdnur8q42jk5c2Qyx
-  j3DXty57
-  =3gvm
+
+  iQGzBAEBCgAdFiEEdbwFKBFJCcB24mB0GAEP+tc8mwcFAmf2rr4ACgkQGAEP+tc8
+  mwfefwv+KJs8MsQ5ovFaBdmyx5H/3k4rO4QHBzuSPOB6UaxErA9IyOB31iP6vNTU
+  HzYpxz6F5dJCJWmmNEMN/0+vjhMHEOkqd7M1l5reVcxduTF2yc4tBZUO2gienEHL
+  W0e+SnUznl1yc/aVpChUiahO2zToCsI8HZRNT4tu6iCnE/OpghqjsSdBOZHmSNDD
+  5wuuCxfDUyWI6ZlLclaaB7RdbCUUJf/iqi711J+wubvnDFhc6Ynwm1xai5laJ1bD
+  ev3NrSb2AAroeNFVo4iECA0fZC1OZQYzaRmAEhBXtCideGJ5Zf2Cp9hmCwNK8Hq6
+  bNt94JP9LqC3FCCJJOMsPyOOhMSA5MU44zyyzloRwEQpHHLuFzVdbTHA3dmTc18n
+  HxNLkZoEMYRc8zNr40g0yb2lCbc+P11TtL1E+5NlE34MX15mPewRCiIFTMwhCnE3
+  gFSKtW1MKustZE35/RUwd2mpJRf+mSRVCl1f1RiFjktLjz7vWQq7imIUSam0fPDr
+  XD4aDogm
+  =RrFX
   -----END PGP SIGNATURE-----
 
 If a user has trusted the public key associated with the private key
-used to sign the above spec file, the signature can be verified with
+used to sign the above manifest file, the signature can be verified with
 gpg, as follows::
 
-  $ gpg –verify linux-ubuntu18.04-haswell-gcc-7.5.0-zlib-1.2.12-llv2ysfdxnppzjrt5ldybb5c52qbmoow.spec.json.sig
+  $ gpg --verify gcc-runtime-12.3.0-s2nqujezsce4x6uhtvxscu7jhewqzztx.spec.manifest.json
 
-The metadata (regardless whether signed or unsigned) contains the checksum
-of the ``.spack`` file containing the actual installation. The checksum should
-be compared to a checksum computed locally on the ``.spack`` file to ensure the
-contents have not changed since the binary spec plus metadata were signed. The
-``.spack`` files are actually tarballs containing the compressed archive of the
-install tree.  These files, along with the metadata files, live within the
-``build_cache`` directory of the mirror, and together are organized as follows::
-
-  build_cache/
-    # unsigned metadata (for indexing, contains sha256 of .spack file)
-    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json
-    # clearsigned metadata (same as above, but signed)
-    <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spec.json.sig
-    <arch>/
-      <compiler>/
-        <name>-<ver>/
-          # tar.gz-compressed prefix (may support more compression formats later)
-          <arch>-<compiler>-<name>-<ver>-24zvipcqgg2wyjpvdq2ajy5jnm564hen.spack
-
-Uncompressing and extracting the ``.spack`` file results in the install tree.
-This is in contrast to previous versions of spack, where the ``.spack`` file
-contained a (duplicated) metadata file, a signature file and a nested tarball
-containing the install tree.
+When attempting to install a binary package that has been signed, spack will
+attempt to verify the signature with one of the trusted keys in its keyring,
+and will fail if unable to do so.  While not recommended, it is possible to
+force installation of a signed package without verification by providing the
+``--no-check-signature`` argument to ``spack install ...``.
 
 .. _internal_implementation:
 
@@ -320,10 +300,10 @@ the following way:
    Reputational Public Key are imported into a keyring by the ``spack gpg …``
    sub-command. This is initiated by the job’s build script which is created by
    the generate job at the beginning of the pipeline.
-4. Assuming the package has dependencies those specs are verified using
+4. Assuming the package has dependencies those spec manifests are verified using
    the keyring.
-5. The package is built and the spec.json is generated
-6. The spec.json is signed by the keyring and uploaded to the mirror’s
+5. The package is built and the spec manifest is generated
+6. The spec manifest is signed by the keyring and uploaded to the mirror’s
    build cache.
 
 **Reputational Key**
@@ -376,24 +356,24 @@ following way:
 4.  In addition to the secret, the runner creates a tmpfs memory mounted
     directory where the GnuPG keyring will be created to verify, and
     then resign the package specs.
-5.  The job script syncs all spec.json.sig files from the build cache to
+5.  The job script syncs all spec manifest files from the build cache to
     a working directory in the job’s execution environment.
 6.  The job script then runs the ``sign.sh`` script built into the
     notary Docker image.
 7.  The ``sign.sh`` script imports the public components of the
     Reputational and Intermediate CI Keys and uses them to verify good
-    signatures on the spec.json.sig files. If any signed spec does not
-    verify the job immediately fails.
-8.  Assuming all specs are verified, the ``sign.sh`` script then unpacks
-    the spec json data from the signed file in preparation for being
+    signatures on the spec.manifest.json files. If any signed manifest
+    does not verify, the job immediately fails.
+8.  Assuming all manifests are verified, the ``sign.sh`` script then unpacks
+    the manifest json data from the signed file in preparation for being
     re-signed with the Reputational Key.
 9.  The private components of the Reputational Key are decrypted to
     standard out using ``aws-encryption-cli`` directly into a ``gpg
     –import …`` statement which imports the key into the
     keyring mounted in-memory.
-10. The private key is then used to sign each of the json specs and the
+10. The private key is then used to sign each of the manifests and the
     keyring is removed from disk.
-11. The re-signed json specs are resynced to the AWS S3 Mirror and the
+11. The re-signed manifests are resynced to the AWS S3 Mirror and the
     public signing of the packages for the develop or release pipeline
     that created them is complete.
 

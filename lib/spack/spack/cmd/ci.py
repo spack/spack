@@ -423,7 +423,7 @@ def ci_rebuild(args):
         # jobs in subsequent stages.
         tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
         for match in matches:
-            tty.msg("    {0}".format(match["mirror_url"]))
+            tty.msg("    {0}".format(match.url_and_version.url))
 
         # Now we are done and successful
         return 0
@@ -791,7 +791,9 @@ def ci_verify_versions(args):
     """
     # Get a list of all packages that have been changed or added
     # between from_ref and to_ref
-    pkgs = spack.repo.get_all_package_diffs("AC", args.from_ref, args.to_ref)
+    pkgs = spack.repo.get_all_package_diffs(
+        "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
+    )
 
     failed_version = False
     for pkg_name in pkgs:
