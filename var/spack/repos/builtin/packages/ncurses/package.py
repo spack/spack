@@ -120,7 +120,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
             if name == "cxxflags":
                 flags.append(self["cxx"].standard_flag(language="cxx", standard="14"))
 
-        #python uses ncurses under c11. don't use c23 bool.
+        # python uses ncurses under c11. don't use c23 bool.
         if self.spec.satisfies("@:6.5 %gcc@15:"):
             if name == "cflags":
                 flags.append("-std=c17")

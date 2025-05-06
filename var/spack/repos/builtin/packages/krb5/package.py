@@ -123,7 +123,7 @@ class Krb5(AutotoolsPackage):
 
     def flag_handler(self, name, flags):
         if self.spec.satisfies("@:1.21.3 %gcc@15:") and name == "cflags":
-            #c17 would disable strdup which is in stdc since c23
+            # c17 would disable strdup which is in stdc since c23
             flags.append("-std=gnu17")
         if name == "ldlibs" and "intl" in self.spec["gettext"].libs.names:
             flags.append("-lintl")
