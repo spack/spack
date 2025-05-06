@@ -94,7 +94,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant("async_mpi", default=False, description="Enable MPI Futures.")
     variant("async_cuda", default=False, description="Enable CUDA Futures.")
     variant("apex", default=False, description="Enable APEX support")
-    
+
     # Build dependencies
     depends_on("cxx", type="build")
     depends_on("apex", when="+apex")
