@@ -89,17 +89,17 @@ def setup_parser(subparser):
 
 def pkg_add(args):
     """add a package to the git stage with `git add`"""
-    spack.repo.add_package_to_git_stage(args.packages)
+    spack.repo.add_package_to_git_stage(args.packages, spack.repo.builtin_repo())
 
 
 def pkg_list(args):
     """list packages associated with a particular spack git revision"""
-    colify(spack.repo.list_packages(args.rev))
+    colify(spack.repo.list_packages(args.rev, spack.repo.builtin_repo()))
 
 
 def pkg_diff(args):
     """compare packages available in two different git revisions"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
 
     if u1:
         print("%s:" % args.rev1)
@@ -114,21 +114,23 @@ def pkg_diff(args):
 
 def pkg_removed(args):
     """show packages removed since a commit"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
     if u1:
         colify(sorted(u1))
 
 
 def pkg_added(args):
     """show packages added since a commit"""
-    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2)
+    u1, u2 = spack.repo.diff_packages(args.rev1, args.rev2, spack.repo.builtin_repo())
     if u2:
         colify(sorted(u2))
 
 
 def pkg_changed(args):
     """show packages changed since a commit"""
-    packages = spack.repo.get_all_package_diffs(args.type, args.rev1, args.rev2)
+    packages = spack.repo.get_all_package_diffs(
+        args.type, spack.repo.builtin_repo(), args.rev1, args.rev2
+    )
 
     if packages:
         colify(sorted(packages))
