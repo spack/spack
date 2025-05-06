@@ -210,6 +210,8 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 
+    depends_on("asagi@:1.0.1", when="@:1.3.1 +asagi")
+
     depends_on("easi ~asagi jit=lua", when="~asagi")
     depends_on("easi +asagi jit=lua", when="+asagi")
 
