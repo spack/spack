@@ -12,6 +12,10 @@ class Glx(BundlePackage):
 
     version("1.4")
 
+    # GLX is only supported on Linux-like platforms
+    conflicts("platform=windows")
+    conflicts("platform=darwin")
+
     depends_on("libglx")
     provides("gl@4.5")
 
