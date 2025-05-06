@@ -17,7 +17,7 @@ spack:
         tbb: [intel-tbb]
       variants: +mpi
     acts:
-      require: +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python +svg +tgeo cxxstd=20
+      require: +alignment +analysis +dd4hep +edm4hep +examples +fatras +fatras_geant4 +geant4 +geomodel +hepmc3 +json +odd +onnx +podio +pythia8 +python +svg +tgeo cxxstd=20
     celeritas:
       require: +geant4 +hepmc3 +root +shared cxxstd=20
     geant4:
@@ -114,7 +114,7 @@ spack:
   - yoda +hdf5 +highfive
 
   # CUDA
-  #- acts +cuda +traccc cuda_arch=80
+  - acts +cuda +traccc cuda_arch=80
   #- celeritas +cuda ~openmp +vecgeom cuda_arch=80
   - root +cuda +cudnn +tmva-gpu
   - vecgeom +cuda cuda_arch=80
