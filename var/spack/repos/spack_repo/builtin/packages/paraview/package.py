@@ -275,11 +275,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # ParaView will also no longer support Spack builds with Qt5.
     with when("@6:"):
         with when("+qt"):
-            depends_on("qt-base+opengl+sql")
-<<<<<<< HEAD:var/spack/repos/spack_repo/builtin/packages/paraview/package.py
-            depends_on("qt-base+opengl")
-=======
->>>>>>> 6e8c42c614f (Add missing Qt Base component to ParaView dep):var/spack/repos/builtin/packages/paraview/package.py
+            depends_on("qt-base+opengl+sql+network")
             depends_on("qt-5compat")
             depends_on("qt-svg")
 
@@ -649,7 +645,12 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
         if spec.satisfies("+qt"):
-            cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
+            if spec.satisfies("^qt"):
+                cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt"].version[0]])
+            else:
+                cmake_args.extend(["-DPARAVIEW_QT_VERSION=%s" % spec["qt-base"].version[0]])
+                cmake_args.extend(["-DVTK_QT_VERSION=%s" % spec["qt-base"].version[0]])
+
             if IS_WINDOWS:
                 # Windows does not currently support Qt Quick
                 cmake_args.append("-DVTK_MODULE_ENABLE_VTK_GUISupportQtQuick:STRING=NO")
