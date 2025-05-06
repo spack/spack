@@ -15,7 +15,6 @@ class Passt(MakefilePackage):
 
     version("2025_01_21.4f2c8e7", tag="2025_01_21.4f2c8e7")
 
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         make()

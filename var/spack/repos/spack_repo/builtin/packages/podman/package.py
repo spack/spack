@@ -10,6 +10,23 @@ from spack.package import *
 _is_macos = sys.platform == "darwin"
 
 
+def write_containers_conf(self, pkgs: list[str]):
+    # podman requires its runtime deps to be in a configured directory
+    # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
+    # we choose the user-friendly option of CONTAINERS_CONF_OVERRIDE, which respects
+    # existing configurations set by the user
+    helper_dirs = ", ".join(f'"{x}"' for x in [self.spec[pkg].prefix.bin for pkg in pkgs])
+
+    config = f"""
+    [engine]
+
+    helper_binaries_dir=[{helper_dirs}]
+    """
+
+    with open(join_path(self.prefix, "containers.conf"), "w") as f:
+        f.write(config)
+
+
 class Podman(Package):
     """An optionally rootless and daemonless container engine: alias docker=podman"""
 
@@ -59,7 +76,7 @@ class Podman(Package):
         depends_on("conmon", type="run")
         depends_on("runc", type="run")
         depends_on("slirp4netns", type="run")
-        depends_on("passt", type="run", when="@5.4.2:")
+        depends_on("passt", type="run")  # , when="@5.4.2:")
         depends_on("gpgme")
         depends_on("libassuan")
         depends_on("libgpg-error")
@@ -113,24 +130,9 @@ class Podman(Package):
         install("bin/darwin/podman", prefix.bin)
         install("bin/darwin/podman-mac-helper", prefix.bin)
 
-        # podman requires its runtime deps to be in a configured directory
-        # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
-        # we choose the user-friendly option of CONTAINERS_CONF_OVERRIDE, which respects
-        # existing configurations set by the user
-        helper_dirs = ", ".join(
-            f'"{x}"' for x in [self.spec["gvproxy"].prefix.bin, self.spec["vfkit"].prefix.bin]
-        )
+        write_containers_conf(self, ["gvproxy", "vfkit"])
 
-        config = f"""
-        [engine]
-
-        helper_binaries_dir=[{helper_dirs}]
-        """
-
-        with open(join_path(self.prefix, "containers.conf"), "w") as f:
-            f.write(config)
-
-#    @when("platform=darwin")
+    # TODO: should this be @5.4.2:?
     def setup_run_environment(self, env):
         # needs to be set any time a user loads the package
         env.set("CONTAINERS_CONF_OVERRIDE", join_path(self.prefix, "containers.conf"))
@@ -155,16 +157,4 @@ class Podman(Package):
         remove_linked_tree(prefix.src)
         remove_linked_tree(prefix.pkg)
 
-
-        helper_dirs = ", ".join(
-            f'"{x}"' for x in [self.spec["passt"].prefix.bin]
-        )
-
-        config = f"""
-        [engine]
-
-        helper_binaries_dir=[{helper_dirs}]
-        """
-
-        with open(join_path(self.prefix, "containers.conf"), "w") as f:
-            f.write(config)
+        write_containers_conf(self, ["passt"])
