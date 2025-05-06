@@ -1,8 +1,8 @@
 spack:
   view: false
   packages:
-    target: ["x86_64_v3"]
     all:
+      target: ["x86_64_v3"]
       require:
       - target=x86_64_v3
       - ~cuda
