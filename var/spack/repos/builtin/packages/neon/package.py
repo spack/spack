@@ -36,6 +36,7 @@ class Neon(CMakePackage):
     depends_on("ginkgo@1.10.0", when="+ginkgo")
     depends_on("openmp", when="+omp")
     depends_on("petsc", when="+petsc")
+    depends_on("sundials", when="+sundials")
     depends_on("adios2", when="+adios2")
 
     def cmake_args(self):
