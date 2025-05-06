@@ -356,7 +356,7 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         # Proper detection of optimized BLAS and LAPACK.
         # Based on the code from the deal II Spack package:
-        # https://github.com/spack/spack/blob/develop/var/spack/spack_repo/builtin/packages/dealii/package.py
+        # https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/dealii/package.py
         #
         # Basically, we override CMake's auto-detection mechanism
         # and use the Spack's interface instead.
