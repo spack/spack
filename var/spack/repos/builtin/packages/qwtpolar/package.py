@@ -19,6 +19,8 @@ class Qwtpolar(QMakePackage):
 
     depends_on("qt@4.4:")
     depends_on("qwt@6.1:")
+    # build fails with qwt@6.2
+    depends_on("qwt@:6.1", when="@1.1.1")
 
     def patch(self):
         # Modify hardcoded prefix
