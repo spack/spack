@@ -59,6 +59,7 @@ class Podman(Package):
         depends_on("conmon", type="run")
         depends_on("runc", type="run")
         depends_on("slirp4netns", type="run")
+        depends_on("passt", type="run", when="@5.4.2:")
         depends_on("gpgme")
         depends_on("libassuan")
         depends_on("libgpg-error")
@@ -129,7 +130,7 @@ class Podman(Package):
         with open(join_path(self.prefix, "containers.conf"), "w") as f:
             f.write(config)
 
-    @when("platform=darwin")
+#    @when("platform=darwin")
     def setup_run_environment(self, env):
         # needs to be set any time a user loads the package
         env.set("CONTAINERS_CONF_OVERRIDE", join_path(self.prefix, "containers.conf"))
@@ -144,7 +145,7 @@ class Podman(Package):
         )
         # Build and installation needs to be in two separate make calls
         # The devicemapper and btrfs drivers are (so far) not enabled in this recipe
-        tags = "seccomp exclude_graphdriver_devicemapper exclude_graphdriver_btrfs"
+        tags = "seccomp exclude_graphdriver_devicemapper exclude_graphdriver_btrfs cni"
         make("-e", "BUILDTAGS=" + tags)
         make("install", "PREFIX=" + prefix)
         # Install an initial etc/containers/policy.json (configured in prefix above)
@@ -153,3 +154,17 @@ class Podman(Package):
         # Cleanup directory trees which are created as part of the go build process
         remove_linked_tree(prefix.src)
         remove_linked_tree(prefix.pkg)
+
+
+        helper_dirs = ", ".join(
+            f'"{x}"' for x in [self.spec["passt"].prefix.bin]
+        )
+
+        config = f"""
+        [engine]
+
+        helper_binaries_dir=[{helper_dirs}]
+        """
+
+        with open(join_path(self.prefix, "containers.conf"), "w") as f:
+            f.write(config)
