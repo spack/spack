@@ -1055,8 +1055,8 @@ class IntelPackage(Package):
     ) -> None:
         # NB: This function is overwritten by 'mpi' provider packages:
         #
-        # var/spack/repos/builtin/packages/intel-mpi/package.py
-        # var/spack/repos/builtin/packages/intel-parallel-studio/package.py
+        # var/spack/repos/spack_repo/builtin/packages/intel_mpi/package.py
+        # var/spack/repos/spack_repo/builtin/packages/intel_parallel_studio/package.py
         #
         # They call _setup_dependent_env_callback() as well, but with the
         # dictionary kwarg compilers_of_client{} present and populated.
