@@ -15,7 +15,7 @@ import spack.repo
 
 @pytest.fixture()
 def builder_test_repository(config):
-    builder_test_path = os.path.join(spack.paths.repos_path, "builder.test")
+    builder_test_path = os.path.join(spack.paths.test_repos_path, "builder.test")
     with spack.repo.use_repositories(builder_test_path) as mock_repo:
         yield mock_repo
 
