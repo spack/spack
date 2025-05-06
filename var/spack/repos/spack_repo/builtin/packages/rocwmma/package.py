@@ -69,6 +69,7 @@ class Rocwmma(CMakePackage):
         description="CMake build type",
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.16:", type="build", when="@5.2.0:")

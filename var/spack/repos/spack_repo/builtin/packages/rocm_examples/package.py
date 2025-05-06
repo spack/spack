@@ -27,6 +27,7 @@ class RocmExamples(CMakePackage):
     version("6.2.1", sha256="2e426572aa5f5b44c7893ea256945c8733b79db39cca84754380f40c8b44a563")
     version("6.2.0", sha256="6fb1f954ed32b5c4085c7f071058d278c2e1e8b7b71118ee5e85cf9bbc024df0")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     depends_on("glfw", type="build")
@@ -42,6 +43,10 @@ class RocmExamples(CMakePackage):
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocsolver@{ver}", when=f"@{ver}")
+
+    for ver in ["6.4.0", "6.3.3", "6.3.2", "6.3.1", "6.3.0"]:
+        depends_on(f"hipfft@{ver}", when=f"@{ver}")
+        depends_on(f"rocfft@{ver}", when=f"@{ver}")
 
     def patch(self):
         filter_file(
