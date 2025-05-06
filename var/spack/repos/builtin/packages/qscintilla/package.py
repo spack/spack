@@ -15,6 +15,8 @@ class Qscintilla(QMakePackage):
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
     url = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz"
 
+    maintainers("Sinan81")
+
     license("GPL-3.0-only")
 
     version("2.14.1", sha256="dfe13c6acc9d85dfcba76ccc8061e71a223957a6c02f3c343b30a9d43a4cdd4d")
