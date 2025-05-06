@@ -13,11 +13,11 @@ class Spatter(CMakePackage, CudaPackage):
 
     maintainers("plavin", "jyoung3131")
 
-    license("UNKNOWN", checked_by="plavin")
+    license("MIT", checked_by="plavin")
 
     variant(
         "backend",
-        default="serial",
+        default="openmp",
         values=["serial", "openmp", "cuda"],
         description="Configuration string",
     )
