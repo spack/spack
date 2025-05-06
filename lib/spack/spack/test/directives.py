@@ -254,42 +254,39 @@ class FakePkg:
 
 
 def test_remove_no_directives():
-    directive_name = "some_directive"
+    directive_name = "conflicts"
     directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
     pkg = FakePkg(directive_name, directives)
-    _remove_directive = spack.directives.remove_directive(directive_name, "some_pkg", "@1.0")
-    _remove_directive(pkg)
+    spack.directives.RemoveConflicts().remove("some_pkg", "@1.0")(pkg)
     assert getattr(pkg, directive_name) == directives
 
 
 def test_remove_one_directive():
-    directive_name = "some_directive"
+    directive_name = "conflicts"
     directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
     pkg = FakePkg(directive_name, directives)
-    _remove_directive = spack.directives.remove_directive(directive_name, "pkg1", "@1.0")
-    _remove_directive(pkg)
+    spack.directives.RemoveConflicts().remove("pkg1", "@1.0")(pkg)
     assert getattr(pkg, directive_name) == {}
 
 
 def test_remove_intersecting_directive():
-    directive_name = "some_directive"
+    directive_name = "conflicts"
     directives = {spack.spec.Spec("@3:"): [(spack.spec.Spec("pkg1"), None)]}
     pkg = FakePkg(directive_name, directives)
-    _remove_directive = spack.directives.remove_directive(directive_name, "pkg1", "@5:")
-    _remove_directive(pkg)
+    spack.directives.RemoveConflicts().remove("pkg1", "@5:")(pkg)
     assert getattr(pkg, directive_name) == {
         spack.spec.Spec("@3:4"): [(spack.spec.Spec("pkg1"), None)]
     }
 
 
 def test_remove_modify_and_leave_directives():
-    directive_name = "some_directive"
+    directive_name = "conflicts"
     directives = {
         spack.spec.Spec("@1:"): [(spack.spec.Spec(val), None) for val in ("pkg1", "pkg2", "pkg3")]
     }
     pkg = FakePkg(directive_name, directives)
-    spack.directives.remove_directive(directive_name, "pkg1", "@1:")(pkg)
-    spack.directives.remove_directive(directive_name, "pkg2", "@3:")(pkg)
+    spack.directives.RemoveConflicts().remove("pkg1", "@1:")(pkg)
+    spack.directives.RemoveConflicts().remove("pkg2", "@3:")(pkg)
     assert getattr(pkg, directive_name) == {
         spack.spec.Spec("@1:2"): [(spack.spec.Spec("pkg2"), None)],
         spack.spec.Spec("@1:"): [(spack.spec.Spec("pkg3"), None)],
@@ -434,6 +431,7 @@ class X(Package):
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
 def test_remove_depends_on(test_repo):
+
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert len(cls.dependencies) == 1
     assert len(cls.dependencies[spack.spec.Spec("@1.0")]) == 1

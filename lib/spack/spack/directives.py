@@ -989,8 +989,16 @@ def remove_all_versions():
 class RemoveConflicts:
     name = "conflicts"
 
-    def get_spec(self, directive):
+    @staticmethod
+    def default_container():
+        return []
+
+    def get_spec(self, directive, directives):
         return directive[0]
+
+    def set_directive(self, new_directive, directive, directives):
+        print(f"{directive=}")
+        new_directive.append(directive)
 
     @staticmethod
     def sanitize_input(spec, when):
@@ -1008,31 +1016,37 @@ class RemoveConflicts:
             directive_dict = getattr(pkg, self.name)
             filtered = directive_dict.copy()
             for when, directives in directive_dict.items():
-                # print(f"{directives=}")
-                # if isinstance(directives["hdf5"], Dependency):
-                #     print("dependency=", directives["hdf5"])
-                #     dependency = directives["hdf5"].copy()
-
-                #     print(f"{dependency.name=}")
                 for directive in directives:
-                    if self.get_spec(directive) == removal_spec:
+                    if self.get_spec(directive, directives) == removal_spec:
                         if when == removal_when:
                             filtered[when].remove(directive)
                         elif when.versions.intersects(removal_when.versions):
-                            new_when_versions = when.versions.intersection(
-                                complement_versions
-                            )
                             filtered[when].remove(directive)
                             new_when = when.copy()
-                            new_when.versions = new_when_versions
-                            new_directives = filtered.setdefault(new_when, [])
-                            new_directives.append(directive)
+                            new_when.versions = when.versions.intersection(complement_versions)
+                            new_directive = filtered.setdefault(new_when, self.default_container())
+                            self.set_directive(new_directive, directive, directives)
+                            # new_directive.append(directive)
                         if len(filtered[when]) == 0:
                             del filtered[when]
             directive_dict.clear()
             directive_dict.update(filtered)
 
         return _remove
+
+
+class RemoveDependsOn(RemoveConflicts):
+    name = "dependencies"
+
+    @staticmethod
+    def default_container():
+        return {}
+
+    def get_spec(self, directive, directives):
+        return directives[directive].spec
+
+    def set_directive(self, new_directive, directive, directives):
+        new_directive[directive] = directives[directive]
 
 
 def remove_directive(directive_name: str, directive_spec: SpecType, when: WhenType = None):
@@ -1092,8 +1106,8 @@ def remove_depends_on(dependency_spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    # remove_directive.__doc__.format("dependency")
-    return remove_directive("dependencies", dependency_spec, when)
+    return RemoveDependsOn().remove(dependency_spec, when)
+    # return remove_directive("dependencies", dependency_spec, when)
     # dependency_when_spec = _make_when_spec(when)
     # dependency_spec = spack.spec.Spec(dependency_spec)
 
