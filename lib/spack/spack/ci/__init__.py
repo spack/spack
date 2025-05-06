@@ -150,10 +150,10 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     return False
 
 
-def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
+def compute_affected_packages(rev1: str = "HEAD^", rev2: str = "HEAD") -> Set[str]:
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
-    return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
+    return spack.repo.get_all_package_diffs("ARC", spack.repo.builtin_repo(), rev1=rev1, rev2=rev2)
 
 
 def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
