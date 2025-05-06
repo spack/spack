@@ -79,6 +79,8 @@ class Libint(AutotoolsPackage):
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=67224
     conflicts("%gcc@:9", when="@2.9.0:", msg="libint@2.9.0: requires at least gcc 10")
 
+    patch("gcc15-cstdint.patch", when="@:2.9.0 %gcc@15:")
+
     for tvariant in TUNE_VARIANTS[1:]:
         conflicts(
             "tune={0}".format(tvariant),

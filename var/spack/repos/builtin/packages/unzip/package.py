@@ -32,6 +32,10 @@ class Unzip(MakefilePackage):
             cflags.append("-Wno-error=implicit-int")
         cflags.append("-DLARGE_FILE_SUPPORT")
 
+        #unzip v6.0 is 16 yrs old. make gcc satisfy unzip, not reversed.
+        if self.spec.satisfies("@:6.0 %gcc@15:"):
+            cflags.append("-std=gnu17")
+
         make_args.append(f"LOC={' '.join(cflags)}")
         return make_args
 

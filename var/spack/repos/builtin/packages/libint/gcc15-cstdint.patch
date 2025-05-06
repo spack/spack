@@ -1,0 +1,12 @@
+diff --git a/./src/bin/libint/memory.h b/./src/bin/libint/memory-new.h
+index ef9e266..e2dc4e0 100644
+--- a/./src/bin/libint/memory.h
++++ b/./src/bin/libint/memory-new.h
+@@ -19,6 +19,7 @@
+  */
+ 
+ #include <limits.h>
++#include <cstdint>
+ #include <smart_ptr.h>
+ 
+ #include <list>

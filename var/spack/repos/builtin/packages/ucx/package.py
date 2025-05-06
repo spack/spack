@@ -151,6 +151,9 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     # See https://github.com/openucx/ucx/pull/8629, wrong int type
     patch("commit-2523555.patch", when="@1.13.1")
+    # gcc-15 introduces c++ allocator to omp.h,
+    # which breaks including omp.h in extern "C" mode
+    patch("gcc15-omph.patch", when="@:1.18.0 %gcc@15:")
 
     def patch(self):
         if self.spec.satisfies("+rocm"):
@@ -265,6 +268,12 @@ class Ucx(AutotoolsPackage, CudaPackage):
             args.append("--without-rocm")
 
         return args
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies("@:1.18.0 %gcc@15:") and name == "cflags":
+            # asm is a gnu extersion
+            flags.append("-std=gnu17")
+        return inject_flags(name, flags)
 
     @run_after("install")
     def drop_examples(self):

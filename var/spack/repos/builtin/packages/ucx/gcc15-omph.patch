@@ -1,0 +1,18 @@
+diff --git a/src/tools/perf/lib/libperf_int.h b/src/tools/perf/lib/libperf_int-new.h
+index 3e6d9f7..beb8f05 100644
+--- a/src/tools/perf/lib/libperf_int.h
++++ b/src/tools/perf/lib/libperf_int-new.h
+@@ -21,7 +21,13 @@ BEGIN_C_DECLS
+ 
+ 
+ #if _OPENMP
++#if defined(__GNUC__) && __GNUC__ >= 15
++END_C_DECLS
++#endif
+ #include <omp.h>
++#if defined(__GNUC__) && __GNUC__ >= 15
++BEGIN_C_DECLS
++#endif
+ #endif
+ 
+ 
