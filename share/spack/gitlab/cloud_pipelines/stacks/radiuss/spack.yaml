@@ -12,7 +12,7 @@ spack:
     mfem:
       require:
       # gcc@7.5.0 crashes when building mfem@4.8.0
-      - '@gcc@12'
+      - '%gcc@12'
 
   specs:
   - ascent  # ^conduit@0.6.0
