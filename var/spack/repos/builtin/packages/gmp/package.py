@@ -58,6 +58,9 @@ class Gmp(AutotoolsPackage, GNUMirrorPackage):
         # This flag is necessary for the Intel build to pass `make check`
         elif self.spec.satisfies("%intel") and name == "cxxflags":
             flags.append("-no-ftz")
+        # gmp configure needs foo() as undetermined args.
+        if self.spec.satisfies("@:6.3.0 %gcc@15:") and name == "cflags":
+            flags.append("-std=c17")
         return (flags, None, None)
 
     def configure_args(self):

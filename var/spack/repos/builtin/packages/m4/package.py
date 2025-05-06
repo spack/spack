@@ -122,6 +122,11 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         if arch.platform == "darwin" and arch.os == "sierra" and "%gcc" in spec:
             args.append("ac_cv_type_struct_sched_param=yes")
 
+        # m4 1.4.19 should be compatible with c23, but lib/gl_oset.h:275 have 
+        # ignored 'nodiscard' attribute, making its build fails.
+        if spec.satisfies("@:1.4.19 %gcc@15:"):
+            args.append("CFLAGS=-std=c17")
+
         return args
 
     def test_version(self):
