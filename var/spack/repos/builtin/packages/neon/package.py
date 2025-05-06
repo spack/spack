@@ -20,7 +20,7 @@ class Neon(CMakePackage):
     variant("cuda", default=False, description="Compile with CUDA support")
     variant("hip", default=False, description="Compile with HIP support")
     variant("omp", default=False, description="Compile with OMP support")
-    variant("threads", default=False, description="Compile with Threads support")
+    variant("threads", default=True, description="Compile with Threads support")
     variant("ginkgo", default=True, description="Compile with Ginkgo")
     variant("petsc", default=False, description="Compile with PETSc")
     variant("sundials", default=True, description="Compile with Sundials")
@@ -33,7 +33,7 @@ class Neon(CMakePackage):
     depends_on("cuda@12.6", when="+cuda")
     depends_on("hip", when="+hip")
     depends_on("kokkos@4.3.00")
-    depends_on("ginkgo@1.10.0", when="+ginkgo")
+    depends_on("ginkgo@develop", when="+ginkgo")
     depends_on("openmp", when="+omp")
     depends_on("petsc", when="+petsc")
     depends_on("sundials", when="+sundials")
@@ -50,5 +50,6 @@ class Neon(CMakePackage):
             self.define_from_variant("NeoN_BUILD_TESTS", "test"),
             self.define_from_variant("Kokkos_ENABLE_CUDA", "cuda"),
             self.define_from_variant("Kokkos_ENABLE_HIP", "hip"),
+            self.define("CPM_USE_LOCAL_PACKAGES", True),
         ]
         return args
