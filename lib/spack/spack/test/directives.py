@@ -6,6 +6,7 @@ from collections import namedtuple
 import pytest
 
 import spack.concretize
+import spack.dependency
 import spack.directives
 import spack.repo
 import spack.spec
@@ -253,11 +254,33 @@ class FakePkg:
         setattr(self, name, directive_dict)
 
 
-def test_remove_no_directives():
-    directive_name = "conflicts"
-    directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
+@pytest.mark.parametrize(
+    "directive_name,directives,remove_class",
+    [
+        (
+            "conflicts",
+            {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]},
+            spack.directives.RemoveConflicts,
+        ),
+        (
+            "dependencies",
+            {
+                spack.spec.Spec("@1.0"): {
+                    "pkg1": spack.dependency.Dependency("pkg1", spack.spec.Spec("pkg1"))
+                }
+            },
+            spack.directives.RemoveDependsOn,
+        ),
+        (
+            "requirements",
+            {spack.spec.Spec("@1.0"): [((spack.spec.Spec("pkg1"),), "one_of", None)]},
+            spack.directives.RemoveRequires,
+        ),
+    ],
+)
+def test_remove_no_directives(directive_name, directives, remove_class):
     pkg = FakePkg(directive_name, directives)
-    spack.directives.RemoveConflicts().remove("some_pkg", "@1.0")(pkg)
+    remove_class().remove("some_pkg", "@1.0")(pkg)
     assert getattr(pkg, directive_name) == directives
 
 
@@ -267,6 +290,14 @@ def test_remove_one_directive():
     pkg = FakePkg(directive_name, directives)
     spack.directives.RemoveConflicts().remove("pkg1", "@1.0")(pkg)
     assert getattr(pkg, directive_name) == {}
+
+
+# def test_remove_one_requirement():
+#     directive_name = "requirements"
+#     directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
+#     pkg = FakePkg(directive_name, directives)
+#     spack.directives.RemoveConflicts().remove("pkg1", "@1.0")(pkg)
+#     assert getattr(pkg, directive_name) == {}
 
 
 def test_remove_intersecting_directive():
@@ -282,14 +313,17 @@ def test_remove_intersecting_directive():
 def test_remove_modify_and_leave_directives():
     directive_name = "conflicts"
     directives = {
-        spack.spec.Spec("@1:"): [(spack.spec.Spec(val), None) for val in ("pkg1", "pkg2", "pkg3")]
+        spack.spec.Spec("@1:"): [(spack.spec.Spec(val), None) for val in ("pkg1", "pkg2", "pkg3")],
+        spack.spec.Spec("@3"): [(spack.spec.Spec("pkg4"), None)],
     }
     pkg = FakePkg(directive_name, directives)
     spack.directives.RemoveConflicts().remove("pkg1", "@1:")(pkg)
     spack.directives.RemoveConflicts().remove("pkg2", "@3:")(pkg)
+    spack.directives.RemoveConflicts().remove("pkg4", "@2")(pkg)
     assert getattr(pkg, directive_name) == {
         spack.spec.Spec("@1:2"): [(spack.spec.Spec("pkg2"), None)],
         spack.spec.Spec("@1:"): [(spack.spec.Spec("pkg3"), None)],
+        spack.spec.Spec("@3"): [(spack.spec.Spec("pkg4"), None)],
     }
 
 
@@ -433,6 +467,31 @@ class X(Package):
 def test_remove_depends_on(test_repo):
 
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
-    assert len(cls.dependencies) == 1
-    assert len(cls.dependencies[spack.spec.Spec("@1.0")]) == 1
-    assert "mpi" in cls.dependencies[spack.spec.Spec("@1.0")]
+    assert cls.dependencies == {
+        spack.spec.Spec("@1.0"): {"mpi": spack.dependency.Dependency(cls, spack.spec.Spec("mpi"))}
+    }
+
+
+_pkgx = (
+    "x",
+    """\
+from spack.package import *
+
+class X(Package):
+    version("1.0")
+    requires("hdf5")
+    requires("mpi", when="@1.0")
+    requires("netcdf-c", when="@1.0")
+    remove_requires("hdf5")
+    remove_requires("netcdf-c", when="@1.0")
+""",
+)
+
+
+@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
+def test_remove_requires(test_repo):
+
+    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+    assert cls.requirements == {
+        spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
+    }

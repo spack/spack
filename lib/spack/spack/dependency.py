@@ -82,3 +82,18 @@ class Dependency:
             return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}, {self.patches}]>"
         else:
             return f"<Dependency: {self.pkg.name} -> {self.spec} [{types}]>"
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality between two Dependency objects."""
+        if not isinstance(other, Dependency):
+            return False
+        return (
+            self.pkg == other.pkg
+            and self.spec == other.spec
+            and self.depflag == other.depflag
+            and self.patches == other.patches
+        )
+
+    def __hash__(self) -> int:
+        """Generate a hash for the Dependency object."""
+        return hash((self.pkg, self.spec, self.depflag, frozenset(self.patches.items())))
