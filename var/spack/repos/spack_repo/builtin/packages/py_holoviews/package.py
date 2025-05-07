@@ -16,8 +16,8 @@ class PyHoloviews(PythonPackage):
 
     license("BSD-3-Clause", checked_by="climbfuji")
 
+    version("1.20.2", sha256="8c78b798601ce3af31523667c6d1cb40df8d781249ebebbdb2c5f6143565e6d8")
     version("1.19.1", sha256="b9e85e8c07275a456c0ef8d06bc157d02b37eff66fb3602aa12f5c86f084865c")
-    # version("1.19.0", sha256="cab1522f75a9b46377f9364b675befd79812e220059714470a58e21475d531ba")
 
     depends_on("python@3.9:", type=("build", "run"))
     depends_on("py-hatchling", type="build")

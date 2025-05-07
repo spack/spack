@@ -17,6 +17,7 @@ class PyUxarray(PythonPackage):
 
     license("Apache-2.0", checked_by="climbfuji")
 
+    version("2025.4.0", sha256="340ab54254e0e403481ec144d056a2a82450623c7144e6cfd8d11dfae467e92d")
     version("2024.10.0", sha256="f65a9920ce085af9a38349dc5ece4f9b83bc015dc8cb738d245d343f7816fd59")
 
     # Build-time dependencies
@@ -41,8 +42,8 @@ class PyUxarray(PythonPackage):
     #                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     #      TypeError: descriptor '__call__' for 'type' objects doesn't apply to a 'property' object
     # https://github.com/dask/dask/issues/11038
-    depends_on("py-dask@2024.7.1 +dataframe", type="run")
-    depends_on("py-dask-expr@1.1.9", type="run")
+    depends_on("py-dask@2024.7.1: +dataframe", type="run")
+    depends_on("py-dask-expr@1.1.9:", type="run")
     depends_on("py-matplotlib", type="run")
     depends_on("py-matplotlib-inline", type="run")
     depends_on("py-netcdf4", type="run")
