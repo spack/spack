@@ -308,6 +308,7 @@ class MockConflicts(MockDirectiveBase):
     def removal_class(self):
         return spack.directives.RemoveConflicts
 
+
 class MockDependencies(MockDirectiveBase):
     directive_name = "dependencies"
 
@@ -324,13 +325,13 @@ class MockDependencies(MockDirectiveBase):
 
 class MockRequirements(MockDirectiveBase):
     directive_name = "requirements"
+
     def create_directives(self, spec_names):
         return [((spack.spec.Spec(spec_name),), "one_of", None) for spec_name in spec_names]
 
     @property
     def removal_class(self):
         return spack.directives.RemoveRequires
-
 
 
 @pytest.fixture(params=[MockConflicts, MockDependencies, MockRequirements])
