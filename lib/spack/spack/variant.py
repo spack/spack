@@ -24,6 +24,7 @@ RESERVED_NAMES = {
     "arch",
     "architecture",
     "dev_path",
+    "install_source",
     "namespace",
     "operating_system",
     "os",
