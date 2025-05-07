@@ -1833,7 +1833,7 @@ class SpackSolverSetup:
         self.gen.h3(f"Special variant: {name}")
         vid = next(self._id_counter)
         self.gen.fact(fn.auto_variant(name, vid))
-        self.gen.fact(fn.variant_type(vid, vtype.value))
+        self.gen.fact(fn.variant_type(vid, vtype.string))
 
     def variant_rules(self, pkg: Type[spack.package_base.PackageBase]):
         for name in pkg.variant_names():
