@@ -163,6 +163,7 @@ unification_set(SetID, VirtualNode)
 multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
+multiple_nodes_attribute("concrete_variant_set").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -470,6 +471,14 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
   :- impose(ID, node(X, A1)),
      imposed_constraint(ID, "depends_on", A1, A2, A3),
      internal_error("Build deps must land in exactly one duplicate").
+
+% For := we must keep track of the origin of the fact, since we need to check
+% each condition separately, i.e. foo:=a,b in one place and foo:=c in another
+% should not make foo:=a,b,c possible
+attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
+  :- impose(ID, node(X, A1)),
+     imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value).
+
 
 % The rule below accounts for expressions like:
 %
@@ -1150,22 +1159,22 @@ error(100, "No valid value for variant '{1}' of package '{0}'", Package, Variant
 attr("variant_set", PackageNode, Variant) :- attr("variant_set", PackageNode, Variant, _).
 
 % Setting a concrete variant implies setting a variant
-attr("variant_set", PackageNode, Variant, Value)
-  :- attr("concrete_variant_set", PackageNode, Variant, Value).
-
 attr("concrete_variant_value", PackageNode, Variant, Value)
-  :- attr("concrete_variant_set", PackageNode, Variant, Value).
+  :- attr("concrete_variant_set", PackageNode, Variant, Value, _).
+
+attr("variant_set", PackageNode, Variant, Value)
+  :- attr("concrete_variant_set", PackageNode, Variant, Value, _).
 
 % Concrete variant values must be in the answer set
 :- attr("concrete_variant_value", PackageNode, Variant, Value), not attr("variant_value", PackageNode, Variant, Value).
 
 % Extra variant values are not allowed, if the variant is concrete
-variant_is_concrete(PackageNode, Variant) :- attr("concrete_variant_value", PackageNode, Variant, Value).
+variant_is_concrete(PackageNode, Variant, Origin) :- attr("concrete_variant_set", PackageNode, Variant, _, Origin).
 
-error(100, "extra values")
-:- variant_is_concrete(PackageNode, Variant),
+error(100, "The variant {0} in package {1} specified as := has the extra value {2}", Variant, PackageNode, Value)
+:- variant_is_concrete(PackageNode, Variant, Origin),
    attr("variant_value", PackageNode, Variant, Value),
-   not attr("concrete_variant_value", PackageNode, Variant, Value).
+   not attr("concrete_variant_set", PackageNode, Variant, Value, Origin).
 
 % A variant cannot have a value that is not also a possible value
 % This only applies to packages we need to build -- concrete packages may

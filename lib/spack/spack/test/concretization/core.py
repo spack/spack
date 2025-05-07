@@ -3506,3 +3506,11 @@ packages:
     assert s["c"].satisfies("gcc@12.1.0"), s.tree()
     assert s["c"].external
     assert s["c"].satisfies("languages=c,c++") and not s["c"].satisfies("languages=fortran")
+
+
+def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
+    """Tests that we can use := to specify exactly multivalued variants in input specs."""
+    s = default_mock_concretization("gcc languages:=fortran")
+    assert not s.external and s["c"].external
+    assert s.satisfies("languages:=fortran")
+    assert not s.satisfies("languages=c") and not s.satisfies("languages=c++")
