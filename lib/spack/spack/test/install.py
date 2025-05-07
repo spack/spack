@@ -51,21 +51,44 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     assert not spec.installed
 
 
+def _it_contains_the_source_i_expect(spec):
+    where_the_source_should_be = os.path.join(
+        spec.prefix.share, spec.name, "src"
+    )
+    configure_path = fs.find_first(where_the_source_should_be, "configure")
+    assert bool(configure_path), "The source was not found"
+
+    if not configure_path:
+        return False, False
+
+    with open(configure_path, "r", encoding="utf-8") as f:
+        # mock_archive, used by mock_fetch, sets up the "source" for
+        # this package
+        return True, any(line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines())
+
+
 def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
     spec = spack.concretize.concretize_one("trivial-install-test-package +install_source")
 
     PackageInstaller([spec.package], explicit=True).install()
 
-    where_the_source_should_be = os.path.join(
-        spec.prefix.share, "trivial-install-test-package", "src"
-    )
-    configure_path = fs.find_first(where_the_source_should_be, "configure")
-    assert bool(configure_path), "The source was not found"
+    assert _it_contains_the_source_i_expect(spec)[1]
 
-    with open(configure_path, "r", encoding="utf-8") as f:
-        # mock_archive, used by mock_fetch, sets up the "source" for
-        # this package
-        assert any(line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines())
+
+def test_install_with_source_dependency(install_mockery, mock_fetch, monkeypatch, mutable_config):
+    spack.config.set("packages", 
+    {
+        "trivial-install-test-package": {
+            "require": [{"spec": "+install_source"}]
+        }
+    })
+
+    spec = spack.concretize.concretize_one("trivial-install-dependent")
+
+    PackageInstaller([spec.package], explicit=True).install()
+
+    assert _it_contains_the_source_i_expect(spec["trivial-install-test-package"])
+    assert _it_contains_the_source_i_expect(spec) == (False, False)
 
 
 @pytest.mark.regression("11870")
