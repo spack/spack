@@ -26,6 +26,7 @@ class Rocal(CMakePackage):
 
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", when="@6.2.0")
     depends_on("libjpeg-turbo@3.0.2:", when="@6.2.1:")
+    depends_on("python@3")
     depends_on("rapidjson")
     depends_on("ffmpeg@4.4:")
     depends_on("abseil-cpp", when="@6.3:")
@@ -127,6 +128,9 @@ class Rocal(CMakePackage):
                     "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
                 )
             )
+            # force rocAL to use Spack installed python
+            args.append(self.define("PYTHON_VERSION_SUGGESTED", self.spec["python"].version))
+            args.append(self.define("Python3_ROOT_DIR", self.spec["python"].prefix))
         return args
 
     def check(self):
