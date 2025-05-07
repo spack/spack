@@ -243,9 +243,6 @@ class BinaryCacheIndex:
                 self._specs_already_associated.add(cached_index_hash)
 
     def _associate_built_specs_with_mirror(self, cache_key, url_and_version: MirrorURLAndVersion):
-        mirror_url = url_and_version.url
-        layout_version = url_and_version.version
-
         with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
             db = BuildCacheDatabase(tmpdir)
 
@@ -257,7 +254,7 @@ class BinaryCacheIndex:
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
-                    f"for the following v{layout_version} mirror: '{mirror_url}'. "
+                    f"for the following v{url_and_version.version} mirror: '{url_and_version:short}'. "
                     f"{e.database_version_message}"
                 )
                 return
@@ -278,10 +275,7 @@ class BinaryCacheIndex:
                     # A binary mirror can only have one spec per DAG hash, so
                     # if we already have an entry under this DAG hash for this
                     # mirror url/layout version, we're done.
-                    if (
-                        entry.url_and_version.url == mirror_url
-                        and entry.url_and_version.version == layout_version
-                    ):
+                    if entry.url_and_version == url_and_version:
                         break
                 else:
                     self._mirrors_for_spec[dag_hash].append(
@@ -518,6 +512,7 @@ class BinaryCacheIndex:
             FetchIndexError
         """
         mirror_url = url_and_version.url
+        mirror_view = url_and_version.view
         layout_version = url_and_version.version
 
         # TODO: get rid of this request, handle 404 better
@@ -525,7 +520,7 @@ class BinaryCacheIndex:
 
         if scheme != "oci":
             cache_class = get_url_buildcache_class(layout_version=layout_version)
-            if not web_util.url_exists(cache_class.get_index_url(mirror_url)):
+            if not web_util.url_exists(cache_class.get_index_url(mirror_url, mirror_view)):
                 return False
 
         fetcher: IndexFetcher = get_index_fetcher(scheme, url_and_version, cache_entry)
@@ -1913,7 +1908,12 @@ def download_tarball(
 
     try_next = []
     for try_layout in SUPPORTED_LAYOUT_VERSIONS:
-        try_next.extend([MirrorURLAndVersion(i.fetch_url, try_layout) for i in configured_mirrors])
+        try_next.extend(
+            [
+                MirrorURLAndVersion(i.fetch_url, try_layout, i.fetch_view)
+                for i in configured_mirrors
+            ]
+        )
     urls_and_versions = try_first + [uv for uv in try_next if uv not in try_first]
 
     # TODO: turn `mirrors_for_spec` into a list of Mirror instances, instead of doing that here.
@@ -2377,7 +2377,10 @@ def try_direct_fetch(spec, mirrors=None):
             fetched_spec._mark_concrete()
 
             found_specs.append(
-                MirrorForSpec(MirrorURLAndVersion(mirror.fetch_url, layout_version), fetched_spec)
+                MirrorForSpec(
+                    MirrorURLAndVersion(mirror.fetch_url, layout_version, mirror.fetch_view),
+                    fetched_spec,
+                )
             )
 
     return found_specs
@@ -2627,6 +2630,9 @@ def check_specs_against_mirrors(mirrors, specs, output_file=None):
     """Check all the given specs against buildcaches on the given mirrors and
     determine if any of the specs need to be rebuilt.  Specs need to be rebuilt
     when their hash doesn't exist in the mirror.
+
+    Note: This method does not consider filtering by views. If a spec exists in
+          in binary mirror it is reported as found.
 
     Arguments:
         mirrors (dict): Mirrors to check against
@@ -2970,13 +2976,14 @@ class DefaultIndexFetcher(IndexFetcher):
     def __init__(self, url_and_version: MirrorURLAndVersion, local_hash, urlopen=web_util.urlopen):
         self.url = url_and_version.url
         self.layout_version = url_and_version.version
+        self.view = url_and_version.view
         self.local_hash = local_hash
         self.urlopen = urlopen
         self.headers = {"User-Agent": web_util.SPACK_USER_AGENT}
 
     def conditional_fetch(self) -> FetchIndexResult:
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        url_index_manifest = cache_class.get_index_url(self.url)
+        url_index_manifest = cache_class.get_index_url(self.url, self.view)
 
         try:
             response = self.urlopen(
@@ -3027,13 +3034,14 @@ class EtagIndexFetcher(IndexFetcher):
     def __init__(self, url_and_version: MirrorURLAndVersion, etag, urlopen=web_util.urlopen):
         self.url = url_and_version.url
         self.layout_version = url_and_version.version
+        self.view = url_and_version.view
         self.etag = etag
         self.urlopen = urlopen
 
     def conditional_fetch(self) -> FetchIndexResult:
         # Do a conditional fetch of the index manifest (i.e. using If-None-Match header)
         cache_class = get_url_buildcache_class(layout_version=self.layout_version)
-        manifest_url = cache_class.get_index_url(self.url)
+        manifest_url = cache_class.get_index_url(self.url, self.view)
         headers = {"User-Agent": web_util.SPACK_USER_AGENT, "If-None-Match": f'"{self.etag}"'}
 
         try:

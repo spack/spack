@@ -252,11 +252,17 @@ class URLBuildcacheEntry:
         return rematch.group(1)
 
     @classmethod
-    def get_index_url(cls, mirror_url: str):
+    def get_index_url(cls, mirror_url: str, view: Optional[str] = None):
+        index_name = cls.BUILDCACHE_INDEX_FILE
+        if view:
+            # Convert "/-." to "_"
+            clean_view_name = view.replace("/", "_")
+            clean_view_name = clean_view_name.replace("-", "_")
+            clean_view_name = clean_view_name.replace(".", "_")
+            index_name = f"{clean_view_name}.{index_name}"
+
         return url_util.join(
-            mirror_url,
-            *cls.get_relative_path_components(BuildcacheComponent.INDEX),
-            cls.BUILDCACHE_INDEX_FILE,
+            mirror_url, *cls.get_relative_path_components(BuildcacheComponent.INDEX), index_name
         )
 
     @classmethod
@@ -1173,28 +1179,62 @@ class MirrorURLAndVersion:
     track of downloaded/processed buildcache index files from remote mirrors
     in some layout version."""
 
+    _formats_with_view = {
+        "full": "{m.view}@{m.url}__v{m.version}",
+        "short": "{m.view}@{m.url}",
+        "url": "{m.url}",
+    }
+
+    _formats_wo_view = {"full": "{m.url}__v{m.version}", "short": "{m.url}", "url": "{m.url}"}
+
     url: str
     version: int
+    view: Optional[str]
 
-    def __init__(self, url: str, version: int):
+    def __init__(self, url: str, version: int, view: Optional[str] = None):
         self.url = url
         self.version = version
+        self.view = view
+
+    def __format__(self, fmt):
+        fmt = fmt or "short"
+
+        if self.view:
+            fstr = self._formats_with_view.get(fmt, "")
+        else:
+            fstr = self._formats_wo_view.get(fmt, "")
+
+        return fstr.format(m=self)
 
     def __str__(self):
-        return f"{self.url}__v{self.version}"
+        return self.__format__("full")
 
     def __eq__(self, other):
         if isinstance(other, MirrorURLAndVersion):
-            return self.url == other.url and self.version == other.version
+            return (
+                self.url == other.url and self.version == other.version and self.view == other.view
+            )
+
         return False
 
     def __hash__(self):
-        return hash((self.url, self.version))
+        return hash((self.url, self.version, self.view))
 
     @classmethod
     def from_string(cls, s: str):
-        parts = s.split("__v")
-        return cls(parts[0], int(parts[1]))
+        """Parse from formatted string
+        Args:
+            s (str): Formatted string of form <url>__v<version>[@<view>]
+        """
+        url, vv = s.split("__v")
+        vv_parts = vv.split("@")
+        if len(vv_parts) == 2:
+            version, view = vv_parts
+        else:
+            view = None
+            (version,) = vv_parts
+
+        return cls(url, int(version), view)
 
 
 class MirrorForSpec:
