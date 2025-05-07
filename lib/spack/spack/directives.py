@@ -1020,7 +1020,6 @@ class RemoveDirectiveBase(ABC):
         if not removal_when:
             return
         complement_versions = removal_when.versions.complement()
-        print(f"{complement_versions=}, {removal_when.versions=}")
 
         def _remove(pkg):
             directive_dict = getattr(pkg, self.name)
@@ -1041,7 +1040,6 @@ class RemoveDirectiveBase(ABC):
                     if when == removal_when:
                         continue
                     elif when.versions.intersects(removal_when.versions):
-                        print(f"{when.versions=}, {removal_when.versions=}")
                         self.handle_intersection(
                             when, directive_entry, complement_versions, filtered
                         )
@@ -1054,7 +1052,6 @@ class RemoveDirectiveBase(ABC):
     def handle_intersection(self, when, directive_entry, complement_versions, filtered):
         new_when = when.copy()
         new_when.versions = when.versions.intersection(complement_versions)
-        print(f"{new_when.versions=}, {type(new_when.versions)=}")
         if new_when.versions != spack.version.VersionList():
             self.add_to_filtered(filtered, new_when, directive_entry)
 
