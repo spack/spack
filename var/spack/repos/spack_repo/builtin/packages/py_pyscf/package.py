@@ -43,6 +43,7 @@ class PyPyscf(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@2.1:")
     depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61.0:", type="build", when="@2.9.0:")
     depends_on("py-numpy@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@2:")
     depends_on("py-numpy@1", type=("build", "run"), when="@:2.6.0")
