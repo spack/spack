@@ -121,6 +121,11 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
 
     conflicts("+rocm", when="+cuda", msg="AMD and NVIDIA accelerators are incompatible")
     conflicts("+rocm", when="+vecgeom", msg="HIP support is only available with ORANGE")
+    conflicts(
+        "+hip",
+        when="@0.6.0 +covfie",
+        msg="HIP support is not available with covfie for older versions",
+    )
     for _arch in "cuda", "rocm":
         conflicts("+perfetto", when=f"+{_arch}", msg="Perfetto is only used for CPU profiling")
 
