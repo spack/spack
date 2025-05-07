@@ -24,11 +24,31 @@ class Openturbine(CMakePackage, CudaPackage, ROCmPackage):
     variant("adi", default=False, description="Build the OpenFAST ADI external project")
     variant("rosco", default=False, description="Build the ROSCO controller external project")
     variant("klu", default=True,  description="Build with support for the KLU sparse direct solver")
-    variant("umfpack", default=False, description="Build with support for the UMFPACK sparse direct solver")
-    variant("superlu", default=False, description="Build with support for the SuperLU sparse direct solver")
-    variant("superlu-mt", default=False,  description="Build with support for the SuperLU_MT sparse direct solver")
-    variant("mkl", default=False,  description="Build with support for the MKL Pardiso sparse direct solver")
-    variant("cusolversp", default=True, when="+cuda", description="Build with support for the cuSolverSP sparse direct solver")
+    variant(
+        "umfpack",
+        default=False,
+        description="Build with support for the UMFPACK sparse direct solver"
+    )
+    variant(
+        "superlu",
+         default=False,
+         description="Build with support for the SuperLU sparse direct solver"
+    )
+    variant(
+        "superlu-mt",
+        default=False,
+        description="Build with support for the SuperLU_MT sparse direct solver"
+    )
+    variant(
+        "mkl",
+        default=False,
+        description="Build with support for the MKL Pardiso sparse direct solver")
+    variant(
+        "cusolversp",
+        default=True,
+        when="+cuda",
+        description="Build with support for the cuSolverSP sparse direct solver"
+    )
 
     depends_on("cxx", type="build")
     depends_on("netcdf-c")
