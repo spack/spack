@@ -550,6 +550,12 @@ error(100, "Cannot satisfy the request on {0} to have the platform set to {1}", 
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_platform", BuildDependency, Platform).
 
+error(100, "Cannot satisfy the request on {0} to have the following hash {1}", BuildDependency, BuildHash)
+:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
+   BuildHash != BuildDependencyHash.
+
 % External nodes
 :- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
    external(ParentNode),
@@ -616,6 +622,10 @@ attr("node_os_set", node(X, BuildDependency), NodeOS) :-
 
 attr("node_platform_set", node(X, BuildDependency), NodePlatform) :-
   attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, NodePlatform)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("hash", node(X, BuildDependency), BuildHash) :-
+  attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 

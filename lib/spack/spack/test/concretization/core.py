@@ -3696,3 +3696,14 @@ def test_spec_parts_on_reused_compilers(
         s = spack.concretize.concretize_one(f"mpileaks %llvm@20 {sat_request}")
 
     assert s.dag_hash() == installed_spec.dag_hash()
+
+
+def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
+    """Tests that we can reuse an installed compiler specifying its hash"""
+    installed_spec = spack.concretize.concretize_one("gcc@14.0")
+    PackageInstaller([installed_spec.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
+
+    assert s["c"].dag_hash() == installed_spec.dag_hash()
