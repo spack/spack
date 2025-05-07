@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from abc import ABC, abstractmethod
 from collections import namedtuple
 
 import pytest
@@ -251,80 +252,118 @@ def test_redistribute_override_when():
 
 class FakePkg:
     def __init__(self, name, directive_dict):
+        self.name = name
         setattr(self, name, directive_dict)
 
 
-@pytest.mark.parametrize(
-    "directive_name,directives,remove_class",
-    [
-        (
-            "conflicts",
-            {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]},
-            spack.directives.RemoveConflicts,
-        ),
-        (
-            "dependencies",
-            {
-                spack.spec.Spec("@1.0"): {
-                    "pkg1": spack.dependency.Dependency("pkg1", spack.spec.Spec("pkg1"))
-                }
-            },
-            spack.directives.RemoveDependsOn,
-        ),
-        (
-            "requirements",
-            {spack.spec.Spec("@1.0"): [((spack.spec.Spec("pkg1"),), "one_of", None)]},
-            spack.directives.RemoveRequires,
-        ),
-    ],
-)
-def test_remove_no_directives(directive_name, directives, remove_class):
-    pkg = FakePkg(directive_name, directives)
-    remove_class().remove("some_pkg", "@1.0")(pkg)
-    assert getattr(pkg, directive_name) == directives
+class FakeDependency(spack.dependency.Dependency):
+    def __init__(self, pkg, spec):
+        self.pkg = pkg
+        self.spec = spec.copy()
+        self.patches = {}
+        self.depflag = 0
+
+    def __eq__(self, other):
+        return self.__repr__() == other.__repr__()
 
 
-def test_remove_one_directive():
+class MockDirectiveBase(ABC):
+    directive_name = ""
+
+    def __init__(self, data):
+        directive_dict = {
+            spack.spec.Spec(when): self.create_directives(spec_names)
+            for when, spec_names in data.items()
+        }
+        self.pkg = FakePkg(self.directive_name, directive_dict)
+
+    def compare(self, data):
+        expected = {
+            spack.spec.Spec(when): self.create_directives(spec_names)
+            for when, spec_names in data.items()
+        }
+        print(f"expected: {expected}")
+        print(f"actual: {getattr(self.pkg, self.directive_name)}")
+        assert getattr(self.pkg, self.directive_name) == expected
+
+    @abstractmethod
+    def create_directives(self, spec, when):
+        pass
+
+    @property
+    def removal_class(self):
+        return spack.directives.RemoveDirectiveBase
+
+    def remove(self, spec, when):
+        self.removal_class().remove(spec, when)(self.pkg)
+
+
+class MockConflicts(MockDirectiveBase):
     directive_name = "conflicts"
-    directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
-    pkg = FakePkg(directive_name, directives)
-    spack.directives.RemoveConflicts().remove("pkg1", "@1.0")(pkg)
-    assert getattr(pkg, directive_name) == {}
+
+    def create_directives(self, spec_names):
+        return [(spack.spec.Spec(spec_name), None) for spec_name in spec_names]
+
+    @property
+    def removal_class(self):
+        return spack.directives.RemoveConflicts
+
+class MockDependencies(MockDirectiveBase):
+    directive_name = "dependencies"
+
+    def create_directives(self, spec_names):
+        pkg = FakePkg(self.directive_name, {})
+        return {
+            spec_name: FakeDependency(pkg, spack.spec.Spec(spec_name)) for spec_name in spec_names
+        }
+
+    @property
+    def removal_class(self):
+        return spack.directives.RemoveDependsOn
 
 
-# def test_remove_one_requirement():
-#     directive_name = "requirements"
-#     directives = {spack.spec.Spec("@1.0"): [(spack.spec.Spec("pkg1"), None)]}
-#     pkg = FakePkg(directive_name, directives)
-#     spack.directives.RemoveConflicts().remove("pkg1", "@1.0")(pkg)
-#     assert getattr(pkg, directive_name) == {}
+class MockRequirements(MockDirectiveBase):
+    directive_name = "requirements"
+    def create_directives(self, spec_names):
+        return [((spack.spec.Spec(spec_name),), "one_of", None) for spec_name in spec_names]
+
+    @property
+    def removal_class(self):
+        return spack.directives.RemoveRequires
 
 
-def test_remove_intersecting_directive():
-    directive_name = "conflicts"
-    directives = {spack.spec.Spec("@3:"): [(spack.spec.Spec("pkg1"), None)]}
-    pkg = FakePkg(directive_name, directives)
-    spack.directives.RemoveConflicts().remove("pkg1", "@5:")(pkg)
-    assert getattr(pkg, directive_name) == {
-        spack.spec.Spec("@3:4"): [(spack.spec.Spec("pkg1"), None)]
-    }
+
+@pytest.fixture(params=[MockConflicts, MockDependencies, MockRequirements])
+def mock_directive_class(request):
+    """Fixture to provide parameterized mock directive classes."""
+    return request.param
 
 
-def test_remove_modify_and_leave_directives():
-    directive_name = "conflicts"
-    directives = {
-        spack.spec.Spec("@1:"): [(spack.spec.Spec(val), None) for val in ("pkg1", "pkg2", "pkg3")],
-        spack.spec.Spec("@3"): [(spack.spec.Spec("pkg4"), None)],
-    }
-    pkg = FakePkg(directive_name, directives)
-    spack.directives.RemoveConflicts().remove("pkg1", "@1:")(pkg)
-    spack.directives.RemoveConflicts().remove("pkg2", "@3:")(pkg)
-    spack.directives.RemoveConflicts().remove("pkg4", "@2")(pkg)
-    assert getattr(pkg, directive_name) == {
-        spack.spec.Spec("@1:2"): [(spack.spec.Spec("pkg2"), None)],
-        spack.spec.Spec("@1:"): [(spack.spec.Spec("pkg3"), None)],
-        spack.spec.Spec("@3"): [(spack.spec.Spec("pkg4"), None)],
-    }
+def test_remove_no_directives(mock_directive_class):
+    mock = mock_directive_class({"@1.0": ["pkg1"]})
+    mock.remove("pkg2", "@1.0")
+    mock.compare({"@1.0": ["pkg1"]})
+
+
+def test_remove_one_directive(mock_directive_class):
+    mock = mock_directive_class({"@1.0": ["pkg1"]})
+    mock.remove("pkg1", "@1.0")
+    mock.compare({})
+
+
+def test_remove_intersecting_directive(mock_directive_class):
+    mock = mock_directive_class({"@3:": ["pkg1"]})
+    mock.remove("pkg1", "@5:")
+    mock.compare({"@3:4": ["pkg1"]})
+
+
+def test_remove_modify_skip_directives(mock_directive_class):
+    mock = mock_directive_class({"@1:": ["pkg1", "pkg2", "pkg3"], "@3": ["pkg4"]})
+    mock.remove("pkg1", "@1:")  # Remove
+    mock.remove("pkg2", "@3:")  # Modify
+    # pkg3 is skipped in the nested else statement
+    mock.remove("pkg4", "@2")  # Skipped in the outer else statement
+    mock.compare({"@1:2": ["pkg2"], "@1:": ["pkg3"], "@3": ["pkg4"]})
 
 
 _pkgx = (

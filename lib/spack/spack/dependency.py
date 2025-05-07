@@ -93,7 +93,3 @@ class Dependency:
             and self.depflag == other.depflag
             and self.patches == other.patches
         )
-
-    def __hash__(self) -> int:
-        """Generate a hash for the Dependency object."""
-        return hash((self.pkg, self.spec, self.depflag, frozenset(self.patches.items())))

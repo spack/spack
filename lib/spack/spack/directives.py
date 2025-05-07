@@ -997,7 +997,6 @@ def remove_all_versions():
 
 
 class RemoveDirectiveBase(ABC):
-    # Abstract methods
     @property
     @abstractmethod
     def name(self):
