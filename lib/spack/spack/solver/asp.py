@@ -2492,7 +2492,7 @@ class SpackSolverSetup:
             # TODO: variant="*" means 'variant is defined to something', which used to
             # be meaningless in concretization, as all variants had to be defined. But
             # now that variants can be conditional, it should force a variant to exist.
-            if variant.value == ("*",):
+            if not variant.values:
                 continue
 
             for value in variant.values:

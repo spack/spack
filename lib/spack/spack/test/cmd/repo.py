@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 
 import pytest
 
@@ -22,19 +23,19 @@ def test_help_option():
     assert repo.returncode in (None, 0)
 
 
-def test_create_add_list_remove(mutable_config, tmpdir):
+def test_create_add_list_remove(mutable_config, tmp_path: pathlib.Path):
     # Create a new repository and check that the expected
     # files are there
-    repo("create", str(tmpdir), "mockrepo")
-    assert os.path.exists(os.path.join(str(tmpdir), "repo.yaml"))
+    repo("create", str(tmp_path), "mockrepo")
+    assert (tmp_path / "spack_repo" / "mockrepo" / "repo.yaml").exists()
 
     # Add the new repository and check it appears in the list output
-    repo("add", "--scope=site", str(tmpdir))
+    repo("add", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     output = repo("list", "--scope=site", output=str)
     assert "mockrepo" in output
 
     # Then remove it and check it's not there
-    repo("remove", "--scope=site", str(tmpdir))
+    repo("remove", "--scope=site", str(tmp_path / "spack_repo" / "mockrepo"))
     output = repo("list", "--scope=site", output=str)
     assert "mockrepo" not in output
 
