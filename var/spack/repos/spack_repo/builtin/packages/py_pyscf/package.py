@@ -40,7 +40,6 @@ class PyPyscf(PythonPackage):
     # dependencies
     depends_on("cmake@3.10:", type="build", when="@2.1:")
     depends_on("cmake@2.8:", type="build")
-    conflicts("cmake@4", when="@:2.9.0")
     depends_on("python@3.6:", type=("build", "run"), when="@2.1:")
     depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
