@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import platform
 import sys
 
 import jinja2
@@ -3568,9 +3569,39 @@ def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
         assert not s.satisfies("^pkg-b")
 
 
-def test_variants_are_associated_with_compilers(mock_packages, mutable_config, tmp_path):
-    """Tests that % behaves as ^ for variants, i.e. that variants after %<package> are
-    associated with <package>
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "constraint_in_yaml,unsat_request,sat_request",
+    [
+        # Arch parts
+        pytest.param(
+            "target=x86_64",
+            "target=core2",
+            "target=x86_64",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        pytest.param(
+            "target=core2",
+            "target=x86_64",
+            "target=core2",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        ("os=debian6", "os=redhat6", "os=debian6"),
+        ("platform=test", "platform=linux", "platform=test"),
+        # Variants
+        ("~lld", "+lld", "~lld"),
+        ("+lld", "~lld", "+lld"),
+    ],
+)
+def test_spec_parts_on_compilers(
+    constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path
+):
+    """Tests that % behaves as ^ for spec parts, i.e. that %<package> target=<target> <variants>
+    etc. is associated with <package>
     """
     packages_yaml = syaml.load_config(
         f"""
@@ -3578,20 +3609,20 @@ def test_variants_are_associated_with_compilers(mock_packages, mutable_config, t
       llvm::
         buildable: false
         externals:
-        - spec: "llvm+clang~lld@20"
+        - spec: "llvm+clang@20 {constraint_in_yaml}"
           prefix: {tmp_path / 'llvm-20'}
     """
     )
     mutable_config.set("packages", packages_yaml["packages"])
 
     # Check the abstract spec is formed correctly
-    abstract_spec = Spec("pkg-a %llvm@20 +clang +lld")
-    assert abstract_spec["llvm"].satisfies("@20 +clang +lld")
+    abstract_spec = Spec(f"pkg-a %llvm@20 +clang {unsat_request}")
+    assert abstract_spec["llvm"].satisfies(f"@20 +clang {unsat_request}")
 
     # Check that we can't concretize the spec, since llvm is not buildable
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
         spack.concretize.concretize_one(abstract_spec)
 
-    # Check we can instead concretize if we use ~lld
-    s = spack.concretize.concretize_one("pkg-a %llvm@20 +clang ~lld")
-    assert s["c"].external and s["c"].satisfies("@20 +clang ~lld")
+    # Check we can instead concretize if we use the correct constraint
+    s = spack.concretize.concretize_one(f"pkg-a %llvm@20 +clang {sat_request}")
+    assert s["c"].external and s["c"].satisfies(f"@20 +clang {sat_request}")
