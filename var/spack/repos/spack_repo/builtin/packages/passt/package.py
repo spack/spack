@@ -6,7 +6,8 @@ from spack.package import *
 
 
 class Passt(MakefilePackage):
-    """passt implements a translation layer between a Layer-2 network interface and native Layer-4 sockets (TCP, UDP, ICMP/ICMPv6 echo) on a host."""
+    """Passt provides full, quasi-native network connectivity to
+    virtual machines in user-mode without requiring any capabilities or privileges."""
 
     homepage = "https://passt.top/passt/"
     git = "https://passt.top/passt"
