@@ -61,6 +61,8 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
     assert bool(configure_path), "The source was not found"
 
     with open(configure_path, "r", encoding="utf-8") as f:
+        # mock_archive, used by mock_fetch, sets up the "source" for
+        # this package
         assert any(line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines())
 
 
