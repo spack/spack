@@ -358,6 +358,12 @@ def test_remove_intersecting_directive(mock_directive_class):
     mock.compare({"@3:4": ["pkg1"]})
 
 
+def test_remove_entire_intersecting_directive(mock_directive_class):
+    mock = mock_directive_class({"@3:": ["pkg1"]})
+    mock.remove("pkg1", "@2:")
+    mock.compare({})
+
+
 def test_remove_modify_skip_directives(mock_directive_class):
     mock = mock_directive_class({"@1:": ["pkg1", "pkg2", "pkg3"], "@3": ["pkg4"]})
     mock.remove("pkg1", "@1:")  # Remove
@@ -496,9 +502,9 @@ class X(Package):
     version("1.0")
     depends_on("hdf5")
     depends_on("mpi", when="@1.0")
-    depends_on("netcdf-c", when="@1.0")
+    depends_on("netcdf-c", when="@2")
     remove_depends_on("hdf5")
-    remove_depends_on("netcdf-c", when="@1.0")
+    remove_depends_on("netcdf-c", when="@1:")
 """,
 )
 
