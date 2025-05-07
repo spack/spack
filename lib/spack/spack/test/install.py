@@ -83,7 +83,7 @@ def test_install_with_source_dependency(install_mockery, mock_fetch, monkeypatch
 
     PackageInstaller([spec.package], explicit=True).install()
 
-    assert _it_contains_the_source_i_expect(spec["trivial-install-test-package"])
+    assert _it_contains_the_source_i_expect(spec["trivial-install-test-package"])[1]
     assert _it_contains_the_source_i_expect(spec) == (False, False)
 
 
