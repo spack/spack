@@ -56,6 +56,7 @@ import spack.patch
 import spack.spec
 import spack.util.crypto
 import spack.variant
+import spack.version
 from spack.dependency import Dependency
 from spack.directives_meta import DirectiveError, DirectiveMeta
 from spack.resource import Resource
@@ -1054,7 +1055,7 @@ class RemoveDirectiveBase(ABC):
         new_when = when.copy()
         new_when.versions = when.versions.intersection(complement_versions)
         print(f"{new_when.versions=}, {type(new_when.versions)=}")
-        if new_when.versions != spack.version.version_types.VersionList():
+        if new_when.versions != spack.version.VersionList():
             self.add_to_filtered(filtered, new_when, directive_entry)
 
     def iterate_directives(self, directives):
