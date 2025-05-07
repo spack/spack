@@ -52,9 +52,7 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
 
 def _it_contains_the_source_i_expect(spec):
-    where_the_source_should_be = os.path.join(
-        spec.prefix.share, spec.name, "src"
-    )
+    where_the_source_should_be = os.path.join(spec.prefix.share, spec.name, "src")
     configure_path = fs.find_first(where_the_source_should_be, "configure")
 
     if not configure_path:
@@ -63,7 +61,9 @@ def _it_contains_the_source_i_expect(spec):
     with open(configure_path, "r", encoding="utf-8") as f:
         # mock_archive, used by mock_fetch, sets up the "source" for
         # this package
-        return True, any(line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines())
+        return True, any(
+            line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines()
+        )
 
 
 def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
@@ -75,12 +75,9 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
 
 
 def test_install_with_source_dependency(install_mockery, mock_fetch, monkeypatch, mutable_config):
-    spack.config.set("packages", 
-    {
-        "trivial-install-test-package": {
-            "require": [{"spec": "+install_source"}]
-        }
-    })
+    spack.config.set(
+        "packages", {"trivial-install-test-package": {"require": [{"spec": "+install_source"}]}}
+    )
 
     spec = spack.concretize.concretize_one("trivial-install-dependent")
 
