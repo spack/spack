@@ -10,12 +10,20 @@ from spack.package import *
 _is_macos = sys.platform == "darwin"
 
 
-def write_containers_conf(pkg_obj, pkgs: list[str]):
+def write_containers_conf(pkg_obj, dep_names):
+    """
+    writes podman runtime dependency paths to containers.conf
+
+    args:
+        pkg_obj: the self object during the install() phase
+        dep_names (list): strings of the dependencies to add to the config
+    """
+
     # podman requires its runtime deps to be in a configured directory
     # https://github.com/containers/common/blob/main/docs/containers.conf.5.md
     # we choose the user-friendly option of CONTAINERS_CONF_OVERRIDE, which respects
     # existing configurations set by the user
-    helper_dirs = ", ".join(f'"{x}"' for x in [pkg_obj.spec[pkg].prefix.bin for pkg in pkgs])
+    helper_dirs = ", ".join(f'"{x}"' for x in [pkg_obj.spec[dep].prefix.bin for dep in dep_names])
 
     config = f"""
     [engine]
