@@ -33,7 +33,8 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
     depends_on("iconv")
     depends_on("gettext")
 
-    patches = [
+    # TODO: patches below are not managed by the GNUMirrorPackage base class
+    for verstr, num, checksum in (
         ("5.2", "001", "f42f2fee923bc2209f406a1892772121c467f44533bedfe00a176139da5d310a"),
         ("5.2", "002", "45cc5e1b876550eee96f95bffb36c41b6cb7c07d33f671db5634405cd00fd7b8"),
         ("5.2", "003", "6a090cdbd334306fceacd0e4a1b9e0b0678efdbbdedbd1f5842035990c8abaff"),
@@ -176,17 +177,12 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
         ("4.3", "046", "b3b456a6b690cd293353f17e22d92a202b3c8bce587ae5f2667c20c9ab6f688f"),
         ("4.3", "047", "c69248de7e78ba6b92f118fe1ef47bc86479d5040fe0b1f908ace1c9e3c67c4a"),
         ("4.3", "048", "5b8215451c5d096ca1e115307ffe6613553551a70369525a0778f216c3a4dfa2"),
-    ]
-
-    # TODO: patches below are not managed by the GNUMirrorPackage base class
-    for verstr, num, checksum in patches:
+    ):
         ver = Version(verstr)
         patch(
-            "https://ftpmirror.gnu.org/bash/bash-{0}-patches/bash{1}-{2}".format(
-                ver, ver.joined, num
-            ),
+            f"https://ftpmirror.gnu.org/bash/bash-{ver}-patches/bash{ver.joined}-{num}",
             level=0,
-            when="@{0}".format(ver),
+            when=f"@{ver}",
             sha256=checksum,
         )
 

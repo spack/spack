@@ -49,14 +49,14 @@ class Justbuild(Package):
     sanity_check_is_file = [join_path("bin", "just"), join_path("bin", "just-mr")]
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        ar = which("ar")
+        ar = which("ar", required=True)
         if self.spec.version < Version("1.2.1"):
             family = ', "COMPILER_FAMILY":"unknown"'
         else:
             family = ', "TOOLCHAIN_CONFIG": {"FAMILY": "unknown"}'
         if self.spec.satisfies("%gcc@10:"):
-            gcc = which("gcc")
-            gpp = which("g++")
+            gcc = which("gcc", required=True)
+            gpp = which("g++", required=True)
             env.set(
                 "JUST_BUILD_CONF",
                 "  {"
@@ -69,9 +69,9 @@ class Justbuild(Package):
                 + "   }"
                 + "}",
             )
-        elif self.spec.satisfies("%clang@11:") or spec.satisfies("%apple-clang@11:"):
-            clang = which("clang")
-            clangpp = which("clang++")
+        elif self.spec.satisfies("%clang@11:") or self.spec.satisfies("%apple-clang@11:"):
+            clang = which("clang", required=True)
+            clangpp = which("clang++", required=True)
             env.set(
                 "JUST_BUILD_CONF",
                 "  {"
@@ -88,7 +88,7 @@ class Justbuild(Package):
             raise InstallError("please use gcc >= 10 or clang >= 11")
 
     def install(self, spec, prefix):
-        python = which("python3")
+        python = which("python3", required=True)
         python(os.path.join("bin", "bootstrap.py"), ".", prefix)
         mkdirp(prefix.bin)
         install(os.path.join(prefix, "out", "bin", "just"), prefix.bin)
