@@ -3,6 +3,7 @@ spack:
 
   packages:
     all:
+      target: ["aarch64"]
       require: target=aarch64
 
   config:

@@ -7,6 +7,15 @@ from spack.package import *
 from spack.variant import ConditionalVariantValues
 
 
+def _std_when(values):
+    for v in values:
+        if isinstance(v, ConditionalVariantValues):
+            for c in v:
+                yield (c.value, c.when)
+        else:
+            yield (v, "")
+
+
 class Vecgeom(CMakePackage, CudaPackage):
     """The vectorized geometry library for particle-detector simulation
     (toolkits)."""
@@ -130,15 +139,7 @@ class Vecgeom(CMakePackage, CudaPackage):
         when="@:1.2.10 ^apple-clang@17:",
     )
 
-    def std_when(values):
-        for v in values:
-            if isinstance(v, ConditionalVariantValues):
-                for c in v:
-                    yield (c.value, c.when)
-            else:
-                yield (v, "")
-
-    for _std, _when in std_when(_cxxstd_values):
+    for _std, _when in _std_when(_cxxstd_values):
         depends_on(f"geant4 cxxstd={_std}", when=f"{_when} +geant4 cxxstd={_std}")
         depends_on(f"root cxxstd={_std}", when=f"{_when} +root cxxstd={_std}")
         depends_on(f"xerces-c cxxstd={_std}", when=f"{_when} +gdml cxxstd={_std}")
