@@ -157,4 +157,6 @@ class Podman(Package):
         remove_linked_tree(prefix.src)
         remove_linked_tree(prefix.pkg)
 
-        write_containers_conf(self, ["passt"])
+        # passt becomes a dep on newer versions of podman
+        if spec.satisfies("@5.4.2:"):
+            write_containers_conf(self, ["passt"])
