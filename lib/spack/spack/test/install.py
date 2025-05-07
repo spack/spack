@@ -56,7 +56,6 @@ def _it_contains_the_source_i_expect(spec):
         spec.prefix.share, spec.name, "src"
     )
     configure_path = fs.find_first(where_the_source_should_be, "configure")
-    assert bool(configure_path), "The source was not found"
 
     if not configure_path:
         return False, False

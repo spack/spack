@@ -1220,6 +1220,18 @@ error(100, "{0} variant '{1}' cannot have values '{2}' and 'none'", Package, Var
 variant_possible_value(PackageNode, Variant, Value)
   :- attr("variant_set", PackageNode, Variant, Value), auto_variant(Variant, _).
 
+{ attr("variant_set", node(ID, Package), Variant, Value) } :-
+  requirement_group_member(ConditionID, Package, RequirementID),
+  activate_requirement(node(ID, Package), RequirementID),
+  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+  imposed_constraint(EffectID, "variant_set", Package, Variant, Value).
+
+%variant_possible_value(node(ID, Package), Variant, Value) :-
+%  requirement_group_member(ConditionID, Package, RequirementID),
+%  activate_requirement(node(ID, Package), RequirementID),
+%  pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+%  imposed_constraint(EffectID, "variant_value", Package, Variant, Value).
+
 node_has_variant(PackageNode, Variant, VariantID)
   :- attr("variant_set", PackageNode, Variant, _), auto_variant(Variant, VariantID).
 
