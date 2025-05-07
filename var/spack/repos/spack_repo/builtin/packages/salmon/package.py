@@ -69,7 +69,7 @@ class Salmon(CMakePackage):
 
     conflicts("%gcc@:5.1", when="@0.14.1:")
 
-    resources = [
+    for ver, repo, checksum in [
         (
             "1.10.3",
             "pufferfish",
@@ -94,16 +94,14 @@ class Salmon(CMakePackage):
         ("0.12.0", "RapMap", "05102c0bbc8a0c0056a01cd0e8788fa5b504aee58ac226ab8c0e3ffec8019790"),
         ("0.9.1", "RapMap", "8975e5a1ed61ed9354ba776272927545f417ecdce95823e71ba1e7b61de7d380"),
         ("0.8.2", "RapMap", "1691f4bca2b604f05f36772ae45faf0842ab4809843df770bd10366a5cfd6822"),
-    ]
-
-    for ver, repo, checksum in resources:
+    ]:
         resource(
             name=repo,
-            url="https://github.com/COMBINE-lab/{0}/archive/salmon-v{1}.zip".format(repo, ver),
+            url=f"https://github.com/COMBINE-lab/{repo}/archive/salmon-v{ver}.zip",
             sha256=checksum,
             placement="external",
             expand=False,
-            when="@{0}".format(ver),
+            when=f"@{ver}",
         )
 
     # `%gcc13:` requires `<cstdint>` to be manually included. Fixed upstream,

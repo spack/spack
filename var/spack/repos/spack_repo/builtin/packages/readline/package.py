@@ -29,7 +29,8 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("ncurses")
 
-    patches = [
+    # TODO: patches below are not managed by the GNUMirrorPackage base class
+    for verstr, num, checksum in [
         ("8.2", "001", "bbf97f1ec40a929edab5aa81998c1e2ef435436c597754916e6a5868f273aff7"),
         ("8.2", "002", "e06503822c62f7bc0d9f387d4c78c09e0ce56e53872011363c74786c7cd4c053"),
         ("8.2", "003", "24f587ba46b46ed2b1868ccaf9947504feba154bb8faabd4adaea63ef7e6acb0"),
@@ -62,17 +63,12 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
         ("6.3", "006", "5c237ab3c6c97c23cf52b2a118adc265b7fb411b57c93a5f7c221d50fafbe556"),
         ("6.3", "007", "4d79b5a2adec3c2e8114cbd3d63c1771f7c6cf64035368624903d257014f5bea"),
         ("6.3", "008", "3bc093cf526ceac23eb80256b0ec87fa1735540d659742107b6284d635c43787"),
-    ]
-
-    # TODO: patches below are not managed by the GNUMirrorPackage base class
-    for verstr, num, checksum in patches:
+    ]:
         ver = Version(verstr)
         patch(
-            "https://ftpmirror.gnu.org/readline/readline-{0}-patches/readline{1}-{2}".format(
-                ver, ver.joined, num
-            ),
+            f"https://ftpmirror.gnu.org/readline/readline-{ver}-patches/readline{ver.joined}-{num}",
             level=0,
-            when="@{0}".format(ver),
+            when=f"@{ver}",
             sha256=checksum,
         )
 

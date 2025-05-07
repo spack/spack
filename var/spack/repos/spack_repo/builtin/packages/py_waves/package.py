@@ -76,7 +76,7 @@ class PyWaves(PythonPackage):
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("PREFIX", self.prefix)
-        env.set("PKG_NAME", "waves"),
+        env.set("PKG_NAME", "waves")
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 
