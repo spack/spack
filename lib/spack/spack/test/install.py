@@ -56,7 +56,9 @@ def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
 
     PackageInstaller([spec.package], explicit=True).install()
 
-    where_the_source_should_be = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+    where_the_source_should_be = os.path.join(
+        spec.prefix.share, "trivial-install-test-package", "src"
+    )
     configure_path = fs.find_first(where_the_source_should_be, "configure")
     assert bool(configure_path), "The source was not found"
 
