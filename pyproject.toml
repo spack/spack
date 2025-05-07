@@ -18,7 +18,7 @@ dev = [
   "pytest-xdist",
   "setuptools",
   "click",
-  'black',
+  "black",
   "mypy",
   "isort",
   "flake8",
@@ -93,8 +93,8 @@ llnl = ["llnl"]
 
 [tool.black]
 line-length = 99
-include = '(lib/spack|var/spack/repos|var/spack/test_repos)/.*\.pyi?$|bin/spack$'
-extend-exclude = 'lib/spack/external'
+include = "(lib/spack|var/spack/repos|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
+extend-exclude = "lib/spack/external"
 skip_magic_trailing_comma = true
 
 [tool.isort]
@@ -134,29 +134,29 @@ ignore_errors = true
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = 'spack.*'
+module = "spack.*"
 ignore_errors = false
 ignore_missing_imports = false
 
 [[tool.mypy.overrides]]
-module = 'spack_repo.*'
+module = "spack_repo.*"
 ignore_errors = false
 ignore_missing_imports = false
 # we can't do this here, not a module scope option, in spack style instead
 # disable_error_code = 'no-redef'
 
 [[tool.mypy.overrides]]
-module = 'llnl.*'
+module = "llnl.*"
 ignore_errors = false
 ignore_missing_imports = false
 
 [[tool.mypy.overrides]]
-module = 'spack.test.packages'
+module = "spack.test.packages"
 ignore_errors = true
 
 # ignore errors in fake import path for packages
 [[tool.mypy.overrides]]
-module = 'spack.pkg.*'
+module = "spack.pkg.*"
 ignore_errors = true
 ignore_missing_imports = true
 
@@ -167,34 +167,34 @@ ignore_missing_imports = true
 # more in CI. Instead, we exclude these imported packages from mypy checking.
 [[tool.mypy.overrides]]
 module = [
-  'IPython',
-  'altgraph',
-  'attr',
-  'boto3',
-  'botocore',
-  'distro',
-  'importlib.metadata',
-  'jinja2',
-  'jsonschema',
-  'macholib',
-  'markupsafe',
-  'numpy',
-  'pkg_resources',
-  'pyristent',
-  'pytest',
-  'ruamel.yaml',
-  'six',
+  "IPython",
+  "altgraph",
+  "attr",
+  "boto3",
+  "botocore",
+  "distro",
+  "importlib.metadata",
+  "jinja2",
+  "jsonschema",
+  "macholib",
+  "markupsafe",
+  "numpy",
+  "pkg_resources",
+  "pyristent",
+  "pytest",
+  "ruamel.yaml",
+  "six",
 ]
-follow_imports = 'skip'
+follow_imports = "skip"
 follow_imports_for_stubs = true
 
 [tool.pyright]
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportWildcardImportFromLibrary = false
-include = ['lib/spack', 'var/spack/repos', 'var/spack/test_repos']
-ignore = ['lib/spack/external']
-extraPaths = ['lib/spack', 'lib/spack/external']
+include = ["lib/spack", "var/spack/repos", "var/spack/test_repos"]
+ignore = ["lib/spack/external"]
+extraPaths = ["lib/spack", "lib/spack/external"]
 
 
 [tool.coverage.run]
@@ -204,30 +204,30 @@ branch = true
 source = ["bin", "lib"]
 data_file = "./tests-coverage/.coverage"
 omit = [
-  'lib/spack/spack/test/*',
-  'lib/spack/docs/*',
-  'lib/spack/external/*',
-  'share/spack/qa/*',
+  "lib/spack/spack/test/*",
+  "lib/spack/docs/*",
+  "lib/spack/external/*",
+  "share/spack/qa/*",
 ]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
 exclude_lines = [
   # Have to re-enable the standard pragma
-  'pragma: no cover',
+  "pragma: no cover",
 
   # Don't complain about missing debug-only code:
-  'def __repr__',
-  'if self\.debug',
+  "def __repr__",
+  "if self\\.debug",
 
   # Don't complain if tests don't hit defensive assertion code:
-  'raise AssertionError',
-  'raise NotImplementedError',
+  "raise AssertionError",
+  "raise NotImplementedError",
 
   # Don't complain if non-runnable code isn't run:
-  'if 0:',
-  'if False:',
-  'if __name__ == .__main__.:',
+  "if 0:",
+  "if False:",
+  "if __name__ == .__main__.:",
 ]
 ignore_errors = true
 
@@ -264,7 +264,7 @@ drop = [
   "pkg_resources/extern/",
   # trim vendored pygments styles and lexers
   "pygments/styles/[!_]*.py",
-  '^pygments/lexers/(?!python|__init__|_mapping).*\.py$',
+  "^pygments/lexers/(?!python|__init__|_mapping).*\\.py$",
   # trim rich's markdown support
   "rich/markdown.py",
   # ruamel.yaml installs unneded files
