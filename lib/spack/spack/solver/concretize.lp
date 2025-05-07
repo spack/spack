@@ -530,6 +530,26 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
    attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
 
+error(100, "Cannot satisfy the request on {0} to have {1}={2}", BuildDependency, Variant, Value)
+:- attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "variant_value", BuildDependency, Variant, Value).
+
+error(100, "Cannot satisfy the request on {0} to have the target set to {1}", BuildDependency, Target)
+:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_target", BuildDependency, Target).
+
+error(100, "Cannot satisfy the request on {0} to have the os set to {1}", BuildDependency, NodeOS)
+:- attr("build_requirement", ParentNode, build_requirement("node_os_set", BuildDependency, NodeOS)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_os", BuildDependency, NodeOS).
+
+error(100, "Cannot satisfy the request on {0} to have the platform set to {1}", BuildDependency, Platform)
+:- attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, Platform)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_platform", BuildDependency, Platform).
+
 % External nodes
 :- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
    external(ParentNode),
