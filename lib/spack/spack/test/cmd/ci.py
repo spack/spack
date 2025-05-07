@@ -31,11 +31,8 @@ from spack.ci import gitlab as gitlab_generator
 from spack.ci.common import PipelineDag, PipelineOptions, SpackCIConfig
 from spack.ci.generator_registry import generator
 from spack.cmd.ci import FAILED_CREATE_BUILDCACHE_CODE
-from spack.database import INDEX_JSON_FILE
 from spack.error import SpackError
-from spack.schema.buildcache_spec import schema as specfile_schema
 from spack.schema.database_index import schema as db_idx_schema
-from spack.spec import Spec
 from spack.test.conftest import MockHTTPResponse
 
 config_cmd = spack.main.SpackCommand("config")
@@ -718,7 +715,7 @@ spack:
         )
 
     install_cmd("archive-files")
-    buildcache_cmd("push", "-f", "-u", mirror_url, "archive-files")
+    buildcache_cmd("push", "-f", "-u", "--update-index", mirror_url, "archive-files")
 
     with working_dir(tmp_path):
         env_cmd("create", "test", "./spack.yaml")
@@ -855,18 +852,18 @@ spack:
 
             # Test generating buildcache index while we have bin mirror
             buildcache_cmd("update-index", mirror_url)
-            with open(mirror_dir / "build_cache" / INDEX_JSON_FILE, encoding="utf-8") as idx_fd:
-                index_object = json.load(idx_fd)
-                jsonschema.validate(index_object, db_idx_schema)
+
+            # Validate resulting buildcache (database) index
+            layout_version = spack.binary_distribution.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+            url_and_version = spack.binary_distribution.MirrorURLAndVersion(
+                mirror_url, layout_version
+            )
+            index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
+            result = index_fetcher.conditional_fetch()
+            jsonschema.validate(json.loads(result.data), db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             assert "patchelf" in buildcache_cmd("list", output=str)
-            # Also test buildcache_spec schema
-            for file_name in os.listdir(mirror_dir / "build_cache"):
-                if file_name.endswith(".spec.json.sig"):
-                    with open(mirror_dir / "build_cache" / file_name, encoding="utf-8") as f:
-                        spec_dict = Spec.extract_json_from_clearsig(f.read())
-                        jsonschema.validate(spec_dict, specfile_schema)
 
             logs_dir = scratch / "logs_dir"
             logs_dir.mkdir()
@@ -1032,7 +1029,7 @@ spack:
 
 
 def test_ci_rebuild_index(
-    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch
+    tmp_path: pathlib.Path, working_env, mutable_mock_env_path, install_mockery, mock_fetch, capsys
 ):
     scratch = tmp_path / "working_dir"
     mirror_dir = scratch / "mirror"
@@ -1069,8 +1066,9 @@ spack:
             buildcache_cmd("push", "-u", "-f", mirror_url, "callpath")
             ci_cmd("rebuild-index")
 
-            with open(mirror_dir / "build_cache" / INDEX_JSON_FILE, encoding="utf-8") as f:
-                jsonschema.validate(json.load(f), db_idx_schema)
+            with capsys.disabled():
+                output = buildcache_cmd("list", "--allarch")
+                assert "callpath" in output
 
 
 def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
