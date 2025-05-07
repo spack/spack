@@ -3168,8 +3168,8 @@ class SpackSolverSetup:
             self.preferred_variants(pkg)
 
         self.gen.h1("Special variants")
-        self.define_auto_variant("dev_path", vtype=vt.VariantType.MULTI)
-        self.define_auto_variant("patches", vtype=vt.VariantType.SINGLE)
+        self.define_auto_variant("dev_path", vtype=vt.VariantType.SINGLE)
+        self.define_auto_variant("patches", vtype=vt.VariantType.MULTI)
         self.define_auto_variant("install_source", vtype=vt.VariantType.BOOL)
 
         self.gen.h1("Develop specs")
