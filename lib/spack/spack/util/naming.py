@@ -6,72 +6,107 @@ import io
 import itertools
 import re
 import string
-
-import spack.error
+from typing import List, Tuple
 
 __all__ = [
-    "mod_to_class",
-    "spack_module_to_python_module",
+    "pkg_name_to_class_name",
     "valid_module_name",
-    "valid_fully_qualified_module_name",
-    "validate_fully_qualified_module_name",
-    "validate_module_name",
     "possible_spack_module_names",
     "simplify_name",
     "NamespaceTrie",
 ]
 
-# Valid module names can contain '-' but can't start with it.
-_valid_module_re = r"^\w[\w-]*$"
+#: see keyword.kwlist: https://github.com/python/cpython/blob/main/Lib/keyword.py
+RESERVED_NAMES_ONLY_LOWERCASE = frozenset(
+    (
+        "and",
+        "as",
+        "assert",
+        "async",
+        "await",
+        "break",
+        "class",
+        "continue",
+        "def",
+        "del",
+        "elif",
+        "else",
+        "except",
+        "finally",
+        "for",
+        "from",
+        "global",
+        "if",
+        "import",
+        "in",
+        "is",
+        "lambda",
+        "nonlocal",
+        "not",
+        "or",
+        "pass",
+        "raise",
+        "return",
+        "try",
+        "while",
+        "with",
+        "yield",
+    )
+)
+
+RESERVED_NAMES_LIST_MIXED_CASE = ("False", "None", "True")
 
 # Valid module names can contain '-' but can't start with it.
-_valid_fully_qualified_module_re = r"^(\w[\w-]*)(\.\w[\w-]*)*$"
+_VALID_MODULE_RE_V1 = re.compile(r"^\w[\w-]*$")
+
+_VALID_MODULE_RE_V2 = re.compile(r"^[a-z_][a-z0-9_]*$")
 
 
-def mod_to_class(mod_name):
-    """Convert a name from module style to class name style.  Spack mostly
-    follows `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
+def pkg_name_to_class_name(pkg_name: str):
+    """Convert a Spack package name to a class name, based on
+    `PEP-8 <http://legacy.python.org/dev/peps/pep-0008/>`_:
 
        * Module and package names use lowercase_with_underscores.
        * Class names use the CapWords convention.
 
-    Regular source code follows these convetions.  Spack is a bit
-    more liberal with its Package names and Compiler names:
+    Not all package names are valid Python identifiers:
 
-       * They can contain '-' as well as '_', but cannot start with '-'.
+       * They can contain '-', but cannot start with '-'.
        * They can start with numbers, e.g. "3proxy".
 
-    This function converts from the module convention to the class
-    convention by removing _ and - and converting surrounding
-    lowercase text to CapWords.  If mod_name starts with a number,
-    the class name returned will be prepended with '_' to make a
-    valid Python identifier.
+    This function converts from the package name to the class convention by removing _ and - and
+    converting surrounding lowercase text to CapWords.  If package name starts with a number, the
+    class name returned will be prepended with '_' to make a valid Python identifier.
     """
-    validate_module_name(mod_name)
-
-    class_name = re.sub(r"[-_]+", "-", mod_name)
+    class_name = re.sub(r"[-_]+", "-", pkg_name)
     class_name = string.capwords(class_name, "-")
     class_name = class_name.replace("-", "")
 
-    # If a class starts with a number, prefix it with Number_ to make it
-    # a valid Python class name.
-    if re.match(r"^[0-9]", class_name):
-        class_name = "_%s" % class_name
+    # Ensure that the class name is a valid Python identifier
+    if re.match(r"^[0-9]", class_name) or class_name in RESERVED_NAMES_LIST_MIXED_CASE:
+        class_name = f"_{class_name}"
 
     return class_name
 
 
-def spack_module_to_python_module(mod_name):
-    """Given a Spack module name, returns the name by which it can be
-    imported in Python.
-    """
-    if re.match(r"[0-9]", mod_name):
-        mod_name = "num" + mod_name
-
-    return mod_name.replace("-", "_")
+def pkg_dir_to_pkg_name(dirname: str, package_api: Tuple[int, int]) -> str:
+    """Translate a package dir (pkg_dir/package.py) to its corresponding package name"""
+    if package_api < (2, 0):
+        return dirname
+    return dirname.lstrip("_").replace("_", "-")
 
 
-def possible_spack_module_names(python_mod_name):
+def pkg_name_to_pkg_dir(name: str, package_api: Tuple[int, int]) -> str:
+    """Translate a package name to its corresponding package dir (pkg_dir/package.py)"""
+    if package_api < (2, 0):
+        return name
+    name = name.replace("-", "_")
+    if re.match(r"^[0-9]", name) or name in RESERVED_NAMES_ONLY_LOWERCASE:
+        name = f"_{name}"
+    return name
+
+
+def possible_spack_module_names(python_mod_name: str) -> List[str]:
     """Given a Python module name, return a list of all possible spack module
     names that could correspond to it."""
     mod_name = re.sub(r"^num(\d)", r"\1", python_mod_name)
@@ -79,7 +114,7 @@ def possible_spack_module_names(python_mod_name):
     parts = re.split(r"(_)", mod_name)
     options = [["_", "-"]] * mod_name.count("_")
 
-    results = []
+    results: List[str] = []
     for subs in itertools.product(*options):
         s = list(parts)
         s[1::2] = subs
@@ -88,7 +123,7 @@ def possible_spack_module_names(python_mod_name):
     return results
 
 
-def simplify_name(name):
+def simplify_name(name: str) -> str:
     """Simplify package name to only lowercase, digits, and dashes.
 
     Simplifies a name which may include uppercase letters, periods,
@@ -136,42 +171,17 @@ def simplify_name(name):
     return name
 
 
-def valid_module_name(mod_name):
+def valid_module_name(mod_name: str, package_api: Tuple[int, int]) -> bool:
     """Return whether mod_name is valid for use in Spack."""
-    return bool(re.match(_valid_module_re, mod_name))
-
-
-def valid_fully_qualified_module_name(mod_name):
-    """Return whether mod_name is a valid namespaced module name."""
-    return bool(re.match(_valid_fully_qualified_module_re, mod_name))
-
-
-def validate_module_name(mod_name):
-    """Raise an exception if mod_name is not valid."""
-    if not valid_module_name(mod_name):
-        raise InvalidModuleNameError(mod_name)
-
-
-def validate_fully_qualified_module_name(mod_name):
-    """Raise an exception if mod_name is not a valid namespaced module name."""
-    if not valid_fully_qualified_module_name(mod_name):
-        raise InvalidFullyQualifiedModuleNameError(mod_name)
-
-
-class InvalidModuleNameError(spack.error.SpackError):
-    """Raised when we encounter a bad module name."""
-
-    def __init__(self, name):
-        super().__init__("Invalid module name: " + name)
-        self.name = name
-
-
-class InvalidFullyQualifiedModuleNameError(spack.error.SpackError):
-    """Raised when we encounter a bad full package name."""
-
-    def __init__(self, name):
-        super().__init__("Invalid fully qualified package name: " + name)
-        self.name = name
+    if package_api < (2, 0):
+        return bool(_VALID_MODULE_RE_V1.match(mod_name))
+    elif not _VALID_MODULE_RE_V2.match(mod_name) or "__" in mod_name:
+        return False
+    elif mod_name.startswith("_"):
+        # it can only start with an underscore if followed by digit or reserved name
+        return mod_name[1:] in RESERVED_NAMES_ONLY_LOWERCASE or mod_name[1].isdigit()
+    else:
+        return mod_name not in RESERVED_NAMES_ONLY_LOWERCASE
 
 
 class NamespaceTrie:

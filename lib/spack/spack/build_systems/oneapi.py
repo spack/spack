@@ -106,8 +106,8 @@ class IntelOneApiPackage(Package):
 
             bash = Executable("bash")
 
-            # Installer writes files in ~/intel set HOME so it goes to prefix
-            bash.add_default_env("HOME", self.prefix)
+            # Installer writes files in ~/intel set HOME so it goes to staging directory
+            bash.add_default_env("HOME", join_path(self.stage.path, "home"))
             # Installer checks $XDG_RUNTIME_DIR/.bootstrapper_lock_file as well
             bash.add_default_env("XDG_RUNTIME_DIR", join_path(self.stage.path, "runtime"))
 
@@ -132,7 +132,7 @@ class IntelOneApiPackage(Package):
         if not isdir(install_dir):
             raise RuntimeError("install failed to directory: {0}".format(install_dir))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:

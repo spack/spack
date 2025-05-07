@@ -7,6 +7,7 @@ import contextlib
 import inspect
 import json
 import os
+import pathlib
 import pickle
 import re
 import shlex
@@ -20,6 +21,12 @@ from llnl.util import tty
 from llnl.util.lang import dedupe
 
 import spack.error
+
+# List is invariant, so List[str] is not a subtype of List[Union[str, pathlib.PurePath]].
+# Sequence is covariant, but because str itself is a subtype of Sequence[str], we cannot exlude it
+# in the type hint. So, use an awkward union type to allow (mixed) str and PurePath items.
+ListOfPaths = Union[List[str], List[pathlib.PurePath], List[Union[str, pathlib.PurePath]]]
+
 
 if sys.platform == "win32":
     SYSTEM_PATHS = [
@@ -254,14 +261,6 @@ class NameValueModifier:
         self, name: str, value: str, *, separator: str = os.pathsep, trace: Optional[Trace] = None
     ):
         self.name = name.upper() if sys.platform == "win32" else name
-        if not isinstance(value, str):
-            warnings.warn(
-                f"{self.__class__.__name__} {self.name}={value}: using a non-string value "
-                f"{type(value).__name__} is deprecated and will be an error in Spack v1.0",
-                spack.error.SpackAPIWarning,
-                stacklevel=4,
-            )
-            value = str(value)
         self.value = value
         self.separator = separator
         self.trace = trace
@@ -278,6 +277,23 @@ class NameValueModifier:
     def execute(self, env: MutableMapping[str, str]):
         """Apply the modification to the mapping passed as input"""
         raise NotImplementedError("must be implemented by derived classes")
+
+
+class NamePathModifier(NameValueModifier):
+    """Base class for modifiers that modify the value of an environment variable
+    that is a path."""
+
+    __slots__ = ("name", "value", "separator", "trace")
+
+    def __init__(
+        self,
+        name: str,
+        value: Union[str, pathlib.PurePath],
+        *,
+        separator: str = os.pathsep,
+        trace: Optional[Trace] = None,
+    ):
+        super().__init__(name, str(value), separator=separator, trace=trace)
 
 
 class SetEnv(NameValueModifier):
@@ -330,19 +346,21 @@ class SetPath(NameValueModifier):
     def __init__(
         self,
         name: str,
-        value: List[str],
+        value: ListOfPaths,
         *,
         separator: str = os.pathsep,
         trace: Optional[Trace] = None,
     ):
-        super().__init__(name, separator.join(value), separator=separator, trace=trace)
+        super().__init__(
+            name, separator.join(str(x) for x in value), separator=separator, trace=trace
+        )
 
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"SetPath: {self.name}={self.value}", level=3)
         env[self.name] = self.value
 
 
-class AppendPath(NameValueModifier):
+class AppendPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"AppendPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
@@ -351,7 +369,7 @@ class AppendPath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class PrependPath(NameValueModifier):
+class PrependPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"PrependPath: {self.name}+{self.value}", level=3)
         environment_value = env.get(self.name, "")
@@ -360,7 +378,7 @@ class PrependPath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class RemoveFirstPath(NameValueModifier):
+class RemoveFirstPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemoveFirstPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
@@ -372,7 +390,7 @@ class RemoveFirstPath(NameValueModifier):
         env[self.name] = self.separator.join(directories)
 
 
-class RemoveLastPath(NameValueModifier):
+class RemoveLastPath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemoveLastPath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
@@ -384,7 +402,7 @@ class RemoveLastPath(NameValueModifier):
         env[self.name] = self.separator.join(directories[::-1])
 
 
-class RemovePath(NameValueModifier):
+class RemovePath(NamePathModifier):
     def execute(self, env: MutableMapping[str, str]):
         tty.debug(f"RemovePath: {self.name}-{self.value}", level=3)
         environment_value = env.get(self.name, "")
@@ -417,6 +435,36 @@ class PruneDuplicatePaths(NameModifier):
             [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
         )
         env[self.name] = self.separator.join(directories)
+
+
+def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
+    """Ensure the value for an env variable is string or path"""
+    types = (str, pathlib.PurePath)
+    if isinstance(value, types):
+        return value
+    types_str = " or ".join([f"`{t.__name__}`" for t in types])
+    warnings.warn(
+        f"when setting environment variable {name}={value}: value is of type "
+        f"`{type(value).__name__}`, but {types_str} was expected. This is deprecated and will be "
+        f"an error in Spack v1.0",
+        spack.error.SpackAPIWarning,
+        stacklevel=3,
+    )
+    return str(value)
+
+
+def _validate_value(name: str, value: Any) -> str:
+    """Ensure the value for an env variable is a string"""
+    if isinstance(value, str):
+        return value
+    warnings.warn(
+        f"when setting environment variable {name}={value}: value is of type "
+        f"`{type(value).__name__}`, but `str` was expected. This is deprecated and will be an "
+        "error in Spack v1.0",
+        spack.error.SpackAPIWarning,
+        stacklevel=3,
+    )
+    return str(value)
 
 
 class EnvironmentModifications:
@@ -479,6 +527,7 @@ class EnvironmentModifications:
             force: if True, audit will not consider this modification a warning
             raw: if True, format of value string is skipped
         """
+        value = _validate_value(name, value)
         item = SetEnv(name, value, trace=self._trace(), force=force, raw=raw)
         self.env_modifications.append(item)
 
@@ -490,6 +539,7 @@ class EnvironmentModifications:
             value: flags to be appended
             sep: separator for the flags (default: " ")
         """
+        value = _validate_value(name, value)
         item = AppendFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
@@ -510,10 +560,11 @@ class EnvironmentModifications:
             value: flags to be removed
             sep: separator for the flags (default: " ")
         """
+        value = _validate_value(name, value)
         item = RemoveFlagsEnv(name, value, separator=sep, trace=self._trace())
         self.env_modifications.append(item)
 
-    def set_path(self, name: str, elements: List[str], separator: str = os.pathsep) -> None:
+    def set_path(self, name: str, elements: ListOfPaths, separator: str = os.pathsep) -> None:
         """Stores a request to set an environment variable to a list of paths,
         separated by a character defined in input.
 
@@ -522,10 +573,13 @@ class EnvironmentModifications:
             elements: ordered list paths
             separator: separator for the paths (default: os.pathsep)
         """
+        elements = [_validate_path_value(name, x) for x in elements]
         item = SetPath(name, elements, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def append_path(self, name: str, path: str, separator: str = os.pathsep) -> None:
+    def append_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to append a path to list of paths.
 
         Args:
@@ -533,10 +587,13 @@ class EnvironmentModifications:
             path: path to be appended
             separator: separator for the paths (default: os.pathsep)
         """
+        path = _validate_path_value(name, path)
         item = AppendPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def prepend_path(self, name: str, path: str, separator: str = os.pathsep) -> None:
+    def prepend_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to prepend a path to list of paths.
 
         Args:
@@ -544,10 +601,13 @@ class EnvironmentModifications:
             path: path to be prepended
             separator: separator for the paths (default: os.pathsep)
         """
+        path = _validate_path_value(name, path)
         item = PrependPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def remove_first_path(self, name: str, path: str, separator: str = os.pathsep) -> None:
+    def remove_first_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to remove first instance of path from a list of paths.
 
         Args:
@@ -555,10 +615,13 @@ class EnvironmentModifications:
             path: path to be removed
             separator: separator for the paths (default: os.pathsep)
         """
+        path = _validate_path_value(name, path)
         item = RemoveFirstPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def remove_last_path(self, name: str, path: str, separator: str = os.pathsep) -> None:
+    def remove_last_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to remove last instance of path from a list of paths.
 
         Args:
@@ -566,10 +629,13 @@ class EnvironmentModifications:
             path: path to be removed
             separator: separator for the paths (default: os.pathsep)
         """
+        path = _validate_path_value(name, path)
         item = RemoveLastPath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
-    def remove_path(self, name: str, path: str, separator: str = os.pathsep) -> None:
+    def remove_path(
+        self, name: str, path: Union[str, pathlib.PurePath], separator: str = os.pathsep
+    ) -> None:
         """Stores a request to remove a path from a list of paths.
 
         Args:
@@ -577,6 +643,7 @@ class EnvironmentModifications:
             path: path to be removed
             separator: separator for the paths (default: os.pathsep)
         """
+        path = _validate_path_value(name, path)
         item = RemovePath(name, path, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 

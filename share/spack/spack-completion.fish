@@ -1054,6 +1054,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a add -d 's
 complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a remove -d 'remove compiler by spec'
 complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a rm -d 'remove compiler by spec'
 complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a list -d 'list available compilers'
+complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a ls -d 'list available compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 compiler' -f -a info -d 'show compiler paths'
 complete -c spack -n '__fish_spack_using_command compiler' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler' -s h -l help -d 'show this help message and exit'
@@ -1112,6 +1113,13 @@ complete -c spack -n '__fish_spack_using_command compiler list' -s h -l help -f 
 complete -c spack -n '__fish_spack_using_command compiler list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler list' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler list' -l scope -r -d 'configuration scope to read from'
+
+# spack compiler ls
+set -g __fish_spack_optspecs_spack_compiler_ls h/help scope=
+complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -f -a '_builtin defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -d 'configuration scope to read from'
 
 # spack compiler info
 set -g __fish_spack_optspecs_spack_compiler_info h/help scope=
@@ -1707,6 +1715,7 @@ complete -c spack -n '__fish_spack_using_command extensions' -s s -l show -r -d 
 set -g __fish_spack_optspecs_spack_external h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a find -d 'add external packages to packages.yaml'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a list -d 'list detectable packages, by repository and name'
+complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a ls -d 'list detectable packages, by repository and name'
 complete -c spack -n '__fish_spack_using_command_pos 0 external' -f -a read-cray-manifest -d 'consume a Spack-compatible description of externally-installed packages, including dependency relationships'
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external' -s h -l help -d 'show this help message and exit'
@@ -1735,6 +1744,11 @@ complete -c spack -n '__fish_spack_using_command external find' -s j -l jobs -r 
 set -g __fish_spack_optspecs_spack_external_list h/help
 complete -c spack -n '__fish_spack_using_command external list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command external list' -s h -l help -d 'show this help message and exit'
+
+# spack external ls
+set -g __fish_spack_optspecs_spack_external_ls h/help
+complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command external ls' -s h -l help -d 'show this help message and exit'
 
 # spack external read-cray-manifest
 set -g __fish_spack_optspecs_spack_external_read_cray_manifest h/help file= directory= ignore-default-dir dry-run fail-on-error
@@ -1772,7 +1786,7 @@ complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -f -a conf
 complete -c spack -n '__fish_spack_using_command fetch' -l deprecated -d 'allow concretizer to select deprecated versions'
 
 # spack find
-set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
+set -g __fish_spack_optspecs_spack_find h/help format= H/hashes json I/install-status specfile-format d/deps p/paths groups no-groups l/long L/very-long t/tag= N/namespaces r/only-roots c/show-concretized f/show-flags show-full-compiler x/explicit X/implicit u/unknown m/missing v/variants loaded M/only-missing only-deprecated deprecated install-tree= start-date= end-date=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 find' -f -a '(__fish_spack_installed_specs)'
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command find' -s h -l help -d 'show this help message and exit'
@@ -1784,6 +1798,8 @@ complete -c spack -n '__fish_spack_using_command find' -l json -f -a json
 complete -c spack -n '__fish_spack_using_command find' -l json -d 'output specs as machine-readable json records'
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -f -a install_status
 complete -c spack -n '__fish_spack_using_command find' -s I -l install-status -d 'show install status of packages'
+complete -c spack -n '__fish_spack_using_command find' -l specfile-format -f -a specfile_format
+complete -c spack -n '__fish_spack_using_command find' -l specfile-format -d 'show the specfile format for installed deps '
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -f -a deps
 complete -c spack -n '__fish_spack_using_command find' -s d -l deps -d 'output dependencies along with found specs'
 complete -c spack -n '__fish_spack_using_command find' -s p -l paths -f -a paths

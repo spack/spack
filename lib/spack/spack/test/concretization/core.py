@@ -1719,7 +1719,7 @@ class TestConcretize:
 
     @pytest.mark.regression("45538")
     def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
-        myrepo = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        myrepo = spack.repo.MockRepositoryBuilder(tmpdir, namespace="mock_repo")
         myrepo.add_package("zlib")
 
         builtin = spack.concretize.concretize_one("zlib")
@@ -1727,21 +1727,19 @@ class TestConcretize:
 
         with spack.repo.use_repositories(myrepo.root, override=False):
             with spack.config.override("concretizer:reuse", True):
-                myrepo = spack.concretize.concretize_one("myrepo.zlib")
+                myrepo = spack.concretize.concretize_one("mock_repo.zlib")
 
-        assert myrepo.namespace == "myrepo"
+        assert myrepo.namespace == "mock_repo"
 
     @pytest.mark.regression("28259")
     def test_reuse_with_unknown_package_dont_raise(self, tmpdir, temporary_store, monkeypatch):
-        builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"), namespace="myrepo")
+        builder = spack.repo.MockRepositoryBuilder(str(tmpdir), namespace="myrepo")
         builder.add_package("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False):
             s = spack.concretize.concretize_one("pkg-c")
             assert s.namespace == "myrepo"
             PackageInstaller([s.package], fake=True, explicit=True).install()
-
-        del sys.modules["spack.pkg.myrepo.pkg-c"]
-        del sys.modules["spack.pkg.myrepo"]
+        del sys.modules["spack_repo.myrepo.packages.pkg_c"]
         builder.remove("pkg-c")
         with spack.repo.use_repositories(builder.root, override=False) as repos:
             # TODO (INJECT CONFIGURATION): unclear why the cache needs to be invalidated explicitly
@@ -1831,10 +1829,7 @@ class TestConcretize:
         monkeypatch.setattr(spack.solver.asp.Result, "unsolved_specs", simulate_unsolved_property)
         monkeypatch.setattr(spack.solver.asp.Result, "specs", list())
 
-        with pytest.raises(
-            spack.solver.asp.InternalConcretizerError,
-            match="a subset of input specs could not be solved for",
-        ):
+        with pytest.raises(spack.solver.asp.OutputDoesNotSatisfyInputError):
             list(solver.solve_in_rounds(specs))
 
     def test_coconcretize_reuse_and_virtuals(self):
@@ -2337,7 +2332,7 @@ class TestConcretize:
         from cli.
         """
         # 'builtin.mock" and "duplicates.test" share a 'gmake' package
-        additional_repo = os.path.join(spack.paths.repos_path, "duplicates.test")
+        additional_repo = os.path.join(spack.paths.test_repos_path, "duplicates.test")
         with spack.repo.use_repositories(additional_repo, override=False):
             s = spack.concretize.concretize_one(spec_str)
 
@@ -2581,7 +2576,7 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "duplicates.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "duplicates.test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -2816,7 +2811,7 @@ class TestConcreteSpecsByHash:
 
 @pytest.fixture()
 def edges_test_repository():
-    repository_path = os.path.join(spack.paths.repos_path, "edges.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "edges.test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -3110,7 +3105,9 @@ def test_spec_unification(unify, mutable_config, mock_packages):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
 
 
-def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
+def test_concretization_cache_roundtrip(
+    mock_packages, use_concretization_cache, monkeypatch, mutable_config
+):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
     # Force determinism:
@@ -3336,3 +3333,110 @@ def test_specifying_compilers_with_virtuals_syntax(default_mock_concretization):
     assert mpich["fortran"].satisfies("gcc")
     assert mpich["c"].satisfies("llvm")
     assert mpich["cxx"].satisfies("llvm")
+
+
+@pytest.mark.regression("49847")
+@pytest.mark.xfail(sys.platform == "win32", reason="issues with install mockery")
+def test_reuse_when_input_specifies_build_dep(install_mockery, do_not_check_runtimes_on_reuse):
+    """Test that we can reuse a spec when specifying build dependencies in the input"""
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9 %gcc@9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b %gcc")
+        assert pkgb_old.dag_hash() == result.dag_hash()
+
+        result = spack.concretize.concretize_one("pkg-a ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+        assert result.satisfies("%gcc@9")
+
+        result = spack.concretize.concretize_one("pkg-a %gcc@10 ^pkg-b %gcc@9")
+        assert pkgb_old.dag_hash() == result["pkg-b"].dag_hash()
+
+
+@pytest.mark.regression("49847")
+def test_reuse_when_requiring_build_dep(
+    install_mockery, do_not_check_runtimes_on_reuse, mutable_config
+):
+    """Test that we can reuse a spec when specifying build dependencies in requirements"""
+    mutable_config.set("packages:all:require", "%gcc")
+    pkgb_old = spack.concretize.concretize_one(spack.spec.Spec("pkg-b@0.9"))
+    PackageInstaller([pkgb_old.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        result = spack.concretize.concretize_one("pkg-b")
+        assert pkgb_old.dag_hash() == result.dag_hash(), result.tree()
+
+
+@pytest.mark.regression("50167")
+def test_input_analysis_and_conditional_requirements(default_mock_concretization):
+    """Tests that input analysis doesn't account for conditional requirement
+    to discard possible dependencies.
+
+    If the requirement is conditional, and impossible to achieve on the current
+    platform, the valid search space is still the complement of the condition that
+    activates the requirement.
+    """
+    libceed = default_mock_concretization("libceed")
+    assert libceed["libxsmm"].satisfies("@main")
+    assert libceed["libxsmm"].satisfies("platform=test")
+
+
+@pytest.mark.parametrize(
+    "compiler_str,expected,not_expected",
+    [
+        # Compiler queries are as specific as the constraint on the external
+        ("gcc@10", ["%gcc", "%gcc@10"], ["%clang", "%gcc@9"]),
+        ("gcc", ["%gcc"], ["%clang", "%gcc@9", "%gcc@10"]),
+    ],
+)
+@pytest.mark.regression("49841")
+def test_installing_external_with_compilers_directly(
+    compiler_str, expected, not_expected, mutable_config, mock_packages, tmp_path
+):
+    """Tests that version constraints are taken into account for compiler annotations
+    on externals
+    """
+    spec_str = f"libelf@0.8.12 %{compiler_str}"
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    buildable: false
+    externals:
+    - spec: {spec_str}
+      prefix: {tmp_path / 'libelf'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+    s = spack.concretize.concretize_one(spec_str)
+
+    assert s.external
+    assert all(s.satisfies(c) for c in expected)
+    assert all(not s.satisfies(c) for c in not_expected)
+
+
+@pytest.mark.regression("49841")
+def test_using_externals_with_compilers(mutable_config, mock_packages, tmp_path):
+    """Tests that version constraints are taken into account for compiler annotations
+    on externals, even imposed as transitive deps.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+packages:
+  libelf:
+    buildable: false
+    externals:
+    - spec: libelf@0.8.12 %gcc@10
+      prefix: {tmp_path / 'libelf'}
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    with pytest.raises(spack.error.SpackError):
+        spack.concretize.concretize_one("dyninst%gcc@10.2.1 ^libelf@0.8.12 %gcc@:9")
+
+    s = spack.concretize.concretize_one("dyninst%gcc@10.2.1 ^libelf@0.8.12 %gcc@10:")
+
+    libelf = s["libelf"]
+    assert libelf.external and libelf.satisfies("%gcc")

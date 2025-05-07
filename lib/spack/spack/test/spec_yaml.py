@@ -433,6 +433,10 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     assert s2.format("{compiler.name}") == "gcc"
     assert s2.format("{compiler.version}") != "none"
 
+    # Ensure satisfies still works with compilers
+    assert s2.satisfies("%gcc")
+    assert s2.satisfies("%gcc@9.4.0")
+
 
 def test_anchorify_1():
     """Test that anchorify replaces duplicate values with references to a single instance, and
