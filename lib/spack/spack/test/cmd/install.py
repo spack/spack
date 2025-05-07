@@ -171,7 +171,7 @@ def test_install_output_on_python_error(mock_packages, mock_archive, mock_fetch,
     assert 'raise InstallError("Expected failure.")' in out
 
 
-# TODO: deprecate along with --source
+# TODO: remove along with --source
 @pytest.mark.disable_clean_stage_check
 def test_install_with_source(mock_packages, mock_archive, mock_fetch, install_mockery):
     """Verify that source has been copied into place."""
