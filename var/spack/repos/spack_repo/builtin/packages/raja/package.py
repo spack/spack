@@ -377,8 +377,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
 
         entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
-        entries.append(cmake_cache_option("RAJA_ENABLE_NV_TOOLS_EXT", spec.satisfies("+gpu-profiling +cuda")))
-        entries.append(cmake_cache_option("RAJA_ENABLE_ROCTX", spec.satisfies("+gpu-profiling +rocm")))
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_NV_TOOLS_EXT", spec.satisfies("+gpu-profiling +cuda"))
+        )
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_ROCTX", spec.satisfies("+gpu-profiling +rocm"))
+        )
 
         if spec.satisfies("+lowopttest"):
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE", "-O1"))
