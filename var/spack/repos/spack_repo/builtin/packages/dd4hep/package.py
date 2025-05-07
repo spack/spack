@@ -154,7 +154,7 @@ class Dd4hep(CMakePackage):
         depends_on("podio@:0", when="@:1.29")
         depends_on("podio@0.16:", when="@1.24:")
         depends_on("podio@0.16.3:", when="@1.26:")
-        depends_on("podio@0.16.7:", when="@:")
+        depends_on("podio@0.16.7:", when="@1.31:")
 
     extends("python")
 
