@@ -3514,3 +3514,24 @@ def test_concrete_multi_valued_in_input_specs(default_mock_concretization):
     assert not s.external and s["c"].external
     assert s.satisfies("languages:=fortran")
     assert not s.satisfies("languages=c") and not s.satisfies("languages=c++")
+
+
+def test_concrete_multi_valued_variants_in_requirements(mutable_config, mock_packages, tmp_path):
+    """Tests that concrete multivalued variants can be imposed by requirements."""
+    packages_yaml = syaml.load_config(
+        """
+packages:
+  pkg-a:
+    require:
+    - libs:=static
+"""
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    with pytest.raises(spack.error.SpackError):
+        spack.concretize.concretize_one("pkg-a libs=shared")
+        spack.concretize.concretize_one("pkg-a libs=shared,static")
+
+    s = spack.concretize.concretize_one("pkg-a")
+    assert s.satisfies("libs:=static")
+    assert not s.satisfies("libs=shared")
