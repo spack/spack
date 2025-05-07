@@ -167,6 +167,7 @@ def setup_parser(subparser):
         action="store_true",
         help="print full build log to stderr if build fails",
     )
+    # DEPRECATED: set +install_source on the spec instead
     subparser.add_argument(
         "--source",
         action="store_true",

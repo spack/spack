@@ -2289,7 +2289,7 @@ class BuildProcessInstaller:
         self.fake = install_args.get("fake", False)
 
         # whether to install source code with the packag
-        self.install_source = install_args.get("install_source", False)
+        self.install_source = pkg.spec.satisfies("+install_source") or install_args.get("install_source", False)
 
         is_develop = pkg.spec.is_develop
         # whether to keep the build stage after installation
