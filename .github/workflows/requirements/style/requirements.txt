@@ -5,4 +5,4 @@ isort==6.0.1
 mypy==1.15.0
 types-six==1.17.0.20250403
 vermin==1.6.0
-pylint==3.3.6
+pylint==3.3.7

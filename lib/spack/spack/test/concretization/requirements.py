@@ -28,7 +28,7 @@ def update_packages_config(conf_str):
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.repos_path) / "requirements.test"
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "requirements.test"
     with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
         yield mock_repo_path
 

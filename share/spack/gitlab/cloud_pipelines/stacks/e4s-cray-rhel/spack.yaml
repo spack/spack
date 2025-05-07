@@ -44,7 +44,9 @@ spack:
       - netlib-scalapack
 
     ncurses:
-      require: +termlib ldflags=-Wl,--undefined-version
+      require:
+      - +termlib ldflags=-Wl,--undefined-version
+      - target=x86_64_v3
     tbb:
       require: "intel-tbb"
     binutils:
@@ -78,6 +80,7 @@ spack:
     petsc:
       require:
       - "+batch"
+      - target=x86_64_v3
     trilinos:
       require:
       - one_of: [+amesos +amesos2 +anasazi +aztec +boost +epetra +epetraext +ifpack

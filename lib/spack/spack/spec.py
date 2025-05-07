@@ -837,7 +837,7 @@ def _shared_subset_pair_iterate(container1, container2):
                 b_idx += 1
 
 
-class FlagMap(lang.HashableMap):
+class FlagMap(lang.HashableMap[str, List[CompilerFlag]]):
     __slots__ = ("spec",)
 
     def __init__(self, spec):
@@ -1861,9 +1861,7 @@ class Spec:
     @property
     def fullname(self):
         return (
-            ("%s.%s" % (self.namespace, self.name))
-            if self.namespace
-            else (self.name if self.name else "")
+            f"{self.namespace}.{self.name}" if self.namespace else (self.name if self.name else "")
         )
 
     @property
@@ -4490,7 +4488,7 @@ class Spec:
         return bool(self.dependencies(virtuals=(virtual,)))
 
 
-class VariantMap(lang.HashableMap):
+class VariantMap(lang.HashableMap[str, vt.VariantValue]):
     """Map containing variant instances. New values can be added only
     if the key is not already present."""
 
