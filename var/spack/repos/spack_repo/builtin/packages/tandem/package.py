@@ -18,6 +18,7 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main", submodules=True)
+    version("1.2.0-rc", branch="dmay/staging", submodules=True)
 
     # we cannot use the tar.gz file because it does not contains submodules
     version(
@@ -51,6 +52,15 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     for var in ["openmpi", "mpich", "mvapich", "mvapich2", "mvapich2-gdr"]:
         depends_on(f"{var} +cuda", when=f"+cuda ^[virtuals=mpi] {var}")
 
+    for var in ["openmpi", "mpich"]:
+        for tgt in CudaPackage.cuda_arch_values:
+            depends_on(
+                f"{var} +cuda cuda_arch={tgt}", when=f"+cuda cuda_arch={tgt} ^[virtuals=mpi] {var}"
+            )
+    # these 3 are not cuda packages
+    for var in ["mvapich", "mvapich2", "mvapich2-gdr"]:
+        depends_on(f"{var} +cuda", when=f"+cuda ^[virtuals=mpi] {var}")
+
     for var in ["mpich", "mvapich2-gdr"]:
         depends_on(f"{var} +rocm", when=f"+rocm ^[virtuals=mpi] {var}")
 
@@ -61,7 +71,16 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("eigen@3.4.0")
 
     depends_on("zlib-api")
-    depends_on("petsc@3.16: +int64 +mumps +scalapack memalign=32")
+
+    conflicts("^petsc memalign=none")
+    conflicts("^petsc memalign=4")
+    conflicts("^petsc memalign=8")
+    conflicts("^petsc memalign=16")
+
+    depends_on("petsc +int64 +mumps +scalapack memalign=32")
+    depends_on("petsc@3.22:", when="@1.2:")
+    depends_on("petsc@3.16:3.17", when="@:1.1")
+
     depends_on("petsc +knl", when="target=skylake:")
 
     with when("+cuda"):
@@ -72,7 +91,9 @@ class Tandem(CMakePackage, CudaPackage, ROCmPackage):
             depends_on(f"petsc +rocm amdgpu_target={tgt}", when=f"+rocm amdgpu_target={tgt}")
 
     depends_on("python@3", type="build", when="+python")
+    depends_on("python@3.9:", type="build", when="@:1.2 +python")
     depends_on("py-numpy", type="build", when="+python")
+    depends_on("py-setuptools", type="build", when="+python")
 
     # see https://github.com/TEAR-ERC/tandem/issues/45
     conflicts("%intel")
