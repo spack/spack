@@ -35,7 +35,7 @@ class Shamrock(CMakePackage):
     requires(
         "^[virtuals=sycl] intel-oneapi",
         "^[virtuals=sycl] hipsycl",
-        # policy="one_of",
+        policy="one_of",
         msg="sycl provider must be one of intel-oneapi or hipsycl",
     )
 
