@@ -107,7 +107,7 @@ class Met(AutotoolsPackage):
             ldflags.append("-L" + netcdfc.prefix.lib)
             libs.append(netcdfc.libs.link_flags)
         else:
-            nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+            nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"), required=True)
             cppflags.append(nc_config("--cflags", output=str).strip())
             ldflags.append(nc_config("--libs", "--static", output=str).strip())
             libs.append(nc_config("--libs", "--static", output=str).strip())

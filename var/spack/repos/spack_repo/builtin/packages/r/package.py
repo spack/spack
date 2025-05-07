@@ -279,8 +279,7 @@ class R(AutotoolsPackage):
             if d.package.extends(self.spec):
                 r_libs_path.append(join_path(d.prefix, self.r_lib_dir))
 
-        r_libs_path = ":".join(r_libs_path)
-        env.set("R_LIBS", r_libs_path)
+        env.set("R_LIBS", ":".join(r_libs_path))
         # R_LIBS_USER gets set to a directory in HOME/R if it is not set, such as
         # during package installation with the --vanilla flag. Set it to null
         # to ensure that it does not point to a directory that may contain R

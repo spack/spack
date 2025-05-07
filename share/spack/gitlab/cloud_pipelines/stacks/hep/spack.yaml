@@ -8,6 +8,7 @@ spack:
 
   packages:
     all:
+      target: ["x86_64_v3"]
       require:
       - "%gcc"
       - target=x86_64_v3
@@ -17,20 +18,34 @@ spack:
         tbb: [intel-tbb]
       variants: +mpi
     acts:
-      require: +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python +svg +tgeo cxxstd=20
+      require:
+      - +analysis +dd4hep +edm4hep +examples +fatras +geant4 +hepmc3 +podio +pythia8 +python +svg +tgeo cxxstd=20
+      - target=x86_64_v3
     celeritas:
-      require: +geant4 +hepmc3 +root +shared cxxstd=20
+      require:
+      - +geant4 +hepmc3 +root +shared cxxstd=20
+      - target=x86_64_v3
     geant4:
-      require: +opengl +qt +threads +x11
+      require:
+      - +opengl +qt +threads +x11
+      - target=x86_64_v3
     hip:
-      require: '@5.7.1 +rocm'
+      require:
+      - '@5.7.1 +rocm'
+      - target=x86_64_v3
     rivet:
-      require: hepmc=3
+      require:
+      - hepmc=3
+      - target=x86_64_v3
     root:
-      require: +arrow ~daos +davix +dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
+      require:
+      - +arrow ~daos +davix +dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
       # note: root cxxstd=20 not concretizable within sherpa
+      - target=x86_64_v3
     vecgeom:
-      require: +gdml +geant4 +root +shared cxxstd=20
+      require:
+      - +gdml +geant4 +root +shared cxxstd=20
+      - target=x86_64_v3
 
     # Mark geant4 data as external to prevent wasting bandwidth on GB-scale files
     geant4-data:
