@@ -1,11 +1,8 @@
 [project]
-name="spack"
-description="The spack package manager"
-requires-python=">=3.6"
-dependencies=[
-  "clingo",
-  "setuptools",
-]
+name = "spack"
+description = "The spack package manager"
+requires-python = ">=3.6"
+dependencies = ["clingo", "setuptools"]
 dynamic = ["version"]
 
 [project.scripts]
@@ -21,16 +18,13 @@ dev = [
   "pytest-xdist",
   "setuptools",
   "click",
-  'black',
+  "black",
   "mypy",
   "isort",
   "flake8",
   "vermin",
 ]
-ci = [
-  "pytest-cov",
-  "codecov[toml]",
-]
+ci = ["pytest-cov", "codecov[toml]"]
 
 [build-system]
 requires = ["hatchling"]
@@ -53,9 +47,7 @@ include = [
 ]
 
 [tool.hatch.envs.default]
-features = [
-  "dev",
-]
+features = ["dev"]
 
 [tool.hatch.envs.default.scripts]
 spack = "./bin/spack"
@@ -63,10 +55,7 @@ style = "./bin/spack style"
 test = "./bin/spack unit-test"
 
 [tool.hatch.envs.ci]
-features = [
-  "dev",
-  "ci",
-]
+features = ["dev", "ci"]
 
 [tool.ruff]
 line-length = 99
@@ -83,14 +72,14 @@ ignore = ["E731", "E203"]
 [tool.ruff.lint.isort]
 split-on-trailing-comma = false
 section-order = [
-    "future",
-    "standard-library",
-    "third-party",
-    "archspec",
-    "llnl",
-    "spack",
-    "first-party",
-    "local-folder",
+  "future",
+  "standard-library",
+  "third-party",
+  "archspec",
+  "llnl",
+  "spack",
+  "first-party",
+  "local-folder",
 ]
 
 [tool.ruff.lint.isort.sections]
@@ -104,8 +93,8 @@ llnl = ["llnl"]
 
 [tool.black]
 line-length = 99
-include = '(lib/spack|var/spack/repos|var/spack/test_repos)/.*\.pyi?$|bin/spack$'
-extend-exclude = 'lib/spack/external'
+include = "(lib/spack|var/spack/repos|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
+extend-exclude = "lib/spack/external"
 skip_magic_trailing_comma = true
 
 [tool.isort]
@@ -115,7 +104,9 @@ sections = [
   "FUTURE",
   "STDLIB",
   "THIRDPARTY",
-  "ARCHSPEC", "LLNL", "FIRSTPARTY",
+  "ARCHSPEC",
+  "LLNL",
+  "FIRSTPARTY",
   "LOCALFOLDER",
 ]
 known_first_party = "spack"
@@ -129,13 +120,9 @@ honor_noqa = true
 files = [
   "lib/spack/llnl/**/*.py",
   "lib/spack/spack/**/*.py",
-  "var/spack/repos/spack_repo/builtin/packages/*/package.py"
+  "var/spack/repos/spack_repo/builtin/packages/*/package.py",
 ]
-mypy_path = [
-  "lib/spack",
-  "lib/spack/external",
-  "var/spack/repos",
-]
+mypy_path = ["lib/spack", "lib/spack/external", "var/spack/repos"]
 allow_redefinition = true
 
 # This and a generated import file allows supporting packages
@@ -146,68 +133,68 @@ namespace_packages = true
 ignore_errors = true
 ignore_missing_imports = true
 
-  [[tool.mypy.overrides]]
-  module = 'spack.*'
-  ignore_errors = false
-  ignore_missing_imports = false
+[[tool.mypy.overrides]]
+module = "spack.*"
+ignore_errors = false
+ignore_missing_imports = false
 
-  [[tool.mypy.overrides]]
-  module = 'spack_repo.*'
-  ignore_errors = false
-  ignore_missing_imports = false
-  # we can't do this here, not a module scope option, in spack style instead
-  # disable_error_code = 'no-redef'
+[[tool.mypy.overrides]]
+module = "spack_repo.*"
+ignore_errors = false
+ignore_missing_imports = false
+# we can't do this here, not a module scope option, in spack style instead
+# disable_error_code = 'no-redef'
 
-  [[tool.mypy.overrides]]
-  module = 'llnl.*'
-  ignore_errors = false
-  ignore_missing_imports = false
+[[tool.mypy.overrides]]
+module = "llnl.*"
+ignore_errors = false
+ignore_missing_imports = false
 
-  [[tool.mypy.overrides]]
-  module = 'spack.test.packages'
-  ignore_errors = true
+[[tool.mypy.overrides]]
+module = "spack.test.packages"
+ignore_errors = true
 
-  # ignore errors in fake import path for packages
-  [[tool.mypy.overrides]]
-  module = 'spack.pkg.*'
-  ignore_errors = true
-  ignore_missing_imports = true
+# ignore errors in fake import path for packages
+[[tool.mypy.overrides]]
+module = "spack.pkg.*"
+ignore_errors = true
+ignore_missing_imports = true
 
-  # Spack imports a number of external packages, and they *may* require Python 3.8 or
-  # higher in recent versions. This can cause mypy to fail because we check for 3.7
-  # compatibility. We could restrict mypy to run for the oldest supported version (3.7),
-  # but that means most developers won't be able to run mypy, which means it'll fail
-  # more in CI. Instead, we exclude these imported packages from mypy checking.
-  [[tool.mypy.overrides]]
-  module = [
-      'IPython',
-      'altgraph',
-      'attr',
-      'boto3',
-      'botocore',
-      'distro',
-      'importlib.metadata',
-      'jinja2',
-      'jsonschema',
-      'macholib',
-      'markupsafe',
-      'numpy',
-      'pkg_resources',
-      'pyristent',
-      'pytest',
-      'ruamel.yaml',
-      'six',
-  ]
-  follow_imports = 'skip'
-  follow_imports_for_stubs = true
+# Spack imports a number of external packages, and they *may* require Python 3.8 or
+# higher in recent versions. This can cause mypy to fail because we check for 3.7
+# compatibility. We could restrict mypy to run for the oldest supported version (3.7),
+# but that means most developers won't be able to run mypy, which means it'll fail
+# more in CI. Instead, we exclude these imported packages from mypy checking.
+[[tool.mypy.overrides]]
+module = [
+  "IPython",
+  "altgraph",
+  "attr",
+  "boto3",
+  "botocore",
+  "distro",
+  "importlib.metadata",
+  "jinja2",
+  "jsonschema",
+  "macholib",
+  "markupsafe",
+  "numpy",
+  "pkg_resources",
+  "pyristent",
+  "pytest",
+  "ruamel.yaml",
+  "six",
+]
+follow_imports = "skip"
+follow_imports_for_stubs = true
 
 [tool.pyright]
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportWildcardImportFromLibrary = false
-include = ['lib/spack', 'var/spack/repos', 'var/spack/test_repos']
-ignore = ['lib/spack/external']
-extraPaths = ['lib/spack', 'lib/spack/external']
+include = ["lib/spack", "var/spack/repos", "var/spack/test_repos"]
+ignore = ["lib/spack/external"]
+extraPaths = ["lib/spack", "lib/spack/external"]
 
 
 [tool.coverage.run]
@@ -217,39 +204,39 @@ branch = true
 source = ["bin", "lib"]
 data_file = "./tests-coverage/.coverage"
 omit = [
-    'lib/spack/spack/test/*',
-    'lib/spack/docs/*',
-    'lib/spack/external/*',
-    'share/spack/qa/*',
+  "lib/spack/spack/test/*",
+  "lib/spack/docs/*",
+  "lib/spack/external/*",
+  "share/spack/qa/*",
 ]
 
 [tool.coverage.report]
 # Regexes for lines to exclude from consideration
 exclude_lines = [
-    # Have to re-enable the standard pragma
-    'pragma: no cover',
+  # Have to re-enable the standard pragma
+  "pragma: no cover",
 
-    # Don't complain about missing debug-only code:
-    'def __repr__',
-    'if self\.debug',
+  # Don't complain about missing debug-only code:
+  "def __repr__",
+  "if self\\.debug",
 
-    # Don't complain if tests don't hit defensive assertion code:
-    'raise AssertionError',
-    'raise NotImplementedError',
+  # Don't complain if tests don't hit defensive assertion code:
+  "raise AssertionError",
+  "raise NotImplementedError",
 
-    # Don't complain if non-runnable code isn't run:
-    'if 0:',
-    'if False:',
-    'if __name__ == .__main__.:',
+  # Don't complain if non-runnable code isn't run:
+  "if 0:",
+  "if False:",
+  "if __name__ == .__main__.:",
 ]
 ignore_errors = true
 
 [tool.coverage.paths]
 source = [
-    ".",
-    "/Users/runner/work/spack/spack",
-    "/System/Volumes/Data/home/runner/work/spack/spack",
-    "D:\\a\\spack\\spack",
+  ".",
+  "/Users/runner/work/spack/spack",
+  "/System/Volumes/Data/home/runner/work/spack/spack",
+  "D:\\a\\spack\\spack",
 ]
 
 [tool.coverage.html]
@@ -264,8 +251,7 @@ protected-files = ["__init__.py", "README.rst", "vendor.txt"]
 patches-dir = "lib/spack/external/patches"
 
 [tool.vendoring.transformations]
-substitute = [
-]
+substitute = []
 drop = [
   # contains unnecessary scripts
   "bin/",
@@ -278,12 +264,12 @@ drop = [
   "pkg_resources/extern/",
   # trim vendored pygments styles and lexers
   "pygments/styles/[!_]*.py",
-  '^pygments/lexers/(?!python|__init__|_mapping).*\.py$',
+  "^pygments/lexers/(?!python|__init__|_mapping).*\\.py$",
   # trim rich's markdown support
   "rich/markdown.py",
   # ruamel.yaml installs unneded files
   "ruamel.*.pth",
-  "pvectorc.*.so"
+  "pvectorc.*.so",
 ]
 
 [tool.vendoring.typing-stubs]

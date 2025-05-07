@@ -57,6 +57,7 @@ spack:
       require:
       - gromacs@2024.3 ^armpl-gcc ^openmpi
       - "%gcc"
+      - target=neoverse_v1
     libfabric:
       buildable: true
       externals:
@@ -64,33 +65,42 @@ spack:
         spec: libfabric@1.17.0
       require:
       - fabrics=shm,efa
+      - target=neoverse_v1
     llvm:
       variants: ~lldb
     mpas-model:
       require:
       - precision=single ^parallelio+pnetcdf
       - "%gcc"
+      - target=neoverse_v1
     mpich:
       require:
       - mpich pmi=pmi2 device=ch4 netmod=ofi +slurm
+      - target=neoverse_v1
     nvhpc:
       require:
       - "target=aarch64"
     openfoam:
       require:
       - openfoam ^scotch@6.0.9
+      - target=neoverse_v1
     openmpi:
       variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
-      require: '@4:'
+      require:
+      - '@4:'
+      - target=neoverse_v1
     # Palace does not build correctly with armpl until https://github.com/awslabs/palace/pull/207 is merged into a version.
     # palace:
     #   require:
     #     - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
     pmix:
-      require: "pmix@3:"
+      require:
+      - "pmix@3:"
+      - target=neoverse_v1
     quantum-espresso:
       require:
       - quantum-espresso@6.6 %gcc ^armpl-gcc
+      - target=neoverse_v1
     slurm:
       buildable: false
       externals:
@@ -99,8 +109,10 @@ spack:
       require:
       - "+pmix"
     all:
+      target: ["neoverse_v1"]
       require:
       - "%gcc"
+      - "target=neoverse_v1"
       providers:
         blas: [armpl-gcc, openblas]
         fftw-api: [armpl-gcc, fftw]
