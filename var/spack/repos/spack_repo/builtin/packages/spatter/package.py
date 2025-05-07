@@ -22,9 +22,13 @@ class Spatter(CMakePackage, CudaPackage):
         description="Configuration string",
     )
     variant("mpi", default=False, description="Enable MPI support")
-    variant('cuda_arch', default='none', multi=True, description='CUDA architecture')
+    variant("cuda_arch", default="none", multi=True, description="CUDA architecture")
 
-    conflicts('backend=cuda', when='cuda_arch=none', msg='CUDA architecture must be specified when CUDA support is enabled.')
+    conflicts(
+        "backend=cuda",
+        when="cuda_arch=none",
+        msg="CUDA architecture must be specified when CUDA support is enabled.",
+    )
 
     version("develop", branch="spatter-devel")
     version("main", branch="main", preferred=True)
@@ -42,7 +46,7 @@ class Spatter(CMakePackage, CudaPackage):
         elif self.spec.satisfies("backend=cuda"):
             args.append(self.define("USE_CUDA", "On"))
             args.append(
-                self.define("CMAKE_CUDA_ARCHITECTURES", self.spec.variants['cuda_arch'].value)
+                self.define("CMAKE_CUDA_ARCHITECTURES", self.spec.variants["cuda_arch"].value)
             )
 
         args.append(self.define_from_variant("USE_MPI", "mpi"))
