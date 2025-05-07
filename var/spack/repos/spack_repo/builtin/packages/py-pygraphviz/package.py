@@ -40,7 +40,7 @@ class PyPygraphviz(PythonPackage):
     @run_before("install")
     def fix_setup(self):
         inc_dir = self["graphviz"].prefix.include
-        lib_dir = self["graphviz"].prefix.lib
+        lib_dir = self["graphviz"].prefix.libs.directories[0]
         fsetup = FileFilter(join_path(self.build_directory, "setup.py"))
         fsetup.filter( "include_dirs=[],", f"include_dirs = [\"{inc_dir}\"],", string=True )
         fsetup.filter( "library_dirs=[],", f"library_dirs = [\"{lib_dir}\"],", string=True )
