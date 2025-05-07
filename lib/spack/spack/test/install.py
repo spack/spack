@@ -51,6 +51,19 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     assert not spec.installed
 
 
+def test_install_with_source(install_mockery, mock_fetch, monkeypatch):
+    spec = spack.concretize.concretize_one("trivial-install-test-package +install_source")
+
+    PackageInstaller([spec.package], explicit=True).install()
+
+    where_the_source_should_be = os.path.join(spec.prefix.share, "trivial-install-test-package", "src")
+    configure_path = fs.find_first(where_the_source_should_be, "configure")
+    assert bool(configure_path), "The source was not found"
+
+    with open(configure_path, "r", encoding="utf-8") as f:
+        assert any(line == "prefix=$(echo $1 | sed 's/--prefix=//')\n" for line in f.readlines())
+
+
 @pytest.mark.regression("11870")
 def test_uninstall_non_existing_package(install_mockery, mock_fetch, monkeypatch):
     """Ensure that we can uninstall a package that has been deleted from the repo"""
