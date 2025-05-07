@@ -1091,7 +1091,6 @@ class RemoveRequires(RemoveConflicts):
         return "requirements"
 
     def get_spec(self, directive_entry):
-        print(f"{directive_entry=}")
         return directive_entry[0][0]
 
 
