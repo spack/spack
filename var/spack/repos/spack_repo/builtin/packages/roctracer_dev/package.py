@@ -160,6 +160,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             )
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
+        env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
         if self.spec.satisfies("+asan"):
             self.asan_on(env)
 
