@@ -1,0 +1,44 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+    static_analysis: true
+
+  packages:
+    all:
+      require:
+      - "%gcc"
+      - target=x86_64_v3
+      variants: +mpi
+    c:
+      require: gcc
+    cxx:
+      require: gcc
+    fortran:
+      require: gcc
+    mpi:
+      require:
+      - openmpi
+    blas:
+      require:
+      - openblas
+    lapack:
+      require:
+      - openblas
+  specs:
+  - python
+  - py-numpy
+  - py-scipy
+  - py-matplotlib
+  - py-pip
+  - py-mpi4py
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-gcc-11.4:2024.03.01
+
+  cdash:
+    build-group: spack-snake
