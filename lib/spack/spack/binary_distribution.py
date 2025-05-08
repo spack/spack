@@ -717,7 +717,11 @@ def _read_specs_and_push_index(
         temp_dir: Location to write index.json and hash for pushing
     """
     for file in file_list:
-        fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+        try:
+            fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+        except Exception as e:
+            tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+            continue
         db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 

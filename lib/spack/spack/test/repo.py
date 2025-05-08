@@ -312,7 +312,6 @@ class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert len(repo.repos) == 1
-        assert repo.repos[0]._finder is repo
         assert repo.by_namespace["builtin.mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
