@@ -750,6 +750,7 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
         cache_entry.destroy()
         return spec_dict
 
+    url_to_list = url_util.join(url, buildcache_relative_specs_url())
     sync_command_args = [
         "s3",
         "sync",
@@ -757,11 +758,11 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
         "*",
         "--include",
         "*.spec.manifest.json",
-        url,
+        url_to_list,
         tmpspecsdir,
     ]
 
-    tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
+    tty.debug(f"Using aws s3 sync to download manifests from {url_to_list} to {tmpspecsdir}")
 
     try:
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
