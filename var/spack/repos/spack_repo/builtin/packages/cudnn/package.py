@@ -355,16 +355,17 @@ class Cudnn(Package):
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)
-        cudnn_ver, cuda_ver = ver.split("-")
-        long_ver = "{0}-{1}".format(cudnn_ver, cuda_ver)
+        cudnn_ver, cuda_ver_str = ver.split("-")
+        cuda_ver = Version(cuda_ver_str)
+        long_ver = f"{cudnn_ver}-{cuda_ver}"
         if pkg:
             version(long_ver, sha256=pkg)
             # Add constraints matching CUDA version to cuDNN version
             # cuDNN builds for CUDA 11.x are compatible with all CUDA 11.x:
             # https://docs.nvidia.com/deeplearning/cudnn/support-matrix/index.html#fntarg_2
-            if Version(cuda_ver) >= Version("11"):
-                cuda_ver = Version(cuda_ver).up_to(1)
-            depends_on("cuda@{}".format(cuda_ver), when="@{}".format(long_ver))
+            if cuda_ver >= Version("11"):
+                cuda_ver = cuda_ver.up_to(1)
+            depends_on(f"cuda@{cuda_ver}", when=f"@{long_ver}")
 
     def url_for_version(self, version):
         # Get the system and machine arch for building the file path

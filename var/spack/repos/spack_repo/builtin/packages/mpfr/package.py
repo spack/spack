@@ -54,20 +54,16 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
 
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
-    patches = {
-        "4.0.2": "3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0",
-        "4.0.1": "5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739",
-        "3.1.6": "7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008",
-        "3.1.5": "1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04",
-        "3.1.4": "113705d5333ef0d0ad3eb136a85404ba6bd1cc524dece5ce902c536aa2e29903",
-        "3.1.3": "4152a780b3cc6e9643283e59093b43460196d0fea9302d8c93b2496f6679f4e4",
-        "3.1.2": "1b9fdb515efb09a506a01e1eb307b1464455f5ca63d6c193db3a3da371ab3220",
-    }
-
-    for ver, checksum in patches.items():
-        patch(
-            "https://www.mpfr.org/mpfr-{0}/allpatches".format(ver), when="@" + ver, sha256=checksum
-        )
+    for ver, checksum in (
+        ("4.0.2", "3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0"),
+        ("4.0.1", "5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739"),
+        ("3.1.6", "7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008"),
+        ("3.1.5", "1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04"),
+        ("3.1.4", "113705d5333ef0d0ad3eb136a85404ba6bd1cc524dece5ce902c536aa2e29903"),
+        ("3.1.3", "4152a780b3cc6e9643283e59093b43460196d0fea9302d8c93b2496f6679f4e4"),
+        ("3.1.2", "1b9fdb515efb09a506a01e1eb307b1464455f5ca63d6c193db3a3da371ab3220"),
+    ):
+        patch(f"https://www.mpfr.org/mpfr-{ver}/allpatches", when=f"@{ver}", sha256=checksum)
 
     def flag_handler(self, name, flags):
         # Work around macOS Catalina / Xcode 11 code generation bug
