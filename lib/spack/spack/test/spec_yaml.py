@@ -14,7 +14,6 @@ import io
 import json
 import os
 import pickle
-import re
 
 import _vendoring.ruamel.yaml
 import pytest
@@ -389,8 +388,6 @@ ordered_spec = collections.OrderedDict(
     ]
 )
 
-specfile_version_regex = re.compile(r"specfiles/hdf5.([a-z0-9]*).*")
-
 
 @pytest.mark.parametrize(
     "specfile,expected_hash,reader_cls",
@@ -424,8 +421,7 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     assert len(openmpi_edges) == 1
 
     # Check that virtuals have been reconstructed
-    match = re.search(specfile_version_regex, specfile)
-    if match.group(1) >= "v020":
+    if reader_cls.SPEC_VERSION >= spack.spec.SpecfileV4.SPEC_VERSION:
         assert "mpi" in openmpi_edges[0].virtuals
 
         # The virtuals attribute must be a tuple, when read from a
