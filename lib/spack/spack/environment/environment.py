@@ -2312,8 +2312,12 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
-        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        namespace: str = spec_node.namespace
+        repository = spack.repo.create_or_construct(
+            root=os.path.join(self.repos_path, namespace),
+            namespace=namespace,
+            package_api=spack.repo.PATH.get_repo(namespace).package_api,
+        )
         pkg_dir = repository.dirname_for_package_name(spec_node.name)
         fs.mkdirp(pkg_dir)
         spack.repo.PATH.dump_provenance(spec_node, pkg_dir)
