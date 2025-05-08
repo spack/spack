@@ -476,7 +476,8 @@ provider(ProviderNode, VirtualNode) :- attr("provider_set", ProviderNode, Virtua
 % each condition separately, i.e. foo:=a,b in one place and foo:=c in another
 % should not make foo:=a,b,c possible
 attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
-  :- impose(ID, node(X, A1)),
+  :- impose(ID, PackageNode),
+     imposed_nodes(ID, PackageNode, node(X, A1)),
      imposed_constraint(ID, "concrete_variant_set", A1, Variant, Value).
 
 

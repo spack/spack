@@ -3535,3 +3535,15 @@ packages:
     s = spack.concretize.concretize_one("pkg-a")
     assert s.satisfies("libs:=static")
     assert not s.satisfies("libs=shared")
+
+
+def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretization):
+    """Tests the use of := in depends_on directives"""
+    with pytest.raises(spack.error.SpackError):
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
+        default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
+
+    s = default_mock_concretization("gmt-concrete-mv-dependency")
+    assert s.satisfies("^mvdefaults foo:=a,b"), s.tree()
+    assert not s.satisfies("^mvdefaults foo=c")
