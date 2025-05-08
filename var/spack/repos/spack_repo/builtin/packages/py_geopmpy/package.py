@@ -13,30 +13,48 @@ class PyGeopmpy(PythonPackage):
 
     homepage = "https://geopm.github.io"
     git = "https://github.com/geopm/geopm.git"
-    url = "https://github.com/geopm/geopm/tarball/v3.1.0"
+    url = "https://github.com/geopm/geopm/tarball/v3.2.0"
 
     maintainers("bgeltz", "cmcantalupo")
     license("BSD-3-Clause")
     tags = ["e4s"]
 
     version("develop", branch="dev", get_full_repo=True)
+    version("3.2.0", sha256="b708233e1bfda66408c500f2ac0cbaf042140870bffdced12dd7cabbd18e0025")
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
 
+    for ver in ["3.1.0", "3.2.0", "develop"]:
+        depends_on(f"py-geopmdpy@{ver}", type="run", when=f"@{ver}")
+        depends_on(f"geopm-runtime@{ver}", type=("build", "run"), when=f"@{ver}")
+
     depends_on("python@3.6:3", type=("build", "run"))
-    depends_on("py-setuptools@53.0.0:", type="build")
+    depends_on("py-setuptools@53.0.0:", when="@3.1", type="build")
+    depends_on("py-setuptools@59.6.0:", when="@3.2:", type="build")
     depends_on("py-setuptools-scm@7.0.3:", when="@3.1:", type="build")
     depends_on("py-build@0.9.0:", when="@3.1:", type="build")
-    depends_on("py-cffi@1.14.5:", type="run")
+    depends_on("py-cffi@1.14.5:", when="@3.1.0", type="run")
+    depends_on("py-cffi@1.14.5:", when="@3.2:", type=("build", "run"))
     depends_on("py-natsort@8.2.0:", type="run")
     depends_on("py-numpy@1.19.5:", type="run")
     depends_on("py-pandas@1.1.5:", type="run")
     depends_on("py-tables@3.7.0:", type="run")
     depends_on("py-psutil@5.8.0:", type="run")
     depends_on("py-pyyaml@6.0:", type="run")
+
+    # Integration test dependencies
     depends_on("py-docutils@0.18:", type="run")
+    depends_on("py-dash@2.17.1:", type="run")
+    depends_on("py-matplotlib", type="run")
+    depends_on("py-plotly@5.18.0:", type="run")
+    depends_on("py-torch@1.10.2:", type="run")
+    depends_on("numactl", type="run")
+    depends_on("stress-ng", type="run")
 
     build_directory = "geopmpy"
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
+        if self.version >= Version("3.2.0"): # Required for CFFI API mode builds
+            env.append_path("C_INCLUDE_PATH", self.spec["geopm-runtime"].prefix.include)
+            env.append_path("LIBRARY_PATH", self.spec["geopm-runtime"].prefix.lib)

@@ -16,15 +16,16 @@ class GeopmRuntime(AutotoolsPackage):
 
     homepage = "https://geopm.github.io"
     git = "https://github.com/geopm/geopm.git"
-    url = "https://github.com/geopm/geopm/tarball/v3.1.0"
+    url = "https://github.com/geopm/geopm/tarball/v3.2.0"
 
     maintainers("bgeltz", "cmcantalupo")
     license("BSD-3-Clause")
     tags = ["e4s"]
 
     version("develop", branch="dev", get_full_repo=True)
+    version("3.2.0", sha256="b708233e1bfda66408c500f2ac0cbaf042140870bffdced12dd7cabbd18e0025")
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
-    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
+    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234", deprecated=True)
 
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=False, when="@3.0.1", description="Create man pages with Sphinx")
@@ -87,23 +88,21 @@ class GeopmRuntime(AutotoolsPackage):
         depends_on("py-docutils@0.18:", type="run", when="+checkprogs")
 
     # Other dependencies
-    for ver in ["3.0.1", "3.1.0", "develop"]:
+    for ver in ["3.0.1", "3.1.0", "3.2.0", "develop"]:
         depends_on(f"geopm-service@{ver}", type=("build", "run"), when=f"@{ver}")
-        depends_on(f"py-geopmdpy@{ver}", type="run", when=f"@{ver}")
-        if ver != "3.0.1":  # geopmpy integrated into autotools build until 3.1
-            depends_on(f"py-geopmpy@{ver}", type="run", when=f"@{ver}")
+
     depends_on("py-setuptools-scm@7.0.3:", when="@3.1:", type="build")
     depends_on("bash-completion")
     depends_on("unzip")
     depends_on("mpi@2.2:", when="+mpi")
     depends_on("libelf")
-    depends_on("numactl", type="run", when="+checkprogs")
-    depends_on("stress-ng", type="run", when="+checkprogs")
+    depends_on("numactl", type="run", when="@3.0.1 +checkprogs")
+    depends_on("stress-ng", type="run", when="@3.0.1 +checkprogs")
 
     # Intel dependencies
     depends_on("intel-oneapi-mkl%oneapi", when="+intel-mkl")
 
-    extends("python")
+    extends("python", when="@3.0.1")
 
     @property
     def configure_directory(self):

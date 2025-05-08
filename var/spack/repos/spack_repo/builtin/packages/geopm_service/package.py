@@ -19,19 +19,21 @@ class GeopmService(AutotoolsPackage):
 
     homepage = "https://geopm.github.io"
     git = "https://github.com/geopm/geopm.git"
-    url = "https://github.com/geopm/geopm/tarball/v3.1.0"
+    url = "https://github.com/geopm/geopm/tarball/v3.2.0"
 
     maintainers("bgeltz", "cmcantalupo")
     license("BSD-3-Clause")
     tags = ["e4s"]
 
     version("develop", branch="dev", get_full_repo=True)
+    version("3.2.0", sha256="b708233e1bfda66408c500f2ac0cbaf042140870bffdced12dd7cabbd18e0025")
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
-    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234")
+    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234", deprecated=True)
 
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, when="@3.0.1", description="Create man pages with Sphinx")
     variant("systemd", default=True, description="Enable use of systemd/DBus")
+    variant("grpc", default=False, when="@3.2:", description="Enable gRPC support")
     variant("liburing", default=True, description="Enables the use of liburing for batch I/O")
     variant(
         "libcap", default=True, description="Enables the use of libcap to do capabilities checks"
@@ -45,10 +47,11 @@ class GeopmService(AutotoolsPackage):
         "rawmsr",
         default=True,
         description="Enable direct use of standard msr device driver",
-        when="@develop",
+        when="@3.2:",
     )
 
     conflicts("+nvml", when="+level_zero", msg="LevelZero and NVML support are mutually exclusive")
+    conflicts("+grpc", when="+systemd", msg="gRPC and systemd support are mutually exclusive")
 
     conflicts("%gcc@:7.2", msg="Requires C++17 support")
     conflicts("%clang@:4", msg="Requires C++17 support")
@@ -60,7 +63,8 @@ class GeopmService(AutotoolsPackage):
     conflicts("target=ppc64:", msg="Only available on x86_64", when="@3.0.1")
     conflicts("target=ppc64le:", msg="Only available on x86_64", when="@3.0.1")
 
-    patch("0001-Support-NVML-via-CUDA-installation.patch", when="+nvml")
+    patch("nvml-v3.0.1.patch", when="@3.0.1 +nvml")
+    patch("nvml-v3.1+.patch", when="@3.1: +nvml")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -93,9 +97,6 @@ class GeopmService(AutotoolsPackage):
         depends_on("py-cffi@1.14.5:", type="run")
 
     # Other dependencies
-    for ver in ["3.1.0", "develop"]:
-        depends_on(f"py-geopmdpy@{ver}", type="run", when=f"@{ver}")
-    depends_on("py-setuptools-scm@7.0.3:", when="@3.1:", type="build")
     depends_on("bash-completion")
     depends_on("unzip")
     depends_on("systemd", when="+systemd")
@@ -103,8 +104,11 @@ class GeopmService(AutotoolsPackage):
     depends_on("liburing", when="+liburing")
     depends_on("oneapi-level-zero", when="+level_zero")
     depends_on("cuda", when="+nvml")
+    depends_on("grpc+shared", when="+grpc")
+    depends_on("protobuf", when="+grpc")
+    depends_on("pkgconf", when="+grpc")
 
-    extends("python")
+    extends("python", when="@3.0.1")
 
     @property
     def configure_directory(self):
@@ -129,19 +133,21 @@ class GeopmService(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            "--with-bash-completion-dir="
-            + join_path(self.spec.prefix, "share", "bash-completion", "completions"),
             *self.enable_or_disable("debug"),
             *self.enable_or_disable("docs"),
             *self.enable_or_disable("systemd"),
-            *self.enable_or_disable("liburing"),
+            *self.enable_or_disable("io-uring", variant="liburing"),
             *self.with_or_without("liburing", activation_value="prefix"),
             *self.enable_or_disable("libcap"),
             *self.with_or_without("gnu-ld"),
             *self.enable_or_disable("levelzero", variant="level_zero"),
             *self.enable_or_disable("nvml"),
             *self.enable_or_disable("rawmsr"),
+            *self.enable_or_disable("grpc"),
         ]
+        if self.version == Version("3.0.1"):
+            args.append("--with-bash-completion-dir=" +
+                        join_path(self.spec.prefix, "share", "bash-completion", "completions"))
 
         if self.spec.satisfies("+nvml"):
             args += [
