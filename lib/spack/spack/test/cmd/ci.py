@@ -2028,13 +2028,12 @@ def test_ci_verify_versions_valid(
     tmpdir,
 ):
     repo, _, commits = mock_git_package_changes
-    spack.repo.PATH.put_first(repo)
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-    monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
-
-    out = ci_cmd("verify-versions", commits[-1], commits[-3])
-    assert "Validated diff-test@2.1.5" in out
-    assert "Validated diff-test@2.1.6" in out
+        out = ci_cmd("verify-versions", commits[-1], commits[-3])
+        assert "Validated diff-test@2.1.5" in out
+        assert "Validated diff-test@2.1.6" in out
 
 
 def test_ci_verify_versions_standard_invalid(
@@ -2045,23 +2044,21 @@ def test_ci_verify_versions_standard_invalid(
     verify_git_versions_invalid,
 ):
     repo, _, commits = mock_git_package_changes
-    spack.repo.PATH.put_first(repo)
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-    monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
-
-    out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
-    assert "Invalid checksum found diff-test@2.1.5" in out
-    assert "Invalid commit for diff-test@2.1.6" in out
+        out = ci_cmd("verify-versions", commits[-1], commits[-3], fail_on_error=False)
+        assert "Invalid checksum found diff-test@2.1.5" in out
+        assert "Invalid commit for diff-test@2.1.6" in out
 
 
 def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_package_changes):
     repo, _, commits = mock_git_package_changes
-    spack.repo.PATH.put_first(repo)
+    with spack.repo.use_repositories(repo):
+        monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-    monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
+        pkg_class = spack.spec.Spec("diff-test").package_class
+        monkeypatch.setattr(pkg_class, "manual_download", True)
 
-    pkg_class = spack.spec.Spec("diff-test").package_class
-    monkeypatch.setattr(pkg_class, "manual_download", True)
-
-    out = ci_cmd("verify-versions", commits[-1], commits[-2])
-    assert "Skipping manual download package: diff-test" in out
+        out = ci_cmd("verify-versions", commits[-1], commits[-2])
+        assert "Skipping manual download package: diff-test" in out
