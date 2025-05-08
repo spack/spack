@@ -230,6 +230,48 @@ def setup_parser(subparser):
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
 
+    # Add-artifact
+    add_artifact_parser = sp.add_parser("add-artifact", help=mirror_add.__doc__)
+    add_artifact_parser.add_argument("name", help="name of existing mirror, or a path", metavar="mirror")
+    add_artifact_parser.add_argument("artifact", help="path to the artifact you want to add", metavar="mirror")
+
+
+def mirror_add_artifact(args):
+    import os
+    import pathlib
+    import spack.fetch_strategy
+    import spack.mirrors.layout
+    import spack.util.crypto
+
+    mirror_name = args.name
+    mirrors = spack.config.get("mirrors")
+
+    if not os.path.exists(args.artifact):
+        raise ValueError(f"Artifact path does not exist: {args.artifact}")
+    if mirror_name in mirrors:
+        the_mirror = spack.mirrors.mirror.Mirror(mirrors[mirror_name], name=mirror_name)
+    else:
+        raise ValueError(f"The mirror does not exist: {mirror_name}")
+
+    local_fetcher = spack.fetch_strategy.URLFetchStrategy(
+        url=f"file://{os.path.abspath(args.artifact)}",
+        checksum=spack.util.crypto.checksum(
+            spack.util.crypto.hash_fun_for_algo("sha256"),
+            args.artifact
+        )
+    )
+    layout = spack.mirrors.layout.default_mirror_layout(
+        local_fetcher, "unknown"
+    )
+    relative_digest_path = layout.digest_path
+    tokenized_relpath = pathlib.PurePath(pathlib.PurePath(relative_digest_path).as_posix()).parts
+    if tokenized_relpath[0] == "./":
+        tokenized_relpath = tokenized_relpath[1:]
+    relative_url = "/".join(tokenized_relpath)
+
+    dest_url = "/".join([the_mirror.push_url, relative_url])
+    web_util.push_to_url(args.artifact, dest_url, keep_original=True)
+
 
 def _configure_access_pair(
     args, id_tok, id_variable_tok, secret_tok, secret_variable_tok, default=None
@@ -700,6 +742,7 @@ def mirror(parser, args):
         "set-url": mirror_set_url,
         "set": mirror_set,
         "list": mirror_list,
+        "add-artifact": mirror_add_artifact,
     }
 
     if args.no_checksum:
