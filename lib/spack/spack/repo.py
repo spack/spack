@@ -258,6 +258,8 @@ def get_all_package_diffs(type: str, repo: "Repo", rev1="HEAD^1", rev2="HEAD") -
     changed: Set[str] = set()
     for path in lines:
         dir_name, _, _ = path.partition("/")
+        if not nm.valid_module_name(dir_name, repo.package_api):
+            continue
         pkg_name = nm.pkg_dir_to_pkg_name(dir_name, repo.package_api)
         if pkg_name not in added and pkg_name not in removed:
             changed.add(pkg_name)
