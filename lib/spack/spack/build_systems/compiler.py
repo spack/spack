@@ -36,7 +36,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     #: Compiler argument(s) that produces version information
     #: If multiple arguments, the earlier arguments must produce errors when invalid
-    compiler_version_argument: Union[str, Tuple[str]] = "-dumpversion"
+    compiler_version_argument: Union[str, Tuple[str, ...]] = "-dumpversion"
 
     #: Regex used to extract version from compiler's output
     compiler_version_regex: str = "(.*)"
@@ -46,6 +46,11 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     #: Relative path to compiler wrappers
     compiler_wrapper_link_paths: Dict[str, str] = {}
+
+    #: Optimization flags
+    opt_flags: Sequence[str] = []
+    #: Flags for generating debug information
+    debug_flags: Sequence[str] = []
 
     def __init__(self, spec: "spack.spec.Spec"):
         super().__init__(spec)

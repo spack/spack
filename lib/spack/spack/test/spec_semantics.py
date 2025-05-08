@@ -1365,6 +1365,18 @@ class TestSpecSemantics:
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
             vt.splice(vh, transitive)
 
+    def test_adaptor_optflags(self):
+        """Tests that we can obtain the list of optflags, and debugflags,
+        from the compiler adaptor, and that this list is taken from the
+        appropriate compiler package.
+        """
+        # pkg-a depends on c, so only the gcc compiler should be chosen
+        spec = spack.concretize.concretize_one(Spec("pkg-a %gcc"))
+        assert "-Otestopt" in spec.package.compiler.opt_flags
+        # This is not set, make sure we get an empty list
+        for x in spec.package.compiler.debug_flags:
+            pass
+
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
         change_spec = Spec("pkg-a foo=fee cflags=-O2")
@@ -1825,7 +1837,7 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
-def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, results):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 

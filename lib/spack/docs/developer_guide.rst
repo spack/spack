@@ -154,9 +154,7 @@ Package-related modules
 
 :mod:`spack.util.naming`
   Contains functions for mapping between Spack package names,
-  Python module names, and Python class names. Functions like
-  :func:`~spack.util.naming.mod_to_class` handle mapping package
-  module names to class names.
+  Python module names, and Python class names.
 
 :mod:`spack.directives`
   *Directives* are functions that can be called inside a package definition

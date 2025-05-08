@@ -172,3 +172,5 @@ spack_cc: str
 spack_cxx: str
 spack_f77: str
 spack_fc: str
+prefix: Prefix
+dso_suffix: str

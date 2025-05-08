@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index"
+        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index migrate"
     fi
 }
 
@@ -646,6 +646,15 @@ _spack_buildcache_rebuild_index() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -k --keys"
+    else
+        _mirrors
+    fi
+}
+
+_spack_buildcache_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -u --unsigned -d --delete-existing -y --yes-to-all"
     else
         _mirrors
     fi
@@ -749,7 +758,7 @@ _spack_compiler() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find add remove rm list info"
+        SPACK_COMPREPLY="find add remove rm list ls info"
     fi
 }
 
@@ -790,6 +799,10 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_compiler_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
@@ -1173,7 +1186,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find list ls read-cray-manifest"
     fi
 }
 
@@ -1187,6 +1200,10 @@ _spack_external_find() {
 }
 
 _spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_ls() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -1206,7 +1223,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format -H --hashes --json -I --install-status -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -r --only-roots -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --only-deprecated --deprecated --install-tree --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format -H --hashes --json -I --install-status --specfile-format -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -r --only-roots -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --only-deprecated --deprecated --install-tree --start-date --end-date"
     else
         _installed_packages
     fi

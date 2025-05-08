@@ -18,6 +18,10 @@ class Languages(enum.Enum):
 
 
 class CompilerAdaptor:
+    """Provides access to compiler attributes via `Package.compiler`. Useful for
+    packages which do not yet access compiler properties via `self.spec[language]`.
+    """
+
     def __init__(
         self, compiled_spec: spack.spec.Spec, compilers: Dict[Languages, spack.spec.Spec]
     ) -> None:
@@ -78,6 +82,14 @@ class CompilerAdaptor:
             seen.add(compiler)
             result.extend(CompilerPropertyDetector(compiler).implicit_rpaths())
         return result
+
+    @property
+    def opt_flags(self) -> List[str]:
+        return next(iter(self.compilers.values())).package.opt_flags
+
+    @property
+    def debug_flags(self) -> List[str]:
+        return next(iter(self.compilers.values())).package.debug_flags
 
     @property
     def openmp_flag(self) -> str:
