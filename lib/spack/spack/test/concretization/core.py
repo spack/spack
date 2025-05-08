@@ -3499,7 +3499,7 @@ packages:
     )
     mutable_config.set("packages", packages_yaml["packages"])
 
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
         spack.concretize.concretize_one("pkg-b %gcc@14")
 
     s = spack.concretize.concretize_one("pkg-b %gcc")
@@ -3528,7 +3528,7 @@ packages:
     )
     mutable_config.set("packages", packages_yaml["packages"])
 
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
         spack.concretize.concretize_one("pkg-a libs=shared")
         spack.concretize.concretize_one("pkg-a libs=shared,static")
 
@@ -3539,7 +3539,7 @@ packages:
 
 def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretization):
     """Tests the use of := in depends_on directives"""
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
         default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=c")
         default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=a,c")
         default_mock_concretization("gmt-concrete-mv-dependency ^mvdefaults foo:=b,c")
