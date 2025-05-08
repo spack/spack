@@ -15,6 +15,7 @@ class PyBokeh(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("3.7.2", sha256="80c21885cec276431acd4db92f831c71eb999ea995470ce777e0c577b0cfc1d8")
     version("3.5.2", sha256="03a54a67db677b8881834271c620a781b383ae593af5c3ea2149164754440d07")
     version("3.3.1", sha256="2a7b3702d7e9f03ef4cd801b02b7380196c70cff2773859bcb84fa565218955c")
     version("2.4.3", sha256="ef33801161af379665ab7a34684f2209861e3aefd5c803a21fbbb99d94874b03")
@@ -70,3 +71,6 @@ class PyBokeh(PythonPackage):
     depends_on("py-typing-extensions@3.10.0:", type=("build", "run"), when="@2.4.0:3.0.0")
 
     depends_on("py-xyzservices@2021.09.1:", type=("build", "run"), when="@3:")
+
+    depends_on("py-narwhals@1.13:", type=("build", "run"), when="@3.7:")
+    depends_on("py-pillow@7.1.0:", type=("build", "run"), when="@3.7:")
