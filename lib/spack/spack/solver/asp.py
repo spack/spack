@@ -2513,11 +2513,20 @@ class SpackSolverSetup:
                         clauses.append(f.variant_value(spec.name, vname, value))
                 else:
                     variant_clause = f.variant_value(spec.name, vname, value)
-                    if variant.concrete and variant.type == vt.VariantType.MULTI and body is False:
-                        variant_clause.args = (
-                            f"concrete_{variant_clause.args[0]}",
-                            *variant_clause.args[1:],
-                        )
+                    if (
+                        variant.concrete
+                        and variant.type == vt.VariantType.MULTI
+                        and not spec.concrete
+                    ):
+                        if body is False:
+                            variant_clause.args = (
+                                f"concrete_{variant_clause.args[0]}",
+                                *variant_clause.args[1:],
+                            )
+                        else:
+                            clauses.append(
+                                fn.attr("concrete_variant_request", spec.name, vname, value)
+                            )
                     clauses.append(variant_clause)
 
         # compiler flags

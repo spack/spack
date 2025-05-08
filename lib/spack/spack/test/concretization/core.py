@@ -3547,3 +3547,22 @@ def test_concrete_multi_valued_variants_in_depends_on(default_mock_concretizatio
     s = default_mock_concretization("gmt-concrete-mv-dependency")
     assert s.satisfies("^mvdefaults foo:=a,b"), s.tree()
     assert not s.satisfies("^mvdefaults foo=c")
+
+
+def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
+    """Tests the use of := in conflicts and when= arguments"""
+    # Check conflicts("foo:=a,b", when="@0.9")
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        default_mock_concretization("mvdefaults@0.9 foo:=a,b")
+
+    for c in ("foo:=a", "foo:=a,b,c", "foo:=a,c", "foo:=b,c"):
+        s = default_mock_concretization(f"mvdefaults@0.9 {c}")
+        assert s.satisfies(c)
+
+    # Check depends_on("pkg-b", when="foo:=b,c")
+    s = default_mock_concretization("mvdefaults foo:=b,c")
+    assert s.satisfies("^pkg-b")
+
+    for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
+        s = default_mock_concretization(f"mvdefaults {c}")
+        assert not s.satisfies("^pkg-b")

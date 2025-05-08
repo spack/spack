@@ -164,6 +164,7 @@ multiple_nodes_attribute("depends_on").
 multiple_nodes_attribute("virtual_on_edge").
 multiple_nodes_attribute("provider_set").
 multiple_nodes_attribute("concrete_variant_set").
+multiple_nodes_attribute("concrete_variant_request").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -403,6 +404,20 @@ trigger_condition_holds(ID, RequestorNode) :-
   % Special cases
   attr("depends_on", node(X, A1), node(Y, A2), A3) : condition_requirement(ID, "depends_on", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A2));
   not cannot_hold(ID, PackageNode).
+
+condition_with_concrete_variant(ID, Package, Variant) :- condition_requirement(ID, "concrete_variant_request", Package, Variant, _).
+
+cannot_hold(ID, PackageNode) :-
+  not attr("variant_value", node(X, A1), Variant, Value),
+  condition_with_concrete_variant(ID, A1, Variant),
+  condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
+  condition_nodes(ID, PackageNode, node(X, A1)).
+
+cannot_hold(ID, PackageNode) :-
+  attr("variant_value", node(X, A1), Variant, Value),
+  condition_with_concrete_variant(ID, A1, Variant),
+  not condition_requirement(ID, "concrete_variant_request", A1, Variant, Value),
+  condition_nodes(ID, PackageNode, node(X, A1)).
 
 condition_holds(ConditionID, node(X, Package))
   :- pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
