@@ -262,6 +262,10 @@ def mirror_add_artifact(args):
             spack.util.crypto.hash_fun_for_algo("sha256"), args.artifact
         ),
     )
+
+    # Use the mirror layout to determine the relative digest path and
+    # turn that into a relative url: util.url does not do this for
+    # relative paths.
     layout = spack.mirrors.layout.default_mirror_layout(local_fetcher, "unknown")
     relative_digest_path = layout.digest_path
     tokenized_relpath = pathlib.PurePath(pathlib.PurePath(relative_digest_path).as_posix()).parts
