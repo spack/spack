@@ -254,7 +254,8 @@ def mirror_add_artifact(args):
     if mirror_name in mirrors:
         the_mirror = spack.mirrors.mirror.Mirror(mirrors[mirror_name], name=mirror_name)
     else:
-        raise ValueError(f"The mirror does not exist: {mirror_name}")
+        assumed_mirror_path = os.path.abspath(args.name)
+        the_mirror = spack.mirrors.mirror.Mirror.from_url(f"file://{assumed_mirror_path}")
 
     local_fetcher = spack.fetch_strategy.URLFetchStrategy(
         url=f"file://{os.path.abspath(args.artifact)}",
