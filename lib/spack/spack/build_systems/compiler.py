@@ -36,7 +36,7 @@ class CompilerPackage(spack.package_base.PackageBase):
 
     #: Compiler argument(s) that produces version information
     #: If multiple arguments, the earlier arguments must produce errors when invalid
-    compiler_version_argument: Union[str, Tuple[str]] = "-dumpversion"
+    compiler_version_argument: Union[str, Tuple[str, ...]] = "-dumpversion"
 
     #: Regex used to extract version from compiler's output
     compiler_version_regex: str = "(.*)"
