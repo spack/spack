@@ -159,12 +159,12 @@ unification_set(SetID, VirtualNode)
 
 % TODO: literals, at the moment, can only influence the "root" unification set. This needs to be extended later.
 
-% Node attributes that have multiple node arguments (usually, only the first argument is a node)
-multiple_nodes_attribute("depends_on").
-multiple_nodes_attribute("virtual_on_edge").
-multiple_nodes_attribute("provider_set").
-multiple_nodes_attribute("concrete_variant_set").
-multiple_nodes_attribute("concrete_variant_request").
+% Node attributes that need custom rules in ASP, e.g. because they involve multiple nodes
+node_attributes_with_custom_rules("depends_on").
+node_attributes_with_custom_rules("virtual_on_edge").
+node_attributes_with_custom_rules("provider_set").
+node_attributes_with_custom_rules("concrete_variant_set").
+node_attributes_with_custom_rules("concrete_variant_request").
 
 trigger_condition_holds(TriggerID, node(min_dupe_id, Package)) :-
   solve_literal(TriggerID),
@@ -399,7 +399,7 @@ trigger_condition_holds(ID, RequestorNode) :-
   trigger_node(ID, PackageNode, RequestorNode);
   attr(Name, node(X, A1))             : condition_requirement(ID, Name, A1),             condition_nodes(ID, PackageNode, node(X, A1));
   attr(Name, node(X, A1), A2)         : condition_requirement(ID, Name, A1, A2),         condition_nodes(ID, PackageNode, node(X, A1));
-  attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name);
+  attr(Name, node(X, A1), A2, A3)     : condition_requirement(ID, Name, A1, A2, A3),     condition_nodes(ID, PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name);
   attr(Name, node(X, A1), A2, A3, A4) : condition_requirement(ID, Name, A1, A2, A3, A4), condition_nodes(ID, PackageNode, node(X, A1));
   % Special cases
   attr("depends_on", node(X, A1), node(Y, A2), A3) : condition_requirement(ID, "depends_on", A1, A2, A3), condition_nodes(ID, PackageNode, node(X, A1)), condition_nodes(ID, PackageNode, node(Y, A2));
@@ -465,8 +465,8 @@ imposed_nodes(ConditionID, PackageNode, node(X, A1))
 
 % Conditions that hold impose may impose constraints on other specs
 attr(Name, node(X, A1))             :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1),             imposed_nodes(ID, PackageNode, node(X, A1)).
-attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
-attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not multiple_nodes_attribute(Name).
+attr(Name, node(X, A1), A2)         :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2),         imposed_nodes(ID, PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
+attr(Name, node(X, A1), A2, A3)     :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3),     imposed_nodes(ID, PackageNode, node(X, A1)), not node_attributes_with_custom_rules(Name).
 attr(Name, node(X, A1), A2, A3, A4) :- impose(ID, PackageNode), imposed_constraint(ID, Name, A1, A2, A3, A4), imposed_nodes(ID, PackageNode, node(X, A1)).
 
 % Provider set is relevant only for literals, since it's the only place where `^[virtuals=foo] bar`
