@@ -14,14 +14,14 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
-import spack.fetch_strategy
-import spack.util.crypto
 import spack.environment as ev
+import spack.fetch_strategy
 import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
 import spack.spec
+import spack.util.crypto
 import spack.util.web as web_util
 from spack.cmd.common import arguments
 from spack.error import SpackError
@@ -237,8 +237,12 @@ def setup_parser(subparser):
 
     # Add-artifact
     add_artifact_parser = sp.add_parser("add-artifact", help=mirror_add.__doc__)
-    add_artifact_parser.add_argument("name", help="name of existing mirror, or a path", metavar="mirror")
-    add_artifact_parser.add_argument("artifact", help="path to the artifact you want to add", metavar="mirror")
+    add_artifact_parser.add_argument(
+        "name", help="name of existing mirror, or a path", metavar="mirror"
+    )
+    add_artifact_parser.add_argument(
+        "artifact", help="path to the artifact you want to add", metavar="mirror"
+    )
 
 
 def mirror_add_artifact(args):
@@ -255,13 +259,10 @@ def mirror_add_artifact(args):
     local_fetcher = spack.fetch_strategy.URLFetchStrategy(
         url=f"file://{os.path.abspath(args.artifact)}",
         checksum=spack.util.crypto.checksum(
-            spack.util.crypto.hash_fun_for_algo("sha256"),
-            args.artifact
-        )
+            spack.util.crypto.hash_fun_for_algo("sha256"), args.artifact
+        ),
     )
-    layout = spack.mirrors.layout.default_mirror_layout(
-        local_fetcher, "unknown"
-    )
+    layout = spack.mirrors.layout.default_mirror_layout(local_fetcher, "unknown")
     relative_digest_path = layout.digest_path
     tokenized_relpath = pathlib.PurePath(pathlib.PurePath(relative_digest_path).as_posix()).parts
     if tokenized_relpath[0] == "./":
