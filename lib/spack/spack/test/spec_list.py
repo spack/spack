@@ -55,6 +55,7 @@ def parser_and_speclist():
     return parser, result
 
 
+@pytest.mark.usefixtures("mock_packages")
 class TestSpecList:
     @pytest.mark.regression("28749")
     @pytest.mark.parametrize(
@@ -88,7 +89,7 @@ class TestSpecList:
             ),
         ],
     )
-    def test_spec_list_constraint_ordering(self, mock_packages, specs, expected):
+    def test_spec_list_constraint_ordering(self, specs, expected):
         result = SpecListParser().parse_user_specs(name="specs", yaml_list=specs)
         assert result.specs == [Spec(x) for x in expected]
 
@@ -125,7 +126,7 @@ class TestSpecList:
         assert mock_list.specs_as_yaml_list == (DEFAULT_EXPANSION + other_list.specs_as_yaml_list)
         assert mock_list.specs == DEFAULT_SPECS + other_list.specs
 
-    def test_spec_list_nested_matrices(self, mock_packages, parser_and_speclist):
+    def test_spec_list_nested_matrices(self, parser_and_speclist):
         parser, _ = parser_and_speclist
 
         inner_matrix = [{"matrix": [["zlib", "libelf"], ["%gcc", "%intel"]]}]
@@ -158,7 +159,7 @@ class TestSpecList:
         assert result.specs == DEFAULT_SPECS
 
     @pytest.mark.regression("16841")
-    def test_spec_list_matrix_exclude(self, mock_packages):
+    def test_spec_list_matrix_exclude(self):
         parser = SpecListParser()
         result = parser.parse_user_specs(
             name="specs",
