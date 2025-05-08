@@ -51,6 +51,7 @@ class Rdc(CMakePackage):
         version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
         version("5.3.0", sha256="ce9c85dad8e0c0b21e8e5938bf16f86a62dc5f6ded5f453c61acd43666634d6b")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.15:", type="build")
