@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import pathlib
 import sys
 
 import llnl.util.lang as lang
@@ -12,7 +14,10 @@ import spack.caches
 import spack.cmd
 import spack.concretize
 import spack.config
+import spack.fetch_strategy
+import spack.util.crypto
 import spack.environment as ev
+import spack.mirrors.layout
 import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.repo
@@ -237,12 +242,6 @@ def setup_parser(subparser):
 
 
 def mirror_add_artifact(args):
-    import os
-    import pathlib
-    import spack.fetch_strategy
-    import spack.mirrors.layout
-    import spack.util.crypto
-
     mirror_name = args.name
     mirrors = spack.config.get("mirrors")
 
