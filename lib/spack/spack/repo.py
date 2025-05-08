@@ -91,29 +91,8 @@ class ReposFinder:
     Returns a loader based on the inspection of the current repository list.
     """
 
-    def __init__(self):
-        self._repo_init = _path
-        self._repo: Optional[RepoType] = None
-
-    @property
-    def current_repository(self):
-        if self._repo is None:
-            self._repo = self._repo_init()
-        return self._repo
-
-    @current_repository.setter
-    def current_repository(self, value):
-        self._repo = value
-
-    @contextlib.contextmanager
-    def switch_repo(self, substitute: "RepoType"):
-        """Switch the current repository list for the duration of the context manager."""
-        old = self._repo
-        try:
-            self._repo = substitute
-            yield
-        finally:
-            self._repo = old
+    #: The current list of repositories.
+    repo_path: "RepoPath"
 
     def find_spec(self, fullname, python_path, target=None):
         # "target" is not None only when calling importlib.reload()
@@ -134,14 +113,11 @@ class ReposFinder:
         namespace, dot, module_name = fullname.rpartition(".")
 
         # If it's a module in some repo, or if it is the repo's namespace, let the repo handle it.
-        current_repo = self.current_repository
-        is_repo_path = isinstance(current_repo, RepoPath)
-        if is_repo_path:
-            repos = current_repo.repos
-        else:
-            repos = [current_repo]
 
-        for repo in repos:
+        if not hasattr(self, "repo_path"):
+            return None
+
+        for repo in self.repo_path.repos:
             # We are using the namespace of the repo and the repo contains the package
             if namespace == repo.full_namespace:
                 # With 2 nested conditionals we can call "repo.real_name" only once
@@ -156,9 +132,7 @@ class ReposFinder:
 
         # No repo provides the namespace, but it is a valid prefix of
         # something in the RepoPath.
-        if is_repo_path and current_repo.by_namespace.is_prefix(
-            fullname[len(PKG_MODULE_PREFIX_V1) :]
-        ):
+        if self.repo_path.by_namespace.is_prefix(fullname[len(PKG_MODULE_PREFIX_V1) :]):
             return SpackNamespaceLoader()
 
         return None
@@ -662,7 +636,6 @@ class RepoPath:
                 if isinstance(repo, str):
                     assert cache is not None, "cache must hold a value, when repo is a string"
                     repo = Repo(repo, cache=cache, overrides=overrides)
-                repo.finder(self)
                 self.put_last(repo)
             except RepoError as e:
                 tty.warn(
@@ -671,6 +644,20 @@ class RepoPath:
                     "To remove the bad repository, run this command:",
                     f"    spack repo rm {repo}",
                 )
+
+    def enable(self) -> None:
+        """Set the relevant search paths for package module loading"""
+        REPOS_FINDER.repo_path = self
+        for p in reversed(self.python_paths()):
+            if p not in sys.path:
+                sys.path.insert(0, p)
+
+    def disable(self) -> None:
+        """Disable the search paths for package module loading"""
+        del REPOS_FINDER.repo_path
+        for p in self.python_paths():
+            if p in sys.path:
+                sys.path.remove(p)
 
     def ensure_unwrapped(self) -> "RepoPath":
         """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
@@ -845,9 +832,6 @@ class RepoPath:
 
     def get_pkg_class(self, pkg_name: str) -> Type["spack.package_base.PackageBase"]:
         """Find a class for the spec's package and return the class object."""
-        for p in self.python_paths():
-            if p not in sys.path:
-                sys.path.insert(0, p)
         return self.repo_for_pkg(pkg_name).get_pkg_class(pkg_name)
 
     @autospec
@@ -1094,9 +1078,6 @@ class Repo:
         # Class attribute overrides by package name
         self.overrides = overrides or {}
 
-        # Optional reference to a RepoPath to influence module import from spack.pkg
-        self._finder: Optional[RepoPath] = None
-
         # Maps that goes from package name to corresponding file stat
         self._fast_package_checker: Optional[FastPackageChecker] = None
 
@@ -1107,9 +1088,6 @@ class Repo:
     @property
     def package_api_str(self) -> str:
         return f"v{self.package_api[0]}.{self.package_api[1]}"
-
-    def finder(self, value: RepoPath) -> None:
-        self._finder = value
 
     def real_name(self, import_name: str) -> Optional[str]:
         """Allow users to import Spack packages using Python identifiers.
@@ -1363,11 +1341,9 @@ class Repo:
             fullname += ".package"
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
-        if self.python_path and self.python_path not in sys.path:
-            sys.path.insert(0, self.python_path)
+
         try:
-            with REPOS_FINDER.switch_repo(self._finder or self):
-                module = importlib.import_module(fullname)
+            module = importlib.import_module(fullname)
         except ImportError as e:
             raise UnknownPackageError(fullname) from e
         except Exception as e:
@@ -1560,12 +1536,6 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def _path(configuration=None):
-    """Get the singleton RepoPath instance for Spack."""
-    configuration = configuration or spack.config.CONFIG
-    return create(configuration=configuration)
-
-
 def create(configuration: spack.config.Configuration) -> RepoPath:
     """Create a RepoPath from a configuration object.
 
@@ -1588,8 +1558,10 @@ def create(configuration: spack.config.Configuration) -> RepoPath:
     return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
 
-#: Singleton repo path instance
-PATH: RepoPath = llnl.util.lang.Singleton(_path)  # type: ignore
+#: Global package repository instance.
+PATH: RepoPath = llnl.util.lang.Singleton(
+    lambda: create(configuration=spack.config.CONFIG)
+)  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
@@ -1615,20 +1587,27 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    global PATH
     paths = [getattr(x, "root", x) for x in paths_and_repos]
-    scope_name = "use-repo-{}".format(uuid.uuid4())
+    scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    PATH, saved = create(configuration=spack.config.CONFIG), PATH
+    old_repo, new_repo = PATH, create(configuration=spack.config.CONFIG)
+    old_repo.disable()
+    enable_repo(new_repo)
     try:
-        with REPOS_FINDER.switch_repo(PATH):  # type: ignore
-            yield PATH
+        yield new_repo
     finally:
         spack.config.CONFIG.remove_scope(scope_name=scope_name)
-        PATH = saved
+        enable_repo(old_repo)
+
+
+def enable_repo(repo_path: RepoPath) -> None:
+    """Set the global package repository and make them available in module search paths."""
+    global PATH
+    PATH = repo_path
+    PATH.enable()
 
 
 class MockRepositoryBuilder:
