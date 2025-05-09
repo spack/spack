@@ -25,7 +25,9 @@ class Muparser(CMakePackage, AutotoolsPackage):
     patch("auto_ptr.patch", when="@2.2.5")
 
     variant("samples", default=True, description="enable samples", when="build_system=cmake")
-    variant("openmp", default=False, description="enable OpenMP support", when="build_system=cmake")
+    variant(
+        "openmp", default=False, description="enable OpenMP support", when="build_system=cmake"
+    )
     variant(
         "wide_char",
         default=False,
@@ -39,6 +41,7 @@ class Muparser(CMakePackage, AutotoolsPackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
 
+
 class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         return [
@@ -47,6 +50,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
             self.define_from_variant("ENABLE_WIDE_CHAR", "wide_char"),
         ]
+
 
 class AutotoolsBuilder(AutotoolsBuilder):
     parallel = False
