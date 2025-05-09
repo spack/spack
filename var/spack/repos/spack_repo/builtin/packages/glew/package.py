@@ -28,6 +28,11 @@ class Glew(CMakePackage):
     # glu is already forcibly disabled in the CMakeLists.txt.  This prevents
     # it from showing up in the .pc file
     patch("remove-pkgconfig-glu-dep.patch")
+    patch(
+        "https://github.com/nigels-com/glew/commit/c050e33aa0d5f97cc9d1bfc73224f6f6d977629f.patch?full_index=1",
+        when="^mesa@24.0.0:",
+        sha256="346b7efb0828e4eecaa4a5066e48a3b3e75066d05d9fdd220611c4ed706d2ac6",
+    )
 
     def cmake_args(self):
         spec = self.spec
