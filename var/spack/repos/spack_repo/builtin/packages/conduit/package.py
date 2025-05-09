@@ -214,9 +214,9 @@ class Conduit(CMakePackage):
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
     patch(
-        "https://github.com/LLNL/conduit/pull/773.patch?full_index=1",
+        "https://github.com/LLNL/conduit/commit/eb7dfce2229aac3b9644d422a44948509034e3c6.patch?full_index=1",
         when="@:0.7.2",
-        sha256="784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30",
+        sha256="379a1b68928d9078e7302efe694f43c51c8f2c26db4a58ab3fd753746b96b284",
     )
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

@@ -271,7 +271,7 @@ class Julia(MakefilePackage):
 
     # Fix libstdc++ not being found (https://github.com/JuliaLang/julia/issues/47987)
     patch(
-        "https://github.com/JuliaLang/julia/pull/48342.patch?full_index=1",
+        "https://github.com/JuliaLang/julia/commit/7d2499dd35bebfcd8419d2d51611ba4ac1a19a9c.patch?full_index=1",
         sha256="10f7cab89c8353b2648a968d2c8e8ed8bd90961df3227084f1d69d3d482933d7",
         when="@1.8.4:1.8.5",
     )
@@ -280,8 +280,8 @@ class Julia(MakefilePackage):
     # applicable to previous versions of the library too
     # (https://github.com/JuliaLang/julia/issues/49895).
     patch(
-        "https://github.com/JuliaLang/julia/pull/49909.patch?full_index=1",
-        sha256="7fa53516b97d83ccf06f6d387c04d337849808f7e8ee2bdc2e79894d84578afc",
+        "https://github.com/JuliaLang/julia/commit/5d43397ee52323f1c015513b2be3909078b646ef.patch?full_index=1",
+        sha256="15f9f2a7b6ae21aa5de8655970c673a953e1d46018e901f7fff98aead8e4a929",
         when="@1.6.4:1.9.0",
     )
 

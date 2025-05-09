@@ -37,8 +37,8 @@ class Ocaml(Package):
     # constants.  Fixes compatibility with the integrated assembler in clang 11.0.0.
     # (Jacob Young, review by Nicolas Ojeda Bar)
     patch(
-        "https://github.com/ocaml/ocaml/pull/9981.patch?full_index=1",
-        sha256="12700c697f0d5227e8eddd62e4308ec3cd67c0a5a5a1b7eec376686a5fd63a5c",
+        "https://github.com/ocaml/ocaml/commit/8a46d76bf9359b5cc505b3f2f9c81eb624c631fa.patch?full_index=1",
+        sha256="805cdd458c3849e0050600bfeac7cbe4a1da78aae7b686b529a475e63948048f",
         when="@:4.11.0 %clang@11:",
     )
 
