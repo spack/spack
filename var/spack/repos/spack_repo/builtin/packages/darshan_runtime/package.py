@@ -24,6 +24,7 @@ class DarshanRuntime(AutotoolsPackage):
     test_requires_compiler = True
 
     version("main", branch="main", submodules=True)
+    version("3.4.7", sha256="115a6d840b3bdb30751c271c0dec098b25bed2f8c77175125c133564d76afe5b")
     version("3.4.6", sha256="092b35e7af859af903dce0c51bcb5d3901dd0d9ad79d1b2f3282692407f032ee")
     version("3.4.5", sha256="1c017ac635fab5ee0e87a6b52c5c7273962813569495cb1dd3b7cfa6e19f6ed0")
     version("3.4.4", sha256="d9c9df5aca94dc5ca3d56fd763bec2f74771d35126d61cb897373d2166ccd867")
@@ -59,6 +60,7 @@ class DarshanRuntime(AutotoolsPackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("parallel-netcdf", when="+parallel-netcdf")
     depends_on("lustre", when="+lustre")
+    depends_on("daos", when="+daos")
     depends_on("papi", when="+apxc")
     depends_on("autoconf", type="build", when="@main")
     depends_on("automake", type="build", when="@main")
@@ -78,6 +80,7 @@ class DarshanRuntime(AutotoolsPackage):
         when="@3.4.1:",
     )
     variant("lustre", default=False, description="Compile with Lustre module", when="@3.1:")
+    variant("daos", default=False, description="Compile with DAOS modules", when="@3.4.7:")
     variant("apmpi", default=False, description="Compile with AutoPerf MPI module", when="@3.3:")
     variant(
         "apmpi_sync",
@@ -131,6 +134,8 @@ class DarshanRuntime(AutotoolsPackage):
             extra_args.append("--enable-lustre-mod")
         else:
             extra_args.append("--disable-lustre-mod")
+        if spec.satisfies("+daos"):
+            extra_args.append("--enable-daos-mod")
         if spec.satisfies("+apmpi"):
             extra_args.append("--enable-apmpi-mod")
         if spec.satisfies("+apmpi_sync"):
