@@ -25,6 +25,7 @@ class Dd4hep(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")
+    version("1.32", sha256="8bde4eab9af9841e040447282ea7df3a16e4bcec587c3a1e32f41987da9b1b4d")
     version("1.31", sha256="9c06a1b4462fc1b51161404889c74b37350162d0b0ac2154db27e3f102670bd1")
     version("1.30", sha256="02de46151e945eff58cffd84b4b86d35051f4436608199c3efb4d2e1183889fe")
     version("1.29", sha256="435d25a7ef093d8bf660f288b5a89b98556b4c1c293c55b93bf641fb4cba77e9")

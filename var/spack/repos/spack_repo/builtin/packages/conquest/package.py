@@ -87,6 +87,8 @@ class Conquest(MakefilePackage):
         else:
             defs_file = FileFilter("./src/system.make")
 
+        defs_file.filter(".*FC=.*", f"FC={spec['mpi'].mpifc}")
+        defs_file.filter(".*F77=.*", f"F77={spec['mpi'].mpif77}")
         defs_file.filter(".*COMPFLAGS=.*", f"COMPFLAGS= {fflags}")
         defs_file.filter(".*LINKFLAGS=.*", f"LINKFLAGS= {ldflags}")
         defs_file.filter(".*BLAS=.*", f"BLAS= {lapack_ld} {blas_ld}")

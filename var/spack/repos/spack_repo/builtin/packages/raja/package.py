@@ -195,6 +195,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
     )
     variant("omptarget", default=False, description="Build OpenMP on target device support")
     variant("sycl", default=False, description="Build sycl backend")
+    variant("gpu-profiling", default=False, description="Enable GPU profiling")
 
     variant("plugins", default=False, description="Enable runtime plugins")
     variant("examples", default=True, description="Build examples.")
@@ -267,6 +268,10 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on("camp +cuda cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
 
+    conflicts("+gpu-profiling", when="~cuda~rocm", msg="GPU profiling requires CUDA or ROCm")
+    conflicts("+gpu-profiling +cuda", when="@:2022.02.99")
+    conflicts("+gpu-profiling +rocm", when="@:2022.02.99")
+
     conflicts("+omptarget +rocm")
     conflicts("+sycl +omptarget")
     conflicts("+sycl +rocm")
@@ -323,11 +328,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         entries.append("#------------------{0}\n".format("-" * 30))
 
         entries.append(cmake_cache_option("ENABLE_OPENMP", spec.satisfies("+openmp")))
-
-        if spec.satisfies("+cuda"):
-            entries.append(cmake_cache_option("ENABLE_CUDA", True))
-        else:
-            entries.append(cmake_cache_option("ENABLE_CUDA", False))
+        entries.append(cmake_cache_option("ENABLE_CUDA", spec.satisfies("+cuda")))
 
         if spec.satisfies("+rocm"):
             entries.append(cmake_cache_option("ENABLE_HIP", True))
@@ -376,6 +377,12 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
         )
 
         entries.append(cmake_cache_option("RAJA_ENABLE_SYCL", spec.satisfies("+sycl")))
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_NV_TOOLS_EXT", spec.satisfies("+gpu-profiling +cuda"))
+        )
+        entries.append(
+            cmake_cache_option("RAJA_ENABLE_ROCTX", spec.satisfies("+gpu-profiling +rocm"))
+        )
 
         if spec.satisfies("+lowopttest"):
             entries.append(cmake_cache_string("CMAKE_CXX_FLAGS_RELEASE", "-O1"))

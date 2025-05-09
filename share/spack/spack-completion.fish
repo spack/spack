@@ -697,6 +697,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-sp
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a migrate -d 'perform in-place binary mirror migration (2 to 3)'
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
@@ -860,6 +861,18 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+
+# spack buildcache migrate
+set -g __fish_spack_optspecs_spack_buildcache_migrate h/help u/unsigned d/delete-existing y/yes-to-all
+
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s u -l unsigned -f -a unsigned
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s u -l unsigned -d 'Ignore signatures and do not resign, default is False'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s d -l delete-existing -f -a delete_existing
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s d -l delete-existing -d 'Delete the previous layout, the default is to keep it.'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack cd
 set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages c/source-dir b/build-dir e/env= first

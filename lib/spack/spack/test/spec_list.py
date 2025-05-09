@@ -55,6 +55,7 @@ def parser_and_speclist():
     return parser, result
 
 
+@pytest.mark.usefixtures("mock_packages")
 class TestSpecList:
     @pytest.mark.regression("28749")
     @pytest.mark.parametrize(
@@ -83,8 +84,8 @@ class TestSpecList:
             ),
             # A constraint affects both the root and a dependency
             (
-                [{"matrix": [["gromacs"], ["%gcc"], ["+plumed ^plumed%gcc"]]}],
-                ["gromacs+plumed%gcc ^plumed%gcc"],
+                [{"matrix": [["version-test-root"], ["%gcc"], ["^version-test-pkg%gcc"]]}],
+                ["version-test-root%gcc ^version-test-pkg%gcc"],
             ),
         ],
     )
@@ -158,7 +159,7 @@ class TestSpecList:
         assert result.specs == DEFAULT_SPECS
 
     @pytest.mark.regression("16841")
-    def test_spec_list_matrix_exclude(self, mock_packages):
+    def test_spec_list_matrix_exclude(self):
         parser = SpecListParser()
         result = parser.parse_user_specs(
             name="specs",
@@ -171,7 +172,7 @@ class TestSpecList:
         )
         assert len(result.specs) == 1
 
-    def test_spec_list_exclude_with_abstract_hashes(self, mock_packages, install_mockery):
+    def test_spec_list_exclude_with_abstract_hashes(self, install_mockery):
         # Put mpich in the database so it can be referred to by hash.
         mpich_1 = spack.concretize.concretize_one("mpich+debug")
         mpich_2 = spack.concretize.concretize_one("mpich~debug")

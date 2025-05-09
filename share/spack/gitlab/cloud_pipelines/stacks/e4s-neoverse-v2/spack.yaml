@@ -10,12 +10,16 @@ spack:
       require:
       - "%gcc"
       - target=neoverse_v2
+      target: ["neoverse_v2"]
       providers:
         blas: [openblas]
         mpi: [mpich]
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
+    blas:
+      require:
+      - openblas
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
