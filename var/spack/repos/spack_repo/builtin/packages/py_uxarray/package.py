@@ -17,6 +17,7 @@ class PyUxarray(PythonPackage):
 
     license("Apache-2.0", checked_by="climbfuji")
 
+    version("2025.5.0", sha256="5a52c938569212522c251fa48acbb967da4ee4f15ad3aeffcbf07f16813634b1")
     version("2025.4.0", sha256="340ab54254e0e403481ec144d056a2a82450623c7144e6cfd8d11dfae467e92d")
     version("2024.10.0", sha256="f65a9920ce085af9a38349dc5ece4f9b83bc015dc8cb738d245d343f7816fd59")
 
@@ -28,11 +29,6 @@ class PyUxarray(PythonPackage):
     # "Minimal" run-time dependencies
     depends_on("py-antimeridian", type="run")
     depends_on("py-cartopy", type="run")
-    depends_on("py-datashader", type="run")
-    depends_on("py-geopandas", type="run")
-    depends_on("py-geoviews", type="run")
-    depends_on("py-holoviews", type="run")
-    depends_on("py-hvplot", type="run")
     # With older versions of py-dask (2021.6.2):
     #    @derived_from(pd.core.strings.StringMethods)
     #                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -44,15 +40,29 @@ class PyUxarray(PythonPackage):
     # https://github.com/dask/dask/issues/11038
     depends_on("py-dask@2024.7.1: +dataframe", type="run")
     depends_on("py-dask-expr@1.1.9:", type="run")
+
+    depends_on("py-datashader", type="run")
+    depends_on("py-geoviews", type="run")
+    depends_on("py-holoviews", type="run")
     depends_on("py-matplotlib", type="run")
     depends_on("py-matplotlib-inline", type="run")
     depends_on("py-netcdf4", type="run")
     depends_on("py-numba", type="run")
+    depends_on("py-numpy", type="run")
     depends_on("py-pandas", type="run")
     depends_on("py-pyarrow", type="run")
-    depends_on("py-pytest", type="run")
     depends_on("py-requests", type="run")
-    depends_on("py-scipy", type="run")
-    depends_on("py-spatialpandas", type="run")
     depends_on("py-scikit-learn", type="run")
+    depends_on("py-scipy", type="run")
+    depends_on("py-shapely", type="run")
+    depends_on("py-spatialpandas", type="run")
+    depends_on("py-geopandas", type="run")
     depends_on("py-xarray", type="run")
+    depends_on("py-hvplot", type="run")
+
+    depends_on("py-healpix", type="run", when="@2025.4.0:")
+
+    # it isn't a real version req but it is a newish contemporary version that works
+    depends_on("py-polars@1.29.0:", type="run", when="@2025.4.0:")
+
+    depends_on("py-pytest", type="run")
