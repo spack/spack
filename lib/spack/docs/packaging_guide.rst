@@ -1267,7 +1267,11 @@ Git fetching supports the following parameters to ``version``:
   If paths provided are directories then all the subdirectories and associated files
   will also be cloned.
 
-Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
+``tag`` and ``branch`` should not be combined in the version parameters. We strongly
+recommend that all ``tag`` entries be paired with ``commit``. Providing the full 
+``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries. 
+This is due to the fact that git tags and branches are mutable references to commits, 
+but git commits are guaranteed to be unique points in the git history.
 
 The destination directory for the clone is the standard stage source path.
 
