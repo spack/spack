@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import re
+
 from spack.package import *
 
 _versions = [
@@ -50,7 +51,8 @@ _versions = [
 
 
 class PyCudaBindings(PythonPackage):
-    """cuda.bindings is a standard set of low-level interfaces, providing full coverage of and access to the CUDA host APIs from Python."""
+    """cuda.bindings is a standard set of low-level interfaces, providing
+    full coverage of and access to the CUDA host APIs from Python."""
 
     homepage = "https://pypi.org/project/cuda-bindings/"
 
