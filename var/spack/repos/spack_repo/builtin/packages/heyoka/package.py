@@ -17,6 +17,10 @@ class Heyoka(CMakePackage):
     # SPDX identifier of the project's license.
     license("MPL-2.0")
 
+    version("7.2.1", sha256="b2a61cbe3892e92626bf0746e2da50a9e33800ebeb6452f97adeb9a6d1b74e28")
+    version("7.2.0", sha256="d77115373bc48fed3401a6bd3ab5eac9b1a2e0152defcd6100230299dbe9ef87")
+    version("7.1.0", sha256="5c901e3e6242c199d443aa5edaab88abc091af3eb65af92e493342d0f6ced1e5")
+    version("7.0.0", sha256="348c14195c1bdcaf37e7d49a5eed757bbd108ca272d56594e535b9091bfaa655")
     version("6.1.0", sha256="a0f01afb1fb4f93fdc41b2a8dfebf9f9ddd45b28b7b373c4ef9355aeda7107b4")
     version("6.0.0", sha256="9cf56a6a29db5c72c5203af70d568aede78cb549baf1505b8abd04b888492895")
     version("5.1.0", sha256="dd405328ace718865ae2690384fbf5f7ee4d03ab6821b908e7d0ca0a02c35e14")
@@ -61,13 +65,14 @@ class Heyoka(CMakePackage):
     depends_on("llvm@15:19", when="@6")
     depends_on("boost@1.69: +serialization")
     depends_on("fmt@9:10", when="@:5")
-    depends_on("fmt@9:11", when="@6")
+    depends_on("fmt@9:11", when="@6:7")
     depends_on("spdlog")
     depends_on("intel-tbb@2021.4.0:")
 
     # Optional dependencies
     depends_on("boost@1.69: +serialization +program_options", when="+benchmarks")
-    depends_on("mppp@1 +serialization +fmt +mpfr +mpc", when="+mppp")
+    depends_on("mppp@2 +serialization +fmt +mpfr +mpc", when="@7: +mppp")
+    depends_on("mppp@1 +serialization +fmt +mpfr +mpc", when="@:6 +mppp")
     depends_on("sleef", when="+sleef")
     depends_on("xtensor", when="+benchmarks")
     depends_on("xtensor-blas", when="+benchmarks")
