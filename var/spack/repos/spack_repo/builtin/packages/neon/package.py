@@ -34,7 +34,6 @@ class Neon(CMakePackage):
     depends_on("hip", when="+hip")
     depends_on("kokkos@4.3.00")
     depends_on("ginkgo@develop", when="+ginkgo")
-    depends_on("openmp", when="+omp")
     depends_on("petsc", when="+petsc")
     depends_on("sundials", when="+sundials")
     depends_on("adios2", when="+adios2")
