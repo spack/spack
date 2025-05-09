@@ -286,6 +286,7 @@ def test_new_entries_are_reported_correctly(
 
 
 @pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
+@pytest.mark.not_on_windows("the test uses bash scripts")
 def test_use_tags_for_detection(
     mock_packages, command_args, mock_executable, mutable_config, monkeypatch
 ):
