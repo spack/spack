@@ -27,26 +27,6 @@ _versions = [
         "sha256": "df5929d82056891477bf1818241098b6289df6f43499f8683a40b9c220505a6b",
         "url": "https://files.pythonhosted.org/packages/85/29/862fa4541adf2cc96f87977116f9e71d3d8ee4dff0a3552117dc6ab7d0f6/cuda_bindings-12.8.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
     },
-    {
-        "sha256": "050e82a8d1ee4d8ac04fc56cf6f98cfea72225447f4a57e477fd455484b88818",
-        "url": "https://files.pythonhosted.org/packages/03/30/f5f2da321f72c23af9bb9df947ef5f53a1efe536d8ec4ccdacdfac25174d/cuda_bindings-12.9.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-    },
-    {
-        "sha256": "f543acf44f1d119c148c49937810451541a8618b054cc779fb1fa21ab46da64c",
-        "url": "https://files.pythonhosted.org/packages/49/0d/82de160bd477c1a51195a49476dd7e3b538432c8717fd636bffc9c806076/cuda_bindings-12.9.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-    },
-    {
-        "sha256": "ff0e28d1e34758654b9c961e1f55e4786e49aee6a4dbceaf3cc24c46c672df7e",
-        "url": "https://files.pythonhosted.org/packages/e3/03/40fc1488727a8d72ecc35f58f9df4939277892a837614339c3366d520426/cuda_bindings-12.9.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-    },
-    {
-        "sha256": "f6d7314b2e5db025bb88ddba4df6db2127cc39610ccf4f74c0e1ead05241da29",
-        "url": "https://files.pythonhosted.org/packages/01/fd/1c30778265488c6797c6c17a69c09ba5636df6dc6b0ebfc96d950be2f9e7/cuda_bindings-12.9.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-    },
-    {
-        "sha256": "98391b6c811dd6565a23b89dcd3d5a530c0d1557a37d3c915670931b6578052b",
-        "url": "https://files.pythonhosted.org/packages/1a/47/9c16b088a9ed1d7f9b2c5a73866df41fe61eb460222bb75281a1159491fd/cuda_bindings-12.9.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl",
-    },
 ]
 
 
@@ -70,9 +50,6 @@ class PyCudaBindings(PythonPackage):
 
         full_version = f"{package_version}-py{python_version.replace('.', '')}"
         version_args = {"sha256": sha256, "url": url}
-
-        if cuda_version == "12.8":
-            version_args["preferred"] = True
 
         version(full_version, **version_args)
         depends_on(f"python@{python_version}", when=f"@{full_version}")
