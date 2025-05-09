@@ -4,14 +4,15 @@ spack:
     all:
       require:
       - target=x86_64_v3
-      - '%gcc@7.5.0'
+      # prefer %gcc@7.5.0 but also allow %gcc@12
+      - one_of: ['%gcc@7.5.0', '%gcc@12']
 
       providers:
         mpi: [mvapich2]
 
     mfem:
       require:
-      # gcc@7.5.0 crashes when building mfem@4.8.0
+      # gcc@7.5.0 crashes when building mfem@4.8.0, so use gcc@12
       - '%gcc@12'
 
   specs:
