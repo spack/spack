@@ -42,13 +42,22 @@ ci:
           aud: "${OIDC_TOKEN_AUDIENCE}"
 
   - signing-job:
-      image: { "name": "ghcr.io/spack/notary:0.0.1", "entrypoint": [""] }
+      image:
+        name: ghcr.io/spack/notary@sha256:d5a183b090602dea5dc89d5023fe777d1e64d9a7ddcb6cc9ec58a79bb410c168
+        entrypoint: [""]
       tags: ["aws"]
       script:
-      - - aws s3 sync --exclude "*" --include "*spec.json*" ${SPACK_BUILDCACHE_DESTINATION}/build_cache /tmp
+      - - export BUILD_CACHE="${SPACK_BUILDCACHE_DESTINATION}/${SPACK_BUILDCACHE_RELATIVE_SPECS_URL}"
+        - mkdir -p /tmp/input /tmp/output
+        - aws s3 sync --exclude "*" --include "*spec.manifest.json" ${BUILD_CACHE} /tmp/input
         - /sign.sh
-        - aws s3 sync --exclude "*" --include "*spec.json.sig*" /tmp ${SPACK_BUILDCACHE_DESTINATION}/build_cache
-        - aws s3 cp /tmp/public_keys ${SPACK_BUILDCACHE_DESTINATION}/build_cache/_pgp --recursive --exclude "*" --include "*.pub"
+        - aws s3 sync --exclude "*" --include "*spec.manifest.json" /tmp/output ${BUILD_CACHE}
+        - |+
+          for keyfile in $( find /tmp/public_keys -type f );
+          do
+            spack gpg trust $keyfile
+          done
+        - spack gpg publish --update-index --mirror-url ${SPACK_BUILDCACHE_DESTINATION}
       id_tokens:
         GITLAB_OIDC_TOKEN:
           aud: "${OIDC_TOKEN_AUDIENCE}"
@@ -62,10 +71,14 @@ ci:
         - export SPACK_COPY_ONLY_SOURCE=${SPACK_BUILDCACHE_SOURCE//SPACK_REPLACE_VERSION/${SPACK_REPLACE_VERSION}}
       script:
       - - spack env activate --without-view ${SPACK_CONCRETE_ENV_DIR}
+        # TODO: remove this when we stop getting windows config includes added to the environment
+        - spack config add 'config:build_stage:["$tempdir/$user/spack-stage", "$user_cache_path/stage"]'
+        - spack config blame config
         - echo Copying environment specs from ${SPACK_COPY_ONLY_SOURCE} to ${SPACK_COPY_ONLY_DESTINATION}
         - spack buildcache sync "${SPACK_COPY_ONLY_SOURCE}" "${SPACK_COPY_ONLY_DESTINATION}"
         - curl -fLsS https://spack.github.io/keys/spack-public-binary-key.pub -o /tmp/spack-public-binary-key.pub
-        - aws s3 cp /tmp/spack-public-binary-key.pub "${SPACK_COPY_ONLY_DESTINATION}/build_cache/_pgp/spack-public-binary-key.pub"
+        - spack gpg trust /tmp/spack-public-binary-key.pub
+        - spack gpg publish --mirror-url "${SPACK_COPY_ONLY_DESTINATION}"
         - spack buildcache update-index --keys "${SPACK_COPY_ONLY_DESTINATION}"
       when: "always"
       retry:

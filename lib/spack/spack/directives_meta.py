@@ -65,7 +65,7 @@ class DirectiveMeta(type):
         # The instance is being initialized: if it is a package we must ensure
         # that the directives are called to set it up.
 
-        if cls.__module__.startswith(spack.repo.ROOT_PYTHON_NAMESPACE):
+        if spack.repo.is_package_module(cls.__module__):
             # Ensure the presence of the dictionaries associated with the directives.
             # All dictionaries are defaultdicts that create lists for missing keys.
             for d in DirectiveMeta._directive_dict_names:

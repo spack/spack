@@ -17,10 +17,9 @@ import urllib.error
 import urllib.request
 import urllib.response
 from pathlib import Path, PurePath
+from typing import Any, Callable, Dict, NamedTuple, Optional
 
 import pytest
-
-import archspec.cpu
 
 from llnl.util.filesystem import copy_tree, join_path
 from llnl.util.symlink import readlink
@@ -38,16 +37,27 @@ import spack.oci.image
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.store
 import spack.util.gpg
 import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web as web_util
-from spack.binary_distribution import INDEX_HASH_FILE, CannotListKeys, GenerateIndexError
+from spack.binary_distribution import CannotListKeys, GenerateIndexError
 from spack.database import INDEX_JSON_FILE
 from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.spec import Spec
+from spack.url_buildcache import (
+    INDEX_MANIFEST_FILE,
+    BuildcacheComponent,
+    BuildcacheEntryError,
+    URLBuildcacheEntry,
+    URLBuildcacheEntryV2,
+    compression_writer,
+    get_url_buildcache_class,
+    get_valid_spec_file,
+)
 
 pytestmark = pytest.mark.not_on_windows("does not run on windows")
 
@@ -372,7 +382,7 @@ def test_built_spec_cache(temporary_mirror_dir):
 
     for s in [gspec, cspec]:
         results = bindist.get_mirrors_for_spec(s)
-        assert any([r["spec"] == s for r in results])
+        assert any([r.spec == s for r in results])
 
 
 def fake_dag_hash(spec, length=None):
@@ -435,7 +445,11 @@ def test_generate_index_missing(monkeypatch, tmpdir, mutable_config):
     assert "libelf" in cache_list
 
     # Remove dependency from cache
-    libelf_files = glob.glob(os.path.join(mirror_dir.join("build_cache").strpath, "*libelf*"))
+    libelf_files = glob.glob(
+        os.path.join(
+            mirror_dir.join(bindist.buildcache_relative_specs_path()).strpath, "libelf", "*libelf*"
+        )
+    )
     os.remove(*libelf_files)
 
     # Update index
@@ -480,8 +494,7 @@ def test_generate_package_index_failure(monkeypatch, tmp_path, capfd):
 
     assert (
         "Warning: Encountered problem listing packages at "
-        f"{test_url}/{bindist.BUILD_CACHE_RELATIVE_PATH}: Some HTTP error"
-        in capfd.readouterr().err
+        f"{test_url}: Some HTTP error" in capfd.readouterr().err
     )
 
 
@@ -538,29 +551,6 @@ def test_update_sbang(tmp_path, temporary_mirror, mock_fetch, install_mockery):
             assert f.read() == new_contents
 
 
-@pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64",
-    reason="test data uses gcc 4.5.0 which does not support aarch64",
-)
-def test_install_legacy_buildcache_layout(mutable_config, compiler_factory, install_mockery):
-    """Legacy buildcache layout involved a nested archive structure
-    where the .spack file contained a repeated spec.json and another
-    compressed archive file containing the install tree.  This test
-    makes sure we can still read that layout."""
-    legacy_layout_dir = os.path.join(test_path, "data", "mirrors", "legacy_layout")
-    mirror_url = f"file://{legacy_layout_dir}"
-    filename = (
-        "test-debian6-core2-gcc-4.5.0-archive-files-2.0-"
-        "l3vdiqvbobmspwyb4q2b62fz6nitd4hk.spec.json"
-    )
-    spec_json_path = os.path.join(legacy_layout_dir, "build_cache", filename)
-    mirror_cmd("add", "--scope", "site", "test-legacy-layout", mirror_url)
-    output = install_cmd("--no-check-signature", "--cache-only", "-f", spec_json_path, output=str)
-    mirror_cmd("rm", "--scope=site", "test-legacy-layout")
-    expect_line = "Extracting archive-files-2.0-l3vdiqvbobmspwyb4q2b62fz6nitd4hk from binary cache"
-    assert expect_line in output
-
-
 def test_FetchCacheError_only_accepts_lists_of_errors():
     with pytest.raises(TypeError, match="list"):
         bindist.FetchCacheError("error")
@@ -600,7 +590,60 @@ def test_text_relocate_if_needed(install_mockery, temporary_store, mock_fetch, t
     assert join_path("bin", "secretexe") not in manifest["relocate_textfiles"]
 
 
-def test_etag_fetching_304():
+def test_compression_writer(tmp_path):
+    text = "This is some text. We might or might not like to compress it as we write."
+    checksum_algo = "sha256"
+
+    # Write the data using gzip compression
+    compressed_output_path = str(tmp_path / "compressed_text")
+    with compression_writer(compressed_output_path, "gzip", checksum_algo) as (
+        compressor,
+        checker,
+    ):
+        compressor.write(text.encode("utf-8"))
+
+    compressed_size = checker.length
+    compressed_checksum = checker.hexdigest()
+
+    with open(compressed_output_path, "rb") as f:
+        binary_content = f.read()
+
+    assert bindist.compute_hash(binary_content) == compressed_checksum
+    assert os.stat(compressed_output_path).st_size == compressed_size
+    assert binary_content[:2] == b"\x1f\x8b"
+    decompressed_content = gzip.decompress(binary_content).decode("utf-8")
+
+    assert decompressed_content == text
+
+    # Write the data without compression
+    uncompressed_output_path = str(tmp_path / "uncompressed_text")
+    with compression_writer(uncompressed_output_path, "none", checksum_algo) as (
+        compressor,
+        checker,
+    ):
+        compressor.write(text.encode("utf-8"))
+
+    uncompressed_size = checker.length
+    uncompressed_checksum = checker.hexdigest()
+
+    with open(uncompressed_output_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    assert bindist.compute_hash(content) == uncompressed_checksum
+    assert os.stat(uncompressed_output_path).st_size == uncompressed_size
+    assert content == text
+
+    # Make sure we raise if requesting unknown compression type
+    nocare_output_path = str(tmp_path / "wontwrite")
+    with pytest.raises(BuildcacheEntryError, match="Unknown compression type"):
+        with compression_writer(nocare_output_path, "gsip", checksum_algo) as (
+            compressor,
+            checker,
+        ):
+            compressor.write(text)
+
+
+def test_v2_etag_fetching_304():
     # Test conditional fetch with etags. If the remote hasn't modified the file
     # it returns 304, which is an HTTPError in urllib-land. That should be
     # handled as success, since it means the local cache is up-to-date.
@@ -613,7 +656,7 @@ def test_etag_fetching_304():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcher(
+    fetcher = bindist.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_304,
@@ -624,7 +667,7 @@ def test_etag_fetching_304():
     assert result.fresh
 
 
-def test_etag_fetching_200():
+def test_v2_etag_fetching_200():
     # Test conditional fetch with etags. The remote has modified the file.
     def response_200(request: urllib.request.Request):
         url = request.get_full_url()
@@ -638,7 +681,7 @@ def test_etag_fetching_200():
             )
         assert False, "Should not fetch {}".format(url)
 
-    fetcher = bindist.EtagIndexFetcher(
+    fetcher = bindist.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_200,
@@ -652,7 +695,7 @@ def test_etag_fetching_200():
     assert result.hash == bindist.compute_hash("Result")
 
 
-def test_etag_fetching_404():
+def test_v2_etag_fetching_404():
     # Test conditional fetch with etags. The remote has modified the file.
     def response_404(request: urllib.request.Request):
         raise urllib.error.HTTPError(
@@ -663,7 +706,7 @@ def test_etag_fetching_404():
             fp=None,
         )
 
-    fetcher = bindist.EtagIndexFetcher(
+    fetcher = bindist.EtagIndexFetcherV2(
         url="https://www.example.com",
         etag="112a8bbc1b3f7f185621c1ee335f0502",
         urlopen=response_404,
@@ -673,13 +716,13 @@ def test_etag_fetching_404():
         fetcher.conditional_fetch()
 
 
-def test_default_index_fetch_200():
+def test_v2_default_index_fetch_200():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
-        if url.endswith(INDEX_HASH_FILE):
+        if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(  # type: ignore[arg-type]
                 io.BytesIO(index_json_hash.encode()),
                 headers={},  # type: ignore[arg-type]
@@ -697,7 +740,7 @@ def test_default_index_fetch_200():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
+    fetcher = bindist.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash="outdated", urlopen=urlopen
     )
 
@@ -710,7 +753,7 @@ def test_default_index_fetch_200():
     assert result.hash == index_json_hash
 
 
-def test_default_index_dont_fetch_index_json_hash_if_no_local_hash():
+def test_v2_default_index_dont_fetch_index_json_hash_if_no_local_hash():
     # When we don't have local hash, we should not be fetching the
     # remote index.json.hash file, but only index.json.
     index_json = '{"Hello": "World"}'
@@ -728,7 +771,7 @@ def test_default_index_dont_fetch_index_json_hash_if_no_local_hash():
 
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
+    fetcher = bindist.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=None, urlopen=urlopen
     )
 
@@ -741,13 +784,13 @@ def test_default_index_dont_fetch_index_json_hash_if_no_local_hash():
     assert not result.fresh
 
 
-def test_default_index_not_modified():
+def test_v2_default_index_not_modified():
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
-        if url.endswith(INDEX_HASH_FILE):
+        if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
                 headers={},  # type: ignore[arg-type]
@@ -758,7 +801,7 @@ def test_default_index_not_modified():
         # No request to index.json should be made.
         assert False, "Unexpected request {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
+    fetcher = bindist.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
     )
 
@@ -766,7 +809,7 @@ def test_default_index_not_modified():
 
 
 @pytest.mark.parametrize("index_json", [b"\xa9", b"!#%^"])
-def test_default_index_invalid_hash_file(index_json):
+def test_v2_default_index_invalid_hash_file(index_json):
     # Test invalid unicode / invalid hash type
     index_json_hash = bindist.compute_hash(index_json)
 
@@ -778,21 +821,21 @@ def test_default_index_invalid_hash_file(index_json):
             code=200,
         )
 
-    fetcher = bindist.DefaultIndexFetcher(
+    fetcher = bindist.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash=index_json_hash, urlopen=urlopen
     )
 
     assert fetcher.get_remote_hash() is None
 
 
-def test_default_index_json_404():
+def test_v2_default_index_json_404():
     # Test invalid unicode / invalid hash type
     index_json = '{"Hello": "World"}'
     index_json_hash = bindist.compute_hash(index_json)
 
     def urlopen(request: urllib.request.Request):
         url = request.get_full_url()
-        if url.endswith(INDEX_HASH_FILE):
+        if url.endswith("index.json.hash"):
             return urllib.response.addinfourl(
                 io.BytesIO(index_json_hash.encode()),
                 headers={},  # type: ignore[arg-type]
@@ -811,7 +854,7 @@ def test_default_index_json_404():
 
         assert False, "Unexpected fetch {}".format(url)
 
-    fetcher = bindist.DefaultIndexFetcher(
+    fetcher = bindist.DefaultIndexFetcherV2(
         url="https://www.example.com", local_hash="invalid", urlopen=urlopen
     )
 
@@ -1097,9 +1140,7 @@ def test_get_valid_spec_file(tmp_path, layout, expect_success):
         json.dump(spec_dict, f)
 
     try:
-        spec_dict_disk, layout_disk = bindist._get_valid_spec_file(
-            str(path), max_supported_layout=1
-        )
+        spec_dict_disk, layout_disk = get_valid_spec_file(str(path), max_supported_layout=1)
         assert expect_success
         assert spec_dict_disk == spec_dict
         assert layout_disk == effective_layout
@@ -1109,51 +1150,66 @@ def test_get_valid_spec_file(tmp_path, layout, expect_success):
 
 def test_get_valid_spec_file_doesnt_exist(tmp_path):
     with pytest.raises(bindist.InvalidMetadataFile, match="No such file"):
-        bindist._get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
-
-
-def test_get_valid_spec_file_gzipped(tmp_path):
-    # Create a gzipped file, contents don't matter
-    path = tmp_path / "spec.json.gz"
-    with gzip.open(path, "wb") as f:
-        f.write(b"hello")
-    with pytest.raises(
-        bindist.InvalidMetadataFile, match="Compressed spec files are not supported"
-    ):
-        bindist._get_valid_spec_file(str(path), max_supported_layout=1)
+        get_valid_spec_file(str(tmp_path / "no-such-file"), max_supported_layout=1)
 
 
 @pytest.mark.parametrize("filename", ["spec.json", "spec.json.sig"])
 def test_get_valid_spec_file_no_json(tmp_path, filename):
     tmp_path.joinpath(filename).write_text("not json")
     with pytest.raises(bindist.InvalidMetadataFile):
-        bindist._get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
+        get_valid_spec_file(str(tmp_path / filename), max_supported_layout=1)
 
 
-def test_download_tarball_with_unsupported_layout_fails(
-    tmp_path, mock_packages, mutable_config, capsys
-):
-    layout_version = bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION + 1
-    spec = spack.concretize.concretize_one("pkg-c")
-    spec_dict = spec.to_dict()
-    spec_dict["buildcache_layout_version"] = layout_version
+@pytest.mark.usefixtures("install_mockery", "mock_packages", "mock_fetch", "temporary_mirror")
+def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
+    """Make sure URLBuildcacheEntry behaves as expected"""
 
-    # Setup a basic local build cache structure
-    path = (
-        tmp_path / bindist.build_cache_relative_path() / bindist.tarball_name(spec, ".spec.json")
-    )
-    path.parent.mkdir(parents=True)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(spec_dict, f)
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join("mirror_dir")
+    mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
-    # Configure as a mirror.
-    mirror_cmd("add", "test-mirror", str(tmp_path))
+    s = Spec("libdwarf").concretized()
 
-    # Shouldn't be able "download" this.
-    assert bindist.download_tarball(spec, unsigned=True) is None
+    # Install libdwarf
+    install_cmd("--fake", s.name)
 
-    # And there should be a warning about an unsupported layout version.
-    assert f"Layout version {layout_version} is too new" in capsys.readouterr().err
+    # Push libdwarf to buildcache
+    buildcache_cmd("push", "-u", mirror_dir.strpath, s.name)
+
+    cache_class = get_url_buildcache_class(bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+    build_cache = cache_class(mirror_url, s, allow_unsigned=True)
+
+    manifest = build_cache.read_manifest()
+    spec_dict = build_cache.fetch_metadata()
+    local_tarball_path = build_cache.fetch_archive()
+
+    assert "spec" in spec_dict
+
+    for blob_record in manifest.data:
+        blob_path = build_cache.get_staged_blob_path(blob_record)
+        assert os.path.exists(blob_path)
+        actual_blob_size = os.stat(blob_path).st_size
+        assert blob_record.content_length == actual_blob_size
+
+    build_cache.destroy()
+
+    assert not os.path.exists(local_tarball_path)
+
+
+def test_relative_path_components():
+    blobs_v3 = URLBuildcacheEntry.get_relative_path_components(BuildcacheComponent.BLOB)
+    assert len(blobs_v3) == 1
+    assert "blobs" in blobs_v3
+
+    blobs_v2 = URLBuildcacheEntryV2.get_relative_path_components(BuildcacheComponent.BLOB)
+    assert len(blobs_v2) == 1
+    assert "build_cache" in blobs_v2
+
+    v2_spec_url = "file:///home/me/mymirror/build_cache/linux-ubuntu22.04-sapphirerapids-gcc-12.3.0-gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.json.sig"
+    assert URLBuildcacheEntryV2.get_base_url(v2_spec_url) == "file:///home/me/mymirror"
+
+    v3_manifest_url = "file:///home/me/mymirror/v3/manifests/gmake-4.4.1-5pddli3htvfe6svs7nbrqmwi5735agi3.spec.manifest.json"
+    assert URLBuildcacheEntry.get_base_url(v3_manifest_url) == "file:///home/me/mymirror"
 
 
 @pytest.mark.parametrize(
@@ -1170,3 +1226,244 @@ def test_download_tarball_with_unsupported_layout_fails(
 def test_default_tag(spec: str):
     """Make sure that computed image tags are valid."""
     assert re.fullmatch(spack.oci.image.tag, bindist._oci_default_tag(spack.spec.Spec(spec)))
+
+
+class IndexInformation(NamedTuple):
+    manifest_contents: Dict[str, Any]
+    index_contents: str
+    index_hash: str
+    manifest_path: str
+    index_path: str
+    manifest_etag: str
+    fetched_blob: Callable[[], bool]
+
+
+@pytest.fixture
+def mock_index(tmp_path, monkeypatch) -> IndexInformation:
+    mirror_root = tmp_path / "mymirror"
+    index_json = '{"Hello": "World"}'
+    index_json_hash = bindist.compute_hash(index_json)
+    fetched = False
+
+    cache_class = get_url_buildcache_class(
+        layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+    )
+
+    index_blob_path = os.path.join(
+        str(mirror_root),
+        *cache_class.get_relative_path_components(BuildcacheComponent.BLOB),
+        "sha256",
+        index_json_hash[:2],
+        index_json_hash,
+    )
+
+    os.makedirs(os.path.dirname(index_blob_path))
+    with open(index_blob_path, "w", encoding="utf-8") as fd:
+        fd.write(index_json)
+
+    index_blob_record = bindist.BlobRecord(
+        os.stat(index_blob_path).st_size,
+        cache_class.BUILDCACHE_INDEX_MEDIATYPE,
+        "none",
+        "sha256",
+        index_json_hash,
+    )
+
+    index_manifest = {
+        "version": cache_class.get_layout_version(),
+        "data": [index_blob_record.to_dict()],
+    }
+
+    manifest_json_path = cache_class.get_index_url(str(mirror_root))
+
+    os.makedirs(os.path.dirname(manifest_json_path))
+
+    with open(manifest_json_path, "w", encoding="utf-8") as f:
+        json.dump(index_manifest, f)
+
+    def fetch_patch(stage, mirror_only: bool = False, err_msg: Optional[str] = None):
+        nonlocal fetched
+        fetched = True
+
+    @property  # type: ignore
+    def save_filename_patch(stage):
+        return str(index_blob_path)
+
+    monkeypatch.setattr(spack.stage.Stage, "fetch", fetch_patch)
+    monkeypatch.setattr(spack.stage.Stage, "save_filename", save_filename_patch)
+
+    def get_did_fetch():
+        # nonlocal fetched
+        return fetched
+
+    return IndexInformation(
+        index_manifest,
+        index_json,
+        index_json_hash,
+        manifest_json_path,
+        index_blob_path,
+        "59bcc3ad6775562f845953cf01624225",
+        get_did_fetch,
+    )
+
+
+def test_etag_fetching_304():
+    # Test conditional fetch with etags. If the remote hasn't modified the file
+    # it returns 304, which is an HTTPError in urllib-land. That should be
+    # handled as success, since it means the local cache is up-to-date.
+    def response_304(request: urllib.request.Request):
+        url = request.get_full_url()
+        if url.endswith(INDEX_MANIFEST_FILE):
+            assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
+            raise urllib.error.HTTPError(
+                url, 304, "Not Modified", hdrs={}, fp=None  # type: ignore[arg-type]
+            )
+        assert False, "Unexpected request {}".format(url)
+
+    fetcher = bindist.EtagIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        etag="112a8bbc1b3f7f185621c1ee335f0502",
+        urlopen=response_304,
+    )
+
+    result = fetcher.conditional_fetch()
+    assert isinstance(result, bindist.FetchIndexResult)
+    assert result.fresh
+
+
+def test_etag_fetching_200(mock_index):
+    # Test conditional fetch with etags. The remote has modified the file.
+    def response_200(request: urllib.request.Request):
+        url = request.get_full_url()
+        if url.endswith(INDEX_MANIFEST_FILE):
+            assert request.get_header("If-none-match") == '"112a8bbc1b3f7f185621c1ee335f0502"'
+            return urllib.response.addinfourl(
+                io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
+                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                url=url,
+                code=200,
+            )
+        assert False, "Unexpected request {}".format(url)
+
+    fetcher = bindist.EtagIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        etag="112a8bbc1b3f7f185621c1ee335f0502",
+        urlopen=response_200,
+    )
+
+    result = fetcher.conditional_fetch()
+    assert isinstance(result, bindist.FetchIndexResult)
+    assert not result.fresh
+    assert mock_index.fetched_blob()
+    assert result.etag == mock_index.manifest_etag
+    assert result.data == mock_index.index_contents
+    assert result.hash == mock_index.index_hash
+
+
+def test_etag_fetching_404():
+    # Test conditional fetch with etags. The remote has modified the file.
+    def response_404(request: urllib.request.Request):
+        raise urllib.error.HTTPError(
+            request.get_full_url(),
+            404,
+            "Not found",
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            fp=None,
+        )
+
+    fetcher = bindist.EtagIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        etag="112a8bbc1b3f7f185621c1ee335f0502",
+        urlopen=response_404,
+    )
+
+    with pytest.raises(bindist.FetchIndexError):
+        fetcher.conditional_fetch()
+
+
+def test_default_index_fetch_200(mock_index):
+    # We fetch the manifest and then the index blob if the hash is outdated
+    def urlopen(request: urllib.request.Request):
+        url = request.get_full_url()
+        if url.endswith(INDEX_MANIFEST_FILE):
+            return urllib.response.addinfourl(  # type: ignore[arg-type]
+                io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
+                headers={"Etag": f'"{mock_index.manifest_etag}"'},  # type: ignore[arg-type]
+                url=url,
+                code=200,
+            )
+
+        assert False, "Unexpected request {}".format(url)
+
+    fetcher = bindist.DefaultIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        local_hash="outdated",
+        urlopen=urlopen,
+    )
+
+    result = fetcher.conditional_fetch()
+
+    assert isinstance(result, bindist.FetchIndexResult)
+    assert not result.fresh
+    assert mock_index.fetched_blob()
+    assert result.etag == mock_index.manifest_etag
+    assert result.data == mock_index.index_contents
+    assert result.hash == mock_index.index_hash
+
+
+def test_default_index_404():
+    # We get a fetch error if the index can't be fetched
+    def urlopen(request: urllib.request.Request):
+        raise urllib.error.HTTPError(
+            request.get_full_url(),
+            404,
+            "Not found",
+            hdrs={"Etag": '"59bcc3ad6775562f845953cf01624225"'},  # type: ignore[arg-type]
+            fp=None,
+        )
+
+    fetcher = bindist.DefaultIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        local_hash=None,
+        urlopen=urlopen,
+    )
+
+    with pytest.raises(bindist.FetchIndexError):
+        fetcher.conditional_fetch()
+
+
+def test_default_index_not_modified(mock_index):
+    # We don't fetch the index blob if hash didn't change
+    def urlopen(request: urllib.request.Request):
+        url = request.get_full_url()
+        if url.endswith(INDEX_MANIFEST_FILE):
+            return urllib.response.addinfourl(
+                io.BytesIO(json.dumps(mock_index.manifest_contents).encode()),
+                headers={},  # type: ignore[arg-type]
+                url=url,
+                code=200,
+            )
+
+        # No other request should be made.
+        assert False, "Unexpected request {}".format(url)
+
+    fetcher = bindist.DefaultIndexFetcher(
+        bindist.MirrorURLAndVersion(
+            "https://www.example.com", bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        ),
+        local_hash=mock_index.index_hash,
+        urlopen=urlopen,
+    )
+
+    assert fetcher.conditional_fetch().fresh
+    assert not mock_index.fetched_blob()
