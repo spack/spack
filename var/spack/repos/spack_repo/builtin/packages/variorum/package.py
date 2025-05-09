@@ -62,37 +62,37 @@ class Variorum(CMakePackage):
             cmake_args.append("-DCMAKE_Fortran_FLAGS=-ef")
 
         # CPU architecture selection.
-        if "cpu=Intel" or "cpu=INTEL" or "cpu=intel" in spec:
+        if any( s in spec for s in ("cpu_Intel", "cpu=INTEL", "cpu=intel") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-        elif "cpu=AMD" or "cpu=amd" in spec:
+        elif any( s in spec for s in ("cpu_AMD", "cpu=amd") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-        elif "cpu=IBM" or "cpu=ibm" in spec:
+        elif any( s in spec for s in ("cpu_IBM", "cpu=ibm") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
-        elif "cpu=ARM" or "cpu=arm" in spec:
+        elif any( s in spec for s in ("cpu_ARM", "cpu=arm") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
 
         # GPU architecture selection.
-        if "gpu=Intel" or "gpu=INTEL" or "gpu=intel" in spec:
+        if any( s in spec for s in ("gpu_Intel", "gpu=INTEL", "gpu=intel") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif "gpu=AMD" or "gpu=amd" in spec:
+        elif any( s in spec for s in ("gpu_AMD", "gpu=amd") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif "gpu=NVIDIA" or "gpu=nvidia" in spec:
+        elif any( s in spec for s in ("gpu_NVIDIA", "gpu=nvidia") ):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
