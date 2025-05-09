@@ -67,10 +67,10 @@ def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mo
 
     env("create", env_name)
     with ev.read(env_name):
-        add("trivial-install-test-package")
+        add("simple-standalone-test@0.9")
         concretize()
         with spack.config.override("config:checksum", False):
-            mirror("create", "-d", mirror_dir, "trivial-install-test-package")
+            mirror("create", "-d", mirror_dir, "simple-standalone-test")
 
     e = ev.read(env_name)
     assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
