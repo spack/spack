@@ -61,8 +61,6 @@ class PyUxarray(PythonPackage):
     depends_on("py-hvplot", type="run")
 
     depends_on("py-healpix", type="run", when="@2025.4.0:")
-
-    # it isn't a real version req but it is a newish contemporary version that works
-    depends_on("py-polars@1.29.0:", type="run", when="@2025.4.0:")
+    depends_on("py-polars", type="run", when="@2025.4.0:")
 
     depends_on("py-pytest", type="run")
