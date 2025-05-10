@@ -701,7 +701,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
 def _read_specs_and_push_index(
     file_list: List[str],
-    read_method: Callable,
+    read_method: Callable[[str], URLBuildcacheEntry],
     cache_prefix: str,
     db: BuildCacheDatabase,
     temp_dir: str,
@@ -717,11 +717,18 @@ def _read_specs_and_push_index(
         temp_dir: Location to write index.json and hash for pushing
     """
     for file in file_list:
+        cache_entry: Optional[URLBuildcacheEntry] = None
         try:
-            fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+            cache_entry = read_method(file)
+            spec_dict = cache_entry.fetch_metadata()
+            cache_entry.destroy()
+            fetched_spec = spack.spec.Spec.from_dict(spec_dict)
         except Exception as e:
             tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
             continue
+        finally:
+            if cache_entry:
+                cache_entry.destroy()
         db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
@@ -746,13 +753,11 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
-    def file_read_method(manifest_path):
+    def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
         cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
         cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
-        spec_dict = cache_entry.fetch_metadata()
-        cache_entry.destroy()
-        return spec_dict
+        return cache_entry
 
     url_to_list = url_util.join(url, buildcache_relative_specs_url())
     sync_command_args = [
@@ -791,13 +796,11 @@ def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
     read_fn = None
     file_list = None
 
-    def url_read_method(manifest_url):
+    def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
         cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(url, allow_unsigned=True)
+        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
         cache_entry.read_manifest(manifest_url)
-        spec_dict = cache_entry.fetch_metadata()
-        cache_entry.destroy()
-        return spec_dict
+        return cache_entry
 
     try:
         url_to_list = url_util.join(url, buildcache_relative_specs_url())
