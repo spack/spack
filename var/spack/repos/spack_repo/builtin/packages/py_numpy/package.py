@@ -243,7 +243,7 @@ class PyNumpy(PythonPackage):
     # (e.g. print(numpy.ones(1000)) when compiled with gcc 11
     conflicts("%gcc@11:", when="@1.21.0")
 
-    # gcc 12 has the correct avx512 implimentation
+    # gcc 12 has the correct avx512 implementation
     # https://github.com/numpy/numpy/issues/24431
     conflicts("%gcc@11", when="@1.25")
 
