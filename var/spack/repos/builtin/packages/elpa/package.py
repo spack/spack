@@ -143,12 +143,7 @@ class Elpa(AutotoolsPackage, CudaPackage, ROCmPackage):
                 # NOTE: hipcc may be used to build some files but the final link
                 # step is not done using hipcc. We must provide the libs.
                 # SPACK_LINK_DIRS already contains the library path.
-                flags.extend(
-                    [
-                        "-l{}".format(library.split("lib")[1])
-                        for library in self.spec["hip"].package.libraries
-                    ]
-                )
+                flags.extend(self.spec["hip"].libs.link_flags.split())
         return flags, None, None
 
     def configure_args(self):
