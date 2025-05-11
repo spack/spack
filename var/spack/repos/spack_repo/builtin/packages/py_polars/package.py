@@ -5,7 +5,6 @@
 from spack_repo.builtin.build_systems.python import PythonPackage
 
 from spack.package import *
-import glob
 
 class PyPolars(PythonPackage):
     """Blazingly fast DataFrame library."""
@@ -21,10 +20,7 @@ class PyPolars(PythonPackage):
     # README.md
     depends_on("rust@1.71:", type="build", when="@0.20")
 
-    # requires select_unpredictable and stable builds are not supported
-    # https://doc.rust-lang.org/nightly/core/hint/fn.select_unpredictable.html
-    # https://github.com/pola-rs/polars/issues/13653#issuecomment-2041619141
-    depends_on("rust@nightly", type="build", when="@1.29:")
+    depends_on("rust@1.80:", type="build", when="@1.29:")
 
     # pyproject.toml
     depends_on("py-maturin@1.3.2:", type="build")
@@ -42,10 +38,14 @@ class PyPolars(PythonPackage):
     depends_on("py-gevent", type=("build","run"))
     # depends_on("py-great-tables@0.8.0:", type=("build","run"))
 
-    # def patch(self):
-        # for filename in glob.glob('**/build.rs', recursive=True):
-        #     filter_file(".*println!\(\"cargo:rustc-cfg=feature.*",
-        #      '', filename)
+    def patch(self):
+        # polars seems to require a nightly rust 
+        # https://github.com/pola-rs/polars/issues/13653#issuecomment-2041619141
+        # these patches turn of the nightly code paths
 
-        # filter_file('channel.*', f'channel="{self.spec["rust"].version}"', "rust-toolchain.toml")
-        # filter_file('channel.*', f'channel="{self.spec["rust"].version}"', "py-polars/rust-toolchain.toml")
+        # ensure the toolchain is for stable
+        filter_file('channel.*', f'channel="stable"', "rust-toolchain.toml")
+        filter_file('channel.*', f'channel="stable"', "py-polars/rust-toolchain.toml")
+
+        # only use non-nightly features of depedency crates
+        filter_file('default = \["all", "nightly"\]', 'default = ["all"]', "py-polars/Cargo.toml")
