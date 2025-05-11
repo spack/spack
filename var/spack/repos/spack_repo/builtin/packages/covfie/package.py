@@ -14,7 +14,7 @@ class Covfie(CMakePackage, CudaPackage):
     git = "https://github.com/acts-project/covfie.git"
     list_url = "https://github.com/acts-project/covfie/tags"
 
-    maintainers("stephenswat")
+    maintainers("stephenswat", "sethrj")
 
     license("MPL-2.0")
 
