@@ -219,6 +219,11 @@ class Rust(Package):
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
 
+        # by default a `-nightly` suffix we be applied even on
+        # non-nightly stable builds
+        if self.spec.version != Version("nightly"):
+            flags.append(f"--release-channel=stable")
+
         configure(*flags)
 
     def build(self, spec, prefix):
