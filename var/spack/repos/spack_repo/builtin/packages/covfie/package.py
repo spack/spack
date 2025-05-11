@@ -5,7 +5,7 @@
 from spack.package import *
 
 
-class Covfie(CMakePackage, CudaPackage):
+class Covfie(CMakePackage, CudaPackage, ROCmPackage):
     """Covfie is a library for compositional descriptions of storage methods for
     vector fields and other structured multi-dimensional data."""
 
@@ -36,7 +36,9 @@ class Covfie(CMakePackage, CudaPackage):
         args = [
             self.define("COVFIE_PLATFORM_CPU", True),
             self.define_from_variant("COVFIE_PLATFORM_CUDA", "cuda"),
+            self.define_from_variant("COVFIE_PLATFORM_HIP", "rocm"),
             self.define("COVFIE_QUIET", True),
+            self.define("COVFIE_BUILD_TESTS", self.run_tests),
         ]
 
         return args
