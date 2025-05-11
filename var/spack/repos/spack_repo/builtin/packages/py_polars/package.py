@@ -6,6 +6,7 @@ from spack_repo.builtin.build_systems.python import PythonPackage
 
 from spack.package import *
 
+
 class PyPolars(PythonPackage):
     """Blazingly fast DataFrame library."""
 
@@ -26,26 +27,26 @@ class PyPolars(PythonPackage):
     depends_on("py-maturin@1.3.2:", type="build")
 
     # Interop
-    depends_on("py-numpy@1.16.0:", type=("build","run"))
-    depends_on("py-pandas", type=("build","run"))
-    depends_on("py-pyarrow@7.0.0:", type=("build","run"))
+    depends_on("py-numpy@1.16.0:", type=("build", "run"))
+    depends_on("py-pandas", type=("build", "run"))
+    depends_on("py-pyarrow@7.0.0:", type=("build", "run"))
     depends_on("py-pydantic")
 
     # Other
-    depends_on("py-cloudpickle", type=("build","run"))
-    depends_on("py-matplotlib", type=("build","run"))
-    depends_on("py-altair@0.7.1:", type=("build","run"))
-    depends_on("py-gevent", type=("build","run"))
+    depends_on("py-cloudpickle", type=("build", "run"))
+    depends_on("py-matplotlib", type=("build", "run"))
+    depends_on("py-altair@0.7.1:", type=("build", "run"))
+    depends_on("py-gevent", type=("build", "run"))
     # depends_on("py-great-tables@0.8.0:", type=("build","run"))
 
     def patch(self):
-        # polars seems to require a nightly rust 
+        # polars seems to require a nightly rust
         # https://github.com/pola-rs/polars/issues/13653#issuecomment-2041619141
         # these patches turn of the nightly code paths
 
         # ensure the toolchain is for stable
-        filter_file('channel.*', f'channel="stable"', "rust-toolchain.toml")
-        filter_file('channel.*', f'channel="stable"', "py-polars/rust-toolchain.toml")
+        filter_file("channel.*", 'channel="stable"', "rust-toolchain.toml")
+        filter_file("channel.*", 'channel="stable"', "py-polars/rust-toolchain.toml")
 
         # only use non-nightly features of depedency crates
         filter_file('default = \["all", "nightly"\]', 'default = ["all"]', "py-polars/Cargo.toml")
