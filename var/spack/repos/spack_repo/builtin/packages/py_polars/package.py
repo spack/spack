@@ -49,4 +49,4 @@ class PyPolars(PythonPackage):
         filter_file("channel.*", 'channel="stable"', "py-polars/rust-toolchain.toml")
 
         # only use non-nightly features of depedency crates
-        filter_file('default = \["all", "nightly"\]', 'default = ["all"]', "py-polars/Cargo.toml")
+        filter_file(r"default = \[\"all\", \"nightly\"\]", 'default = ["all"]', "py-polars/Cargo.toml")
