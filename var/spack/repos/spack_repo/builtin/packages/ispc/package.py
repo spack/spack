@@ -81,16 +81,16 @@ class Ispc(CMakePackage):
 
     # Fix build with Apple clang 15
     patch(
-        "https://github.com/ispc/ispc/pull/2785.patch?full_index=1",
+        "https://github.com/ispc/ispc/commit/a25cbdcdb86cb35ea40dcddeba03564128f83eca.patch?full_index=1",
         when="@1.22:1.23.0",
-        sha256="f6a413bf86e49d520d23df7132004d1f09caa512187f369549a4a783859fbc41",
+        sha256="fb807ff565f8b07e9517a57658fa434958ad53241ce84216b3490c91f9e937eb",
     )
 
     # Fix library lookup for NCurses in CMake
     patch(
-        "https://patch-diff.githubusercontent.com/raw/ispc/ispc/pull/2638.patch?full_index=1",
+        "https://github.com/ispc/ispc/commit/408f831b6200439c3bc3f98fb62066f4980c1271.patch?full_index=1",
         when="@1.18:1.20",
-        sha256="3f7dae8d4a683fca2a6157bbcb7cbe9692ff2094b0f4afaf29be121c02b0b3ad",
+        sha256="c4621feaa73c8cb6ee2bbcebe218bc0275517aaa5f8fc4a45a962c60a8168c95",
     )
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

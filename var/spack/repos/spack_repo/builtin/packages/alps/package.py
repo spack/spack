@@ -50,19 +50,17 @@ class Alps(CMakePackage):
 
     # See https://github.com/ALPSim/ALPS/issues/6#issuecomment-2604912169
     # for why this is needed
-    resources = {
+    for boost_version, boost_checksum in (
         # boost version, shasum
-        "1.87.0": "af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89",
-        "1.86.0": "1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b",
-        "1.85.0": "7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617",
-        "1.84.0": "cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454",
-        "1.83.0": "6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e",
-        "1.82.0": "a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6",
-        "1.81.0": "71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa",
-        "1.80.0": "1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0",
-    }
-
-    for boost_version, boost_checksum in resources.items():
+        ("1.87.0", "af57be25cb4c4f4b413ed692fe378affb4352ea50fbe294a11ef548f4d527d89"),
+        ("1.86.0", "1bed88e40401b2cb7a1f76d4bab499e352fa4d0c5f31c0dbae64e24d34d7513b"),
+        ("1.85.0", "7009fe1faa1697476bdc7027703a2badb84e849b7b0baad5086b087b971f8617"),
+        ("1.84.0", "cc4b893acf645c9d4b698e9a0f08ca8846aa5d6c68275c14c3e7949c24109454"),
+        ("1.83.0", "6478edfe2f3305127cffe8caf73ea0176c53769f4bf1585be237eb30798c3b8e"),
+        ("1.82.0", "a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6"),
+        ("1.81.0", "71feeed900fbccca04a3b4f2f84a7c217186f28a940ed8b7ed4725986baf99fa"),
+        ("1.80.0", "1e19565d82e43bc59209a168f5ac899d3ba471d55c7610c677d4ccf2c9c500c0"),
+    ):
         resource(
             when="^boost@{0}".format(boost_version),
             name="boost_source_files",

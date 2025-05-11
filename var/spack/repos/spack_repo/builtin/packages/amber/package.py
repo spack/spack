@@ -35,14 +35,12 @@ class Amber(Package, CudaPackage):
         deprecated=True,
     )
 
-    resources = {
-        # [version amber, version ambertools , sha256sum]
-        "20": ("21", "f55fa930598d5a8e9749e8a22d1f25cab7fcf911d98570e35365dd7f262aaafd"),
-        # '20': ('20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
-        "18": ("19", "0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699"),
-        "16": ("16", "7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa"),
-    }
-    for ver, (ambertools_ver, ambertools_checksum) in resources.items():
+    for ver, ambertools_ver, ambertools_checksum in (
+        # (version amber, version ambertools, sha256sum)
+        ("20", "21", "f55fa930598d5a8e9749e8a22d1f25cab7fcf911d98570e35365dd7f262aaafd"),
+        ("18", "19", "0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699"),
+        ("16", "16", "7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa"),
+    ):
         resource(
             when="@{0}".format(ver),
             name="AmberTools",
@@ -52,7 +50,7 @@ class Amber(Package, CudaPackage):
             placement="ambertools_tmpdir",
         )
 
-    patches = [
+    for ver, num, checksum in (
         ("20", "1", "10780cb91a022b49ffdd7b1e2bf4a572fa4edb7745f0fc4e5d93b158d6168e42"),
         ("20", "2", "9c973e3f8f33a271d60787e8862901e8f69e94e7d80cda1695f7fad7bc396093"),
         ("20", "3", "acb359dc9b1bcff7e0f1965baa9f3f3dc18eeae99c49f1103c1e2986c0bbeed8"),
@@ -97,8 +95,7 @@ class Amber(Package, CudaPackage):
         ("16", "13", "5ce28e6e0118a4780ad72fc096e617c874cde7d140e15f87451babb25aaf2d8f"),
         ("16", "14", "93703e734e76da30a5e050189a66d5a4d6bec5885752503c4c798e2f44049080"),
         ("16", "15", "a156ec246cd06688043cefde24de0d715fd46b08f5c0235015c2c5c3c6e37488"),
-    ]
-    for ver, num, checksum in patches:
+    ):
         patch_url_str = "https://ambermd.org/bugfixes/{0}.0/update.{1}"
         patch(patch_url_str.format(ver, num), sha256=checksum, level=0, when="@{0}".format(ver))
 

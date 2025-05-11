@@ -4670,6 +4670,9 @@ def substitute_abstract_variants(spec: Spec):
     # in $spack/lib/spack/spack/spec_list.py
     unknown = []
     for name, v in spec.variants.items():
+        if v.concrete and v.type == vt.VariantType.MULTI:
+            continue
+
         if name == "dev_path":
             v.type = vt.VariantType.SINGLE
             v.concrete = True

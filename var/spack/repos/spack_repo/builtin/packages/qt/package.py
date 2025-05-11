@@ -183,7 +183,7 @@ class Qt(Package):
     # https://github.com/Tencent/rapidjson/issues/2277
     # https://github.com/Tencent/rapidjson/pull/719
     patch(
-        "https://patch-diff.githubusercontent.com/raw/Tencent/rapidjson/pull/719.patch?full_index=1",
+        "https://github.com/Tencent/rapidjson/commit/9bd618f545ab647e2c3bcbf2f1d87423d6edf800.patch?full_index=1",
         sha256="ce341a69d6c17852fddd5469b6aabe995fd5e3830379c12746a18c3ae858e0e1",
         working_dir="qtlocation/src/3rdparty/mapbox-gl-native/deps/rapidjson/1.1.0",
         when="@5.9.2: %gcc@14:",

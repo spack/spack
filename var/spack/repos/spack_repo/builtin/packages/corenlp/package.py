@@ -24,20 +24,15 @@ class Corenlp(Package):
 
     version("4.0.0", sha256="07195eed46dd39bdc364d3988da8ec6a5fc9fed8c17613cfe5a8b84d649c8f0f")
 
-    resources = [("4.0.0", "f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94")]
-    for ver, checksum in resources:
-        jarfile = "stanford-corenlp-{0}-models.jar".format(ver)
-        resource(
-            when="@{0}".format(ver),
-            name=jarfile,
-            url="https://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/{0}/{1}".format(
-                ver, jarfile
-            ),
-            expand=False,
-            destination="",
-            placement=jarfile,
-            sha256=checksum,
-        )
+    resource(
+        when="@4.0.0",
+        name="stanford-corenlp-4.0.0-models.jar",
+        url="https://repo1.maven.org/maven2/edu/stanford/nlp/stanford-corenlp/4.0.0/stanford-corenlp-4.0.0-models.jar",
+        expand=False,
+        destination="",
+        placement="stanford-corenlp-4.0.0-models.jar",
+        sha256="f45bde062fb368d72f7d3c7ac1ddc6cfb61d3badc1152572bde17f1a5ed9ec94",
+    )
 
     depends_on("ant", type="build")
 

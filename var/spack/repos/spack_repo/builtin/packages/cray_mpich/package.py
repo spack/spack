@@ -4,8 +4,6 @@
 
 import os
 
-import llnl.util.tty as tty
-
 from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
 

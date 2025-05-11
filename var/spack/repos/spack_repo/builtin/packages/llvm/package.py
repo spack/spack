@@ -1212,6 +1212,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),
                     define("RUNTIMES_CMAKE_ARGS", runtime_cmake_args),
+                    define("LIBCXXABI_USE_LLVM_UNWINDER", not spec.satisfies("libunwind=none")),
                 ]
             )
 
