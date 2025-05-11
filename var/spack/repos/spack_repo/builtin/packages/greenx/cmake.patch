@@ -1,0 +1,130 @@
+From 2ab6ef49e60f835e33de3ea5b56318aab3f48e76 Mon Sep 17 00:00:00 2001
+From: Mathieu Taillefumier <mathieu.taillefumier@free.fr>
+Date: Sun, 11 May 2025 15:38:49 +0200
+Subject: [PATCH] Add missing GMP targets when find_package(greenX) is called
+
+---
+ CMakeLists.txt                                | 15 ++++++--
+ GX-AnalyticContinuation/CMakeLists.txt        |  2 +-
+ cmake/FindGMPXX.cmake                         | 38 ++++++++++++++-----
+ ...eenXConfig.cmake => greenXConfig.cmake.in} |  5 +++
+ 4 files changed, 46 insertions(+), 14 deletions(-)
+ rename cmake/{greenXConfig.cmake => greenXConfig.cmake.in} (81%)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index e67e394..23989c0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -170,14 +170,23 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+     FORCE)
+ endif()
+ 
++
+ install(
+     EXPORT      greenXTargets
+     NAMESPACE   greenX::
+     FILE        greenXTargets.cmake
+-    DESTINATION lib/cmake/greenX
++    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
+ )
+ 
++configure_file("${PROJECT_SOURCE_DIR}/cmake/greenXConfig.cmake.in"
++               "${PROJECT_BINARY_DIR}/greenXConfig.cmake" @ONLY)
++
+ install(
+-    FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/greenXConfig.cmake"
+-    DESTINATION lib/cmake/greenX
++    FILES "${PROJECT_BINARY_DIR}/greenXConfig.cmake"
++    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
+ )
++install(
++  DIRECTORY "${PROJECT_SOURCE_DIR}/cmake"
++  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
++  FILES_MATCHING
++  PATTERN "*.cmake")
+diff --git a/GX-AnalyticContinuation/CMakeLists.txt b/GX-AnalyticContinuation/CMakeLists.txt
+index b2cefec..077dd28 100644
+--- a/GX-AnalyticContinuation/CMakeLists.txt
++++ b/GX-AnalyticContinuation/CMakeLists.txt
+@@ -27,7 +27,7 @@ if(GMPXX_FOUND)
+   add_definitions(-DGMPXX_FOUND)
+   target_sources(LibGXAC PRIVATE src/pade_approximant.f90 src/ComplexGMP.cpp src/Symmetry_pade.cpp src/pade_mp.cpp api/gx_ac.F90)
+   target_include_directories(LibGXAC PRIVATE ${GMPXX_INCLUDE_DIRS})
+-  target_link_libraries(LibGXAC GXCommon ${GMPXX_LIBRARIES} gmp)
++  target_link_libraries(LibGXAC GXCommon greenX::gmpxx)
+ else()
+   target_sources(LibGXAC PRIVATE src/pade_approximant.f90 api/gx_ac.F90)
+   target_link_libraries(LibGXAC GXCommon)
+diff --git a/cmake/FindGMPXX.cmake b/cmake/FindGMPXX.cmake
+index 7a26574..c8bbe50 100644
+--- a/cmake/FindGMPXX.cmake
++++ b/cmake/FindGMPXX.cmake
+@@ -3,19 +3,37 @@
+ #  GMPXX_FOUND
+ #  GMPXX_INCLUDE_DIR
+ #  GMPXX_LIBRARIES
+-
+-find_path(GMPXX_INCLUDE_DIR NAMES gmpxx.h)
+-find_library(GMPXX_LIBRARY NAMES gmpxx)
+-
+ include(FindPackageHandleStandardArgs)
+-find_package_handle_standard_args(GMPXX DEFAULT_MSG GMPXX_INCLUDE_DIR GMPXX_LIBRARY)
++find_package(PkgConfig)
+ 
+-if(GMPXX_FOUND)
+-  set(GMPXX_INCLUDE_DIRS ${GMPXX_INCLUDE_DIR})
+-  set(GMPXX_LIBRARIES ${GMPXX_LIBRARY})
++if (PKG_CONFIG_FOUND)
++  pkg_check_modules(GREENX_GMPXX IMPORTED_TARGET GLOBAL gmpxx)
++  pkg_check_modules(GREENX_GMP IMPORTED_TARGET GLOBAL gmp)
++endif()
++if(NOT GREENX_GMP_FOUND)
++  find_path(GREENX_GMPXX_INCLUDE_DIR NAMES gmpxx.h)
++  find_library(GREENX_GMPXX_LIBRARY NAMES gmpxx)
++  find_library(GREENX_GMP_LIBRARY NAMES gmp)
+ else()
+-  set(GMPXX_INCLUDE_DIRS)
+-  set(GMPXX_LIBRARIES)
++  set(GREENX_GMP_LIBRARY ${GREENX_GMP_LINK_LIBRARIES})
++  set(GREENX_GMPXX_LIBRARY ${GREENX_GMPXX_LINK_LIBRARIES})
++  set(GREENX_GMPXX_INCLUDE_DIR ${GREENX_GMP_INCLUDE_DIRS})
++endif()
++
++find_package_handle_standard_args(GMPXX DEFAULT_MSG GREENX_GMPXX_INCLUDE_DIRS GREENX_GMPXX_LIBRARY GREENX_GMP_LIBRARY)
++
++set(GREENX_GMPXX_LIBRARIES ${GREENX_GMPXX_LIBRARY} ${GREENX_GMP_LIBRARY})
++
++if (NOT TARGET greenX::gmpxx)
++  add_library(greenX::gmpxx INTERFACE IMPORTED)
++  set_target_properties(greenX::gmpxx
++                        PROPERTIES
++                        INTERFACE_LINK_LIBRARIES "${GREENX_GMPXX_LIBRARIES}")
++  if (GREENX_GMPXX_INCLUDE_DIRS)
++    set_target_properties(greenX::gmpxx
++                          PROPERTIES
++                          INTERFACE_INCLUDE_DIRECTORIES ${GREENX_GMPXX_INCLUDE_DIRS})
++  endif()
+ endif()
+ 
+ mark_as_advanced(GMPXX_INCLUDE_DIR GMPXX_LIBRARY)
+diff --git a/cmake/greenXConfig.cmake b/cmake/greenXConfig.cmake.in
+similarity index 81%
+rename from cmake/greenXConfig.cmake
+rename to cmake/greenXConfig.cmake.in
+index 7dd40b0..d89f70d 100644
+--- a/cmake/greenXConfig.cmake
++++ b/cmake/greenXConfig.cmake.in
+@@ -3,5 +3,10 @@ include(CMakeFindDependencyMacro)
+ # If greenX depends on other libraries, do:
+ find_dependency(BLAS REQUIRED)
+ find_dependency(LAPACK REQUIRED)
++
++if(@ENABLE_GNU_GMP@)
++   find_dependency(GMPXX)
++endif()
++
+ # Finally, pull in the targets you exported:
+ include("${CMAKE_CURRENT_LIST_DIR}/greenXTargets.cmake")
+-- 
+2.49.0
+
