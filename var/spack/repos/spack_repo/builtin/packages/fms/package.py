@@ -76,8 +76,8 @@ class Fms(CMakePackage):
     # What the following patch is providing is available in version 2024.03
     # and newer so it is only needed to 2024.02
     patch(
-        "https://github.com/NOAA-GFDL/fms/pull/1559.patch?full_index=1",
-        sha256="2b12a6c35f357c3dddcfa5282576e56ab0e8e6c1ad1dab92a2c85ce3dfb815d4",
+        "https://github.com/NOAA-GFDL/fms/commit/361352e0b410373ba259259627f4b714b15cff57.patch?full_index=1",
+        sha256="6c085485919d493c350d1692ea0b6b403fca1246c0c4bde3b50b44a08d887694",
         when="@2024.02",
     )
 

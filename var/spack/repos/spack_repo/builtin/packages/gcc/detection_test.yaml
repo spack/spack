@@ -22,7 +22,7 @@ paths:
       fi
   platforms: ["darwin", "linux"]
   results:
-  - spec: "gcc@9.4.0 languages=c,c++"
+  - spec: "gcc@9.4.0 languages:=c,c++"
     extra_attributes:
       compilers:
         c: ".*/bin/gcc"
@@ -45,7 +45,7 @@ paths:
       fi
   platforms: ["darwin", "linux"]
   results:
-  - spec: "gcc@5.5.0 languages=c,c++,fortran"
+  - spec: "gcc@5.5.0 languages:=c,c++,fortran"
     extra_attributes:
       compilers:
         c: ".*/bin/gcc-5$"
@@ -115,7 +115,7 @@ paths:
       fi
   platforms: [darwin]
   results:
-    - spec: "gcc@14.1.0 languages=c"
+    - spec: "gcc@14.1.0 languages:=c"
       extra_attributes:
         compilers:
           c: ".*/bin/gcc-14$"

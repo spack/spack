@@ -181,7 +181,7 @@ class Raja(CachedCMakePackage, CudaPackage, ROCmPackage):
 
     # Fix compilation issue reported by Intel from their new compiler version
     patch(
-        "https://github.com/LLNL/RAJA/pull/1668.patch?full_index=1",
+        "https://github.com/LLNL/RAJA/commit/3e831e034bd92daacf49f40b66459aefd6ea3972.patch?full_index=1",
         sha256="c0548fc5220f24082fb2592d5b4e8b7c8c783b87906d5f0950d53953d25161f6",
         when="@2024.02.1:2024.02.99 %oneapi@2025:",
     )

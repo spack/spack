@@ -492,7 +492,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch(
-        "https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1",
+        "https://github.com/OSGeo/gdal/commit/b1a01a6790d428038e3c7cd81ca54d6d468b68b9.patch?full_index=1",
         when="@3.3.0",
         level=2,
         sha256="9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce",
@@ -501,7 +501,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # https://github.com/spack/spack/issues/41299
     # ensures the correct build specific libproj is used with cmake builds (gdal >=3.5.0)
     patch(
-        "https://patch-diff.githubusercontent.com/raw/OSGeo/gdal/pull/8964.patch?full_index=1",
+        "https://github.com/OSGeo/gdal/commit/cc1213052fbfc6aca8fd7268f39e84f38a7b4155.patch?full_index=1",
         when="@3.5:3.8",
         sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79",
     )

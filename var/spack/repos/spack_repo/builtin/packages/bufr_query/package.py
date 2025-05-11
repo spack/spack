@@ -42,8 +42,8 @@ class BufrQuery(CMakePackage, PythonExtension):
 
     # Patches
     patch(
-        "https://github.com/NOAA-EMC/bufr-query/pull/20.patch?full_index=1",
-        sha256="3acf11082c9e76e64dbbda4f62ac0cbc234dca7e60c85a275e778417cfd65001",
+        "https://github.com/NOAA-EMC/bufr-query/commit/a27d75e0c2a7c1b819520154fb330af202d65dcf.patch?full_index=1",
+        sha256="6146db89605f24a92f75bd3bb7521e3fb545dd25d1f3bfc1d917b862e7f3c6c9",
         when="+python @:0.0.2",
     )
 
