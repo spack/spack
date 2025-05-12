@@ -5,7 +5,7 @@ Utilities for reading and writing Mach-O headers
 import os
 import sys
 
-from altgraph.ObjectGraph import ObjectGraph
+from _vendoring.altgraph.ObjectGraph import ObjectGraph
 
 from macholib.dyld import dyld_find
 from macholib.itergraphreport import itergraphreport
