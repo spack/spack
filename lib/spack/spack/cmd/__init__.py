@@ -559,11 +559,11 @@ def get_run_dependents(spec):
     return run_dependents + dependent_dependents
 
 
-def filter_loaded_specs(specs, run_dependencies):
+def filter_loaded_specs(specs, env_roots, run_dependencies):
     """Filter a list of specs returning only those that are
     currently loaded."""
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
-    loaded_specs = [x for x in specs if x.dag_hash() in hashes]
+    loaded_specs = [x for x in specs if x.dag_hash() in hashes] + env_roots
     if run_dependencies:
         dependencies = []
         for loaded_spec in loaded_specs:
