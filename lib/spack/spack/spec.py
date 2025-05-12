@@ -1012,6 +1012,7 @@ class _EdgeMap(collections.abc.Mapping):
         child: Optional[str] = None,
         depflag: dt.DepFlag = dt.ALL,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
+        when: Optional["Spec"] = None,
     ) -> List[DependencySpec]:
         """Selects a list of edges and returns them.
 
@@ -1031,6 +1032,7 @@ class _EdgeMap(collections.abc.Mapping):
             child: name of the child package
             depflag: allowed dependency types in flag form
             virtuals: list of virtuals or specific virtual on the edge
+            when: condition on conditional dependency, or Spec() for unconditional dependency only
         """
         if not depflag:
             return []
@@ -1055,6 +1057,9 @@ class _EdgeMap(collections.abc.Mapping):
                 selected = (dep for dep in selected if virtuals in dep.virtuals)
             else:
                 selected = (dep for dep in selected if any(v in dep.virtuals for v in virtuals))
+
+        if when is not None:
+            selected = (dep for dep in selected if dep.when == when)
 
         return list(selected)
 
@@ -1603,6 +1608,7 @@ class Spec:
         depflag: dt.DepFlag = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
+        when: Optional["Spec"] = None,
     ) -> List[DependencySpec]:
         """Returns a list of edges connecting this node in the DAG to children.
 
@@ -1610,9 +1616,13 @@ class Spec:
             name: filter dependencies by package name
             depflag: allowed dependency types
             virtuals: allowed virtuals
+            when: condition on conditional dependencies (or Spec() for unconditional)
         """
         return [
-            d for d in self._dependencies.select(child=name, depflag=depflag, virtuals=virtuals)
+            d
+            for d in self._dependencies.select(
+                child=name, depflag=depflag, virtuals=virtuals, when=when
+            )
         ]
 
     @property
@@ -1651,6 +1661,7 @@ class Spec:
         deptype: Union[dt.DepTypes, dt.DepFlag] = dt.ALL,
         *,
         virtuals: Optional[Union[str, Sequence[str]]] = None,
+        when: Optional["Spec"] = None,
     ) -> List["Spec"]:
         """Returns a list of direct dependencies (nodes in the DAG)
 
@@ -1658,11 +1669,15 @@ class Spec:
             name: filter dependencies by package name
             deptype: allowed dependency types
             virtuals: allowed virtuals
+            when: condition on conditional dependency or Spec() for unconditional
         """
         if not isinstance(deptype, dt.DepFlag):
             deptype = dt.canonicalize(deptype)
         return [
-            d.spec for d in self.edges_to_dependencies(name, depflag=deptype, virtuals=virtuals)
+            d.spec
+            for d in self.edges_to_dependencies(
+                name, depflag=deptype, virtuals=virtuals, when=when
+            )
         ]
 
     def dependents(
