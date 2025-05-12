@@ -131,35 +131,34 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
         spec = self.spec
         env.set("CXXFLAGS", self.compiler.cxx17_flag)
 
-        if spec.satisfies("+cuda") or spec.satisfies("+rocm"):
-            if spec.satisfies("+cuda"):
-                arch_config = ",".join(
-                    f"arch=compute_{arch},code=sm_{arch}"
-                    for arch in spec.variants["cuda_arch"].value
-                )
-                if "comms=none" in spec:
-                    host_compiler = ""
-                else:
-                    host_compiler = f"-ccbin {spec['mpi'].mpicxx}"
-                env.set("CXX", join_path(spec["cuda"].prefix, "bin", "nvcc"))
-                env.append_flags(
-                    "CXXFLAGS", f"-gencode {arch_config} -cudart shared {host_compiler}"
-                )
-                env.set("LDFLAGS", "-cudart shared -lcublas")
-            elif spec.satisfies("+rocm"):
-                archs = ",".join(self.spec.variants["amdgpu_target"].value)
-                if "comms=none" in spec:
-                    mpi_include = ""
-                    mpi_ldflags = ""
-                else:
-                    mpi_include = spec["mpi"].headers.cpp_flags
-                    mpi_ldflags = f"{spec['mpi'].libs.ld_flags} -lmpi"
-                env.set("CXX", join_path(spec["hip"].prefix, "bin", "hipcc"))
-                env.set("LDFLAGS", f"{mpi_ldflags} -lamdhip64")
-                env.append_flags(
-                    "CXXFLAGS",
-                    f"--offload-arch={archs} {spec['hip'].headers.cpp_flags} {mpi_include}",
-                )
+        if spec.satisfies("+cuda"):
+            arch_config = ",".join(
+                f"arch=compute_{arch},code=sm_{arch}"
+                for arch in spec.variants["cuda_arch"].value
+            )
+            if "comms=none" in spec:
+                host_compiler = ""
+            else:
+                host_compiler = f"-ccbin {spec['mpi'].mpicxx}"
+            env.set("CXX", join_path(spec["cuda"].prefix, "bin", "nvcc"))
+            env.append_flags(
+                "CXXFLAGS", f"-gencode {arch_config} -cudart shared {host_compiler}"
+            )
+            env.set("LDFLAGS", "-cudart shared -lcublas")
+        elif spec.satisfies("+rocm"):
+            archs = ",".join(self.spec.variants["amdgpu_target"].value)
+            if "comms=none" in spec:
+                mpi_include = ""
+                mpi_ldflags = ""
+            else:
+                mpi_include = spec["mpi"].headers.cpp_flags
+                mpi_ldflags = f"{spec['mpi'].libs.ld_flags} -lmpi"
+            env.set("CXX", join_path(spec["hip"].prefix, "bin", "hipcc"))
+            env.set("LDFLAGS", f"{mpi_ldflags} -lamdhip64")
+            env.append_flags(
+                "CXXFLAGS",
+                f"--offload-arch={archs} {spec['hip'].headers.cpp_flags} {mpi_include}",
+            )
         else:
             if "comms=none" not in spec:
                 env.append_flags("CXXFLAGS", "-fPIC")
