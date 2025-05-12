@@ -256,6 +256,7 @@ substitute = [
   { match='ruamel.yaml', replace="_vendoring.ruamel.yaml" },
   { match='altgraph', replace="_vendoring.altgraph" },
   { match='macholib', replace="_vendoring.macholib" },
+  { match='from six', replace="from _vendoring.six" },
 ]
 drop = [
   # contains unnecessary scripts

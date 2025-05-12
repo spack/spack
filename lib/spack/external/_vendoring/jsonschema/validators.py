@@ -8,7 +8,7 @@ import contextlib
 import json
 import numbers
 
-from six import add_metaclass
+from _vendoring.six import add_metaclass
 
 from jsonschema import (
     _legacy_validators,
