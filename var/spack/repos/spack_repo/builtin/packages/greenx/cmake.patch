@@ -1,25 +1,96 @@
-From 2ab6ef49e60f835e33de3ea5b56318aab3f48e76 Mon Sep 17 00:00:00 2001
+From d2cca1f85e0c568afc0c225f098bda0056d6c8b5 Mon Sep 17 00:00:00 2001
 From: Mathieu Taillefumier <mathieu.taillefumier@free.fr>
 Date: Sun, 11 May 2025 15:38:49 +0200
 Subject: [PATCH] Add missing GMP targets when find_package(greenX) is called
+ [cmake] Fix the include directy for the fortran modules
 
 ---
- CMakeLists.txt                                | 15 ++++++--
- GX-AnalyticContinuation/CMakeLists.txt        |  2 +-
- cmake/FindGMPXX.cmake                         | 38 ++++++++++++++-----
- ...eenXConfig.cmake => greenXConfig.cmake.in} |  5 +++
- 4 files changed, 46 insertions(+), 14 deletions(-)
+ CMakeLists.txt                                | 56 +++++++++++++++----
+ GX-AnalyticContinuation/CMakeLists.txt        |  6 +-
+ GX-LocalizedBasis/CMakeLists.txt              |  6 +-
+ GX-TimeFrequency/CMakeLists.txt               |  4 +-
+ GX-common/CMakeLists.txt                      |  4 +-
+ cmake/FindGMPXX.cmake                         | 38 +++++++++----
+ ...eenXConfig.cmake => greenXConfig.cmake.in} |  5 ++
+ 7 files changed, 89 insertions(+), 30 deletions(-)
  rename cmake/{greenXConfig.cmake => greenXConfig.cmake.in} (81%)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index e67e394..23989c0 100644
+index e67e394..d93b442 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -170,14 +170,23 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+@@ -8,13 +8,12 @@
+ cmake_minimum_required(VERSION 3.15.0)
+ 
+ project(greenX
+-  LANGUAGES Fortran
+-  VERSION 0.0.1
++  LANGUAGES Fortran CXX
++  VERSION 2.2
++  DESCRIPTION "Library for Many-body Green Functions on HPC"
++  HOMEPAGE_URL "https://nomad-coe.github.io/greenX/"
+ )
+ 
+-# Need for Intel MKL and for GNU GMP
+-enable_language(CXX)
+-
+ # Set C++ standard
+ set(CMAKE_CXX_STANDARD 17)
+ 
+@@ -26,6 +25,22 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${PROJECT_BINARY_DIR}/modules)
+ # Define GNU standard installation directories
+ include(GNUInstallDirs)
+ 
++# Set installation location
++if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
++  set(default_install_prefix "${PROJECT_SOURCE_DIR}/install")
++  set(CMAKE_INSTALL_PREFIX ${default_install_prefix}
++    CACHE STRING "Choose the installation directory. Default location is ${default_install_prefix}"
++    FORCE)
++endif()
++
++# the set the include directory where the mod files will be installed. the include directory is compiler dependent.
++if(NOT DEFINED CMAKE_INSTALL_Fortran_MODULES)
++  message(INFO "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
++  set(CMAKE_INSTALL_Fortran_MODULES
++      "${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
++  )
++endif()
++
+ # CMake module directory
+ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+ 
+@@ -124,7 +139,7 @@ if (${COMPILE_SUBMODULES})
+   set(IDieL_INSTALL_DIR "${IDieL_SOURCE}/IDieL")
+   install(FILES ${IDieL_INSTALL_DIR}/lib/libIDieL.so DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+   install(DIRECTORY ${IDieL_INSTALL_DIR}/include/
+-        DESTINATION ${CMAKE_INSTALL_PREFIX}/include/modules/
++        DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}
+         FILES_MATCHING PATTERN "*d")
+   else()
+     message(FATAL_ERROR "IDieL source directory not found: ${IDieL_SOURCE}. You can obtain it by executing 'git submodule update --init'.")
+@@ -148,7 +163,7 @@ if (${PAW_COMPONENT})
+    install(FILES ${LIBPAW_INSTALL_DIR}/lib/libabinit_common.a DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    install(FILES ${LIBPAW_INSTALL_DIR}/lib/libpaw.so DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
+    install(DIRECTORY ${LIBPAW_INSTALL_DIR}/include/
+-           DESTINATION ${CMAKE_INSTALL_PREFIX}/include/modules/
++           DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}
+            FILES_MATCHING PATTERN "*d")
+ endif()
+ 
+@@ -170,14 +185,35 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
      FORCE)
  endif()
  
++# the set the include directory where the mod files will be installed. the include directory is compiler dependent.
++if(NOT DEFINED CMAKE_INSTALL_Fortran_MODULES)
++  message(INFO "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
++  set(CMAKE_INSTALL_Fortran_MODULES
++      "${CMAKE_INSTALL_FULL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
++  )
++endif()
 +
++message(INFO "${CMAKE_INSTALL_Fortran_MODULES}")
  install(
      EXPORT      greenXTargets
      NAMESPACE   greenX::
@@ -31,22 +102,33 @@ index e67e394..23989c0 100644
 +configure_file("${PROJECT_SOURCE_DIR}/cmake/greenXConfig.cmake.in"
 +               "${PROJECT_BINARY_DIR}/greenXConfig.cmake" @ONLY)
 +
++install(
++    FILES "${PROJECT_BINARY_DIR}/greenXConfig.cmake"
++    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
++)
++
++install(
++  FILES "${PROJECT_SOURCE_DIR}/cmake/Findzofu.cmake"
++  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
++)
  install(
 -    FILES "${CMAKE_CURRENT_SOURCE_DIR}/cmake/greenXConfig.cmake"
 -    DESTINATION lib/cmake/greenX
-+    FILES "${PROJECT_BINARY_DIR}/greenXConfig.cmake"
-+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
- )
-+install(
-+  DIRECTORY "${PROJECT_SOURCE_DIR}/cmake"
++  FILES "${PROJECT_SOURCE_DIR}/cmake/FindGMPXX.cmake"
 +  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/greenX"
-+  FILES_MATCHING
-+  PATTERN "*.cmake")
+ )
 diff --git a/GX-AnalyticContinuation/CMakeLists.txt b/GX-AnalyticContinuation/CMakeLists.txt
-index b2cefec..077dd28 100644
+index b2cefec..73febe5 100644
 --- a/GX-AnalyticContinuation/CMakeLists.txt
 +++ b/GX-AnalyticContinuation/CMakeLists.txt
-@@ -27,7 +27,7 @@ if(GMPXX_FOUND)
+@@ -21,13 +21,13 @@ set_target_properties(LibGXAC
+ target_include_directories(LibGXAC
+     PUBLIC
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+-        $<INSTALL_INTERFACE:include/modules>
++        $<INSTALL_INTERFACE:${CMAKE_INSTALL_Fortran_MODULES}/AnalyticContinuation/modules>
+ )
+ if(GMPXX_FOUND)
    add_definitions(-DGMPXX_FOUND)
    target_sources(LibGXAC PRIVATE src/pade_approximant.f90 src/ComplexGMP.cpp src/Symmetry_pade.cpp src/pade_mp.cpp api/gx_ac.F90)
    target_include_directories(LibGXAC PRIVATE ${GMPXX_INCLUDE_DIRS})
@@ -55,6 +137,88 @@ index b2cefec..077dd28 100644
  else()
    target_sources(LibGXAC PRIVATE src/pade_approximant.f90 api/gx_ac.F90)
    target_link_libraries(LibGXAC GXCommon)
+@@ -42,7 +42,7 @@ install(TARGETS LibGXAC EXPORT greenXTargets ARCHIVE DESTINATION lib LIBRARY DES
+ 
+ # Install modules
+ # Destination relative to ${CMAKE_INSTALL_PREFIX}, defined in top-level CMake
+-install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}  DESTINATION include)
++install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}  DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}/AnalyticContinuation)
+ 
+ 
+ 
+diff --git a/GX-LocalizedBasis/CMakeLists.txt b/GX-LocalizedBasis/CMakeLists.txt
+index 48dea1b..174caef 100644
+--- a/GX-LocalizedBasis/CMakeLists.txt
++++ b/GX-LocalizedBasis/CMakeLists.txt
+@@ -32,13 +32,13 @@ target_include_directories(LibGXLBasis
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/api>
+ 
+         # Install-time includes (point to the location where headers/modules land when installed)
+-        $<INSTALL_INTERFACE:include/modules>
++        $<INSTALL_INTERFACE:${CMAKE_INSTALL_Fortran_MODULES}/LocalizedBasis/modules>
+ )
+ 
+ # Define source that comprise LibGXLBasis
+ target_sources(LibGXLBasis PRIVATE
+ 	src/separable_ri.f90
+-        src/localized_basis_types.f90
++    src/localized_basis_types.f90
+ 	src/localized_basis_environments.f90
+ 	src/polarizability.f90
+ 	src/w_engine.f90
+@@ -62,7 +62,7 @@ install(TARGETS LibGXLBasis
+ # Install modules
+ # Destination relative to ${CMAKE_INSTALL_PREFIX}, defined in top-level CMake
+ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}
+-        DESTINATION include)
++        DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}/LocalizedBasis)
+ 
+ # -----------------------------------------------
+ # Application Testing Set-Up
+diff --git a/GX-TimeFrequency/CMakeLists.txt b/GX-TimeFrequency/CMakeLists.txt
+index a9347fc..cf103d3 100644
+--- a/GX-TimeFrequency/CMakeLists.txt
++++ b/GX-TimeFrequency/CMakeLists.txt
+@@ -29,7 +29,7 @@ target_include_directories(LibGXMiniMax
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/utilities>
+ 
+         # Install-time includes (point to the location where headers/modules land when installed)
+-        $<INSTALL_INTERFACE:include/modules>
++        $<INSTALL_INTERFACE:${CMAKE_INSTALL_Fortran_MODULES}/TimeFrequency/modules>
+ )
+ # Define source that comprise LibGXMiniMax
+ target_sources(LibGXMiniMax PRIVATE
+@@ -82,7 +82,7 @@ install(TARGETS LibGXMiniMax
+ # Install modules
+ # Destination relative to ${CMAKE_INSTALL_PREFIX}, defined in top-level CMake
+ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}
+-        DESTINATION include)
++        DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}/TimeFrequency)
+ 
+ # Install `Build utility` program
+ install(TARGETS GXTabulateGrids
+diff --git a/GX-common/CMakeLists.txt b/GX-common/CMakeLists.txt
+index 5328880..f7ab5ae 100644
+--- a/GX-common/CMakeLists.txt
++++ b/GX-common/CMakeLists.txt
+@@ -17,7 +17,7 @@ set_target_properties(GXCommon
+ target_include_directories(GXCommon
+     PUBLIC
+         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>  # used when building in the source tree
+-        $<INSTALL_INTERFACE:include/modules>                        # used after 'make install'
++        $<INSTALL_INTERFACE:${CMAKE_INSTALL_Fortran_MODULES}/common/modules>                        # used after 'make install'
+ )
+ 
+ target_sources(GXCommon PRIVATE
+@@ -41,7 +41,7 @@ install(TARGETS GXCommon
+ # Destination relative to ${CMAKE_INSTALL_PREFIX}, defined in the top-level
+ ## CMakeLists.txt
+ install(DIRECTORY ${CMAKE_Fortran_MODULE_DIRECTORY}
+-        DESTINATION include)
++        DESTINATION ${CMAKE_INSTALL_Fortran_MODULES}/common)
+ 
+ 
+ # ensure that zofu is build before GXCommon 
 diff --git a/cmake/FindGMPXX.cmake b/cmake/FindGMPXX.cmake
 index 7a26574..c8bbe50 100644
 --- a/cmake/FindGMPXX.cmake
