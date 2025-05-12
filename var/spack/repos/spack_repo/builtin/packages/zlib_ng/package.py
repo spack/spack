@@ -15,6 +15,11 @@ class ZlibNg(AutotoolsPackage, CMakePackage):
     url = "https://github.com/zlib-ng/zlib-ng/archive/2.0.0.tar.gz"
     git = "https://github.com/zlib-ng/zlib-ng.git"
 
+    class Data:
+        make: MakeExecutable
+
+    data: Data
+
     maintainers("haampie")
 
     license("Zlib")
@@ -95,6 +100,9 @@ class AutotoolsBuilder(autotools.AutotoolsBuilder):
         if self.spec.satisfies("~new_strategies"):
             args.append("--without-new-strategies")
         return args
+
+    def build(self, pkg: ZlibNg, spec: Spec, prefix: Prefix) -> None:
+        pkg.data.make("V=1", *self.build_targets)
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
