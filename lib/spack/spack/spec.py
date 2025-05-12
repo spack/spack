@@ -1634,12 +1634,12 @@ class Spec:
 
         union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
         all_direct_edges = all(x.direct for x in edges)
-        dep_conditions = []
+        dep_conditions = set()
 
         for edge in edges:
             union.update_deptypes(edge.depflag)
             union.update_virtuals(edge.virtuals)
-            dep_conditions.append(edge.when)
+            dep_conditions.add(edge.when)
 
         deptypes_str = ""
         if not all_direct_edges and union.depflag:
