@@ -141,6 +141,9 @@ def setup_parser(subparser):
         help="show variants in output (can be long)",
     )
     subparser.add_argument(
+        "--runtime", action="store_true", help="show packages loaded in the user environment and runtime dependencies thereof"
+    )
+    subparser.add_argument(
         "--loaded", action="store_true", help="show only packages loaded in the user environment"
     )
     only_missing_or_deprecated = subparser.add_mutually_exclusive_group()
@@ -357,8 +360,10 @@ def _find_query(args, env):
             x for x in concretized_but_not_installed if x.name in packages_with_tags
         ]
 
-    if args.loaded:
+    if args.runtime:
         results = cmd.filter_loaded_specs(results, env.concrete_roots(), True)
+    elif args.loaded:
+        results = cmd.filter_loaded_specs(results)
 
     return results, concretized_but_not_installed
 
@@ -418,7 +423,7 @@ def find(parser, args):
                 if env and not args.show_concretized:
                     concretized_suffix += " (show with `spack find -c`)"
 
-            pkg_type = "loaded" if args.loaded else "installed"
+            pkg_type = "runtime" if args.runtime else "loaded" if args.loaded else "installed"
             cmd.print_how_many_pkgs(results, pkg_type, suffix=installed_suffix)
 
             if env:
