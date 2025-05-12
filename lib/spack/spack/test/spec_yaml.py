@@ -420,7 +420,8 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
 
-    # Check that virtuals have been reconstructed
+    # Check that virtuals have been reconstructed for specfiles conforming to
+    # version 4 on.
     if reader_cls.SPEC_VERSION >= spack.spec.SpecfileV4.SPEC_VERSION:
         assert "mpi" in openmpi_edges[0].virtuals
 
