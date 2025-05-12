@@ -19,7 +19,6 @@ import _vendoring.jsonschema
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
-from spack.binary_distribution import ListMirrorSpecsError, buildcache_relative_specs_url
 from spack.util.executable import which
 import spack.config as config
 import spack.database
@@ -1061,6 +1060,9 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str):
     Return:
         List of the local file paths and a function that can read each one from the file system.
     """
+    # Import here to avoid circular dependency
+    from spack.binary_distribution import buildcache_relative_specs_url
+
     read_fn = None
     file_list = None
     aws = which("aws")
@@ -1109,6 +1111,9 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str):
         The list of complete spec file urls and a function that can read each one from its
             remote location (also using the spack.util.web module).
     """
+    # Import here to avoid circular dependency
+    from spack.binary_distribution import buildcache_relative_specs_url
+
     read_fn = None
     file_list = None
 
@@ -1148,6 +1153,9 @@ def get_entries_from_cache(url: str, tmpspecsdir: str):
         and the second item is a function taking a url or file path and
         returning the spec read from that location.
     """
+    # Import here to avoid circular dependency
+    from spack.binary_distribution import ListMirrorSpecsError
+
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
         callbacks.append(_entries_from_cache_aws_cli)
