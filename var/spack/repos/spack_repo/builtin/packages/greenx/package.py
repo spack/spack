@@ -41,6 +41,8 @@ class Greenx(CMakePackage):
 
     depends_on("gmp", when="+gmp")
 
+    # fix a missing dependency in the greenXConfig.cmake file. A linking error will occur 
+    # when clang is used. 
     patch("cmake.patch", when="@2.1:")
 
     def cmake_args(self):
