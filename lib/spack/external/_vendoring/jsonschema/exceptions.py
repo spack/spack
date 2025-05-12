@@ -6,7 +6,7 @@ import itertools
 import pprint
 import textwrap
 
-import attr
+import _vendoring.attr
 
 from jsonschema import _utils
 from jsonschema.compat import PY3, iteritems
@@ -149,13 +149,13 @@ class SchemaError(_Error):
     _word_for_instance_in_error_message = "schema"
 
 
-@attr.s(hash=True)
+@_vendoring.attr.s(hash=True)
 class RefResolutionError(Exception):
     """
     A ref could not be resolved.
     """
 
-    _cause = attr.ib()
+    _cause = _vendoring.attr.ib()
 
     def __str__(self):
         return str(self._cause)

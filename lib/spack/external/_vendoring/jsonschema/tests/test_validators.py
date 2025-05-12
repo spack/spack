@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from twisted.trial.unittest import SynchronousTestCase
-import attr
+import _vendoring.attr
 
 from jsonschema import FormatChecker, TypeChecker, exceptions, validators
 from jsonschema.compat import PY3, pathname2url
@@ -1741,10 +1741,10 @@ def sorted_errors(errors):
     return sorted(errors, key=key)
 
 
-@attr.s
+@_vendoring.attr.s
 class ReallyFakeRequests(object):
 
-    _responses = attr.ib()
+    _responses = _vendoring.attr.ib()
 
     def get(self, url):
         response = self._responses.get(url)
@@ -1753,10 +1753,10 @@ class ReallyFakeRequests(object):
         return _ReallyFakeJSONResponse(json.dumps(response))
 
 
-@attr.s
+@_vendoring.attr.s
 class _ReallyFakeJSONResponse(object):
 
-    _response = attr.ib()
+    _response = _vendoring.attr.ib()
 
     def json(self):
         return json.loads(self._response)

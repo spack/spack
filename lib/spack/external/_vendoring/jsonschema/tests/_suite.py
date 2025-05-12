@@ -11,7 +11,7 @@ import sys
 import unittest
 
 from twisted.python.filepath import FilePath
-import attr
+import _vendoring.attr
 
 from jsonschema.compat import PY3
 from jsonschema.validators import validators
@@ -36,10 +36,10 @@ def _find_suite():
     return root
 
 
-@attr.s(hash=True)
+@_vendoring.attr.s(hash=True)
 class Suite(object):
 
-    _root = attr.ib(default=attr.Factory(_find_suite))
+    _root = _vendoring.attr.ib(default=_vendoring.attr.Factory(_find_suite))
 
     def _remotes(self):
         jsonschema_suite = self._root.descendant(["bin", "jsonschema_suite"])
@@ -63,13 +63,13 @@ class Suite(object):
         )
 
 
-@attr.s(hash=True)
+@_vendoring.attr.s(hash=True)
 class Version(object):
 
-    _path = attr.ib()
-    _remotes = attr.ib()
+    _path = _vendoring.attr.ib()
+    _remotes = _vendoring.attr.ib()
 
-    name = attr.ib()
+    name = _vendoring.attr.ib()
 
     def benchmark(self, runner, **kwargs):  # pragma: no cover
         for suite in self.tests():
@@ -146,21 +146,21 @@ class Version(object):
             )
 
 
-@attr.s(hash=True, repr=False)
+@_vendoring.attr.s(hash=True, repr=False)
 class _Test(object):
 
-    version = attr.ib()
+    version = _vendoring.attr.ib()
 
-    subject = attr.ib()
-    case_description = attr.ib()
-    description = attr.ib()
+    subject = _vendoring.attr.ib()
+    case_description = _vendoring.attr.ib()
+    description = _vendoring.attr.ib()
 
-    data = attr.ib()
-    schema = attr.ib(repr=False)
+    data = _vendoring.attr.ib()
+    schema = _vendoring.attr.ib(repr=False)
 
-    valid = attr.ib()
+    valid = _vendoring.attr.ib()
 
-    _remotes = attr.ib()
+    _remotes = _vendoring.attr.ib()
 
     def __repr__(self):  # pragma: no cover
         return "<Test {}>".format(self.fully_qualified_name)
