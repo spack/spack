@@ -7,7 +7,7 @@ import pathlib
 import shutil
 from typing import NamedTuple
 
-import jsonschema
+import _vendoring.jsonschema
 import pytest
 
 from llnl.util.filesystem import mkdirp, working_dir
@@ -860,7 +860,7 @@ spack:
             )
             index_fetcher = spack.binary_distribution.DefaultIndexFetcher(url_and_version, None)
             result = index_fetcher.conditional_fetch()
-            jsonschema.validate(json.loads(result.data), db_idx_schema)
+            _vendoring.jsonschema.validate(json.loads(result.data), db_idx_schema)
 
             # Now that index is regenerated, validate "buildcache list" output
             assert "patchelf" in buildcache_cmd("list", output=str)

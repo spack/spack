@@ -3,8 +3,8 @@ import numbers
 from _vendoring.pyrsistent import pmap
 import _vendoring.attr
 
-from jsonschema.compat import int_types, str_types
-from jsonschema.exceptions import UndefinedTypeCheck
+from _vendoring.jsonschema.compat import int_types, str_types
+from _vendoring.jsonschema.exceptions import UndefinedTypeCheck
 
 
 def is_array(checker, instance):

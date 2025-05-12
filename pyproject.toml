@@ -262,6 +262,8 @@ substitute = [
   { match='pyrsistent', replace="_vendoring.pyrsistent" },
   { match='import attr\n', replace="import _vendoring.attr\n" },
   { match='from attr', replace="from _vendoring.attr" },
+  { match='import jsonschema', replace="import _vendoring.jsonschema" },
+  { match='from jsonschema', replace="from _vendoring.jsonschema" },
 ]
 drop = [
   # contains unnecessary scripts
@@ -281,6 +283,8 @@ drop = [
   # ruamel.yaml installs unneded files
   "ruamel.*.pth",
   "pvectorc.*.so",
+  # Trim jsonschema tests
+  "jsonschema/tests"
 ]
 
 [tool.vendoring.typing-stubs]

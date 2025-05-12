@@ -8,8 +8,8 @@ import textwrap
 
 import _vendoring.attr
 
-from jsonschema import _utils
-from jsonschema.compat import PY3, iteritems
+from _vendoring.jsonschema import _utils
+from _vendoring.jsonschema.compat import PY3, iteritems
 
 
 WEAK_MATCHES = frozenset(["anyOf", "oneOf"])

@@ -1,0 +1,60 @@
+diff --git a/lib/spack/external/_vendoring/jsonschema/_types.py b/lib/spack/external/_vendoring/jsonschema/_types.py
+index 4c05bf773b..cfd21cfcf7 100644
+--- a/lib/spack/external/_vendoring/jsonschema/_types.py
++++ b/lib/spack/external/_vendoring/jsonschema/_types.py
+@@ -45,7 +45,7 @@ def is_any(checker, instance):
+     return True
+ 
+ 
+-@attr.s(frozen=True)
++@_vendoring.attr.s(frozen=True)
+ class TypeChecker(object):
+     """
+     A ``type`` property checker.
+@@ -61,7 +61,7 @@ class TypeChecker(object):
+ 
+             The initial mapping of types to their checking functions.
+     """
+-    _type_checkers = attr.ib(default=pmap(), converter=pmap)
++    _type_checkers = _vendoring.attr.ib(default=pmap(), converter=pmap)
+ 
+     def is_type(self, instance, type):
+         """
+@@ -131,7 +131,7 @@ def redefine_many(self, definitions=()):
+ 
+             A new `TypeChecker` instance.
+         """
+-        return attr.evolve(
++        return _vendoring.attr.evolve(
+             self, type_checkers=self._type_checkers.update(definitions),
+         )
+ 
+@@ -162,7 +162,7 @@ def remove(self, *types):
+                 checkers = checkers.remove(each)
+             except KeyError:
+                 raise UndefinedTypeCheck(each)
+-        return attr.evolve(self, type_checkers=checkers)
++        return _vendoring.attr.evolve(self, type_checkers=checkers)
+ 
+ 
+ draft3_type_checker = TypeChecker(
+diff --git a/lib/spack/external/_vendoring/jsonschema/exceptions.py b/lib/spack/external/_vendoring/jsonschema/exceptions.py
+index 492c2c174a..1d891701c0 100644
+--- a/lib/spack/external/_vendoring/jsonschema/exceptions.py
++++ b/lib/spack/external/_vendoring/jsonschema/exceptions.py
+@@ -149,13 +149,13 @@ class SchemaError(_Error):
+     _word_for_instance_in_error_message = "schema"
+ 
+ 
+-@attr.s(hash=True)
++@_vendoring.attr.s(hash=True)
+ class RefResolutionError(Exception):
+     """
+     A ref could not be resolved.
+     """
+ 
+-    _cause = attr.ib()
++    _cause = _vendoring.attr.ib()
+ 
+     def __str__(self):
+         return str(self._cause)
