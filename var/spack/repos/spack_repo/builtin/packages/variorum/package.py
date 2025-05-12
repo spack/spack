@@ -52,11 +52,20 @@ class Variorum(CMakePackage):
     depends_on("fortran", type="build")  # generated
 
     depends_on("cmake@2.8:", type="build")
-    depends_on("hwloc")
     depends_on("jansson", type="link")
 
-    depends_on("cuda@12.2", type=("build","link","run"), when="gpu=nvidia") # required for nvml
-    depends_on("cuda@12.2", type=("build","link","run"), when="gpu=NVIDIA")
+    # cuda@10.1.243 works, as does 12.4.1
+
+    depends_on("cuda", type=("build","link"), when="gpu=nvidia") # required for nvml
+    depends_on("cuda", type=("build","link"), when="gpu=NVIDIA")
+
+    depends_on("hwloc +nvml", type=("build", "link"), when="gpu=nvidia")
+    depends_on("hwloc +nvml", type=("build", "link"), when="gpu=NVIDIA")
+    depends_on("hwloc",       type=("build", "link"), when="gpu=none")
+    depends_on("hwloc",       type=("build", "link"), when="gpu=AMD")
+    depends_on("hwloc",       type=("build", "link"), when="gpu=amd")
+
+
 
     root_cmakelists_dir = "src"
 
@@ -66,7 +75,10 @@ class Variorum(CMakePackage):
 
         cmake_args.append("-DJANSSON_DIR={0}".format(spec["jansson"].prefix))
         cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
+
+        # The examples remain in the build directory
         cmake_args.append("-DBUILD_EXAMPLES=ON")
+        cmake_args.append("-DBUILD_TESTS=ON")
 
         if spec.satisfies("%cce"):
             cmake_args.append("-DCMAKE_C_FLAGS=-fcommon")
@@ -117,10 +129,5 @@ class Variorum(CMakePackage):
             cmake_args.append("-DVARIORUM_DEBUG=ON")
         else:
             cmake_args.append("-DVARIORUM_DEBUG=OFF")
-
-        if self.run_tests:
-            cmake_args.append("-DBUILD_TESTS=ON")
-        else:
-            cmake_args.append("-DBUILD_TESTS=OFF")
 
         return cmake_args
