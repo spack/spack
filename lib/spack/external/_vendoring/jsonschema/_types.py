@@ -1,6 +1,6 @@
 import numbers
 
-from pyrsistent import pmap
+from _vendoring.pyrsistent import pmap
 import attr
 
 from jsonschema.compat import int_types, str_types
