@@ -72,6 +72,8 @@ packages:
     permissions:
       read: world
       write: user
+  cce:
+    buildable: false
   cray-fftw:
     buildable: false
   cray-libsci:
@@ -86,13 +88,23 @@ packages:
     buildable: false
   essl:
     buildable: false
+  fj:
+    buildable: false
   fujitsu-mpi:
     buildable: false
   fujitsu-ssl2:
     buildable: false
+  glibc:
+    buildable: false
   hpcx-mpi:
     buildable: false
+  iconv:
+    prefer: [libiconv]
   mpt:
     buildable: false
+  musl:
+    buildable: false
   spectrum-mpi:
+    buildable: false
+  xl:
     buildable: false

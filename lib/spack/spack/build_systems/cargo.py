@@ -8,6 +8,7 @@ import spack.builder
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, depends_on
 from spack.multimethod import when
@@ -86,7 +87,9 @@ class CargoBuilder(BuilderWithDefaults):
         """Argument for ``cargo test`` during check phase"""
         return []
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         env.set("CARGO_HOME", self.stage.path)
 
     def build(
