@@ -358,7 +358,7 @@ def _find_query(args, env):
         ]
 
     if args.loaded:
-        results = cmd.filter_loaded_specs(results)
+        results = cmd.filter_loaded_specs(results, True)
 
     return results, concretized_but_not_installed
 

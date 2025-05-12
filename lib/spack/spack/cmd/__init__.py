@@ -548,11 +548,28 @@ def display_specs(specs, args=None, **kwargs):
     output.flush()
 
 
-def filter_loaded_specs(specs):
+def get_run_dependents(spec):
+    """Get the specs which are run-time dependencies of the given spec, including transitive runtime dependencies"""
+    run_dependents = spec.dependencies(deptype="run")
+    if len(run_dependents) == 0:
+        return []
+    dependent_dependents = []
+    for dependency in run_dependents:
+        dependent_dependents += get_run_dependents(dependency)
+    return run_dependents + dependent_dependents
+
+
+def filter_loaded_specs(specs, run_dependencies):
     """Filter a list of specs returning only those that are
     currently loaded."""
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
-    return [x for x in specs if x.dag_hash() in hashes]
+    loaded_specs = [x for x in specs if x.dag_hash() in hashes]
+    if run_dependencies:
+        dependencies = []
+        for loaded_spec in loaded_specs:
+            dependencies += get_run_dependents(loaded_spec)
+        loaded_specs += dependencies
+    return loaded_specs
 
 
 def print_how_many_pkgs(specs, pkg_type="", suffix=""):
