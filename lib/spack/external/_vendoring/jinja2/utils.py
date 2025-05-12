@@ -28,7 +28,7 @@ concat = "".join
 
 
 def pass_context(f: F) -> F:
-    """Pass the :class:`~jinja2.runtime.Context` as the first argument
+    """Pass the :class:`~_vendoring.jinja2.runtime.Context` as the first argument
     to the decorated function when called while rendering a template.
 
     Can be used on functions, filters, and tests.
@@ -45,7 +45,7 @@ def pass_context(f: F) -> F:
 
 
 def pass_eval_context(f: F) -> F:
-    """Pass the :class:`~jinja2.nodes.EvalContext` as the first argument
+    """Pass the :class:`~_vendoring.jinja2.nodes.EvalContext` as the first argument
     to the decorated function when called while rendering a template.
     See :ref:`eval-context`.
 
@@ -62,7 +62,7 @@ def pass_eval_context(f: F) -> F:
 
 
 def pass_environment(f: F) -> F:
-    """Pass the :class:`~jinja2.Environment` as the first argument to
+    """Pass the :class:`~_vendoring.jinja2.Environment` as the first argument to
     the decorated function when called while rendering a template.
 
     Can be used on functions, filters, and tests.
@@ -104,7 +104,7 @@ def contextfunction(f: F) -> F:
     """Pass the context as the first argument to the decorated function.
 
     .. deprecated:: 3.0
-        Will be removed in Jinja 3.1. Use :func:`~jinja2.pass_context`
+        Will be removed in Jinja 3.1. Use :func:`~_vendoring.jinja2.pass_context`
         instead.
     """
     warnings.warn(
@@ -122,7 +122,7 @@ def evalcontextfunction(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_eval_context` instead.
+        :func:`~_vendoring.jinja2.pass_eval_context` instead.
 
     .. versionadded:: 2.4
     """
@@ -141,7 +141,7 @@ def environmentfunction(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_environment` instead.
+        :func:`~_vendoring.jinja2.pass_environment` instead.
     """
     warnings.warn(
         "'environmentfunction' is renamed to 'pass_environment', the"
@@ -658,7 +658,7 @@ def select_autoescape(
     If you want to enable it for all templates created from strings or
     for all templates with `.html` and `.xml` extensions::
 
-        from jinja2 import Environment, select_autoescape
+        from _vendoring.jinja2 import Environment, select_autoescape
         env = Environment(autoescape=select_autoescape(
             enabled_extensions=('html', 'xml'),
             default_for_string=True,
@@ -667,7 +667,7 @@ def select_autoescape(
     Example configuration to turn it on at all times except if the template
     ends with `.txt`::
 
-        from jinja2 import Environment, select_autoescape
+        from _vendoring.jinja2 import Environment, select_autoescape
         env = Environment(autoescape=select_autoescape(
             disabled_extensions=('txt',),
             default_for_string=True,
@@ -836,7 +836,7 @@ class Namespace:
 class Markup(_vendoring.markupsafe.Markup):
     def __new__(cls, base="", encoding=None, errors="strict"):  # type: ignore
         warnings.warn(
-            "'jinja2.Markup' is deprecated and will be removed in Jinja"
+            "'_vendoring.jinja2.Markup' is deprecated and will be removed in Jinja"
             " 3.1. Import '_vendoring.markupsafe.Markup' instead.",
             DeprecationWarning,
             stacklevel=2,
@@ -846,7 +846,7 @@ class Markup(_vendoring.markupsafe.Markup):
 
 def escape(s: t.Any) -> str:
     warnings.warn(
-        "'jinja2.escape' is deprecated and will be removed in Jinja"
+        "'_vendoring.jinja2.escape' is deprecated and will be removed in Jinja"
         " 3.1. Import '_vendoring.markupsafe.escape' instead.",
         DeprecationWarning,
         stacklevel=2,

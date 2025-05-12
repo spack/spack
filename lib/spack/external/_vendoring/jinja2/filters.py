@@ -48,7 +48,7 @@ def contextfilter(f: F) -> F:
     """Pass the context as the first argument to the decorated function.
 
     .. deprecated:: 3.0
-        Will be removed in Jinja 3.1. Use :func:`~jinja2.pass_context`
+        Will be removed in Jinja 3.1. Use :func:`~_vendoring.jinja2.pass_context`
         instead.
     """
     warnings.warn(
@@ -66,7 +66,7 @@ def evalcontextfilter(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_eval_context` instead.
+        :func:`~_vendoring.jinja2.pass_eval_context` instead.
 
     .. versionadded:: 2.4
     """
@@ -85,7 +85,7 @@ def environmentfilter(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_environment` instead.
+        :func:`~_vendoring.jinja2.pass_environment` instead.
     """
     warnings.warn(
         "'environmentfilter' is renamed to 'pass_environment', the old"
@@ -547,10 +547,10 @@ def do_default(
         {{ ''|default('the string was empty', true) }}
 
     .. versionchanged:: 2.11
-       It's now possible to configure the :class:`~jinja2.Environment` with
-       :class:`~jinja2.ChainableUndefined` to make the `default` filter work
+       It's now possible to configure the :class:`~_vendoring.jinja2.Environment` with
+       :class:`~_vendoring.jinja2.ChainableUndefined` to make the `default` filter work
        on nested elements and attributes that may contain undefined values
-       in the chain without getting an :exc:`~jinja2.UndefinedError`.
+       in the chain without getting an :exc:`~_vendoring.jinja2.UndefinedError`.
     """
     if isinstance(value, Undefined) or (boolean and not value):
         return default_value

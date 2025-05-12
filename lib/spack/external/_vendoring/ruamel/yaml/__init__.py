@@ -15,7 +15,7 @@ _package_data = dict(
     since=2014,
     extras_require={
         ':platform_python_implementation=="CPython" and python_version<"3.11"': ['_vendoring.ruamel.yaml.clib>=0.2.6'],  # NOQA
-        'jinja2': ['_vendoring.ruamel.yaml.jinja2>=0.2'],
+        '_vendoring.jinja2': ['_vendoring.ruamel.yaml._vendoring.jinja2>=0.2'],
         'docs': ['ryd'],
     },
     classifiers=[

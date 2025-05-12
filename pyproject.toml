@@ -258,6 +258,7 @@ substitute = [
   { match='macholib', replace="_vendoring.macholib" },
   { match='from six', replace="from _vendoring.six" },
   { match='markupsafe', replace="_vendoring.markupsafe" },
+  { match='jinja2', replace="_vendoring.jinja2" },
 ]
 drop = [
   # contains unnecessary scripts

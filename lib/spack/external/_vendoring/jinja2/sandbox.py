@@ -128,7 +128,7 @@ def is_internal_attribute(obj: t.Any, attr: str) -> bool:
     python objects.  This is useful if the environment method
     :meth:`~SandboxedEnvironment.is_safe_attribute` is overridden.
 
-    >>> from jinja2.sandbox import is_internal_attribute
+    >>> from _vendoring.jinja2.sandbox import is_internal_attribute
     >>> is_internal_attribute(str, "mro")
     True
     >>> is_internal_attribute(str, "upper")

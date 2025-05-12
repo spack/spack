@@ -108,10 +108,10 @@ class Extension:
     def filter_stream(
         self, stream: "TokenStream"
     ) -> t.Union["TokenStream", t.Iterable["Token"]]:
-        """It's passed a :class:`~jinja2.lexer.TokenStream` that can be used
+        """It's passed a :class:`~_vendoring.jinja2.lexer.TokenStream` that can be used
         to filter tokens returned.  This method has to return an iterable of
-        :class:`~jinja2.lexer.Token`\\s, but it doesn't have to return a
-        :class:`~jinja2.lexer.TokenStream`.
+        :class:`~_vendoring.jinja2.lexer.Token`\\s, but it doesn't have to return a
+        :class:`~_vendoring.jinja2.lexer.TokenStream`.
         """
         return stream
 
@@ -145,7 +145,7 @@ class Extension:
         lineno: t.Optional[int] = None,
     ) -> nodes.Call:
         """Call a method of the extension.  This is a shortcut for
-        :meth:`attr` + :class:`jinja2.nodes.Call`.
+        :meth:`attr` + :class:`_vendoring.jinja2.nodes.Call`.
         """
         if args is None:
             args = []
@@ -629,9 +629,9 @@ class DebugExtension(Extension):
 
     .. code-block:: text
 
-        {'context': {'cycler': <class 'jinja2.utils.Cycler'>,
+        {'context': {'cycler': <class '_vendoring.jinja2.utils.Cycler'>,
                      ...,
-                     'namespace': <class 'jinja2.utils.Namespace'>},
+                     'namespace': <class '_vendoring.jinja2.utils.Namespace'>},
          'filters': ['abs', 'attr', 'batch', 'capitalize', 'center', 'count', 'd',
                      ..., 'urlencode', 'urlize', 'wordcount', 'wordwrap', 'xmlattr'],
          'tests': ['!=', '<', '<=', '==', '>', '>=', 'callable', 'defined',
@@ -679,7 +679,7 @@ def extract_from_ast(
 
     This example explains the behavior:
 
-    >>> from jinja2 import Environment
+    >>> from _vendoring.jinja2 import Environment
     >>> env = Environment()
     >>> node = env.parse('{{ (_("foo"), _(), ngettext("foo", "bar", 42)) }}')
     >>> list(extract_from_ast(node))
