@@ -3162,42 +3162,22 @@ class Spec:
         if any(not d.name for d in other.traverse(root=False)):
             raise UnconstrainableDependencySpecError(other)
 
-        # Handle common first-order constraints directly
-        # Note: This doesn't handle constraining transitive dependencies with the same name
-        # as direct dependencies
-        changed = False
-        common_dependencies = {x.name for x in self.dependencies()}
-        common_dependencies &= {x.name for x in other.dependencies()}
-        for name in common_dependencies:
-            changed |= self[name].constrain(other[name], deps=True)
-            if name in self._dependencies:
-                # WARNING: This function is an implementation detail of the
-                # WARNING: original concretizer. Since with that greedy
-                # WARNING: algorithm we don't allow multiple nodes from
-                # WARNING: the same package in a DAG, here we hard-code
-                # WARNING: using index 0 i.e. we assume that we have only
-                # WARNING: one edge from package "name"
-                edges_from_name = self._dependencies[name]
-                changed |= edges_from_name[0].update_deptypes(other._dependencies[name][0].depflag)
-                changed |= edges_from_name[0].update_virtuals(
-                    other._dependencies[name][0].virtuals
+        reference_spec = self.copy(deps=True)
+        for edge in other.edges_to_dependencies():
+            existing = self.edges_to_dependencies(edge.spec.name, when=edge.when)
+            if existing:
+                existing[0].spec.constrain(edge.spec)
+                existing[0].update_deptypes(edge.depflag)
+                existing[0].update_virtuals(edge.virtuals)
+            else:
+                self.add_dependency_edge(
+                    edge.spec,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                    direct=edge.direct,
+                    when=edge.when,
                 )
-
-        # Update with additional constraints from other spec
-        # operate on direct dependencies only, because a concrete dep
-        # represented by hash may have structure that needs to be preserved
-        for name in other.direct_dep_difference(self):
-            dep_spec_copy = other._get_dependency(name)
-            self._add_dependency(
-                dep_spec_copy.spec.copy(),
-                depflag=dep_spec_copy.depflag,
-                virtuals=dep_spec_copy.virtuals,
-                direct=dep_spec_copy.direct,
-                when=dep_spec_copy.when,
-            )
-            changed = True
-
-        return changed
+        return self != reference_spec
 
     def common_dependencies(self, other):
         """Return names of dependencies that self and other have in common."""
