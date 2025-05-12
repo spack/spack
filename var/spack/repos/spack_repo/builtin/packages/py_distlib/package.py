@@ -8,7 +8,7 @@ from spack.package import *
 class PyDistlib(PythonPackage):
     """Distribution utilities"""
 
-    homepage = "https://bitbucket.org/pypa/distlib"
+    homepage = "https://github.com/pypa/distlib"
     pypi = "distlib/distlib-0.3.6.tar.gz"
 
     license("PSF-2.0")
