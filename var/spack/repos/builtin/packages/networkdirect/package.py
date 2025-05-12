@@ -35,9 +35,18 @@ class Networkdirect(MSBuildPackage):
     patch("no_cbt.patch")
 
 class MSBuildBuilder(MSBuildBuilder):
+
+    build_targets = ["ndutil"]
+
+    # Networkdirect is a unique package where providing
+    # typically required information actually
+    # breaks expected behavior, override the defaults
+    @property
+    def std_msbuild_args(self):
+        return []
+
     def msbuild_args(self):
         args = ["-noLogo"]
-        args.append(self.define("VCToolsVersion", self.pkg["msvc"].msvc_version))
         args.append(self.define("WindowsTargetPlatformVersion", str(self.pkg["win-sdk"].version)+".0"))
         # one of the headers we need isn't generated during release builds
         args.append(self.define("Configuration", "Debug"))
@@ -45,10 +54,10 @@ class MSBuildBuilder(MSBuildBuilder):
         return args
 
     def install(self, pkg, spec, prefix):
-        base_build = pkg.stage.source_dir
+        base_build = pkg.stage.source_path
         out = os.path.join(base_build, "out")
         build_configuration = glob.glob(os.path.join(out, "*"))[0]
-        for x in glob.glob(os.path.join(build_configuration, "**", "*.exe")):
+        for x in glob.glob(os.path.join(build_configuration, "**", "*.lib")):
             install_path = x.replace(build_configuration, prefix)
             mkdirp(os.path.dirname(install_path))
             install(x, install_path)
