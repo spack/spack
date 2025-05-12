@@ -23,7 +23,7 @@ from .utils import concat
 from .visitor import NodeVisitor
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])

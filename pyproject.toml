@@ -251,7 +251,9 @@ protected-files = ["__init__.py", "README.rst", "vendor.txt"]
 patches-dir = "lib/spack/external/patches"
 
 [tool.vendoring.transformations]
-substitute = []
+substitute = [
+  { match='typing_extensions', replace="_vendoring.typing_extensions" }
+]
 drop = [
   # contains unnecessary scripts
   "bin/",

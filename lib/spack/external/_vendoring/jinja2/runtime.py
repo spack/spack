@@ -28,7 +28,7 @@ F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 if t.TYPE_CHECKING:
     import logging
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
     class LoopRenderFunc(te.Protocol):

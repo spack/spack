@@ -18,7 +18,7 @@ from .utils import import_string
 from .utils import pass_context
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .lexer import Token
     from .lexer import TokenStream
     from .parser import Parser

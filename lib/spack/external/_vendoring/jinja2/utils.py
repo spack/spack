@@ -15,7 +15,7 @@ from urllib.parse import quote_from_bytes
 import markupsafe
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 

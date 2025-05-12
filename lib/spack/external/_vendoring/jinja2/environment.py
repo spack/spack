@@ -55,7 +55,7 @@ from .utils import LRUCache
 from .utils import missing
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .bccache import BytecodeCache
     from .ext import Extension
     from .loaders import BaseLoader

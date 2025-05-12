@@ -28,7 +28,7 @@ from .utils import url_quote
 from .utils import urlize
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
     from .nodes import EvalContext
     from .runtime import Context

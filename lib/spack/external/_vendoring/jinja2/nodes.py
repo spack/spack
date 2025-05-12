@@ -12,7 +12,7 @@ from markupsafe import Markup
 from .utils import _PassArg
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 _NodeBound = t.TypeVar("_NodeBound", bound="Node")

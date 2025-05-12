@@ -19,7 +19,7 @@ from io import BytesIO
 from types import CodeType
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
     class _MemcachedClient(te.Protocol):

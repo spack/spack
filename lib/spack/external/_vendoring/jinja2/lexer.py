@@ -14,7 +14,7 @@ from .exceptions import TemplateSyntaxError
 from .utils import LRUCache
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 # cache for the lexers. Exists in order to be able to have multiple
