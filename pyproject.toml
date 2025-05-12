@@ -254,7 +254,8 @@ patches-dir = "lib/spack/external/patches"
 substitute = [
   { match='typing_extensions', replace="_vendoring.typing_extensions" },
   { match='ruamel.yaml', replace="_vendoring.ruamel.yaml" },
-  { match='altgraph', replace="_vendoring.altgraph" }
+  { match='altgraph', replace="_vendoring.altgraph" },
+  { match='macholib', replace="_vendoring.macholib" },
 ]
 drop = [
   # contains unnecessary scripts

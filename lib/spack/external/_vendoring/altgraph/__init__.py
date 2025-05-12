@@ -4,7 +4,7 @@ _vendoring.altgraph - a python graph library
 
 _vendoring.altgraph is a fork of `graphlib <http://pygraphlib.sourceforge.net>`_ tailored
 to use newer Python 2.3+ features, including additional support used by the
-py2app suite (modulegraph and macholib, specifically).
+py2app suite (modulegraph and _vendoring.macholib, specifically).
 
 _vendoring.altgraph is a python based graph (network) representation and manipulation
 package.  It has started out as an extension to the

@@ -7,9 +7,9 @@ import sys
 
 from _vendoring.altgraph.ObjectGraph import ObjectGraph
 
-from macholib.dyld import dyld_find
-from macholib.itergraphreport import itergraphreport
-from macholib.MachO import MachO
+from _vendoring.macholib.dyld import dyld_find
+from _vendoring.macholib.itergraphreport import itergraphreport
+from _vendoring.macholib.MachO import MachO
 
 __all__ = ["MachOGraph"]
 
