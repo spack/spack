@@ -34,7 +34,7 @@ jobs:
         vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
     - name: vermin (Repositories)
       run: |
-        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos
+        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos var/spack/test_repos
 
   # Run style checks on the files that have been changed
   style:

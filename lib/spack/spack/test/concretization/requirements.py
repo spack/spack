@@ -28,7 +28,7 @@ def update_packages_config(conf_str):
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.repos_path) / "requirements.test"
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "requirements.test"
     with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
         yield mock_repo_path
 
@@ -1270,13 +1270,10 @@ packages:
 packages:
   all:
     require:
-    - "%gcc"
-  pkg-a:
-    require:
-    - "%gcc@10"
+    - "%gcc@9"
     """,
             True,
-            ["%gcc@10"],
+            ["%gcc@9"],
         ),
     ],
 )
@@ -1303,4 +1300,4 @@ def test_requirements_on_compilers_and_reuse(
 
     assert is_pkgb_reused == expected_reuse
     for c in expected_contraints:
-        assert pkga.satisfies(c), print(pkga.tree())
+        assert pkga.satisfies(c)
