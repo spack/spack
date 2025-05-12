@@ -1051,7 +1051,7 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
-def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
+def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str):
     """Use aws cli to sync all the specs into a local temporary directory.
 
     Args:
@@ -1099,7 +1099,7 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
     return file_list, read_fn
 
 
-def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
+def _entries_from_cache_fallback(url: str, tmpspecsdir: str):
     """Use spack.util.web module to get a list of all the specs at the remote url.
 
     Args:
@@ -1134,7 +1134,7 @@ def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
     return file_list, read_fn
 
 
-def _spec_files_from_cache(url: str, tmpspecsdir: str):
+def get_entries_from_cache(url: str, tmpspecsdir: str):
     """Get a list of all the spec files in the mirror and a function to
     read them.
 
@@ -1150,9 +1150,9 @@ def _spec_files_from_cache(url: str, tmpspecsdir: str):
     """
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
-        callbacks.append(_specs_from_cache_aws_cli)
+        callbacks.append(_entries_from_cache_aws_cli)
 
-    callbacks.append(_specs_from_cache_fallback)
+    callbacks.append(_entries_from_cache_fallback)
 
     for specs_from_cache_fn in callbacks:
         file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir)
