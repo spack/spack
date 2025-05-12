@@ -196,6 +196,7 @@ class Rocblas(CMakePackage):
     patch("0006-Guard-use-of-OpenMP-to-make-it-optional-5.4.patch", when="@5.4")
     patch("0007-add-rocm-openmp-extras-include-dir.patch", when="@5.6:5.7")
     patch("0008-link-roctracer.patch", when="@6.4")
+    patch("0009-use-rocm-smi-config.patch", when="@6.4")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)

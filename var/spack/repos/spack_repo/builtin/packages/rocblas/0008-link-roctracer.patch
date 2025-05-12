@@ -8,7 +8,7 @@ index 762580d..1692578 100644
      if (BUILD_SHARED_LIBS)
 -      target_link_libraries(${lib_target_} PRIVATE -lroctx64)
 +      find_path(ROCTRACER_INCLUDE_DIR "roctracer/roctx.h")
-+      target_include_directories(${lib_target_} PRIVATE ${ROCTRACER_INCLUDE_DIR})
++      target_include_directories(${lib_target_} PUBLIC ${ROCTRACER_INCLUDE_DIR})
 +      find_library(ROCTX_LIB NAMES roctx64)
 +      target_link_libraries(${lib_target_} PRIVATE ${ROCTX_LIB})
      endif()
