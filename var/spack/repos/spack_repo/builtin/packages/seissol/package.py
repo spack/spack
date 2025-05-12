@@ -41,6 +41,10 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     maintainers("Thomas-Ulrich", "davschneller", "vikaskurapati")
 
+    depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build", when="equations=poroelastic")
+
     variant("asagi", default=True, description="Use ASAGI for material input")
     variant(
         "convergence_order",
@@ -206,8 +210,10 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("asagi +mpi +mpi3", when="+asagi")
 
-    depends_on("easi ~asagi jit=impalajit,lua", when="~asagi")
-    depends_on("easi +asagi jit=impalajit,lua", when="+asagi")
+    depends_on("asagi@:1.0.1", when="@:1.3.1 +asagi")
+
+    depends_on("easi ~asagi jit=lua", when="~asagi")
+    depends_on("easi +asagi jit=lua", when="+asagi")
 
     depends_on("intel-oneapi-mkl threads=none", when="gemm_tools_list=MKL")
     depends_on("blis threads=none", when="gemm_tools_list=BLIS")
@@ -250,7 +256,6 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("EQUATIONS", "equations"),
             self.define_from_variant("NETCDF", "netcdf"),
         ]
-
         gemm_tools_list = ",".join(self.spec.variants["gemm_tools_list"].value)
         args.append(f"-DGEMM_TOOLS_LIST={gemm_tools_list}")
 
@@ -361,7 +366,7 @@ class Seissol(CMakePackage, CudaPackage, ROCmPackage):
 
         args.append(f"-DHOST_ARCH={hostarch}")
 
-        args.append(self.define("PYTHON_EXECUTABLE", self.spec["python"].command.path))
+        args.append(self.define("Python3_EXECUTABLE", self.spec["python"].command.path))
 
         return args
 

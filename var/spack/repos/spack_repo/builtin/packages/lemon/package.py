@@ -22,7 +22,8 @@ class Lemon(CMakePackage):
     # soplex not mentioned in docs but shown in cmakecache
     # variant("soplex", default=False, description="Enable SOPLEX solver backend") #TODO
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("glpk", when="+glpk")
     depends_on("cplex", when="+ilog")

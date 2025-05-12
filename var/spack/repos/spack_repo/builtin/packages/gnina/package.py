@@ -80,12 +80,12 @@ class Gnina(CMakePackage, CudaPackage):
     depends_on("openblas~fortran", when="@:1.1")
 
     patch(
-        "https://patch-diff.githubusercontent.com/raw/gnina/gnina/pull/280.patch?full_index=1",
+        "https://github.com/gnina/gnina/commit/b59e958c5d02c9348b7d327fa54a4b1bae5d55c4.patch?full_index=1",
         when="@1.3",
         sha256="88d1760423cedfdb992409b0bfe3f9939ab5900f52074364db9ad8b87f4845d4",
     )
     patch(
-        "https://patch-diff.githubusercontent.com/raw/gnina/gnina/pull/282.patch?full_index=1",
+        "https://github.com/gnina/gnina/commit/c33e0ccff8a5a36053599509f394cc2b84311563.patch?full_index=1",
         when="@1.3",
         sha256="6a1db3d63039a11ecc6e753b325962773e0084673d54a0d93a503bca8b08fb9e",
     )

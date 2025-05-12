@@ -96,9 +96,9 @@ class Edm4hep(CMakePackage):
     # Fix missing nljson import
     # NOTE that downstream packages (dd4hep) may fail for 0.99 and before
     patch(
-        "https://patch-diff.githubusercontent.com/raw/key4hep/EDM4hep/pull/379.patch?full_index=1",
+        "https://github.com/key4hep/EDM4hep/commit/18799dacfdaf5d746134c957de48607aa2665d75.patch?full_index=1",
         when="@0.99.1",
-        sha256="c4be2f27c7bda4d033f92fee14e48ddf59fbe606d208e8288d9bdb3dec5ad5c2",
+        sha256="374f0b7635c632e5a57d23ad163efab7370ab471c62e2713a41aa26e33d8f221",
     )
 
     def cmake_args(self):

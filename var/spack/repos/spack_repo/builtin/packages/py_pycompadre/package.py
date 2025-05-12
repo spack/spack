@@ -50,7 +50,7 @@ class PyPycompadre(PythonPackage):
 
     # fixes duplicate symbol issue with static library build
     patch(
-        "https://patch-diff.githubusercontent.com/raw/sandialabs/Compadre/pull/286.patch?full_index=1",
+        "https://github.com/sandialabs/Compadre/commit/af91a6ee3831dc951445df76053ec6315c58cb45.patch?full_index=1",
         sha256="e267b74f8ecb8dd23970848ed919d29b7d442f619ce80983e02a19f1d9582c61",
         when="@1.5.0",
     )

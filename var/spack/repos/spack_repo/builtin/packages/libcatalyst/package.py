@@ -6,7 +6,6 @@ import subprocess
 import sys
 
 import llnl.util.filesystem as fsys
-import llnl.util.tty as tty
 
 from spack.package import *
 

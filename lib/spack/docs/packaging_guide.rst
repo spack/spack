@@ -497,7 +497,7 @@ extends Spack's ``Package`` class.  For example, here is
 .. code-block:: python
    :linenos:
 
-   from spack import *
+   from spack.package import *
 
    class Libelf(Package):
        """ ... description ... """
@@ -1089,7 +1089,7 @@ You've already seen the ``homepage`` and ``url`` package attributes:
 .. code-block:: python
    :linenos:
 
-   from spack import *
+   from spack.package import *
 
 
    class Mpich(Package):
@@ -6183,7 +6183,7 @@ running:
 
 .. code-block:: python
 
-   from spack import *
+   from spack.package import *
 
 This is already part of the boilerplate for packages created with
 ``spack create``.
