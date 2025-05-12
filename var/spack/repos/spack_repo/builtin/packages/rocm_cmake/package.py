@@ -85,6 +85,7 @@ class RocmCmake(CMakePackage):
         test_dir = join_path(self.test_suite.current_test_cache_dir, self.test_src_dir)
         with working_dir(test_dir, create=True):
             cc_options = [f"-DCMAKE_PREFIX_PATH={self.prefix}", "."]
+            make = self.spec["gmake"].command
             cmake = self.spec["cmake"].command
             cmake(*cc_options)
             make()
