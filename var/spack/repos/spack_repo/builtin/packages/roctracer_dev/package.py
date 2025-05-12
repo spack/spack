@@ -169,7 +169,7 @@ class RoctracerDev(CMakePackage, ROCmPackage):
             self.define("CMAKE_MODULE_PATH", f"{self.stage.source_path}/cmake_modules"),
             self.define("HSA_RUNTIME_HSA_INC_PATH", self.spec["hsa-rocr-dev"].prefix.include),
             self.define("CMAKE_POSITION_INDEPENDENT_CODE", True),
-            self.define("HIP_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
+            self.define("HIP_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++"),
         ]
         if self.spec.satisfies("@:5.4.0"):
             args.append(self.define("ROCPROFILER_PATH", self.spec["rocprofiler-dev"].prefix))
