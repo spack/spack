@@ -141,7 +141,9 @@ def setup_parser(subparser):
         help="show variants in output (can be long)",
     )
     subparser.add_argument(
-        "--runtime", action="store_true", help="show packages loaded in the user environment and runtime dependencies thereof"
+        "--runtime",
+        action="store_true",
+        help="show packages loaded in the user environment and runtime dependencies thereof",
     )
     subparser.add_argument(
         "--loaded", action="store_true", help="show only packages loaded in the user environment"

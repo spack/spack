@@ -549,7 +549,8 @@ def display_specs(specs, args=None, **kwargs):
 
 
 def get_run_dependents(spec):
-    """Get the specs which are run-time dependencies of the given spec, including transitive runtime dependencies"""
+    """Get the specs which are run-time dependencies of the given spec,
+    including transitive runtime dependencies"""
     run_dependents = spec.dependencies(deptype=["run"])
     if len(run_dependents) == 0:
         return []
