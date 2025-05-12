@@ -97,6 +97,7 @@ from .url_buildcache import (
     URLBuildcacheEntry,
     get_url_buildcache_class,
     get_valid_spec_file,
+    _spec_files_from_cache,
 )
 
 
@@ -733,117 +734,6 @@ def _read_specs_and_push_index(
         db.mark(fetched_spec, "in_buildcache", True)
 
     _push_index(db, temp_dir, cache_prefix)
-
-
-def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
-    """Use aws cli to sync all the specs into a local temporary directory.
-
-    Args:
-        url: prefix of the build cache on s3
-        tmpspecsdir: path to temporary directory to use for writing files
-
-    Return:
-        List of the local file paths and a function that can read each one from the file system.
-    """
-    read_fn = None
-    file_list = None
-    aws = which("aws")
-
-    if not aws:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-        return file_list, read_fn
-
-    def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
-        return cache_entry
-
-    url_to_list = url_util.join(url, buildcache_relative_specs_url())
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--exclude",
-        "*",
-        "--include",
-        "*.spec.manifest.json",
-        url_to_list,
-        tmpspecsdir,
-    ]
-
-    tty.debug(f"Using aws s3 sync to download manifests from {url_to_list} to {tmpspecsdir}")
-
-    try:
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
-        read_fn = file_read_method
-    except Exception:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-
-    return file_list, read_fn
-
-
-def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
-    """Use spack.util.web module to get a list of all the specs at the remote url.
-
-    Args:
-        cache_prefix (str): Base url of mirror (location of spec files)
-
-    Return:
-        The list of complete spec file urls and a function that can read each one from its
-            remote location (also using the spack.util.web module).
-    """
-    read_fn = None
-    file_list = None
-
-    def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url)
-        return cache_entry
-
-    try:
-        url_to_list = url_util.join(url, buildcache_relative_specs_url())
-        file_list = [
-            url_util.join(url_to_list, entry)
-            for entry in web_util.list_url(url_to_list, recursive=True)
-            if entry.endswith("spec.manifest.json")
-        ]
-        read_fn = url_read_method
-    except Exception as err:
-        # If we got some kind of S3 (access denied or other connection error), the first non
-        # boto-specific class in the exception is Exception.  Just print a warning and return
-        tty.warn(f"Encountered problem listing packages at {url}: {err}")
-
-    return file_list, read_fn
-
-
-def _spec_files_from_cache(url: str, tmpspecsdir: str):
-    """Get a list of all the spec files in the mirror and a function to
-    read them.
-
-    Args:
-        url: Base url of mirror (location of spec files)
-        tmpspecsdir: Temporary location for writing files
-
-    Return:
-        A tuple where the first item is a list of absolute file paths or
-        urls pointing to the specs that should be read from the mirror,
-        and the second item is a function taking a url or file path and
-        returning the spec read from that location.
-    """
-    callbacks = []
-    if url.startswith("s3://"):
-        callbacks.append(_specs_from_cache_aws_cli)
-
-    callbacks.append(_specs_from_cache_fallback)
-
-    for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir)
-        if file_list:
-            return file_list, read_fn
-
-    raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(url))
 
 
 def _url_generate_package_index(url: str, tmpdir: str):
