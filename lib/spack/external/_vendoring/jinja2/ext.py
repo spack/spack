@@ -4,7 +4,7 @@ import re
 import typing as t
 import warnings
 
-from markupsafe import Markup
+from _vendoring.markupsafe import Markup
 
 from . import defaults
 from . import nodes

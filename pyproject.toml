@@ -257,6 +257,7 @@ substitute = [
   { match='altgraph', replace="_vendoring.altgraph" },
   { match='macholib', replace="_vendoring.macholib" },
   { match='from six', replace="from _vendoring.six" },
+  { match='markupsafe', replace="_vendoring.markupsafe" },
 ]
 drop = [
   # contains unnecessary scripts

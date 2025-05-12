@@ -12,7 +12,7 @@ from functools import partial
 from functools import reduce
 from types import CodeType
 
-from markupsafe import Markup
+from _vendoring.markupsafe import Markup
 
 from . import nodes
 from .compiler import CodeGenerator
@@ -221,7 +221,7 @@ class Environment:
         `autoescape`
             If set to ``True`` the XML/HTML autoescaping feature is enabled by
             default.  For more details about autoescaping see
-            :class:`~markupsafe.Markup`.  As of Jinja 2.4 this can also
+            :class:`~_vendoring.markupsafe.Markup`.  As of Jinja 2.4 this can also
             be a callable that is passed the template name and has to
             return ``True`` or ``False`` depending on autoescape should be
             enabled by default.

@@ -9,8 +9,8 @@ from collections import abc
 from collections import deque
 from string import Formatter
 
-from markupsafe import EscapeFormatter
-from markupsafe import Markup
+from _vendoring.markupsafe import EscapeFormatter
+from _vendoring.markupsafe import Markup
 
 from .environment import Environment
 from .exceptions import SecurityError

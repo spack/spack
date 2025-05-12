@@ -12,7 +12,7 @@ from threading import Lock
 from types import CodeType
 from urllib.parse import quote_from_bytes
 
-import markupsafe
+import _vendoring.markupsafe
 
 if t.TYPE_CHECKING:
     import _vendoring.typing_extensions as te
@@ -335,9 +335,9 @@ def urlize(
         def trim_url(x: str) -> str:
             return x
 
-    words = re.split(r"(\s+)", str(markupsafe.escape(text)))
-    rel_attr = f' rel="{markupsafe.escape(rel)}"' if rel else ""
-    target_attr = f' target="{markupsafe.escape(target)}"' if target else ""
+    words = re.split(r"(\s+)", str(_vendoring.markupsafe.escape(text)))
+    rel_attr = f' rel="{_vendoring.markupsafe.escape(rel)}"' if rel else ""
+    target_attr = f' target="{_vendoring.markupsafe.escape(target)}"' if target else ""
 
     for i, word in enumerate(words):
         head, middle, tail = "", word, ""
@@ -455,8 +455,8 @@ def generate_lorem_ipsum(
 
     if not html:
         return "\n\n".join(result)
-    return markupsafe.Markup(
-        "\n".join(f"<p>{markupsafe.escape(x)}</p>" for x in result)
+    return _vendoring.markupsafe.Markup(
+        "\n".join(f"<p>{_vendoring.markupsafe.escape(x)}</p>" for x in result)
     )
 
 
@@ -703,10 +703,10 @@ def select_autoescape(
 
 def htmlsafe_json_dumps(
     obj: t.Any, dumps: t.Optional[t.Callable[..., str]] = None, **kwargs: t.Any
-) -> markupsafe.Markup:
+) -> _vendoring.markupsafe.Markup:
     """Serialize an object to a string of JSON with :func:`json.dumps`,
     then replace HTML-unsafe characters with Unicode escapes and mark
-    the result safe with :class:`~markupsafe.Markup`.
+    the result safe with :class:`~_vendoring.markupsafe.Markup`.
 
     This is available in templates as the ``|tojson`` filter.
 
@@ -732,7 +732,7 @@ def htmlsafe_json_dumps(
     if dumps is None:
         dumps = json.dumps
 
-    return markupsafe.Markup(
+    return _vendoring.markupsafe.Markup(
         dumps(obj, **kwargs)
         .replace("<", "\\u003c")
         .replace(">", "\\u003e")
@@ -833,11 +833,11 @@ class Namespace:
         return f"<Namespace {self.__attrs!r}>"
 
 
-class Markup(markupsafe.Markup):
+class Markup(_vendoring.markupsafe.Markup):
     def __new__(cls, base="", encoding=None, errors="strict"):  # type: ignore
         warnings.warn(
             "'jinja2.Markup' is deprecated and will be removed in Jinja"
-            " 3.1. Import 'markupsafe.Markup' instead.",
+            " 3.1. Import '_vendoring.markupsafe.Markup' instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -847,8 +847,8 @@ class Markup(markupsafe.Markup):
 def escape(s: t.Any) -> str:
     warnings.warn(
         "'jinja2.escape' is deprecated and will be removed in Jinja"
-        " 3.1. Import 'markupsafe.escape' instead.",
+        " 3.1. Import '_vendoring.markupsafe.escape' instead.",
         DeprecationWarning,
         stacklevel=2,
     )
-    return markupsafe.escape(s)
+    return _vendoring.markupsafe.escape(s)
