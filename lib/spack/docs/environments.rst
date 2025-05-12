@@ -539,7 +539,9 @@ from the command line.
 
 You can also include an environment directly in the ``spack.yaml`` file. It
 involves adding the ``include_concrete`` heading in the yaml followed by the
-absolute path to the independent environments.
+absolute path to the independent environments. Note, that you may use Spack
+config variables such as ``$spack`` or environment variables as long as the
+expression expands to an absolute path.
 
 .. code-block:: yaml
 
@@ -549,7 +551,7 @@ absolute path to the independent environments.
          unify: true
      include_concrete:
      - /absolute/path/to/environment1
-     - /absolute/path/to/environment2
+     - $spack/../path/to/environment2
 
 
 Once the ``spack.yaml`` has been updated you must concretize the environment to
@@ -1000,6 +1002,28 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
+-------------------------------
+Modifying Environment Variables
+-------------------------------
+
+Spack Environments can modify the active shell's environment variables when activated.  The environment can be
+configured to set, unset, prepend, or append using ``env_vars`` configuration in the ``spack.yaml``  or through config scopes
+file:
+
+.. code-block:: yaml
+
+  spack:
+    env_vars:
+      set:
+        ENVAR_TO_SET_IN_ENV_LOAD: "FOO"
+      unset:
+        ENVAR_TO_UNSET_IN_ENV_LOAD:
+      prepend_path:
+        PATH_LIST: "path/to/prepend"
+      append_path:
+        PATH_LIST: "path/to/append"
+      remove_path:
+        PATH_LIST: "path/to/remove"
 
 -----------------
 Environment Views

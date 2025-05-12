@@ -973,13 +973,10 @@ class TestSpecSemantics:
         with pytest.raises(SpecFormatStringError):
             spec.format(fmt_str)
 
-    def test_combination_of_wildcard_or_none(self):
-        # Test that using 'none' and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
-            Spec("multivalue-variant foo=none,bar")
-
-        # Test that using wildcard and another value raises
-        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot be combined"):
+    def test_wildcard_is_invalid_variant_value(self):
+        """The spec string x=* is parsed as a multi-valued variant with values the empty set.
+        That excludes * as a literal variant value."""
+        with pytest.raises(spack.spec_parser.SpecParsingError, match="cannot use reserved value"):
             Spec("multivalue-variant foo=*,bar")
 
     def test_errors_in_variant_directive(self):
@@ -1367,6 +1364,18 @@ class TestSpecSemantics:
         vh = default_mock_concretization("splice-vh+foo")
         with pytest.raises(spack.spec.SpliceError, match="virtual"):
             vt.splice(vh, transitive)
+
+    def test_adaptor_optflags(self):
+        """Tests that we can obtain the list of optflags, and debugflags,
+        from the compiler adaptor, and that this list is taken from the
+        appropriate compiler package.
+        """
+        # pkg-a depends on c, so only the gcc compiler should be chosen
+        spec = spack.concretize.concretize_one(Spec("pkg-a %gcc"))
+        assert "-Otestopt" in spec.package.compiler.opt_flags
+        # This is not set, make sure we get an empty list
+        for x in spec.package.compiler.debug_flags:
+            pass
 
     def test_spec_override(self):
         init_spec = Spec("pkg-a foo=baz foobar=baz cflags=-O3 cxxflags=-O1")
@@ -1828,7 +1837,7 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
-def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, results):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 

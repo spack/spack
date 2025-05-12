@@ -281,7 +281,7 @@ class PyTorch(PythonPackage, CudaPackage):
             "caffe2/CMakeLists.txt",
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         """Set environment variables used to control the build.
 
         PyTorch's ``setup.py`` is a thin wrapper around ``cmake``.

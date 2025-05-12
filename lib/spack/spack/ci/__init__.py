@@ -24,6 +24,7 @@ from llnl.util.tty.color import cescape, colorize
 
 import spack
 import spack.binary_distribution as bindist
+import spack.builder
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -32,6 +33,7 @@ import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.store
 import spack.util.git
 import spack.util.gpg as gpg_util
@@ -149,10 +151,10 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     return False
 
 
-def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
+def compute_affected_packages(rev1: str = "HEAD^", rev2: str = "HEAD") -> Set[str]:
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
-    return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
+    return spack.repo.get_all_package_diffs("ARC", spack.repo.builtin_repo(), rev1=rev1, rev2=rev2)
 
 
 def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
@@ -244,7 +246,9 @@ def create_already_built_pruner(
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join([loc["mirror_url"] for loc in spec_locations])
+        urls = ",".join(
+            [f"{loc.url_and_version.url}@v{loc.url_and_version.version}" for loc in spec_locations]
+        )
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -613,32 +617,40 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     job_spec, and attempts to copy the files into the directory given
     by job_log_dir.
 
-    Args:
+    Parameters:
         job_spec: spec associated with spack install log
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
-
-    try:
-        package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
-    except spack.error.SpackError as e:
-        tty.error(f"Cannot copy logs: {str(e)}")
+    if not job_spec.concrete:
+        tty.warn("Cannot copy artifacts for non-concrete specs")
         return
 
-    # Get the package's archived files
-    archive_files = []
-    archive_root = package_metadata_root / "archived-files"
-    if archive_root.is_dir():
-        archive_files = [f for f in archive_root.rglob("*") if f.is_file()]
-    else:
-        msg = "Cannot copy package archived files: archived-files must be a directory"
-        tty.warn(msg)
+    package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    if not os.path.isdir(package_metadata_root):
+        # Fallback to using the stage directory
+        job_pkg = job_spec.package
 
+        package_metadata_root = pathlib.Path(job_pkg.stage.path)
+        archive_files = spack.builder.create(job_pkg).archive_files
+        tty.warn("Package not installed, falling back to use stage dir")
+        tty.debug(f"stage dir: {package_metadata_root}")
+    else:
+        # Get the package's archived files
+        archive_files = []
+        archive_root = package_metadata_root / "archived-files"
+        if os.path.isdir(archive_root):
+            archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
+        else:
+            tty.debug(f"No archived files detected at {archive_root}")
+
+    # Try zipped and unzipped versions of the build log
     build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
+    build_log = package_metadata_root / "spack-build-out.txt"
     build_env_mods = package_metadata_root / "spack-build-env.txt"
 
-    for f in [build_log_zipped, build_env_mods, *archive_files]:
-        copy_files_to_artifacts(str(f), job_log_dir)
+    for f in [build_log_zipped, build_log, build_env_mods, *archive_files]:
+        copy_files_to_artifacts(str(f), job_log_dir, compress_artifacts=True)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
@@ -651,11 +663,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        msg = f"Cannot copy test logs: job test stage ({test_stage}) does not exist"
-        tty.error(msg)
+        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
-    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
+    copy_files_to_artifacts(
+        os.path.join(test_stage, "*", "*.txt"), job_test_dir, compress_artifacts=True
+    )
 
 
 def download_and_extract_artifacts(url, work_dir) -> str:
@@ -1232,33 +1245,31 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     """Given a url to write to and the details of the failed job, write an entry
     in the broken specs list.
     """
-    tmpdir = tempfile.mkdtemp()
-    file_path = os.path.join(tmpdir, "broken.txt")
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        file_path = os.path.join(tmpdir, "broken.txt")
 
-    broken_spec_details = {
-        "broken-spec": {
-            "job-name": pkg_name,
-            "job-stack": stack_name,
-            "job-url": job_url,
-            "pipeline-url": pipeline_url,
-            "concrete-spec-dict": spec_dict,
+        broken_spec_details = {
+            "broken-spec": {
+                "job-name": pkg_name,
+                "job-stack": stack_name,
+                "job-url": job_url,
+                "pipeline-url": pipeline_url,
+                "concrete-spec-dict": spec_dict,
+            }
         }
-    }
 
-    try:
-        with open(file_path, "w", encoding="utf-8") as fd:
-            syaml.dump(broken_spec_details, fd)
-        web_util.push_to_url(
-            file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-        )
-    except Exception as err:
-        # If there is an S3 error (e.g., access denied or connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = f"Error writing to broken specs list {url}: {err}"
-        tty.warn(msg)
-    finally:
-        shutil.rmtree(tmpdir)
+        try:
+            with open(file_path, "w", encoding="utf-8") as fd:
+                syaml.dump(broken_spec_details, fd)
+            web_util.push_to_url(
+                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
+            )
+        except Exception as err:
+            # If there is an S3 error (e.g., access denied or connection
+            # error), the first non boto-specific class in the exception
+            # hierarchy is Exception.  Just print a warning and return
+            msg = f"Error writing to broken specs list {url}: {err}"
+            tty.warn(msg)
 
 
 def read_broken_spec(broken_spec_url):
