@@ -128,8 +128,6 @@ class Provenance(enum.IntEnum):
     SPEC = enum.auto()
     # A dev spec literal
     DEV_SPEC = enum.auto()
-    # An external spec declaration
-    EXTERNAL = enum.auto()
     # The 'packages' section of the configuration
     PACKAGES_YAML = enum.auto()
     # A package requirement
@@ -138,6 +136,8 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # An external spec declaration
+    EXTERNAL = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
@@ -2500,7 +2500,7 @@ class SpackSolverSetup:
             # TODO: variant="*" means 'variant is defined to something', which used to
             # be meaningless in concretization, as all variants had to be defined. But
             # now that variants can be conditional, it should force a variant to exist.
-            if variant.value == ("*",):
+            if not variant.values:
                 continue
 
             for value in variant.values:
@@ -2520,7 +2520,22 @@ class SpackSolverSetup:
                     if self.pkg_class(spec.name).has_variant(vname):
                         clauses.append(f.variant_value(spec.name, vname, value))
                 else:
-                    clauses.append(f.variant_value(spec.name, vname, value))
+                    variant_clause = f.variant_value(spec.name, vname, value)
+                    if (
+                        variant.concrete
+                        and variant.type == vt.VariantType.MULTI
+                        and not spec.concrete
+                    ):
+                        if body is False:
+                            variant_clause.args = (
+                                f"concrete_{variant_clause.args[0]}",
+                                *variant_clause.args[1:],
+                            )
+                        else:
+                            clauses.append(
+                                fn.attr("concrete_variant_request", spec.name, vname, value)
+                            )
+                    clauses.append(variant_clause)
 
         # compiler flags
         source = context.source if context else "none"

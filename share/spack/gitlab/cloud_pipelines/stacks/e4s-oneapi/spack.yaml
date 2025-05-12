@@ -173,11 +173,11 @@ spack:
   - vtk-m ~openmp                   # +openmp: https://github.com/spack/spack/issues/31830
   - zfp
   # --
-  # - paraview +qt                  # llvm-17.0.6: https://github.com/spack/spack/issues/49625
-  # - py-cinemasci                  # llvm-14.0.6: https://github.com/spack/spack/issues/49625
-  # - visit                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - paraview +qt                  # concretize: paraview: Qt support requires GLX on non Windows; llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - py-cinemasci                  # py-maturin-1.8.3: rust-lld: error: undefined symbol: _intel_fast_memcpy
+  # - visit                         # vtk-9.2.6: ??
   # --
-  # - chapel ~cuda ~rocm            # llvm-19.1.7: https://github.com/spack/spack/issues/49625
+  # - chapel ~cuda ~rocm            # chapel-2.4.0: KeyError: 'intel-oneapi-compilers': /builds/spack/spack/var/spack/repos/builtin/packages/chapel/package.py:602, in setup_chpl_compilers: env.set("CHPL_HOST_COMPILER", self.compiler_map[self.spec.compiler.name])
   # - cp2k +mpi                     # dbcsr-2.8.0: FAILED: src/CMakeFiles/dbcsr.dir/dbcsr_api.F-pp.f src/CMakeFiles/dbcsr.dir/dbcsr_api.F.o.ddi: 
   # - dealii                        # taskflow@3.7.0: cmake: Taskflow currently supports the following compilers: g++ v7.0 or above, clang++ v6.0 or above
   # - exago +mpi ~ipopt +hiop ~python +raja ^hiop+raja~sparse # raja-0.14.0: RAJA/pattern/kernel/Tile.hpp:174:30: error: no member named 'block_id' in 'IterableTiler<Iterable>'
@@ -185,8 +185,8 @@ spack:
   # - fftx                          # fftx-1.2.0: https://github.com/spack/spack/issues/49621
   # - fpm                           # fpm-0.10.0: /tmp/ifx1305151083OkWTRB/ifxqBG60i.i90: error #6405: The same named entity from different modules and/or program units cannot be referenced.   [TOML_TABLE]; fpm.F90(32048): error #7002: Error in opening the compiled module file.  Check INCLUDE paths.   [FPM_MANIFEST_PREPROCESS]
   # - geopm-runtime                 # concretize: c-blosc2: conflicts with '%oneapi';
-  # - glvis                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
-  # - gptune ~mpispawn              # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  - glvis                         # llvm-17.0.6: https://github.com/spack/spack/issues/49625
+  # - gptune ~mpispawn              # py-maturin-1.8.3: rust-lld: error: undefined symbol: __intel_cpu_feature_indicator_x
   # - lbann                         # lbann-0.104: https://github.com/spack/spack/issues/49619
   # - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp # concretize: c-blosc2: conflicts with '%oneapi';
   # - nek5000 +mpi ~visit           # nek5000-19.0: RuntimeError: Cannot build example: short_tests/eddy.
@@ -209,8 +209,8 @@ spack:
   # --
   # - py-jupyterlab                 # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
   # - py-notebook                   # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
-  # - py-numba                      # llvm-14.0.6: https://github.com/spack/spack/issues/49625
-  # - py-pandas                     # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  - py-numba                      # llvm-14.0.6: https://github.com/spack/spack/issues/49625
+  - py-pandas                     # llvm-14.0.6: https://github.com/spack/spack/issues/49625
   # - py-plotly                     # py-maturin: rust-lld: error: undefined symbol: _intel_fast_memcpy
 
   - aml +level_zero

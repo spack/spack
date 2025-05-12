@@ -47,6 +47,7 @@ import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.executable
+import spack.util.naming
 import spack.util.path
 import spack.util.web
 import spack.variant
@@ -838,26 +839,36 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     def fullnames(cls):
         """Fullnames for this package and any packages from which it inherits."""
         fullnames = []
-        for cls in cls.__mro__:
-            namespace = getattr(cls, "namespace", None)
-            if namespace:
-                fullnames.append("%s.%s" % (namespace, cls.name))
-            if namespace == "builtin":
-                # builtin packages cannot inherit from other repos
+        for base in cls.__mro__:
+            if not spack.repo.is_package_module(base.__module__):
                 break
+            fullnames.append(base.fullname)
         return fullnames
 
     @classproperty
     def name(cls):
-        """The name of this package.
-
-        The name of a package is the name of its Python module, without
-        the containing module names.
-        """
+        """The name of this package."""
         if cls._name is None:
-            cls._name = cls.module.__name__
-            if "." in cls._name:
-                cls._name = cls._name[cls._name.rindex(".") + 1 :]
+            # We cannot know the exact package API version, but we can distinguish between v1
+            # v2 based on the module. We don't want to figure out the exact package API version
+            # since it requires parsing the repo.yaml.
+            module = cls.__module__
+
+            if module.startswith(spack.repo.PKG_MODULE_PREFIX_V1):
+                version = (1, 0)
+            elif module.startswith(spack.repo.PKG_MODULE_PREFIX_V2):
+                version = (2, 0)
+            else:
+                raise ValueError(f"Package {cls.__qualname__} is not a known Spack package")
+
+            if version < (2, 0):
+                # spack.pkg.builtin.package_name.
+                _, _, pkg_module = module.rpartition(".")
+            else:
+                # spack_repo.builtin.packages.package_name.package
+                pkg_module = module.rsplit(".", 2)[-2]
+
+            cls._name = spack.util.naming.pkg_dir_to_pkg_name(pkg_module, version)
         return cls._name
 
     @classproperty

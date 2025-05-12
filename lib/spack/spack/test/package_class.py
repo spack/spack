@@ -246,22 +246,29 @@ def test_package_exes_and_libs():
 
 
 def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+    UrlsPackage = type(
+        "URLsPackage",
+        (spack.package.Package,),
+        {
+            "__module__": "spack.pkg.builtin.urls_package",
+            "url": "https://www.example.com/url-package-1.0.tgz",
+            "urls": ["https://www.example.com/archive"],
+        },
+    )
 
-    s = spack.spec.Spec("pkg-a")
+    s = spack.spec.Spec("urls-package")
     with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
+        UrlsPackage(s)
 
 
 def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
+    LicensedPackage = type(
+        "LicensedPackage",
+        (spack.package.Package,),
+        {"__module__": "spack.pkg.builtin.licensed_package"},
+    )
 
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
