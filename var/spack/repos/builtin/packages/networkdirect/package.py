@@ -6,7 +6,7 @@ import glob
 import os
 
 from spack.package import *
-from spack.build_systems.msbuild import MSBuildBuilder
+import spack.build_systems.msbuild as msbuild
 
 class Networkdirect(MSBuildPackage):
     """NetworkDirect is a user-mode programming interface specification for Remote Direct Memory Access (RDMA)"""
@@ -34,7 +34,7 @@ class Networkdirect(MSBuildPackage):
     # so we disable the CBT system and drive the underlying MSBuild system directly
     patch("no_cbt.patch")
 
-class MSBuildBuilder(MSBuildBuilder):
+class MSBuildBuilder(msbuild.MSBuildBuilder):
 
     build_targets = ["ndutil"]
 
