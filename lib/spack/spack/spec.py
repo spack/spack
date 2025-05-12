@@ -3414,10 +3414,6 @@ class Spec:
         if not other._dependencies:
             return True
 
-        # If we have no dependencies, we can't satisfy any constraints.
-        if not self._dependencies and self.original_spec_format() >= 5 and not self.external:
-            return False
-
         # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
         # all the edges that have an abstract parent, and verify that they match some edge in the
         # lhs.
