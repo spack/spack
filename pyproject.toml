@@ -252,7 +252,8 @@ patches-dir = "lib/spack/external/patches"
 
 [tool.vendoring.transformations]
 substitute = [
-  { match='typing_extensions', replace="_vendoring.typing_extensions" }
+  { match='typing_extensions', replace="_vendoring.typing_extensions" },
+  { match='ruamel.yaml', replace="_vendoring.ruamel.yaml" }
 ]
 drop = [
   # contains unnecessary scripts
