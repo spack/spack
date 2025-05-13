@@ -87,22 +87,24 @@ class MSBuildBuilder(msbuild.MSBuildBuilder):
     @property
     def std_msbuild_args(self):
         return []
-    
+
     # We will need to burn out the CBT build system and associated files
     # and instead directly invoke msbuild per sln we're interested in
     # and generate our own installer
     def msbuild_args(self):
         pkg = self.pkg
         args = ["-noLogo"]
-        ifort_bin = "\"" + os.path.dirname(pkg.compiler.fc) + "\""
+        ifort_bin = '"' + os.path.dirname(pkg.compiler.fc) + '"'
         args.append(self.define("IFORT_BIN", ifort_bin))
-        args.append(self.define("PlatformToolset", "v"+ pkg["msvc"].platform_toolset_ver))
+        args.append(self.define("PlatformToolset", "v" + pkg["msvc"].platform_toolset_ver))
         args.append(self.define("VCToolsVersion", pkg["msvc"].msvc_version))
-        args.append(self.define("WindowsTargetPlatformVersion", str(pkg["win-sdk"].version) + ".0"))
+        args.append(
+            self.define("WindowsTargetPlatformVersion", str(pkg["win-sdk"].version) + ".0")
+        )
         args.append(self.define("Configuration", "Release"))
         args.append("src\\msmpi.sln")
         return args
-    
+
     def install(self, pkg, spec, prefix):
         base_build = pkg.stage.source_path
         out = os.path.join(base_build, "out")

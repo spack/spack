@@ -5,15 +5,16 @@
 import glob
 import os
 
-from spack.package import *
 import spack.build_systems.msbuild as msbuild
+from spack.package import *
+
 
 class Networkdirect(MSBuildPackage):
-    """NetworkDirect is a user-mode programming interface specification for Remote Direct Memory Access (RDMA)"""
+    """NetworkDirect is a user-mode programming interface specification
+    for Remote Direct Memory Access (RDMA)"""
 
     homepage = "https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/hh997033(v=ws.11)"
     url = "https://github.com/microsoft/NetworkDirect/archive/refs/tags/v2.0.zip"
-
 
     maintainers("johnwparent")
 
@@ -34,6 +35,7 @@ class Networkdirect(MSBuildPackage):
     # so we disable the CBT system and drive the underlying MSBuild system directly
     patch("no_cbt.patch")
 
+
 class MSBuildBuilder(msbuild.MSBuildBuilder):
 
     build_targets = ["ndutil"]
@@ -47,7 +49,9 @@ class MSBuildBuilder(msbuild.MSBuildBuilder):
 
     def msbuild_args(self):
         args = ["-noLogo"]
-        args.append(self.define("WindowsTargetPlatformVersion", str(self.pkg["win-sdk"].version)+".0"))
+        args.append(
+            self.define("WindowsTargetPlatformVersion", str(self.pkg["win-sdk"].version) + ".0")
+        )
         # one of the headers we need isn't generated during release builds
         args.append(self.define("Configuration", "Debug"))
         args.append("src\\netdirect.sln")
@@ -66,7 +70,3 @@ class MSBuildBuilder(msbuild.MSBuildBuilder):
         # for whatever reason this header is not moved to the "out" prefix
         # with the rest of the headers, ensure its there
         install(os.path.join(base_build, "src", "ndutil", "ndsupport.h"), prefix.include)
-
-
-
-
