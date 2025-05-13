@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import traceback
+import multiprocessing
+import time
+import signal
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp
@@ -210,9 +213,31 @@ class MirrorStats:
     def error(self):
         self.errors.add(self.current_spec)
 
+    # TODO: AQ, Merge a given MirrorStats object to this one. Return just one MirrorStats
+    def merge(self, ext_mirror_stat: "MirrorStats") -> "MirrorStats":
+        # For the sake of parallelism we need a way to reduce/merge different
+        # MirrorStats objects.
+        self.present.update(ext_mirror_stat.present)
+        self.new.update(ext_mirror_stat.new)
+        self.errors.update(ext_mirror_stat.errors)
+
+        if self.current_spec != None and ext_mirror_stat.current_spec != None:
+            # If we already have a current_spec it needs to be tallied
+            # and then the new one set (via next_spec)
+            self.next_spec(ext_mirror_stat.current_spec)
+        elif self.current_spec != None and ext_mirror_stat.current_spec == None:
+            # If we have a current_spec, and there's no new one coming, leave things alone
+            pass
+        else:
+            # In anycase where current_spec is None, use the incoming mirror_stat current. 
+            self.current_spec = ext_mirror_stat.current_spec
+
+        self.added_resources.update(ext_mirror_stat.added_resources)
+        self.existing_resources.update(ext_mirror_stat.existing_resources)
+
 
 def create_mirror_from_package_object(
-    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStats
+    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: "MirrorStats"
 ) -> bool:
     """Add a single package object to a mirror.
 
@@ -247,6 +272,44 @@ def create_mirror_from_package_object(
                 return False
     return True
 
+# TODO: AQ
+# I need a function that does the same thing as create_mirror_from_package_object(), but uses an
+# empty (fresh) spack mirror_stats object, and returns that, then we need a method in the mirror_stat object that will merge two mirror_stats
+def cache_single_package(pkg_obj, mirror_cache: "spack.caches.MirrorCache") -> "MirrorStats":
+    """Cache a single package object, and return the MirrorStats object.
+
+    The package object is only required to have an associated spec
+    with a concrete version.
+
+    Args:
+        pkg_obj (spack.package_base.PackageBase): package object with to be added.
+        mirror_cache: mirror where to add the spec.
+
+    Return:
+        mirror_stats: statistics on the current mirror
+    """
+    # Create an empty MirrorStats object we will later combine with others
+    mirror_stats = MirrorStats()
+    tty.msg("Adding package {} to mirror".format(pkg_obj.spec.format("{name}{@version}")))
+    max_retries = 3
+    for num_retries in range(max_retries):
+        try:
+            # Includes patches and resources
+            with pkg_obj.stage as pkg_stage:
+                pkg_stage.cache_mirror(mirror_cache, mirror_stats)
+            break
+        except Exception as e:
+            if num_retries + 1 == max_retries:
+                if spack.config.get("config:debug"):
+                    traceback.print_exc()
+                else:
+                    tty.warn(
+                        "Error while fetching %s" % pkg_obj.spec.format("{name}{@version}"), str(e)
+                    )
+                mirror_stats.error()
+                return mirror_stats
+    return mirror_stats
+    
 
 def require_mirror_name(mirror_name):
     """Find a mirror by name and raise if it does not exist"""
@@ -254,3 +317,63 @@ def require_mirror_name(mirror_name):
     if not mirror:
         raise ValueError(f'no mirror named "{mirror_name}"')
     return mirror
+
+
+def watchdog_directory(process_pid, directory_path, timeout_threshold=20, check_interval=2):
+    """
+    Monitors a directory for any file changes and kills the process if no changes occur.
+
+    Args:
+        process_pid (int): The PID of the process to monitor.
+        directory_path (str): The directory to check for file changes.
+        timeout_threshold (int): Time (in seconds) before killing the process if no updates occur.
+        check_interval (int): Time interval (in seconds) between checks.
+    """
+    print(f"Watchdog started (PID: {os.getpid()}), monitoring process {process_pid} and directory {directory_path}")
+
+    if not os.path.exists(directory_path):
+        print(f"Watchdog Warning: Directory '{directory_path}' does not exist at start, I will wait.")
+        last_mod_times = {}
+    else:
+        # Create a mapping of each file in the directory to its last modification time.
+        last_mod_times = {
+            os.path.join(directory_path, f): os.path.getmtime(os.path.join(directory_path, f))
+            for f in os.listdir(directory_path)
+            if os.path.isfile(os.path.join(directory_path, f))
+        }
+    
+    # Use a separate timer to track when the last change occurred.
+    last_update_time = time.time()
+
+    while True:
+        time.sleep(check_interval)  # Sleep before checking again
+
+        if not os.path.exists(directory_path):
+            print("Directory not found, waiting...")
+            continue  # Keep waiting if the directory doesn’t exist yet
+
+        # Build the current mapping of file modification times.
+        current_mod_times = {
+            os.path.join(directory_path, f): os.path.getmtime(os.path.join(directory_path, f))
+            for f in os.listdir(directory_path)
+            if os.path.isfile(os.path.join(directory_path, f))
+        }
+
+        if current_mod_times != last_mod_times:
+            print("Change detected in directory, resetting timer.")
+            last_mod_times = current_mod_times  # Update the stored modification times.
+            last_update_time = time.time()         # Reset the timer.
+        else:
+            elapsed_time = time.time() - last_update_time
+            print(f"No changes detected for {elapsed_time:.2f}s")
+            if elapsed_time > timeout_threshold:
+                print(f"No changes detected for {elapsed_time:.2f}s! Killing process {process_pid}.")
+                try:
+                    # Attempt to gracefully terminate the process.
+                    os.kill(process_pid, signal.SIGTERM)
+                    print(f"Process {process_pid} has been terminated.")
+                except OSError as e:
+                    print(f"Failed to kill process {process_pid}: {e}")
+                break  # Exit watchdog loop
+
+    print("Watchdog shutting down.")
