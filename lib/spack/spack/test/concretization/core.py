@@ -3600,8 +3600,9 @@ def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
 def test_spec_parts_on_fresh_compilers(
     constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path
 ):
-    """Tests that % behaves as ^ for spec parts, i.e. that %<package> target=<target> <variants>
-    etc. is associated with <package>, when we concretize without reusing.
+    """Tests that spec parts like targets and variants in `%<package> target=<target> <variants>`
+    are associated with `package` for `%` just as they would be for `^`, when we concretize
+    without reusing.
     """
     packages_yaml = syaml.load_config(
         f"""
