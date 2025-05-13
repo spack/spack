@@ -511,8 +511,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     )
     # See: https://github.com/pytorch/pytorch/pull/100049
     patch(
-        "https://github.com/pytorch/pytorch/commit/aaa3eb059a0294cc01c71f8e74abcebc33404e17.patch?=full_index=1",
-        sha256="595cd50ce4d39f0b43a5dc6c52331f6647c9a21e71765d236b3f6778968046cb",
+        "https://github.com/pytorch/pytorch/commit/aaa3eb059a0294cc01c71f8e74abcebc33404e17.patch?full_index=1",
+        sha256="8dcbc5cd24b4c0e4a051e2161700b485c6c598b66347e7e90a263d9319c76374",
         when="@2.0.0:2.0.1",
     )
 
