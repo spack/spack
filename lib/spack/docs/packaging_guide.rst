@@ -2264,138 +2264,6 @@ RPATHs in Spack are handled in one of three ways:
    links.  You can see this how this is used in the :ref:`PySide
    example <pyside-patch>` above.
 
-.. _attribute_parallel:
-
----------------
-Parallel builds
----------------
-
-Spack supports parallel builds on an individual package and at the
-installation level.  Package-level parallelism is established by the
-``--jobs`` option and its configuration and package recipe equivalents.
-Installation-level parallelism is driven by the DAG(s) of the requested
-package or packages.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Package-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so those builds run in parallel.
-The parallelism is determined by the value of the ``build_jobs`` entry
-in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
-how this value is computed).
-
-If a package does not build properly in parallel, you can override
-this setting by adding ``parallel = False`` to your package.  For
-example, OpenSSL's build does not work in parallel, so its package
-looks like this:
-
-.. code-block:: python
-   :emphasize-lines: 8
-   :linenos:
-
-   class Openssl(Package):
-       homepage = "http://www.openssl.org"
-       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
-
-       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib-api")
-
-       parallel = False
-
-Similarly, you can disable parallel builds only for specific make
-commands, as ``libdwarf`` does:
-
-.. code-block:: python
-   :emphasize-lines: 9, 12
-   :linenos:
-
-   class Data:
-       configure: Executable
-       make: Executable
-
-   class Libelf(Package):
-       data: Data
-       ...
-
-       def install(self, spec, prefix):
-           self.data.configure("--prefix=" + prefix,
-                               "--enable-shared",
-                               "--disable-dependency-tracking",
-                               "--disable-debug")
-           self.data.make()
-
-           # The mkdir commands in libelf's install can fail in parallel
-           self.data.make("install", parallel=False)
-
-The first make will run in parallel here, but the second will not.  If
-you set ``parallel`` to ``False`` at the package level, then each call
-to ``make()`` will be sequential by default, but packagers can call
-``make(parallel=True)`` to override it.
-
-Note that the ``--jobs`` option works out of the box for all standard
-build systems. If you are using a non-standard build system instead, you
-can use the variable ``make_jobs`` to extract the number of jobs specified
-by the ``--jobs`` option:
-
-.. code-block:: python
-   :emphasize-lines: 2, 8
-   :linenos:
-
-   class Data:
-       make_jobs: int
-
-   class Xios(Package):
-       ...
-       def install(self, spec, prefix):
-           make_xios = Executable("./make_xios")
-           make_xios(..., "--jobs", str(self.pkg.make_jobs))
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack supports the concurrent installation of packages within a Spack
-instance across multiple processes using file system locks.  This
-parallelism is separate from the package-level achieved through build
-systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
-processes coordinate the installation of the dependencies of specs
-provided on the command line and as part of an environment build with
-only **one process** being allowed to install a given package at a time.
-Refer to :ref:`Dependencies` for more information on dependencies and
-:ref:`installing-environment` for how to install an environment.
-
-Concurrent processes may be any combination of interactive sessions and
-batch jobs.  Which means a ``spack install`` can be running in a terminal
-window while a batch job is running ``spack install`` on the same or
-overlapping dependencies without any process trying to re-do the work of
-another.
-
-For example, if you are using Slurm, you could launch an installation
-of ``mpich`` using the following command:
-
-.. code-block:: console
-
-   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
-
-This will create eight concurrent, four-job installs on two different
-nodes.
-
-Alternatively, you could run the same installs on one node by entering
-the following at the command line of a bash shell:
-
-.. code-block:: console
-
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
-
-.. note::
-
-   The effective parallelism is based on the maximum number of packages
-   that can be installed at the same time, which is limited by the
-   number of packages with no (remaining) uninstalled dependencies.
-
-
 .. _dependencies:
 
 ------------
@@ -3027,6 +2895,137 @@ a global variable:
 
 This is not recommended, because it is unclear where the ``make`` variable is set, and leads to
 issues with editors and type checkers.
+
+.. _attribute_parallel:
+
+---------------
+Parallel builds
+---------------
+
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Spack will invoke ``make()``, or any other similar tool,
+with a ``-j <njobs>`` argument, so those builds run in parallel.
+The parallelism is determined by the value of the ``build_jobs`` entry
+in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
+how this value is computed).
+
+If a package does not build properly in parallel, you can override
+this setting by adding ``parallel = False`` to your package.  For
+example, OpenSSL's build does not work in parallel, so its package
+looks like this:
+
+.. code-block:: python
+   :emphasize-lines: 8
+   :linenos:
+
+   class Openssl(Package):
+       homepage = "http://www.openssl.org"
+       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
+       depends_on("zlib-api")
+
+       parallel = False
+
+Similarly, you can disable parallel builds only for specific make
+commands, as ``libdwarf`` does:
+
+.. code-block:: python
+   :emphasize-lines: 14, 17
+   :linenos:
+
+   class Data:
+       configure: Executable
+       make: Executable
+
+   class Libelf(Package):
+       data: Data
+       ...
+
+       def install(self, spec, prefix):
+           self.data.configure("--prefix=" + prefix,
+                               "--enable-shared",
+                               "--disable-dependency-tracking",
+                               "--disable-debug")
+           self.data.make()
+
+           # The mkdir commands in libelf's install can fail in parallel
+           self.data.make("install", parallel=False)
+
+The first make will run in parallel here, but the second will not.  If
+you set ``parallel`` to ``False`` at the package level, then each call
+to ``make()`` will be sequential by default, but packagers can call
+``make(parallel=True)`` to override it.
+
+Note that the ``--jobs`` option works out of the box for all standard
+build systems. If you are using a non-standard build system instead, you
+can use the variable ``make_jobs`` to extract the number of jobs specified
+by the ``--jobs`` option:
+
+.. code-block:: python
+   :emphasize-lines: 2, 8
+   :linenos:
+
+   class Data:
+       make_jobs: int
+
+   class Xios(Package):
+       ...
+       def install(self, spec, prefix):
+           make_xios = Executable("./make_xios")
+           make_xios(..., "--jobs", str(self.pkg.make_jobs))
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  Which means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using Slurm, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent, four-job installs on two different
+nodes.
+
+Alternatively, you could run the same installs on one node by entering
+the following at the command line of a bash shell:
+
+.. code-block:: console
+
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
+
+.. note::
+
+   The effective parallelism is based on the maximum number of packages
+   that can be installed at the same time, which is limited by the
+   number of packages with no (remaining) uninstalled dependencies.
 
 -----
 Views
