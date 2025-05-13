@@ -75,7 +75,6 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
-  "archspec",
   "llnl",
   "spack",
   "first-party",
@@ -84,7 +83,6 @@ section-order = [
 
 [tool.ruff.lint.isort.sections]
 spack = ["spack"]
-archspec = ["archspec"]
 llnl = ["llnl"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -104,13 +102,11 @@ sections = [
   "FUTURE",
   "STDLIB",
   "THIRDPARTY",
-  "ARCHSPEC",
   "LLNL",
   "FIRSTPARTY",
   "LOCALFOLDER",
 ]
 known_first_party = "spack"
-known_archspec = "archspec"
 known_llnl = "llnl"
 known_third_party = ["ruamel", "six"]
 src_paths = "lib"
