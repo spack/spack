@@ -190,7 +190,7 @@ spack:
   - umap
   - umpire
   - upcxx
-  - variorum
+  - variorum cpu=amd gpu=none
   - wannier90
   - wps
   - wrf
