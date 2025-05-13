@@ -29,8 +29,10 @@ class Msmpi(Package):
     provides("mpi")
 
     depends_on("c", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("win-wdk")
+    depends_on("networkdirect")
 
     patch("ifort_compat.patch")
 
@@ -59,21 +61,23 @@ class Msmpi(Package):
 
 class GenericBuilder(GenericBuilder):
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
+        ifort_root = os.path.join(*self.pkg.compiler.fortran.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
+        env.prepend_path("IncludePath", self.spec["networkdirect"].prefix.include)
 
-    def is_64bit(self):
-        return "64" in str(self.pkg.spec.target.family)
+    # We will need to burn out the CBT build system and associated files
+    # and instead directly invoke msbuild per sln we're interested in
+    # and generate our own installer
 
-    def build_command_line(self):
+    def build_command_line(self, pkg):
         args = ["-noLogo"]
-        ifort_bin = self.pkg.compiler.fc
+        ifort_bin = pkg.compiler.fortran
         args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
-        args.append("/p:VCToolsVersion=%s" % self.pkg.compiler.msvc_version)
-        args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["wdk"].version))
-        args.append("/p:PlatformToolset=%s" % self.pkg.compiler.cc_version)
+        args.append("/p:VCToolsVersion=%s" % pkg["msvc"].msvc_version)
+        args.append("/p:WindowsTargetPlatformVersion=%s" % str(pkg["win-wdk"].version))
+        args.append("/p:PlatformToolset=%s" % pkg.compiler.cc_version)
         return args
 
-    def install(self, spec, prefix):
-        with working_dir(self.pkg.stage.build_directory, create=True):
-            msbuild(*self.build_command_line())
+    def install(self, pkg, spec, prefix):
+        with working_dir(pkg.stage.build_directory, create=True):
+            msbuild(*self.build_command_line(pkg))
