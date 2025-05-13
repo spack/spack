@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.builder
 import spack.package_base
+import spack.spec
+import spack.util.environment
+import spack.util.prefix
 from spack.directives import build_system, extends
 from spack.multimethod import when
 
@@ -42,7 +45,9 @@ class OctaveBuilder(BuilderWithDefaults):
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ()
 
-    def install(self, pkg, spec, prefix):
+    def install(
+        self, pkg: OctavePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
+    ) -> None:
         """Install the package from the archive file"""
         pkg.module.octave(
             "--quiet",
@@ -53,7 +58,9 @@ class OctaveBuilder(BuilderWithDefaults):
             "pkg prefix %s; pkg install %s" % (prefix, self.pkg.stage.archive_file),
         )
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         # octave does not like those environment variables to be set:
         env.unset("CC")
         env.unset("CXX")

@@ -5,7 +5,7 @@
 import argparse
 import collections
 import io
-import os.path
+import os
 import re
 import sys
 
@@ -17,6 +17,7 @@ except ImportError:
     pytest = None  # type: ignore
 
 import llnl.util.filesystem
+import llnl.util.tty as tty
 import llnl.util.tty.color as color
 from llnl.util.tty.colify import colify
 
@@ -216,7 +217,7 @@ def unit_test(parser, args, unknown_args):
     # Ensure clingo is available before switching to the
     # mock configuration used by unit tests
     with spack.bootstrap.ensure_bootstrap_configuration():
-        spack.bootstrap.ensure_core_dependencies()
+        spack.bootstrap.ensure_clingo_importable_or_raise()
         if pytest is None:
             spack.bootstrap.ensure_environment_dependencies()
             import pytest
@@ -236,6 +237,12 @@ def unit_test(parser, args, unknown_args):
         pytest_root = spack.extensions.load_extension(args.extension)
 
     if args.numprocesses is not None and args.numprocesses > 1:
+        try:
+            import xdist  # noqa: F401
+        except ImportError:
+            tty.error("parallel unit-test requires pytest-xdist module")
+            return 1
+
         pytest_args.extend(
             [
                 "--dist",

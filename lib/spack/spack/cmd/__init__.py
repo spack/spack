@@ -171,7 +171,9 @@ def quote_kvp(string: str) -> str:
 
 
 def parse_specs(
-    args: Union[str, List[str]], concretize: bool = False, tests: bool = False
+    args: Union[str, List[str]],
+    concretize: bool = False,
+    tests: spack.concretize.TestsType = False,
 ) -> List[spack.spec.Spec]:
     """Convenience function for parsing arguments from specs.  Handles common
     exceptions and dies if there are errors.
@@ -183,11 +185,13 @@ def parse_specs(
     if not concretize:
         return specs
 
-    to_concretize = [(s, None) for s in specs]
+    to_concretize: List[spack.concretize.SpecPairInput] = [(s, None) for s in specs]
     return _concretize_spec_pairs(to_concretize, tests=tests)
 
 
-def _concretize_spec_pairs(to_concretize, tests=False):
+def _concretize_spec_pairs(
+    to_concretize: List[spack.concretize.SpecPairInput], tests: spack.concretize.TestsType = False
+) -> List[spack.spec.Spec]:
     """Helper method that concretizes abstract specs from a list of abstract,concrete pairs.
 
     Any spec with a concrete spec associated with it will concretize to that spec. Any spec
@@ -198,7 +202,7 @@ def _concretize_spec_pairs(to_concretize, tests=False):
     # Special case for concretizing a single spec
     if len(to_concretize) == 1:
         abstract, concrete = to_concretize[0]
-        return [concrete or abstract.concretized()]
+        return [concrete or spack.concretize.concretize_one(abstract, tests=tests)]
 
     # Special case if every spec is either concrete or has an abstract hash
     if all(
@@ -250,9 +254,9 @@ def matching_spec_from_env(spec):
     """
     env = ev.active_environment()
     if env:
-        return env.matching_spec(spec) or spec.concretized()
+        return env.matching_spec(spec) or spack.concretize.concretize_one(spec)
     else:
-        return spec.concretized()
+        return spack.concretize.concretize_one(spec)
 
 
 def matching_specs_from_env(specs):
@@ -293,7 +297,7 @@ def disambiguate_spec(
 
 def disambiguate_spec_from_hashes(
     spec: spack.spec.Spec,
-    hashes: List[str],
+    hashes: Optional[List[str]],
     local: bool = False,
     installed: Union[bool, InstallRecordStatus] = True,
     first: bool = False,
@@ -326,7 +330,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{ arch=architecture}"
+    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -371,8 +375,13 @@ def iter_groups(specs, indent, all_headers):
     index = index_by(specs, ("architecture", "compiler"))
     ispace = indent * " "
 
+    def _key(item):
+        if item is None:
+            return ""
+        return str(item)
+
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
+    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
@@ -427,7 +436,7 @@ def display_specs(specs, args=None, **kwargs):
         all_headers (bool): show headers even when arch/compiler aren't defined
         status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
-
+        specfile_format (bool): specfile format of the current spec
     """
 
     def get_arg(name, default=None):
@@ -444,12 +453,12 @@ def display_specs(specs, args=None, **kwargs):
     hashes = get_arg("long", False)
     namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
-    full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
     groups = get_arg("groups", True)
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
     status_fn = get_arg("status_fn", None)
+    specfile_format = get_arg("specfile_format", False)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -466,13 +475,13 @@ def display_specs(specs, args=None, **kwargs):
     if format_string is None:
         nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
-        if full_compiler or flags:
-            ffmt += "{%compiler.name}"
-            if full_compiler:
-                ffmt += "{@compiler.version}"
+        if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + ffmt + vfmt
+        format_string = nfmt + "{@version}" + vfmt + ffmt
+
+    if specfile_format:
+        format_string = "[{specfile_version}] " + format_string
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""

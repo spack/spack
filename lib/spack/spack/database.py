@@ -41,6 +41,9 @@ from typing import (
     Union,
 )
 
+import spack
+import spack.repo
+
 try:
     import uuid
 
@@ -79,11 +82,11 @@ _DB_DIRNAME = ".spack-db"
 #: DB version.  This is stuck in the DB file to track changes in format.
 #: Increment by one when the database format changes.
 #: Versions before 5 were not integers.
-_DB_VERSION = vn.Version("7")
+_DB_VERSION = vn.Version("8")
 
 #: For any version combinations here, skip reindex when upgrading.
 #: Reindexing can take considerable time and is not always necessary.
-_SKIP_REINDEX = [
+_REINDEX_NOT_NEEDED_ON_READ = [
     # reindexing takes a significant amount of time, and there's
     # no reason to do it from DB version 0.9.3 to version 5. The
     # only difference is that v5 can contain "deprecated_for"
@@ -92,6 +95,8 @@ _SKIP_REINDEX = [
     (vn.Version("0.9.3"), vn.Version("5")),
     (vn.Version("5"), vn.Version("6")),
     (vn.Version("6"), vn.Version("7")),
+    (vn.Version("6"), vn.Version("8")),
+    (vn.Version("7"), vn.Version("8")),
 ]
 
 #: Default timeout for spack database locks in seconds or None (no timeout).
@@ -123,6 +128,15 @@ DEFAULT_INSTALL_RECORD_FIELDS = (
     "deprecated_for",
 )
 
+#: File where the database is written
+INDEX_JSON_FILE = "index.json"
+
+# Verifier file to check last modification of the DB
+_INDEX_VERIFIER_FILE = "index_verifier"
+
+# Lockfile for the database
+_LOCK_FILE = "lock"
+
 
 @llnl.util.lang.memoized
 def _getfqdn():
@@ -137,9 +151,10 @@ def _getfqdn():
 
 def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:
     reader_cls = {
-        vn.Version("5"): spack.spec.SpecfileV1,
-        vn.Version("6"): spack.spec.SpecfileV3,
-        vn.Version("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("5"): spack.spec.SpecfileV1,
+        vn.StandardVersion.from_string("6"): spack.spec.SpecfileV3,
+        vn.StandardVersion.from_string("7"): spack.spec.SpecfileV4,
+        vn.StandardVersion.from_string("8"): spack.spec.SpecfileV5,
     }
     return reader_cls[version]
 
@@ -260,7 +275,7 @@ class ForbiddenLockError(SpackError):
 
 class ForbiddenLock:
     def __getattr__(self, name):
-        raise ForbiddenLockError("Cannot access attribute '{0}' of lock".format(name))
+        raise ForbiddenLockError(f"Cannot access attribute '{name}' of lock")
 
     def __reduce__(self):
         return ForbiddenLock, tuple()
@@ -419,13 +434,24 @@ class FailureTracker:
     the likelihood of collision very low with no cleanup required.
     """
 
+    #: root directory of the failure tracker
+    dir: pathlib.Path
+
+    #: File for locking particular concrete spec hashes
+    locker: SpecLocker
+
     def __init__(self, root_dir: Union[str, pathlib.Path], default_timeout: Optional[float]):
         #: Ensure a persistent location for dealing with parallel installation
         #: failures (e.g., across near-concurrent processes).
         self.dir = pathlib.Path(root_dir) / _DB_DIRNAME / "failures"
-        self.dir.mkdir(parents=True, exist_ok=True)
-
         self.locker = SpecLocker(failures_lock_path(root_dir), default_timeout=default_timeout)
+
+    def _ensure_parent_directories(self) -> None:
+        """Ensure that parent directories of the FailureTracker exist.
+
+        Accesses the filesystem only once, the first time it's called on a given FailureTracker.
+        """
+        self.dir.mkdir(parents=True, exist_ok=True)
 
     def clear(self, spec: "spack.spec.Spec", force: bool = False) -> None:
         """Removes any persistent and cached failure tracking for the spec.
@@ -469,13 +495,18 @@ class FailureTracker:
 
         tty.debug("Removing prefix failure tracking files")
         try:
-            for fail_mark in os.listdir(str(self.dir)):
-                try:
-                    (self.dir / fail_mark).unlink()
-                except OSError as exc:
-                    tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
+            marks = os.listdir(str(self.dir))
+        except FileNotFoundError:
+            return  # directory doesn't exist yet
         except OSError as exc:
             tty.warn(f"Unable to remove failure marking files: {str(exc)}")
+            return
+
+        for fail_mark in marks:
+            try:
+                (self.dir / fail_mark).unlink()
+            except OSError as exc:
+                tty.warn(f"Unable to remove failure marking file {fail_mark}: {str(exc)}")
 
     def mark(self, spec: "spack.spec.Spec") -> lk.Lock:
         """Marks a spec as failing to install.
@@ -483,6 +514,8 @@ class FailureTracker:
         Args:
             spec: spec that failed to install
         """
+        self._ensure_parent_directories()
+
         # Dump the spec to the failure file for (manual) debugging purposes
         path = self._path(spec)
         path.write_text(spec.to_json())
@@ -567,17 +600,13 @@ class Database:
                 Relevant only if the repository is not an upstream.
         """
         self.root = root
-        self.database_directory = os.path.join(self.root, _DB_DIRNAME)
+        self.database_directory = pathlib.Path(self.root) / _DB_DIRNAME
         self.layout = layout
 
         # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self.database_directory, "index.json")
-        self._verifier_path = os.path.join(self.database_directory, "index_verifier")
-        self._lock_path = os.path.join(self.database_directory, "lock")
-
-        # Create needed directories and files
-        if not is_upstream and not os.path.exists(self.database_directory):
-            fs.mkdirp(self.database_directory)
+        self._index_path = self.database_directory / INDEX_JSON_FILE
+        self._verifier_path = self.database_directory / _INDEX_VERIFIER_FILE
+        self._lock_path = self.database_directory / _LOCK_FILE
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ""
@@ -592,14 +621,14 @@ class Database:
 
         # initialize rest of state.
         self.db_lock_timeout = lock_cfg.database_timeout
-        tty.debug("DATABASE LOCK TIMEOUT: {0}s".format(str(self.db_lock_timeout)))
+        tty.debug(f"DATABASE LOCK TIMEOUT: {str(self.db_lock_timeout)}s")
 
         self.lock: Union[ForbiddenLock, lk.Lock]
         if self.is_upstream:
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(
-                self._lock_path,
+                str(self._lock_path),
                 default_timeout=self.db_lock_timeout,
                 desc="database",
                 enable=lock_cfg.enable,
@@ -615,6 +644,22 @@ class Database:
 
         self._write_transaction_impl = lk.WriteTransaction
         self._read_transaction_impl = lk.ReadTransaction
+        self._db_version: Optional[vn.ConcreteVersion] = None
+
+    @property
+    def db_version(self) -> vn.ConcreteVersion:
+        if self._db_version is None:
+            raise AttributeError("version not set -- DB has not been read yet")
+        return self._db_version
+
+    @db_version.setter
+    def db_version(self, value: vn.ConcreteVersion):
+        self._db_version = value
+
+    def _ensure_parent_directories(self):
+        """Create the parent directory for the DB, if necessary."""
+        if not self.is_upstream:
+            self.database_directory.mkdir(parents=True, exist_ok=True)
 
     def write_transaction(self):
         """Get a write lock context manager for use in a `with` block."""
@@ -630,6 +675,8 @@ class Database:
 
         This function does not do any locking or transactions.
         """
+        self._ensure_parent_directories()
+
         # map from per-spec hash code to installation record.
         installs = dict(
             (k, v.to_dict(include_fields=self.record_fields)) for k, v in self._data.items()
@@ -752,16 +799,15 @@ class Database:
 
                 spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
 
-    def _read_from_file(self, filename):
+    def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.
         Translate the spec portions from node-dict form to spec form.
 
         Does not do any locking.
         """
         try:
-            with open(filename, "r", encoding="utf-8") as f:
-                # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
-                fdata, _ = JSONDecoder().raw_decode(f.read())
+            # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
+            fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e)) from e
 
@@ -770,7 +816,7 @@ class Database:
 
         def check(cond, msg):
             if not cond:
-                raise CorruptDatabaseError("Spack database is corrupt: %s" % msg, self._index_path)
+                raise CorruptDatabaseError(f"Spack database is corrupt: {msg}", self._index_path)
 
         check("database" in fdata, "no 'database' attribute in JSON DB.")
 
@@ -778,24 +824,15 @@ class Database:
         db = fdata["database"]
         check("version" in db, "no 'version' in JSON DB.")
 
-        # TODO: better version checking semantics.
-        version = vn.Version(db["version"])
-        if version > _DB_VERSION:
-            raise InvalidDatabaseVersionError(self, _DB_VERSION, version)
-        elif version < _DB_VERSION and not any(
-            old == version and new == _DB_VERSION for old, new in _SKIP_REINDEX
-        ):
-            tty.warn(f"Spack database version changed from {version} to {_DB_VERSION}. Upgrading.")
-
-            self.reindex()
-            installs = dict(
-                (k, v.to_dict(include_fields=self._record_fields)) for k, v in self._data.items()
-            )
+        self.db_version = vn.StandardVersion.from_string(db["version"])
+        if self.db_version > _DB_VERSION:
+            raise InvalidDatabaseVersionError(self, _DB_VERSION, self.db_version)
+        elif self.db_version < _DB_VERSION:
+            installs = self._handle_old_db_versions_read(check, db, reindex=reindex)
         else:
-            check("installs" in db, "no 'installs' in JSON DB.")
-            installs = db["installs"]
+            installs = self._handle_current_version_read(check, db)
 
-        spec_reader = reader(version)
+        spec_reader = reader(self.db_version)
 
         def invalid_record(hash_key, error):
             return CorruptDatabaseError(
@@ -852,6 +889,39 @@ class Database:
         self._data = data
         self._installed_prefixes = installed_prefixes
 
+    def _handle_current_version_read(self, check, db):
+        check("installs" in db, "no 'installs' in JSON DB.")
+        installs = db["installs"]
+        return installs
+
+    def _handle_old_db_versions_read(self, check, db, *, reindex: bool):
+        if reindex is False and not self.is_upstream:
+            self.raise_explicit_database_upgrade_error()
+
+        if not self.is_readable():
+            raise DatabaseNotReadableError(
+                f"cannot read database v{self.db_version} at {self.root}"
+            )
+
+        return self._handle_current_version_read(check, db)
+
+    def is_readable(self) -> bool:
+        """Returns true if this DB can be read without reindexing"""
+        return (self.db_version, _DB_VERSION) in _REINDEX_NOT_NEEDED_ON_READ
+
+    def raise_explicit_database_upgrade_error(self):
+        """Raises an ExplicitDatabaseUpgradeError with an appropriate message"""
+        raise ExplicitDatabaseUpgradeError(
+            f"database is v{self.db_version}, but Spack v{spack.__version__} needs v{_DB_VERSION}",
+            long_message=(
+                f"\nChange config:install_tree:root to use a different store, or use `spack "
+                f"reindex` to migrate the store at {self.root} to version {_DB_VERSION}.\n\n"
+                f"If you decide to migrate the store, note that:\n"
+                f"1. The operation cannot be reverted, and\n"
+                f"2. Older Spack versions will not be able to read the store anymore\n"
+            ),
+        )
+
     def reindex(self):
         """Build database index from scratch based on a directory layout.
 
@@ -860,14 +930,15 @@ class Database:
         if self.is_upstream:
             raise UpstreamDatabaseLockingError("Cannot reindex an upstream database")
 
+        self._ensure_parent_directories()
+
         # Special transaction to avoid recursive reindex calls and to
         # ignore errors if we need to rebuild a corrupt database.
         def _read_suppress_error():
             try:
-                if os.path.isfile(self._index_path):
-                    self._read_from_file(self._index_path)
-            except CorruptDatabaseError as e:
-                tty.warn(f"Reindexing corrupt database, error was: {e}")
+                if self._index_path.is_file():
+                    self._read_from_file(self._index_path, reindex=True)
+            except (CorruptDatabaseError, DatabaseNotReadableError):
                 self._data = {}
                 self._installed_prefixes = set()
 
@@ -1007,7 +1078,7 @@ class Database:
                     % (key, found, expected, self._index_path)
                 )
 
-    def _write(self, type, value, traceback):
+    def _write(self, type=None, value=None, traceback=None):
         """Write the in-memory database index to its file path.
 
         This is a helper function called by the WriteTransaction context
@@ -1018,6 +1089,8 @@ class Database:
 
         This routine does no locking.
         """
+        self._ensure_parent_directories()
+
         # Do not write if exceptions were raised
         if type is not None:
             # A failure interrupted a transaction, so we should record that
@@ -1026,16 +1099,16 @@ class Database:
             self._state_is_inconsistent = True
             return
 
-        temp_file = self._index_path + (".%s.%s.temp" % (_getfqdn(), os.getpid()))
+        temp_file = str(self._index_path) + (".%s.%s.temp" % (_getfqdn(), os.getpid()))
 
         # Write a temporary database file them move it into place
         try:
             with open(temp_file, "w", encoding="utf-8") as f:
                 self._write_to_file(f)
-            fs.rename(temp_file, self._index_path)
+            fs.rename(temp_file, str(self._index_path))
 
             if _use_uuid:
-                with open(self._verifier_path, "w", encoding="utf-8") as f:
+                with self._verifier_path.open("w", encoding="utf-8") as f:
                     new_verifier = str(uuid.uuid4())
                     f.write(new_verifier)
                     self.last_seen_verifier = new_verifier
@@ -1048,11 +1121,11 @@ class Database:
 
     def _read(self):
         """Re-read Database from the data in the set location. This does no locking."""
-        if os.path.isfile(self._index_path):
+        if self._index_path.is_file():
             current_verifier = ""
             if _use_uuid:
                 try:
-                    with open(self._verifier_path, "r", encoding="utf-8") as f:
+                    with self._verifier_path.open("r", encoding="utf-8") as f:
                         current_verifier = f.read()
                 except BaseException:
                     pass
@@ -1065,7 +1138,7 @@ class Database:
                 self._state_is_inconsistent = False
             return
         elif self.is_upstream:
-            tty.warn("upstream not found: {0}".format(self._index_path))
+            tty.warn(f"upstream not found: {self._index_path}")
 
     def _add(
         self,
@@ -1090,7 +1163,7 @@ class Database:
             installation_time:
                 Date and time of installation
             allow_missing: if True, don't warn when installation is not found on on disk
-                This is useful when installing specs without build deps.
+                This is useful when installing specs without build/test deps.
         """
         if not spec.concrete:
             raise NonConcreteSpecAddError("Specs added to DB must be concrete.")
@@ -1110,10 +1183,8 @@ class Database:
                 edge.spec,
                 explicit=False,
                 installation_time=installation_time,
-                # allow missing build-only deps. This prevents excessive warnings when a spec is
-                # installed, and its build dep is missing a build dep; there's no need to install
-                # the build dep's build dep first, and there's no need to warn about it missing.
-                allow_missing=allow_missing or edge.depflag == dt.BUILD,
+                # allow missing build / test only deps
+                allow_missing=allow_missing or edge.depflag & (dt.BUILD | dt.TEST) == edge.depflag,
             )
 
         # Make sure the directory layout agrees whether the spec is installed
@@ -1330,7 +1401,7 @@ class Database:
     def installed_relatives(
         self,
         spec: "spack.spec.Spec",
-        direction: str = "children",
+        direction: tr.DirectionType = "children",
         transitive: bool = True,
         deptype: Union[dt.DepFlag, dt.DepTypes] = dt.ALL,
     ) -> Set["spack.spec.Spec"]:
@@ -1522,7 +1593,12 @@ class Database:
         # If we did fine something, the query spec can't be virtual b/c we matched an actual
         # package installation, so skip the virtual check entirely. If we *didn't* find anything,
         # check all the deferred specs *if* the query is virtual.
-        if not results and query_spec is not None and deferred and query_spec.virtual:
+        if (
+            not results
+            and query_spec is not None
+            and deferred
+            and spack.repo.PATH.is_virtual(query_spec.name)
+        ):
             results = [spec for spec in deferred if spec.satisfies(query_spec)]
 
         return results
@@ -1681,7 +1757,7 @@ class Database:
             )
 
         results = list(local_results) + list(x for x in upstream_results if x not in local_results)
-        results.sort()
+        results.sort()  # type: ignore[call-overload]
         return results
 
     def query_one(
@@ -1803,6 +1879,14 @@ class InvalidDatabaseVersionError(SpackError):
     @property
     def database_version_message(self):
         return f"The expected DB version is '{self.expected}', but '{self.found}' was found."
+
+
+class ExplicitDatabaseUpgradeError(SpackError):
+    """Raised to request an explicit DB upgrade to the user"""
+
+
+class DatabaseNotReadableError(SpackError):
+    """Raised to signal Database.reindex that the reindex should happen via spec.json"""
 
 
 class NoSuchSpecError(KeyError):

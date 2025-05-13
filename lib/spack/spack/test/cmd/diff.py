@@ -5,9 +5,9 @@
 import pytest
 
 import spack.cmd.diff
+import spack.concretize
 import spack.main
 import spack.repo
-import spack.spec
 import spack.util.spack_json as sjson
 from spack.test.conftest import create_test_repo
 
@@ -133,8 +133,8 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 
 
 def test_diff_ignore(test_repo):
-    specA = spack.spec.Spec("p1+usev1").concretized()
-    specB = spack.spec.Spec("p1~usev1").concretized()
+    specA = spack.concretize.concretize_one("p1+usev1")
+    specB = spack.concretize.concretize_one("p1~usev1")
 
     c1 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
 
@@ -154,8 +154,8 @@ def test_diff_ignore(test_repo):
 
     # Check ignoring changes on multiple packages
 
-    specA = spack.spec.Spec("p1+usev1 ^p3+p3var").concretized()
-    specA = spack.spec.Spec("p1~usev1 ^p3~p3var").concretized()
+    specA = spack.concretize.concretize_one("p1+usev1 ^p3+p3var")
+    specA = spack.concretize.concretize_one("p1~usev1 ^p3~p3var")
 
     c3 = spack.cmd.diff.compare_specs(specA, specB, to_string=False)
     assert find(c3["a_not_b"], "variant_value", ["p3", "p3var"])
@@ -168,8 +168,8 @@ def test_diff_ignore(test_repo):
 def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that we can install two packages and diff them"""
 
-    specA = spack.spec.Spec("mpileaks").concretized()
-    specB = spack.spec.Spec("mpileaks+debug").concretized()
+    specA = spack.concretize.concretize_one("mpileaks")
+    specB = spack.concretize.concretize_one("mpileaks+debug")
 
     # Specs should be the same as themselves
     c = spack.cmd.diff.compare_specs(specA, specA, to_string=True)
@@ -194,7 +194,7 @@ def test_diff_cmd(install_mockery, mock_fetch, mock_archive, mock_packages):
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
-    install_cmd("mpileaks")
+    install_cmd("--fake", "mpileaks")
 
     # Only one version of mpileaks will work
     diff_cmd("mpileaks", "mpileaks")
@@ -223,14 +223,12 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         for dep in ("mpileaks", "callpath", "dyninst", "libelf", "libdwarf", "mpich")
     )
     assert all(
-        len([diff for diff in result["intersect"] if diff[0] == attr]) == 6
+        len([diff for diff in result["intersect"] if diff[0] == attr]) == 8
         for attr in (
             "version",
             "node_target",
             "node_platform",
             "node_os",
-            "node_compiler",
-            "node_compiler_version",
             "node",
             "package_hash",
             "hash",

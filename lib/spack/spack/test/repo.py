@@ -6,11 +6,14 @@ import pathlib
 
 import pytest
 
+import spack
 import spack.package_base
 import spack.paths
 import spack.repo
 import spack.spec
 import spack.util.file_cache
+import spack.util.naming
+from spack.util.naming import valid_module_name
 
 
 @pytest.fixture(params=["packages", "", "foo"])
@@ -34,7 +37,7 @@ repo:
   subdirectory: '{request.param}'
 """
         )
-    repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
+    repo_cache = spack.util.file_cache.FileCache(cache_dir)
     return spack.repo.Repo(str(repo_dir), cache=repo_cache), request.param
 
 
@@ -65,12 +68,21 @@ def test_repo_unknown_pkg(mutable_mock_repo):
         mutable_mock_repo.get_pkg_class("builtin.mock.nonexistentpackage")
 
 
-@pytest.mark.maybeslow
-def test_repo_last_mtime():
-    latest_mtime = max(
-        os.path.getmtime(p.module.__file__) for p in spack.repo.PATH.all_package_classes()
-    )
-    assert spack.repo.PATH.last_mtime() == latest_mtime
+def test_repo_last_mtime(mock_packages):
+    mtime_with_package_py = [
+        (os.path.getmtime(p.module.__file__), p.module.__file__)
+        for p in spack.repo.PATH.all_package_classes()
+    ]
+    repo_mtime = spack.repo.PATH.last_mtime()
+    max_mtime, max_file = max(mtime_with_package_py)
+    if max_mtime > repo_mtime:
+        modified_after = "\n    ".join(
+            f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
+        )
+        assert (
+            max_mtime <= repo_mtime
+        ), f"the following files were modified while running tests:\n    {modified_after}"
+    assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 
 def test_repo_invisibles(mutable_mock_repo, extra_repo):
@@ -91,13 +103,13 @@ def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
 
 
 @pytest.mark.regression("24552")
-def test_all_package_names_is_cached_correctly():
+def test_all_package_names_is_cached_correctly(mock_packages):
     assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
     assert "mpi" not in spack.repo.all_package_names(include_virtuals=False)
 
 
 @pytest.mark.regression("29203")
-def test_use_repositories_doesnt_change_class():
+def test_use_repositories_doesnt_change_class(mock_packages):
     """Test that we don't create the same package module and class multiple times
     when swapping repositories.
     """
@@ -166,19 +178,26 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
     assert "package.py" in os.listdir(tmpdir), "Expected the virtual's package to be copied"
 
 
-@pytest.mark.parametrize(
-    "repo_paths,namespaces",
-    [
-        ([spack.paths.packages_path], ["builtin"]),
-        ([spack.paths.mock_packages_path], ["builtin.mock"]),
-        ([spack.paths.packages_path, spack.paths.mock_packages_path], ["builtin", "builtin.mock"]),
-        ([spack.paths.mock_packages_path, spack.paths.packages_path], ["builtin.mock", "builtin"]),
-    ],
-)
-def test_repository_construction_doesnt_use_globals(
-    nullify_globals, tmp_path, repo_paths, namespaces
-):
-    repo_cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+@pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
+def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, repos):
+    def _repo_paths(repos):
+        repo_paths, namespaces = [], []
+        for entry in repos:
+            if entry == "mock":
+                repo_paths.append(spack.paths.mock_packages_path)
+                namespaces.append("builtin.mock")
+            if entry == "extra":
+                name = "extra_mock"
+                repo_dir = tmp_path / name
+                repo_dir.mkdir()
+                repo = spack.repo.MockRepositoryBuilder(repo_dir, name)
+                repo_paths.append(repo.root)
+                namespaces.append(repo.namespace)
+        return repo_paths, namespaces
+
+    repo_paths, namespaces = _repo_paths(repos)
+
+    repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
     repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
@@ -200,7 +219,7 @@ def test_use_repositories_and_import():
     """Tests that use_repositories changes the import search too"""
     import spack.paths
 
-    repo_dir = pathlib.Path(spack.paths.repos_path)
+    repo_dir = pathlib.Path(spack.paths.test_repos_path)
     with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
         import spack.pkg.compiler_runtime.test.gcc_runtime
 
@@ -293,8 +312,7 @@ class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert len(repo.repos) == 1
-        assert repo.repos[0]._finder is repo
-        assert repo.by_namespace["spack.pkg.builtin.mock"] is repo.repos[0]
+        assert repo.by_namespace["builtin.mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
@@ -303,3 +321,205 @@ class TestRepoPath:
         # foo is not there, raise
         with pytest.raises(spack.repo.UnknownNamespaceError):
             repo.get_repo("foo")
+
+
+def test_parse_package_api_version():
+    """Test that we raise an error if a repository has a version that is not supported."""
+    # valid version
+    assert spack.repo._parse_package_api_version(
+        {"api": "v1.2"}, min_api=(1, 0), max_api=(2, 3)
+    ) == (1, 2)
+    # too new and too old
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v2.4 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v2.4"}, min_api=(1, 0), max_api=(2, 3))
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v0.9 is not supported .* \(must be between v1.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({"api": "v0.9"}, min_api=(1, 0), max_api=(2, 3))
+    # default to v1.0 if not specified
+    assert spack.repo._parse_package_api_version({}, min_api=(1, 0), max_api=(2, 3)) == (1, 0)
+    # if v1.0 support is dropped we should also raise
+    with pytest.raises(
+        spack.repo.BadRepoError,
+        match=r"Package API v1.0 is not supported .* \(must be between v2.0 and v2.3\)",
+    ):
+        spack.repo._parse_package_api_version({}, min_api=(2, 0), max_api=(2, 3))
+    # finally test invalid input
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": "v2"}, min_api=(1, 0), max_api=(3, 3))
+    with pytest.raises(spack.repo.BadRepoError, match="Invalid Package API version"):
+        spack.repo._parse_package_api_version({"api": 2.0}, min_api=(1, 0), max_api=(3, 3))
+
+
+def test_repo_package_api_version(tmp_path: pathlib.Path):
+    """Test that we can specify the API version of a repository."""
+    (tmp_path / "example" / "packages").mkdir(parents=True)
+    (tmp_path / "example" / "repo.yaml").write_text(
+        """\
+repo:
+    namespace: example
+"""
+    )
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    assert spack.repo.Repo(str(tmp_path / "example"), cache=cache).package_api == (1, 0)
+
+
+def test_mod_to_pkg_name_and_reverse():
+    # In repo v1 the dirname/module name is the package name
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib_ng", package_api=(1, 0)) == "zlib_ng"
+    assert (
+        spack.util.naming.pkg_name_to_pkg_dir("_3example_4", package_api=(1, 0)) == "_3example_4"
+    )
+
+    # In repo v2 there is a 1-1 mapping between module and package names
+    assert spack.util.naming.pkg_dir_to_pkg_name("_3example_4", package_api=(2, 0)) == "3example-4"
+    assert spack.util.naming.pkg_dir_to_pkg_name("zlib_ng", package_api=(2, 0)) == "zlib-ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("zlib-ng", package_api=(2, 0)) == "zlib_ng"
+    assert spack.util.naming.pkg_name_to_pkg_dir("3example-4", package_api=(2, 0)) == "_3example_4"
+
+    # reserved names need an underscore
+    assert spack.util.naming.pkg_dir_to_pkg_name("_finally", package_api=(2, 0)) == "finally"
+    assert spack.util.naming.pkg_dir_to_pkg_name("_assert", package_api=(2, 0)) == "assert"
+    assert spack.util.naming.pkg_name_to_pkg_dir("finally", package_api=(2, 0)) == "_finally"
+    assert spack.util.naming.pkg_name_to_pkg_dir("assert", package_api=(2, 0)) == "_assert"
+
+    # reserved names are case sensitive, so true/false/none are ok
+    assert spack.util.naming.pkg_dir_to_pkg_name("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_dir_to_pkg_name("none", package_api=(2, 0)) == "none"
+    assert spack.util.naming.pkg_name_to_pkg_dir("true", package_api=(2, 0)) == "true"
+    assert spack.util.naming.pkg_name_to_pkg_dir("none", package_api=(2, 0)) == "none"
+
+
+def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_1", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
+    # Create two invalid module names
+    (repo_dir / "packages" / "zlib-ng").mkdir()
+    (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class ZlibNg(Package):
+    pass
+"""
+    )
+    (repo_dir / "packages" / "UPPERCASE").mkdir()
+    (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class Uppercase(Package):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert len(repo.all_package_names()) == 0
+
+    stderr = capsys.readouterr().err
+    assert "cannot be used because `zlib-ng` is not a valid Spack package module name" in stderr
+    assert "cannot be used because `UPPERCASE` is not a valid Spack package module name" in stderr
+
+
+def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys):
+    # Create a repo with a v2 structure
+    root, _ = spack.repo.create_repo(str(tmp_path), namespace="repo_2", package_api=(2, 0))
+    repo_dir = pathlib.Path(root)
+
+    # Create an invalid module name
+    (repo_dir / "packages" / "_1example_2_test").mkdir()
+    (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
+        """
+from spack.package import Package
+
+class _1example2Test(Package):
+    pass
+"""
+    )
+
+    with spack.repo.use_repositories(str(repo_dir)) as repo:
+        assert repo.exists("1example-2-test")
+        pkg_cls = repo.get_pkg_class("1example-2-test")
+        assert pkg_cls.name == "1example-2-test"
+        assert pkg_cls.module.__name__ == "spack_repo.repo_2.packages._1example_2_test.package"
+
+
+def test_valid_module_name_v2():
+    api = (2, 0)
+
+    # no hyphens
+    assert not valid_module_name("zlib-ng", api)
+
+    # cannot start with a number
+    assert not valid_module_name("7zip", api)
+
+    # no consecutive underscores
+    assert not valid_module_name("zlib__ng", api)
+
+    # reserved names
+    assert not valid_module_name("finally", api)
+    assert not valid_module_name("assert", api)
+
+    # cannot contain uppercase
+    assert not valid_module_name("False", api)
+    assert not valid_module_name("zlib_NG", api)
+
+    # reserved names are allowed when preceded by underscore
+    assert valid_module_name("_finally", api)
+    assert valid_module_name("_assert", api)
+
+    # digits are allowed when preceded by underscore
+    assert valid_module_name("_1example_2_test", api)
+
+    # underscore is not allowed unless followed by reserved name or digit
+    assert not valid_module_name("_zlib", api)
+    assert not valid_module_name("_false", api)
+
+
+def test_namespace_is_optional_in_v2(tmp_path: pathlib.Path):
+    """Test that a repo without a namespace is valid in v2."""
+    repo_yaml_dir = tmp_path / "spack_repo" / "foo" / "bar" / "baz"
+    (repo_yaml_dir / "packages").mkdir(parents=True)
+    (repo_yaml_dir / "repo.yaml").write_text(
+        """\
+repo:
+  api: v2.0
+"""
+    )
+
+    cache = spack.util.file_cache.FileCache(tmp_path / "cache")
+    repo = spack.repo.Repo(str(repo_yaml_dir), cache=cache)
+
+    assert repo.namespace == "foo.bar.baz"
+    assert repo.full_namespace == "spack_repo.foo.bar.baz.packages"
+    assert repo.root == str(repo_yaml_dir)
+    assert repo.packages_path == str(repo_yaml_dir / "packages")
+    assert repo.python_path == str(tmp_path)
+    assert repo.package_api == (2, 0)
+
+
+def test_subdir_in_v2():
+    """subdir cannot be . or empty in v2, because otherwise we cannot statically distinguish
+    between namespace and subdir."""
+    with pytest.raises(spack.repo.BadRepoError, match="Use a symlink packages -> . instead"):
+        spack.repo._validate_and_normalize_subdir(subdir="", root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Use a symlink packages -> . instead"):
+        spack.repo._validate_and_normalize_subdir(subdir=".", root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Expected a directory name, not a path"):
+        subdir = os.path.join("a", "b")
+        spack.repo._validate_and_normalize_subdir(subdir=subdir, root="root", package_api=(2, 0))
+
+    with pytest.raises(spack.repo.BadRepoError, match="Must be a valid Python module name"):
+        spack.repo._validate_and_normalize_subdir(subdir="123", root="root", package_api=(2, 0))

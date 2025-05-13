@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import json
-import os.path
+import os
 
-import jsonschema
 import pytest
+from _vendoring import jsonschema
 
 import spack.paths
 import spack.schema
@@ -17,7 +17,7 @@ import spack.util.spack_yaml as syaml
 def validate_spec_schema():
     return {
         "type": "object",
-        "validate_spec": True,
+        "additionalKeysAreSpecs": True,
         "patternProperties": {r"\w[\w-]*": {"type": "string"}},
     }
 
@@ -34,7 +34,7 @@ def module_suffixes_schema():
                         "type": "object",
                         "properties": {
                             "suffixes": {
-                                "validate_spec": True,
+                                "additionalKeysAreSpecs": True,
                                 "patternProperties": {r"\w[\w-]*": {"type": "string"}},
                             }
                         },
@@ -64,7 +64,7 @@ def test_validate_spec(validate_spec_schema):
 
     # Check that invalid data throws
     data["^python@3.7@"] = "baz"
-    with pytest.raises(jsonschema.ValidationError, match="unexpected characters"):
+    with pytest.raises(jsonschema.ValidationError, match="is not a valid spec"):
         v.validate(data)
 
 
@@ -73,7 +73,7 @@ def test_module_suffixes(module_suffixes_schema):
     v = spack.schema.Validator(module_suffixes_schema)
     data = {"tcl": {"all": {"suffixes": {"^python@2.7@": "py2.7"}}}}
 
-    with pytest.raises(jsonschema.ValidationError, match="unexpected characters"):
+    with pytest.raises(jsonschema.ValidationError, match="is not a valid spec"):
         v.validate(data)
 
 
@@ -84,6 +84,7 @@ def test_module_suffixes(module_suffixes_schema):
         "compilers",
         "config",
         "definitions",
+        "include",
         "env",
         "merged",
         "mirrors",

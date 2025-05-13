@@ -7,6 +7,7 @@ import os
 import pytest
 
 import spack.build_systems.cmake as cmake
+import spack.concretize
 import spack.directives
 import spack.error
 import spack.fetch_strategy
@@ -14,7 +15,7 @@ import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
-from spack.util.naming import mod_to_class
+from spack.util.naming import pkg_name_to_class_name
 from spack.version import VersionChecksumError
 
 
@@ -46,11 +47,15 @@ class TestPackage:
         )
 
     def test_package_class_names(self):
-        assert "Mpich" == mod_to_class("mpich")
-        assert "PmgrCollective" == mod_to_class("pmgr_collective")
-        assert "PmgrCollective" == mod_to_class("pmgr-collective")
-        assert "Pmgrcollective" == mod_to_class("PmgrCollective")
-        assert "_3db" == mod_to_class("3db")
+        assert "Mpich" == pkg_name_to_class_name("mpich")
+        assert "PmgrCollective" == pkg_name_to_class_name("pmgr_collective")
+        assert "PmgrCollective" == pkg_name_to_class_name("pmgr-collective")
+        assert "Pmgrcollective" == pkg_name_to_class_name("PmgrCollective")
+        assert "_3db" == pkg_name_to_class_name("3db")
+        assert "_True" == pkg_name_to_class_name("true")  # reserved keyword
+        assert "_False" == pkg_name_to_class_name("false")  # reserved keyword
+        assert "_None" == pkg_name_to_class_name("none")  # reserved keyword
+        assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
@@ -68,20 +73,20 @@ class TestPackage:
 
         # Check dictionaries that should have been filled by directives
         dependencies = pkg_cls.dependencies_by_name()
-        assert len(dependencies) == 3
+        assert len(dependencies) == 4
         assert "cmake" in dependencies
         assert "openblas" in dependencies
         assert "mpi" in dependencies
         assert len(pkg_cls.provided) == 2
 
         # Check that Spec instantiation behaves as we expect
-        s = Spec("simple-inheritance").concretized()
+        s = spack.concretize.concretize_one("simple-inheritance")
         assert "^cmake" in s
         assert "^openblas" in s
         assert "+openblas" in s
         assert "mpi" in s
 
-        s = Spec("simple-inheritance~openblas").concretized()
+        s = spack.concretize.concretize_one("simple-inheritance~openblas")
         assert "^cmake" in s
         assert "^openblas" not in s
         assert "~openblas" in s
@@ -89,9 +94,8 @@ class TestPackage:
 
     @pytest.mark.regression("11844")
     def test_inheritance_of_patches(self):
-        s = Spec("patch-inheritance")
         # Will error if inheritor package cannot find inherited patch files
-        s.concretize()
+        _ = spack.concretize.concretize_one("patch-inheritance")
 
     def test_import_class_from_package(self):
         from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401
@@ -115,7 +119,7 @@ class TestPackage:
 def test_urls_for_versions(mock_packages, config):
     """Version directive without a 'url' argument should use default url."""
     for spec_str in ("url_override@0.9.0", "url_override@1.0.0"):
-        s = Spec(spec_str).concretized()
+        s = spack.concretize.concretize_one(spec_str)
         url = s.package.url_for_version("0.9.0")
         assert url == "http://www.anothersite.org/uo-0.9.0.tgz"
 
@@ -137,7 +141,7 @@ def test_url_for_version_with_no_urls(mock_packages, config):
 
 
 def test_custom_cmake_prefix_path(mock_packages, config):
-    spec = Spec("depends-on-define-cmake-prefix-paths").concretized()
+    spec = spack.concretize.concretize_one("depends-on-define-cmake-prefix-paths")
 
     assert cmake.get_cmake_prefix_path(spec.package) == [
         spec["define-cmake-prefix-paths"].prefix.test
@@ -145,7 +149,7 @@ def test_custom_cmake_prefix_path(mock_packages, config):
 
 
 def test_url_for_version_with_only_overrides(mock_packages, config):
-    s = Spec("url-only-override").concretized()
+    s = spack.concretize.concretize_one("url-only-override")
 
     # these exist and should just take the URL provided in the package
     assert s.package.url_for_version("1.0.0") == "http://a.example.com/url_override-1.0.0.tar.gz"
@@ -160,7 +164,7 @@ def test_url_for_version_with_only_overrides(mock_packages, config):
 
 
 def test_url_for_version_with_only_overrides_with_gaps(mock_packages, config):
-    s = Spec("url-only-override-with-gaps").concretized()
+    s = spack.concretize.concretize_one("url-only-override-with-gaps")
 
     # same as for url-only-override -- these are specific
     assert s.package.url_for_version("1.0.0") == "http://a.example.com/url_override-1.0.0.tar.gz"
@@ -333,3 +337,16 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_pkg_name_can_only_be_derived_when_package_module():
+    """When the module prefix is not spack_repo (or legacy spack.pkg) we cannot derive
+    a package name."""
+    ExamplePackage = type(
+        "ExamplePackage",
+        (spack.package_base.PackageBase,),
+        {"__module__": "not.a.spack.repo.packages.example_package.package"},
+    )
+
+    with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
+        ExamplePackage.name

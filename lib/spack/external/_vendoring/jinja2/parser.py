@@ -9,7 +9,7 @@ from .lexer import describe_token
 from .lexer import describe_token_expr
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 _ImportInclude = t.TypeVar("_ImportInclude", nodes.Import, nodes.Include)
@@ -156,7 +156,7 @@ class Parser:
         return False
 
     def free_identifier(self, lineno: t.Optional[int] = None) -> nodes.InternalName:
-        """Return a new free identifier as :class:`~jinja2.nodes.InternalName`."""
+        """Return a new free identifier as :class:`~_vendoring.jinja2.nodes.InternalName`."""
         self._last_identifier += 1
         rv = object.__new__(nodes.InternalName)
         nodes.Node.__init__(rv, f"fi{self._last_identifier}", lineno=lineno)
@@ -687,7 +687,7 @@ class Parser:
         explicit_parentheses: bool = False,
     ) -> t.Union[nodes.Tuple, nodes.Expr]:
         """Works like `parse_expression` but if multiple expressions are
-        delimited by a comma a :class:`~jinja2.nodes.Tuple` node is created.
+        delimited by a comma a :class:`~_vendoring.jinja2.nodes.Tuple` node is created.
         This method could also return a regular expression instead of a tuple
         if no commas where found.
 

@@ -1,7 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import os.path
+import os
+import pathlib
 import shutil
 import sys
 import tempfile
@@ -14,9 +15,9 @@ import spack
 import spack.bootstrap
 import spack.bootstrap.config
 import spack.bootstrap.core
+import spack.concretize
 import spack.config
 import spack.mirrors.utils
-import spack.spec
 import spack.stage
 import spack.util.path
 import spack.util.spack_yaml
@@ -28,7 +29,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache-v3.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -397,7 +398,7 @@ def _mirror(args):
         llnl.util.tty.msg(msg.format(spec_str, mirror_dir))
         # Suppress tty from the call below for terser messages
         llnl.util.tty.set_msg_enabled(False)
-        spec = spack.spec.Spec(spec_str).concretized()
+        spec = spack.concretize.concretize_one(spec_str)
         for node in spec.traverse():
             spack.mirrors.utils.create(mirror_dir, [node])
         llnl.util.tty.set_msg_enabled(True)
@@ -410,8 +411,9 @@ def _mirror(args):
         stage.create()
         stage.fetch()
         stage.expand_archive()
-        build_cache_dir = os.path.join(stage.source_path, "build_cache")
-        shutil.move(build_cache_dir, mirror_dir)
+        stage_dir = pathlib.Path(stage.source_path)
+        for entry in stage_dir.iterdir():
+            shutil.move(str(entry), mirror_dir)
         llnl.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):

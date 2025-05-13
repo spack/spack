@@ -10,8 +10,10 @@ import pytest
 
 import spack.binary_distribution
 import spack.cmd
+import spack.concretize
 import spack.platforms.test
 import spack.repo
+import spack.solver.asp
 import spack.spec
 from spack.spec_parser import (
     UNIX_FILENAME,
@@ -20,18 +22,13 @@ from spack.spec_parser import (
     SpecParsingError,
     SpecTokenizationError,
     SpecTokens,
+    parse_one_or_raise,
 )
 from spack.tokenize import Token
 
-FAIL_ON_WINDOWS = pytest.mark.xfail(
-    sys.platform == "win32",
-    raises=(SpecTokenizationError, spack.spec.InvalidHashError),
-    reason="Unix style path on Windows",
-)
+SKIP_ON_WINDOWS = pytest.mark.skipif(sys.platform == "win32", reason="Unix style path on Windows")
 
-FAIL_ON_UNIX = pytest.mark.xfail(
-    sys.platform != "win32", raises=SpecTokenizationError, reason="Windows style path on Unix"
-)
+SKIP_ON_UNIX = pytest.mark.skipif(sys.platform != "win32", reason="Windows style path on Unix")
 
 
 def simple_package_name(name):
@@ -158,13 +155,13 @@ def specfile_for(default_mock_concretization):
         ),
         # Version after compiler
         (
-            "foo %bar@1.0 @2.0",
+            "foo @2.0 %bar@1.0",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="foo"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
                 Token(SpecTokens.VERSION, value="@2.0"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
             ],
-            "foo@2.0%bar@1.0",
+            "foo@2.0 %bar@1.0",
         ),
         # Single dependency with version
         dependency_with_version("openmpi ^hwloc@1.2e6"),
@@ -173,55 +170,55 @@ def specfile_for(default_mock_concretization):
         dependency_with_version("openmpi ^hwloc@1.2e6:1.4b7-rc3"),
         # Complex specs with multiple constraints
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6+debug~qt_4 %intel@12.1 ^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1+debug~qt_4 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6+debug~qt_4 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6~qt_4 debug=2 %intel@12.1 ^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="debug=2"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1~qt_4 debug=2 ^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6~qt_4 debug=2 %intel@12.1 ^stackwalker@8.1_1e",
         ),
         (
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6 cppflags=-O3 +debug~qt_4 %intel@12.1 "
             "^stackwalker@8.1_1e",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich_foo"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="_openmpi"),
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cppflags=-O3"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
             ],
-            "mvapich_foo ^_openmpi@1.2:1.4,1.6%intel@12.1 cppflags=-O3 +debug~qt_4 "
-            "^stackwalker@8.1_1e",
+            "mvapich_foo ^_openmpi@1.2:1.4,1.6 cppflags=-O3 +debug~qt_4 %intel@12.1"
+            " ^stackwalker@8.1_1e",
         ),
         # Specs containing YAML or JSON in the package name
         (
@@ -234,7 +231,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%intel@12.1 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %intel@12.1 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp%gcc",
@@ -242,7 +239,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="builtin.yaml-cpp"),
                 Token(SpecTokens.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"testrepo.yaml-cpp%gcc",
@@ -250,7 +247,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="testrepo.yaml-cpp"),
                 Token(SpecTokens.COMPILER, value="%gcc"),
             ],
-            "yaml-cpp%gcc",
+            "yaml-cpp %gcc",
         ),
         (
             r"builtin.yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
@@ -262,7 +259,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
             ],
-            "yaml-cpp@0.1.8%gcc@7.2.0 ^boost@3.1.4",
+            "yaml-cpp@0.1.8 %gcc@7.2.0 ^boost@3.1.4",
         ),
         (
             r"builtin.yaml-cpp ^testrepo.boost ^zlib",
@@ -305,7 +302,7 @@ def specfile_for(default_mock_concretization):
         (
             r"os=fe",  # Various translations associated with the architecture
             [Token(SpecTokens.KEY_VALUE_PAIR, value="os=fe")],
-            "arch=test-redhat6-None",
+            "arch=test-debian6-None",
         ),
         (
             r"os=default_os",
@@ -484,12 +481,12 @@ def specfile_for(default_mock_concretization):
             "a@1:",
         ),
         (
-            "% intel @ 12.1:12.6 + debug",
+            "+ debug % intel @ 12.1:12.6",
             [
-                Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
                 Token(SpecTokens.BOOL_VARIANT, value="+ debug"),
+                Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
             ],
-            "%intel@12.1:12.6+debug",
+            "+debug %intel@12.1:12.6",
         ),
         (
             "@ 12.1:12.6 + debug - qt_4",
@@ -514,7 +511,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@:0.4"),
                 Token(SpecTokens.COMPILER, value="% nvhpc"),
             ],
-            "@:0.4%nvhpc",
+            "@:0.4 %nvhpc",
         ),
         (
             "^[virtuals=mpi] openmpi",
@@ -600,6 +597,59 @@ def specfile_for(default_mock_concretization):
             ],
             "zlib foo==bar",
         ),
+        # Compilers specifying virtuals
+        (
+            "zlib %[virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c] gcc"),
+            ],
+            "zlib %[virtuals=c] gcc",
+        ),
+        (
+            "zlib %[virtuals=c,cxx] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc"),
+            ],
+            "zlib %[virtuals=c,cxx] gcc",
+        ),
+        (
+            "zlib %[virtuals=c,cxx] gcc@14.1",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc@14.1"),
+            ],
+            "zlib %[virtuals=c,cxx] gcc@14.1",
+        ),
+        (
+            "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(
+                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=fortran] gcc@14.1"
+                ),
+                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] clang"),
+            ],
+            "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
+        ),
+        # test := and :== syntax for key value pairs
+        (
+            "gcc languages:=c,c++",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
+            ],
+            "gcc languages:='c,c++'",
+        ),
+        (
+            "gcc languages:==c,c++",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.PROPAGATED_KEY_VALUE_PAIR, "languages:==c,c++"),
+            ],
+            "gcc languages:=='c,c++'",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
@@ -638,15 +688,15 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
             ["mvapich cppflags=-O3", "emacs"],
         ),
         (
-            "mvapich emacs @1.1.1 %intel cflags=-O3",
+            "mvapich emacs @1.1.1 cflags=-O3 %intel",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
                 Token(SpecTokens.VERSION, value="@1.1.1"),
-                Token(SpecTokens.COMPILER, value="%intel"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cflags=-O3"),
+                Token(SpecTokens.COMPILER, value="%intel"),
             ],
-            ["mvapich", "emacs @1.1.1 %intel cflags=-O3"],
+            ["mvapich", "emacs @1.1.1 cflags=-O3 %intel"],
         ),
         (
             'mvapich cflags="-O3 -fPIC" emacs^ncurses%intel',
@@ -776,7 +826,7 @@ def test_spec_by_hash_tokens(text, tokens):
 @pytest.mark.db
 def test_spec_by_hash(database, monkeypatch, config):
     mpileaks = database.query_one("mpileaks ^zmpi")
-    b = spack.spec.Spec("pkg-b").concretized()
+    b = spack.concretize.concretize_one("pkg-b")
     monkeypatch.setattr(spack.binary_distribution, "update_cache_and_get_specs", lambda: [b])
 
     hash_str = f"/{mpileaks.dag_hash()}"
@@ -816,13 +866,10 @@ def test_dep_spec_by_hash(database, config):
     assert "zmpi" in mpileaks_hash_fake
     assert mpileaks_hash_fake["zmpi"] == spack.spec.Spec("zmpi")
 
-    mpileaks_hash_zmpi = SpecParser(
-        f"mpileaks %{mpileaks_zmpi.compiler} ^ /{zmpi.dag_hash()}"
-    ).next_spec()
+    mpileaks_hash_zmpi = SpecParser(f"mpileaks ^ /{zmpi.dag_hash()}").next_spec()
     mpileaks_hash_zmpi.replace_hash()
     assert "zmpi" in mpileaks_hash_zmpi
     assert mpileaks_hash_zmpi["zmpi"] == zmpi
-    assert mpileaks_zmpi.compiler.satisfies(mpileaks_hash_zmpi.compiler)
 
     mpileaks_hash_fake_and_zmpi = SpecParser(
         f"mpileaks ^/{fake.dag_hash()[:4]} ^ /{zmpi.dag_hash()[:5]}"
@@ -873,12 +920,10 @@ def test_ambiguous_hash(mutable_database):
     In the past this ambiguity error would happen during parse time."""
 
     # This is a very sketchy as manually setting hashes easily breaks invariants
-    x1 = spack.spec.Spec("pkg-a").concretized()
+    x1 = spack.concretize.concretize_one("pkg-a")
     x2 = x1.copy()
     x1._hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
-    x1._process_hash = "xyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
     x2._hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-    x2._process_hash = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
     assert x1 != x2  # doesn't hold when only the dag hash is modified.
 
@@ -947,8 +992,8 @@ def test_nonexistent_hash(database, config):
     ],
 )
 def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monkeypatch, config):
-    spec1_concrete = spack.spec.Spec(spec1).concretized()
-    spec2_concrete = spack.spec.Spec(spec2).concretized()
+    spec1_concrete = spack.concretize.concretize_one(spec1)
+    spec2_concrete = spack.concretize.concretize_one(spec2)
 
     spec1_concrete._hash = "spec1"
     spec2_concrete._hash = "spec2"
@@ -985,27 +1030,20 @@ def test_disambiguate_hash_by_spec(spec1, spec2, constraint, mock_packages, monk
         ("x@1.2%y@1.2@2.3:2.4", "version"),
         # Duplicate dependency
         ("x ^y@1 ^y@2", "Cannot depend on incompatible specs"),
-        # Duplicate compiler
-        ("x%intel%intel", "compiler"),
-        ("x%intel%gcc", "compiler"),
-        ("x%gcc%intel", "compiler"),
-        ("x ^y%intel%intel", "compiler"),
-        ("x ^y%intel%gcc", "compiler"),
-        ("x ^y%gcc%intel", "compiler"),
         # Duplicate Architectures
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64", "two architectures"),
         ("x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le", "two architectures"),
         ("x arch=linux-rhel7-ppc64le arch=linux-rhel7-x86_64", "two architectures"),
         ("y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-x86_64", "two architectures"),
         ("y ^x arch=linux-rhel7-x86_64 arch=linux-rhel7-ppc64le", "two architectures"),
-        ("x os=fe os=fe", "'os'"),
-        ("x os=fe os=be", "'os'"),
-        ("x target=fe target=fe", "'target'"),
-        ("x target=fe target=be", "'target'"),
+        ("x os=redhat6 os=debian6", "'os'"),
+        ("x os=debian6 os=redhat6", "'os'"),
+        ("x target=core2 target=x86_64", "'target'"),
+        ("x target=x86_64 target=core2", "'target'"),
         ("x platform=test platform=test", "'platform'"),
         # TODO: these two seem wrong: need to change how arch is initialized (should fail on os)
-        ("x os=fe platform=test target=fe os=fe", "'platform'"),
-        ("x target=be platform=test os=be os=fe", "'platform'"),
+        ("x os=debian6 platform=test target=default_target os=redhat6", "two architectures"),
+        ("x target=default_target platform=test os=redhat6 os=debian6", "'platform'"),
         # Dependencies
         ("^[@foo] zlib", "edge attributes"),
         ("x ^[deptypes=link]foo ^[deptypes=run]foo", "conflicting dependency types"),
@@ -1033,56 +1071,56 @@ def test_error_conditions(text, match_string):
     [
         # Specfile related errors
         pytest.param(
-            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "/bogus/path/libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
-        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
-        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS),
+        pytest.param("../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
+        pytest.param("./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS),
         pytest.param(
             "libfoo ^/bogus/path/libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "libfoo ^../../libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
-            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_WINDOWS
+            "libfoo ^./libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_WINDOWS
         ),
         pytest.param(
             "/bogus/path/libdwarf.yamlfoobar",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
             "libdwarf^/bogus/path/libelf.yamlfoobar ^/path/to/bogus.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_WINDOWS,
+            marks=SKIP_ON_WINDOWS,
         ),
         pytest.param(
-            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "c:\\bogus\\path\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
-        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
-        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX),
+        pytest.param("..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
+        pytest.param(".\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX),
         pytest.param(
             "libfoo ^c:\\bogus\\path\\libdwarf.yaml",
             spack.spec.NoSuchSpecFileError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
         pytest.param(
-            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "libfoo ^..\\..\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
-            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=FAIL_ON_UNIX
+            "libfoo ^.\\libdwarf.yaml", spack.spec.NoSuchSpecFileError, marks=SKIP_ON_UNIX
         ),
         pytest.param(
             "c:\\bogus\\path\\libdwarf.yamlfoobar",
             spack.spec.SpecFilenameError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
         pytest.param(
             "libdwarf^c:\\bogus\\path\\libelf.yamlfoobar ^c:\\path\\to\\bogus.yaml",
             spack.spec.SpecFilenameError,
-            marks=FAIL_ON_UNIX,
+            marks=SKIP_ON_UNIX,
         ),
     ],
 )
@@ -1139,15 +1177,15 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
     # Check that if we concretize this spec, we get a good error
     # message that mentions we might've meant a file.
     with pytest.raises(spack.repo.UnknownEntityError) as exc_info:
-        spec.concretize()
+        spack.concretize.concretize_one(spec)
     assert exc_info.value.long_message
     assert (
         "Did you mean to specify a filename with './libelf.yaml'?" in exc_info.value.long_message
     )
 
     # make sure that only happens when the spec ends in yaml
-    with pytest.raises(spack.repo.UnknownPackageError) as exc_info:
-        SpecParser("builtin.mock.doesnotexist").next_spec().concretize()
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
+        spack.concretize.concretize_one(SpecParser("builtin.mock.doesnotexist").next_spec())
     assert not exc_info.value.long_message or (
         "Did you mean to specify a filename with" not in exc_info.value.long_message
     )
@@ -1230,7 +1268,7 @@ def test_compare_abstract_specs():
         "foo.foo@foo+foo",
         "foo.foo@foo+foo arch=foo-foo-foo",
         "foo.foo@foo+foo arch=foo-foo-foo %foo",
-        "foo.foo@foo+foo arch=foo-foo-foo %foo cflags=foo",
+        "foo.foo@foo+foo arch=foo-foo-foo cflags=foo %foo",
     ]
     specs = [SpecParser(s).next_spec() for s in constraints]
 
@@ -1284,3 +1322,19 @@ def test_git_ref_spec_equivalences(mock_packages, lhs_str, rhs_str, expected):
 def test_platform_is_none_if_not_present(spec_str):
     s = SpecParser(spec_str).next_spec()
     assert s.architecture.platform is None, s
+
+
+def test_parse_one_or_raise_error_message():
+    with pytest.raises(ValueError) as exc:
+        parse_one_or_raise("  x y   z")
+
+    msg = """\
+expected a single spec, but got more:
+  x y   z
+    ^\
+"""
+
+    assert str(exc.value) == msg
+
+    with pytest.raises(ValueError, match="expected a single spec, but got none"):
+        parse_one_or_raise("    ")

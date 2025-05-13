@@ -4,7 +4,7 @@
 
 
 import argparse
-import os.path
+import os
 import textwrap
 
 from llnl.util.lang import stable_partition
@@ -528,7 +528,6 @@ class ConfigSetAction(argparse.Action):
         # the const from the constructor or a value from the CLI.
         # Note that this is only called if the argument is actually
         # specified on the command line.
-        spack.config.CONFIG.ensure_scope_ordering()
         spack.config.set(self.config_path, self.const, scope="command_line")
 
 

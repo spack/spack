@@ -25,14 +25,16 @@ import copy
 import functools
 import http.client
 import os
-import os.path
 import re
 import shutil
+import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import urllib.response
 from pathlib import PurePath
-from typing import List, Optional
+from typing import Callable, List, Mapping, Optional
 
 import llnl.url
 import llnl.util
@@ -220,6 +222,114 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
+def _format_speed(total_bytes: int, elapsed: float) -> str:
+    """Return a human-readable average download speed string."""
+    elapsed = 1 if elapsed <= 0 else elapsed  # avoid divide by zero
+    speed = total_bytes / elapsed
+    if speed >= 1e9:
+        return f"{speed / 1e9:6.1f} GB/s"
+    elif speed >= 1e6:
+        return f"{speed / 1e6:6.1f} MB/s"
+    elif speed >= 1e3:
+        return f"{speed / 1e3:6.1f} KB/s"
+    return f"{speed:6.1f}  B/s"
+
+
+def _format_bytes(total_bytes: int) -> str:
+    """Return a human-readable total bytes string."""
+    if total_bytes >= 1e9:
+        return f"{total_bytes / 1e9:7.2f} GB"
+    elif total_bytes >= 1e6:
+        return f"{total_bytes / 1e6:7.2f} MB"
+    elif total_bytes >= 1e3:
+        return f"{total_bytes / 1e3:7.2f} KB"
+    return f"{total_bytes:7.2f}  B"
+
+
+class FetchProgress:
+    #: Characters to rotate in the spinner.
+    spinner = ["|", "/", "-", "\\"]
+
+    def __init__(
+        self,
+        total_bytes: Optional[int] = None,
+        enabled: bool = True,
+        get_time: Callable[[], float] = time.time,
+    ) -> None:
+        """Initialize a FetchProgress instance.
+        Args:
+            total_bytes: Total number of bytes to download, if known.
+            enabled: Whether to print progress information.
+            get_time: Function to get the current time."""
+        #: Number of bytes downloaded so far.
+        self.current_bytes = 0
+        #: Delta time between progress prints
+        self.delta = 0.1
+        #: Whether to print progress information.
+        self.enabled = enabled
+        #: Function to get the current time.
+        self.get_time = get_time
+        #: Time of last progress print to limit output
+        self.last_printed = 0.0
+        #: Time of start of download
+        self.start_time = get_time() if enabled else 0.0
+        #: Total number of bytes to download, if known.
+        self.total_bytes = total_bytes if total_bytes and total_bytes > 0 else 0
+        #: Index of spinner character to print (used if total bytes is unknown)
+        self.index = 0
+
+    @classmethod
+    def from_headers(
+        cls,
+        headers: Mapping[str, str],
+        enabled: bool = True,
+        get_time: Callable[[], float] = time.time,
+    ) -> "FetchProgress":
+        """Create a FetchProgress instance from HTTP headers."""
+        # headers.get is case-insensitive if it's from a HTTPResponse object.
+        content_length = headers.get("Content-Length")
+        try:
+            total_bytes = int(content_length) if content_length else None
+        except ValueError:
+            total_bytes = None
+        return cls(total_bytes=total_bytes, enabled=enabled, get_time=get_time)
+
+    def advance(self, num_bytes: int, out=sys.stdout) -> None:
+        if not self.enabled:
+            return
+        self.current_bytes += num_bytes
+        self.print(out=out)
+
+    def print(self, final: bool = False, out=sys.stdout) -> None:
+        if not self.enabled:
+            return
+        current_time = self.get_time()
+        if self.last_printed + self.delta < current_time or final:
+            self.last_printed = current_time
+            # print a newline if this is the final update
+            maybe_newline = "\n" if final else ""
+            # if we know the total bytes, show a percentage, otherwise a spinner
+            if self.total_bytes > 0:
+                percentage = min(100 * self.current_bytes / self.total_bytes, 100.0)
+                percent_or_spinner = f"[{percentage:3.0f}%] "
+            else:
+                # only show the spinner if we are not at 100%
+                if final:
+                    percent_or_spinner = "[100%] "
+                else:
+                    percent_or_spinner = f"[ {self.spinner[self.index]}  ] "
+                self.index = (self.index + 1) % len(self.spinner)
+
+            print(
+                f"\r    {percent_or_spinner}{_format_bytes(self.current_bytes)} "
+                f"@ {_format_speed(self.current_bytes, current_time - self.start_time)}"
+                f"{maybe_newline}",
+                end="",
+                flush=True,
+                file=out,
+            )
+
+
 @fetcher
 class URLFetchStrategy(FetchStrategy):
     """URLFetchStrategy pulls source code from a URL for an archive, check the
@@ -296,8 +406,9 @@ class URLFetchStrategy(FetchStrategy):
             )
 
     def _fetch_from_url(self, url):
-        if spack.config.get("config:url_fetch_method") == "curl":
-            return self._fetch_curl(url)
+        fetch_method = spack.config.get("config:url_fetch_method", "urllib")
+        if fetch_method.startswith("curl"):
+            return self._fetch_curl(url, config_args=fetch_method.split()[1:])
         else:
             return self._fetch_urllib(url)
 
@@ -316,28 +427,33 @@ class URLFetchStrategy(FetchStrategy):
             tty.warn(msg)
 
     @_needs_stage
-    def _fetch_urllib(self, url):
+    def _fetch_urllib(self, url, chunk_size=65536):
         save_file = self.stage.save_filename
 
         request = urllib.request.Request(url, headers={"User-Agent": web_util.SPACK_USER_AGENT})
 
+        if os.path.lexists(save_file):
+            os.remove(save_file)
+
         try:
             response = web_util.urlopen(request)
-        except (TimeoutError, urllib.error.URLError) as e:
+            tty.msg(f"Fetching {url}")
+            progress = FetchProgress.from_headers(response.headers, enabled=sys.stdout.isatty())
+            with open(save_file, "wb") as f:
+                while True:
+                    chunk = response.read(chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    progress.advance(len(chunk))
+            progress.print(final=True)
+        except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(save_file):
                 os.remove(save_file)
             raise FailedDownloadError(e) from e
-
-        tty.msg(f"Fetching {url}")
-
-        if os.path.lexists(save_file):
-            os.remove(save_file)
-
-        with open(save_file, "wb") as f:
-            shutil.copyfileobj(response, f)
 
         # Save the redirected URL for error messages. Sometimes we're redirected to an arbitrary
         # mirror that is broken, leading to spurious download failures. In that case it's helpful
@@ -348,7 +464,7 @@ class URLFetchStrategy(FetchStrategy):
         self._check_headers(str(response.headers))
 
     @_needs_stage
-    def _fetch_curl(self, url):
+    def _fetch_curl(self, url, config_args=[]):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -377,7 +493,7 @@ class URLFetchStrategy(FetchStrategy):
             timeout = self.extra_options.get("timeout")
 
         base_args = web_util.base_curl_fetch_args(url, timeout)
-        curl_args = save_args + base_args + cookie_args
+        curl_args = config_args + save_args + base_args + cookie_args
 
         # Run curl but grab the mime type from the http headers
         curl = self.curl
@@ -535,23 +651,22 @@ class OCIRegistryFetchStrategy(URLFetchStrategy):
     @_needs_stage
     def fetch(self):
         file = self.stage.save_filename
-        tty.msg(f"Fetching {self.url}")
+
+        if os.path.lexists(file):
+            os.remove(file)
 
         try:
             response = self._urlopen(self.url)
-        except (TimeoutError, urllib.error.URLError) as e:
+            tty.msg(f"Fetching {self.url}")
+            with open(file, "wb") as f:
+                shutil.copyfileobj(response, f)
+        except OSError as e:
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
             if os.path.lexists(file):
                 os.remove(file)
             raise FailedDownloadError(e) from e
-
-        if os.path.lexists(file):
-            os.remove(file)
-
-        with open(file, "wb") as f:
-            shutil.copyfileobj(response, f)
 
 
 class VCSFetchStrategy(FetchStrategy):

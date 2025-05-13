@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-import os.path
 import stat
 import subprocess
 from typing import Callable, List, Optional, Set, Tuple, Union
@@ -12,10 +11,12 @@ import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.builder
+import spack.compilers.libraries
 import spack.error
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, conflicts, depends_on
 from spack.multimethod import when
@@ -356,6 +357,13 @@ To resolve this problem, please try the following:
             )
             # Support Libtool 2.4.2 and older:
             x.filter(regex=r'^(\s*test \$p = "-R")(; then\s*)$', repl=r'\1 || test x-l = x"$p"\2')
+            # Configure scripts generated with libtool < 2.5.4 have a faulty test for the
+            # -single_module linker flag. A deprecation warning makes it think the default is
+            # -multi_module, triggering it to use problematic linker flags (such as ld -r). The
+            # linker default is `-single_module` from (ancient) macOS 10.4, so override by setting
+            # `lt_cv_apple_cc_single_mod=yes`. See the fix in libtool commit
+            # 82f7f52123e4e7e50721049f7fa6f9b870e09c9d.
+            x.filter("lt_cv_apple_cc_single_mod=no", "lt_cv_apple_cc_single_mod=yes", string=True)
 
     @spack.phase_callbacks.run_after("configure")
     def _do_patch_libtool(self) -> None:
@@ -392,33 +400,44 @@ To resolve this problem, please try the following:
             markers[tag] = "LIBTOOL TAG CONFIG: {0}".format(tag.upper())
 
         # Replace empty linker flag prefixes:
-        if self.pkg.compiler.name == "nag":
+        if self.spec.satisfies("%nag"):
             # Nag is mixed with gcc and g++, which are recognized correctly.
             # Therefore, we change only Fortran values:
+            nag_pkg = self.spec["fortran"].package
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
                 x.filter(
                     regex='^wl=""$',
-                    repl='wl="{0}"'.format(self.pkg.compiler.linker_arg),
-                    start_at="# ### BEGIN {0}".format(marker),
-                    stop_at="# ### END {0}".format(marker),
+                    repl=f'wl="{nag_pkg.linker_arg}"',
+                    start_at=f"# ### BEGIN {marker}",
+                    stop_at=f"# ### END {marker}",
                 )
         else:
-            x.filter(regex='^wl=""$', repl='wl="{0}"'.format(self.pkg.compiler.linker_arg))
+            compiler_spec = spack.compilers.libraries.compiler_spec(self.spec)
+            if compiler_spec:
+                x.filter(regex='^wl=""$', repl='wl="{0}"'.format(compiler_spec.package.linker_arg))
 
         # Replace empty PIC flag values:
-        for cc, marker in markers.items():
+        for compiler, marker in markers.items():
+            if compiler == "cc":
+                language = "c"
+            elif compiler == "cxx":
+                language = "cxx"
+            else:
+                language = "fortran"
+
+            if language not in self.spec:
+                continue
+
             x.filter(
                 regex='^pic_flag=""$',
-                repl='pic_flag="{0}"'.format(
-                    getattr(self.pkg.compiler, "{0}_pic_flag".format(cc))
-                ),
-                start_at="# ### BEGIN {0}".format(marker),
-                stop_at="# ### END {0}".format(marker),
+                repl=f'pic_flag="{self.spec[language].package.pic_flag}"',
+                start_at=f"# ### BEGIN {marker}",
+                stop_at=f"# ### END {marker}",
             )
 
         # Other compiler-specific patches:
-        if self.pkg.compiler.name == "fj":
+        if self.spec.satisfies("%fj"):
             x.filter(regex="-nostdlib", repl="", string=True)
             rehead = r"/\S*/"
             for o in [
@@ -431,7 +450,7 @@ To resolve this problem, please try the following:
                 r"crtendS\.o",
             ]:
                 x.filter(regex=(rehead + o), repl="")
-        elif self.pkg.compiler.name == "nag":
+        elif self.spec.satisfies("%nag"):
             for tag in ["fc", "f77"]:
                 marker = markers[tag]
                 start_at = "# ### BEGIN {0}".format(marker)
@@ -527,7 +546,7 @@ To resolve this problem, please try the following:
         return build_dir
 
     @spack.phase_callbacks.run_before("autoreconf")
-    def delete_configure_to_force_update(self) -> None:
+    def _delete_configure_to_force_update(self) -> None:
         if self.force_autoreconf:
             fs.force_remove(self.configure_abs_path)
 
@@ -540,7 +559,7 @@ To resolve this problem, please try the following:
         return _autoreconf_search_path_args(self.spec)
 
     @spack.phase_callbacks.run_after("autoreconf")
-    def set_configure_or_die(self) -> None:
+    def _set_configure_or_die(self) -> None:
         """Ensure the presence of a "configure" script, or raise. If the "configure"
         is found, a module level attribute is set.
 
@@ -564,10 +583,7 @@ To resolve this problem, please try the following:
         return []
 
     def autoreconf(
-        self,
-        pkg: spack.package_base.PackageBase,
-        spec: spack.spec.Spec,
-        prefix: spack.util.prefix.Prefix,
+        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
     ) -> None:
         """Not needed usually, configure should be already there"""
 
@@ -596,10 +612,7 @@ To resolve this problem, please try the following:
             self.pkg.module.autoreconf(*autoreconf_args)
 
     def configure(
-        self,
-        pkg: spack.package_base.PackageBase,
-        spec: spack.spec.Spec,
-        prefix: spack.util.prefix.Prefix,
+        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
     ) -> None:
         """Run "configure", with the arguments specified by the builder and an
         appropriately set prefix.
@@ -612,10 +625,7 @@ To resolve this problem, please try the following:
             pkg.module.configure(*options)
 
     def build(
-        self,
-        pkg: spack.package_base.PackageBase,
-        spec: spack.spec.Spec,
-        prefix: spack.util.prefix.Prefix,
+        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
     ) -> None:
         """Run "make" on the build targets specified by the builder."""
         # See https://autotools.io/automake/silent.html
@@ -625,10 +635,7 @@ To resolve this problem, please try the following:
             pkg.module.make(*params)
 
     def install(
-        self,
-        pkg: spack.package_base.PackageBase,
-        spec: spack.spec.Spec,
-        prefix: spack.util.prefix.Prefix,
+        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
     ) -> None:
         """Run "make" on the install targets specified by the builder."""
         with fs.working_dir(self.build_directory):
@@ -825,7 +832,7 @@ To resolve this problem, please try the following:
             self.pkg._if_make_target_execute("installcheck")
 
     @spack.phase_callbacks.run_after("install")
-    def remove_libtool_archives(self) -> None:
+    def _remove_libtool_archives(self) -> None:
         """Remove all .la files in prefix sub-folders if the package sets
         ``install_libtool_archives`` to be False.
         """
@@ -840,7 +847,9 @@ To resolve this problem, please try the following:
             with open(self._removed_la_files_log, mode="w", encoding="utf-8") as f:
                 f.write("\n".join(libtool_files))
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         if self.spec.platform == "darwin" and macos_version() >= Version("11"):
             # Many configure files rely on matching '10.*' for macOS version
             # detection and fail to add flags if it shows as version 11.

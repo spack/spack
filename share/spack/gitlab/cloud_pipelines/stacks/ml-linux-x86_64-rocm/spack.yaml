@@ -2,6 +2,7 @@ spack:
   view: false
   packages:
     all:
+      target: ["x86_64_v3"]
       require:
       - target=x86_64_v3
       - ~cuda
@@ -11,6 +12,13 @@ spack:
       require: "osmesa"
     mpi:
       require: openmpi
+    py-torch:
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - +rocm
+      - amdgpu_target=gfx90a
+      - ~flash_attention
 
   specs:
     # Horovod
@@ -20,9 +28,8 @@ spack:
     - py-transformers
 
     # JAX
-    # Does not yet support Spack-installed ROCm
-    # - py-jax
-    # - py-jaxlib
+    - py-jax
+    - py-jaxlib
 
     # Keras
     - py-keras backend=tensorflow

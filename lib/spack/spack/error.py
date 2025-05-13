@@ -15,6 +15,10 @@ debug = 0
 SHOW_BACKTRACE = False
 
 
+class SpackAPIWarning(UserWarning):
+    """Warning that formats with file and line number."""
+
+
 class SpackError(Exception):
     """This is the superclass for all Spack errors.
     Subclasses can be found in the modules they have to do with.
@@ -198,3 +202,16 @@ class MirrorError(SpackError):
 
     def __init__(self, msg, long_msg=None):
         super().__init__(msg, long_msg)
+
+
+class NoChecksumException(SpackError):
+    """
+    Raised if file fails checksum verification.
+    """
+
+    def __init__(self, path, size, contents, algorithm, expected, computed):
+        super().__init__(
+            f"{algorithm} checksum failed for {path}",
+            f"Expected {expected} but got {computed}. "
+            f"File size = {size} bytes. Contents = {contents!r}",
+        )

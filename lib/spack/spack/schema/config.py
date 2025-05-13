@@ -58,6 +58,15 @@ properties: Dict[str, Any] = {
                     {"type": "string"},  # deprecated
                 ]
             },
+            "concretization_cache": {
+                "type": "object",
+                "properties": {
+                    "enable": {"type": "boolean"},
+                    "url": {"type": "string"},
+                    "entry_limit": {"type": "integer", "minimum": 0},
+                    "size_limit": {"type": "integer", "minimum": 0},
+                },
+            },
             "install_hash_length": {"type": "integer", "minimum": 1},
             "install_path_scheme": {"type": "string"},  # deprecated
             "build_stage": {
@@ -91,7 +100,7 @@ properties: Dict[str, Any] = {
             "allow_sgid": {"type": "boolean"},
             "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
-            "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
+            "url_fetch_method": {"type": "string", "pattern": r"^urllib$|^curl( .*)*"},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
@@ -106,8 +115,15 @@ properties: Dict[str, Any] = {
             {
                 "names": ["install_missing_compilers"],
                 "message": "The config:install_missing_compilers option has been deprecated in "
-                "Spack v0.23, and is currently ignored. It will be removed from config after "
+                "Spack v0.23, and is currently ignored. It will be removed from config in "
                 "Spack v1.0.",
+                "error": False,
+            },
+            {
+                "names": ["install_path_scheme"],
+                "message": "The config:install_path_scheme option was deprecated in Spack v0.16 "
+                "in favor of config:install_tree:projections:all. It will be removed in Spack "
+                "v1.0.",
                 "error": False,
             },
         ],

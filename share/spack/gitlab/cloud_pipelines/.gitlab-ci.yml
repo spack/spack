@@ -14,10 +14,10 @@ default:
   image: { "name": "ghcr.io/spack/e4s-ubuntu-18.04:v2021-10-18", "entrypoint": [""] }
 
 # CI Platform-Arch
-.cray_rhel_zen4:
+.cray_rhel_x86_64_v3:
   variables:
     SPACK_TARGET_PLATFORM: "cray-rhel"
-    SPACK_TARGET_ARCH: "zen4"
+    SPACK_TARGET_ARCH: "x86_64_v3"
 
 .cray_sles_zen4:
   variables:
@@ -58,11 +58,6 @@ default:
   variables:
     SPACK_TARGET_PLATFORM: "linux"
     SPACK_TARGET_ARCH: "aarch64"
-
-.linux_power:
-  variables:
-    SPACK_TARGET_PLATFORM: "linux"
-    SPACK_TARGET_ARCH: "ppc64le"
 
 .win64-msvc2019:
   variables:
@@ -193,7 +188,7 @@ default:
 
 .generate-neoverse_v1:
   extends: [ ".generate-base" ]
-  tags: ["spack", "public", "medium", "aarch64", "graviton3"]
+  tags: ["spack", "public", "medium", "aarch64", "neoverse_v1"]
 
 .generate-neoverse-v2:
   extends: [ ".generate-base" ]
@@ -339,7 +334,7 @@ e4s-rocm-external-build:
 
 e4s-oneapi-generate:
   extends: [ ".e4s-oneapi", ".generate-x86_64"]
-  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2024.2:2024.09.06
+  image: ghcr.io/spack/spack/ubuntu22.04-runner-amd64-oneapi-2025.1:2025.03.24
 
 e4s-oneapi-build:
   extends: [ ".e4s-oneapi", ".build" ]
@@ -351,35 +346,6 @@ e4s-oneapi-build:
   needs:
     - artifacts: True
       job: e4s-oneapi-generate
-
-########################################
-# E4S on Power
-########################################
-.e4s-power-generate-tags-and-image:
-  image: { "name": "ghcr.io/spack/ubuntu20.04-runner-ppc64-gcc-11.4:2023.08.01", "entrypoint": [""] }
-  tags: ["spack", "public", "large", "ppc64le"]
-
-.e4s-power:
-  extends: [".linux_power"]
-  variables:
-    SPACK_CI_STACK_NAME: e4s-power
-
-e4s-power-generate:
-  extends: [ ".e4s-power", ".generate-x86_64", ".e4s-power-generate-tags-and-image"]
-  variables:
-    # Override concretization pool for metal runners
-    SPACK_CONCRETIZE_JOBS: 16
-
-e4s-power-build:
-  extends: [ ".e4s-power", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: e4s-power-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: e4s-power-generate
 
 #########################################
 # Build tests for different build-systems
@@ -460,7 +426,7 @@ developer-tools-aarch64-linux-gnu-build:
     SPACK_CI_STACK_NAME: developer-tools-darwin
 
 developer-tools-darwin-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [ ".developer-tools-darwin", ".generate-base"]
 
 developer-tools-darwin-build:
@@ -572,57 +538,6 @@ data-vis-sdk-build:
   needs:
     - artifacts: True
       job: data-vis-sdk-generate
-
-########################################
-# AWS ISC Applications (x86_64)
-########################################
-
-# Call this AFTER .*-generate
-.aws-isc-overrides:
-  # This controls image for generate step; build step is controlled by spack.yaml
-  # Note that generator emits OS info for build so these should be the same.
-  image: { "name": "ghcr.io/spack/e4s-amazonlinux-2:v2023-03-09", "entrypoint": [""] }
-
-.aws-isc:
-  extends: [ ".linux_x86_64_v3" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-isc
-
-aws-isc-generate:
-  extends: [ ".aws-isc", ".generate-x86_64", ".aws-isc-overrides", ".tags-x86_64_v4" ]
-
-aws-isc-build:
-  extends: [ ".aws-isc", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-isc-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-isc-generate
-
-# Parallel Pipeline for aarch64 (reuses override image, but generates and builds on aarch64)
-
-.aws-isc-aarch64:
-  extends: [ ".linux_aarch64" ]
-  variables:
-    SPACK_CI_STACK_NAME: aws-isc-aarch64
-
-aws-isc-aarch64-generate:
-  extends: [ ".aws-isc-aarch64", ".generate-aarch64", ".aws-isc-overrides" ]
-
-aws-isc-aarch64-build:
-  extends: [ ".aws-isc-aarch64", ".build" ]
-  trigger:
-    include:
-      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
-        job: aws-isc-aarch64-generate
-    strategy: depend
-  needs:
-    - artifacts: True
-      job: aws-isc-aarch64-generate
-
 
 ########################################
 # Spack Tutorial
@@ -771,7 +686,7 @@ ml-linux-aarch64-cuda-build:
     SPACK_CI_STACK_NAME: ml-darwin-aarch64-mps
 
 ml-darwin-aarch64-mps-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [ ".ml-darwin-aarch64-mps", ".generate-base"]
 
 ml-darwin-aarch64-mps-build:
@@ -826,6 +741,7 @@ aws-pcluster-generate-x86_64_v4:
     - - . "./share/spack/setup-env.sh"
       # TODO: Move this to the container next time it is rebuilt
       - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/binutils-2.37-qvccg7zpskturysmr4bzbsfrx34kvazo/bin:$PATH
+      - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
 
 aws-pcluster-build-x86_64_v4:
   extends: [ ".linux_x86_64_v4", ".aws-pcluster-x86_64_v4", ".build" ]
@@ -850,6 +766,7 @@ aws-pcluster-generate-neoverse_v1:
     - - . "./share/spack/setup-env.sh"
       # TODO: Move this to the container next time it is rebuilt
       - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/binutils-2.37-2yxz3xsjfmesxujxtlrgcctxlyilynmp/bin:$PATH
+      - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
 
 aws-pcluster-build-neoverse_v1:
   extends: [  ".linux_neoverse_v1", ".aws-pcluster-neoverse_v1", ".build" ]
@@ -884,7 +801,7 @@ aws-pcluster-build-neoverse_v1:
     - cat /proc/meminfo | grep 'MemTotal\|MemFree' || true
 
 .generate-cray-rhel:
-  tags: [ "cray-rhel-zen4", "public" ]
+  tags: [ "cray-rhel-x86_64_v3", "public" ]
   extends: [ ".generate-cray" ]
 
 .generate-cray-sles:
@@ -896,7 +813,7 @@ aws-pcluster-build-neoverse_v1:
 # E4S - Cray RHEL
 #######################################
 .e4s-cray-rhel:
-  extends: [ ".cray_rhel_zen4" ]
+  extends: [ ".cray_rhel_x86_64_v3" ]
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-rhel
 
@@ -904,7 +821,6 @@ e4s-cray-rhel-generate:
   extends: [ ".generate-cray-rhel", ".e4s-cray-rhel" ]
 
 e4s-cray-rhel-build:
-  allow_failure: true  # libsci_cray.so broken, misses DT_NEEDED for libdl.so
   extends: [ ".build", ".e4s-cray-rhel" ]
   trigger:
     include:
@@ -923,10 +839,10 @@ e4s-cray-rhel-build:
   variables:
     SPACK_CI_STACK_NAME: e4s-cray-sles
 
-e4s-cray-sles-generate:
+.e4s-cray-sles-generate:
   extends: [ ".generate-cray-sles", ".e4s-cray-sles" ]
 
-e4s-cray-sles-build:
+.e4s-cray-sles-build:
   allow_failure: true  # libsci_cray.so broken, misses DT_NEEDED for libdl.so
   extends: [ ".build", ".e4s-cray-sles" ]
   trigger:
@@ -996,7 +912,7 @@ bootstrap-x86_64-linux-gnu-build:
     SPACK_CI_STACK_NAME: bootstrap-aarch64-darwin
 
 bootstrap-aarch64-darwin-generate:
-  tags: [ "macos-sonoma", "apple-clang-16", "aarch64-macos" ]
+  tags: [ "macos-sequoia", "apple-clang-16", "aarch64-macos" ]
   extends: [.bootstrap-aarch64-darwin, .generate-base]
 
 bootstrap-aarch64-darwin-build:

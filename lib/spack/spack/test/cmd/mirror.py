@@ -6,7 +6,9 @@ import os
 
 import pytest
 
+import spack.binary_distribution as bindist
 import spack.cmd.mirror
+import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
@@ -37,8 +39,9 @@ def test_regression_8083(tmpdir, capfd, mock_packages, mock_fetch, config):
     assert "as it is an external spec" in output
 
 
+# Unit tests should not be affected by the user's managed environments
 @pytest.mark.regression("12345")
-def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, mutable_mock_env_path):
+def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
     mirror_dir = str(tmp_path / "mirror")
     env_name = "test"
 
@@ -60,7 +63,7 @@ def test_mirror_from_env(tmp_path, mock_packages, mock_fetch, mutable_mock_env_p
 
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
-    s = spack.spec.Spec("trivial-pkg-with-valid-hash").concretized()
+    s = spack.concretize.concretize_one("trivial-pkg-with-valid-hash")
     local_url_basename = os.path.basename(s.package.url)
     local_path = os.path.join(str(tmpdir), local_url_basename)
     with open(local_path, "w", encoding="utf-8") as f:
@@ -72,7 +75,9 @@ def source_for_pkg_with_hash(mock_packages, tmpdir):
 def test_mirror_skip_unstable(tmpdir_factory, mock_packages, config, source_for_pkg_with_hash):
     mirror_dir = str(tmpdir_factory.mktemp("mirror-dir"))
 
-    specs = [spack.spec.Spec(x).concretized() for x in ["git-test", "trivial-pkg-with-valid-hash"]]
+    specs = [
+        spack.concretize.concretize_one(x) for x in ["git-test", "trivial-pkg-with-valid-hash"]
+    ]
     spack.mirrors.utils.create(mirror_dir, specs, skip_unstable_versions=True)
 
     assert set(os.listdir(mirror_dir)) - set(["_source-cache"]) == set(
@@ -111,7 +116,7 @@ def test_exclude_specs(mock_packages, config):
 
     mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
     expected_include = set(
-        spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
+        spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
@@ -145,7 +150,7 @@ mpich@1.0
 
     mirror_specs, _ = spack.cmd.mirror._specs_and_action(args)
     expected_include = set(
-        spack.spec.Spec(x).concretized() for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
+        spack.concretize.concretize_one(x) for x in ["mpich@3.0.3", "mpich@3.0.4", "mpich@3.0"]
     )
     expected_exclude = set(spack.spec.Spec(x) for x in ["mpich@3.0.1", "mpich@3.0.2", "mpich@1.0"])
     assert expected_include <= set(mirror_specs)
@@ -339,8 +344,16 @@ def test_mirror_name_collision(mutable_config):
         mirror("add", "first", "1")
 
 
+# Unit tests should not be affected by the user's managed environments
 def test_mirror_destroy(
-    install_mockery, mock_packages, mock_fetch, mock_archive, mutable_config, monkeypatch, tmpdir
+    mutable_mock_env_path,
+    install_mockery,
+    mock_packages,
+    mock_fetch,
+    mock_archive,
+    mutable_config,
+    monkeypatch,
+    tmpdir,
 ):
     # Create a temp mirror directory for buildcache usage
     mirror_dir = tmpdir.join("mirror_dir")
@@ -350,11 +363,13 @@ def test_mirror_destroy(
     spec_name = "libdwarf"
 
     # Put a binary package in a buildcache
-    install("--no-cache", spec_name)
+    install("--fake", "--no-cache", spec_name)
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
+    blobs_path = bindist.buildcache_relative_blobs_path()
+
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
@@ -364,7 +379,7 @@ def test_mirror_destroy(
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by url
     mirror("destroy", "--mirror-url", mirror_url)
