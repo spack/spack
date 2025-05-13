@@ -287,12 +287,12 @@ class MockDirectiveBase(ABC):
         assert getattr(self.pkg, self.directive_name) == expected
 
     @abstractmethod
-    def create_directives(self, spec, when):
+    def create_directives(self, spec_names):
         pass
 
     @property
     def removal_class(self):
-        return spack.directives.RemoveDirectiveBase
+        return spack.directives.DropDirectiveBase
 
     def remove(self, spec, when):
         self.removal_class().remove(spec, when)(self.pkg)
@@ -306,7 +306,7 @@ class MockConflicts(MockDirectiveBase):
 
     @property
     def removal_class(self):
-        return spack.directives.RemoveConflicts
+        return spack.directives.DropConflicts
 
 
 class MockDependencies(MockDirectiveBase):
@@ -320,7 +320,7 @@ class MockDependencies(MockDirectiveBase):
 
     @property
     def removal_class(self):
-        return spack.directives.RemoveDependsOn
+        return spack.directives.DropDependsOn
 
 
 class MockRequirements(MockDirectiveBase):
@@ -331,7 +331,7 @@ class MockRequirements(MockDirectiveBase):
 
     @property
     def removal_class(self):
-        return spack.directives.RemoveRequires
+        return spack.directives.DropRequires
 
 
 @pytest.fixture(params=[MockConflicts, MockDependencies, MockRequirements])
@@ -381,13 +381,13 @@ from spack.package import *
 class X(Package):
     version("1.3")
     version("1.2")
-    remove_all_versions()
+    drop_all_versions()
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_all_versions(test_repo):
+def test_drop_all_versions(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert len(cls.versions) == 0
 
@@ -401,13 +401,13 @@ class X(Package):
     version("1.3")
     version("1.2")
     version("1.1")
-    [remove_version(ver) for ver in ["1.3", "1.1"]]
+    [drop_version(ver) for ver in ["1.3", "1.1"]]
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_version(test_repo):
+def test_drop_version(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.versions == {spack.version.Version("1.2"): {}}
 
@@ -421,13 +421,13 @@ class X(Package):
     version("1.0")
     conflicts("%gcc", when="@1.0")
     conflicts("%clang")
-    remove_all_conflicts()
+    drop_all_conflicts()
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_all_conflicts(test_repo):
+def test_drop_all_conflicts(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert len(cls.conflicts) == 0
 
@@ -442,14 +442,14 @@ class X(Package):
     conflicts("%gcc", when="@1.0")
     conflicts("%clang")
     conflicts("^hdf5", when="@1.0")
-    remove_conflict("%clang")
-    remove_conflict("^hdf5", when="@1.0")
+    drop_conflict("%clang")
+    drop_conflict("^hdf5", when="@1.0")
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_conflict(test_repo):
+def test_drop_conflict(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.conflicts == {spack.spec.Spec("@1.0"): [(spack.spec.Spec("%gcc"), None)]}
 
@@ -462,13 +462,13 @@ from spack.package import *
 class X(Package):
     version("1.0")
     conflicts("mpi", when="@3:")
-    remove_conflict("mpi", when="@5:")
+    drop_conflict("mpi", when="@5:")
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_conflict_range(test_repo):
+def test_drop_conflict_range(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.conflicts == {spack.spec.Spec("@3:4"): [(spack.spec.Spec("mpi"), None)]}
 
@@ -482,13 +482,13 @@ class X(Package):
     version("1.0")
     depends_on("hdf5")
     depends_on("mpi")
-    remove_all_depends_on()
+    drop_all_depends_on()
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_all_depends_on(test_repo):
+def test_drop_all_depends_on(test_repo):
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert len(cls.dependencies) == 0
 
@@ -503,14 +503,14 @@ class X(Package):
     depends_on("hdf5")
     depends_on("mpi", when="@1.0")
     depends_on("netcdf-c", when="@2")
-    remove_depends_on("hdf5")
-    remove_depends_on("netcdf-c", when="@1:")
+    drop_depends_on("hdf5")
+    drop_depends_on("netcdf-c", when="@1:")
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_depends_on(test_repo):
+def test_drop_depends_on(test_repo):
 
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.dependencies == {
@@ -528,14 +528,14 @@ class X(Package):
     requires("hdf5")
     requires("mpi", when="@1.0")
     requires("netcdf-c", when="@1.0")
-    remove_requires("hdf5")
-    remove_requires("netcdf-c", when="@1.0")
+    drop_requires("hdf5")
+    drop_requires("netcdf-c", when="@1.0")
 """,
 )
 
 
 @pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
-def test_remove_requires(test_repo):
+def test_drop_requires(test_repo):
 
     cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
     assert cls.requirements == {

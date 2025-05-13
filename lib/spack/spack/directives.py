@@ -28,14 +28,14 @@ The available directives are:
   * ``version``
   * ``requires``
   * ``redistribute``
-  * ``remove_all_conflicts``
-  * ``remove_all_depends_on``
-  * ``remove_all_requires``
-  * ``remove_all_versions``
-  * ``remove_conflict``
-  * ``remove_depends_on``
-  * ``remove_requires``
-  * ``remove_version``
+  * ``drop_all_conflicts``
+  * ``drop_all_depends_on``
+  * ``drop_all_requires``
+  * ``drop_all_versions``
+  * ``drop_conflict``
+  * ``drop_depends_on``
+  * ``drop_requires``
+  * ``drop_version``
 
 """
 import collections
@@ -85,14 +85,14 @@ __all__ = [
     "requires",
     "redistribute",
     "can_splice",
-    "remove_all_conflicts",
-    "remove_all_depends_on",
-    "remove_all_requires",
-    "remove_all_versions",
-    "remove_conflict",
-    "remove_depends_on",
-    "remove_requires",
-    "remove_version",
+    "drop_all_conflicts",
+    "drop_all_depends_on",
+    "drop_all_requires",
+    "drop_all_versions",
+    "drop_conflict",
+    "drop_depends_on",
+    "drop_requires",
+    "drop_version",
 ]
 
 _patch_order_index = 0
@@ -958,7 +958,7 @@ def remove_all_directive(directive_name):
 
 
 @directive("conflicts")
-def remove_all_conflicts():
+def drop_all_conflicts():
     """Removes all conflicts from a package.
 
     This is typically used when inheriting from another package if the author
@@ -968,7 +968,7 @@ def remove_all_conflicts():
 
 
 @directive("dependencies")
-def remove_all_depends_on():
+def drop_all_depends_on():
     """Removes all depends_on from a package.
 
     This is typically used when inheriting from another package if the author
@@ -978,7 +978,7 @@ def remove_all_depends_on():
 
 
 @directive("requirements")
-def remove_all_requires():
+def drop_all_requires():
     """Removes all requirements from a package.
 
     This is typically used when inheriting from another package if the author
@@ -988,7 +988,7 @@ def remove_all_requires():
 
 
 @directive("versions")
-def remove_all_versions():
+def drop_all_versions():
     """Removes all versions from a package.
 
     This is typically used when inheriting from another package if the author
@@ -997,7 +997,7 @@ def remove_all_versions():
     return remove_all_directive("versions")
 
 
-class RemoveDirectiveBase(ABC):
+class DropDirectiveBase(ABC):
     @property
     @abstractmethod
     def name(self):
@@ -1059,7 +1059,7 @@ class RemoveDirectiveBase(ABC):
         return directives
 
 
-class RemoveConflicts(RemoveDirectiveBase):
+class DropConflicts(DropDirectiveBase):
     @property
     def name(self):
         return "conflicts"
@@ -1071,7 +1071,7 @@ class RemoveConflicts(RemoveDirectiveBase):
         return directive_entry[0]
 
 
-class RemoveDependsOn(RemoveDirectiveBase):
+class DropDependsOn(DropDirectiveBase):
     @property
     def name(self):
         return "dependencies"
@@ -1087,7 +1087,7 @@ class RemoveDependsOn(RemoveDirectiveBase):
         return directive_entry[1].spec
 
 
-class RemoveRequires(RemoveConflicts):
+class DropRequires(DropConflicts):
     @property
     def name(self):
         return "requirements"
@@ -1097,7 +1097,7 @@ class RemoveRequires(RemoveConflicts):
 
 
 @directive("conflicts")
-def remove_conflict(conflict_spec: SpecType, when: WhenType = None):
+def drop_conflict(conflict_spec: SpecType, when: WhenType = None):
     """Remove a conflict from a package.
 
     This is typically used when inheriting from another package if the author
@@ -1106,11 +1106,11 @@ def remove_conflict(conflict_spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a conflict to delete
     that does not exist.
     """
-    return RemoveConflicts().remove(conflict_spec, when)
+    return DropConflicts().remove(conflict_spec, when)
 
 
 @directive("dependencies")
-def remove_depends_on(spec: SpecType, when: WhenType = None):
+def drop_depends_on(spec: SpecType, when: WhenType = None):
     """Remove a dependency from a package.
 
     This is typically used when inheriting from another package if the author
@@ -1119,11 +1119,11 @@ def remove_depends_on(spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    return RemoveDependsOn().remove(spec, when)
+    return DropDependsOn().remove(spec, when)
 
 
 @directive("requirements")
-def remove_requires(spec: SpecType, when: WhenType = None):
+def drop_requires(spec: SpecType, when: WhenType = None):
     """Remove a dependency from a package.
 
     This is typically used when inheriting from another package if the author
@@ -1132,21 +1132,21 @@ def remove_requires(spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    return RemoveRequires().remove(spec, when)
+    return DropRequires().remove(spec, when)
 
 
 @directive("versions")
-def remove_version(ver: Union[str, int]):
+def drop_version(ver: Union[str, int]):
     """Try to remove a specific version from a package."""
     version = Version(ver)
 
-    def _remove_version(pkg):
+    def _drop_version(pkg):
         try:
             del pkg.versions[version]
         except KeyError:
             pass
 
-    return _remove_version
+    return _drop_version
 
 
 class DependencyError(DirectiveError):

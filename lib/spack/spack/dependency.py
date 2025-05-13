@@ -88,7 +88,7 @@ class Dependency:
         if not isinstance(other, Dependency):
             return False
         return (
-            self.pkg == other.pkg
+            self.pkg.name == other.pkg.name
             and self.spec == other.spec
             and self.depflag == other.depflag
             and self.patches == other.patches
