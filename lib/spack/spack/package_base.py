@@ -21,9 +21,22 @@ import sys
 import textwrap
 import time
 import traceback
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
-from typing_extensions import Literal
+from typing_extensions import Literal, final
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -1390,6 +1403,75 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if fsys.is_exe(path):
             return spack.util.executable.Executable(path)
         raise RuntimeError(f"Unable to locate {self.spec.name} command in {self.home.bin}")
+
+    def find_headers(
+        self, *, features: Sequence[str] = (), virtual: Optional[str] = None
+    ) -> fsys.HeaderList:
+        """Return the header list for this package based on the query. This method can be
+        overridden by individual packages to return package specific headers.
+
+        Args:
+            features: query argument to filter or extend the header list.
+            virtual: when set, return headers relevant for the virtual provided by this package.
+        Raises:
+            spack.error.NoHeadersError: if there was an error locating the headers.
+        """
+        spec = self.spec
+        home = self.home
+        headers = fsys.find_headers("*", root=home.include, recursive=True)
+
+        if headers:
+            return headers
+        raise spack.error.NoHeadersError(f"Unable to locate {spec.name} headers in {home}")
+
+    def find_libs(
+        self, *, features: Sequence[str] = (), virtual: Optional[str] = None
+    ) -> fsys.LibraryList:
+        """Return the library list for this package based on the query. This method can be
+        overridden by individual packages to return package specific libraries.
+
+        Args:
+            features: query argument to filter or extend the library list.
+            virtual: when set, return libraries relevant for the virtual provided by this package.
+        Raises:
+            spack.error.NoLibrariesError: if there was an error locating the libraries.
+        """
+        spec = self.spec
+        home = self.home
+        name = self.spec.name.replace("-", "?")
+
+        # Avoid double 'lib' for packages whose names already start with lib
+        if not name.startswith("lib") and not spec.satisfies("platform=windows"):
+            name = "lib" + name
+
+        # If '+shared' search only for shared library; if '~shared' search only for
+        # static library; otherwise, first search for shared and then for static.
+        search_shared = (
+            [True] if ("+shared" in spec) else ([False] if ("~shared" in spec) else [True, False])
+        )
+
+        for shared in search_shared:
+            # Since we are searching for link libraries, on Windows search only for
+            # ".Lib" extensions by default as those represent import libraries for implicit links.
+            libs = fsys.find_libraries(name, home, shared=shared, recursive=True, runtime=False)
+            if libs:
+                return libs
+
+        raise spack.error.NoLibrariesError(
+            f"Unable to recursively locate {spec.name} libraries in {home}"
+        )
+
+    @final
+    def query_headers(self, name: str, *, features: Sequence[str] = ()) -> fsys.HeaderList:
+        """Returns the header list for a dependency ``name``."""
+        spec, is_virtual = self.spec._get_dependency_by_name(name)
+        return spec.package.find_headers(features=features, virtual=name if is_virtual else None)
+
+    @final
+    def query_libs(self, name: str, *, features: Sequence[str] = ()) -> fsys.LibraryList:
+        """Returns the library list for a dependency ``name``."""
+        spec, is_virtual = self.spec._get_dependency_by_name(name)
+        return spec.package.find_libs(features=features, virtual=name if is_virtual else None)
 
     def url_version(self, version):
         """
