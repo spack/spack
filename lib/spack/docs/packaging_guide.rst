@@ -4333,12 +4333,7 @@ Prefix objects
 ^^^^^^^^^^^^^^^^^^^^^
 
 Spack passes the ``prefix`` parameter to the install method so that
-you can pass it to ``configure``, ``cmake``, or some other installer,
-e.g.:
-
-.. code-block:: python
-
-   configure("--prefix={0}".format(prefix))
+you can pass it to ``configure``, ``cmake``, or some other installer.
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -4349,7 +4344,7 @@ yourself, e.g.:
 
 .. code-block:: python
 
-   def install(self, spec, prefix):
+   def install(self, spec: Spec, prefix: Prefix) -> None:
        mkdirp(prefix.bin)
        install("foo-tool", prefix.bin)
 
@@ -4422,7 +4417,7 @@ do that, e.g.:
    if spec.satisfies("@1.2:1.4"):
        configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
 
-   configure(*configure_args)
+   self.data.configure(*configure_args)
 
 This works for compilers, too:
 
@@ -4840,15 +4835,15 @@ of MPI builds:
      supply includes/libs/etc.  This is fairly uncommon.
 
   2. Others really want the wrappers and assume you're using an MPI
-     "compiler" – i.e., they have no mechanism to add MPI
+     "compiler" -- i.e., they have no mechanism to add MPI
      includes/libraries/etc.
 
   3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
      regular library.
 
 Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support – they just assume
+know about or don't like CMake's ``FindMPI`` support -- they just assume
 an MPI compiler. Also, some autotools builds fall into case 3 (e.g. `here
 is an autotools version of CMake's FindMPI
 <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
@@ -4863,7 +4858,7 @@ Packaging Conventions
 As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
 ``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
 Spack's wrappers are not the MPI compiler wrappers, though they do
-automatically add ``–I``, ``–L``, and ``–Wl,-rpath`` args for
+automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for
 dependencies in a similar way.  The MPI wrappers are a bit different in
 that they also add ``-l`` arguments for the MPI libraries, and some add
 special ``-D`` arguments to trigger build options in MPI programs.
@@ -4892,8 +4887,8 @@ there instead, e.g.:
 
 .. code-block:: python
 
-   configure("—prefix=%s" % prefix,
-             "—with-cc=%s" % spec["mpi"].mpicc)
+   configure("-prefix=%s" % prefix,
+             "-with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths,
 and RPATHs that Spack's compiler wrapper get you, but we've actually set
@@ -6222,10 +6217,10 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r"^\s*CC\s*=.*",  "CC = "  + spack_cc,  "Makefile")
-        filter_file(r"^\s*CXX\s*=.*", "CXX = " + spack_cxx, "Makefile")
-        filter_file(r"^\s*F77\s*=.*", "F77 = " + spack_f77, "Makefile")
-        filter_file(r"^\s*FC\s*=.*",  "FC = "  + spack_fc,  "Makefile")
+        filter_file(r"^\s*CC\s*=.*",  "CC = "  + self.data.spack_cc,  "Makefile")
+        filter_file(r"^\s*CXX\s*=.*", "CXX = " + self.data.spack_cxx, "Makefile")
+        filter_file(r"^\s*F77\s*=.*", "F77 = " + self.data.spack_f77, "Makefile")
+        filter_file(r"^\s*FC\s*=.*",  "FC = "  + self.data.spack_fc,  "Makefile")
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
@@ -6308,28 +6303,9 @@ File functions
      .. code-block:: python
 
         with working_dir("libdwarf"):
-            configure("--prefix=" + prefix, "--enable-shared")
-            make()
+            self.pkg.configure("--prefix=" + prefix, "--enable-shared")
+            self.pkg.make()
             install("libdwarf.a",  prefix.lib)
-
-  #. Many CMake builds require that you build "out of source", that
-     is, in a subdirectory.  You can handle creating and ``cd``'ing to
-     the subdirectory like the LLVM package does:
-
-     .. code-block:: python
-
-        with working_dir("spack-build", create=True):
-            cmake("..",
-                  "-DLLVM_REQUIRES_RTTI=1",
-                  "-DPYTHON_EXECUTABLE=/usr/bin/python",
-                  "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
-                  "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
-                  *std_cmake_args)
-            make()
-            make("install")
-
-     The ``create=True`` keyword argument causes the command to create
-     the directory if it does not exist.
 
 :py:func:`touch(path) <llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
