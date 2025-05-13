@@ -2253,21 +2253,10 @@ RPATHs in Spack are handled in one of three ways:
    set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
    so most build systems (autotools and many gmake systems) pick them
    up and use them.
-#. CMake also respects Spack's compiler wrappers, but many CMake
-   builds have logic to overwrite RPATHs when binaries are
-   installed. Spack provides the ``std_cmake_args`` variable, which
-   includes parameters necessary for CMake build use the right
-   installation RPATH.  It can be used like this when ``cmake`` is
-   invoked:
-
-   .. code-block:: python
-
-      class MyPackage(Package):
-          ...
-          def install(self, spec, prefix):
-              cmake("..", *std_cmake_args)
-              make()
-              make("install")
+#. CMake also respects Spack's compiler wrappers during the build, but
+   modifies them upon installation. If you inherit from ``CMakePackage``,
+   Spack will set the default ``cmake`` defines to ensure that RPATHs
+   are set correctly upon installation.
 
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
@@ -2322,18 +2311,23 @@ commands, as ``libdwarf`` does:
    :emphasize-lines: 9, 12
    :linenos:
 
+   class Data:
+       configure: Executable
+       make: Executable
+
    class Libelf(Package):
+       data: Data
        ...
 
        def install(self, spec, prefix):
-           configure("--prefix=" + prefix,
-                     "--enable-shared",
-                     "--disable-dependency-tracking",
-                     "--disable-debug")
-           make()
+           self.data.configure("--prefix=" + prefix,
+                               "--enable-shared",
+                               "--disable-dependency-tracking",
+                               "--disable-debug")
+           self.data.make()
 
            # The mkdir commands in libelf's install can fail in parallel
-           make("install", parallel=False)
+           self.data.make("install", parallel=False)
 
 The first make will run in parallel here, but the second will not.  If
 you set ``parallel`` to ``False`` at the package level, then each call
@@ -2346,20 +2340,17 @@ can use the variable ``make_jobs`` to extract the number of jobs specified
 by the ``--jobs`` option:
 
 .. code-block:: python
-   :emphasize-lines: 7, 11
+   :emphasize-lines: 2, 8
    :linenos:
 
+   class Data:
+       make_jobs: int
+
    class Xios(Package):
-      ...
-      def install(self, spec, prefix):
-         ...
-         options = [
-            ...
-            '--jobs', str(make_jobs),
-        ]
-        ...
-        make_xios = Executable("./make_xios")
-        make_xios(*options)
+       ...
+       def install(self, spec, prefix):
+           make_xios = Executable("./make_xios")
+           make_xios(..., "--jobs", str(self.pkg.make_jobs))
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Install-level build parallelism
@@ -2949,14 +2940,45 @@ This means that the former should only be used if the environment variables depe
 package, whereas the latter should be used if the environment variables depend only on the package
 itself.
 
---------------------------------
-Setting package module variables
---------------------------------
+---------------------------------------------------------
+Setting and requesting Python variables with data classes
+---------------------------------------------------------
 
-Apart from modifying environment variables of the dependent package, you can also define Python
-variables to be used by the dependent. This is done by implementing
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
-example of this can be found in the ``Python`` package:
+Apart from environment variables, Spack also provides a way to set Python variables that are 
+necessary for configuring or building a package. A package that requires certain Python variables
+for its build can declare them using a data class and an annotation in the package class:
+
+.. code-block:: python
+  :emphasize-lines: 1-2,5,10-11
+  :linenos:
+
+   class Data:
+       make: Executable
+   
+   class MyPackage(Package):
+       data: Data
+
+       depends_on("gmake", type="build")
+       
+       def install(self, spec, prefix):
+           self.data.make("mytarget")
+           self.data.make("install", parallel=False)
+
+The dependency ``gmake`` implements :meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
+to set the ``make`` variable so it can be used by the dependent package:
+
+.. code-block:: python
+   :linenos:
+
+   class Gmake(Package):
+       ...
+       def setup_dependent_package(self, module, dependent_spec):
+           module.make = MakeExecutable(
+               self.spec.prefix.bin.make,
+               jobs=determine_number_of_jobs(dependent_spec),
+           )
+
+Another example of this can be found in the ``Python`` package:
 
 .. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_package
@@ -2966,14 +2988,45 @@ This allows Python packages to directly use these variables:
 
 .. code-block:: python
 
-   def install(self, spec, prefix):
-       ...
-       install("script.py", python_platlib)
+   class Data:
+       python_platlib: str
 
-.. note::
+   class MyPythonPackage(Package):
+       data: Data
 
-   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
-   global variables are coming from when editing a ``package.py`` file.
+       extends("python")
+
+       def install(self, spec, prefix):
+           ...
+           install("script.py", self.data.python_platlib)
+
+There are a few special variables that are set by Spack's build environment instead of by
+dependencies. These can be request in the data class as well. Among those are ``make_jobs: int``,
+``configure: Executable``, ``prefix: Prefix``, and ``dso_suffix: str``.
+
+Notice that type hints in data classes are not required and not enforced at runtime. They are only
+used for documentation purposes and to help IDEs with code completion.
+
+-------------------------------
+Module level variables (legacy)
+-------------------------------
+
+For packages that do not use the data class mechanism, Spack will still set global variables
+in the package module. This is an artifact of the legacy package system and is not recommended
+to be used in new packages.
+
+If we omit the data class in the previous example, we can still use the ``make`` variable as
+a global variable:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       def install(self, spec, prefix):
+           make("mytarget")  # not recommended, use data class instead
+           make("install", parallel=False)
+
+This is not recommended, because it is unclear where the ``make`` variable is set, and leads to
+issues with editors and type checkers.
 
 -----
 Views
