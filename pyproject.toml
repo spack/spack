@@ -286,6 +286,7 @@ drop = [
   "jsonschema/tests",
   "archspec/json/tests",
   "archspec/vendor/cpuid/.gitignore",
+  "pyrsistent/__init__.pyi",
 ]
 
 [tool.vendoring.typing-stubs]
