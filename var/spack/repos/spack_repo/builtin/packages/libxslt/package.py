@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+import spack.build_systems
 
 
-class Libxslt(AutotoolsPackage):
+class Libxslt(CMakePackage, AutotoolsPackage):
     """Libxslt is the XSLT C library developed for the GNOME project. XSLT
     itself is a an XML language to define transformation for XML. Libxslt is
     based on libxml2 the XML C library developed for the GNOME project. It also
@@ -19,6 +20,8 @@ class Libxslt(AutotoolsPackage):
     list_depth = 1
 
     license("X11", checked_by="wdconinc")
+
+    build_system("cmake", "autotools", default="cmake")
 
     version("1.1.42", sha256="85ca62cac0d41fc77d3f6033da9df6fd73d20ea2fc18b0a3609ffb4110e1baeb")
     version("1.1.41", sha256="3ad392af91115b7740f7b50d228cc1c5fc13afc1da7f16cb0213917a37f71bda")
@@ -41,15 +44,21 @@ class Libxslt(AutotoolsPackage):
     depends_on("c", type="build")
 
     depends_on("pkgconfig@0.9.0:", type="build")
+
     depends_on("iconv")
     depends_on("libxml2")
     depends_on("libxml2+python", when="+python")
     depends_on("xz")
     depends_on("zlib-api")
+
     depends_on("libgcrypt", when="+crypto")
+    conflicts("+crypto", when="platform=windows")
 
     depends_on("python+shared", when="+python")
     extends("python", when="+python")
+
+    # CMake was added in version 1.1.35
+    conflicts("build_system=cmake", when="@:1.1.34")
 
     def url_for_version(self, v):
         if v > Version("1.1.34"):
@@ -57,6 +66,20 @@ class Libxslt(AutotoolsPackage):
         else:
             return f"http://xmlsoft.org/sources/libxslt-{v}.tar.gz"
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def import_module_test(self):
+        if self.spec.satisfies("+python"):
+            with working_dir("spack-test", create=True):
+                python("-c", "import libxslt")
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies("build_system=autotools %nvhpc"):
+            filter_file("-Wmissing-format-attribute", "", "configure")
+
+
+class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -72,14 +95,12 @@ class Libxslt(AutotoolsPackage):
 
         return args
 
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if self.spec.satisfies("+python"):
-            with working_dir("spack-test", create=True):
-                python("-c", "import libxslt")
 
-    def patch(self):
-        # Remove flags not recognized by the NVIDIA compiler
-        if self.spec.satisfies("%nvhpc"):
-            filter_file("-Wmissing-format-attribute", "", "configure")
+class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    def cmake_args(self):
+        return [
+            self.define_from_variant("LIBXSLT_WITH_PYTHON", "+python"),
+            self.define_from_variant("LIBXSLT_WITH_CRYPTO", "+crypto"),
+            self.define("DLIBXSLT_WITH_MODULES", False),
+            self.define("DLIBXSLT_WITH_TESTS", False),
+        ]

@@ -59,6 +59,8 @@ class QtTools(QtPackage):
         def define(cmake_var, value):
             args.append(self.define(cmake_var, value))
 
+        define("FEATURE_fullqthelp", True)
+
         if spec.satisfies("+assistant"):
             define("FEATURE_assistant", True)
 

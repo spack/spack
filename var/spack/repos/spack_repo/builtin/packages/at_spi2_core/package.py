@@ -39,6 +39,7 @@ class AtSpi2Core(MesonPackage):
     depends_on("libx11")
     depends_on("libxi")
     depends_on("libxtst")
+    depends_on("libxml2")
     depends_on("recordproto")
     depends_on("inputproto")
     depends_on("fixesproto")

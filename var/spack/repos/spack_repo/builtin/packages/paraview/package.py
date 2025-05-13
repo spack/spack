@@ -275,9 +275,11 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     # ParaView will also no longer support Spack builds with Qt5.
     with when("@6:"):
         with when("+qt"):
-            depends_on("qt-base+opengl+sql+network")
+            depends_on("qt-base+accessibility+gui+opengl+sql+network")
+            depends_on("qt-tools+assistant")
             depends_on("qt-5compat")
             depends_on("qt-svg")
+            depends_on("libxslt")
 
         # ParaView@6: and later will depend on OSMesa as a fallback for
         # OpenGL.
