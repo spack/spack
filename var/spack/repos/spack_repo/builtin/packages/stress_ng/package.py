@@ -14,12 +14,12 @@ class StressNg(MakefilePackage):
     subsystems of a computer as well as the various operating system
     kernel interfaces."""
 
-    homepage = "https://kernel.ubuntu.com/~cking/stress-ng/"
-    url = "https://kernel.ubuntu.com/~cking/tarballs/stress-ng/stress-ng-0.12.06.tar.xz"
+    homepage = "https://github.com/ColinIanKing/stress-ng"
+    url = "https://github.com/ColinIanKing/stress-ng/archive/refs/tags/V0.19.00.tar.gz"
 
     license("GPL-2.0-or-later")
 
-    version("0.12.06", sha256="75eb340266b1bbae944d8f9281af978bd5bc2c8085df97a098d5500d6f177296")
+    version("0.19.00", sha256="7d0be69dcdad655145026f499863de01d317e87ff87acd48c3343d451540d172")
 
     depends_on("libaio")
     depends_on("libbsd")
