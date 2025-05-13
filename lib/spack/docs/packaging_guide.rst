@@ -2912,8 +2912,10 @@ package or packages.
 Package-level build parallelism
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so those builds run in parallel.
+By default, build dependencies like ``gmake`` and ``ninja`` ensure that
+the ``-j <njobs>`` flag is passed whenever their ``make`` or ``ninja``
+executables are invoked, so that builds are done in parallel.
+
 The parallelism is determined by the value of the ``build_jobs`` entry
 in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
 how this value is computed).
@@ -2924,7 +2926,7 @@ example, OpenSSL's build does not work in parallel, so its package
 looks like this:
 
 .. code-block:: python
-   :emphasize-lines: 8
+   :emphasize-lines: 9
    :linenos:
 
    class Openssl(Package):
@@ -2933,6 +2935,7 @@ looks like this:
 
        version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
        depends_on("zlib-api")
+       depends_on("gmake", type="build")
 
        parallel = False
 
@@ -2972,14 +2975,16 @@ can use the variable ``make_jobs`` to extract the number of jobs specified
 by the ``--jobs`` option:
 
 .. code-block:: python
-   :emphasize-lines: 2, 8
+   :emphasize-lines: 2, 10
    :linenos:
 
    class Data:
        make_jobs: int
 
    class Xios(Package):
+       data: Data
        ...
+
        def install(self, spec, prefix):
            make_xios = Executable("./make_xios")
            make_xios(..., "--jobs", str(self.pkg.make_jobs))
