@@ -18,10 +18,17 @@ class PyPolars(PythonPackage):
     version("1.29.0", sha256="d2acb71fce1ff0ea76db5f648abd91a7a6c460fafabce9a2e8175184efa00d02")
     version("0.20.5", sha256="fa4abc22cee024b5872961ddcd8a13a0a76150df345e21ce4308c2b1a36b47aa")
 
+    variant("nightly", default=False, description="Enable nightly SIMD paths. Requires nightly rust")
+
     # README.md
     depends_on("rust@1.71:", type="build", when="@0.20")
-
     depends_on("rust@1.80:", type="build", when="@1.29:")
+
+    # nightly rust is built without a checksum and will fail with the error
+    # URLFetchStrategy with no digest
+    # build it with
+    #     $ spack install -n rust@nightly
+    depends_on("rust@nightly", type="build", when="@1.29: +nightly")
 
     # pyproject.toml
     depends_on("py-maturin@1.3.2:", type="build")
@@ -39,16 +46,8 @@ class PyPolars(PythonPackage):
     depends_on("py-gevent", type=("build", "run"))
     # depends_on("py-great-tables@0.8.0:", type=("build","run"))
 
-    def patch(self):
-        # polars seems to require a nightly rust
-        # https://github.com/pola-rs/polars/issues/13653#issuecomment-2041619141
-        # these patches turn of the nightly code paths
-
-        # ensure the toolchain is for stable
-        filter_file("channel.*", 'channel="stable"', "rust-toolchain.toml")
-        filter_file("channel.*", 'channel="stable"', "py-polars/rust-toolchain.toml")
-
-        # only use non-nightly features of depedency crates
-        filter_file(
-            r"default = \[\"all\", \"nightly\"\]", 'default = ["all"]', "py-polars/Cargo.toml"
-        )
+    @when("~nightly")
+    def setup_build_environment(self, env):
+        # https://github.com/PyO3/maturin/discussions/1090
+        # https://github.com/pola-rs/polars/issues/22708#issuecomment-2872555300
+        env.prepend_path("MATURIN_PEP517_ARGS", "--no-default-features --features all")
