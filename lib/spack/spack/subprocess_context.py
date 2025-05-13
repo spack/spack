@@ -17,6 +17,7 @@ import multiprocessing
 import pickle
 import pydoc
 from types import ModuleType
+from typing import Any
 
 import spack.config
 import spack.environment
@@ -35,11 +36,17 @@ def append_patch(patch):
     patches.append(patch)
 
 
-def serialize(obj):
-    serialized_obj = io.BytesIO()
-    pickle.dump(obj, serialized_obj)
-    serialized_obj.seek(0)
-    return serialized_obj
+def serialize(pkg) -> io.BytesIO:
+    serialized_pkg = io.BytesIO()
+    pickle.dump(pkg, serialized_pkg)
+    serialized_pkg.seek(0)
+    return serialized_pkg
+
+
+def deserialize(serialized_pkg: io.BytesIO) -> Any:
+    pkg = pickle.load(serialized_pkg)
+    pkg.spec._package = pkg
+    return pkg
 
 
 class SpackTestProcess:
@@ -87,8 +94,7 @@ class PackageInstallContext:
 
         # Order of operation is important, since the package might be retrieved
         # from a repo defined within the environment configuration
-        pkg = pickle.load(self.serialized_pkg) if self.serialize else self.pkg
-        return pkg
+        return deserialize(self.serialized_pkg) if self.serialize else self.pkg
 
 
 class GlobalStateMarshaler:

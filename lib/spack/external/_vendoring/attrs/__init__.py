@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 
-from attr import (
+from _vendoring.attr import (
     NOTHING,
     Attribute,
     Factory,
@@ -28,7 +28,7 @@ from attr import (
     resolve_types,
     validate,
 )
-from attr._next_gen import asdict, astuple
+from _vendoring.attr._next_gen import asdict, astuple
 
 from . import converters, exceptions, filters, setters, validators
 
