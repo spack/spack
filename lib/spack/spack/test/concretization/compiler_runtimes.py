@@ -4,9 +4,8 @@
 
 import os
 
+import _vendoring.archspec.cpu
 import pytest
-
-import archspec.cpu
 
 import spack.concretize
 import spack.config
@@ -86,7 +85,8 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
             {"pkg-a": "gcc-runtime@9.4.0", "pkg-b": "gcc-runtime@9.4.0"},
             1,
             marks=pytest.mark.skipif(
-                str(archspec.cpu.host().family) != "x86_64", reason="test data is x86_64 specific"
+                str(_vendoring.archspec.cpu.host().family) != "x86_64",
+                reason="test data is x86_64 specific",
             ),
         ),
         pytest.param(
@@ -98,7 +98,8 @@ def test_external_nodes_do_not_have_runtimes(runtime_repo, mutable_config, tmp_p
             },
             2,
             marks=pytest.mark.skipif(
-                str(archspec.cpu.host().family) != "x86_64", reason="test data is x86_64 specific"
+                str(_vendoring.archspec.cpu.host().family) != "x86_64",
+                reason="test data is x86_64 specific",
             ),
         ),
     ],
