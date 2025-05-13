@@ -119,9 +119,9 @@ class Conduit(CMakePackage):
     # package dependencies
     ###########################################################################
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     #######################
     # BLT
@@ -184,8 +184,10 @@ class Conduit(CMakePackage):
     #######################
     # Parmetis
     #######################
-    depends_on("parmetis", when="+parmetis")
-    depends_on("metis", when="+parmetis")
+    depends_on("parmetis+shared", when="+parmetis+shared")
+    depends_on("parmetis~shared", when="+parmetis~shared")
+    depends_on("metis+shared", when="+parmetis+shared")
+    depends_on("metis~shared", when="+parmetis~shared")
 
     #######################
     # MPI
