@@ -28,6 +28,8 @@ class Glew(CMakePackage):
     # glu is already forcibly disabled in the CMakeLists.txt.  This prevents
     # it from showing up in the .pc file
     patch("remove-pkgconfig-glu-dep.patch")
+    # fix a build issue with mesa >= 24.0.0, see
+    # https://github.com/spack/spack/pull/50401
     patch("mesa-24.0.0-osmesa.patch", when="^mesa@24.0.0:")
 
     def cmake_args(self):
