@@ -107,6 +107,8 @@ Since v0.19, Spack supports  two ways of writing a package recipe. The most comm
 
 .. code-block:: python
 
+   from spack.package import *
+
    class Openjpeg(CMakePackage):
        """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
 
@@ -140,6 +142,8 @@ To do that, we have to resort to the second way Spack has of writing packages, w
 builder class explicitly. Using the same example as above, this reads:
 
 .. code-block:: python
+
+   from spack.package import *
 
    class Openjpeg(CMakePackage):
        """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
