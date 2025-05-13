@@ -725,6 +725,18 @@ def specfile_for(default_mock_concretization):
             ],
             "gcc languages:=='c,c++'",
         ),
+        # test <variants> etc. after %
+        (
+            "mvapich %gcc languages:=c,c++ target=x86_64",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "mvapich"),
+                Token(SpecTokens.DEPENDENCY, "%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
+            ],
+            "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
@@ -786,6 +798,22 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
             ],
             ['mvapich cflags="-O3 -fPIC"', "emacs ^ncurses%intel"],
+        ),
+        (
+            "mvapich %gcc languages=c,c++ emacs ^ncurses%gcc languages:=c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="languages=c,c++"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="ncurses"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="languages:=c"),
+            ],
+            ["mvapich %gcc languages=c,c++", "emacs ^ncurses%gcc languages:=c"],
         ),
     ],
 )
