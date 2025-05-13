@@ -15,8 +15,8 @@ import json
 import os
 import pickle
 
+import _vendoring.ruamel.yaml
 import pytest
-import ruamel.yaml
 
 import spack.concretize
 import spack.config
@@ -449,7 +449,7 @@ def test_anchorify_1():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -472,7 +472,7 @@ def test_anchorify_2():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
