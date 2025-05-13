@@ -299,7 +299,6 @@ macholib = []
 pyrsistent = []
 ruamel = []
 six = []
-typing_extensions = []
 
 [tool.vendoring.license.directories]
 setuptools = "pkg_resources"
