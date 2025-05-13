@@ -285,6 +285,8 @@ drop = [
   "pvectorc.*.so",
   # Trim jsonschema tests
   "jsonschema/tests",
+  "archspec/json/tests",
+  "archspec/vendor/cpuid/.gitignore",
 ]
 
 [tool.vendoring.typing-stubs]
