@@ -74,7 +74,6 @@ class Variorum(CMakePackage):
         cmake_args = []
 
         cmake_args.append("-DJANSSON_DIR={0}".format(spec["jansson"].prefix))
-        cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
 
         # The examples remain in the build directory
         cmake_args.append("-DBUILD_EXAMPLES=ON")
@@ -120,6 +119,7 @@ class Variorum(CMakePackage):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
+            cmake_args.append("-DNVML_DIR={0}".format(spec["cuda"].prefix))
         else:
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
