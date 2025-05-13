@@ -159,20 +159,19 @@ class Msvc(Package, CompilerPackage):
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, msvc_version)
         env_cmds.append(self.vcvars_call)
 
-
         def get_oneapi_root(pth: str):
-                """From within a prefix known to be a oneAPI path
-                determine the oneAPI root path from arbitrary point
-                under root
+            """From within a prefix known to be a oneAPI path
+            determine the oneAPI root path from arbitrary point
+            under root
 
-                Args:
-                    pth: path prefixed within oneAPI root
-                """
-                if not pth:
-                    return ""
-                while os.path.basename(pth) and os.path.basename(pth) != "oneAPI":
-                    pth = os.path.dirname(pth)
-                return pth
+            Args:
+                pth: path prefixed within oneAPI root
+            """
+            if not pth:
+                return ""
+            while os.path.basename(pth) and os.path.basename(pth) != "oneAPI":
+                pth = os.path.dirname(pth)
+            return pth
 
         if self.fortran:
             # If this found, it sets all the vars
@@ -190,10 +189,7 @@ class Msvc(Package, CompilerPackage):
                 oneapi_root, "compiler", version_from_path, "env", "vars.bat"
             )
             env_cmds.extend(
-                [
-                    VarsInvocation(oneapi_version_setvars),
-                    VarsInvocation(oneapi_root_setvars)
-                ]
+                [VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)]
             )
         self.msvc_compiler_environment = CmdCall(*env_cmds)
 
