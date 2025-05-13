@@ -10,9 +10,9 @@ import sys
 import warnings
 from typing import IO, List, Set, Tuple
 
-import archspec
-import archspec.cpu.alias
-import archspec.cpu.schema
+import _vendoring.archspec
+import _vendoring.archspec.cpu.alias
+import _vendoring.archspec.cpu.schema
 
 from .alias import FEATURE_ALIASES
 from .schema import LazyDictionary
@@ -394,7 +394,7 @@ def _known_microarchitectures():
         )
 
     known_targets = {}
-    data = archspec.cpu.schema.TARGETS_JSON["microarchitectures"]
+    data = _vendoring.archspec.cpu.schema.TARGETS_JSON["microarchitectures"]
     for name in data:
         if name in known_targets:
             # name was already brought in as ancestor to a target
