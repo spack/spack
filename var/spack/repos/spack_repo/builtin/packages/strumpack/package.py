@@ -105,9 +105,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             "slate amdgpu_target={0}".format(val), when="+slate amdgpu_target={0}".format(val)
         )
     for val in CudaPackage.cuda_arch_values:
-        depends_on(
-            "slate cuda_arch={0}".format(val), when="+slate cuda_arch={0}".format(val)
-        )
+        depends_on("slate cuda_arch={0}".format(val), when="+slate cuda_arch={0}".format(val))
 
     conflicts("+parmetis", when="~mpi")
     conflicts("+butterflypack", when="~mpi")
