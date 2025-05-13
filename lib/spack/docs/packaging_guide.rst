@@ -4159,50 +4159,6 @@ condition is true.  You can explicitly cause the build to fail from
    if spec.architecture.startswith("darwin"):
        raise InstallError("This package does not build on Mac OS X!")
 
-.. _shell-wrappers:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Shell command functions
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Recall the install method from ``libelf``:
-
-.. literalinclude::  _spack_root/var/spack/repos/spack_repo/builtin/packages/libelf/package.py
-   :pyobject: Libelf.install
-   :linenos:
-
-Normally in Python, you'd have to write something like this in order
-to execute shell commands:
-
-.. code-block:: python
-
-   import subprocess
-   subprocess.check_call("configure", "--prefix={0}".format(prefix))
-
-We've tried to make this a bit easier by providing callable wrapper
-objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` wrappers are are provided, so you can call
-them more naturally in your package files.
-
-If you need other commands, you can use ``which`` to get them:
-
-.. code-block:: python
-
-   sed = which("sed")
-   sed("s/foo/bar/", filename)
-
-The ``which`` function will search the ``PATH`` for the application.
-
-Callable wrappers also allow spack to provide some special features.
-For example, in Spack, ``make`` is parallel by default, and Spack
-figures out the number of cores on your machine and passes an
-appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
-``parallel`` `package attribute <attribute_parallel>`).  In
-a package file, you can supply a keyword argument, ``parallel=False``,
-to the ``make`` wrapper to disable parallel make.  In the ``libelf``
-package, this allows us to avoid race conditions in the library's
-build system.
-
 ^^^^^^^^^^^^^^
 Compiler flags
 ^^^^^^^^^^^^^^
