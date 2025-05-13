@@ -1,6 +1,6 @@
 import sys
 
-from pyrsistent._checked_types import (
+from _vendoring.pyrsistent._checked_types import (
     CheckedPMap,
     CheckedPSet,
     CheckedPVector,
@@ -11,8 +11,8 @@ from pyrsistent._checked_types import (
     maybe_parse_user_type,
     maybe_parse_many_user_types,
 )
-from pyrsistent._checked_types import optional as optional_type
-from pyrsistent._checked_types import wrap_invariant
+from _vendoring.pyrsistent._checked_types import optional as optional_type
+from _vendoring.pyrsistent._checked_types import wrap_invariant
 import inspect
 
 PY2 = sys.version_info[0] < 3

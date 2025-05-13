@@ -5,7 +5,7 @@
 
 from typing import Iterable, List, Tuple, Union
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 #: Type hint for the low-level dependency input (enum.Flag is too slow)
 DepFlag = int
