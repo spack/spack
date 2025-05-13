@@ -548,30 +548,22 @@ def display_specs(specs, args=None, **kwargs):
     output.flush()
 
 
-def get_run_dependents(spec):
-    """Get the specs which are run-time dependencies of the given spec,
-    including transitive runtime dependencies"""
-    run_dependents = spec.dependencies(deptype=["run"])
-    if len(run_dependents) == 0:
-        return []
-    dependent_dependents = []
-    for dependency in run_dependents:
-        dependent_dependents += get_run_dependents(dependency)
-    return run_dependents + dependent_dependents
+def filter_runtime_specs(specs):
+    """Filter a list of specs returning only those that have entries in PATH or PYTHONPATH."""
+    run_dirs = os.environ.get("PATH", "").split(os.pathsep)
+    run_dirs += os.environ.get("PYTHONPATH", "").split(os.pathsep)
+    runtime_specs = []
+    for spec in specs:
+        if any(spec.prefix in x for x in run_dirs):
+            runtime_specs.append(spec)
+    return runtime_specs
 
 
-def filter_loaded_specs(specs, env_roots=[], run_dependencies=False):
+def filter_loaded_specs(specs):
     """Filter a list of specs returning only those that are
     currently loaded."""
     hashes = os.environ.get(uenv.spack_loaded_hashes_var, "").split(os.pathsep)
-    loaded_specs = [x for x in specs if x.dag_hash() in hashes] + env_roots
-    if run_dependencies:
-        dependencies = []
-        for loaded_spec in loaded_specs:
-            dependencies += get_run_dependents(loaded_spec)
-        loaded_specs += dependencies
-        loaded_specs = list(set(loaded_specs))
-    return loaded_specs
+    return [x for x in specs if x.dag_hash() in hashes]
 
 
 def print_how_many_pkgs(specs, pkg_type="", suffix=""):

@@ -1848,7 +1848,7 @@ complete -c spack -n '__fish_spack_using_command find' -s m -l missing -d 'show 
 complete -c spack -n '__fish_spack_using_command find' -s v -l variants -f -a variants
 complete -c spack -n '__fish_spack_using_command find' -s v -l variants -d 'show variants in output (can be long)'
 complete -c spack -n '__fish_spack_using_command find' -l runtime -f -a runtime
-complete -c spack -n '__fish_spack_using_command find' -l runtime -d 'show packages loaded in the user environment and runtime dependencies thereof'
+complete -c spack -n '__fish_spack_using_command find' -l runtime -d 'show packages loaded into the user'"'"'s PATH or PYTHONPATH environment'
 complete -c spack -n '__fish_spack_using_command find' -l loaded -f -a loaded
 complete -c spack -n '__fish_spack_using_command find' -l loaded -d 'show only packages loaded in the user environment'
 complete -c spack -n '__fish_spack_using_command find' -s M -l only-missing -f -a only_missing

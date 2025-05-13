@@ -143,7 +143,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         "--runtime",
         action="store_true",
-        help="show packages loaded in the user environment and runtime dependencies thereof",
+        help="show packages loaded into the user's PATH or PYTHONPATH environment",
     )
     subparser.add_argument(
         "--loaded", action="store_true", help="show only packages loaded in the user environment"
@@ -363,7 +363,7 @@ def _find_query(args, env):
         ]
 
     if args.runtime:
-        results = cmd.filter_loaded_specs(results, env.concrete_roots(), True)
+        results = cmd.filter_runtime_specs(results)
     elif args.loaded:
         results = cmd.filter_loaded_specs(results)
 
