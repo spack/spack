@@ -19,7 +19,7 @@ from io import BytesIO
 from types import CodeType
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
     class _MemcachedClient(te.Protocol):
@@ -101,7 +101,7 @@ class Bucket:
 class BytecodeCache:
     """To implement your own bytecode cache you have to subclass this class
     and override :meth:`load_bytecode` and :meth:`dump_bytecode`.  Both of
-    these methods are passed a :class:`~jinja2.bccache.Bucket`.
+    these methods are passed a :class:`~_vendoring.jinja2.bccache.Bucket`.
 
     A very basic bytecode cache that saves the bytecode on the file system::
 
@@ -193,7 +193,7 @@ class FileSystemBytecodeCache(BytecodeCache):
     is created for the user in the system temp directory.
 
     The pattern can be used to have multiple separate caches operate on the
-    same directory.  The default pattern is ``'__jinja2_%s.cache'``.  ``%s``
+    same directory.  The default pattern is ``'___vendoring.jinja2_%s.cache'``.  ``%s``
     is replaced with the cache key.
 
     >>> bcc = FileSystemBytecodeCache('/tmp/jinja_cache', '%s.cache')
@@ -202,7 +202,7 @@ class FileSystemBytecodeCache(BytecodeCache):
     """
 
     def __init__(
-        self, directory: t.Optional[str] = None, pattern: str = "__jinja2_%s.cache"
+        self, directory: t.Optional[str] = None, pattern: str = "___vendoring.jinja2_%s.cache"
     ) -> None:
         if directory is None:
             directory = self._get_default_cache_dir()
@@ -225,7 +225,7 @@ class FileSystemBytecodeCache(BytecodeCache):
         if not hasattr(os, "getuid"):
             _unsafe_dir()
 
-        dirname = f"_jinja2-cache-{os.getuid()}"
+        dirname = f"__vendoring.jinja2-cache-{os.getuid()}"
         actual_dir = os.path.join(tmpdir, dirname)
 
         try:
@@ -332,7 +332,7 @@ class MemcachedBytecodeCache(BytecodeCache):
     def __init__(
         self,
         client: "_MemcachedClient",
-        prefix: str = "jinja2/bytecode/",
+        prefix: str = "_vendoring.jinja2/bytecode/",
         timeout: t.Optional[int] = None,
         ignore_memcache_errors: bool = True,
     ):
