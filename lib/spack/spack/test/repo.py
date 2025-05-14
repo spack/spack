@@ -93,15 +93,6 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
     extra_repo[0].all_package_names()
 
 
-@pytest.mark.parametrize("attr_name,exists", [("cmake", True), ("__sphinx_mock__", False)])
-@pytest.mark.regression("20661")
-def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
-    # Check that we don't fail on 'hasattr' checks because
-    # of a custom __getattr__ implementation
-    nms = spack.repo.SpackNamespace("spack.pkg.builtin_mock")
-    assert hasattr(nms, attr_name) == exists
-
-
 @pytest.mark.regression("24552")
 def test_all_package_names_is_cached_correctly(mock_packages):
     assert "mpi" in spack.repo.all_package_names(include_virtuals=True)
@@ -120,25 +111,20 @@ def test_use_repositories_doesnt_change_class(mock_packages):
     assert id(zlib_cls_inner) == id(zlib_cls_outer)
 
 
-def test_import_repo_prefixes_as_python_modules(mock_packages):
-    import spack.pkg.builtin_mock
-
-    assert isinstance(spack.pkg, spack.repo.SpackNamespace)
-    assert isinstance(spack.pkg.builtin, spack.repo.SpackNamespace)
-    assert isinstance(spack.pkg.builtin_mock, spack.repo.SpackNamespace)
-
-
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
-    import spack.pkg.builtin_mock.mpileaks
+    import spack_repo.builtin_mock.packages.mpileaks.package  # type: ignore[import]
 
-    assert hasattr(spack.pkg.builtin_mock, "mpileaks")
-    assert hasattr(spack.pkg.builtin_mock.mpileaks, "Mpileaks")
-    assert isinstance(spack.pkg.builtin_mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin_mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
+    assert hasattr(spack_repo.builtin_mock.packages.mpileaks.package, "Mpileaks")
+    assert isinstance(
+        spack_repo.builtin_mock.packages.mpileaks.package.Mpileaks, spack.package_base.PackageMeta
+    )
+    assert issubclass(
+        spack_repo.builtin_mock.packages.mpileaks.package.Mpileaks, spack.package_base.PackageBase
+    )
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
-    from spack.pkg.builtin_mock.mpileaks import Mpileaks
+    from spack_repo.builtin_mock.packages.mpileaks.package import Mpileaks
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
     assert issubclass(Mpileaks, spack.package_base.PackageBase)
@@ -220,11 +206,11 @@ def test_use_repositories_and_import():
     import spack.paths
 
     repo_dir = pathlib.Path(spack.paths.test_repos_path)
-    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime_test")):
-        import spack.pkg.compiler_runtime_test.gcc_runtime
+    with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "compiler_runtime_test")):
+        import spack_repo.compiler_runtime_test.packages.gcc_runtime.package  # type: ignore[import]  # noqa: E501
 
-    with spack.repo.use_repositories(str(repo_dir / "builtin_mock")):
-        import spack.pkg.builtin_mock.cmake
+    with spack.repo.use_repositories(str(repo_dir / "spack_repo" / "builtin_mock")):
+        import spack_repo.builtin_mock.packages.cmake.package  # type: ignore[import]  # noqa: F401
 
 
 @pytest.mark.usefixtures("nullify_globals")
@@ -248,7 +234,7 @@ class TestRepo:
         assert repo.is_virtual_safe(name) is expected
 
     @pytest.mark.parametrize(
-        "module_name,expected",
+        "module_name,pkg_name",
         [
             ("dla_future", "dla-future"),
             ("num7zip", "7zip"),
@@ -256,12 +242,18 @@ class TestRepo:
             ("unknown", None),
         ],
     )
-    def test_real_name(self, module_name, expected, mock_test_cache):
+    def test_real_name(self, module_name, pkg_name, mock_test_cache, tmp_path):
         """Test that we can correctly compute the 'real' name of a package, from the one
         used to import the Python module.
         """
-        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        assert repo.real_name(module_name) == expected
+        path, _ = spack.repo.create_repo(str(tmp_path), package_api=(1, 0))
+        pkg_path = pathlib.Path(path) / "packages" / pkg_name / "package.py"
+        pkg_path.parent.mkdir(parents=True)
+        pkg_path.write_text("")
+        repo = spack.repo.Repo(
+            path, cache=spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+        )
+        assert repo.real_name(module_name) == pkg_name
 
     @pytest.mark.parametrize("name", ["mpileaks", "7zip", "dla-future"])
     def test_get(self, name, mock_test_cache):
