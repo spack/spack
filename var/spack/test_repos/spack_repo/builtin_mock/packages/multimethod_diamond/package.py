@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package import *
+
 from ..multimethod_diamond_parent.package import MultimethodDiamondParent
 from ..multimethod_inheritor.package import MultimethodInheritor
-from spack.package import *
 
 
 class MultimethodDiamond(MultimethodInheritor, MultimethodDiamondParent):

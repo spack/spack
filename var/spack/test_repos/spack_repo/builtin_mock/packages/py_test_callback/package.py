@@ -3,12 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.builder
-import spack.pkg.builtin_mock.python as mp
 from spack.build_systems._checks import BuilderWithDefaults, execute_install_time_tests
 from spack.package import *
 
+from ..python.package import Python
 
-class PyTestCallback(mp.Python):
+
+class PyTestCallback(Python):
     """A package for testing stand-alone test methods as a callback."""
 
     homepage = "http://www.example.com"

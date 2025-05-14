@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.pkg.builtin_mock.simple_inheritance as si
 from spack.package import *
+
+from ..simple_inheritance import package as si
 
 
 class MultimoduleInheritance(si.BaseWithDirectives):

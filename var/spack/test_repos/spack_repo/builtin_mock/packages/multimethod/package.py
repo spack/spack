@@ -4,6 +4,7 @@
 
 import spack.platforms
 from spack.package import *
+
 from ..multimethod_base.package import MultimethodBase
 
 

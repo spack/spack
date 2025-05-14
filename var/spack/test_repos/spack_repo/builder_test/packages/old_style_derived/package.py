@@ -1,11 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.pkg.builder_test.old_style_autotools
 from spack.package import *
 
+from ..old_style_autotools.package import OldStyleAutotools
 
-class OldStyleDerived(spack.pkg.builder_test.old_style_autotools.OldStyleAutotools):
+
+class OldStyleDerived(OldStyleAutotools):
     """Package used to verify that old-style packages work correctly when executing the
     installation procedure.
     """

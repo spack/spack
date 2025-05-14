@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *  # noqa: F401
+
 from ..cmake_client.package import CmakeClient
 
 

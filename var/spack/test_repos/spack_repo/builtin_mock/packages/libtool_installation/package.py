@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
 from ..libtool_deletion.package import AutotoolsBuilder as BuilderBase
 from ..libtool_deletion.package import LibtoolDeletion
 

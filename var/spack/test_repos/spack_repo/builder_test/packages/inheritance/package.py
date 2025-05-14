@@ -3,17 +3,19 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack.pkg.builder_test.callbacks
 from spack.package import *
 
+from ..callbacks.package import Callbacks
+from ..callbacks.package import GenericBuilder as CallbacksGenericBuilder
 
-class Inheritance(spack.pkg.builder_test.callbacks.Callbacks):
+
+class Inheritance(Callbacks):
     """Package used to verify that inheritance among packages work as expected"""
 
     pass
 
 
-class GenericBuilder(spack.pkg.builder_test.callbacks.GenericBuilder):
+class GenericBuilder(CallbacksGenericBuilder):
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)
         os.environ["INHERITANCE_INSTALL_CALLED"] = "1"
