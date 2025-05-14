@@ -190,7 +190,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     def cc(self) -> Optional[str]:
         assert self.spec.concrete, "cannot retrieve C compiler, spec is not concrete"
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("c", None)
+            return self.spec.extra_attributes.get("compilers", {}).get("c", None)
         return self._cc_path()
 
     def _cc_path(self) -> Optional[str]:
@@ -201,7 +201,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     def cxx(self) -> Optional[str]:
         assert self.spec.concrete, "cannot retrieve C++ compiler, spec is not concrete"
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("cxx", None)
+            return self.spec.extra_attributes.get("compilers", {}).get("cxx", None)
         return self._cxx_path()
 
     def _cxx_path(self) -> Optional[str]:
@@ -212,7 +212,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     def fortran(self):
         assert self.spec.concrete, "cannot retrieve Fortran compiler, spec is not concrete"
         if self.spec.external:
-            return self.spec.extra_attributes["compilers"].get("fortran", None)
+            return self.spec.extra_attributes.get("compilers", {}).get("fortran", None)
         return self._fortran_path()
 
     def _fortran_path(self) -> Optional[str]:

@@ -672,15 +672,13 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         translation = {"cxx": "c++"}
         for lang, compiler in compilers.items():
             languages.add(translation.get(lang, lang))
-        variant_str = "languages={0}".format(",".join(languages))
+        variant_str = "languages:={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):
         # For GCC 'compilers' is a mandatory attribute
-        msg = 'the extra attribute "compilers" must be set for ' 'the detected spec "{0}"'.format(
-            spec
-        )
+        msg = f'the extra attribute "compilers" must be set for the detected spec "{spec}"'
         assert "compilers" in extra_attributes, msg
 
         compilers = extra_attributes["compilers"]

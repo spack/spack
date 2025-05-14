@@ -15,6 +15,8 @@ class Qscintilla(QMakePackage):
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
     url = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz"
 
+    maintainers("Sinan81")
+
     license("GPL-3.0-only")
 
     version("2.14.1", sha256="dfe13c6acc9d85dfcba76ccc8061e71a223957a6c02f3c343b30a9d43a4cdd4d")
@@ -38,7 +40,7 @@ class Qscintilla(QMakePackage):
     depends_on("py-pyqt5", type=("build", "run"), when="+python ^qt@5")
     depends_on("python", type=("build", "run"), when="+python")
     # adter install inquires py-sip variant : so we need to have it
-    depends_on("py-sip", type="build", when="~python")
+    depends_on("py-sip", type="build", when="+python")
 
     extends("python", when="+python")
 
@@ -118,7 +120,7 @@ qmake-settings = ["QT += widgets", "QT += printsupport", "{link_qscilibs}"]
 
             mkdirp(os.path.join(self.prefix.share.sip, pyqtx))
 
-            sip_build = Executable(self.spec["py-sip"].prefix.bin.join("sip-build"))
+            sip_build = Executable(self["py-sip"].prefix.bin.join("sip-build"))
             sip_build(
                 "--target-dir=" + python_platlib,
                 "--qsci-include-dir=" + self.spec.prefix.include,
