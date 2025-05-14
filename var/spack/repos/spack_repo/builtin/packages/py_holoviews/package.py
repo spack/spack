@@ -14,6 +14,8 @@ class PyHoloviews(PythonPackage):
     pypi = "holoviews/holoviews-1.19.1.tar.gz"
     git = "https://github.com/holoviz/holoviews.git"
 
+    maintainers("climbfuji")
+
     license("BSD-3-Clause", checked_by="climbfuji")
 
     version("1.20.2", sha256="8c78b798601ce3af31523667c6d1cb40df8d781249ebebbdb2c5f6143565e6d8")
