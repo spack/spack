@@ -32,7 +32,7 @@ class PyMetatensorOperations(PythonPackage):
     depends_on("py-packaging@23:", type="build")
     depends_on("py-pip@22.1:", type="build")
     depends_on("py-torch@2.6:", type=("build", "run"), when="+torch")
-    depends_on("py-libmetatensor@0.1.10:", type="run")
-    conflicts("py-libmetatensor@0.2.0:")
+    depends_on("py-metatensor@0.1.10:", type="run")
+    conflicts("py-metatensor@0.2.0:")
     # XXX: Needs to be declared upstream
     depends_on("py-numpy", type=("build", "run"))

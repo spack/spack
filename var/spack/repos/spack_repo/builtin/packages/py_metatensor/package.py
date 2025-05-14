@@ -1,8 +1,8 @@
-# Copyright Spack Project Developers. See COPYRIGHT file for details.#
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-
 
 # Necessary to pin each version to libmetatensor
 VERSION_MAP = {
@@ -17,8 +17,7 @@ VERSION_MAP = {
     "0.1.6": "36912e6ac2c45951a1947b3843cc39a6e5fa50d9e0121695733de92c383a8327",
 }
 
-
-class PyLibmetatensor(PythonPackage):
+class PyMetatensor(PythonPackage):
     """Python bindings for metatensor-core"""
 
     homepage = "https://docs.metatensor.org"
