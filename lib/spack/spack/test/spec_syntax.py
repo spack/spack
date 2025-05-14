@@ -11,6 +11,7 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
+import spack.config
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
@@ -892,6 +893,39 @@ def test_cli_spec_roundtrip(args, expected):
     specs = spack.cmd.parse_specs(args)
     output_string = " ".join(str(spec) for spec in specs)
     assert expected == output_string
+
+
+@pytest.mark.parametrize(
+    "spec_str,toolchain,expected_roundtrip",
+    [
+        (
+            "foo%my_toolchain",
+            {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
+            "foo ^[when='%c' virtuals=c] gcc",
+        ),
+        (
+            "foo%my_toolchain2",
+            {"my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich"},
+            "foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich",
+        ),
+        (
+            "foo%my_toolchain bar%my_toolchain2",
+            {
+                "my_toolchain": "%[when='%c' virtuals=c]gcc",
+                "my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+            },
+            [
+                "foo ^[when='%c' virtuals=c] gcc",
+                "bar %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich",
+            ],
+        ),
+    ],
+)
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
+    spack.config.CONFIG.set("toolchains", toolchain)
+    parser = SpecParser(spec_str)
+    for expected in expected_roundtrip:
+        assert expected_roundtrip == str(parser.next_spec())
 
 
 @pytest.mark.parametrize(
