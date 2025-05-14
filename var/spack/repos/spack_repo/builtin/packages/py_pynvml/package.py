@@ -15,7 +15,8 @@ class PyPynvml(PythonPackage):
     homepage = "https://www.nvidia.com/"
     pypi = "pynvml/pynvml-8.0.4.tar.gz"
 
-    license("Unlicense")
+    license("BSD-3-Clause", when="@12:")
+    license("Unlicense", when="@:11")
 
     version("12.0.0", sha256="299ce2451a6a17e6822d6faee750103e25b415f06f59abb8db65d30f794166f5")
     version("11.5.3", sha256="183d223ae487e5f00402d8da06c68c978ef8a9295793ee75559839c6ade7b229")
