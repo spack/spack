@@ -2222,11 +2222,6 @@ def mock_runtimes(config, mock_packages):
 
 
 @pytest.fixture()
-def mock_compilers(config, mock_packages):
-    return mock_packages.packages_with_tags("compiler")
-
-
-@pytest.fixture()
 def write_config_file(tmpdir):
     """Returns a function that writes a config file."""
 
