@@ -35,7 +35,6 @@ link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
@@ -225,10 +224,14 @@ nitpick_ignore = [
     ("py:class", "llnl.util.lang.T"),
     ("py:class", "llnl.util.lang.KT"),
     ("py:class", "llnl.util.lang.VT"),
+    ("py:class", "llnl.util.lang.K"),
+    ("py:class", "llnl.util.lang.V"),
     ("py:class", "llnl.util.lang.ClassPropertyType"),
     ("py:obj", "llnl.util.lang.KT"),
     ("py:obj", "llnl.util.lang.VT"),
     ("py:obj", "llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "llnl.util.lang.K"),
+    ("py:obj", "llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

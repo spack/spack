@@ -140,8 +140,9 @@ else:
 # $spack/var/spack is generally read-only. Older instances may
 # write gpg keys or environments into ...var/
 repos_path = os.path.join(var_path, "repos")
-packages_path = os.path.join(repos_path, "builtin")
-mock_packages_path = os.path.join(repos_path, "builtin.mock")
+test_repos_path = os.path.join(var_path, "test_repos")
+packages_path = os.path.join(repos_path, "spack_repo", "builtin")
+mock_packages_path = os.path.join(test_repos_path, "builtin.mock")
 
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")

@@ -24,6 +24,7 @@ import spack.package
 import spack.package_base
 import spack.spec
 import spack.store
+import spack.subprocess_context
 from spack.build_systems.generic import Package
 from spack.error import InstallError
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -246,22 +247,29 @@ def test_package_exes_and_libs():
 
 
 def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+    UrlsPackage = type(
+        "URLsPackage",
+        (spack.package.Package,),
+        {
+            "__module__": "spack.pkg.builtin.urls_package",
+            "url": "https://www.example.com/url-package-1.0.tgz",
+            "urls": ["https://www.example.com/archive"],
+        },
+    )
 
-    s = spack.spec.Spec("pkg-a")
+    s = spack.spec.Spec("urls-package")
     with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
+        UrlsPackage(s)
 
 
 def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
+    LicensedPackage = type(
+        "LicensedPackage",
+        (spack.package.Package,),
+        {"__module__": "spack.pkg.builtin.licensed_package"},
+    )
 
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
@@ -316,3 +324,11 @@ def test_package_subscript(default_mock_concretization):
     # Subscript on concrete
     for d in root.traverse():
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
+
+
+def test_deserialize_preserves_package_attribute(default_mock_concretization):
+    x = default_mock_concretization("mpileaks").package
+    assert x.spec._package is x
+
+    y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
+    assert y.spec._package is y

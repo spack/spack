@@ -5,7 +5,6 @@ ci:
       - Write-Output "Done"
 
       before_script::
-      - git config core.autocrlf true
       - fsutil 8dot3name set C:\ 0
       - . .\share\spack\setup-env.ps1
       - If (Test-Path -path C:\\key\intermediate_ci_signing_key.gpg) { spack.ps1 gpg trust C:\\key\intermediate_ci_signing_key.gpg }

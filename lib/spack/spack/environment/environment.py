@@ -1049,7 +1049,11 @@ class Environment:
 
     def _process_concrete_includes(self):
         """Extract and load into memory included concrete spec data."""
-        self.included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        # Expand config and environment variables
+        self.included_concrete_envs = [
+            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
+        ]
 
         if self.included_concrete_envs:
             if os.path.exists(self.lock_path):
@@ -2312,8 +2316,12 @@ class Environment:
 
     def _add_to_environment_repository(self, spec_node: Spec) -> None:
         """Add the root node of the spec to the environment repository"""
-        repository_dir = os.path.join(self.repos_path, spec_node.namespace)
-        repository = spack.repo.create_or_construct(repository_dir, spec_node.namespace)
+        namespace: str = spec_node.namespace
+        repository = spack.repo.create_or_construct(
+            root=os.path.join(self.repos_path, namespace),
+            namespace=namespace,
+            package_api=spack.repo.PATH.get_repo(namespace).package_api,
+        )
         pkg_dir = repository.dirname_for_package_name(spec_node.name)
         fs.mkdirp(pkg_dir)
         spack.repo.PATH.dump_provenance(spec_node, pkg_dir)

@@ -914,7 +914,7 @@ def test_single_file_scope(config, env_yaml):
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("packages:externalmodule:buildable") is False
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/spack_repo/builtin"]
 
 
 def test_single_file_scope_section_override(tmpdir, config):
@@ -950,7 +950,7 @@ spack:
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert not spack.config.get("packages:externalmodule")
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/spack_repo/builtin"]
 
 
 def test_write_empty_single_file_scope(tmpdir):

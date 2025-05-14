@@ -2,6 +2,7 @@ spack:
   view: false
   packages:
     all:
+      target: ["aarch64"]
       require:
       - target=aarch64
       - ~cuda

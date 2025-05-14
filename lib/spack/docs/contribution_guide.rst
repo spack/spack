@@ -226,9 +226,9 @@ If all is well, you'll see something like this:
 
    Modified files:
 
-     var/spack/repos/builtin/packages/hdf5/package.py
-     var/spack/repos/builtin/packages/hdf/package.py
-     var/spack/repos/builtin/packages/netcdf/package.py
+     var/spack/repos/spack_repo/builtin/packages/hdf5/package.py
+     var/spack/repos/spack_repo/builtin/packages/hdf/package.py
+     var/spack/repos/spack_repo/builtin/packages/netcdf/package.py
    =======================================================
    Flake8 checks were clean.
 
@@ -236,9 +236,9 @@ However, if you aren't compliant with PEP 8, flake8 will complain:
 
 .. code-block:: console
 
-   var/spack/repos/builtin/packages/netcdf/package.py:26: [F401] 'os' imported but unused
-   var/spack/repos/builtin/packages/netcdf/package.py:61: [E303] too many blank lines (2)
-   var/spack/repos/builtin/packages/netcdf/package.py:106: [E501] line too long (92 > 79 characters)
+   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:26: [F401] 'os' imported but unused
+   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:61: [E303] too many blank lines (2)
+   var/spack/repos/spack_repo/builtin/packages/netcdf/package.py:106: [E501] line too long (92 > 79 characters)
    Flake8 found errors.
 
 Most of the error messages are straightforward, but if you don't understand what
@@ -280,7 +280,7 @@ All of these can be installed with Spack, e.g.
 
 .. warning::
 
-   Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-sphinx/package.py>`_.
+   Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/py-sphinx/package.py>`_.
    If you're using a ``python`` from Spack and you installed
    ``py-sphinx`` and friends, you need to make them available to your
    ``python``. The easiest way to do this is to run:
