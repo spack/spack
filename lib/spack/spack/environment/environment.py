@@ -5,6 +5,7 @@ import collections
 import collections.abc
 import contextlib
 import errno
+import glob
 import os
 import pathlib
 import re
@@ -2424,19 +2425,11 @@ def display_specs(specs):
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    path = spack.repo.RepoPath(cache=spack.caches.MISC_CACHE)
-
-    if os.path.isdir(root):
-        for repo_root in os.listdir(root):
-            repo_root = os.path.join(root, repo_root)
-
-            if not os.path.isdir(repo_root):
-                continue
-
-            repo = spack.repo.from_path(repo_root)
-            path.put_last(repo)
-
-    return path
+    repos = [
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    ]
+    return spack.repo.RepoPath(*repos, cache=spack.caches.MISC_CACHE)
 
 
 def manifest_file(env_name_or_dir):
