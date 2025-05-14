@@ -132,7 +132,7 @@ class IntelOneApiPackage(Package):
         if not isdir(install_dir):
             raise RuntimeError("install failed to directory: {0}".format(install_dir))
 
-    def setup_run_environment(self, env):
+    def setup_run_environment(self, env: EnvironmentModifications) -> None:
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
