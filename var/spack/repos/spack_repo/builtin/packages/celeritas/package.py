@@ -120,11 +120,7 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         for _pkg in ["covfie", "vecgeom"]:
             depends_on(f"{_pkg} +cuda cuda_arch={_arch}", when=f"+{_pkg} +cuda cuda_arch={_arch}")
 
-    conflicts(
-        "+rocm",
-        when="+covfie",
-        msg="HIP support is not yet available with covfie",
-    )
+    conflicts("+rocm", when="+covfie", msg="HIP support is not yet available with covfie")
     conflicts("+rocm", when="+cuda", msg="AMD and NVIDIA accelerators are incompatible")
     conflicts("+rocm", when="+vecgeom", msg="HIP support is only available with ORANGE")
     for _arch in ["cuda", "rocm"]:
