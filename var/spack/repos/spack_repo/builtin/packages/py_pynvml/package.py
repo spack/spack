@@ -22,5 +22,5 @@ class PyPynvml(PythonPackage):
     version("8.0.4", sha256="c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d")
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.6:3.11", when="@8.0.4", type=("build", "run"))
-    depends_on("python@3.6:", when="@11:", type=("build", "run"))
+    depends_on("python", when="@11:", type=("build", "run"))
+    depends_on("python@:3.11", when="@8.0.4", type=("build", "run"))
