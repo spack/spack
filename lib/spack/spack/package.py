@@ -162,6 +162,7 @@ pwd = getcwd
 configure: Executable
 make_jobs: int
 make: MakeExecutable
+nmake: Executable
 ninja: MakeExecutable
 python_include: str
 python_platlib: str
@@ -171,3 +172,5 @@ spack_cc: str
 spack_cxx: str
 spack_f77: str
 spack_fc: str
+prefix: Prefix
+dso_suffix: str

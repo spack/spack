@@ -15,7 +15,20 @@ import types
 import typing
 import warnings
 from datetime import datetime, timedelta
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 # Ignore emacs backups when listing modules
 ignore_modules = r"^\.#|~$"
@@ -424,45 +437,38 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     return cls
 
 
+K = TypeVar("K")
+V = TypeVar("V")
+
+
 @lazy_lexicographic_ordering
-class HashableMap(collections.abc.MutableMapping):
+class HashableMap(typing.MutableMapping[K, V]):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
     __slots__ = ("dict",)
 
     def __init__(self):
-        self.dict = {}
+        self.dict: Dict[K, V] = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: K) -> V:
         return self.dict[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V) -> None:
         self.dict[key] = value
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[K]:
         return iter(self.dict)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.dict)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: K) -> None:
         del self.dict[key]
 
     def _cmp_iter(self):
         for _, v in sorted(self.items()):
             yield v
-
-    def copy(self):
-        """Type-agnostic clone method.  Preserves subclass type."""
-        # Construct a new dict of my type
-        self_type = type(self)
-        clone = self_type()
-
-        # Copy everything from this dict into it.
-        for key in self:
-            clone[key] = self[key].copy()
-        return clone
 
 
 def match_predicate(*args):
@@ -1047,17 +1053,26 @@ class GroupedExceptionForwarder:
         return True
 
 
-class classproperty:
+ClassPropertyType = TypeVar("ClassPropertyType")
+
+
+class classproperty(Generic[ClassPropertyType]):
     """Non-data descriptor to evaluate a class-level property. The function that performs
-    the evaluation is injected at creation time and take an instance (could be None) and
-    an owner (i.e. the class that originated the instance)
+    the evaluation is injected at creation time and takes an owner (i.e., the class that
+    originated the instance).
     """
 
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
+
+
+#: A type alias that represents either a classproperty descriptor or a constant value of the same
+#: type. This allows derived classes to override a computed class-level property with a constant
+#: value while retaining type compatibility.
+ClassProperty = Union[ClassPropertyType, classproperty[ClassPropertyType]]
 
 
 class DeprecatedProperty:

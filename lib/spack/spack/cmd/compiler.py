@@ -63,7 +63,7 @@ def setup_parser(subparser):
     )
 
     # List
-    list_parser = sp.add_parser("list", help="list available compilers")
+    list_parser = sp.add_parser("list", aliases=["ls"], help="list available compilers")
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
@@ -216,5 +216,6 @@ def compiler(parser, args):
         "rm": compiler_remove,
         "info": compiler_info,
         "list": compiler_list,
+        "ls": compiler_list,
     }
     action[args.compiler_command](args)

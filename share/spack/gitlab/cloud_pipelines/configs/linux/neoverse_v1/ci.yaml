@@ -1,4 +1,4 @@
 ci:
   pipeline-gen:
   - build-job:
-      tags: ["aarch64", "graviton3"]
+      tags: ["aarch64", "neoverse_v1"]

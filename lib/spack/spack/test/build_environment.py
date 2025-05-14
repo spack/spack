@@ -1,9 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import collections
+import multiprocessing
 import os
 import posixpath
 import sys
+from typing import Dict, Optional, Tuple
 
 import pytest
 
@@ -688,36 +691,6 @@ def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_con
     assert result["ANOTHER_VAR"] == "this-should-be-present"
 
 
-@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
-def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
-    """Test whether when setting up a build environment, the build related globals are set only
-    in the top level spec.
-
-    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
-    persist across tests. In principle this is not terrible, cause the variables are mostly static.
-    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
-    define them instead as a property on the package instance.
-    """
-    root = spack.concretize.concretize_one("mpileaks")
-    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
-
-    # See todo above, we clear out any properties that may have been set by the previous test.
-    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
-    # globals were always a bad idea, and we should pass them to the package instance.
-    for spec in root.traverse():
-        for variable in build_variables:
-            spec.package.module.__dict__.pop(variable, None)
-
-    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
-
-    # Excpect the globals to be set at the root in a build context only.
-    should_be_set = lambda depth: context == Context.BUILD and depth == 0
-
-    for depth, spec in root.traverse(depth=True, root=True):
-        for variable in build_variables:
-            assert hasattr(spec.package.module, variable) == should_be_set(depth)
-
-
 def test_rpath_with_duplicate_link_deps():
     """If we have two instances of one package in the same link sub-dag, only the newest version is
     rpath'ed. This is for runtime support without splicing."""
@@ -777,3 +750,139 @@ def test_optimization_flags_are_using_node_target(default_mock_concretization, m
 
     assert len(actions) == 1 and isinstance(actions[0], spack.util.environment.SetEnv)
     assert actions[0].value == "-march=x86-64 -mtune=generic"
+
+
+@pytest.mark.regression("49827")
+@pytest.mark.parametrize(
+    "gcc_config,expected_rpaths",
+    [
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+      extra_rpaths:
+      - /extra/rpaths1
+      - /extra/rpaths2
+""",
+            "/extra/rpaths1:/extra/rpaths2",
+        ),
+        (
+            """\
+gcc:
+  externals:
+  - spec: gcc@14.2.0 languages=c
+    prefix: /fake/path1
+    extra_attributes:
+      compilers:
+        c: /fake/path1
+""",
+            None,
+        ),
+    ],
+)
+@pytest.mark.not_on_windows("Windows doesn't use the compiler-wrapper")
+def test_extra_rpaths_is_set(
+    working_env, mutable_config, mock_packages, gcc_config, expected_rpaths
+):
+    """Tests that using a compiler with an 'extra_rpaths' section will set the corresponding
+    SPACK_COMPILER_EXTRA_RPATHS variable for the wrapper.
+    """
+    cfg_data = syaml.load_config(gcc_config)
+    spack.config.set("packages", cfg_data)
+    mpich = spack.concretize.concretize_one("mpich %gcc@14")
+    spack.build_environment.setup_package(mpich.package, dirty=False)
+
+    if expected_rpaths is not None:
+        assert os.environ["SPACK_COMPILER_EXTRA_RPATHS"] == expected_rpaths
+    else:
+        assert "SPACK_COMPILER_EXTRA_RPATHS" not in os.environ
+
+
+class _TestProcess:
+    calls: Dict[str, int] = collections.defaultdict(int)
+    terminated = False
+    runtime = 0
+
+    def __init__(self, *, target, args):
+        self.alive = None
+        self.exitcode = 0
+        self._reset()
+
+    def start(self):
+        self.calls["start"] += 1
+        self.alive = True
+
+    def is_alive(self):
+        self.calls["is_alive"] += 1
+        return self.alive
+
+    def join(self, timeout: Optional[int] = None):
+        self.calls["join"] += 1
+        if timeout is not None and timeout > self.runtime:
+            self.alive = False
+
+    def terminate(self):
+        self.calls["terminate"] += 1
+        self._set_terminated()
+        self.alive = False
+
+    @classmethod
+    def _set_terminated(cls):
+        cls.terminated = True
+
+    @classmethod
+    def _reset(cls):
+        cls.calls.clear()
+        cls.terminated = False
+
+
+class _TestPipe:
+    def close(self):
+        pass
+
+    def recv(self):
+        if _TestProcess.terminated is True:
+            return 1
+        return 0
+
+
+def _pipe_fn(*, duplex: bool = False) -> Tuple[_TestPipe, _TestPipe]:
+    return _TestPipe(), _TestPipe()
+
+
+@pytest.fixture()
+def mock_build_process(monkeypatch):
+    monkeypatch.setattr(spack.build_environment, "BuildProcess", _TestProcess)
+    monkeypatch.setattr(multiprocessing, "Pipe", _pipe_fn)
+
+    def _factory(*, runtime: int):
+        _TestProcess.runtime = runtime
+
+    return _factory
+
+
+@pytest.mark.parametrize(
+    "runtime,timeout,expected_result,expected_calls",
+    [
+        # execution time < timeout
+        (2, 5, 0, {"start": 1, "join": 1, "is_alive": 1}),
+        # execution time > timeout
+        (5, 2, 1, {"start": 1, "join": 2, "is_alive": 1, "terminate": 1}),
+    ],
+)
+def test_build_process_timeout(
+    mock_build_process, runtime, timeout, expected_result, expected_calls
+):
+    """Tests that we make the correct function calls in different timeout scenarios."""
+    mock_build_process(runtime=runtime)
+    result = spack.build_environment.start_build_process(
+        pkg=None, function=None, kwargs={}, timeout=timeout
+    )
+
+    assert result == expected_result
+    assert _TestProcess.calls == expected_calls

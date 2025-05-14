@@ -24,6 +24,7 @@ import spack.package
 import spack.package_base
 import spack.spec
 import spack.store
+import spack.subprocess_context
 from spack.build_systems.generic import Package
 from spack.error import InstallError
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -111,14 +112,13 @@ def mpi_names(mock_inspector):
         ("dtbuild1", {"allowed_deps": dt.LINK}, {"dtbuild1", "dtlink2"}),
     ],
 )
-def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_runtimes, mock_inspector):
+def test_possible_dependencies(pkg_name, fn_kwargs, expected, mock_inspector):
     """Tests possible nodes of mpileaks, under different scenarios."""
-    expected.update(mock_runtimes)
     result, *_ = mock_inspector.possible_dependencies(pkg_name, **fn_kwargs)
     assert expected == result
 
 
-def test_possible_dependencies_virtual(mock_inspector, mock_packages, mock_runtimes, mpi_names):
+def test_possible_dependencies_virtual(mock_inspector, mock_packages, mpi_names):
     expected = set(mpi_names)
     for name in mpi_names:
         expected.update(
@@ -126,7 +126,6 @@ def test_possible_dependencies_virtual(mock_inspector, mock_packages, mock_runti
             for dep in mock_packages.get_pkg_class(name).dependencies_by_name()
             if not mock_packages.is_virtual(dep)
         )
-    expected.update(mock_runtimes)
     expected.update(s.name for s in mock_packages.providers_for("c"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(
@@ -146,7 +145,6 @@ def test_possible_dependencies_with_multiple_classes(
     pkgs = ["dt-diamond", "mpileaks"]
     expected = set(mpileaks_possible_deps)
     expected.update({"dt-diamond", "dt-diamond-left", "dt-diamond-right", "dt-diamond-bottom"})
-    expected.update(mock_packages.packages_with_tags("runtime"))
 
     real_pkgs, *_ = mock_inspector.possible_dependencies(*pkgs, allowed_deps=dt.ALL)
     assert set(expected) == real_pkgs
@@ -249,22 +247,29 @@ def test_package_exes_and_libs():
 
 
 def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+    UrlsPackage = type(
+        "URLsPackage",
+        (spack.package.Package,),
+        {
+            "__module__": "spack.pkg.builtin.urls_package",
+            "url": "https://www.example.com/url-package-1.0.tgz",
+            "urls": ["https://www.example.com/archive"],
+        },
+    )
 
-    s = spack.spec.Spec("pkg-a")
+    s = spack.spec.Spec("urls-package")
     with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
+        UrlsPackage(s)
 
 
 def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
+    LicensedPackage = type(
+        "LicensedPackage",
+        (spack.package.Package,),
+        {"__module__": "spack.pkg.builtin.licensed_package"},
+    )
 
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
@@ -319,3 +324,11 @@ def test_package_subscript(default_mock_concretization):
     # Subscript on concrete
     for d in root.traverse():
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
+
+
+def test_deserialize_preserves_package_attribute(default_mock_concretization):
+    x = default_mock_concretization("mpileaks").package
+    assert x.spec._package is x
+
+    y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
+    assert y.spec._package is y

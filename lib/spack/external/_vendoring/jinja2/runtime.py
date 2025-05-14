@@ -5,9 +5,9 @@ import typing as t
 from collections import abc
 from itertools import chain
 
-from markupsafe import escape  # noqa: F401
-from markupsafe import Markup
-from markupsafe import soft_str
+from _vendoring.markupsafe import escape  # noqa: F401
+from _vendoring.markupsafe import Markup
+from _vendoring.markupsafe import soft_str
 
 from .async_utils import auto_aiter
 from .async_utils import auto_await  # noqa: F401
@@ -28,7 +28,7 @@ F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
 if t.TYPE_CHECKING:
     import logging
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
     class LoopRenderFunc(te.Protocol):
@@ -849,7 +849,7 @@ class Undefined:
     >>> foo + 42
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
     """
 
     __slots__ = (
@@ -1020,7 +1020,7 @@ class ChainableUndefined(Undefined):
     >>> foo.bar['baz'] + 42
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
 
     .. versionadded:: 2.11.0
     """
@@ -1047,7 +1047,7 @@ class DebugUndefined(Undefined):
     >>> foo + 42
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
     """
 
     __slots__ = ()
@@ -1077,15 +1077,15 @@ class StrictUndefined(Undefined):
     >>> str(foo)
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
     >>> not foo
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
     >>> foo + 42
     Traceback (most recent call last):
       ...
-    jinja2.exceptions.UndefinedError: 'foo' is undefined
+    _vendoring.jinja2.exceptions.UndefinedError: 'foo' is undefined
     """
 
     __slots__ = ()
