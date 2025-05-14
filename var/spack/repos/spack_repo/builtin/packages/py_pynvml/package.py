@@ -22,6 +22,7 @@ class PyPynvml(PythonPackage):
     version("11.5.3", sha256="183d223ae487e5f00402d8da06c68c978ef8a9295793ee75559839c6ade7b229")
     version("8.0.4", sha256="c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d")
 
+    depends_on("py-nvidia-ml-py", when="@12:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("python@3.9:", when="@12:", type=("build", "run"))
     depends_on("python", when="@11:", type=("build", "run"))
