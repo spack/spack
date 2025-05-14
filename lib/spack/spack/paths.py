@@ -37,6 +37,11 @@ spack_xdg_state_home = _define_xdg_or_backup(xdg_state_home, os.path.join("~", "
 spack_xdg_config_home = _define_xdg_or_backup(xdg_config_home, os.path.join("~", "config"))
 spack_xdg_data_home = _define_xdg_or_backup(xdg_data_home, os.path.join("~", ".local", "share"))
 
+if xdg_data_home in os.environ:
+    spack_xdg_data_home_nodefault = os.path.expanduser(os.path.join(os.environ[xdg_data_home], "spack"))
+else:
+    spack_xdg_data_home_nodefault = None
+
 
 # User configuration
 def _get_user_config_path():
@@ -117,9 +122,17 @@ for module_dir in ["lmod", "modules"]:
 if not modules_base:
     modules_base = os.path.join(spack_xdg_data_home, "modules")
 
-# Environments can store views and `develop` packages
-# TODO: maybe store views/develop packages in a separate location?
-envs_path = os.path.join(var_path, "environments")
+old_envs_path = os.path.join(var_path, "environments")
+if dir_is_occupied(old_envs_path):
+    envs_path = old_envs_path
+elif spack_xdg_data_home_nodefault:
+    envs_path = os.path.join(spack_xdg_data_home_nodefault, "environments")
+else:
+    # Environments can store views and `develop` packages, which
+    # take up too much space for us to place them in ~ unless the
+    # user explicitly requests it
+    # TODO: maybe store views/develop packages in a separate location?
+    envs_path = old_envs_path
 
 # TODO: we could shutil.mv resources from old paths to new paths
 
