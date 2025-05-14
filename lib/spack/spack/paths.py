@@ -21,20 +21,22 @@ prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
 xdg_config_home = "XDG_CONFIG_HOME"
 xdg_state_home = "XDG_STATE_HOME"
+xdg_data_home = "XDG_DATA_HOME"
 
-if xdg_state_home in os.environ:
-    spack_xdg_state_home = os.path.join(os.environ[xdg_state_home], "spack")
-else:
-    spack_xdg_state_home = os.path.join("~", ".local", "state", "spack")
-spack_xdg_state_home = os.path.expanduser(spack_xdg_state_home)
 
-if xdg_config_home in os.environ:
-    spack_xdg_config_home = os.path.join(os.environ[xdg_config_home], "spack")
-else:
-    spack_xdg_config_home = os.path.join("~", ".config", "spack")
-spack_xdg_config_home = os.path.expanduser(spack_xdg_config_home)
+def _define_xdg_or_backup(xdg_var, backup):
+    if xdg_var in os.environ:
+        spack_xdg_defined = os.path.join(xdg_var, "spack")
+    else:
+        spack_xdg_defined = os.path.join(backup, "spack")
+    return os.path.expanduser(spack_xdg_defined)
 
-# xdg_data_home -- $HOME/.local/share
+
+#: Resolved XDG_ counterparts, with additional "spack" subdirectory
+spack_xdg_state_home = _define_xdg_or_backup(xdg_state_home, os.path.join("~", ".local", "state"))
+spack_xdg_config_home = _define_xdg_or_backup(xdg_config_home, os.path.join("~", "config"))
+spack_xdg_data_home = _define_xdg_or_backup(xdg_data_home, os.path.join("~", ".local", "share"))
+
 
 # User configuration
 def _get_user_config_path():
@@ -113,13 +115,11 @@ for module_dir in ["lmod", "modules"]:
     if dir_is_occupied(os.path.join(share_path, module_dir)):
         modules_base = share_path
 if not modules_base:
-    modules_base = os.path.join(per_spack_user_root, "modules")
+    modules_base = os.path.join(spack_xdg_data_home, "modules")
 
-old_envs_path = os.path.join(var_path, "environments")
-if dir_is_occupied(old_envs_path):
-    envs_path = old_envs_path
-else:
-    envs_path = os.path.join(per_spack_user_root, "environments")
+# Environments can store views and `develop` packages
+# TODO: maybe store views/develop packages in a separate location?
+envs_path = os.path.join(var_path, "environments")
 
 # TODO: we could shutil.mv resources from old paths to new paths
 
@@ -144,7 +144,7 @@ mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
+    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home)
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
