@@ -35,6 +35,8 @@ class Parsec(CMakePackage, CudaPackage):
         url="https://github.com/ICLDisco/parsec/archive/refs/tags/v1.1.0.tar.gz",
     )
 
+    patch("apply-header.patch", when="@4.0.2411")
+
     variant(
         "build_type",
         default="RelWithDebInfo",
@@ -82,6 +84,7 @@ class Parsec(CMakePackage, CudaPackage):
             self.define_from_variant("PARSEC_PROF_TRACE", "profile"),
             self.define_from_variant("PARSEC_DEBUG_HISTORY", "debug_verbose"),
             self.define_from_variant("PARSEC_DEBUG_PARANOID", "debug_verbose"),
+            self.define("PARSEC_GPU_WITH_HIP", "Off"),
         ]
         return args
 
