@@ -1135,7 +1135,7 @@ complete -c spack -n '__fish_spack_using_command compiler list' -l scope -r -d '
 set -g __fish_spack_optspecs_spack_compiler_ls h/help scope=
 complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -f -a '_builtin defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -f -a '_builtin defaults system end-user site user per-spack-user command_line'
 complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -d 'configuration scope to read from'
 
 # spack compiler info
