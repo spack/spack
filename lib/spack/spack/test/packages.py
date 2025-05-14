@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import importlib
 import os
+import pathlib
+import sys
 
 import pytest
 
@@ -42,7 +45,7 @@ class TestPackage:
         repo = spack.repo.from_path(mock_packages_path)
         filename = repo.filename_for_package_name("some-nonexisting-package")
         assert filename == os.path.join(
-            mock_packages_path, "packages", "some-nonexisting-package", "package.py"
+            mock_packages_path, "packages", "some_nonexisting_package", "package.py"
         )
 
     def test_package_class_names(self):
@@ -56,16 +59,45 @@ class TestPackage:
         assert "_None" == pkg_name_to_class_name("none")  # reserved keyword
         assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
+<<<<<<< HEAD
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
         import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa: F401
+||||||| parent of 1c05b1dd1b (fix various tests)
+    # Below tests target direct imports of spack packages from the
+    # spack.pkg namespace
+    def test_import_package(self):
+        import spack.pkg.builtin_mock.mpich  # type: ignore[import] # noqa: F401
+=======
+    # Below tests target direct imports of spack packages from the spack.pkg namespace
+    def test_import_package(self, tmp_path: pathlib.Path):
+        root, _ = spack.repo.create_repo(str(tmp_path), "testing_repo", package_api=(1, 0))
+        pkg_path = pathlib.Path(root) / "packages" / "mpich" / "package.py"
+        pkg_path.parent.mkdir(parents=True)
+        pkg_path.write_text("foo = 1")
+>>>>>>> 1c05b1dd1b (fix various tests)
 
+<<<<<<< HEAD
     def test_import_package_as(self):
         import spack.pkg.builtin.mock  # noqa: F401
         import spack.pkg.builtin.mock as m  # noqa: F401
         import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
         from spack.pkg.builtin import mock  # noqa: F401
+||||||| parent of 1c05b1dd1b (fix various tests)
+    def test_import_package_as(self):
+        import spack.pkg.builtin_mock  # noqa: F401
+        import spack.pkg.builtin_mock as m  # noqa: F401
+        import spack.pkg.builtin_mock.mpich as mp  # noqa: F401
+        from spack.pkg.builtin import mock  # noqa: F401
+=======
+        with spack.repo.use_repositories(root):
+            importlib.import_module("spack.pkg.testing_repo")
+            assert importlib.import_module("spack.pkg.testing_repo.mpich").foo == 1
+
+        del sys.modules["spack.pkg.testing_repo"]
+        del sys.modules["spack.pkg.testing_repo.mpich"]
+>>>>>>> 1c05b1dd1b (fix various tests)
 
     def test_inheritance_of_directives(self):
         pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
@@ -96,28 +128,11 @@ class TestPackage:
         # Will error if inheritor package cannot find inherited patch files
         _ = spack.concretize.concretize_one("patch-inheritance")
 
-    def test_import_class_from_package(self):
-        from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401
-
-    def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich  # noqa: F401
-
-    def test_import_namespace_container_modules(self):
-        import spack.pkg  # noqa: F401
-        import spack.pkg as p  # noqa: F401
-        import spack.pkg.builtin  # noqa: F401
-        import spack.pkg.builtin as b  # noqa: F401
-        import spack.pkg.builtin.mock  # noqa: F401
-        import spack.pkg.builtin.mock as m  # noqa: F401
-        from spack import pkg  # noqa: F401
-        from spack.pkg import builtin  # noqa: F401
-        from spack.pkg.builtin import mock  # noqa: F401
-
 
 @pytest.mark.regression("2737")
 def test_urls_for_versions(mock_packages, config):
     """Version directive without a 'url' argument should use default url."""
-    for spec_str in ("url_override@0.9.0", "url_override@1.0.0"):
+    for spec_str in ("url-override@0.9.0", "url-override@1.0.0"):
         s = spack.concretize.concretize_one(spec_str)
         url = s.package.url_for_version("0.9.0")
         assert url == "http://www.anothersite.org/uo-0.9.0.tgz"

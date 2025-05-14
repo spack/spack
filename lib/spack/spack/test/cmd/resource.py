@@ -48,7 +48,9 @@ def test_resource_list(mock_packages, capfd):
     assert "path:" in out
 
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
     assert "applies to: builtin.mock.libelf" in out
@@ -74,7 +76,9 @@ def test_resource_show(mock_packages, capfd):
 
     assert out.startswith(test_hash)
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
     assert "applies to: builtin.mock.libelf" in out
