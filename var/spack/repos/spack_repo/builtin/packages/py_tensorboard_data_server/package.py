@@ -24,13 +24,13 @@ class PyTensorboardDataServer(PythonPackage):
 
     # https://github.com/tensorflow/tensorboard/issues/5713
     patch(
-        "https://github.com/tensorflow/tensorboard/pull/5715.patch?full_index=1",
-        sha256="878bbd60fd9c38216a372792f02a65c1b422b6c546050fdf335b264ab263cd8a",
+        "https://github.com/tensorflow/tensorboard/commit/b085eab93a689230f24d3bba6a8caf75b387f1b9.patch?full_index=1",
+        sha256="ce5d221a3302cba1ee7948d6c9e7d4ce053c392b3849a1290a5210905d8e8cbd",
         when="@0.6.1",
     )
     patch(
-        "https://github.com/tensorflow/tensorboard/pull/6101.patch?full_index=1",
-        sha256="4b3bcc2ed656699e9faad7937d013b65fa65fed58fbe58d2ae38e0e7b8006ad8",
+        "https://github.com/tensorflow/tensorboard/commit/1675de9a2c905ef6cc8ecaa59394cb2fb52489db.patch?full_index=1",
+        sha256="8cbd5feb7235d3944fd05ba1f3e16ed3fa0e2212680d6e060c19489be372d6c5",
         when="@0.6.1",
     )
 

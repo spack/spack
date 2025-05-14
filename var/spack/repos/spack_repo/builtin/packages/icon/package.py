@@ -14,11 +14,16 @@ class Icon(AutotoolsPackage):
 
     homepage = "https://www.icon-model.org"
     url = "https://gitlab.dkrz.de/icon/icon-model/-/archive/icon-2024.01-public/icon-model-icon-2024.01-public.tar.gz"
+    git = "https://gitlab.dkrz.de/icon/icon-model.git"
+    submodules = True
 
     maintainers("skosukhin", "Try2Code")
 
     license("BSD-3-Clause", checked_by="skosukhin")
 
+    version(
+        "2025.04", tag="icon-2025.04-public", commit="1be2ca66ea0de149971d2e77e88a9f11c764bd22"
+    )
     version("2024.10", sha256="5c461c783eb577c97accd632b18140c3da91c1853d836ca2385f376532e9bad1")
     version("2024.07", sha256="f53043ba1b36b8c19d0d2617ab601c3b9138b90f8ff8ca6db0fd079665eb5efa")
     version("2024.01-1", sha256="3e57608b7e1e3cf2f4cb318cfe2fdb39678bd53ca093955d99570bd6d7544184")
@@ -95,10 +100,9 @@ class Icon(AutotoolsPackage):
     # Optimization Features:
     variant("mixed-precision", default=False, description="Enable mixed-precision dynamical core")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
-
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on("python", type="build")
     depends_on("perl", type="build")
     depends_on("cmake@3.18:", type="build")
@@ -205,10 +209,12 @@ class Icon(AutotoolsPackage):
                 "-arch=sm_{0}".format(self.nvidia_targets[gpu]),
                 "-ccbin={0}".format(spack_cxx),
             ]
-            flags["ICON_LDFLAGS"].extend(self.compiler.stdcxx_libs)
             libs += self.spec["cuda"].libs
         else:
             args.append("--disable-gpu")
+
+        if gpu in self.nvidia_targets or "+comin" in self.spec:
+            flags["ICON_LDFLAGS"].extend(self.compiler.stdcxx_libs)
 
         if self.compiler.name == "gcc":
             flags["CFLAGS"].append("-g")

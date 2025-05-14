@@ -47,7 +47,7 @@ class BaseLoader:
     A very basic example for a loader that looks up templates on the file
     system could look like this::
 
-        from jinja2 import BaseLoader, TemplateNotFound
+        from _vendoring.jinja2 import BaseLoader, TemplateNotFound
         from os.path import join, exists, getmtime
 
         class MyLoader(BaseLoader):
@@ -594,7 +594,7 @@ class ModuleLoader(BaseLoader):
     def __init__(
         self, path: t.Union[str, os.PathLike, t.Sequence[t.Union[str, os.PathLike]]]
     ) -> None:
-        package_name = f"_jinja2_module_templates_{id(self):x}"
+        package_name = f"__vendoring.jinja2_module_templates_{id(self):x}"
 
         # create a fake module that looks for the templates in the
         # path given.

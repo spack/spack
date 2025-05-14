@@ -9,7 +9,7 @@ import shlex
 from collections import namedtuple
 from typing import Optional
 
-import jsonschema
+import _vendoring.jsonschema
 
 import spack.environment as ev
 import spack.error
@@ -201,7 +201,7 @@ class PathContext(tengine.Context):
         manifest = {"spack": manifest}
 
         # Validate the manifest file
-        jsonschema.validate(manifest, schema=spack.schema.env.schema)
+        _vendoring.jsonschema.validate(manifest, schema=spack.schema.env.schema)
 
         return syaml.dump(manifest, default_flow_style=False).strip()
 

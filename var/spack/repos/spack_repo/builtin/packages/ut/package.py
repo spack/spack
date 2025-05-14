@@ -39,8 +39,8 @@ class Ut(CMakePackage):
 
     # 1.1.9 had the version set to 1.1.8. See: https://github.com/boost-ext/ut/pull/492.
     patch(
-        "https://github.com/boost-ext/ut/pull/492.patch?full_index=1",
-        sha256="1858aefec7e6adbb6130bf32a0343f9ddd173182f9dba3eb3d30523e11d26987",
+        "https://github.com/boost-ext/ut/commit/67b136c0267a54248d05fcba63905ff5e6abf0b7.patch?full_index=1",
+        sha256="0b7ad701a4f9bd6276f7d8b7c464d4ba98cc8c18d436f0eb769c639e67296a69",
         when="@1.1.9",
     )
 

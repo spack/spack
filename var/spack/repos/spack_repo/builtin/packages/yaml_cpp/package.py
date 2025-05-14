@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.spec import ConflictsInSpecError
 
 from ..boost.package import Boost
 
@@ -57,20 +56,12 @@ class YamlCpp(CMakePackage):
         # the user can add arbitrary strings to the flags. Here we can at least
         # fail early.
         # We'll include cppflags in case users mistakenly put c++ flags there.
-        spec = self.spec
-        if name in ("cxxflags", "cppflags") and spec.satisfies("+tests"):
-            if "-stdlib=libc++" in flags:
-                raise ConflictsInSpecError(
-                    spec,
-                    [
-                        (
-                            spec,
-                            spec.compiler_flags[name],
-                            spec.variants["tests"],
-                            yaml_cpp_tests_libcxx_error_msg,
-                        )
-                    ],
-                )
+        if (
+            name in ("cxxflags", "cppflags")
+            and self.spec.satisfies("+tests")
+            and "-stdlib=libc++" in flags
+        ):
+            raise InstallError(yaml_cpp_tests_libcxx_error_msg)
         return (flags, None, None)
 
     def cmake_args(self):

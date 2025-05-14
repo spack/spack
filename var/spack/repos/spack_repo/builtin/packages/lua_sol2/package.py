@@ -35,9 +35,9 @@ class LuaSol2(CMakePackage):
     depends_on("lua", type=("link", "run"))
 
     patch(
-        "https://github.com/ThePhD/sol2/pull/1606.patch?full_index=1",
+        "https://github.com/ThePhD/sol2/commit/d805d027e0a0a7222e936926139f06e23828ce9f.patch?full_index=1",
         when="@3.3.0 %oneapi@2025:",
-        sha256="ed6c5924a0639fb1671e6d7dacbb88dce70aa006bcee2f380b6acd34da89664c",
+        sha256="ea7e30be5d6e0d71aded18d68b16725fa4e5f86f99757048fa18c7ece92417c5",
     )
 
     def cmake_args(self):

@@ -1,2 +1,2 @@
-from jsonschema.cli import main
+from _vendoring.jsonschema.cli import main
 main()
