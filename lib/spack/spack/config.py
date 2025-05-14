@@ -985,8 +985,8 @@ def create_incremental() -> Generator[Configuration, None, None]:
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
-    per_spack_cfg = os.path.join(spack.paths.per_spack_user_root, "config")
-    configuration_paths.append(("per-spack-user", per_spack_cfg))
+        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id)
+        configuration_paths.append(("this-spack-user", per_spack_cfg))
 
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:

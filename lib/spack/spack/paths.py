@@ -19,11 +19,28 @@ import spack.util.hash as hash
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
+xdg_config_home = "XDG_CONFIG_HOME"
+xdg_state_home = "XDG_STATE_HOME"
 
-# User configuration and caches in $HOME/.spack
-# Override w/ `SPACK_USER_CONFIG_PATH`
+if xdg_state_home in os.environ:
+    spack_xdg_state_home = os.path.join(os.environ[xdg_state_home], "spack")
+else:
+    spack_xdg_state_home = os.path.join("~", ".local", "state", "spack")
+spack_xdg_state_home = os.path.expanduser(spack_xdg_state_home)
+
+if xdg_config_home in os.environ:
+    spack_xdg_config_home = os.path.join(os.environ[xdg_config_home], "spack")
+else:
+    spack_xdg_config_home = os.path.join("~", ".config", "spack")
+spack_xdg_config_home = os.path.expanduser(spack_xdg_config_home)
+
+# xdg_data_home -- $HOME/.local/share
+
+# User configuration
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or "~%s.spack" % os.sep)
+    return os.path.expanduser(
+        os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home
+    )
 
 
 # Configuration in /etc/spack on the system
@@ -83,22 +100,10 @@ var_path = os.path.join(prefix, "var", "spack")
 internal_install_tree_root = os.path.join(prefix, "opt", "spack")
 
 
-def user_root():
-    """Default install tree and config scope.
-
-    Applies when $spack/opt is not an install tree.
-
-    ~/<spack-prefix-hash>/
-    """
-    spack_prefix = prefix
-    return pathlib.Path(user_config_path, hash.b32_hash(spack_prefix)[:7])
-
-
-per_spack_user_root = str(user_root())
+spack_instance_id = hash.b32_hash(prefix)[:7]
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-#: placed in per-spack-instance user root
-default_misc_cache_path = os.path.join(per_spack_user_root, "cache")
+default_misc_cache_path = os.path.join(spack_xdg_state_home, spack_instance_id, "cache")
 
 #: concretization cache for Spack concretizations
 default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
