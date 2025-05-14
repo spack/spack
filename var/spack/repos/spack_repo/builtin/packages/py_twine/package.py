@@ -41,5 +41,9 @@ class PyTwine(PythonPackage):
         depends_on("py-packaging", when="@6.1:")
         depends_on("py-id", when="@6.1:")
 
+        depends_on("python@3.8:", when="@5:")
+        depends_on("python@3.7:", when="@4:")
+        depends_on("python@3.6:", when="@2:")
+
         # Historical Dependencies
         depends_on("py-tqdm@4.14:", when="@:3")
