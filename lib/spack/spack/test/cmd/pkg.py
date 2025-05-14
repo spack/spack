@@ -37,9 +37,9 @@ abd = {"mockpkg-a", "mockpkg-b", "mockpkg-d"}
 # Force all tests to use a git repository *in* the mock packages repo.
 @pytest.fixture(scope="module")
 def mock_pkg_git_repo(git, tmp_path_factory):
-    """Copy the builtin.mock repo and make a mutable git repo inside it."""
+    """Copy the builtin_mock repo and make a mutable git repo inside it."""
     root_dir = tmp_path_factory.mktemp("mock_pkg_git_repo")
-    repo_dir = root_dir / "builtin.mock"
+    repo_dir = root_dir / "builtin_mock"
     shutil.copytree(spack.paths.mock_packages_path, str(repo_dir))
 
     repo_cache = spack.util.file_cache.FileCache(root_dir / "cache")
@@ -90,7 +90,7 @@ def mock_pkg_git_repo(git, tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def mock_pkg_names():
-    repo = spack.repo.PATH.get_repo("builtin.mock")
+    repo = spack.repo.PATH.get_repo("builtin_mock")
 
     # Be sure to include virtual packages since packages with stand-alone
     # tests may inherit additional tests from the virtuals they provide,
@@ -116,7 +116,7 @@ def test_builtin_repo():
 
 
 def test_mock_builtin_repo(mock_packages):
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin.mock")
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
 
 
 def test_pkg_add(git, mock_pkg_git_repo):

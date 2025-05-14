@@ -266,7 +266,7 @@ spec:
     compiler:
       name: gcc
       version: 8.3.0
-    namespace: builtin.mock
+    namespace: builtin_mock
     parameters:
       bvv: true
       foo:
@@ -296,7 +296,7 @@ spec:
     compiler:
       name: gcc
       version: 8.3.0
-    namespace: builtin.mock
+    namespace: builtin_mock
     parameters:
       cflags: []
       cppflags: []

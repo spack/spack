@@ -1,0 +1,3 @@
+repo:
+  namespace: builtin_mock
+  api: v2.0

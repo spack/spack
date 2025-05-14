@@ -43,19 +43,19 @@ repo:
 
 def test_repo_getpkg(mutable_mock_repo):
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_multi_getpkg(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_multi_getpkgclass(mutable_mock_repo, extra_repo):
     mutable_mock_repo.put_first(extra_repo[0])
     mutable_mock_repo.get_pkg_class("pkg-a")
-    mutable_mock_repo.get_pkg_class("builtin.mock.pkg-a")
+    mutable_mock_repo.get_pkg_class("builtin_mock.pkg-a")
 
 
 def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
@@ -65,7 +65,7 @@ def test_repo_pkg_with_unknown_namespace(mutable_mock_repo):
 
 def test_repo_unknown_pkg(mutable_mock_repo):
     with pytest.raises(spack.repo.UnknownPackageError):
-        mutable_mock_repo.get_pkg_class("builtin.mock.nonexistentpackage")
+        mutable_mock_repo.get_pkg_class("builtin_mock.nonexistentpackage")
 
 
 def test_repo_last_mtime(mock_packages):
@@ -98,7 +98,7 @@ def test_repo_invisibles(mutable_mock_repo, extra_repo):
 def test_namespace_hasattr(attr_name, exists, mutable_mock_repo):
     # Check that we don't fail on 'hasattr' checks because
     # of a custom __getattr__ implementation
-    nms = spack.repo.SpackNamespace("spack.pkg.builtin.mock")
+    nms = spack.repo.SpackNamespace("spack.pkg.builtin_mock")
     assert hasattr(nms, attr_name) == exists
 
 
@@ -121,24 +121,24 @@ def test_use_repositories_doesnt_change_class(mock_packages):
 
 
 def test_import_repo_prefixes_as_python_modules(mock_packages):
-    import spack.pkg.builtin.mock
+    import spack.pkg.builtin_mock
 
     assert isinstance(spack.pkg, spack.repo.SpackNamespace)
     assert isinstance(spack.pkg.builtin, spack.repo.SpackNamespace)
-    assert isinstance(spack.pkg.builtin.mock, spack.repo.SpackNamespace)
+    assert isinstance(spack.pkg.builtin_mock, spack.repo.SpackNamespace)
 
 
 def test_absolute_import_spack_packages_as_python_modules(mock_packages):
-    import spack.pkg.builtin.mock.mpileaks
+    import spack.pkg.builtin_mock.mpileaks
 
-    assert hasattr(spack.pkg.builtin.mock, "mpileaks")
-    assert hasattr(spack.pkg.builtin.mock.mpileaks, "Mpileaks")
-    assert isinstance(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
-    assert issubclass(spack.pkg.builtin.mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
+    assert hasattr(spack.pkg.builtin_mock, "mpileaks")
+    assert hasattr(spack.pkg.builtin_mock.mpileaks, "Mpileaks")
+    assert isinstance(spack.pkg.builtin_mock.mpileaks.Mpileaks, spack.package_base.PackageMeta)
+    assert issubclass(spack.pkg.builtin_mock.mpileaks.Mpileaks, spack.package_base.PackageBase)
 
 
 def test_relative_import_spack_packages_as_python_modules(mock_packages):
-    from spack.pkg.builtin.mock.mpileaks import Mpileaks
+    from spack.pkg.builtin_mock.mpileaks import Mpileaks
 
     assert isinstance(Mpileaks, spack.package_base.PackageMeta)
     assert issubclass(Mpileaks, spack.package_base.PackageBase)
@@ -160,7 +160,7 @@ def test_repo_path_handles_package_removal(tmpdir, mock_packages):
     builder.remove("pkg-c")
     with spack.repo.use_repositories(builder.root, override=False) as repos:
         r = repos.repo_for_pkg("pkg-c")
-        assert r.namespace == "builtin.mock"
+        assert r.namespace == "builtin_mock"
 
 
 def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_debug, capsys):
@@ -185,7 +185,7 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
         for entry in repos:
             if entry == "mock":
                 repo_paths.append(spack.paths.mock_packages_path)
-                namespaces.append("builtin.mock")
+                namespaces.append("builtin_mock")
             if entry == "extra":
                 name = "extra_mock"
                 repo_dir = tmp_path / name
@@ -211,7 +211,7 @@ def test_path_computation_with_names(method_name, mock_repo_path):
     repo_path = spack.repo.RepoPath(mock_repo_path, cache=None)
     method = getattr(repo_path, method_name)
     unqualified = method("mpileaks")
-    qualified = method("builtin.mock.mpileaks")
+    qualified = method("builtin_mock.mpileaks")
     assert qualified == unqualified
 
 
@@ -220,11 +220,11 @@ def test_use_repositories_and_import():
     import spack.paths
 
     repo_dir = pathlib.Path(spack.paths.test_repos_path)
-    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime.test")):
-        import spack.pkg.compiler_runtime.test.gcc_runtime
+    with spack.repo.use_repositories(str(repo_dir / "compiler_runtime_test")):
+        import spack.pkg.compiler_runtime_test.gcc_runtime
 
-    with spack.repo.use_repositories(str(repo_dir / "builtin.mock")):
-        import spack.pkg.builtin.mock.cmake
+    with spack.repo.use_repositories(str(repo_dir / "builtin_mock")):
+        import spack.pkg.builtin_mock.cmake
 
 
 @pytest.mark.usefixtures("nullify_globals")
@@ -236,7 +236,7 @@ class TestRepo:
     def test_creation(self, mock_test_cache):
         repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.config_file.endswith("repo.yaml")
-        assert repo.namespace == "builtin.mock"
+        assert repo.namespace == "builtin_mock"
 
     @pytest.mark.parametrize(
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
@@ -312,12 +312,12 @@ class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert len(repo.repos) == 1
-        assert repo.by_namespace["builtin.mock"] is repo.repos[0]
+        assert repo.by_namespace["builtin_mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
-        # builtin.mock is there
-        assert repo.get_repo("builtin.mock") is repo.repos[0]
+        # builtin_mock is there
+        assert repo.get_repo("builtin_mock") is repo.repos[0]
         # foo is not there, raise
         with pytest.raises(spack.repo.UnknownNamespaceError):
             repo.get_repo("foo")

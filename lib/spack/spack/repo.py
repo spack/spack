@@ -153,7 +153,7 @@ NOT_PROVIDED = object()
 def builtin_repo() -> "Repo":
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return PATH.get_repo("builtin.mock")
+        return PATH.get_repo("builtin_mock")
     except UnknownNamespaceError:
         return PATH.get_repo("builtin")
 

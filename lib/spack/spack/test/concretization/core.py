@@ -78,7 +78,7 @@ def binary_compatibility(monkeypatch, request):
         return
 
     if "mock_packages" not in request.fixturenames:
-        # Only builtin.mock has a mock glibc package
+        # Only builtin_mock has a mock glibc package
         return
 
     if "database" in request.fixturenames or "mutable_database" in request.fixturenames:
@@ -373,11 +373,11 @@ class TestConcretize:
         # Note that providers are repo-specific, so we don't misinterpret
         # providers, but vdeps are not namespace-specific, so we can
         # associate vdeps across repos.
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.3") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.2") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.1") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.10.0") in providers
-        assert Spec("builtin.mock.multi-provider-mpi@1.8.8") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.3") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.2") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.1") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.10.0") in providers
+        assert Spec("builtin_mock.multi-provider-mpi@1.8.8") in providers
 
     def test_different_compilers_get_different_flags(
         self, mutable_config, clang12_with_flags, gcc11_with_flags
@@ -1715,12 +1715,12 @@ class TestConcretize:
     ):
         with spack.repo.use_repositories(mock_custom_repository, override=False):
             s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace != "builtin.mock"
+            assert s.namespace != "builtin_mock"
             PackageInstaller([s.package], fake=True, explicit=True).install()
 
         with spack.config.override("concretizer:reuse", True):
             s = spack.concretize.concretize_one("pkg-c")
-        assert s.namespace == "builtin.mock"
+        assert s.namespace == "builtin_mock"
 
     @pytest.mark.regression("45538")
     def test_reuse_from_other_namespace_no_raise(self, tmpdir, temporary_store, monkeypatch):
@@ -1751,7 +1751,7 @@ class TestConcretize:
             repos.repos[0]._pkg_checker.invalidate()
             with spack.config.override("concretizer:reuse", True):
                 s = spack.concretize.concretize_one("pkg-c")
-            assert s.namespace == "builtin.mock"
+            assert s.namespace == "builtin_mock"
 
     @pytest.mark.parametrize(
         "specs,checks",
@@ -2328,10 +2328,10 @@ class TestConcretize:
         "spec_str,expected_namespaces",
         [
             # Single node with fully qualified namespace
-            ("builtin.mock.gmake", {"gmake": "builtin.mock"}),
+            ("builtin_mock.gmake", {"gmake": "builtin_mock"}),
             # Dependency with fully qualified namespace
-            ("hdf5 ^builtin.mock.gmake", {"gmake": "builtin.mock", "hdf5": "duplicates.test"}),
-            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+            ("hdf5 ^builtin_mock.gmake", {"gmake": "builtin_mock", "hdf5": "duplicates_test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates_test", "hdf5": "duplicates_test"}),
         ],
     )
     def test_select_lower_priority_package_from_repository_stack(
@@ -2340,8 +2340,8 @@ class TestConcretize:
         """Tests that a user can explicitly select a lower priority, fully qualified dependency
         from cli.
         """
-        # 'builtin.mock" and "duplicates.test" share a 'gmake' package
-        additional_repo = os.path.join(spack.paths.test_repos_path, "duplicates.test")
+        # 'builtin_mock" and "duplicates_test" share a 'gmake' package
+        additional_repo = os.path.join(spack.paths.test_repos_path, "duplicates_test")
         with spack.repo.use_repositories(additional_repo, override=False):
             s = spack.concretize.concretize_one(spec_str)
 
@@ -2585,7 +2585,7 @@ class TestConcretize:
 
 @pytest.fixture()
 def duplicates_test_repository():
-    repository_path = os.path.join(spack.paths.test_repos_path, "duplicates.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "duplicates_test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 
@@ -2820,7 +2820,7 @@ class TestConcreteSpecsByHash:
 
 @pytest.fixture()
 def edges_test_repository():
-    repository_path = os.path.join(spack.paths.test_repos_path, "edges.test")
+    repository_path = os.path.join(spack.paths.test_repos_path, "edges_test")
     with spack.repo.use_repositories(repository_path) as mock_repo:
         yield mock_repo
 

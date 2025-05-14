@@ -135,16 +135,16 @@ class TestSpecSemantics:
             ("libelf@0:2.5%gcc@2:4.6", "libelf@2.1:3%gcc@4.5:4.7", "libelf@2.1:2.5%gcc@4.5:4.6"),
             # Namespaces
             ("builtin.mpich", "mpich", "builtin.mpich"),
-            ("builtin.mock.mpich", "mpich", "builtin.mock.mpich"),
+            ("builtin_mock.mpich", "mpich", "builtin_mock.mpich"),
             ("builtin.mpich", "builtin.mpich", "builtin.mpich"),
-            ("mpileaks ^builtin.mock.mpich", "^mpich", "mpileaks ^builtin.mock.mpich"),
+            ("mpileaks ^builtin_mock.mpich", "^mpich", "mpileaks ^builtin_mock.mpich"),
             # Virtual dependencies are fully resolved during concretization, so we can constrain
             # abstract specs but that would result in a new node
-            ("mpileaks ^builtin.mock.mpich", "^mpi", "mpileaks ^mpi ^builtin.mock.mpich"),
+            ("mpileaks ^builtin_mock.mpich", "^mpi", "mpileaks ^mpi ^builtin_mock.mpich"),
             (
-                "mpileaks ^builtin.mock.mpich",
-                "^builtin.mock.mpich",
-                "mpileaks ^builtin.mock.mpich",
+                "mpileaks ^builtin_mock.mpich",
+                "^builtin_mock.mpich",
+                "mpileaks ^builtin_mock.mpich",
             ),
             # Compilers
             ("foo%gcc", "%gcc", "foo%gcc"),
@@ -455,8 +455,8 @@ class TestSpecSemantics:
             ("foo%gcc@4.3", "%gcc@4.4:4.6"),
             ("foo@4.0%gcc", "@1:3%gcc"),
             ("foo@4.0%gcc@4.5", "@1:3%gcc@4.4:4.6"),
-            ("builtin.mock.mpich", "builtin.mpich"),
-            ("mpileaks ^builtin.mock.mpich", "^builtin.mpich"),
+            ("builtin_mock.mpich", "builtin.mpich"),
+            ("mpileaks ^builtin_mock.mpich", "^builtin.mpich"),
             ("mpileaks^mpich@1.2", "^mpich@2.0"),
             ("mpileaks^mpich@4.0^callpath@1.5", "^mpich@1:3^callpath@1.4:1.6"),
             ("mpileaks^mpich@2.0^callpath@1.7", "^mpich@1:3^callpath@1.4:1.6"),
@@ -476,7 +476,7 @@ class TestSpecSemantics:
             ("libelf+debug", "libelf~debug"),
             ("libelf+debug~foo", "libelf+debug+foo"),
             ("libelf debug=True", "libelf debug=False"),
-            ("namespace=builtin.mock", "namespace=builtin"),
+            ("namespace=builtin_mock", "namespace=builtin"),
         ],
     )
     def test_constraining_abstract_specs_with_empty_intersection(self, lhs, rhs):
@@ -609,7 +609,7 @@ class TestSpecSemantics:
 
     def test_satisfied_namespace(self):
         spec = spack.concretize.concretize_one("zlib")
-        assert spec.satisfies("namespace=builtin.mock")
+        assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
     @pytest.mark.parametrize(

@@ -1,0 +1,18 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from ..multimethod_diamond_parent.package import MultimethodDiamondParent
+from ..multimethod_inheritor.package import MultimethodInheritor
+from spack.package import *
+
+
+class MultimethodDiamond(MultimethodInheritor, MultimethodDiamondParent):
+    """This package is designed for use with Spack's multimethod test.
+    It has a bunch of test cases for the @when decorator that the
+    test uses.
+    """
+
+    @when("@4.0")
+    def diamond_inheritance(self):
+        return "subclass"

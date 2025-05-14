@@ -60,12 +60,12 @@ class TestPackage:
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa: F401
+        import spack.pkg.builtin_mock.mpich  # type: ignore[import] # noqa: F401
 
     def test_import_package_as(self):
-        import spack.pkg.builtin.mock  # noqa: F401
-        import spack.pkg.builtin.mock as m  # noqa: F401
-        import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
+        import spack.pkg.builtin_mock  # noqa: F401
+        import spack.pkg.builtin_mock as m  # noqa: F401
+        import spack.pkg.builtin_mock.mpich as mp  # noqa: F401
         from spack.pkg.builtin import mock  # noqa: F401
 
     def test_inheritance_of_directives(self):
@@ -98,18 +98,18 @@ class TestPackage:
         _ = spack.concretize.concretize_one("patch-inheritance")
 
     def test_import_class_from_package(self):
-        from spack.pkg.builtin.mock.mpich import Mpich  # noqa: F401
+        from spack.pkg.builtin_mock.mpich import Mpich  # noqa: F401
 
     def test_import_module_from_package(self):
-        from spack.pkg.builtin.mock import mpich  # noqa: F401
+        from spack.pkg.builtin_mock import mpich  # noqa: F401
 
     def test_import_namespace_container_modules(self):
         import spack.pkg  # noqa: F401
         import spack.pkg as p  # noqa: F401
         import spack.pkg.builtin  # noqa: F401
         import spack.pkg.builtin as b  # noqa: F401
-        import spack.pkg.builtin.mock  # noqa: F401
-        import spack.pkg.builtin.mock as m  # noqa: F401
+        import spack.pkg.builtin_mock  # noqa: F401
+        import spack.pkg.builtin_mock as m  # noqa: F401
         from spack import pkg  # noqa: F401
         from spack.pkg import builtin  # noqa: F401
         from spack.pkg.builtin import mock  # noqa: F401
