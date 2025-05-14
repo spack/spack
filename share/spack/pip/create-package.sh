@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 # Set USE_SYTHETIC_VERSION to use a unique, non-semantic version
 
 set -e
