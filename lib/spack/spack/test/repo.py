@@ -307,9 +307,10 @@ class TestRepo:
         used to import the Python module.
         """
         path, _ = spack.repo.create_repo(str(tmp_path), package_api=(1, 0))
-        pkg_path = pathlib.Path(path) / "packages" / pkg_name / "package.py"
-        pkg_path.parent.mkdir(parents=True)
-        pkg_path.write_text("")
+        if pkg_name is not None:
+            pkg_path = pathlib.Path(path) / "packages" / pkg_name / "package.py"
+            pkg_path.parent.mkdir(parents=True)
+            pkg_path.write_text("")
         repo = spack.repo.Repo(
             path, cache=spack.util.file_cache.FileCache(str(tmp_path / "cache"))
         )
