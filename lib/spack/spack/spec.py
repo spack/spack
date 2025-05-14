@@ -74,7 +74,7 @@ from typing import (
     overload,
 )
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 import archspec.cpu
 

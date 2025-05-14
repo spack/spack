@@ -23,7 +23,7 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Type, TypeVar, Union
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty

@@ -5,7 +5,7 @@ import os
 import pathlib
 import sys
 
-import jinja2
+import _vendoring.jinja2
 import pytest
 
 import archspec.cpu
@@ -268,7 +268,7 @@ class Changing(Package):
                     del sys.modules["spack.pkg.changing"]
 
                 # Change the recipe
-                t = jinja2.Template(changing_template)
+                t = _vendoring.jinja2.Template(changing_template)
                 changing_pkg_str = t.render(**context)
                 package_py = packages_dir / "changing" / "package.py"
                 package_py.parent.mkdir(parents=True, exist_ok=True)

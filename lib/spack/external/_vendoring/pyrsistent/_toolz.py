@@ -56,7 +56,7 @@ def get_in(keys, coll, default=None, no_default=False):
 
     ``get_in`` is a generalization of ``operator.getitem`` for nested data
     structures such as dictionaries and lists.
-    >>> from pyrsistent import freeze
+    >>> from _vendoring.pyrsistent import freeze
     >>> transaction = freeze({'name': 'Alice',
     ...                       'purchase': {'items': ['Apple', 'Orange'],
     ...                                    'costs': [0.50, 1.25]},

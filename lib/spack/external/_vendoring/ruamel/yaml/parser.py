@@ -74,13 +74,13 @@
 # and for Jython too
 
 
-from ruamel.yaml.error import MarkedYAMLError
-from ruamel.yaml.tokens import *  # NOQA
-from ruamel.yaml.events import *  # NOQA
-from ruamel.yaml.scanner import Scanner, RoundTripScanner, ScannerError  # NOQA
-from ruamel.yaml.scanner import BlankLineComment
-from ruamel.yaml.comments import C_PRE, C_POST, C_SPLIT_ON_FIRST_BLANK
-from ruamel.yaml.compat import _F, nprint, nprintf  # NOQA
+from _vendoring.ruamel.yaml.error import MarkedYAMLError
+from _vendoring.ruamel.yaml.tokens import *  # NOQA
+from _vendoring.ruamel.yaml.events import *  # NOQA
+from _vendoring.ruamel.yaml.scanner import Scanner, RoundTripScanner, ScannerError  # NOQA
+from _vendoring.ruamel.yaml.scanner import BlankLineComment
+from _vendoring.ruamel.yaml.comments import C_PRE, C_POST, C_SPLIT_ON_FIRST_BLANK
+from _vendoring.ruamel.yaml.compat import _F, nprint, nprintf  # NOQA
 
 if False:  # MYPY
     from typing import Any, Dict, Optional, List, Optional  # NOQA

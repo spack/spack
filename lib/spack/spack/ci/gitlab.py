@@ -6,7 +6,7 @@ import os
 import shutil
 from typing import List, Optional
 
-import ruamel.yaml
+import _vendoring.ruamel.yaml
 
 import llnl.util.tty as tty
 
@@ -422,4 +422,4 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     syaml.anchorify(sorted_output)
 
     with open(output_file, "w", encoding="utf-8") as f:
-        ruamel.yaml.YAML().dump(sorted_output, f)
+        _vendoring.ruamel.yaml.YAML().dump(sorted_output, f)
