@@ -6,8 +6,8 @@ import copy
 import typing
 import warnings
 
-import jsonschema
-import jsonschema.validators
+from _vendoring import jsonschema
+from _vendoring.jsonschema import validators
 
 from spack.error import SpecSyntaxError
 
@@ -66,7 +66,7 @@ def _deprecated_properties(validator, deprecated, instance, schema):
         yield jsonschema.ValidationError("\n".join(errors))
 
 
-Validator = jsonschema.validators.extend(
+Validator = validators.extend(
     jsonschema.Draft7Validator,
     {"additionalKeysAreSpecs": _validate_spec, "deprecatedProperties": _deprecated_properties},
 )

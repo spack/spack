@@ -35,7 +35,7 @@ class Ftgl(CMakePackage):
     # https://github.com/kraj/ftgl/commit/37ed7d606a0dfecdcb4ab0c26d1b0132cd96d5fa
     # freetype 2.13.3 changed the type of many external chars to unsigned char!
     patch(
-        "https://patch-diff.githubusercontent.com/raw/frankheckenbach/ftgl/pull/20.patch?full_index=1",
+        "https://github.com/frankheckenbach/ftgl/commit/21e050670bc7217a3f61b90cdab5b543e676380c.patch?full_index=1",
         sha256="e2a0810fbf68403931bef4fbfda22e010e01421c92eeaa45f62e4e47f2381ebd",
         when="^freetype@2.13.3:",
     )

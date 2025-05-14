@@ -115,7 +115,7 @@ class FluxSched(CMakePackage, AutotoolsPackage):
     patch("jobid-sign-compare-fix.patch", when="@:0.22.0")
 
     patch(
-        "https://github.com/flux-framework/flux-sched/pull/1338.patch?full_index=1",
+        "https://github.com/flux-framework/flux-sched/commit/da6156addab5ec127b36cdee03c5d1f3e458d363.patch?full_index=1",
         when="@0.42.2 %oneapi@2025:",
         sha256="b46579efa70176055f88493caa3fefbfea5a5663a33d9c561b71e83046f763c5",
     )

@@ -92,29 +92,29 @@ class OpenpmdApi(CMakePackage):
 
     # CMake: Fix Python Install Directory
     patch(
-        "https://github.com/openPMD/openPMD-api/pull/1393.patch?full_index=1",
-        sha256="b5cecbdbe16d98c0ba352fa861fcdf9d7c7cc85f21226fa03effa7d62a7cb276",
+        "https://github.com/openPMD/openPMD-api/commit/31e3c42eb6687269adfb0e63c35269db328ea6ec.patch?full_index=1",
+        sha256="e8b57bcdc965643f46280408244f4d574bff09d0c19c863f42395a7203a89385",
         when="@0.15.0",
     )
 
     # macOS AppleClang12 Fixes
     patch(
-        "https://github.com/openPMD/openPMD-api/pull/1395.patch?full_index=1",
-        sha256="791c0a9d1dc09226beb26e8e67824b3337d95f4a2a6e7e64637ea8f0d95eee61",
+        "https://github.com/openPMD/openPMD-api/commit/c9b0f70294ef8d9ac89018c9b439815be9e77b96.patch?full_index=1",
+        sha256="83714efc90fe6d4f909bdde1b0578a43e6a013a5db6b10e87466665122fd6b21",
         when="@0.15.0",
     )
 
     # forgot to bump version.hpp in 0.15.1
     patch(
-        "https://github.com/openPMD/openPMD-api/pull/1417.patch?full_index=1",
-        sha256="c306483f1f94b308775a401c9cd67ee549fac6824a2264f5985499849fe210d5",
+        "https://github.com/openPMD/openPMD-api/commit/b3d3057e141af3a40dde5f00262a5671979a95c7.patch?full_index=1",
+        sha256="f31d0adcd407d20d559aa67e5f6ec2d81c6579b8b0166918c5178c02af180fba",
         when="@0.15.1",
     )
 
     # fix superbuild control in 0.16.0
     patch(
-        "https://github.com/openPMD/openPMD-api/pull/1678.patch?full_index=1",
-        sha256="e49fe79691bbb5aae2224d218f29801630d33f3a923c518f6bfb39ec22fd6a72",
+        "https://github.com/openPMD/openPMD-api/commit/3dc3a463d18dd5f87c38ee64d93bc7814b1cbb5d.patch?full_index=1",
+        sha256="474a7ccf11f0892717271fe3974a6ee046c15187a6ba12c75085a0d092071c9c",
         when="@0.16.0",
     )
 

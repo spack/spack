@@ -82,7 +82,7 @@ class Geos(CMakePackage):
     variant("shared", default=True, description="Build shared library")
 
     patch(
-        "https://github.com/libgeos/geos/pull/461.patch?full_index=1",
+        "https://github.com/libgeos/geos/commit/cb127eeac823c8b48364c1b437844a5b65ff4748.patch?full_index=1",
         sha256="ab78db7ff2e8fc89e899b8233cf77d90b24d88940dd202c4219decba479c8d35",
         when="@3.8:3.9",
     )

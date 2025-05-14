@@ -217,7 +217,9 @@ class Git(AutotoolsPackage):
                 env.append_flags("EXTLIBS", " ".join(extlib_bits))
 
         if not self.spec["curl"].satisfies("libs=shared"):
-            curlconfig = which(os.path.join(self.spec["curl"].prefix.bin, "curl-config"))
+            curlconfig = which(
+                os.path.join(self.spec["curl"].prefix.bin, "curl-config"), required=True
+            )
             # For configure step:
             env.append_flags("LIBS", curlconfig("--static-libs", output=str).strip())
             # For build step:

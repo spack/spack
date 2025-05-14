@@ -166,20 +166,20 @@ class Xrootd(CMakePackage):
     # Issue with _STAT_VER not being defined, fixed in 5.0.3
     patch(
         "https://github.com/xrootd/xrootd/commit/1f2d48fa23ba220ce92bf8ec6c15305ebbf19564.diff?full_index=1",
-        sha256="cfb5c2a13257012c6f117e8a1d0a3831b02586e910d845b5ff5e80d1ab2119bc",
+        sha256="792f4cd4c80018a2d031bbdcf3afe2d8b5bc669249740d669c0eedb8096dc18f",
         when="@4:5.0.2",
     )
     patch("python-support.patch", level=1, when="@:4.8+python")
     # https://github.com/xrootd/xrootd/pull/1805
     patch(
-        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1805.patch?full_index=1",
+        "https://github.com/xrootd/xrootd/commit/c267103e3093d9fc1370d56eed7481dbc10eba7d.patch?full_index=1",
         sha256="2655e2d609d80bf9c9ab58557f4f6940408a1af9c686e7aa214ac0348c89c8fa",
         when="@5.5.1",
     )
     # https://github.com/xrootd/xrootd/pull/1930
     patch(
-        "https://patch-diff.githubusercontent.com/raw/xrootd/xrootd/pull/1930.patch?full_index=1",
-        sha256="969f8b07edff42449ad76b02f3e57d93b8d6c829be1ba14bccf831c27bc971e1",
+        "https://github.com/xrootd/xrootd/commit/984efbc72bdad86b43923569f4dfa707b7a287a2.patch?full_index=1",
+        sha256="13a4a3373268b137f8cea8d6e082db421d17175cef36bb53a2b939f697290f0e",
         when="@5.5.3",
     )
     # https://github.com/xrootd/xrootd/pull/2013

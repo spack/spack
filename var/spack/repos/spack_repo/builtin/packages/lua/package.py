@@ -43,7 +43,7 @@ class LuaImplPackage(MakefilePackage):
         description="Fetcher to use in the LuaRocks package manager",
     )
 
-    lua_version_override = None
+    lua_version_override: Optional[str] = None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

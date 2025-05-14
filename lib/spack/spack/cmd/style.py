@@ -56,7 +56,7 @@ def is_package(f):
     """Whether flake8 should consider a file as a core file or a package.
 
     We run flake8 with different exceptions for the core and for
-    packages, since we allow `from spack import *` and poking globals
+    packages, since we allow `from spack.package import *` and poking globals
     into packages.
     """
     return f.startswith("var/spack/") and f.endswith("package.py")

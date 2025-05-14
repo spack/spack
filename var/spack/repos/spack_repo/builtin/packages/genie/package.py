@@ -61,7 +61,7 @@ class Genie(Package):
     # Disables this check.
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
     patch(
-        "https://patch-diff.githubusercontent.com/raw/GENIE-MC/Generator/pull/376.patch?full_index=1",
+        "https://github.com/GENIE-MC/Generator/commit/be723d688ea0e1070b972b9fc3b52a557cfe79b5.patch?full_index=1",
         sha256="7eca9bf44251cd99edd962483ca24c5072f8e2eee688f1e95b076425f2dc59f6",
         when="@3.4.2",
     )

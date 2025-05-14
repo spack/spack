@@ -50,8 +50,8 @@ class Flatbuffers(CMakePackage):
     # https://github.com/google/flatbuffers/issues/5950
     # Possibly affects earlier releases but I haven't tried to apply it.
     patch(
-        "https://github.com/google/flatbuffers/pull/6020.patch?full_index=1",
-        sha256="579cb6fa4430d4304b93c7a1df7e922f3c3ec614c445032877ad328c209d5462",
+        "https://github.com/google/flatbuffers/commit/515a4052a750dfe6df8d143c8f23cd8aaf51f9d7.patch?full_index=1",
+        sha256="f76b8777d7e719834ba0d83535b35e7c17ce474cfbc1286671d936191f784dc1",
         when="@1.12.0:1%gcc@10:",
     )
 
