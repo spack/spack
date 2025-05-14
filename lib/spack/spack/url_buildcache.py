@@ -4,6 +4,7 @@
 
 import codecs
 import enum
+import fnmatch
 import gzip
 import io
 import json
@@ -281,6 +282,23 @@ class URLBuildcacheEntry:
         return url_util.join(
             mirror_url, *path_components, spec.name, cls.get_manifest_filename(spec)
         )
+
+    @classmethod
+    def get_buildcache_component_include_pattern(
+        cls, buildcache_component: Optional[BuildcacheComponent] = None
+    ) -> str:
+        if buildcache_component is None:
+            return "*.manifest.json"
+        elif buildcache_component == BuildcacheComponent.SPEC:
+            return "*.spec.manifest.json"
+        elif buildcache_component == BuildcacheComponent.INDEX:
+            return ".*index.manifest.json"
+        elif buildcache_component == BuildcacheComponent.KEY:
+            return "*.key.manifest.json"
+        elif buildcache_component == BuildcacheComponent.KEY_INDEX:
+            return "keys.manifest.json"
+
+        raise BuildcacheEntryError(f"Not a manifest component: {buildcache_component}")
 
     @classmethod
     def component_to_media_type(cls, component: BuildcacheComponent) -> str:
@@ -945,6 +963,12 @@ class URLBuildcacheEntryV2(URLBuildcacheEntry):
     def get_manifest_url(cls, spec: spack.spec.Spec, mirror_url: str) -> str:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest url")
 
+    @classmethod
+    def get_buildcache_component_include_pattern(
+        cls, buildcache_component: Optional[BuildcacheComponent] = None
+    ) -> str:
+        raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
+
     def read_manifest(self, manifest_url: Optional[str] = None) -> BuildcacheManifest:
         raise BuildcacheEntryError("v2 buildcache entries do not have a manifest file")
 
@@ -1050,50 +1074,52 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
         tty.warn(msg)
 
 
-def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str):
+def _entries_from_cache_aws_cli(
+    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
+):
     """Use aws cli to sync all the specs into a local temporary directory.
 
     Args:
         url: prefix of the build cache on s3
         tmpspecsdir: path to temporary directory to use for writing files
+        component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         List of the local file paths and a function that can read each one from the file system.
     """
-    # Import here to avoid circular dependency
-    from spack.binary_distribution import buildcache_relative_specs_url
-
     read_fn = None
     file_list = None
     aws = which("aws")
+
+    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
 
     if not aws:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
         return file_list, read_fn
 
     def file_read_method(manifest_path: str) -> URLBuildcacheEntry:
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
         cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
         cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
         return cache_entry
 
-    url_to_list = url_util.join(url, buildcache_relative_specs_url())
+    include_pattern = cache_class.get_buildcache_component_include_pattern(component_type)
+
     sync_command_args = [
         "s3",
         "sync",
         "--exclude",
         "*",
         "--include",
-        "*.spec.manifest.json",
-        url_to_list,
+        include_pattern,
+        url,
         tmpspecsdir,
     ]
 
-    tty.debug(f"Using aws s3 sync to download manifests from {url_to_list} to {tmpspecsdir}")
+    tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
 
     try:
         aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
+        file_list = fsys.find(tmpspecsdir, [include_pattern])
         read_fn = file_read_method
     except Exception:
         tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
@@ -1101,7 +1127,7 @@ def _entries_from_cache_aws_cli(url: str, tmpspecsdir: str):
     return file_list, read_fn
 
 
-def _entries_from_cache_fallback(url: str, tmpspecsdir: str):
+def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None):
     """Use spack.util.web module to get a list of all the specs at the remote url.
 
     Args:
@@ -1111,24 +1137,23 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str):
         The list of complete spec file urls and a function that can read each one from its
             remote location (also using the spack.util.web module).
     """
-    # Import here to avoid circular dependency
-    from spack.binary_distribution import buildcache_relative_specs_url
-
     read_fn = None
     file_list = None
 
+    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+
     def url_read_method(manifest_url: str) -> URLBuildcacheEntry:
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
         cache_entry = cache_class(mirror_url=url, allow_unsigned=True)
         cache_entry.read_manifest(manifest_url)
         return cache_entry
 
     try:
-        url_to_list = url_util.join(url, buildcache_relative_specs_url())
         file_list = [
-            url_util.join(url_to_list, entry)
-            for entry in web_util.list_url(url_to_list, recursive=True)
-            if entry.endswith("spec.manifest.json")
+            url_util.join(url, entry)
+            for entry in web_util.list_url(url, recursive=True)
+            if fnmatch.fnmatch(
+                entry, cache_class.get_buildcache_component_include_pattern(component_type)
+            )
         ]
         read_fn = url_read_method
     except Exception as err:
@@ -1139,7 +1164,11 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str):
     return file_list, read_fn
 
 
-def get_entries_from_cache(url: str, tmpspecsdir: str):
+def get_entries_from_cache(
+    url: str,
+    tmpspecsdir: str,
+    component_type: Optional[BuildcacheComponent] = None,
+):
     """Get a list of all the spec files in the mirror and a function to
     read them.
 
@@ -1163,7 +1192,7 @@ def get_entries_from_cache(url: str, tmpspecsdir: str):
     callbacks.append(_entries_from_cache_fallback)
 
     for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir)
+        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir, component_type)
         if file_list:
             return file_list, read_fn
 
