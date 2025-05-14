@@ -57,7 +57,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -157,7 +157,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -181,7 +181,7 @@ Hash: SHA256
 "platform_os":"debian6",
 "target":"aarch64"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "languages":[
@@ -263,7 +263,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
