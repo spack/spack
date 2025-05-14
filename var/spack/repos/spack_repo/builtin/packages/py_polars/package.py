@@ -41,6 +41,12 @@ class PyPolars(PythonPackage):
     depends_on("py-pyarrow@7.0.0:", type=("build", "run"))
     depends_on("py-pydantic")
 
+    # The following optional dependencies are missing in spack
+    # Excel
+    # Database
+    # Cloud
+    # Other I/O
+
     # Other
     depends_on("py-cloudpickle", type=("build", "run"))
     depends_on("py-matplotlib", type=("build", "run"))
