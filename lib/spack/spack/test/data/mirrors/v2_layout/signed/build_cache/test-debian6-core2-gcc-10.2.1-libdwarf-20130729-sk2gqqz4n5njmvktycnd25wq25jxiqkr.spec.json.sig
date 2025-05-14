@@ -33,7 +33,7 @@ Hash: SHA512
 "name":"gcc",
 "version":"10.2.1"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -85,7 +85,7 @@ Hash: SHA512
 "name":"gcc",
 "version":"10.2.1"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
