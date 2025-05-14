@@ -32,6 +32,7 @@ from spack.cmd.common import arguments
 from spack.spec import Spec, save_dependency_specfiles
 
 from ..buildcache_migrate import migrate
+from ..buildcache_prune import prune
 from ..enums import InstallRecordStatus
 from ..url_buildcache import (
     BuildcacheComponent,
@@ -210,6 +211,10 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="path to directory where tarball should be downloaded",
     )
     download.set_defaults(func=download_fn)
+
+    prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
+    prune.add_argument("mirror", type=arguments.mirror_name, help="name of a configured mirror")
+    prune.set_defaults(func=prune_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
     savespecfile = subparsers.add_parser("save-specfile", help=save_specfile_fn.__doc__)
@@ -818,6 +823,14 @@ def migrate_fn(args):
         tty.die("Migration aborted.")
 
     migrate(target_mirror, unsigned=unsigned, delete_existing=delete_existing)
+
+
+def prune_fn(args):
+    """prune stale buildcache entries from the mirror"""
+    mirror: spack.mirrors.mirror.Mirror = args.mirror
+    assert isinstance(mirror, spack.mirrors.mirror.Mirror)
+
+    prune(mirror)
 
 
 def buildcache(parser, args):
