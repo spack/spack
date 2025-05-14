@@ -54,6 +54,18 @@ class QtPackage(CMakePackage):
                     if dep in vendor_deps_to_remove:
                         shutil.rmtree(dep)
 
+    def define_feature(self, feature, value=None):
+        assert type(value) in (type(None), str, bool)
+
+        if value is None:
+            value = feature
+
+        flag = f"FEATURE_{feature}"
+        if isinstance(value, str):
+            return self.define_from_variant(flag, value)
+        else:
+            return self.define(flag, value)
+
     def cmake_args(self):
         # Start with upstream cmake_args
         args = super().cmake_args()
@@ -285,32 +297,24 @@ class QtBase(QtPackage):
         def define(cmake_var, value):
             args.append(self.define(cmake_var, value))
 
-        def define_from_variant(cmake_var, variant=None):
-            result = self.define_from_variant(cmake_var, variant)
-            if result:
-                # Not a conditional variant
-                args.append(result)
-
-        def define_feature(key, variant=None):
-            if variant is None:
-                variant = key
-            define_from_variant("FEATURE_" + key, variant)
-
-        define_from_variant("BUILD_SHARED_LIBS", "shared")
-        define("FEATURE_optimize_size", spec.satisfies("build_type=MinSizeRel"))
-
         # Top-level features
-        define_feature("accessibility")
-        # concurrent: default to on
-        define_feature("dbus")
-        define_feature("framework")
-        define_feature("gui")
-        define_feature("network")  # note: private feature
-        # testlib: default to on
-        # thread: default to on
-        define_feature("widgets")  # note: private feature
-        define_feature("sql")  # note: private feature
-        # xml: default to on
+        args.extend(
+            [
+                self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+                self.define_feature("optimize_size", spec.satisfies("build_type=MinSizeRel")),
+                self.define_feature("accessibility"),
+                # concurrent: default to on
+                self.define_feature("dbus"),
+                self.define_feature("framework"),
+                self.define_feature("gui"),
+                self.define_feature("network"),  # note: private feature
+                # testlib: default to on
+                # thread: default to on
+                self.define_feature("widgets"),  # note: private feature
+                self.define_feature("sql"),  # note: private feature
+                # xml: default to on
+            ]
+        )
 
         # Extra FEATURE_ toggles
         features = []
@@ -321,7 +325,7 @@ class QtBase(QtPackage):
             if sys.platform == "linux":
                 features.append("libproxy")
         for k in features:
-            define("FEATURE_" + k, True)
+            args.append(self.define_feature(k, True))
 
         if "~opengl" in spec:
             args.append(self.define("INPUT_opengl", "no"))
@@ -331,7 +335,7 @@ class QtBase(QtPackage):
         if "+sql" in spec:
             sys_inputs.append("sqlite")
         for k in sys_inputs:
-            define("INPUT_" + k, "system")
+            args.append(self.define("INPUT_" + k, "system"))
 
         # FEATURE_system_* arguments: on/off
         sys_features = [
@@ -354,7 +358,7 @@ class QtBase(QtPackage):
         if "+network" in spec:
             sys_features += [("proxies", True)]
         for k, v in sys_features:
-            define("FEATURE_system_" + k, v)
+            args.append(self.define_feature(f"system_{k}", v))
 
         return args
 

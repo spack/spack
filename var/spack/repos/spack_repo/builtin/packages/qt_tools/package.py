@@ -38,11 +38,21 @@ class QtTools(QtPackage):
         default=False,
         description="Qt Widgets Designer for designing and building GUIs with Qt Widgets.",
     )
+    variant(
+        "qdoc",
+        default=False,
+        description="QDoc is Qt's documentation generator for C++ and QML projects.",
+    )
+    variant(
+        "linguist",
+        default=False,
+        description="Qt Linguist can be used by translator to translate text in Qt applications.",
+    )
 
     # use of relative path in https://github.com/qt/qttools/blob/6.8.2/.gitmodules
     conflicts("+assistant", when="@6.8.2", msg="Incorrect git submodule prevents +assistant")
 
-    depends_on("llvm +clang")
+    depends_on("llvm +clang", when="+qdoc")
 
     depends_on("qt-base +network")
     depends_on("qt-base +widgets", when="+designer")
@@ -52,19 +62,13 @@ class QtTools(QtPackage):
         depends_on("qt-base@" + v, when="@" + v)
 
     def cmake_args(self):
-        spec = self.spec
-
-        args = super().cmake_args() + []
-
-        def define(cmake_var, value):
-            args.append(self.define(cmake_var, value))
-
-        define("FEATURE_fullqthelp", True)
-
-        if spec.satisfies("+assistant"):
-            define("FEATURE_assistant", True)
-
-        if spec.satisfies("+designer"):
-            define("FEATURE_designer", True)
+        args = super().cmake_args() + [
+            self.define_feature("fullqthelp", False),
+            self.define_feature("qdoc"),
+            self.define_feature("clang", "qdoc"),
+            self.define_feature("assistant"),
+            self.define_feature("designer"),
+            self.define_feature("linguist"),
+        ]
 
         return args
