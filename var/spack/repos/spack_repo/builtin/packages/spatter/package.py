@@ -15,6 +15,10 @@ class Spatter(CMakePackage, CudaPackage):
 
     license("MIT", checked_by="plavin")
 
+    version("develop", branch="spatter-devel")
+    version("main", branch="main", preferred=True)
+    version("2.1", tag="v2.1", commit="ec8923711f8dc21eedff7189f12b02eb06845d2f")
+
     variant(
         "backend",
         default="openmp",
@@ -24,19 +28,15 @@ class Spatter(CMakePackage, CudaPackage):
     variant("mpi", default=False, description="Enable MPI support")
     variant("cuda_arch", default="none", multi=True, description="CUDA architecture")
 
+    depends_on("cmake@3.25:", type="build")
+    depends_on("mpi", when="+mpi")
+    depends_on("cuda", when="backend=cuda")
+
     conflicts(
         "backend=cuda",
         when="cuda_arch=none",
         msg="CUDA architecture must be specified when CUDA support is enabled.",
     )
-
-    version("develop", branch="spatter-devel")
-    version("main", branch="main", preferred=True)
-    version("2.1", tag="v2.1", commit="ec8923711f8dc21eedff7189f12b02eb06845d2f")
-
-    depends_on("cmake@3.25:", type="build")
-    depends_on("mpi", when="+mpi")
-    depends_on("cuda", when="backend=cuda")
 
     def cmake_args(self):
         args = []
