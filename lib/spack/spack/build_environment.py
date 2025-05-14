@@ -1573,9 +1573,31 @@ class ModuleChangePropagator:
     def __init__(self, package: spack.package_base.PackageBase) -> None:
         self._set_self_attributes("package", package)
         self._set_self_attributes("current_module", package.module)
+        self._set_self_attributes("_set_attributes", {})
 
         #: Modules for the classes in the MRO up to PackageBase
         modules_in_mro = []
+
+        # New API: the package class has a "data" annotation, which is a dataclass we instantiate
+        # class MyPackage(Package):
+        #
+        #     class Data:
+        #         foo: str
+        #         bar: int
+        #
+        #     data: Data
+        if hasattr(package, "data"):
+            return
+
+        for cls in package.__class__.__mro__:
+            if not hasattr(cls, "__annotations__") or "data" not in cls.__annotations__:
+                continue
+            setattr(package, "data", cls.__annotations__["data"]())
+            return
+
+        # Old API: we define globals on the package module. This is deprecated, because modules
+        # have a one to many relationship with package instances, and DAGs can contain multiple
+        # instances of the same package.
         for cls in package.__class__.__mro__:
             module = getattr(cls, "module", None)
 
@@ -1587,7 +1609,6 @@ class ModuleChangePropagator:
 
             modules_in_mro.append(module)
         self._set_self_attributes("modules_in_mro", modules_in_mro)
-        self._set_self_attributes("_set_attributes", {})
 
     def _set_self_attributes(self, key, value):
         super().__setattr__(key, value)
@@ -1604,5 +1625,11 @@ class ModuleChangePropagator:
         self._set_attributes[key] = value
 
     def propagate_changes_to_mro(self):
+        # New API: update the data class of the package instance
+        if hasattr(self.package, "data"):
+            self.package.data.__dict__.update(self._set_attributes)
+            return
+
+        # Old API: set globals for every module in the package's MRO
         for module_in_mro in self.modules_in_mro:
             module_in_mro.__dict__.update(self._set_attributes)

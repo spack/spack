@@ -107,6 +107,8 @@ Since v0.19, Spack supports  two ways of writing a package recipe. The most comm
 
 .. code-block:: python
 
+   from spack.package import *
+
    class Openjpeg(CMakePackage):
        """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
 
@@ -140,6 +142,8 @@ To do that, we have to resort to the second way Spack has of writing packages, w
 builder class explicitly. Using the same example as above, this reads:
 
 .. code-block:: python
+
+   from spack.package import *
 
    class Openjpeg(CMakePackage):
        """OpenJPEG is an open-source JPEG 2000 codec written in C language"""
@@ -2253,157 +2257,16 @@ RPATHs in Spack are handled in one of three ways:
    set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
    so most build systems (autotools and many gmake systems) pick them
    up and use them.
-#. CMake also respects Spack's compiler wrappers, but many CMake
-   builds have logic to overwrite RPATHs when binaries are
-   installed. Spack provides the ``std_cmake_args`` variable, which
-   includes parameters necessary for CMake build use the right
-   installation RPATH.  It can be used like this when ``cmake`` is
-   invoked:
-
-   .. code-block:: python
-
-      class MyPackage(Package):
-          ...
-          def install(self, spec, prefix):
-              cmake("..", *std_cmake_args)
-              make()
-              make("install")
+#. CMake also respects Spack's compiler wrappers during the build, but
+   modifies them upon installation. If you inherit from ``CMakePackage``,
+   Spack will set the default ``cmake`` defines to ensure that RPATHs
+   are set correctly upon installation.
 
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
    return a list of all the RPATHs that Spack will use when it
    links.  You can see this how this is used in the :ref:`PySide
    example <pyside-patch>` above.
-
-.. _attribute_parallel:
-
----------------
-Parallel builds
----------------
-
-Spack supports parallel builds on an individual package and at the
-installation level.  Package-level parallelism is established by the
-``--jobs`` option and its configuration and package recipe equivalents.
-Installation-level parallelism is driven by the DAG(s) of the requested
-package or packages.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Package-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so those builds run in parallel.
-The parallelism is determined by the value of the ``build_jobs`` entry
-in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
-how this value is computed).
-
-If a package does not build properly in parallel, you can override
-this setting by adding ``parallel = False`` to your package.  For
-example, OpenSSL's build does not work in parallel, so its package
-looks like this:
-
-.. code-block:: python
-   :emphasize-lines: 8
-   :linenos:
-
-   class Openssl(Package):
-       homepage = "http://www.openssl.org"
-       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
-
-       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib-api")
-
-       parallel = False
-
-Similarly, you can disable parallel builds only for specific make
-commands, as ``libdwarf`` does:
-
-.. code-block:: python
-   :emphasize-lines: 9, 12
-   :linenos:
-
-   class Libelf(Package):
-       ...
-
-       def install(self, spec, prefix):
-           configure("--prefix=" + prefix,
-                     "--enable-shared",
-                     "--disable-dependency-tracking",
-                     "--disable-debug")
-           make()
-
-           # The mkdir commands in libelf's install can fail in parallel
-           make("install", parallel=False)
-
-The first make will run in parallel here, but the second will not.  If
-you set ``parallel`` to ``False`` at the package level, then each call
-to ``make()`` will be sequential by default, but packagers can call
-``make(parallel=True)`` to override it.
-
-Note that the ``--jobs`` option works out of the box for all standard
-build systems. If you are using a non-standard build system instead, you
-can use the variable ``make_jobs`` to extract the number of jobs specified
-by the ``--jobs`` option:
-
-.. code-block:: python
-   :emphasize-lines: 7, 11
-   :linenos:
-
-   class Xios(Package):
-      ...
-      def install(self, spec, prefix):
-         ...
-         options = [
-            ...
-            '--jobs', str(make_jobs),
-        ]
-        ...
-        make_xios = Executable("./make_xios")
-        make_xios(*options)
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack supports the concurrent installation of packages within a Spack
-instance across multiple processes using file system locks.  This
-parallelism is separate from the package-level achieved through build
-systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
-processes coordinate the installation of the dependencies of specs
-provided on the command line and as part of an environment build with
-only **one process** being allowed to install a given package at a time.
-Refer to :ref:`Dependencies` for more information on dependencies and
-:ref:`installing-environment` for how to install an environment.
-
-Concurrent processes may be any combination of interactive sessions and
-batch jobs.  Which means a ``spack install`` can be running in a terminal
-window while a batch job is running ``spack install`` on the same or
-overlapping dependencies without any process trying to re-do the work of
-another.
-
-For example, if you are using Slurm, you could launch an installation
-of ``mpich`` using the following command:
-
-.. code-block:: console
-
-   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
-
-This will create eight concurrent, four-job installs on two different
-nodes.
-
-Alternatively, you could run the same installs on one node by entering
-the following at the command line of a bash shell:
-
-.. code-block:: console
-
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
-
-.. note::
-
-   The effective parallelism is based on the maximum number of packages
-   that can be installed at the same time, which is limited by the
-   number of packages with no (remaining) uninstalled dependencies.
-
 
 .. _dependencies:
 
@@ -2949,14 +2812,45 @@ This means that the former should only be used if the environment variables depe
 package, whereas the latter should be used if the environment variables depend only on the package
 itself.
 
---------------------------------
-Setting package module variables
---------------------------------
+---------------------------------------------------------
+Setting and requesting Python variables with data classes
+---------------------------------------------------------
 
-Apart from modifying environment variables of the dependent package, you can also define Python
-variables to be used by the dependent. This is done by implementing
-:meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
-example of this can be found in the ``Python`` package:
+Apart from environment variables, Spack also provides a way to set Python variables that are 
+necessary for configuring or building a package. A package that requires certain Python variables
+for its build can declare them using a data class and an annotation in the package class:
+
+.. code-block:: python
+  :emphasize-lines: 1-2,5,10-11
+  :linenos:
+
+   class Data:
+       make: Executable
+   
+   class MyPackage(Package):
+       data: Data
+
+       depends_on("gmake", type="build")
+       
+       def install(self, spec, prefix):
+           self.data.make("mytarget")
+           self.data.make("install", parallel=False)
+
+The dependency ``gmake`` implements :meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`
+to set the ``make`` variable so it can be used by the dependent package:
+
+.. code-block:: python
+   :linenos:
+
+   class Gmake(Package):
+       ...
+       def setup_dependent_package(self, module, dependent_spec):
+           module.make = MakeExecutable(
+               self.spec.prefix.bin.make,
+               jobs=determine_number_of_jobs(dependent_spec),
+           )
+
+Another example of this can be found in the ``Python`` package:
 
 .. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_package
@@ -2966,14 +2860,181 @@ This allows Python packages to directly use these variables:
 
 .. code-block:: python
 
-   def install(self, spec, prefix):
+   class Data:
+       python_platlib: str
+
+   class MyPythonPackage(Package):
+       data: Data
+
+       extends("python")
+
+       def install(self, spec, prefix):
+           ...
+           install("script.py", self.data.python_platlib)
+
+There are a few special variables that are set by Spack's build environment instead of by
+dependencies. These can be request in the data class as well. Among those are ``make_jobs: int``,
+``configure: Executable``, ``prefix: Prefix``, and ``dso_suffix: str``.
+
+Notice that type hints in data classes are not required and not enforced at runtime. They are only
+used for documentation purposes and to help IDEs with code completion.
+
+-------------------------------
+Module level variables (legacy)
+-------------------------------
+
+For packages that do not use the data class mechanism, Spack will still set global variables
+in the package module. This is an artifact of the legacy package system and is not recommended
+to be used in new packages.
+
+If we omit the data class in the previous example, we can still use the ``make`` variable as
+a global variable:
+
+.. code-block:: python
+
+   class MyPackage(Package):
+       def install(self, spec, prefix):
+           make("mytarget")  # not recommended, use data class instead
+           make("install", parallel=False)
+
+This is not recommended, because it is unclear where the ``make`` variable is set, and leads to
+issues with editors and type checkers.
+
+.. _attribute_parallel:
+
+---------------
+Parallel builds
+---------------
+
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, build dependencies like ``gmake`` and ``ninja`` ensure that
+the ``-j <njobs>`` flag is passed whenever their ``make`` or ``ninja``
+executables are invoked, so that builds are done in parallel.
+
+The parallelism is determined by the value of the ``build_jobs`` entry
+in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
+how this value is computed).
+
+If a package does not build properly in parallel, you can override
+this setting by adding ``parallel = False`` to your package.  For
+example, OpenSSL's build does not work in parallel, so its package
+looks like this:
+
+.. code-block:: python
+   :emphasize-lines: 9
+   :linenos:
+
+   class Openssl(Package):
+       homepage = "http://www.openssl.org"
+       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
+       depends_on("zlib-api")
+       depends_on("gmake", type="build")
+
+       parallel = False
+
+Similarly, you can disable parallel builds only for specific make
+commands, as ``libdwarf`` does:
+
+.. code-block:: python
+   :emphasize-lines: 14, 17
+   :linenos:
+
+   class Data:
+       configure: Executable
+       make: Executable
+
+   class Libelf(Package):
+       data: Data
        ...
-       install("script.py", python_platlib)
+
+       def install(self, spec, prefix):
+           self.data.configure("--prefix=" + prefix,
+                               "--enable-shared",
+                               "--disable-dependency-tracking",
+                               "--disable-debug")
+           self.data.make()
+
+           # The mkdir commands in libelf's install can fail in parallel
+           self.data.make("install", parallel=False)
+
+The first make will run in parallel here, but the second will not.  If
+you set ``parallel`` to ``False`` at the package level, then each call
+to ``make()`` will be sequential by default, but packagers can call
+``make(parallel=True)`` to override it.
+
+Note that the ``--jobs`` option works out of the box for all standard
+build systems. If you are using a non-standard build system instead, you
+can use the variable ``make_jobs`` to extract the number of jobs specified
+by the ``--jobs`` option:
+
+.. code-block:: python
+   :emphasize-lines: 2, 10
+   :linenos:
+
+   class Data:
+       make_jobs: int
+
+   class Xios(Package):
+       data: Data
+       ...
+
+       def install(self, spec, prefix):
+           make_xios = Executable("./make_xios")
+           make_xios(..., "--jobs", str(self.pkg.make_jobs))
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  Which means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using Slurm, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent, four-job installs on two different
+nodes.
+
+Alternatively, you could run the same installs on one node by entering
+the following at the command line of a bash shell:
+
+.. code-block:: console
+
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
 
 .. note::
 
-   We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
-   global variables are coming from when editing a ``package.py`` file.
+   The effective parallelism is based on the maximum number of packages
+   that can be installed at the same time, which is limited by the
+   number of packages with no (remaining) uninstalled dependencies.
 
 -----
 Views
@@ -4102,50 +4163,6 @@ condition is true.  You can explicitly cause the build to fail from
    if spec.architecture.startswith("darwin"):
        raise InstallError("This package does not build on Mac OS X!")
 
-.. _shell-wrappers:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Shell command functions
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Recall the install method from ``libelf``:
-
-.. literalinclude::  _spack_root/var/spack/repos/spack_repo/builtin/packages/libelf/package.py
-   :pyobject: Libelf.install
-   :linenos:
-
-Normally in Python, you'd have to write something like this in order
-to execute shell commands:
-
-.. code-block:: python
-
-   import subprocess
-   subprocess.check_call("configure", "--prefix={0}".format(prefix))
-
-We've tried to make this a bit easier by providing callable wrapper
-objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` wrappers are are provided, so you can call
-them more naturally in your package files.
-
-If you need other commands, you can use ``which`` to get them:
-
-.. code-block:: python
-
-   sed = which("sed")
-   sed("s/foo/bar/", filename)
-
-The ``which`` function will search the ``PATH`` for the application.
-
-Callable wrappers also allow spack to provide some special features.
-For example, in Spack, ``make`` is parallel by default, and Spack
-figures out the number of cores on your machine and passes an
-appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
-``parallel`` `package attribute <attribute_parallel>`).  In
-a package file, you can supply a keyword argument, ``parallel=False``,
-to the ``make`` wrapper to disable parallel make.  In the ``libelf``
-package, this allows us to avoid race conditions in the library's
-build system.
-
 ^^^^^^^^^^^^^^
 Compiler flags
 ^^^^^^^^^^^^^^
@@ -4320,12 +4337,7 @@ Prefix objects
 ^^^^^^^^^^^^^^^^^^^^^
 
 Spack passes the ``prefix`` parameter to the install method so that
-you can pass it to ``configure``, ``cmake``, or some other installer,
-e.g.:
-
-.. code-block:: python
-
-   configure("--prefix={0}".format(prefix))
+you can pass it to ``configure``, ``cmake``, or some other installer.
 
 For the most part, prefix objects behave exactly like strings.  For
 packages that do not have their own install target, or for those that
@@ -4336,7 +4348,7 @@ yourself, e.g.:
 
 .. code-block:: python
 
-   def install(self, spec, prefix):
+   def install(self, spec: Spec, prefix: Prefix) -> None:
        mkdirp(prefix.bin)
        install("foo-tool", prefix.bin)
 
@@ -4409,7 +4421,7 @@ do that, e.g.:
    if spec.satisfies("@1.2:1.4"):
        configure_args.append("CXXFLAGS='-DWITH_FEATURE'")
 
-   configure(*configure_args)
+   self.data.configure(*configure_args)
 
 This works for compilers, too:
 
@@ -4827,15 +4839,15 @@ of MPI builds:
      supply includes/libs/etc.  This is fairly uncommon.
 
   2. Others really want the wrappers and assume you're using an MPI
-     "compiler" – i.e., they have no mechanism to add MPI
+     "compiler" -- i.e., they have no mechanism to add MPI
      includes/libraries/etc.
 
   3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     extract ``-I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
      regular library.
 
 Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support – they just assume
+know about or don't like CMake's ``FindMPI`` support -- they just assume
 an MPI compiler. Also, some autotools builds fall into case 3 (e.g. `here
 is an autotools version of CMake's FindMPI
 <https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
@@ -4850,7 +4862,7 @@ Packaging Conventions
 As mentioned above, in the ``install()`` method, ``CC``, ``CXX``,
 ``F77``, and ``FC`` point to Spack's wrappers around the chosen compiler.
 Spack's wrappers are not the MPI compiler wrappers, though they do
-automatically add ``–I``, ``–L``, and ``–Wl,-rpath`` args for
+automatically add ``-I``, ``-L``, and ``-Wl,-rpath`` args for
 dependencies in a similar way.  The MPI wrappers are a bit different in
 that they also add ``-l`` arguments for the MPI libraries, and some add
 special ``-D`` arguments to trigger build options in MPI programs.
@@ -4879,8 +4891,8 @@ there instead, e.g.:
 
 .. code-block:: python
 
-   configure("—prefix=%s" % prefix,
-             "—with-cc=%s" % spec["mpi"].mpicc)
+   configure("-prefix=%s" % prefix,
+             "-with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths,
 and RPATHs that Spack's compiler wrapper get you, but we've actually set
@@ -6209,10 +6221,10 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r"^\s*CC\s*=.*",  "CC = "  + spack_cc,  "Makefile")
-        filter_file(r"^\s*CXX\s*=.*", "CXX = " + spack_cxx, "Makefile")
-        filter_file(r"^\s*F77\s*=.*", "F77 = " + spack_f77, "Makefile")
-        filter_file(r"^\s*FC\s*=.*",  "FC = "  + spack_fc,  "Makefile")
+        filter_file(r"^\s*CC\s*=.*",  "CC = "  + self.data.spack_cc,  "Makefile")
+        filter_file(r"^\s*CXX\s*=.*", "CXX = " + self.data.spack_cxx, "Makefile")
+        filter_file(r"^\s*F77\s*=.*", "F77 = " + self.data.spack_f77, "Makefile")
+        filter_file(r"^\s*FC\s*=.*",  "FC = "  + self.data.spack_fc,  "Makefile")
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
@@ -6295,28 +6307,9 @@ File functions
      .. code-block:: python
 
         with working_dir("libdwarf"):
-            configure("--prefix=" + prefix, "--enable-shared")
-            make()
+            self.pkg.configure("--prefix=" + prefix, "--enable-shared")
+            self.pkg.make()
             install("libdwarf.a",  prefix.lib)
-
-  #. Many CMake builds require that you build "out of source", that
-     is, in a subdirectory.  You can handle creating and ``cd``'ing to
-     the subdirectory like the LLVM package does:
-
-     .. code-block:: python
-
-        with working_dir("spack-build", create=True):
-            cmake("..",
-                  "-DLLVM_REQUIRES_RTTI=1",
-                  "-DPYTHON_EXECUTABLE=/usr/bin/python",
-                  "-DPYTHON_INCLUDE_DIR=/usr/include/python2.6",
-                  "-DPYTHON_LIBRARY=/usr/lib64/libpython2.6.so",
-                  *std_cmake_args)
-            make()
-            make("install")
-
-     The ``create=True`` keyword argument causes the command to create
-     the directory if it does not exist.
 
 :py:func:`touch(path) <llnl.util.filesystem.touch>`
   Create an empty file at ``path``.
