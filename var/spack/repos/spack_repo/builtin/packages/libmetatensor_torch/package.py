@@ -27,8 +27,8 @@ class LibmetatensorTorch(CMakePackage):
     depends_on("ninja", type="build")
     depends_on("cxx", type="build")
     depends_on("c", type="build")
-    # TODO: Enforce < 0.2
-    depends_on("libmetatensor@0.1.13")
+    depends_on("libmetatensor@0.1.13:", type="run")
+    conflicts("libmetatensor@0.2.0:")
     variant("cuda", default=False, description="Use CUDA")
     depends_on("py-torch@2.6.0:~cuda", type=("build", "link"), when="~cuda")
     depends_on("py-torch@2.6.0:+cuda+cudnn", type=("build", "link"), when="+cuda")
