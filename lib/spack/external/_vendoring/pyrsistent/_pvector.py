@@ -2,7 +2,7 @@ from abc import abstractmethod, ABCMeta
 from collections.abc import Sequence, Hashable
 from numbers import Integral
 import operator
-from pyrsistent._transformations import transform
+from _vendoring.pyrsistent._transformations import transform
 
 
 def _bitcount(val):
@@ -626,7 +626,7 @@ class PVector(metaclass=ABCMeta):
         consists of two parts. One match expression that specifies which elements to transform
         and one transformation function that performs the actual transformation.
 
-        >>> from pyrsistent import freeze, ny
+        >>> from _vendoring.pyrsistent import freeze, ny
         >>> news_paper = freeze({'articles': [{'author': 'Sara', 'content': 'A short article'},
         ...                                   {'author': 'Steve', 'content': 'A slightly longer article'}],
         ...                      'weather': {'temperature': '11C', 'wind': '5m/s'}})

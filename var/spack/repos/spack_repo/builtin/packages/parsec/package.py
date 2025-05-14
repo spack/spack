@@ -26,6 +26,7 @@ class Parsec(CMakePackage, CudaPackage):
     license("BSD-3-Clause-Open-MPI")
 
     version("master", branch="master")
+    version("4.0.2411", sha256="3f5750565b9f673626284dd0ba835dadea3633577fee50ac217baf43a335f2ef")
     version("3.0.2209", sha256="67d383d076991484cb2a265f56420abdea7cc1f329c63ac65a3e96fbfb6cc295")
     version("3.0.2012", sha256="7a8403ca67305738f3974cbc7a51b64c4ec353ae9170f2468262a9a52035eff6")
     version(
@@ -58,6 +59,8 @@ class Parsec(CMakePackage, CudaPackage):
     )
     # TODO: Spack does not handle cross-compilation atm
     # variant('xcompile', default=False, description='Cross compile')
+
+    depends_on("c", type="build")
 
     depends_on("cmake@3.18:", type="build")
     depends_on("python", type="build")

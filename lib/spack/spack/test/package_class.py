@@ -24,6 +24,7 @@ import spack.package
 import spack.package_base
 import spack.spec
 import spack.store
+import spack.subprocess_context
 from spack.build_systems.generic import Package
 from spack.error import InstallError
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -323,3 +324,11 @@ def test_package_subscript(default_mock_concretization):
     # Subscript on concrete
     for d in root.traverse():
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
+
+
+def test_deserialize_preserves_package_attribute(default_mock_concretization):
+    x = default_mock_concretization("mpileaks").package
+    assert x.spec._package is x
+
+    y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
+    assert y.spec._package is y

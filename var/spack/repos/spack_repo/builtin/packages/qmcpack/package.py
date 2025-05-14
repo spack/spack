@@ -197,17 +197,17 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     # Backport several patches from recent versions of QMCPACK
     # The test_numerics unit test is broken prior to QMCPACK 3.3.0
-    patch_url = "https://github.com/QMCPACK/qmcpack/pull/621.patch?full_index=1"
+    patch_url = "https://github.com/QMCPACK/qmcpack/commit/26aac9a2adb9a688ab8fe2a9664450de97557cf9.patch?full_index=1"
     patch_checksum = "54484b722df264dae3fd0c1094883b17431617e278eeba2cffbd720b36c9e21a"
     patch(patch_url, sha256=patch_checksum, when="@3.1.0:3.3.0")
 
     # FindMKL.cmake has an issues prior to QMCPACK 3.3.0
-    patch_url = "https://github.com/QMCPACK/qmcpack/pull/623.patch?full_index=1"
+    patch_url = "https://github.com/QMCPACK/qmcpack/commit/9f4c5f58779cad3146e3dfef005acdead95aa46e.patch?full_index=1"
     patch_checksum = "9e444d627ab22ad5f31797aec0c0d662463055955eff1c84fbde274e0259db6b"
     patch(patch_url, sha256=patch_checksum, when="@3.1.0:3.3.0")
 
     # git-rev files for not git builds issues prior to QMCPACK 3.3.0
-    patch_url = "https://github.com/QMCPACK/qmcpack/pull/643.patch?full_index=1"
+    patch_url = "https://github.com/QMCPACK/qmcpack/commit/d59a2b3f07584f7a4665db908577110a866d7f1b.patch?full_index=1"
     patch_checksum = "d6410e7843f6c062bf9aa8ecf107e573b35c32022927d63f8cf5ad36ccf873c3"
     patch(patch_url, sha256=patch_checksum, when="@3.1.0:3.3.0")
 

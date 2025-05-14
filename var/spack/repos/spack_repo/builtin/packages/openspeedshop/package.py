@@ -4,7 +4,6 @@
 
 import os
 
-import spack.store
 from spack.package import *
 
 from ..boost.package import Boost
@@ -37,11 +36,6 @@ class Openspeedshop(CMakePackage):
 
     variant(
         "runtime", default=False, description="build only the runtime libraries and collectors."
-    )
-    variant(
-        "crayfe",
-        default=False,
-        description="build only the FE tool using the runtime_dir to point to target build.",
     )
     variant("cuda", default=False, description="build with cuda packages included.")
 
@@ -123,11 +117,6 @@ class Openspeedshop(CMakePackage):
     depends_on("cbtf-krell@develop", when="@develop", type=("build", "link", "run"))
     depends_on("cbtf-krell@1.9.3:9999", when="@2.4.0:9999", type=("build", "link", "run"))
 
-    depends_on("cbtf-krell@develop+crayfe", when="@develop+crayfe", type=("build", "link", "run"))
-    depends_on(
-        "cbtf-krell@1.9.3:9999+crayfe", when="@2.4.0:9999+crayfe", type=("build", "link", "run")
-    )
-
     depends_on("cbtf-krell@develop+mpich2", when="@develop+mpich2", type=("build", "link", "run"))
     depends_on(
         "cbtf-krell@1.9.3:9999+mpich2", when="@2.4.0:9999+mpich2", type=("build", "link", "run")
@@ -163,29 +152,6 @@ class Openspeedshop(CMakePackage):
     parallel = False
 
     build_directory = "build_openspeedshop"
-
-    def set_cray_login_node_cmake_options(self, spec, cmake_options):
-        # Appends to cmake_options the options that will enable the appropriate
-        # Cray login node libraries
-
-        cray_login_node_options = []
-        rt_platform = "cray"
-
-        # How do we get the compute node (CNL) cbtf package install
-        # directory path?
-        # spec['cbtf'].prefix is the login node value for this build, as
-        # we only get here when building the login node components and
-        # that is all that is known to spack.
-        store = spack.store
-        be_ck = store.db.query_one("cbtf-krell arch=cray-CNL-haswell")
-
-        # Equivalent to install-tool cmake arg:
-        # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-        #               % <base dir>/cbtf_v2.4.0.release/compute)
-        cray_login_node_options.append("-DCBTF_KRELL_CN_RUNTIME_DIR=%s" % be_ck.prefix)
-        cray_login_node_options.append("-DRUNTIME_PLATFORM=%s" % rt_platform)
-
-        cmake_options.extend(cray_login_node_options)
 
     def cmake_args(self):
         spec = self.spec
@@ -239,13 +205,6 @@ class Openspeedshop(CMakePackage):
 
             if spec.satisfies("+cuda"):
                 cmake_args.extend(["-DCBTF_ARGONAVIS_DIR=%s" % spec["cbtf-argonavis"].prefix])
-
-            if spec.satisfies("+crayfe"):
-                # We need to build target/compute node
-                # components/libraries first then pass
-                # those libraries to the openspeedshop
-                # login node build
-                self.set_cray_login_node_cmake_options(spec, cmake_args)
 
         return cmake_args
 

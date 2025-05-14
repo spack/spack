@@ -5,8 +5,8 @@
 import json
 import os
 
-import jsonschema
 import pytest
+from _vendoring import jsonschema
 
 import spack.paths
 import spack.schema

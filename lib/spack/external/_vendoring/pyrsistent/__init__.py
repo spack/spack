@@ -1,35 +1,35 @@
 # -*- coding: utf-8 -*-
 
-from pyrsistent._pmap import pmap, m, PMap
+from _vendoring.pyrsistent._pmap import pmap, m, PMap
 
-from pyrsistent._pvector import pvector, v, PVector
+from _vendoring.pyrsistent._pvector import pvector, v, PVector
 
-from pyrsistent._pset import pset, s, PSet
+from _vendoring.pyrsistent._pset import pset, s, PSet
 
-from pyrsistent._pbag import pbag, b, PBag
+from _vendoring.pyrsistent._pbag import pbag, b, PBag
 
-from pyrsistent._plist import plist, l, PList
+from _vendoring.pyrsistent._plist import plist, l, PList
 
-from pyrsistent._pdeque import pdeque, dq, PDeque
+from _vendoring.pyrsistent._pdeque import pdeque, dq, PDeque
 
-from pyrsistent._checked_types import (
+from _vendoring.pyrsistent._checked_types import (
     CheckedPMap, CheckedPVector, CheckedPSet, InvariantException, CheckedKeyTypeError,
     CheckedValueTypeError, CheckedType, optional)
 
-from pyrsistent._field_common import (
+from _vendoring.pyrsistent._field_common import (
     field, PTypeError, pset_field, pmap_field, pvector_field)
 
-from pyrsistent._precord import PRecord
+from _vendoring.pyrsistent._precord import PRecord
 
-from pyrsistent._pclass import PClass, PClassMeta
+from _vendoring.pyrsistent._pclass import PClass, PClassMeta
 
-from pyrsistent._immutable import immutable
+from _vendoring.pyrsistent._immutable import immutable
 
-from pyrsistent._helpers import freeze, thaw, mutant
+from _vendoring.pyrsistent._helpers import freeze, thaw, mutant
 
-from pyrsistent._transformations import inc, discard, rex, ny
+from _vendoring.pyrsistent._transformations import inc, discard, rex, ny
 
-from pyrsistent._toolz import get_in
+from _vendoring.pyrsistent._toolz import get_in
 
 
 __all__ = ('pmap', 'm', 'PMap',
