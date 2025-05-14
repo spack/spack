@@ -831,7 +831,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                     break
 
         # Remove executables that aren't compilers
-        compilers.pop(None)
+        compilers.pop(None, None)
 
         # Convert
         added_variant = set()
