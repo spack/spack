@@ -616,7 +616,7 @@ class SpackCIConfig:
             # Reindex script
             {
                 "reindex-job": {
-                    "script:": ["spack buildcache update-index --keys {index_target_mirror}"]
+                    "script:": ["spack -d buildcache update-index --keys {index_target_mirror}"]
                 }
             },
             # Cleanup script
