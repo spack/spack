@@ -70,7 +70,7 @@ class Thrift(CMakePackage, AutotoolsPackage):
             depends_on("libtool")
 
     # min ver in build/cmake/BoostMacros.cmake
-    depends_on("boost@1.56:", when="@0.13: +cpp")
+    depends_on("boost@1.56:", when="@0.13:")
     depends_on("glib@2:", when="+c_glib")
     depends_on("openssl", when="+openssl")
     depends_on("libevent@2:", when="+libevent")
