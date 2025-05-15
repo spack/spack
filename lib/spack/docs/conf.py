@@ -75,6 +75,7 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
         "_spack_root/lib/spack/spack/test/*.py",
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
@@ -188,7 +189,7 @@ gettext_uuid = False
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ["_build", "_spack_root", ".spack-env", "spack/package.py"]
+exclude_patterns = ["_build", "_spack_root", ".spack-env"]
 
 nitpicky = True
 nitpick_ignore = [
