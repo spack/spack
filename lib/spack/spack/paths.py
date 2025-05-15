@@ -132,7 +132,7 @@ for module_dir in ["lmod", "modules"]:
 if not modules_base:
     modules_base = os.path.join(spack_xdg_data_home, "modules")
 
-# TODO: proposed precedence
+# Precedence for installs:
 # 1. config:install_tree:root
 # 2. explicitly defined SPACK_DATA_HOME
 # 3. occupied old install path (inside spack prefix)
