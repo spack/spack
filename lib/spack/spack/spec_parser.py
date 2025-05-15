@@ -164,7 +164,7 @@ def tokenize(text: str) -> Iterator[Token]:
         yield token
 
 
-def parseable_tokens(text: str) -> List[Token]:
+def parseable_tokens(text: str) -> Iterator[Token]:
     """Return non-whitespace tokens from the text passed as input
 
     Raises:
