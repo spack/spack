@@ -4,12 +4,12 @@ import re
 
 if False:  # MYPY
     from typing import Any, Dict, List, Union, Text, Optional  # NOQA
-    from ruamel.yaml.compat import VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import VersionType  # NOQA
 
-from ruamel.yaml.compat import _DEFAULT_YAML_VERSION, _F  # NOQA
-from ruamel.yaml.error import *  # NOQA
-from ruamel.yaml.nodes import MappingNode, ScalarNode, SequenceNode  # NOQA
-from ruamel.yaml.util import RegExp  # NOQA
+from _vendoring.ruamel.yaml.compat import _DEFAULT_YAML_VERSION, _F  # NOQA
+from _vendoring.ruamel.yaml.error import *  # NOQA
+from _vendoring.ruamel.yaml.nodes import MappingNode, ScalarNode, SequenceNode  # NOQA
+from _vendoring.ruamel.yaml.util import RegExp  # NOQA
 
 __all__ = ['BaseResolver', 'Resolver', 'VersionedResolver']
 

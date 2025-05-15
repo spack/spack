@@ -4,7 +4,8 @@
 
 import tempfile
 
-from spack.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.build_systems.python import PythonPackage, PythonPipBuilder
+
 from spack.package import *
 
 

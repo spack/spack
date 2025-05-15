@@ -5,6 +5,8 @@
 import glob
 import os
 
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 

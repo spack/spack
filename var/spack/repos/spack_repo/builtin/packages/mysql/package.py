@@ -5,6 +5,8 @@
 import os
 import tempfile
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 from ..boost.package import Boost

@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+
 from spack.package import *
 
 
@@ -21,6 +23,7 @@ class PySetuptools(Package, PythonExtension):
     # Requires railroad
     skip_modules = ["setuptools._vendor", "pkg_resources._vendor"]
 
+    version("79.0.1", sha256="e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51")
     version("78.1.1", sha256="c3a9c4211ff4c309edb8b8c4f1cbfa7ae324c4ba9f91ff254e3d305b9fd54561")
     version("78.1.0", sha256="3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8")
     version("78.0.2", sha256="4a612c80e1f1d71b80e4906ce730152e8dec23df439f82731d9d0b608d7b700d")

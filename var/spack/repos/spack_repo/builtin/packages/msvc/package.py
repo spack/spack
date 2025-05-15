@@ -5,11 +5,13 @@ import os.path
 import re
 import subprocess
 
+from spack_repo.builtin.build_systems import compiler
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 import archspec.cpu
 
-import spack.build_systems.compiler
 import spack.platforms
-import spack.version
 from spack.package import *
 
 FC_PATH: Dict[str, str] = dict()
@@ -64,9 +66,7 @@ class Msvc(Package, CompilerPackage):
         is_ifx = "ifx.exe" in str(exe)
         match = re.search(
             cls.compiler_version_regex,
-            spack.build_systems.compiler.compiler_output(
-                exe, version_argument=None, ignore_errors=1
-            ),
+            compiler.compiler_output(exe, version_argument=None, ignore_errors=1),
         )
         if match:
             if is_ifx:
@@ -153,11 +153,42 @@ class Msvc(Package, CompilerPackage):
         if str(archspec.cpu.host().family) == "x86_64":
             arch = "amd64"
 
-        msvc_version = spack.version.Version(
-            re.search(Msvc.compiler_version_regex, self.cc).group(1)
-        )
+        msvc_version = Version(re.search(Msvc.compiler_version_regex, self.cc).group(1))
         self.vcvars_call = VCVarsInvocation(vcvars_script_path, arch, msvc_version)
         env_cmds.append(self.vcvars_call)
+
+        def get_oneapi_root(pth: str):
+            """From within a prefix known to be a oneAPI path
+            determine the oneAPI root path from arbitrary point
+            under root
+
+            Args:
+                pth: path prefixed within oneAPI root
+            """
+            if not pth:
+                return ""
+            while os.path.basename(pth) and os.path.basename(pth) != "oneAPI":
+                pth = os.path.dirname(pth)
+            return pth
+
+        if self.fortran:
+            # If this found, it sets all the vars
+            oneapi_root = get_oneapi_root(self.fortran)
+            if not oneapi_root:
+                raise RuntimeError(f"Non-oneAPI Fortran compiler {self.fortran} assigned to MSVC")
+            oneapi_root_setvars = os.path.join(oneapi_root, "setvars.bat")
+            # some oneAPI exes return a version more precise than their
+            # install paths specify, so we determine path from
+            # the install path rather than the fc executable itself
+            numver = r"\d+\.\d+(?:\.\d+)?"
+            pattern = f"((?:{numver})|(?:latest))"
+            version_from_path = re.search(pattern, self.fortran).group(1)
+            oneapi_version_setvars = os.path.join(
+                oneapi_root, "compiler", version_from_path, "env", "vars.bat"
+            )
+            env_cmds.extend(
+                [VarsInvocation(oneapi_version_setvars), VarsInvocation(oneapi_root_setvars)]
+            )
         self.msvc_compiler_environment = CmdCall(*env_cmds)
 
     def _standard_flag(self, *, language: str, standard: str) -> str:
@@ -203,7 +234,7 @@ class Msvc(Package, CompilerPackage):
     @property
     def msvc_version(self):
         """This is the VCToolset version *NOT* the actual version of the cl compiler"""
-        return spack.version.Version(re.search(Msvc.compiler_version_regex, self.cc).group(1))
+        return Version(re.search(Msvc.compiler_version_regex, self.cc).group(1))
 
     @property
     def vs_root(self):
@@ -233,7 +264,7 @@ class Msvc(Package, CompilerPackage):
         # TODO: (johnwparent) Update this logic for the next platform toolset
         # or VC toolset version update
         toolset_ver = self.vc_toolset_ver
-        vs22_toolset = spack.version.Version(toolset_ver) > Version("142")
+        vs22_toolset = Version(toolset_ver) > Version("142")
         return toolset_ver if not vs22_toolset else "143"
 
 
@@ -328,6 +359,6 @@ def get_valid_fortran_pth():
     """Assign maximum available fortran compiler version"""
     # TODO (johnwparent): validate compatibility w/ try compiler
     # functionality when added
-    sort_fn = lambda fc_ver: spack.version.Version(fc_ver)
+    sort_fn = lambda fc_ver: Version(fc_ver)
     sort_fc_ver = sorted(list(FC_PATH.keys()), key=sort_fn)
     return FC_PATH[sort_fc_ver[-1]] if sort_fc_ver else None

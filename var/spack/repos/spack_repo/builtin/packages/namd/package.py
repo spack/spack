@@ -6,6 +6,10 @@ import os
 import platform
 import sys
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.build_environment import optimization_flags
 from spack.package import *
 

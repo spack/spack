@@ -1,5 +1,5 @@
 -----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+Hash: SHA512
 
 {
 "spec":{
@@ -57,7 +57,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -157,7 +157,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -181,7 +181,7 @@ Hash: SHA256
 "platform_os":"debian6",
 "target":"aarch64"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "languages":[
@@ -263,7 +263,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -301,17 +301,17 @@ Hash: SHA256
 }
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEqYoEuILhnYX9Nu4GlWXYCwVckv8FAmf23+QACgkQlWXYCwVc
-kv/zSg/+NrS4JjT9TFSFR/q2vaN9aL7fSTunxp+M8eAzTmg0sgHc/D6ov2PMpUF7
-1E2mnZ2gL5a5dHtsSCf30ILFzQoD+m+I9yOwcJopcbEjr8pcnXBFe6TT8lkxlXtI
-EHNsYGMUHFbFvc+hFdWatQJicdDaIbdyEMGAC7Kobs/4KpdBF5VWV+sIrzD5+XzO
-ACiKRjBmcaJpa950nuEaFzBITgq1aDtZ0EEZdXYvjRnzj9Bm6gbqmWzlllW1wf4r
-5hSMTpAsRED4TxL433nuf0nKIvTD5Mywzs88kiLCtEABfDy1qccyBAnjyNypFF6B
-fPqSDnr33s+JQ35t7RcHKfrgowk69UablE25YOUrQP6LtH4QzLBLj4/Z0zuz33hO
-v+YYe51DgixsMQ2WCKWEO6sNcrcrLBJMFVwUP2FyTTdW3jCYRlFiTYLSfoDhTRJ/
-4o7f2eEp3sVoOe12jKI6dw/P+c70dl8K4+1ICcnZkwsb0pd0vt2z4J2kPs2+1/0g
-vpywJO1HL5Zy7/ZRlmeeSMHYEDX2eKhm7QRFbxw1IEbg3stQCA7a425JWztyJ05K
-sfhFQgPt7F/xanJVFYk/hdza+3+5pFr1K/ARcLFBdLBKGxAXTMMR+NkMp3J5NiOo
-SMZJ3jG6xA2ntvSkyx/GFawD0FpnlgEByU3E+R/WiQA4VojLpvo=
-=kfWI
+iQIzBAEBCgAdFiEEy6ssEDLG/1B4BJ7A+mHVDBLK034FAmgnhqIACgkQ+mHVDBLK
+0356nQ//aVMUZU8Ly8/b1H4nvKM8Vyd275aFK64rvO89mERDNiYIOKk1pmYSMldU
++ltx2iIfVTUCEWYYJb/4UXWmw6SLAXIZ5mtrkALDAeDSih4wqIdevM3yii7pn8Oh
+/OEyDX8N5k05pnxFLYqR/2gA6vvdxHFd9/h4/zy2Z5w6m1hXb5jtS2ECyYN72nYN
+8QnnkXWZYturOhb4GawWY1l/rHIBqAseCQXSGR6UyrHTEGLUgT0+VQZwgxLNM4uG
+xj4xCDTgKiOesa5+3WE8Ug2wDIm48Prvg4qFmNrofguRNiIsNrl5k7wRiJWdfkjc
+gzs9URYddoCTRR2wpN0CaAQ268UlwZUCjPSrxgCNeqRi4Ob9Q4n37TKXNcVw46Ud
+MXRezAf+wyPGkq4vudh7cu11mHUcTeev82GM5bYQa6dSna3WvPpie/rx0TZYRkKE
+hesDW/41ZtFDANfXa7r011ngS5zZwak3zUaoqOdLNhN/xL4TFsZ19uSUdSZHAgSk
+9Sr3xodwV2D5H6gDuOtAo1vRod1Fx+yoi3BubX0sI5QuFgvtJrHVZmVj2bnGMBKI
+gR17q1ZHOmp3yPhVE9ZsiLKn9r3yIsfVhoTB6mXOnvq2q1fBxyrEpIGzIUmWfuTm
+vLn4nXt7PD78msiG/GZt6fShYBAwVfuvG+M1AQrsyGGoW2Bty7M=
+=hLvB
 -----END PGP SIGNATURE-----
