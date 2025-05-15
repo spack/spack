@@ -1,7 +1,7 @@
 from collections.abc import Mapping, Hashable
 from itertools import chain
-from pyrsistent._pvector import pvector
-from pyrsistent._transformations import transform
+from _vendoring.pyrsistent._pvector import pvector
+from _vendoring.pyrsistent._transformations import transform
 
 
 class PMap(object):
@@ -256,7 +256,7 @@ class PMap(object):
         consists of two parts. One match expression that specifies which elements to transform
         and one transformation function that performs the actual transformation.
 
-        >>> from pyrsistent import freeze, ny
+        >>> from _vendoring.pyrsistent import freeze, ny
         >>> news_paper = freeze({'articles': [{'author': 'Sara', 'content': 'A short article'},
         ...                                   {'author': 'Steve', 'content': 'A slightly longer article'}],
         ...                      'weather': {'temperature': '11C', 'wind': '5m/s'}})

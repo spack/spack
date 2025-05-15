@@ -17,6 +17,7 @@ class Llvm(Package, CompilerPackage):
     variant(
         "clang", default=True, description="Build the LLVM C/C++/Objective-C compiler frontend"
     )
+    variant("lld", default=True, description="Build the LLVM linker")
 
     provides("c", "cxx", when="+clang")
 

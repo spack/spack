@@ -96,7 +96,7 @@ class Hermes(CMakePackage):
         env.append_flags("LDFLAGS", "-L{}".format(path))
         env.prepend_path("PYTHONPATH", "{}".format(path))
 
-    def set_flags(self, env: EnvironmentModifications, path: str):
+    def set_flags(self, env: EnvironmentModifications):
         self.set_include(env, "{}/include".format(self.prefix))
         self.set_include(env, "{}/include".format(self.prefix))
         self.set_lib(env, "{}/lib".format(self.prefix))

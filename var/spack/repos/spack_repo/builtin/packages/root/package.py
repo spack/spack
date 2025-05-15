@@ -113,21 +113,21 @@ class Root(CMakePackage):
     patch("root7-webgui.patch", level=1, when="@6.16.00")
     # Missing includes in libcpp_string_view.h
     patch(
-        "https://github.com/root-project/root/pull/8289.patch?full_index=1",
-        sha256="5d91d78bcecd4fdbce9c829554a563234a9cb99eaf91dbc14fb85c3de33bac34",
+        "https://github.com/root-project/root/commit/a15e883277e51303a61baa3e6890f46b5bb4bfd7.patch?full_index=1",
+        sha256="12f4b5d47cca85871160b6772f2e0ebcf49de4e3294414411477f1ef44dd2e5b",
         when="@6.22:6.22.08",
     )
     # 6.26.00:6.26.06 can fail with empty string COMPILE_DEFINITIONS, which this patch
     # protects against
     patch(
-        "https://github.com/root-project/root/pull/11111.patch?full_index=1",
-        sha256="3115be912bd948979c9c2a3d89ffe6437fe17bd3b81396958c6cb6f51f64ae62",
+        "https://github.com/root-project/root/commit/08ab7e03061e551647d707637957252d121f9c39.patch?full_index=1",
+        sha256="943e361c85f133d252e35200b59ee3c260a5e74edecb8ea37a362b580bef81d1",
         when="@6.26:6.26.06",
     )
     # 6.26.00:6.26.06 fails for recent nlohmann-json single headers versions
     patch(
-        "https://github.com/root-project/root/pull/11225.patch?full_index=1",
-        sha256="397f2de7db95a445afdb311fc91c40725fcfad485d58b4d72e6c3cdd0d0c5de7",
+        "https://github.com/root-project/root/commit/26247b68b3aabad4aea5362bc5a8988103ce8038.patch?full_index=1",
+        sha256="8337fda2a964682422a11f32cd385104054e3ad112ec234be3f2bd88cea08fd9",
         when="@6.26:6.26.06 +root7 ^nlohmann-json@3.11:",
     )
     # Support recent versions of protobuf with their own CMake config
@@ -151,8 +151,8 @@ class Root(CMakePackage):
 
     # Fix TUri to be PCRE2 compatible
     patch(
-        "https://github.com/root-project/root/pull/15988.patch?full_index=1",
-        sha256="9de4aa66f791dc3a1b9521995552b2d28b57be88a96a2e9e369977e32da26eb0",
+        "https://github.com/root-project/root/commit/37f59306938f91f3ff2cce963ecbb041591dff43.patch?full_index=1",
+        sha256="a530978b5a9e9aa4a58958aed5b1d7c7d5e91f949ea04254bf0afa2000e1eee9",
         when="@6.32.0:6.32.02",
     )
 
@@ -165,13 +165,13 @@ class Root(CMakePackage):
         patch("root6-60606-mathmore.patch", when="@6.06.06")
         # Fix macOS build when cocoa is disabled:
         patch(
-            "https://github.com/root-project/root/pull/14387.patch?full_index=1",
+            "https://github.com/root-project/root/commit/ebcda91aa14a359f06fa1c50690d5be9e4c98b94.patch?full_index=1",
             sha256="559495f7bdd6b7674d3b1019da9b76e8b374f6dca3dbe72fb1320b0be2b00e53",
             when="@6.30:6.30.3 ~aqua",
         )
         # Fix build issues with libAfterImage for macOS
         patch(
-            "https://github.com/root-project/root/pull/15044.patch?full_index=1",
+            "https://github.com/root-project/root/commit/854cbc1af3eddf144aaa98b530103b229ab63ed3.patch?full_index=1",
             sha256="e68be5fe7b1ec873da134bd39c5c72730c4ca06d51b52eb436ae44fe81cd472d",
             when="@:6.30.04 +x",
         )

@@ -155,12 +155,12 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
         when="@0.4.36:0.4.38",
     )
     patch(
-        "https://github.com/jax-ml/jax/pull/25473.patch?full_index=1",
+        "https://github.com/jax-ml/jax/commit/7bbba40cd42aa47a6880308469b56294c1f3512c.patch?full_index=1",
         sha256="9d6977bc32046600bf8b15863251283fe7546896340367a7f14e3dccf418b4fe",
         when="@0.4.36:0.4.37",
     )
     patch(
-        "https://github.com/google/jax/pull/20101.patch?full_index=1",
+        "https://github.com/google/jax/commit/612d4d500132f8ae2fca313ec1f21acb18eae78e.patch?full_index=1",
         sha256="4dfb9f32d4eeb0a0fb3a6f4124c4170e3fe49511f1b768cd634c78d489962275",
         when="@:0.4.25",
     )

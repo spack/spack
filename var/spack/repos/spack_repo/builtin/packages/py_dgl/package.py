@@ -86,8 +86,8 @@ class PyDgl(CMakePackage, PythonExtension, CudaPackage):
     depends_on("cudnn", when="+cuda", type=("build", "run"))
 
     patch(
-        "https://patch-diff.githubusercontent.com/raw/dmlc/dgl/pull/5434.patch?full_index=1",
-        sha256="8c5f14784637a9bb3dd55e6104715d4a35b4e6594c99884aa19e67bc0544e91a",
+        "https://github.com/dmlc/dgl/commit/b1ec112eeb0e0633e57d89a60f6f80322cff0028.patch?full_index=1",
+        sha256="ae432af55650a3e69ab1c5e5d8c2bb3c3f1450bef7a0660c9d30b716fcb8652f",
         when="@1.0.1",
     )
 

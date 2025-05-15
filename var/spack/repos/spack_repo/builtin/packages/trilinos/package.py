@@ -524,7 +524,7 @@ class Trilinos(CMakePackage, CudaPackage, ROCmPackage):
     patch("cray_secas_12_12_1.patch", when="@12.12.1%cce")
     patch("cray_secas.patch", when="@12.14.1:12%cce")
     patch(
-        "https://patch-diff.githubusercontent.com/raw/trilinos/Trilinos/pull/10545.patch?full_index=1",
+        "https://github.com/trilinos/Trilinos/commit/c8b788d7e6e213a2828201ebdc00cde181e3b71b.patch?full_index=1",
         sha256="62272054f7cc644583c269e692c69f0a26af19e5a5bd262db3ea3de3447b3358",
         when="@:13.4 +complex",
     )

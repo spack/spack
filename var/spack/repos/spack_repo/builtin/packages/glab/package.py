@@ -15,6 +15,7 @@ class Glab(GoPackage):
 
     license("MIT")
 
+    version("1.57.0", sha256="b0c3333c7160a9d95ec820ceadd4636fe7760b19a23bc8957337812b191c03dd")
     version("1.55.0", sha256="21f58698b92035461e8e8ba9040429f4b5a0f6d528d8333834ef522a973384c8")
     version("1.54.0", sha256="99f5dd785041ad26c8463ae8630e98a657aa542a2bb02333d50243dd5cfdf9cb")
     version("1.53.0", sha256="2930aa5dd76030cc6edcc33483bb49dd6a328eb531d0685733ca7be7b906e915")
@@ -37,6 +38,7 @@ class Glab(GoPackage):
     version("1.20.0", sha256="6beb0186fa50d0dea3b05fcfe6e4bc1f9be0c07aa5fa15b37ca2047b16980412")
 
     with default_args(type="build"):
+        depends_on("go@1.24.2:", when="@1.56:")
         depends_on("go@1.24.1:", when="@1.54:")
         depends_on("go@1.23.4:", when="@1.52:")
         depends_on("go@1.23.2:", when="@1.48:")

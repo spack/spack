@@ -9,5 +9,9 @@ class Mvdefaults(Package):
     url = "http://www.example.com/mvdefaults-1.0.tar.gz"
 
     version("1.0", md5="abcdef1234567890abcdef1234567890")
+    version("0.9", md5="abcdef1234567890abcdef1234567890")
 
     variant("foo", values=("a", "b", "c"), default=("a", "b", "c"), multi=True, description="")
+    conflicts("foo:=a,b", when="@0.9")
+
+    depends_on("pkg-b", when="foo:=b,c")

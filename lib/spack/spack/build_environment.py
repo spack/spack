@@ -68,9 +68,6 @@ from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 
-import spack.build_systems.cmake
-import spack.build_systems.meson
-import spack.build_systems.python
 import spack.builder
 import spack.compilers.libraries
 import spack.config
@@ -567,9 +564,6 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
-    if context == Context.BUILD:
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
     module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
@@ -997,15 +991,6 @@ class SetupContext:
                 dependent_module = ModuleChangePropagator(spec.package)
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
-
-        if self.context == Context.BUILD:
-            pkg = self.specs[0].package
-            module = ModuleChangePropagator(pkg)
-            # std_cmake_args is not sufficiently static to be defined
-            # in set_package_py_globals and is deprecated so its handled
-            # here as a special case
-            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-            module.propagate_changes_to_mro()
 
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
