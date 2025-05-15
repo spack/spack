@@ -75,6 +75,7 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
         "_spack_root/lib/spack/spack/test/*.py",
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
