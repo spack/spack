@@ -23,6 +23,7 @@ spack.main.add_all_commands(parser)
 
 def test_names():
     """Test default output of spack commands."""
+
     def cleanup(commands):
         """Format output and remove any non-command lines, e.g., repo warnings."""
         return [cmd for cmd in commands.strip().split("\n") if " " not in cmd]
