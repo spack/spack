@@ -11,6 +11,7 @@ dependencies.
 import os
 import pathlib
 from pathlib import PurePath
+from typing import Optional
 
 import llnl.util.filesystem
 
@@ -38,18 +39,20 @@ spack_xdg_state_home = _define_xdg_or_backup(xdg_state_home, os.path.join("~", "
 spack_xdg_config_home = _define_xdg_or_backup(xdg_config_home, os.path.join("~", "config"))
 spack_xdg_data_home = _define_xdg_or_backup(xdg_data_home, os.path.join("~", ".local", "share"))
 
+spack_xdg_data_home_nodefault: Optional[str]
 if xdg_data_home in os.environ:
-    spack_xdg_data_home_nodefault = os.path.expanduser(os.path.join(os.environ[xdg_data_home], "spack"))
+    spack_xdg_data_home_nodefault = os.path.expanduser(
+        os.path.join(os.environ[xdg_data_home], "spack")
+    )
 else:
     spack_xdg_data_home_nodefault = None
 
 spack_xdg_cache_home = _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 
+
 # User configuration
 def _get_user_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home
-    )
+    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home)
 
 
 # Configuration in /etc/spack on the system
