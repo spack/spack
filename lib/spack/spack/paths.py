@@ -141,6 +141,12 @@ else:
     # TODO: maybe store views/develop packages in a separate location?
     envs_path = os.path.join(spack_data_home, "environments")
 
+# TODO: proposed precedence
+# 1. config:install_tree:root
+# 2. explicitly defined SPACK_DATA_HOME
+# 3. occupied old install path (inside spack prefix)
+# 4. explicitly defined XDG_DATA_HOME
+# 5. inside spack prefix (slightly different compared to old install path)
 old_install_path = os.path.join(prefix, "opt", "spack")
 if dir_is_occupied(old_install_path):
     default_install_location = old_install_path
