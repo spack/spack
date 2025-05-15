@@ -103,7 +103,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             depends_on(f"slate +cuda cuda_arch={val}", when=f"cuda_arch={val}")
     with when("+slate+rocm"):
         for val in ROCmPackage.amdgpu_targets:
-            depends_on(f"slate amdgpu_target={val}", when=f"+slate amdgpu_target={val}")
+            depends_on(f"slate +rocm amdgpu_target={val}", when=f"amdgpu_target={val}")
 
     conflicts("+parmetis", when="~mpi")
     conflicts("+butterflypack", when="~mpi")
