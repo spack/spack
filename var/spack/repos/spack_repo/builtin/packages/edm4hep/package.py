@@ -107,6 +107,8 @@ class Edm4hep(CMakePackage):
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("EDM4HEP_WITH_JSON", "json"),
         ]
+        if self.spec.satisfies("@:0.99.1 ^podio@1.3:"):
+            args.append(self.define("PODIO_USE_CLANG_FORMAT", False))
         return args
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
