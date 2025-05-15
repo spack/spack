@@ -45,7 +45,7 @@ def _define_xdg_or_backup(xdg_var, backup):
     return os.path.expanduser(spack_xdg_defined)
 
 
-#: Resolved XDG_ counterparts, with additional "spack" subdirectory
+#: Resolved XDG_STATE_HOME, with additional "spack" subdirectory
 spack_xdg_state_home = lambda: _define_xdg_or_backup(
     xdg_state_home, os.path.join("~", ".local", "state")
 )
