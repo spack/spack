@@ -46,9 +46,15 @@ def _define_xdg_or_backup(xdg_var, backup):
 
 
 #: Resolved XDG_ counterparts, with additional "spack" subdirectory
-spack_xdg_state_home = lambda: _define_xdg_or_backup(xdg_state_home, os.path.join("~", ".local", "state"))
-spack_xdg_config_home = lambda: _define_xdg_or_backup(xdg_config_home, os.path.join("~", ".config"))
-spack_xdg_data_home = lambda: _define_xdg_or_backup(xdg_data_home, os.path.join("~", ".local", "share"))
+spack_xdg_state_home = lambda: _define_xdg_or_backup(
+    xdg_state_home, os.path.join("~", ".local", "state")
+)
+spack_xdg_config_home = lambda: _define_xdg_or_backup(
+    xdg_config_home, os.path.join("~", ".config")
+)
+spack_xdg_data_home = lambda: _define_xdg_or_backup(
+    xdg_data_home, os.path.join("~", ".local", "share")
+)
 
 spack_xdg_data_home_nodefault: Optional[str]
 if xdg_data_home in os.environ:
@@ -78,7 +84,7 @@ def spack_data_home():
 
 # User configuration
 def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home)
+    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home())
 
 
 # Configuration in /etc/spack on the system
@@ -166,6 +172,7 @@ def default_install_location():
     else:
         return os.path.join(spack_data_home(), "installs")
 
+
 # Environments follow the same precedence rules as installs
 # (the view and dev_path packages can take up significant space)
 old_envs_path = os.path.join(var_path, "environments")
@@ -199,12 +206,12 @@ mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home)
+    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home())
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
 
-default_fetch_cache_path = os.path.join(spack_data_home, "downloads")
+default_fetch_cache_path = os.path.join(spack_data_home(), "downloads")
 
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")

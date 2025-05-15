@@ -366,6 +366,7 @@ def clear_xdg_vars():
     yield
     os.environ.update(saved)
 
+
 #
 # Make sure global state of active env does not leak between tests.
 #
