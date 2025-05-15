@@ -1,3 +1,3 @@
 # SPDX-License-Identifier: MIT
 
-from attr.converters import *  # noqa
+from _vendoring.attr.converters import *  # noqa

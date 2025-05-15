@@ -21,13 +21,13 @@
 
 import codecs
 
-from ruamel.yaml.error import YAMLError, FileMark, StringMark, YAMLStreamError
-from ruamel.yaml.compat import _F  # NOQA
-from ruamel.yaml.util import RegExp
+from _vendoring.ruamel.yaml.error import YAMLError, FileMark, StringMark, YAMLStreamError
+from _vendoring.ruamel.yaml.compat import _F  # NOQA
+from _vendoring.ruamel.yaml.util import RegExp
 
 if False:  # MYPY
     from typing import Any, Dict, Optional, List, Union, Text, Tuple, Optional  # NOQA
-#    from ruamel.yaml.compat import StreamTextType  # NOQA
+#    from _vendoring.ruamel.yaml.compat import StreamTextType  # NOQA
 
 __all__ = ['Reader', 'ReaderError']
 

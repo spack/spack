@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from ruamel.yaml.anchor import Anchor
+from _vendoring.ruamel.yaml.anchor import Anchor
 
 if False:  # MYPY
     from typing import Text, Any, Dict, List  # NOQA
@@ -121,7 +121,7 @@ def walk_tree(base, map=None):
 
     You can also provide an explicit (ordered) mapping for multiple transforms
     (first of which is executed):
-        map = ruamel.yaml.compat.ordereddict
+        map = _vendoring.ruamel.yaml.compat.ordereddict
         map['\n'] = preserve_literal
         map[':'] = SingleQuotedScalarString
         walk_tree(data, map=map)

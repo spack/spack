@@ -82,7 +82,7 @@ class Libzmq(AutotoolsPackage):
 
     # Fix build issues with gcc-12
     patch(
-        "https://github.com/zeromq/libzmq/pull/4334.patch?full_index=1",
+        "https://github.com/zeromq/libzmq/commit/a01d259db372bff5e049aa966da4efce7259af67.patch?full_index=1",
         sha256="edca864cba914481a5c97d2e975ba64ca1d2fbfc0044e9a78c48f1f7b2bedb6f",
         when="@4.3.4",
     )

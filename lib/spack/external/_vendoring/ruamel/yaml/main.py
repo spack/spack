@@ -7,39 +7,39 @@ import glob
 from importlib import import_module
 
 
-import ruamel.yaml
-from ruamel.yaml.error import UnsafeLoaderWarning, YAMLError  # NOQA
+import _vendoring.ruamel.yaml
+from _vendoring.ruamel.yaml.error import UnsafeLoaderWarning, YAMLError  # NOQA
 
-from ruamel.yaml.tokens import *  # NOQA
-from ruamel.yaml.events import *  # NOQA
-from ruamel.yaml.nodes import *  # NOQA
+from _vendoring.ruamel.yaml.tokens import *  # NOQA
+from _vendoring.ruamel.yaml.events import *  # NOQA
+from _vendoring.ruamel.yaml.nodes import *  # NOQA
 
-from ruamel.yaml.loader import BaseLoader, SafeLoader, Loader, RoundTripLoader  # NOQA
-from ruamel.yaml.dumper import BaseDumper, SafeDumper, Dumper, RoundTripDumper  # NOQA
-from ruamel.yaml.compat import StringIO, BytesIO, with_metaclass, nprint, nprintf  # NOQA
-from ruamel.yaml.resolver import VersionedResolver, Resolver  # NOQA
-from ruamel.yaml.representer import (
+from _vendoring.ruamel.yaml.loader import BaseLoader, SafeLoader, Loader, RoundTripLoader  # NOQA
+from _vendoring.ruamel.yaml.dumper import BaseDumper, SafeDumper, Dumper, RoundTripDumper  # NOQA
+from _vendoring.ruamel.yaml.compat import StringIO, BytesIO, with_metaclass, nprint, nprintf  # NOQA
+from _vendoring.ruamel.yaml.resolver import VersionedResolver, Resolver  # NOQA
+from _vendoring.ruamel.yaml.representer import (
     BaseRepresenter,
     SafeRepresenter,
     Representer,
     RoundTripRepresenter,
 )
-from ruamel.yaml.constructor import (
+from _vendoring.ruamel.yaml.constructor import (
     BaseConstructor,
     SafeConstructor,
     Constructor,
     RoundTripConstructor,
 )
-from ruamel.yaml.loader import Loader as UnsafeLoader
-from ruamel.yaml.comments import CommentedMap, CommentedSeq, C_PRE
+from _vendoring.ruamel.yaml.loader import Loader as UnsafeLoader
+from _vendoring.ruamel.yaml.comments import CommentedMap, CommentedSeq, C_PRE
 
 if False:  # MYPY
     from typing import List, Set, Dict, Union, Any, Callable, Optional, Text  # NOQA
-    from ruamel.yaml.compat import StreamType, StreamTextType, VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import StreamType, StreamTextType, VersionType  # NOQA
     from pathlib import Path
 
 try:
-    from _ruamel_yaml import CParser, CEmitter  # type: ignore
+    from __vendoring.ruamel.yaml import CParser, CEmitter  # type: ignore
 except:  # NOQA
     CParser = CEmitter = None
 
@@ -74,7 +74,7 @@ class YAML:
         for pu in ([] if plug_ins is None else plug_ins) + self.official_plug_ins():
             file_name = pu.replace(os.sep, '.')
             self.plug_ins.append(import_module(file_name))
-        self.Resolver = ruamel.yaml.resolver.VersionedResolver  # type: Any
+        self.Resolver = _vendoring.ruamel.yaml.resolver.VersionedResolver  # type: Any
         self.allow_unicode = True
         self.Reader = None  # type: Any
         self.Representer = None  # type: Any
@@ -89,37 +89,37 @@ class YAML:
             setup_rt = True
         elif 'safe' in self.typ:
             self.Emitter = (
-                ruamel.yaml.emitter.Emitter if pure or CEmitter is None else CEmitter
+                _vendoring.ruamel.yaml.emitter.Emitter if pure or CEmitter is None else CEmitter
             )
-            self.Representer = ruamel.yaml.representer.SafeRepresenter
-            self.Parser = ruamel.yaml.parser.Parser if pure or CParser is None else CParser
-            self.Composer = ruamel.yaml.composer.Composer
-            self.Constructor = ruamel.yaml.constructor.SafeConstructor
+            self.Representer = _vendoring.ruamel.yaml.representer.SafeRepresenter
+            self.Parser = _vendoring.ruamel.yaml.parser.Parser if pure or CParser is None else CParser
+            self.Composer = _vendoring.ruamel.yaml.composer.Composer
+            self.Constructor = _vendoring.ruamel.yaml.constructor.SafeConstructor
         elif 'base' in self.typ:
-            self.Emitter = ruamel.yaml.emitter.Emitter
-            self.Representer = ruamel.yaml.representer.BaseRepresenter
-            self.Parser = ruamel.yaml.parser.Parser if pure or CParser is None else CParser
-            self.Composer = ruamel.yaml.composer.Composer
-            self.Constructor = ruamel.yaml.constructor.BaseConstructor
+            self.Emitter = _vendoring.ruamel.yaml.emitter.Emitter
+            self.Representer = _vendoring.ruamel.yaml.representer.BaseRepresenter
+            self.Parser = _vendoring.ruamel.yaml.parser.Parser if pure or CParser is None else CParser
+            self.Composer = _vendoring.ruamel.yaml.composer.Composer
+            self.Constructor = _vendoring.ruamel.yaml.constructor.BaseConstructor
         elif 'unsafe' in self.typ:
             self.Emitter = (
-                ruamel.yaml.emitter.Emitter if pure or CEmitter is None else CEmitter
+                _vendoring.ruamel.yaml.emitter.Emitter if pure or CEmitter is None else CEmitter
             )
-            self.Representer = ruamel.yaml.representer.Representer
-            self.Parser = ruamel.yaml.parser.Parser if pure or CParser is None else CParser
-            self.Composer = ruamel.yaml.composer.Composer
-            self.Constructor = ruamel.yaml.constructor.Constructor
+            self.Representer = _vendoring.ruamel.yaml.representer.Representer
+            self.Parser = _vendoring.ruamel.yaml.parser.Parser if pure or CParser is None else CParser
+            self.Composer = _vendoring.ruamel.yaml.composer.Composer
+            self.Constructor = _vendoring.ruamel.yaml.constructor.Constructor
         elif 'rtsc' in self.typ:
             self.default_flow_style = False
             # no optimized rt-dumper yet
-            self.Emitter = ruamel.yaml.emitter.Emitter
-            self.Serializer = ruamel.yaml.serializer.Serializer
-            self.Representer = ruamel.yaml.representer.RoundTripRepresenter
-            self.Scanner = ruamel.yaml.scanner.RoundTripScannerSC
+            self.Emitter = _vendoring.ruamel.yaml.emitter.Emitter
+            self.Serializer = _vendoring.ruamel.yaml.serializer.Serializer
+            self.Representer = _vendoring.ruamel.yaml.representer.RoundTripRepresenter
+            self.Scanner = _vendoring.ruamel.yaml.scanner.RoundTripScannerSC
             # no optimized rt-parser yet
-            self.Parser = ruamel.yaml.parser.RoundTripParserSC
-            self.Composer = ruamel.yaml.composer.Composer
-            self.Constructor = ruamel.yaml.constructor.RoundTripConstructor
+            self.Parser = _vendoring.ruamel.yaml.parser.RoundTripParserSC
+            self.Composer = _vendoring.ruamel.yaml.composer.Composer
+            self.Constructor = _vendoring.ruamel.yaml.constructor.RoundTripConstructor
             self.comment_handling = C_PRE
         else:
             setup_rt = True
@@ -127,14 +127,14 @@ class YAML:
         if setup_rt:
             self.default_flow_style = False
             # no optimized rt-dumper yet
-            self.Emitter = ruamel.yaml.emitter.Emitter
-            self.Serializer = ruamel.yaml.serializer.Serializer
-            self.Representer = ruamel.yaml.representer.RoundTripRepresenter
-            self.Scanner = ruamel.yaml.scanner.RoundTripScanner
+            self.Emitter = _vendoring.ruamel.yaml.emitter.Emitter
+            self.Serializer = _vendoring.ruamel.yaml.serializer.Serializer
+            self.Representer = _vendoring.ruamel.yaml.representer.RoundTripRepresenter
+            self.Scanner = _vendoring.ruamel.yaml.scanner.RoundTripScanner
             # no optimized rt-parser yet
-            self.Parser = ruamel.yaml.parser.RoundTripParser
-            self.Composer = ruamel.yaml.composer.Composer
-            self.Constructor = ruamel.yaml.constructor.RoundTripConstructor
+            self.Parser = _vendoring.ruamel.yaml.parser.RoundTripParser
+            self.Composer = _vendoring.ruamel.yaml.composer.Composer
+            self.Constructor = _vendoring.ruamel.yaml.constructor.RoundTripConstructor
         del setup_rt
         self.stream = None
         self.canonical = None
@@ -477,20 +477,20 @@ class YAML:
         """
         if self.Parser is not CParser:
             if self.Reader is None:
-                self.Reader = ruamel.yaml.reader.Reader
+                self.Reader = _vendoring.ruamel.yaml.reader.Reader
             if self.Scanner is None:
-                self.Scanner = ruamel.yaml.scanner.Scanner
+                self.Scanner = _vendoring.ruamel.yaml.scanner.Scanner
             self.reader.stream = stream
         else:
             if self.Reader is not None:
                 if self.Scanner is None:
-                    self.Scanner = ruamel.yaml.scanner.Scanner
-                self.Parser = ruamel.yaml.parser.Parser
+                    self.Scanner = _vendoring.ruamel.yaml.scanner.Scanner
+                self.Parser = _vendoring.ruamel.yaml.parser.Parser
                 self.reader.stream = stream
             elif self.Scanner is not None:
                 if self.Reader is None:
-                    self.Reader = ruamel.yaml.reader.Reader
-                self.Parser = ruamel.yaml.parser.Parser
+                    self.Reader = _vendoring.ruamel.yaml.reader.Reader
+                self.Parser = _vendoring.ruamel.yaml.parser.Parser
                 self.reader.stream = stream
             else:
                 # combined C level reader>scanner>parser
@@ -498,8 +498,8 @@ class YAML:
                 # if you just initialise the CParser, to much of resolver.py
                 # is actually used
                 rslvr = self.Resolver
-                # if rslvr is ruamel.yaml.resolver.VersionedResolver:
-                #     rslvr = ruamel.yaml.resolver.Resolver
+                # if rslvr is _vendoring.ruamel.yaml.resolver.VersionedResolver:
+                #     rslvr = _vendoring.ruamel.yaml.resolver.Resolver
 
                 class XLoader(self.Parser, self.Constructor, rslvr):  # type: ignore
                     def __init__(selfx, stream, version=self.version, preserve_quotes=None):
@@ -640,7 +640,7 @@ class YAML:
         # we have only .Serializer to deal with (vs .Reader & .Scanner), much simpler
         if self.Emitter is not CEmitter:
             if self.Serializer is None:
-                self.Serializer = ruamel.yaml.serializer.Serializer
+                self.Serializer = _vendoring.ruamel.yaml.serializer.Serializer
             self.emitter.stream = stream
             self.emitter.top_level_colon_align = tlca
             if self.scalar_after_indicator is not None:
@@ -648,7 +648,7 @@ class YAML:
             return self.serializer, self.representer, self.emitter
         if self.Serializer is not None:
             # cannot set serializer with CEmitter
-            self.Emitter = ruamel.yaml.emitter.Emitter
+            self.Emitter = _vendoring.ruamel.yaml.emitter.Emitter
             self.emitter.stream = stream
             self.emitter.top_level_colon_align = tlca
             if self.scalar_after_indicator is not None:
@@ -657,9 +657,9 @@ class YAML:
         # C routines
 
         rslvr = (
-            ruamel.yaml.resolver.BaseResolver
+            _vendoring.ruamel.yaml.resolver.BaseResolver
             if 'base' in self.typ
-            else ruamel.yaml.resolver.Resolver
+            else _vendoring.ruamel.yaml.resolver.Resolver
         )
 
         class XDumper(CEmitter, self.Representer, rslvr):  # type: ignore
@@ -743,7 +743,7 @@ class YAML:
         single file installers that are not properly emulating a file-system (issue 324)
         no plug-ins will be found. If any are packaged, you know which file that are
         and you can explicitly provide it during instantiation:
-            yaml = ruamel.yaml.YAML(plug_ins=['ruamel/yaml/jinja2/__plug_in__'])
+            yaml = _vendoring.ruamel.yaml.YAML(plug_ins=['_vendoring.ruamel.yaml/_vendoring.jinja2/__plug_in__'])
         """
         try:
             bd = os.path.dirname(__file__)
@@ -982,7 +982,7 @@ def yaml_object(yml):
 ########################################################################################
 def warn_deprecation(fun, method, arg=''):
     # type: (Any, Any, str) -> None
-    from ruamel.yaml.compat import _F
+    from _vendoring.ruamel.yaml.compat import _F
 
     warnings.warn(
         _F(
@@ -1469,7 +1469,7 @@ def add_implicit_resolver(
         if hasattr(Loader, 'add_implicit_resolver'):
             Loader.add_implicit_resolver(tag, regexp, first)
         elif issubclass(
-            Loader, (BaseLoader, SafeLoader, ruamel.yaml.loader.Loader, RoundTripLoader)
+            Loader, (BaseLoader, SafeLoader, _vendoring.ruamel.yaml.loader.Loader, RoundTripLoader)
         ):
             Resolver.add_implicit_resolver(tag, regexp, first)
         else:
@@ -1478,7 +1478,7 @@ def add_implicit_resolver(
         if hasattr(Dumper, 'add_implicit_resolver'):
             Dumper.add_implicit_resolver(tag, regexp, first)
         elif issubclass(
-            Dumper, (BaseDumper, SafeDumper, ruamel.yaml.dumper.Dumper, RoundTripDumper)
+            Dumper, (BaseDumper, SafeDumper, _vendoring.ruamel.yaml.dumper.Dumper, RoundTripDumper)
         ):
             Resolver.add_implicit_resolver(tag, regexp, first)
         else:
@@ -1501,7 +1501,7 @@ def add_path_resolver(tag, path, kind=None, Loader=None, Dumper=None, resolver=R
         if hasattr(Loader, 'add_path_resolver'):
             Loader.add_path_resolver(tag, path, kind)
         elif issubclass(
-            Loader, (BaseLoader, SafeLoader, ruamel.yaml.loader.Loader, RoundTripLoader)
+            Loader, (BaseLoader, SafeLoader, _vendoring.ruamel.yaml.loader.Loader, RoundTripLoader)
         ):
             Resolver.add_path_resolver(tag, path, kind)
         else:
@@ -1510,7 +1510,7 @@ def add_path_resolver(tag, path, kind=None, Loader=None, Dumper=None, resolver=R
         if hasattr(Dumper, 'add_path_resolver'):
             Dumper.add_path_resolver(tag, path, kind)
         elif issubclass(
-            Dumper, (BaseDumper, SafeDumper, ruamel.yaml.dumper.Dumper, RoundTripDumper)
+            Dumper, (BaseDumper, SafeDumper, _vendoring.ruamel.yaml.dumper.Dumper, RoundTripDumper)
         ):
             Resolver.add_path_resolver(tag, path, kind)
         else:
@@ -1560,7 +1560,7 @@ def add_multi_constructor(tag_prefix, multi_constructor, Loader=None, constructo
             BaseConstructor.add_multi_constructor(tag_prefix, multi_constructor)
         elif issubclass(Loader, SafeLoader):
             SafeConstructor.add_multi_constructor(tag_prefix, multi_constructor)
-        elif issubclass(Loader, ruamel.yaml.loader.Loader):
+        elif issubclass(Loader, _vendoring.ruamel.yaml.loader.Loader):
             Constructor.add_multi_constructor(tag_prefix, multi_constructor)
         elif issubclass(Loader, RoundTripLoader):
             RoundTripConstructor.add_multi_constructor(tag_prefix, multi_constructor)

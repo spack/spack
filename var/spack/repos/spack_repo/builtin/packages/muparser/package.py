@@ -2,10 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.autotools import AutotoolsBuilder
+from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 
 
-class Muparser(CMakePackage, Package):
+class Muparser(CMakePackage, AutotoolsPackage):
     """C++ math expression parser library."""
 
     homepage = "https://beltoforion.de/en/muparser/"
@@ -22,7 +24,9 @@ class Muparser(CMakePackage, Package):
     patch("auto_ptr.patch", when="@2.2.5")
 
     variant("samples", default=True, description="enable samples", when="build_system=cmake")
-    variant("openmp", default=True, description="enable OpenMP support", when="build_system=cmake")
+    variant(
+        "openmp", default=False, description="enable OpenMP support", when="build_system=cmake"
+    )
     variant(
         "wide_char",
         default=False,
@@ -31,13 +35,13 @@ class Muparser(CMakePackage, Package):
     )
     variant("shared", default=True, description="enable shared libs", when="build_system=cmake")
 
-    # Non-CMake build system is not supported by windows
-    conflicts("platform=windows", when="@:2.2.5")
-    build_system(conditional("cmake", when="@2.2.6:"), "generic", default="cmake")
+    build_system(conditional("cmake", when="@2.2.6:"), "autotools", default="cmake")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
+
+class CMakeBuilder(CMakeBuilder):
     def cmake_args(self):
         return [
             self.define_from_variant("ENABLE_SAMPLES", "samples"),
@@ -46,17 +50,14 @@ class Muparser(CMakePackage, Package):
             self.define_from_variant("ENABLE_WIDE_CHAR", "wide_char"),
         ]
 
-    @when("@:2.2.5")
-    def install(self, spec, prefix):
-        options = [
+
+class AutotoolsBuilder(AutotoolsBuilder):
+    parallel = False
+
+    def configure_args(self):
+        return [
             "--disable-debug",
             "--disable-samples",
             "--disable-dependency-tracking",
             "CXXFLAGS={0}".format(self.compiler.cxx11_flag),
-            "--prefix=%s" % prefix,
         ]
-
-        configure(*options)
-
-        make(parallel=False)
-        make("install")

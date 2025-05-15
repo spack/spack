@@ -6,9 +6,9 @@ import argparse
 import json
 import sys
 
-from jsonschema import __version__
-from jsonschema._reflect import namedAny
-from jsonschema.validators import validator_for
+from _vendoring.jsonschema import __version__
+from _vendoring.jsonschema._reflect import namedAny
+from _vendoring.jsonschema.validators import validator_for
 
 
 def _namedAnyWithDefault(name):

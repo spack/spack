@@ -4,7 +4,6 @@
 
 import os
 
-import spack
 from spack.package import *
 
 
@@ -115,9 +114,7 @@ class SingularityEos(CMakePackage, CudaPackage):
     # specfic specs when using GPU/cuda offloading
     depends_on("kokkos +wrapper+cuda_lambda", when="+cuda+kokkos")
 
-    # fix for older spacks
-    if Version(spack.spack_version) >= Version("0.17"):
-        depends_on("kokkos-kernels ~shared", when="+kokkos-kernels")
+    depends_on("kokkos-kernels ~shared", when="+kokkos-kernels")
 
     for _flag in list(CudaPackage.cuda_arch_values):
         depends_on("kokkos cuda_arch=" + _flag, when="+cuda+kokkos cuda_arch=" + _flag)

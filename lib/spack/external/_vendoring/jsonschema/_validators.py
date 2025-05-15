@@ -1,6 +1,6 @@
 import re
 
-from jsonschema._utils import (
+from _vendoring.jsonschema._utils import (
     ensure_list,
     equal,
     extras_msg,
@@ -9,8 +9,8 @@ from jsonschema._utils import (
     unbool,
     uniq,
 )
-from jsonschema.exceptions import FormatError, ValidationError
-from jsonschema.compat import iteritems
+from _vendoring.jsonschema.exceptions import FormatError, ValidationError
+from _vendoring.jsonschema.compat import iteritems
 
 
 def patternProperties(validator, patternProperties, instance, schema):

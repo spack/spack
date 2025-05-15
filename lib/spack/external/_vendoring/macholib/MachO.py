@@ -7,7 +7,7 @@ import os
 import struct
 import sys
 
-from macholib.util import fileview
+from _vendoring.macholib.util import fileview
 
 from .mach_o import (
     FAT_MAGIC,
@@ -41,7 +41,7 @@ from .mach_o import (
 from .ptypes import sizeof
 
 try:
-    from macholib.compat import bytes
+    from _vendoring.macholib.compat import bytes
 except ImportError:
     pass
 

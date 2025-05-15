@@ -12,6 +12,7 @@ class Mpich(Package):
     list_depth = 2
 
     tags = ["tag1", "tag2"]
+    executables = ["^mpichversion$"]
 
     variant("debug", default=False, description="Compile MPICH with debug flags.")
 
@@ -29,6 +30,12 @@ class Mpich(Package):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r"MPICH Version:\s+(\S+)", output)
+        return match.group(1) if match else None
 
     def install(self, spec, prefix):
         touch(prefix.mpich)

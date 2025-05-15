@@ -98,12 +98,12 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
         # Fix headers
         # See https://github.com/Unidata/netcdf-c/pull/1505
         patch(
-            "https://github.com/Unidata/netcdf-c/pull/1505.patch?full_index=1",
+            "https://github.com/Unidata/netcdf-c/commit/cca9ae64f622bb2b7f164fa352c820b5fe4d132c.patch?full_index=1",
             sha256="495b3e5beb7f074625bcec2ca76aebd339e42719e9c5ccbedbdcc4ffb81a7450",
         )
         # See https://github.com/Unidata/netcdf-c/pull/1508
         patch(
-            "https://github.com/Unidata/netcdf-c/pull/1508.patch?full_index=1",
+            "https://github.com/Unidata/netcdf-c/commit/f0dc61a73c8a35432034c8d262f1893a0090c3ed.patch?full_index=1",
             sha256="19e7f31b96536928621b1c29bb6d1a57bcb7aa672cea8719acf9ac934cdd2a3e",
         )
 

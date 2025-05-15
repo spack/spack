@@ -503,7 +503,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     # See https://github.com/tensorflow/tensorflow/issues/57663
     # This is fixed for 2.11 but 2.10 needs the following patch.
     patch(
-        "https://github.com/tensorflow/tensorflow/pull/56691.patch?full_index=1",
+        "https://github.com/tensorflow/tensorflow/commit/cd8cb49c977d8a460884cbd24f4cb9c20e532f0d.patch?full_index=1",
         sha256="d635ea6d6c1571505871d0caba3e2cd939ea0f4aff972095d552913a8109def3",
         when="@2.10",
     )
