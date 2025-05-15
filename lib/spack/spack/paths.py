@@ -109,9 +109,6 @@ default_license_dir = os.path.join(etc_path, "licenses")
 var_path = os.path.join(prefix, "var", "spack")
 
 
-internal_install_tree_root = os.path.join(prefix, "opt", "spack")
-
-
 spack_instance_id = hash.b32_hash(prefix)[:7]
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
@@ -138,6 +135,15 @@ else:
     # user explicitly requests it
     # TODO: maybe store views/develop packages in a separate location?
     envs_path = old_envs_path
+
+old_install_path = os.path.join(prefix, "opt", "spack")
+if dir_is_occupied(old_install_path):
+    default_install_location = old_install_path
+elif spack_xdg_data_home_nodefault:
+    default_install_location = os.path.join(spack_xdg_data_home_nodefault, "installs")
+else:
+    default_install_location = old_install_path
+
 
 # TODO: we could shutil.mv resources from old paths to new paths
 
