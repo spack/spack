@@ -27,9 +27,16 @@ spack_data_home_varname = "SPACK_DATA_HOME"
 xdg_cache_home = "XDG_CACHE_HOME"
 
 
+# This is for tests that want to clean the environment of XDG_ variables that
+# affect spack behavior
+def _unset_xdg_vars(env):
+    for xdg_var in [xdg_config_home, xdg_state_home, xdg_data_home, xdg_cache_home]:
+        env.pop(xdg_var, None)
+
+
 def _define_xdg_or_backup(xdg_var, backup):
     if xdg_var in os.environ:
-        spack_xdg_defined = os.path.join(xdg_var, "spack")
+        spack_xdg_defined = os.path.join(os.environ[xdg_var], "spack")
     else:
         spack_xdg_defined = os.path.join(backup, "spack")
     return os.path.expanduser(spack_xdg_defined)
