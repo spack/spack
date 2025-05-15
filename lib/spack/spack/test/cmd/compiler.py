@@ -15,6 +15,8 @@ import spack.version
 
 compiler = spack.main.SpackCommand("compiler")
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 
 @pytest.fixture
 def compilers_dir(mock_executable):
@@ -67,9 +69,7 @@ fi
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("11678,13138")
-def test_compiler_find_without_paths(
-    mock_packages, no_packages_yaml, working_env, mock_executable
-):
+def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executable):
     """Tests that 'spack compiler find' looks into PATH by default, if no specific path
     is given.
     """
@@ -82,7 +82,7 @@ def test_compiler_find_without_paths(
 
 
 @pytest.mark.regression("37996")
-def test_compiler_remove(mutable_config, mock_packages):
+def test_compiler_remove(mutable_config):
     """Tests that we can remove a compiler from configuration."""
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -95,7 +95,7 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
+def test_removing_compilers_from_multiple_scopes(mutable_config):
     # Duplicate "site" scope into "user" scope
     site_config = spack.config.get("packages", scope="site")
     spack.config.set("packages", site_config, scope="user")
@@ -111,7 +111,7 @@ def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_add(mock_packages, mutable_config, mock_executable):
+def test_compiler_add(mutable_config, mock_executable):
     """Tests that we can add a compiler to configuration."""
     expected_version = "4.5.3"
     gcc_path = mock_executable(
@@ -147,9 +147,7 @@ done
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
 @pytest.mark.regression("17590")
-def test_compiler_find_prefer_no_suffix(
-    mock_packages, no_packages_yaml, working_env, compilers_dir
-):
+def test_compiler_find_prefer_no_suffix(no_packages_yaml, working_env, compilers_dir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice."""
     clang_path = compilers_dir / "clang"
     shutil.copy(clang_path, clang_path.parent / "clang-gpu")
@@ -170,7 +168,7 @@ def test_compiler_find_prefer_no_suffix(
 
 
 @pytest.mark.not_on_windows("Cannot execute bash script on Windows")
-def test_compiler_find_path_order(mock_packages, no_packages_yaml, working_env, compilers_dir):
+def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
     """Ensure that we look for compilers in the same order as PATH, when there are duplicates"""
     new_dir = compilers_dir / "first_in_path"
     new_dir.mkdir()
@@ -193,12 +191,12 @@ def test_compiler_find_path_order(mock_packages, no_packages_yaml, working_env, 
     }
 
 
-def test_compiler_list_empty(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_list_empty(no_packages_yaml, compilers_dir, monkeypatch):
     """Spack should not automatically search for compilers when listing them and none are
     available. And when stdout is not a tty like in tests, there should be no output and
     no error exit code.
     """
-    os.environ["PATH"] = str(compilers_dir)
+    monkeypatch.setenv("PATH", str(compilers_dir), prepend=":")
     out = compiler("list")
     assert not out
     assert compiler.returncode == 0
@@ -236,7 +234,7 @@ def test_compiler_list_empty(no_packages_yaml, working_env, compilers_dir):
     ],
 )
 def test_compilers_shows_packages_yaml(
-    mock_packages, external, expected, no_packages_yaml, working_env, compilers_dir
+    external, expected, no_packages_yaml, working_env, compilers_dir
 ):
     """Spack should see a single compiler defined from packages.yaml"""
     external["prefix"] = external["prefix"].format(prefix=os.path.dirname(compilers_dir))
