@@ -38,7 +38,7 @@ _classvar_prefixes = (
     "typing.ClassVar",
     "t.ClassVar",
     "ClassVar",
-    "typing_extensions.ClassVar",
+    "_vendoring.typing_extensions.ClassVar",
 )
 # we don't use a double-underscore prefix because that triggers
 # name mangling when trying to create a slot for the field

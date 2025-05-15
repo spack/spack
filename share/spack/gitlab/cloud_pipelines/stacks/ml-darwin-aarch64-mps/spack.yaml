@@ -3,6 +3,7 @@ spack:
 
   packages:
     all:
+      target: ["aarch64"]
       require:
       - target=aarch64
       - +mps
@@ -11,7 +12,9 @@ spack:
     mpi:
       require: mpich
     openblas:
-      require: ~fortran
+      require:
+      - ~fortran
+      - target=aarch64
 
   specs:
   # Horovod
