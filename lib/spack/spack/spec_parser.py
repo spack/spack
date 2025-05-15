@@ -63,7 +63,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Iterable, Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -202,7 +202,10 @@ class TokenContext:
 
     def push(self, token_stream: Iterator[Token]):
         # New tokens need to go before next_token, which comes before the rest of the stream
-        self.token_stream = itertools.chain(token_stream, (self.next_token,), self.token_stream)
+        next_token_iterator: Iterable[Token] = (
+            iter((self.next_token,)) if self.next_token else iter(())
+        )
+        self.token_stream = itertools.chain(token_stream, next_token_iterator, self.token_stream)
         self.current_token = None
         self.next_token = None
         self.advance()
