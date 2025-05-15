@@ -18,6 +18,8 @@ import spack.repo
 from spack.main import SpackCommand
 from spack.spec import Spec
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 
 @pytest.fixture
 def executables_found(monkeypatch):
@@ -137,14 +139,14 @@ def test_find_external_cmd_not_buildable(
         (["hwloc"], ["detectable"], [], []),
     ],
 )
-def test_package_selection(names, tags, exclude, expected, mutable_mock_repo):
+def test_package_selection(names, tags, exclude, expected):
     """Tests various cases of selecting packages"""
     # In the mock repo we only have 'find-externals1' that is detectable
     result = spack.cmd.external.packages_to_search_for(names=names, tags=tags, exclude=exclude)
     assert set(result) == set(expected)
 
 
-def test_find_external_no_manifest(mutable_config, working_env, mutable_mock_repo, monkeypatch):
+def test_find_external_no_manifest(mutable_config, working_env, monkeypatch):
     """The user runs 'spack external find'; the default path for storing
     manifest files does not exist. Ensure that the command does not
     fail.
@@ -157,7 +159,7 @@ def test_find_external_no_manifest(mutable_config, working_env, mutable_mock_rep
 
 
 def test_find_external_empty_default_manifest_dir(
-    mutable_config, working_env, mutable_mock_repo, tmpdir, monkeypatch
+    mutable_config, working_env, tmpdir, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but is empty. Ensure that the command does not
@@ -172,7 +174,7 @@ def test_find_external_empty_default_manifest_dir(
 @pytest.mark.not_on_windows("Can't chmod on Windows")
 @pytest.mark.skipif(getuid() == 0, reason="user is root")
 def test_find_external_manifest_with_bad_permissions(
-    mutable_config, working_env, mutable_mock_repo, tmpdir, monkeypatch
+    mutable_config, working_env, tmpdir, monkeypatch
 ):
     """The user runs 'spack external find'; the default path for storing
     manifest files exists but with insufficient permissions. Check that
@@ -192,7 +194,7 @@ def test_find_external_manifest_with_bad_permissions(
         os.chmod(test_manifest_file_path, 0o700)
 
 
-def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdir, monkeypatch):
+def test_find_external_manifest_failure(mutable_config, tmpdir, monkeypatch):
     """The user runs 'spack external find'; the manifest parsing fails with
     some exception. Ensure that the command still succeeds (i.e. moves on
     to other external detection mechanisms).
@@ -212,7 +214,7 @@ def test_find_external_manifest_failure(mutable_config, mutable_mock_repo, tmpdi
     assert "Skipping manifest and continuing" in output
 
 
-def test_find_external_merge(mutable_config, mutable_mock_repo, tmp_path):
+def test_find_external_merge(mutable_config, tmp_path):
     """Checks that 'spack find external' doesn't overwrite an existing spec in packages.yaml."""
     pkgs_cfg_init = {
         "find-externals1": {
@@ -238,7 +240,7 @@ def test_find_external_merge(mutable_config, mutable_mock_repo, tmp_path):
     assert {"spec": "find-externals1@1.2", "prefix": "/x/y2"} in pkg_externals
 
 
-def test_list_detectable_packages(mutable_config, mutable_mock_repo):
+def test_list_detectable_packages(mutable_config):
     external("list")
     assert external.returncode == 0
 
