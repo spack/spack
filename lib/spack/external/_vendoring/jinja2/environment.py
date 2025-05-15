@@ -12,7 +12,7 @@ from functools import partial
 from functools import reduce
 from types import CodeType
 
-from markupsafe import Markup
+from _vendoring.markupsafe import Markup
 
 from . import nodes
 from .compiler import CodeGenerator
@@ -55,7 +55,7 @@ from .utils import LRUCache
 from .utils import missing
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .bccache import BytecodeCache
     from .ext import Extension
     from .loaders import BaseLoader
@@ -126,7 +126,7 @@ def _environment_config_check(environment: "Environment") -> "Environment":
     """Perform a sanity check on the environment."""
     assert issubclass(
         environment.undefined, Undefined
-    ), "'undefined' must be a subclass of 'jinja2.Undefined'."
+    ), "'undefined' must be a subclass of '_vendoring.jinja2.Undefined'."
     assert (
         environment.block_start_string
         != environment.variable_start_string
@@ -221,7 +221,7 @@ class Environment:
         `autoescape`
             If set to ``True`` the XML/HTML autoescaping feature is enabled by
             default.  For more details about autoescaping see
-            :class:`~markupsafe.Markup`.  As of Jinja 2.4 this can also
+            :class:`~_vendoring.markupsafe.Markup`.  As of Jinja 2.4 this can also
             be a callable that is passed the template name and has to
             return ``True`` or ``False`` depending on autoescape should be
             enabled by default.
@@ -264,7 +264,7 @@ class Environment:
 
     #: if this environment is sandboxed.  Modifying this variable won't make
     #: the environment sandboxed though.  For a real sandboxed environment
-    #: have a look at jinja2.sandbox.  This flag alone controls the code
+    #: have a look at _vendoring.jinja2.sandbox.  This flag alone controls the code
     #: generation by the compiler.
     sandboxed = False
 
@@ -279,11 +279,11 @@ class Environment:
     shared = False
 
     #: the class that is used for code generation.  See
-    #: :class:`~jinja2.compiler.CodeGenerator` for more information.
+    #: :class:`~_vendoring.jinja2.compiler.CodeGenerator` for more information.
     code_generator_class: t.Type["CodeGenerator"] = CodeGenerator
 
     #: the context class that is used for templates.  See
-    #: :class:`~jinja2.runtime.Context` for more information.
+    #: :class:`~_vendoring.jinja2.runtime.Context` for more information.
     context_class: t.Type[Context] = Context
 
     template_class: t.Type["Template"]
@@ -650,7 +650,7 @@ class Environment:
         state: t.Optional[str] = None,
     ) -> TokenStream:
         """Called by the parser to do the preprocessing and filtering
-        for all the extensions.  Returns a :class:`~jinja2.lexer.TokenStream`.
+        for all the extensions.  Returns a :class:`~_vendoring.jinja2.lexer.TokenStream`.
         """
         source = self.preprocess(source, name, filename)
         stream = self.lexer.tokenize(source, name, filename, state)
@@ -1547,7 +1547,7 @@ class TemplateModule:
 
 
 class TemplateExpression:
-    """The :meth:`jinja2.Environment.compile_expression` method returns an
+    """The :meth:`_vendoring.jinja2.Environment.compile_expression` method returns an
     instance of this object.  It encapsulates the expression-like access
     to the template with an expression it wraps.
     """

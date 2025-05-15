@@ -194,7 +194,7 @@ elif sys.version_info[:2] >= (3, 7):
     class _FinalForm(typing._SpecialForm, _root=True):
 
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             item = typing._type_check(parameters,
@@ -321,7 +321,7 @@ elif sys.version_info[:2] >= (3, 7):
     class _LiteralForm(typing._SpecialForm, _root=True):
 
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             return typing._GenericAlias(self, parameters)
@@ -405,7 +405,7 @@ class _ExtensionsGenericMeta(GenericMeta):
     def __subclasscheck__(self, subclass):
         """This mimics a more modern GenericMeta.__subclasscheck__() logic
         (that does not have problems with recursion) to work around interactions
-        between collections, typing, and typing_extensions on older
+        between collections, typing, and _vendoring.typing_extensions on older
         versions of Python, see https://github.com/python/typing/issues/501.
         """
         if self.__origin__ is not None:
@@ -629,7 +629,7 @@ elif PEP_560:
             func(C())  # Passes static type check
 
         See PEP 544 for details. Protocol classes decorated with
-        @typing_extensions.runtime act as simple-minded runtime protocol that checks
+        @_vendoring.typing_extensions.runtime act as simple-minded runtime protocol that checks
         only the presence of given attributes, ignoring their type signatures.
 
         Protocol classes can be generic, they are defined as::
@@ -985,7 +985,7 @@ else:
           func(C())  # Passes static type check
 
         See PEP 544 for details. Protocol classes decorated with
-        @typing_extensions.runtime act as simple-minded runtime protocol that checks
+        @_vendoring.typing_extensions.runtime act as simple-minded runtime protocol that checks
         only the presence of given attributes, ignoring their type signatures.
 
         Protocol classes can be generic, they are defined as::
@@ -1334,7 +1334,7 @@ elif PEP_560:
             return _AnnotatedAlias(new_type, self.__metadata__)
 
         def __repr__(self):
-            return (f"typing_extensions.Annotated[{typing._type_repr(self.__origin__)}, "
+            return (f"_vendoring.typing_extensions.Annotated[{typing._type_repr(self.__origin__)}, "
                     f"{', '.join(repr(a) for a in self.__metadata__)}]")
 
         def __reduce__(self):
@@ -1629,7 +1629,7 @@ if hasattr(typing, 'TypeAlias'):
 elif sys.version_info[:2] >= (3, 9):
     class _TypeAliasForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
     @_TypeAliasForm
     def TypeAlias(self, parameters):
@@ -1648,7 +1648,7 @@ elif sys.version_info[:2] >= (3, 9):
 elif sys.version_info[:2] >= (3, 7):
     class _TypeAliasForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
     TypeAlias = _TypeAliasForm('TypeAlias',
                                doc="""Special marker indicating that an assignment should
@@ -1667,7 +1667,7 @@ else:
         """Metaclass for TypeAlias"""
 
         def __repr__(self):
-            return 'typing_extensions.TypeAlias'
+            return '_vendoring.typing_extensions.TypeAlias'
 
     class _TypeAliasBase(typing._FinalTypingBase, metaclass=_TypeAliasMeta, _root=True):
         """Special marker indicating that an assignment should
@@ -1689,7 +1689,7 @@ else:
             raise TypeError("TypeAlias cannot be used with issubclass().")
 
         def __repr__(self):
-            return 'typing_extensions.TypeAlias'
+            return '_vendoring.typing_extensions.TypeAlias'
 
     TypeAlias = _TypeAliasBase(_root=True)
 
@@ -1836,7 +1836,7 @@ else:
                 def_mod = sys._getframe(1).f_globals.get('__name__', '__main__')
             except (AttributeError, ValueError):
                 def_mod = None
-            if def_mod != 'typing_extensions':
+            if def_mod != '_vendoring.typing_extensions':
                 self.__module__ = def_mod
 
         def __repr__(self):
@@ -1952,7 +1952,7 @@ elif sys.version_info[:2] >= (3, 9):
 elif sys.version_info[:2] >= (3, 7):
     class _ConcatenateForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             return _concatenate_getitem(self, parameters)
@@ -1975,7 +1975,7 @@ else:
         """Metaclass for Concatenate."""
 
         def __repr__(self):
-            return 'typing_extensions.Concatenate'
+            return '_vendoring.typing_extensions.Concatenate'
 
     class _ConcatenateAliasBase(typing._FinalTypingBase,
                                 metaclass=_ConcatenateAliasMeta,
@@ -1999,7 +1999,7 @@ else:
             raise TypeError("Concatenate cannot be used with issubclass().")
 
         def __repr__(self):
-            return 'typing_extensions.Concatenate'
+            return '_vendoring.typing_extensions.Concatenate'
 
         def __getitem__(self, parameters):
             return _concatenate_getitem(self, parameters)
@@ -2013,7 +2013,7 @@ if hasattr(typing, 'TypeGuard'):
 elif sys.version_info[:2] >= (3, 9):
     class _TypeGuardForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
     @_TypeGuardForm
     def TypeGuard(self, parameters):
@@ -2066,7 +2066,7 @@ elif sys.version_info[:2] >= (3, 7):
     class _TypeGuardForm(typing._SpecialForm, _root=True):
 
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             item = typing._type_check(parameters,
@@ -2221,7 +2221,7 @@ if sys.version_info[:2] >= (3, 7):
             raise TypeError(f"Cannot subclass {self!r}")
 
         def __repr__(self):
-            return f'typing_extensions.{self._name}'
+            return f'_vendoring.typing_extensions.{self._name}'
 
         def __reduce__(self):
             return self._name
@@ -2255,7 +2255,7 @@ elif sys.version_info[:2] >= (3, 7):
 
         Example::
 
-          from typing_extensions import LiteralString
+          from _vendoring.typing_extensions import LiteralString
 
           def query(sql: LiteralString) -> ...:
               ...
@@ -2273,7 +2273,7 @@ else:
 
         Example::
 
-          from typing_extensions import LiteralString
+          from _vendoring.typing_extensions import LiteralString
 
           def query(sql: LiteralString) -> ...:
               ...
@@ -2351,7 +2351,7 @@ elif sys.version_info[:2] >= (3, 7):
         This can be used to define a function that should never be
         called, or a function that never returns::
 
-            from typing_extensions import Never
+            from _vendoring.typing_extensions import Never
 
             def never_call_me(arg: Never) -> None:
                 pass
@@ -2376,7 +2376,7 @@ else:
         This can be used to define a function that should never be
         called, or a function that never returns::
 
-            from typing_extensions import Never
+            from _vendoring.typing_extensions import Never
 
             def never_call_me(arg: Never) -> None:
                 pass
@@ -2410,7 +2410,7 @@ if hasattr(typing, 'Required'):
 elif sys.version_info[:2] >= (3, 9):
     class _ExtensionsSpecialForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
     @_ExtensionsSpecialForm
     def Required(self, parameters):
@@ -2452,7 +2452,7 @@ elif sys.version_info[:2] >= (3, 9):
 elif sys.version_info[:2] >= (3, 7):
     class _RequiredForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             item = typing._type_check(parameters,
@@ -2567,7 +2567,7 @@ else:
 if sys.version_info[:2] >= (3, 9):
     class _UnpackSpecialForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
     class _UnpackAlias(typing._GenericAlias, _root=True):
         __class__ = typing.TypeVar
@@ -2596,7 +2596,7 @@ elif sys.version_info[:2] >= (3, 7):
 
     class _UnpackForm(typing._SpecialForm, _root=True):
         def __repr__(self):
-            return 'typing_extensions.' + self._name
+            return '_vendoring.typing_extensions.' + self._name
 
         def __getitem__(self, parameters):
             item = typing._type_check(parameters,
@@ -2736,7 +2736,7 @@ class TypeVarTuple:
             def_mod = sys._getframe(1).f_globals.get('__name__', '__main__')
         except (AttributeError, ValueError):
             def_mod = None
-        if def_mod != 'typing_extensions':
+        if def_mod != '_vendoring.typing_extensions':
             self.__module__ = def_mod
 
         self.__unpacked__ = Unpack[self]
@@ -2831,7 +2831,7 @@ else:
 
         Example:
 
-            from typing_extensions import dataclass_transform
+            from _vendoring.typing_extensions import dataclass_transform
 
             _T = TypeVar("_T")
 

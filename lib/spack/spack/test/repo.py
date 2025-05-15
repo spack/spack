@@ -523,3 +523,10 @@ def test_subdir_in_v2():
 
     with pytest.raises(spack.repo.BadRepoError, match="Must be a valid Python module name"):
         spack.repo._validate_and_normalize_subdir(subdir="123", root="root", package_api=(2, 0))
+
+
+def test_is_package_module():
+    assert spack.repo.is_package_module("spack.pkg.something.something")
+    assert spack.repo.is_package_module("spack_repo.foo.bar.baz.package")
+    assert not spack.repo.is_package_module("spack_repo.builtin.build_systems.cmake")
+    assert not spack.repo.is_package_module("spack.something.else")

@@ -333,45 +333,45 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
 
     # https://github.com/pytorch/pytorch/issues/151316
     patch(
-        "https://github.com/pytorch/pytorch/pull/151344.patch?full_index=1",
-        sha256="edaadfd5f8acee67fee1c77b34145640a1239c9546d77420f3887af24889799e",
+        "https://github.com/pytorch/pytorch/commit/331423e5c24170b218e743b3392acbad4480340d.patch?full_index=1",
+        sha256="493cde279804346e13cf21862fddc48040a4d7da65d4e5d3de5f717a15e0aa62",
         when="@2.7.0",
     )
     patch("apple_clang_17.patch", when="@1.12:2.6")
 
     # https://github.com/pytorch/pytorch/issues/146239
     patch(
-        "https://github.com/pytorch/pytorch/pull/146637.patch?full_index=1",
+        "gloo_cuda.patch",
         sha256="f93aa66e2cf9c0febdbcf72f44213a213e570e5f860186e81c92c8d2af0857c0",
         when="@2.6:",
     )
 
     # Fixes 'FindBLAS.cmake' error: unknown command check_function_exists
     patch(
-        "https://github.com/pytorch/pytorch/pull/145849.patch?full_index=1",
-        sha256="5675ab543b786b8f360de451b27b3eb5d3ce8499d6c1a207f4a854f0c473ab03",
+        "https://github.com/pytorch/pytorch/commit/8d91bfd9654589c41b3bbb589bcb0bf95443c53e.patch?full_index=1",
+        sha256="2c9e0c8986c388f38288dacfb3208b457b2eec340963b8c8c8779e9f487adc07",
         when="@:2.6",
     )
 
     # https://github.com/pytorch/pytorch/issues/90448
     patch(
-        "https://github.com/pytorch/pytorch/pull/97270.patch?full_index=1",
-        sha256="beb3fb57746cf8443f5caa6e08b2f8f4d4822c1e11e0c912134bd166c6a0ade7",
+        "https://github.com/pytorch/pytorch/commit/9a18968253e28ba8d8bdf646731087000c7876b7.patch?full_index=1",
+        sha256="b4f299f6751e03fcf5d9a318541156edbc49c00e8a9c78785031e438e38f5533",
         when="@1.10:2.0",
     )
 
     # Fix BLAS being overridden by MKL
     # https://github.com/pytorch/pytorch/issues/60328
     patch(
-        "https://github.com/pytorch/pytorch/pull/59220.patch?full_index=1",
+        "59220.patch",
         sha256="6d5717267f901e8ee493dfacd08734d9bcc48ad29a76ca9ef702368e96bee675",
         when="@:1.11",
     )
 
     # Fixes build on older systems with glibc <2.12
     patch(
-        "https://github.com/pytorch/pytorch/pull/55063.patch?full_index=1",
-        sha256="2229bcbf20fbe88aa9f7318f89c126ec7f527875ffe689a763c78abfa127a65c",
+        "https://github.com/pytorch/pytorch/commit/13c975684a220ec096216ec6468ccd0dc90ff50a.patch?full_index=1",
+        sha256="a999e9376a69bbb8620ab358b485d1529c8e1c23a09ca34c5d287f6b77d2f5d9",
         when="@:1.8.1",
     )
 
@@ -505,21 +505,21 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Some missing includes
     # See: https://github.com/pytorch/pytorch/pull/100036
     patch(
-        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100036.patch?full_index=1",
-        sha256="65060b54c31196b26dcff29bbb178fd17d5677e8481a2a06002c0ca4dd37b3d0",
+        "https://github.com/pytorch/pytorch/commit/9d99d8879cb8a7a5ec94b04e933305b8d24ad6ac.patch?full_index=1",
+        sha256="8c3a5b22d0dbda2ee45cfc2ae1da446fc20898e498003579490d4efe9241f9ee",
         when="@2.0.0:2.0.1",
     )
     # See: https://github.com/pytorch/pytorch/pull/100049
     patch(
-        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/100049.patch?full_index=1",
-        sha256="673056141c0ea6ff4411f65a26f1a9d7a7c49ad8fe034a01ef0d56ba8a7a9386",
+        "https://github.com/pytorch/pytorch/commit/aaa3eb059a0294cc01c71f8e74abcebc33404e17.patch?full_index=1",
+        sha256="8dcbc5cd24b4c0e4a051e2161700b485c6c598b66347e7e90a263d9319c76374",
         when="@2.0.0:2.0.1",
     )
 
     # Use correct OpenBLAS include path under prefix
     patch(
-        "https://patch-diff.githubusercontent.com/raw/pytorch/pytorch/pull/110063.patch?full_index=1",
-        sha256="23fb4009f7337051fc5303927ff977186a5af960245e7212895406477d8b2f66",
+        "https://github.com/pytorch/pytorch/commit/21d77bcf808d076f81b5e885a8ce6ca20a08dbed.patch?full_index=1",
+        sha256="c61a6bd8cb9f021bfa122945a332cec223a2c7c6843ac911f9dc23e6facfb0ac",
         when="@:2.1",
     )
 

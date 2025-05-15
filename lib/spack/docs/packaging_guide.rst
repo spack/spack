@@ -2253,22 +2253,15 @@ RPATHs in Spack are handled in one of three ways:
    set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
    so most build systems (autotools and many gmake systems) pick them
    up and use them.
-#. CMake also respects Spack's compiler wrappers, but many CMake
-   builds have logic to overwrite RPATHs when binaries are
-   installed. Spack provides the ``std_cmake_args`` variable, which
-   includes parameters necessary for CMake build use the right
-   installation RPATH.  It can be used like this when ``cmake`` is
-   invoked:
-
-   .. code-block:: python
-
-      class MyPackage(Package):
-          ...
-          def install(self, spec, prefix):
-              cmake("..", *std_cmake_args)
-              make()
-              make("install")
-
+#. CMake has its own RPATH handling, and distinguishes between build and
+   install RPATHs. By default, during the build it registers RPATHs to
+   all libraries it links to, so that just-built executables can be run
+   during the build itself. Upon installation, these RPATHs are cleared,
+   unless the user defines the install RPATHs. When inheriting from
+   ``CMakePackage``, Spack handles this automatically, and sets
+   ``CMAKE_INSTALL_RPATH_USE_LINK_PATH`` and ``CMAKE_INSTALL_RPATH``,
+   so that libraries of dependencies and the package's own libraries
+   can be found at runtime.
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
    return a list of all the RPATHs that Spack will use when it

@@ -2556,7 +2556,7 @@ class SpackSolverSetup:
 
         edges = spec.edges_from_dependents()
         virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
-        if not body:
+        if not body and not spec.concrete:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))

@@ -31,6 +31,7 @@ class Gcc(CompilerPackage, Package):
     provides("fortran", when="languages=fortran")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     c_names = ["gcc"]
     cxx_names = ["g++"]
@@ -47,6 +48,19 @@ class Gcc(CompilerPackage, Package):
         "cxx": os.path.join("gcc", "g++"),
         "fortran": os.path.join("gcc", "gfortran"),
     }
+
+    implicit_rpath_libs = ["libgcc", "libgfortran"]
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        compilers = cls.determine_compiler_paths(exes=exes)
+
+        languages = set()
+        translation = {"cxx": "c++"}
+        for lang, compiler in compilers.items():
+            languages.add(translation.get(lang, lang))
+        variant_str = "languages={0}".format(",".join(languages))
+        return variant_str, {"compilers": compilers}
 
     def install(self, spec, prefix):
         # Create the minimal compiler that will fool `spack compiler find`
