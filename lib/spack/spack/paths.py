@@ -23,6 +23,7 @@ prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 xdg_config_home = "XDG_CONFIG_HOME"
 xdg_state_home = "XDG_STATE_HOME"
 xdg_data_home = "XDG_DATA_HOME"
+spack_data_home_varname = "SPACK_DATA_HOME"
 xdg_cache_home = "XDG_CACHE_HOME"
 
 
@@ -49,6 +50,12 @@ else:
 
 spack_xdg_cache_home = _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 
+if spack_data_home_varname in os.environ:
+    spack_data_home = os.environ[spack_data_home_varname]
+elif spack_xdg_data_home_nodefault:
+    spack_data_home = spack_xdg_data_home_nodefault
+else:
+    spack_data_home = os.path.join(prefix, "opt", "data")
 
 # User configuration
 def _get_user_config_path():
@@ -127,22 +134,18 @@ if not modules_base:
 old_envs_path = os.path.join(var_path, "environments")
 if dir_is_occupied(old_envs_path):
     envs_path = old_envs_path
-elif spack_xdg_data_home_nodefault:
-    envs_path = os.path.join(spack_xdg_data_home_nodefault, "environments")
 else:
     # Environments can store views and `develop` packages, which
     # take up too much space for us to place them in ~ unless the
     # user explicitly requests it
     # TODO: maybe store views/develop packages in a separate location?
-    envs_path = old_envs_path
+    envs_path = os.path.join(spack_data_home, "environments")
 
 old_install_path = os.path.join(prefix, "opt", "spack")
 if dir_is_occupied(old_install_path):
     default_install_location = old_install_path
-elif spack_xdg_data_home_nodefault:
-    default_install_location = os.path.join(spack_xdg_data_home_nodefault, "installs")
 else:
-    default_install_location = old_install_path
+    default_install_location = os.path.join(spack_data_home, "installs")
 
 
 # TODO: we could shutil.mv resources from old paths to new paths
@@ -173,7 +176,7 @@ def _get_user_cache_path():
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
 
-default_fetch_cache_path = os.path.join(user_cache_path, "downloads")
+default_fetch_cache_path = os.path.join(spack_data_home, "downloads")
 
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")
