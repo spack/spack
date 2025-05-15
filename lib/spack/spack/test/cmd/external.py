@@ -70,7 +70,7 @@ external = SpackCommand("external")
 # causing intermittent (spurious) CI failures on all PRs
 @pytest.mark.not_on_windows("Test fails intermittently on Windows")
 def test_find_external_cmd_not_buildable(
-    mock_packages, mutable_config, working_env, mock_executable, monkeypatch
+    mutable_config, working_env, mock_executable, monkeypatch
 ):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
@@ -245,7 +245,7 @@ def test_list_detectable_packages(mutable_config):
     assert external.returncode == 0
 
 
-def test_overriding_prefix(mock_packages, mock_executable, mutable_config, monkeypatch):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     search_dir = gcc_exe.parent
 
@@ -269,9 +269,7 @@ def test_overriding_prefix(mock_packages, mock_executable, mutable_config, monke
 
 
 @pytest.mark.not_on_windows("Fails spuriously on Windows")
-def test_new_entries_are_reported_correctly(
-    mock_packages, mock_executable, mutable_config, monkeypatch
-):
+def test_new_entries_are_reported_correctly(mock_executable, mutable_config, monkeypatch):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable("gcc", output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
@@ -289,9 +287,7 @@ def test_new_entries_are_reported_correctly(
 
 @pytest.mark.parametrize("command_args", [("-t", "build-tools"), ("-t", "build-tools", "cmake")])
 @pytest.mark.not_on_windows("the test uses bash scripts")
-def test_use_tags_for_detection(
-    mock_packages, command_args, mock_executable, mutable_config, monkeypatch
-):
+def test_use_tags_for_detection(command_args, mock_executable, mutable_config, monkeypatch):
     versions = {"cmake": "3.19.1", "openssl": "2.8.3"}
 
     @classmethod
@@ -320,7 +316,7 @@ def test_use_tags_for_detection(
 @pytest.mark.regression("38733")
 @pytest.mark.not_on_windows("the test uses bash scripts")
 def test_failures_in_scanning_do_not_result_in_an_error(
-    mock_packages, mock_executable, monkeypatch, mutable_config
+    mock_executable, monkeypatch, mutable_config
 ):
     """Tests that scanning paths with wrong permissions, won't cause `external find` to error."""
     versions = {"first": "3.19.1", "second": "3.23.3"}
@@ -354,7 +350,7 @@ def test_failures_in_scanning_do_not_result_in_an_error(
         assert vers in output
 
 
-def test_detect_virtuals(mock_packages, mock_executable, mutable_config, monkeypatch):
+def test_detect_virtuals(mock_executable, mutable_config, monkeypatch):
     """Test whether external find --not-buildable sets virtuals as non-buildable (unless user
     config sets them to buildable)"""
     version = "4.0.2"
