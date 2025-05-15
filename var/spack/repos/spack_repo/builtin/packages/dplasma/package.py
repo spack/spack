@@ -8,11 +8,11 @@ from spack.package import *
 
 
 class Dplasma(CMakePackage, CudaPackage):
-    """"DPLASMA is a highly optimized, accelerator-aware, implementation of a
+    """DPLASMA is a highly optimized, accelerator-aware, implementation of a
     dense linear algebra package for distributed heterogeneous systems. It is
     designed to deliver sustained performance for distributed systems where each
     node featuring multiple sockets of multicore processors, and if available,
-    accelerators, using the PaRSEC runtime as a backend. """
+    accelerators, using the PaRSEC runtime as a backend."""
 
     homepage = "https://github.com/ICLDisco/dplasma"
     git = "https://github.com/ICLDisco/dplasma.git"
