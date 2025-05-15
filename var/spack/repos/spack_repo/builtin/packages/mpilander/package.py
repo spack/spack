@@ -38,6 +38,8 @@ class Mpilander(CMakePackage):
     conflicts("%apple-clang@:7.4")
     conflicts("%intel@:16")
 
+    conflicts("platform=windows")
+
     def cmake_args(self):
         args = [
             # tests and examples

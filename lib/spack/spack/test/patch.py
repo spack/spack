@@ -89,7 +89,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "patch")
         (os.path.join(data_path, "foo.patch"), platform_url_sha, None),
     ],
 )
-def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
+def test_url_patch(mock_packages, mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
     url = url_util.path_to_file_url(filename)
     s = spack.concretize.concretize_one("patch")
@@ -466,7 +466,7 @@ def test_equality():
     assert patch1 != "not a patch"
 
 
-def test_sha256_setter(mock_patch_stage, config):
+def test_sha256_setter(mock_packages, mock_patch_stage, config):
     path = os.path.join(data_path, "foo.patch")
     s = spack.concretize.concretize_one("patch")
     patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")

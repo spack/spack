@@ -24,7 +24,7 @@ class PyMacs2(PythonPackage):
 
     # patch to correctly identify python-3.10 as greater than required version
     patch(
-        "https://github.com/macs3-project/MACS/pull/497.patch?full_index=1",
+        "https://github.com/macs3-project/MACS/commit/291fae879f8f9014a8163126a80cc356878ae553.patch?full_index=1",
         sha256="eaff891b9b3c6a910bd5d454dcc6e21288c8d1ad4d6d6f77e370bc8f90921cbd",
         when="@2.2.7.1^python@3.10:",
     )

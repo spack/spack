@@ -8,8 +8,8 @@ import traceback
 import warnings
 from typing import Any, Dict, Iterable, List, Optional
 
-import jsonschema
-import jsonschema.exceptions
+from _vendoring import jsonschema
+from _vendoring.jsonschema import exceptions
 
 import llnl.util.tty as tty
 
@@ -227,7 +227,7 @@ def read(path, apply_updates):
             json_data = json.load(json_file)
 
         jsonschema.validate(json_data, manifest_schema)
-    except (jsonschema.exceptions.ValidationError, decode_exception_type) as e:
+    except (exceptions.ValidationError, decode_exception_type) as e:
         raise ManifestValidationError("error parsing manifest JSON:", str(e)) from e
 
     specs = entries_to_specs(json_data["specs"])

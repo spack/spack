@@ -20,6 +20,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.23.2", sha256="030ec6c4e9ed885457a6155f20b6f914593a1cd960b28706521a19a9cdadd5e2")
     version("3.23.1", sha256="f729885710c3b42b818fdb525cbd7e1b8c95c1cc25139a44968aa0e7f9e75418")
     version("3.23.0", sha256="aeebd7094f4d583fd04700e73779caa7d9a3d54742e95eff2c3dd87768a79063")
     version("3.22.5", sha256="984dba48bd26e7b17d42c078fc4f74d59e9cbc437ee25a8635865eeca9f5dd28")
@@ -580,7 +581,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-sycl=0")
 
-        if spec.satisfies("^cuda@12.8.0"):
+        if spec.satisfies("@:3.22 ^cuda@12.8:"):
             options.append("CUDAPPFLAGS=-Wno-deprecated-gpu-targets")
 
         if "trilinos" in spec:

@@ -19,10 +19,6 @@ properties: Dict[str, Any] = {
         "additionalProperties": True,
         "items": spack.schema.spec.properties,
     },
-    "binary_cache_checksum": {
-        "type": "object",
-        "properties": {"hash_algorithm": {"type": "string"}, "hash": {"type": "string"}},
-    },
     "buildcache_layout_version": {"type": "number"},
 }
 
@@ -30,6 +26,6 @@ schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Spack buildcache specfile schema",
     "type": "object",
-    "additionalProperties": False,
+    "additionalProperties": True,
     "properties": properties,
 }

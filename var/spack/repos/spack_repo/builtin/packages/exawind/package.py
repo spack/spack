@@ -35,6 +35,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on(

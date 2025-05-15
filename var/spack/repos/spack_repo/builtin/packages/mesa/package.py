@@ -22,10 +22,12 @@ class Mesa(MesonPackage):
 
     version("main", branch="main")
     version(
-        "23.3.6",
-        sha256="cd3d6c60121dea73abbae99d399dc2facaecde1a8c6bd647e6d85410ff4b577b",
+        "25.0.5",
+        sha256="c0d245dea0aa4b49f74b3d474b16542e4a8799791cd33d676c69f650ad4378d0",
         preferred=True,
     )
+    version("24.3.4", sha256="e641ae27191d387599219694560d221b7feaa91c900bcec46bf444218ed66025")
+    version("23.3.6", sha256="cd3d6c60121dea73abbae99d399dc2facaecde1a8c6bd647e6d85410ff4b577b")
     version("23.3.3", sha256="518307c0057fa3cee8b58df78be431d4df5aafa7edc60d09278b2d7a0a80f3b4")
     version("23.2.1", sha256="64de0616fc2d801f929ab1ac2a4f16b3e2783c4309a724c8a259b20df8bbc1cc")
     version("23.1.9", sha256="295ba27c28146ed09214e8ce79afa1659edf9d142decc3c91f804552d64f7510")
@@ -66,6 +68,7 @@ class Mesa(MesonPackage):
     depends_on("python@:3.11", when="@:23.2", type="build")
     depends_on("py-packaging", type="build", when="^python@3.12:")
     depends_on("py-mako@0.8.0:", type="build")
+    depends_on("py-pyyaml", when="@24.2:", type="build")
     depends_on("unwind")
     depends_on("expat")
     depends_on("zlib-api")
@@ -126,6 +129,9 @@ class Mesa(MesonPackage):
         depends_on("libxt")
         depends_on("xrandr")
         depends_on("glproto@1.4.14:")
+        # In @24.3:, "libxshmfence@1.1:" is needed when:
+        # (with_dri_platform == 'drm') or (with_any_vk), see mesa's meson.build.
+        depends_on("libxshmfence@1.1:", when="@24.3:")
 
     # version specific issue
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
@@ -198,7 +204,6 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         args = [
             "-Dvulkan-drivers=",
             "-Dgallium-vdpau=disabled",
-            "-Dgallium-omx=disabled",
             "-Dgallium-va=disabled",
             "-Dgallium-xa=disabled",
             "-Dgallium-nine=false",
@@ -209,6 +214,9 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         # gallium-xvmc was removed in @main and @2.23:
         if self.spec.satisfies("@:22.2"):
             args.append("-Dgallium-xvmc=disabled")
+        # the option 'gallium-omx' is present in @24.2.4 and removed in @main
+        if spec.satisfies("@:24.2.4"):
+            args.append("-Dgallium-omx=disabled")
 
         args_platforms = []
         args_gallium_drivers = ["swrast"]
@@ -247,10 +255,14 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
 
         if "+egl" in spec:
             num_frontends += 1
-            args.extend(["-Degl=enabled", "-Dgbm=enabled", "-Ddri3=enabled"])
+            args.extend(["-Degl=enabled", "-Dgbm=enabled"])
+            if spec.satisfies("@:24.2.4"):
+                args.extend(["-Ddri3=enabled"])
             args_platforms.append("surfaceless")
         else:
-            args.extend(["-Degl=disabled", "-Dgbm=disabled", "-Ddri3=disabled"])
+            args.extend(["-Degl=disabled", "-Dgbm=disabled"])
+            if spec.satisfies("@:24.2.4"):
+                args.extend(["-Ddri3=disabled"])
 
         args.append(opt_bool("+opengl" in spec, "opengl"))
         args.append(opt_enable("+opengles" in spec, "gles1"))

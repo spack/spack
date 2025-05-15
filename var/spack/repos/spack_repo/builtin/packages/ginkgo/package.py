@@ -127,7 +127,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
     # Correctly find rocthrust through CMake
     patch(
-        "https://github.com/ginkgo-project/ginkgo/pull/1668.patch?full_index=1",
+        "https://github.com/ginkgo-project/ginkgo/commit/369b12a5f4431577d60a61e67f2b0537b428abca.patch?full_index=1",
         sha256="27d6ae6c87bec15464d20a963c336e89eac92625d07e3f9548e33cd7b952a496",
         when="+rocm @1.8.0",
     )
