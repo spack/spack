@@ -40,9 +40,9 @@ class Variorum(CMakePackage):
         values=("Debug", "Release"),
     )
     variant( "cpu", default="Intel", description="Supported CPU architecture",
-        values=("Intel", "INTEL", "intel", "AMD", "amd", "IBM", "ibm", "ARM", "arm"), multi=False )
+        values=("intel", "amd", "ibm", "arm"), multi=False )
     variant( "gpu", default="none", description="Supported GPU architecture",
-        values=("Intel", "INTEL", "intel", "AMD", "amd", "NVIDIA", "nvidia", "none" ), multi=False )
+        values=("intel", "amd", "nvidia", "none" ), multi=False )
 
     ########################
     # Package dependencies #
@@ -57,15 +57,10 @@ class Variorum(CMakePackage):
     # cuda@10.1.243 works, as does 12.4.1
 
     depends_on("cuda", type=("build","link"), when="gpu=nvidia") # required for nvml
-    depends_on("cuda", type=("build","link"), when="gpu=NVIDIA")
 
     depends_on("hwloc +nvml", type=("build", "link"), when="gpu=nvidia")
-    depends_on("hwloc +nvml", type=("build", "link"), when="gpu=NVIDIA")
     depends_on("hwloc",       type=("build", "link"), when="gpu=none")
-    depends_on("hwloc",       type=("build", "link"), when="gpu=AMD")
     depends_on("hwloc",       type=("build", "link"), when="gpu=amd")
-
-
 
     root_cmakelists_dir = "src"
 
@@ -85,37 +80,37 @@ class Variorum(CMakePackage):
             cmake_args.append("-DCMAKE_Fortran_FLAGS=-ef")
 
         # CPU architecture selection.
-        if any( s in spec for s in ("cpu_Intel", "cpu=INTEL", "cpu=intel") ):
+        if spec.satisfies("cpu=intel"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-        elif any( s in spec for s in ("cpu_AMD", "cpu=amd") ):
+        elif spec.satisfies("cpu=amd"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-        elif any( s in spec for s in ("cpu_IBM", "cpu=ibm") ):
+        elif spec.satisfies("cpu=ibm"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=ON")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=OFF")
-        elif any( s in spec for s in ("cpu_ARM", "cpu=arm") ):
+        elif spec.satisfies("cpu=arm"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_IBM_CPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_ARM_CPU=ON")
 
         # GPU architecture selection.
-        if any( s in spec for s in ("gpu_Intel", "gpu=INTEL", "gpu=intel") ):
+        if spec.satisfies("gpu=intel"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif any( s in spec for s in ("gpu_AMD", "gpu=amd") ):
+        elif spec.satisfies("gpu=amd"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=ON")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=OFF")
-        elif any( s in spec for s in ("gpu_NVIDIA", "gpu=nvidia") ):
+        elif spec.satisfies("gpu=nvidia"):
             cmake_args.append("-DVARIORUM_WITH_INTEL_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_AMD_GPU=OFF")
             cmake_args.append("-DVARIORUM_WITH_NVIDIA_GPU=ON")
