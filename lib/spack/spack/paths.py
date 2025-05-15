@@ -22,6 +22,7 @@ prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 xdg_config_home = "XDG_CONFIG_HOME"
 xdg_state_home = "XDG_STATE_HOME"
 xdg_data_home = "XDG_DATA_HOME"
+xdg_cache_home = "XDG_CACHE_HOME"
 
 
 def _define_xdg_or_backup(xdg_var, backup):
@@ -42,6 +43,7 @@ if xdg_data_home in os.environ:
 else:
     spack_xdg_data_home_nodefault = None
 
+spack_xdg_cache_home = _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 
 # User configuration
 def _get_user_config_path():

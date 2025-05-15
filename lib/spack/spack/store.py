@@ -126,10 +126,7 @@ def parse_install_tree(config_dict):
 
 
 def _default_install_location():
-    if os.access(spack.paths.prefix, os.W_OK):
-        return spack.paths.internal_install_tree_root
-    else:
-        return os.path.join(spack.paths.per_spack_user_root, "installs")
+    return spack.paths.internal_install_tree_root
 
 
 class Store:
