@@ -20,7 +20,6 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
-import spack.package
 import spack.package_base
 import spack.spec
 import spack.store
@@ -241,7 +240,7 @@ def test_cache_extra_sources_fails(install_mockery):
 def test_package_exes_and_libs():
     with pytest.raises(spack.error.SpackError, match="defines both"):
 
-        class BadDetectablePackage(spack.package.Package):
+        class BadDetectablePackage(spack.package_base.PackageBase):
             executables = ["findme"]
             libraries = ["libFindMe.a"]
 
@@ -249,7 +248,7 @@ def test_package_exes_and_libs():
 def test_package_url_and_urls():
     UrlsPackage = type(
         "URLsPackage",
-        (spack.package.Package,),
+        (spack.package_base.PackageBase,),
         {
             "__module__": "spack.pkg.builtin.urls_package",
             "url": "https://www.example.com/url-package-1.0.tgz",
@@ -265,7 +264,7 @@ def test_package_url_and_urls():
 def test_package_license():
     LicensedPackage = type(
         "LicensedPackage",
-        (spack.package.Package,),
+        (spack.package_base.PackageBase,),
         {"__module__": "spack.pkg.builtin.licensed_package"},
     )
 

@@ -90,7 +90,7 @@ class _PrependFileLoader(importlib.machinery.SourceFileLoader):
 
     def path_stats(self, path):
         stats = dict(super().path_stats(path))
-        stats["size"] += len(self.prepend) + 1
+        stats["size"] += len(self.prepend)
         return stats
 
     def get_data(self, path):
