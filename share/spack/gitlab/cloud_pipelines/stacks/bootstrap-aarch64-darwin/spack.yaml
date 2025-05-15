@@ -3,6 +3,7 @@ spack:
 
   packages:
     all:
+      target: ["aarch64"]
       require: target=aarch64
 
   config:
@@ -25,8 +26,6 @@ spack:
 
   ci:
     pipeline-gen:
-    - build-job-remove:
-        tags: [spack, public]
     - build-job:
         variables:
           CI_GPG_KEY_ROOT: /etc/protected-runner

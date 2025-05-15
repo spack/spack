@@ -7,13 +7,19 @@ spack:
 
   packages:
     all:
-      require: '%gcc target=neoverse_v2'
+      require:
+      - "%gcc"
+      - target=neoverse_v2
+      target: ["neoverse_v2"]
       providers:
         blas: [openblas]
         mpi: [mpich]
       variants: +mpi
     binutils:
       variants: +ld +gold +headers +libiberty ~nls
+    blas:
+      require:
+      - openblas
     hdf5:
       variants: +fortran +hl +shared
     libfabric:
@@ -28,13 +34,13 @@ spack:
     mpi:
       require: mpich
     mpich:
-      require: '~wrapperrpath ~hwloc %gcc target=neoverse_v2'
+      require: '~wrapperrpath ~hwloc target=neoverse_v2 %gcc'
     tbb:
       require: intel-tbb
     vtk-m:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
     paraview:
-      require: "+examples %gcc target=neoverse_v2"
+      require: "+examples target=neoverse_v2 %gcc"
 
   specs:
   # CPU

@@ -12,7 +12,7 @@ import sys
 import tempfile
 from typing import Callable, Dict, List, Optional
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 from llnl.string import comma_or
 from llnl.util import tty
@@ -643,7 +643,7 @@ class YamlFilesystemView(FilesystemView):
                 specs.sort()
 
                 abbreviated = [
-                    s.cformat("{name}{@version}{%compiler}{compiler_flags}{variants}")
+                    s.cformat("{name}{@version}{compiler_flags}{variants}{%compiler}")
                     for s in specs
                 ]
 
