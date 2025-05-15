@@ -131,18 +131,6 @@ for module_dir in ["lmod", "modules"]:
 if not modules_base:
     modules_base = os.path.join(spack_xdg_data_home, "modules")
 
-old_envs_path = os.path.join(var_path, "environments")
-if spack_data_home_varname in os.environ:
-    envs_path = os.path.join(spack_data_home, "environments")
-elif dir_is_occupied(old_envs_path):
-    envs_path = old_envs_path
-else:
-    # Environments can store views and `develop` packages, which
-    # take up too much space for us to place them in ~ unless the
-    # user explicitly requests it
-    # TODO: maybe store views/develop packages in a separate location?
-    envs_path = os.path.join(spack_data_home, "environments")
-
 # TODO: proposed precedence
 # 1. config:install_tree:root
 # 2. explicitly defined SPACK_DATA_HOME
@@ -157,6 +145,17 @@ elif dir_is_occupied(old_install_path):
 else:
     default_install_location = os.path.join(spack_data_home, "installs")
 
+old_envs_path = os.path.join(var_path, "environments")
+if spack_data_home_varname in os.environ:
+    envs_path = os.path.join(spack_data_home, "environments")
+elif dir_is_occupied(old_envs_path):
+    envs_path = old_envs_path
+else:
+    # Environments can store views and `develop` packages, which
+    # take up too much space for us to place them in ~ unless the
+    # user explicitly requests it
+    # TODO: maybe store views/develop packages in a separate location?
+    envs_path = os.path.join(spack_data_home, "environments")
 
 # TODO: we could shutil.mv resources from old paths to new paths
 
