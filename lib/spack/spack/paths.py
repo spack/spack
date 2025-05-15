@@ -57,6 +57,7 @@ elif spack_xdg_data_home_nodefault:
 else:
     spack_data_home = os.path.join(prefix, "opt", "data")
 
+
 # User configuration
 def _get_user_config_path():
     return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home)
