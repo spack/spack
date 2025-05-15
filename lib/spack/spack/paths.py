@@ -36,7 +36,7 @@ def _define_xdg_or_backup(xdg_var, backup):
 
 #: Resolved XDG_ counterparts, with additional "spack" subdirectory
 spack_xdg_state_home = _define_xdg_or_backup(xdg_state_home, os.path.join("~", ".local", "state"))
-spack_xdg_config_home = _define_xdg_or_backup(xdg_config_home, os.path.join("~", "config"))
+spack_xdg_config_home = _define_xdg_or_backup(xdg_config_home, os.path.join("~", ".config"))
 spack_xdg_data_home = _define_xdg_or_backup(xdg_data_home, os.path.join("~", ".local", "share"))
 
 spack_xdg_data_home_nodefault: Optional[str]
