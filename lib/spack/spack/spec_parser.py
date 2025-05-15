@@ -286,7 +286,7 @@ class SpecParser:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
         # Get toolchain information outside of loop
-        toolchains = spack.config.get("toolchains", {})
+        toolchains = spack.config.CONFIG.get("toolchains", {})
 
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
@@ -316,11 +316,11 @@ class SpecParser:
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 # String replacement for toolchains
                 # Look ahead to match upcoming value to list of toolchains
-                if self.next_token.value in toolchains:
+                if self.ctx.next_token.value in toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
-                    # accepting the token advances it to the current token
+                    # accepting the token advances it to be the current token
                     # Push associated tokens back to the TokenContext
-                    self.ctx.push(parseable_tokens(toolchains[self.current_token.value]))
+                    self.ctx.push(parseable_tokens(toolchains[self.ctx.current_token.value]))
                     continue
 
                 is_direct = self.ctx.current_token.value[0] == "%"
