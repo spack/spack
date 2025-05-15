@@ -48,9 +48,10 @@ class Tfel(CMakePackage):
     version("rliv-1.2", branch="rliv-1.2")
 
     # released versions
-    version("5.0.1",
-            sha256="820b2f9d54e237b2c2d9d6f06aaf7d4a1d3f34fb373e6549bee4fd8b55ecfad1",
-            preferred=True,
+    version(
+        "5.0.1",
+        sha256="820b2f9d54e237b2c2d9d6f06aaf7d4a1d3f34fb373e6549bee4fd8b55ecfad1",
+        preferred=True,
     )
     version("5.0.0", sha256="fe1ec39eba7f23571c2b0c773dab1cc274fee4512c5b2f2fc54b231da4502e87")
     version("4.2.3", sha256="a4f636ff9aeb6146a2d4f4bfd261092d6aa6c89be1ca725cefa8c02a5ec5183a")
@@ -170,16 +171,10 @@ class Tfel(CMakePackage):
             depends_on("py-pybind11", type=("build", "link", "run"))
 
         with when("@2.0.4:5.0.99"):
-            depends_on(
-                "boost+python+numpy+exception+container",
-                type=("build", "link", "run"),
-            )
+            depends_on("boost+python+numpy+exception+container", type=("build", "link", "run"))
 
         with when("@rliv1.2:rliv5.0"):
-            depends_on(
-                "boost+python+numpy+exception+container",
-                type=("build", "link", "run"),
-            )
+            depends_on("boost+python+numpy+exception+container", type=("build", "link", "run"))
     
         extends("python", when="+python_bindings")
 
