@@ -4,6 +4,7 @@
 
 import os
 
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

@@ -5,6 +5,7 @@
 import os
 from datetime import datetime
 
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

@@ -4,8 +4,8 @@
 
 import os
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack.build_systems.cmake import CMakeBuilder, CMakePackage, generator
 from spack.package import *
 
 

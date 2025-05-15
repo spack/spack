@@ -4,6 +4,7 @@
 
 from glob import glob
 
+from spack.build_systems.python import PythonPackage
 from spack.package import *
 
 

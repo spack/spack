@@ -5,6 +5,7 @@
 import shlex
 from subprocess import Popen
 
+from spack.build_systems.autotools import AutotoolsPackage
 from spack.package import *
 
 

@@ -4,6 +4,7 @@
 
 import os
 
+from spack.build_systems.r import RPackage
 from spack.package import *
 
 

@@ -9,6 +9,8 @@ import sys
 from llnl.util.lang import dedupe
 
 from spack.build_systems import autotools, cmake
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 from spack.util.environment import filter_system_paths
 

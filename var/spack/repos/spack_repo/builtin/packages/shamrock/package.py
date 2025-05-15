@@ -4,6 +4,7 @@
 
 import glob
 
+from spack.build_systems.cmake import CMakePackage, generator
 from spack.package import *
 
 

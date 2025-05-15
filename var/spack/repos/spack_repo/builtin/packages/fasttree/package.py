@@ -4,6 +4,7 @@
 
 from os import symlink
 
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

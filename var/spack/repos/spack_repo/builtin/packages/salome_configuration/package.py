@@ -5,6 +5,7 @@
 # Important feature: a set of salome-xxx packages must have all the same version
 # - except salome-med that is also fixed but by another number version
 
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

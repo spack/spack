@@ -5,6 +5,9 @@
 import os
 
 from spack.build_systems import cmake, generic
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

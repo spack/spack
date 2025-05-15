@@ -7,6 +7,8 @@ import sys
 
 import spack.build_systems.cmake
 import spack.build_systems.generic
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.generic import Package
 from spack.package import *
 
 # Only build certain parts of dwarf because the other ones break.

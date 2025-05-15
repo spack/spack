@@ -4,6 +4,9 @@
 
 import os
 
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.python import PythonPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

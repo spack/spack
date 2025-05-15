@@ -4,6 +4,8 @@
 import os
 import os.path
 
+from spack.build_systems.compiler import CompilerPackage
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

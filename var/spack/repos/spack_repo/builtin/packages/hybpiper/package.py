@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack.build_systems.generic import Package
+from spack.build_systems.python import PythonPackage
 from spack.package import *
 
 

@@ -5,6 +5,7 @@
 from os import getenv
 from subprocess import PIPE, run
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

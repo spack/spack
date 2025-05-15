@@ -6,6 +6,7 @@ import os
 import shutil
 from glob import glob
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

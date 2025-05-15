@@ -5,6 +5,8 @@
 import sys
 
 import spack.build_systems.cmake
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

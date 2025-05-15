@@ -8,6 +8,8 @@ import sys
 import tempfile
 
 import spack.util.environment
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.gnu import GNUMirrorPackage
 from spack.package import *
 
 

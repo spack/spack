@@ -8,6 +8,9 @@ import re
 import sys
 from subprocess import Popen
 
+from spack.build_systems.cmake import CMakePackage, generator
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 IS_WINDOWS = sys.platform == "win32"

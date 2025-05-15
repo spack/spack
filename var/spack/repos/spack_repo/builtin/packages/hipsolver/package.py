@@ -6,6 +6,9 @@ import os
 import re
 
 import spack.variant
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

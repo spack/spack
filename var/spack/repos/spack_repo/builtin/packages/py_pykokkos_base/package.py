@@ -4,6 +4,8 @@
 #
 # ----------------------------------------------------------------------------
 
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.python import PythonExtension
 from spack.package import *
 
 

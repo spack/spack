@@ -8,6 +8,7 @@ import os
 import re
 
 import spack.util.windows_registry as winreg
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

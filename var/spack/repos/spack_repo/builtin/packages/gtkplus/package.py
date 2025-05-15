@@ -4,6 +4,8 @@
 
 import spack.build_systems.autotools
 import spack.build_systems.meson
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.meson import MesonPackage
 from spack.package import *
 
 

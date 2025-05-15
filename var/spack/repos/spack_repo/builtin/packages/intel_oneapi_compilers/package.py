@@ -8,6 +8,8 @@ import platform
 import warnings
 
 from spack.build_environment import dso_suffix
+from spack.build_systems.compiler import CompilerPackage
+from spack.build_systems.oneapi import IntelOneApiPackage
 from spack.package import *
 
 versions = [

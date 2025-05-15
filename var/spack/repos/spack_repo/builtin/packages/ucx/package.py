@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import shutil
 
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cuda import CudaPackage
 from spack.package import *
 
 

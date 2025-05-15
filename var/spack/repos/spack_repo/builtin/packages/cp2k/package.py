@@ -8,6 +8,10 @@ import sys
 import spack.util.environment
 from spack.build_environment import dso_suffix
 from spack.build_systems import cmake, makefile
+from spack.build_systems.cmake import CMakePackage, generator
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 GPU_MAP = {

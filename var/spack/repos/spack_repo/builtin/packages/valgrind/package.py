@@ -5,6 +5,8 @@
 import glob
 import sys
 
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.sourceware import SourcewarePackage
 from spack.package import *
 
 

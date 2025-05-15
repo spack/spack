@@ -5,6 +5,8 @@
 import os
 import re
 
+from spack.build_systems.generic import Package
+from spack.build_systems.gnu import GNUMirrorPackage
 from spack.package import *
 
 

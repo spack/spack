@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 # dlaf-no-license-check
+from spack.build_systems.cmake import CMakePackage, generator
 from spack.package import *
 
 

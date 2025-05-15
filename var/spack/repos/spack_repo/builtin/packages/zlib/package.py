@@ -11,6 +11,8 @@ import re
 
 import spack.build_systems.generic
 import spack.build_systems.makefile
+from spack.build_systems.generic import Package
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

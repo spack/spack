@@ -5,6 +5,8 @@
 import os
 import re
 
+from spack.build_systems.cached_cmake import cmake_cache_string
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

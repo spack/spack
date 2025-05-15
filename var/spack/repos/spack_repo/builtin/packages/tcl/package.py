@@ -7,6 +7,9 @@ import sys
 
 import spack.build_systems.autotools
 import spack.build_systems.nmake
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.nmake import NMakePackage
+from spack.build_systems.sourceforge import SourceforgePackage
 from spack.package import *
 from spack.util.environment import is_system_path
 

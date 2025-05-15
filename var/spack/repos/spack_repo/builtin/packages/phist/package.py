@@ -4,6 +4,7 @@
 
 
 import spack.hooks.sbang as sbang
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

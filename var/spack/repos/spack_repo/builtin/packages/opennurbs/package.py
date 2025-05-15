@@ -4,6 +4,8 @@
 
 
 from spack.build_systems import cmake, makefile
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

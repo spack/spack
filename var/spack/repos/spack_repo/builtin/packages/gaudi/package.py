@@ -4,6 +4,8 @@
 
 import sys
 
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
 from spack.package import *
 
 

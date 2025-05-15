@@ -7,6 +7,9 @@ import sys
 from llnl.util.lang import classproperty
 from llnl.util.link_tree import LinkTree
 
+from spack.build_systems.compiler import CompilerPackage
+from spack.build_systems.generic import Package
+from spack.build_systems.oneapi import IntelOneApiPackage
 from spack.package import *
 
 

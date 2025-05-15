@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from spack.build_systems.generic import GenericBuilder
+from spack.build_systems.generic import GenericBuilder, Package
 from spack.package import *
 
 

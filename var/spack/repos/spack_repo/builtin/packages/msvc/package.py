@@ -10,6 +10,8 @@ import archspec.cpu
 import spack.build_systems.compiler
 import spack.platforms
 import spack.version
+from spack.build_systems.compiler import CompilerPackage
+from spack.build_systems.generic import Package
 from spack.package import *
 
 FC_PATH: Dict[str, str] = dict()

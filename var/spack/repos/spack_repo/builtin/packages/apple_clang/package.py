@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack.build_systems.bundle import BundlePackage
+from spack.build_systems.compiler import CompilerPackage
 from spack.package import *
 
 from ..llvm.package import LlvmDetection

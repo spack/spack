@@ -9,6 +9,8 @@ from tempfile import NamedTemporaryFile
 import spack.build_systems.autotools
 import spack.build_systems.nmake
 import spack.platforms
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.nmake import NMakePackage
 from spack.package import *
 
 is_windows = sys.platform == "win32"

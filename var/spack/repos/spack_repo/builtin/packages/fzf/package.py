@@ -4,6 +4,7 @@
 
 import re
 
+from spack.build_systems.go import GoPackage
 from spack.package import *
 
 

@@ -7,6 +7,9 @@ import platform
 import sys
 
 from spack.build_environment import optimization_flags
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

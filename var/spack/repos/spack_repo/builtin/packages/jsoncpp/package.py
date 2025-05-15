@@ -4,6 +4,8 @@
 
 import spack.build_systems.cmake
 import spack.build_systems.meson
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.meson import MesonPackage
 from spack.package import *
 
 

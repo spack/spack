@@ -7,7 +7,10 @@ import sys
 import tempfile
 
 from spack.build_environment import optimization_flags
-from spack.build_systems.python import PythonPipBuilder
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.generic import Package
+from spack.build_systems.python import PythonExtension, PythonPipBuilder
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 rocm_dependencies = [

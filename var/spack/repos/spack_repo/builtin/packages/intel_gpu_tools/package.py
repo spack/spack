@@ -4,6 +4,8 @@
 
 import sys
 
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.xorg import XorgPackage
 from spack.package import *
 
 

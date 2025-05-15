@@ -5,6 +5,7 @@
 import os
 
 import spack.build_systems.meson
+from spack.build_systems.meson import MesonPackage
 from spack.package import *
 from spack.util.environment import is_system_path
 

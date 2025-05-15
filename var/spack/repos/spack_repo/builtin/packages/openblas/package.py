@@ -7,6 +7,8 @@ import re
 
 import spack.build_systems.cmake
 import spack.build_systems.makefile
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 

@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.build_systems import cmake, meson
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.meson import MesonPackage
 from spack.package import *
 
 

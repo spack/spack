@@ -5,6 +5,7 @@
 import glob
 import os
 
+from spack.build_systems.autotools import AutotoolsPackage
 from spack.package import *
 
 

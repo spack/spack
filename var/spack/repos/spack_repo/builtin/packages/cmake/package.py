@@ -9,6 +9,7 @@ import sys
 
 import spack.build_environment
 from spack.build_systems.cmake import get_cmake_prefix_path
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

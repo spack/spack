@@ -12,6 +12,7 @@ from llnl.util import lang
 
 import spack.compilers.libraries
 import spack.package_base
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

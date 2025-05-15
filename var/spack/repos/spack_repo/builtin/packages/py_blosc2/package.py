@@ -5,6 +5,7 @@
 import shlex
 
 from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.python import PythonPackage
 from spack.package import *
 
 

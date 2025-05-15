@@ -8,6 +8,7 @@ from os.path import join
 
 from llnl.util.symlink import readlink
 
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

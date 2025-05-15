@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # See the Spack documentation for more information on packaging.
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

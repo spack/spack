@@ -4,6 +4,11 @@
 
 from os.path import dirname, isdir
 
+from spack.build_systems.oneapi import (
+    IntelOneApiLibraryPackage,
+    IntelOneApiPackage,
+    IntelOneApiStaticLibraryList,
+)
 from spack.package import *
 
 

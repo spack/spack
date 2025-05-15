@@ -11,6 +11,7 @@ from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
+from spack.build_systems.generic import Package
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 

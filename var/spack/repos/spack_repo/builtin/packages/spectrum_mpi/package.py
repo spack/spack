@@ -5,6 +5,7 @@ import os
 import re
 
 import spack.compilers.config
+from spack.build_systems.bundle import BundlePackage
 from spack.package import *
 
 

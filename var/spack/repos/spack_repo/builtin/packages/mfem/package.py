@@ -6,6 +6,9 @@ import os
 import shutil
 import sys
 
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.generic import Package
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

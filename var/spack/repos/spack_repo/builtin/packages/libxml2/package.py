@@ -6,6 +6,9 @@ import os
 import llnl.util.filesystem as fs
 
 from spack.build_systems import autotools, cmake, nmake
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.nmake import NMakePackage
 from spack.package import *
 
 

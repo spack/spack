@@ -4,8 +4,8 @@
 
 import os
 
-from spack.build_systems.cmake import CMakeBuilder
-from spack.build_systems.makefile import MakefileBuilder
+from spack.build_systems.cmake import CMakeBuilder, CMakePackage
+from spack.build_systems.makefile import MakefileBuilder, MakefilePackage
 from spack.package import *
 
 

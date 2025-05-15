@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 from ..boost.package import Boost

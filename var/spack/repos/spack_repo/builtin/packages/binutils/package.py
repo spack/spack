@@ -6,6 +6,8 @@ import pathlib
 import re
 
 import spack.build_systems.autotools
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.gnu import GNUMirrorPackage
 from spack.package import *
 
 

@@ -5,6 +5,8 @@ import re
 
 import spack.build_systems.autotools
 import spack.build_systems.nmake
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.nmake import NMakePackage
 from spack.package import *
 
 

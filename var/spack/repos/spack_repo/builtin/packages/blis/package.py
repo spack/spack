@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 # Although this looks like an Autotools package, it's not one. Refer to:

@@ -5,6 +5,7 @@
 import os
 from os.path import join as pjoin
 
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

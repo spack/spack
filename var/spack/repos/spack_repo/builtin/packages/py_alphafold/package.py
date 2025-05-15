@@ -4,6 +4,8 @@
 
 import glob
 
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.python import PythonPackage
 from spack.package import *
 
 

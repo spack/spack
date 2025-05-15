@@ -6,6 +6,7 @@ import glob
 import os
 
 import spack.tengine
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

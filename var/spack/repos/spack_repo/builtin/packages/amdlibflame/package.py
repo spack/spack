@@ -5,6 +5,7 @@
 
 import spack.build_systems.autotools
 import spack.build_systems.cmake
+from spack.build_systems.cmake import CMakePackage, generator
 from spack.package import *
 
 from ..libflame.package import LibflameBase

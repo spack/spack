@@ -6,6 +6,8 @@ import os
 import socket
 
 from spack.build_systems.cmake import CMakeBuilder
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.generic import Package
 from spack.package import *
 
 

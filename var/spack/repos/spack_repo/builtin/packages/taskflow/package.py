@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.build_systems.cmake import CMakePackage
 from spack.compilers.error import UnsupportedCompilerFlag
 from spack.package import *
 

@@ -4,6 +4,8 @@
 
 import os
 
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

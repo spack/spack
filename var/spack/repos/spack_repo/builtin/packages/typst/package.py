@@ -4,6 +4,7 @@
 
 import re
 
+from spack.build_systems.cargo import CargoPackage
 from spack.package import *
 
 

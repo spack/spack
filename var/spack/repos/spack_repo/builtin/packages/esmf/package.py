@@ -8,6 +8,8 @@ import sys
 import spack.build_systems.makefile
 import spack.build_systems.python
 from spack.build_environment import dso_suffix, stat_suffix
+from spack.build_systems.makefile import MakefilePackage
+from spack.build_systems.python import PythonExtension
 from spack.package import *
 
 

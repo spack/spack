@@ -7,6 +7,9 @@ import os.path
 import re
 import sys
 
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

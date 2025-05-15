@@ -5,6 +5,9 @@
 import os
 
 from spack.build_systems import autotools, cmake, python
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
 from spack.package import *
 
 

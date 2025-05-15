@@ -6,6 +6,7 @@
 import os
 
 import spack.build_systems.lua
+from spack.build_systems.lua import LuaPackage
 from spack.package import *
 
 

@@ -4,6 +4,7 @@
 
 import os
 
+from spack.build_systems.scons import SConsPackage
 from spack.package import *
 
 

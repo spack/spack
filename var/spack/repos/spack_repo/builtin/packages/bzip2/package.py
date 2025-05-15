@@ -5,6 +5,8 @@
 import re
 import sys
 
+from spack.build_systems.generic import Package
+from spack.build_systems.sourceware import SourcewarePackage
 from spack.package import *
 
 

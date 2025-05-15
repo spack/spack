@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)-
 
+from spack.build_systems.racket import RacketPackage
 from spack.package import *
 
 

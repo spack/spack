@@ -8,6 +8,7 @@ import shutil
 import socket
 from os import environ as env
 
+from spack.build_systems.cmake import CMakePackage
 from spack.package import *
 
 

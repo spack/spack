@@ -5,6 +5,7 @@
 import os
 import platform
 
+from spack.build_systems.autotools import AutotoolsPackage
 from spack.package import *
 
 

@@ -4,6 +4,11 @@
 
 import os
 
+from spack.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+)
 from spack.package import *
 
 

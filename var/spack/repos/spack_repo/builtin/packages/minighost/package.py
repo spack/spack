@@ -5,6 +5,7 @@
 
 import tarfile
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

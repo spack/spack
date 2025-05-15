@@ -5,6 +5,8 @@
 import os
 import sys
 
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.gnu import GNUMirrorPackage
 from spack.package import *
 
 

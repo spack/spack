@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack.build_systems.meson import MesonPackage
+from spack.build_systems.xorg import XorgPackage
 from spack.package import *
 
 

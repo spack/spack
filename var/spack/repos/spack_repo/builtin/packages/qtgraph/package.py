@@ -4,6 +4,7 @@
 
 import os
 
+from spack.build_systems.qmake import QMakePackage
 from spack.package import *
 
 

@@ -7,6 +7,8 @@ import os
 import sys
 
 import spack.util.environment
+from spack.build_systems.autotools import AutotoolsPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.package import *
 
 

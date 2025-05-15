@@ -6,6 +6,7 @@ import glob
 import os
 import platform
 
+from spack.build_systems.makefile import MakefilePackage
 from spack.package import *
 
 

@@ -4,6 +4,7 @@
 
 import os
 
+from spack.build_systems.generic import Package
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
 

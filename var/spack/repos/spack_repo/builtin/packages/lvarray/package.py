@@ -8,6 +8,8 @@ import warnings
 from os import environ as env
 from os.path import join as pjoin
 
+from spack.build_systems.cmake import CMakePackage
+from spack.build_systems.cuda import CudaPackage
 from spack.package import *
 
 

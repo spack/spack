@@ -5,6 +5,7 @@
 import os
 import re
 
+from spack.build_systems.meson import MesonPackage
 from spack.package import *
 
 
