@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from llnl.util.filesystem import getuid, join_path, touch
+from llnl.util.filesystem import getuid, touch
 
 import spack
 import spack.cmd.external
