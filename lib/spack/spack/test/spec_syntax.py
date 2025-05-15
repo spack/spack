@@ -737,6 +737,7 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
             ],
             "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
+        ),
         # Test conditional dependencies
         (
             "foo ^[when='%c' virtuals=c]gcc",
