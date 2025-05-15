@@ -132,7 +132,9 @@ if not modules_base:
     modules_base = os.path.join(spack_xdg_data_home, "modules")
 
 old_envs_path = os.path.join(var_path, "environments")
-if dir_is_occupied(old_envs_path):
+if spack_data_home_varname in os.environ:
+    envs_path = os.path.join(spack_data_home, "environments")
+elif dir_is_occupied(old_envs_path):
     envs_path = old_envs_path
 else:
     # Environments can store views and `develop` packages, which
@@ -148,7 +150,9 @@ else:
 # 4. explicitly defined XDG_DATA_HOME
 # 5. inside spack prefix (slightly different compared to old install path)
 old_install_path = os.path.join(prefix, "opt", "spack")
-if dir_is_occupied(old_install_path):
+if spack_data_home_varname in os.environ:
+    default_install_location = os.path.join(spack_data_home, "installs")
+elif dir_is_occupied(old_install_path):
     default_install_location = old_install_path
 else:
     default_install_location = os.path.join(spack_data_home, "installs")
