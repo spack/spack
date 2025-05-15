@@ -8,6 +8,7 @@ import spack.builder
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, depends_on
 from spack.multimethod import when
@@ -71,16 +72,24 @@ class CargoBuilder(BuilderWithDefaults):
         return self.pkg.stage.source_path
 
     @property
+    def std_build_args(self):
+        """Standard arguments for ``cargo build`` provided as a property for
+        convenience of package writers."""
+        return ["-j", str(self.pkg.module.make_jobs)]
+
+    @property
     def build_args(self):
         """Arguments for ``cargo build``."""
-        return ["-j", str(self.pkg.module.make_jobs)]
+        return []
 
     @property
     def check_args(self):
         """Argument for ``cargo test`` during check phase"""
         return []
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         env.set("CARGO_HOME", self.stage.path)
 
     def build(
@@ -88,7 +97,9 @@ class CargoBuilder(BuilderWithDefaults):
     ) -> None:
         """Runs ``cargo install`` in the source directory"""
         with fs.working_dir(self.build_directory):
-            pkg.module.cargo("install", "--root", "out", "--path", ".", *self.build_args)
+            pkg.module.cargo(
+                "install", "--root", "out", "--path", ".", *self.std_build_args, *self.build_args
+            )
 
     def install(
         self, pkg: CargoPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix

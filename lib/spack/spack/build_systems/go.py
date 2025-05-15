@@ -8,6 +8,7 @@ import spack.builder
 import spack.package_base
 import spack.phase_callbacks
 import spack.spec
+import spack.util.environment
 import spack.util.prefix
 from spack.directives import build_system, depends_on
 from spack.multimethod import when
@@ -68,7 +69,9 @@ class GoBuilder(BuilderWithDefaults):
     #: Callback names for install-time test
     install_time_test_callbacks = ["check"]
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(
+        self, env: spack.util.environment.EnvironmentModifications
+    ) -> None:
         env.set("GO111MODULE", "on")
         env.set("GOTOOLCHAIN", "local")
         env.set("GOPATH", fs.join_path(self.pkg.stage.path, "go"))

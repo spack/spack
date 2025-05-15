@@ -42,7 +42,7 @@ def mock_pkg_git_repo(git, tmp_path_factory):
     repo_dir = root_dir / "builtin.mock"
     shutil.copytree(spack.paths.mock_packages_path, str(repo_dir))
 
-    repo_cache = spack.util.file_cache.FileCache(str(root_dir / "cache"))
+    repo_cache = spack.util.file_cache.FileCache(root_dir / "cache")
     mock_repo = spack.repo.RepoPath(str(repo_dir), cache=repo_cache)
     mock_repo_packages = mock_repo.repos[0].packages_path
 
@@ -111,12 +111,13 @@ def split(output):
 pkg = spack.main.SpackCommand("pkg")
 
 
-def test_packages_path():
-    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin").packages_path
+@pytest.mark.requires_builtin("builtin repository path must exist")
+def test_builtin_repo():
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin")
 
 
-def test_mock_packages_path(mock_packages):
-    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin.mock").packages_path
+def test_mock_builtin_repo(mock_packages):
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin.mock")
 
 
 def test_pkg_add(git, mock_pkg_git_repo):

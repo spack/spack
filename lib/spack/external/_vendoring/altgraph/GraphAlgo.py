@@ -1,8 +1,8 @@
 """
-altgraph.GraphAlgo - Graph algorithms
+_vendoring.altgraph.GraphAlgo - Graph algorithms
 =====================================
 """
-from altgraph import GraphError
+from _vendoring.altgraph import GraphError
 
 
 def dijkstra(graph, start, end=None):
@@ -25,7 +25,7 @@ def dijkstra(graph, start, end=None):
     and will raise an exception if it discovers that a negative edge has
     caused it to make a mistake.
 
-    Adapted to altgraph by Istvan Albert, Pennsylvania State University -
+    Adapted to _vendoring.altgraph by Istvan Albert, Pennsylvania State University -
     June, 9 2004
     """
     D = {}  # dictionary of final distances

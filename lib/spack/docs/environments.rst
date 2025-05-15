@@ -457,6 +457,13 @@ developed package in the environment are concretized to match the
 version (and other constraints) passed as the spec argument to the
 ``spack develop`` command.
 
+When working deep in the graph it is often desirable to have multiple specs marked
+as ``develop`` so you don't have to restage and/or do full rebuilds each time you
+call ``spack install``.  The ``--recursive`` flag can be used in these scenarios
+to ensure that all the dependents of the initial spec you provide are also marked
+as develop specs.  The ``--recursive`` flag requires a pre-concretized environment
+so the graph can be traversed from the supplied spec all the way to the root specs.
+
 For packages with ``git`` attributes, git branches, tags, and commits can
 also be used as valid concrete versions (see :ref:`version-specifier`).
 This means that for a package ``foo``, ``spack develop foo@git.main`` will clone
@@ -532,7 +539,9 @@ from the command line.
 
 You can also include an environment directly in the ``spack.yaml`` file. It
 involves adding the ``include_concrete`` heading in the yaml followed by the
-absolute path to the independent environments.
+absolute path to the independent environments. Note, that you may use Spack
+config variables such as ``$spack`` or environment variables as long as the
+expression expands to an absolute path.
 
 .. code-block:: yaml
 
@@ -542,7 +551,7 @@ absolute path to the independent environments.
          unify: true
      include_concrete:
      - /absolute/path/to/environment1
-     - /absolute/path/to/environment2
+     - $spack/../path/to/environment2
 
 
 Once the ``spack.yaml`` has been updated you must concretize the environment to
@@ -660,34 +669,56 @@ a ``packages.yaml`` file) could contain:
      # ...
      packages:
        all:
-         compiler: [intel]
+         providers:
+           mpi: [openmpi]
      # ...
 
-This configuration sets the default compiler for all packages to
-``intel``.
+This configuration sets the default mpi provider to be openmpi.
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Included configurations
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack environments allow an ``include`` heading in their yaml
-schema. This heading pulls in external configuration files and applies
-them to the environment.
+Spack environments allow an ``include`` heading in their yaml schema.
+This heading pulls in external configuration files and applies them to
+the environment.
 
 .. code-block:: yaml
 
    spack:
      include:
-     - relative/path/to/config.yaml
-     - https://github.com/path/to/raw/config/compilers.yaml
+     - environment/relative/path/to/config.yaml
+     - path: https://github.com/path/to/raw/config/compilers.yaml
+       sha256: 26e871804a92cd07bb3d611b31b4156ae93d35b6a6d6e0ef3a67871fcb1d258b
      - /absolute/path/to/packages.yaml
+     - path: /path/to/$os/$target/environment
+       optional: true
+     - path: /path/to/os-specific/config-dir
+       when: os == "ventura"
 
-Environments can include files or URLs. File paths can be relative or
-absolute. URLs include the path to the text for individual files or
-can be the path to a directory containing configuration files.
-Spack supports ``file``, ``http``, ``https`` and ``ftp`` protocols (or
-schemes). Spack-specific, environment and user path variables may be
-used in these paths. See :ref:`config-file-variables` for more information.
+Included configuration files are required *unless* they are explicitly optional
+or the entry's condition evaluates to ``false``. Optional includes are specified
+with the ``optional`` clause and conditional with the ``when`` clause. (See
+:ref:`include-yaml` for more information on optional and conditional entries.)
+
+Files are listed using paths to individual files or directories containing them.
+Path entries may be absolute or relative to the environment or specified as 
+URLs. URLs to individual files must link to the **raw** form of the file's 
+contents (e.g., `GitHub
+<https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#viewing-or-copying-the-raw-file-content>`_ 
+or `GitLab
+<https://docs.gitlab.com/ee/api/repository_files.html#get-raw-file-from-repository>`_) **and** include a valid sha256 for the file.
+Only the ``file``, ``ftp``, ``http`` and ``https`` protocols (or schemes) are
+supported. Spack-specific, environment and user path variables can be used.
+(See :ref:`config-file-variables` for more information.)
+
+.. warning::
+
+   Recursive includes are not currently processed in a breadth-first manner
+   so the value of a configuration option that is altered by multiple included
+   files may not be what you expect. This will be addressed in a future
+   update.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 Configuration precedence
@@ -971,6 +1002,28 @@ For example, the following environment has three root packages:
 This allows for a much-needed reduction in redundancy between packages
 and constraints.
 
+-------------------------------
+Modifying Environment Variables
+-------------------------------
+
+Spack Environments can modify the active shell's environment variables when activated.  The environment can be
+configured to set, unset, prepend, or append using ``env_vars`` configuration in the ``spack.yaml``  or through config scopes
+file:
+
+.. code-block:: yaml
+
+  spack:
+    env_vars:
+      set:
+        ENVAR_TO_SET_IN_ENV_LOAD: "FOO"
+      unset:
+        ENVAR_TO_UNSET_IN_ENV_LOAD:
+      prepend_path:
+        PATH_LIST: "path/to/prepend"
+      append_path:
+        PATH_LIST: "path/to/append"
+      remove_path:
+        PATH_LIST: "path/to/remove"
 
 -----------------
 Environment Views

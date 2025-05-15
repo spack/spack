@@ -128,7 +128,7 @@ depend on the spec:
 
 .. code-block:: python
 
-   def setup_run_environment(self, env):
+   def setup_run_environment(self, env: EnvironmentModifications) -> None:
        if self.spec.satisfies("+foo"):
            env.set("FOO", "bar")
 
@@ -142,7 +142,7 @@ For example, a simplified version of the ``python`` package could look like this
 
 .. code-block:: python
 
-   def setup_dependent_run_environment(self, env, dependent_spec):
+   def setup_dependent_run_environment(self, env: EnvironmentModifications, dependent_spec: Spec) -> None:
        if dependent_spec.package.extends(self.spec):
            env.prepend_path("PYTHONPATH", dependent_spec.prefix.lib.python)
 

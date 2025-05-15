@@ -1,0 +1,34 @@
+name: sync with spack/spack-packages
+
+on:
+  push:
+    branches:
+    - develop
+
+jobs:
+  sync:
+    if: github.repository == 'spack/spack'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout spack/spack
+      run: git clone https://github.com/spack/spack.git
+    - name: Checkout spack/spack-packages
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        ssh-key: ${{ secrets.SYNC_PACKAGES_KEY }}
+        path: spack-packages
+        repository: spack/spack-packages
+    - name: Install git-filter-repo
+      run: |
+        curl -LfsO https://raw.githubusercontent.com/newren/git-filter-repo/refs/tags/v2.47.0/git-filter-repo
+        echo "67447413e273fc76809289111748870b6f6072f08b17efe94863a92d810b7d94  git-filter-repo" | sha256sum -c -
+        chmod +x git-filter-repo
+        sudo mv git-filter-repo /usr/local/bin/
+    - name: Sync spack/spack-packages with spack/spack
+      run: |
+        cd spack-packages
+        git-filter-repo --quiet --source ../spack --subdirectory-filter var/spack/repos --refs develop
+    - name: Push
+      run: |
+        cd spack-packages
+        git push git@github.com:spack/spack-packages.git develop:develop --force
