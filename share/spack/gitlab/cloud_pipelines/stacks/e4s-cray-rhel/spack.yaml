@@ -20,6 +20,9 @@ spack:
       - "%cce"
       providers:
         blas: [cray-libsci]
+        c: [cce]
+        cxx: [cce]
+        fortran: [cce]
         lapack: [cray-libsci]
         mpi: [cray-mpich]
         tbb: [intel-tbb]
@@ -41,7 +44,9 @@ spack:
       - netlib-scalapack
 
     ncurses:
-      require: +termlib ldflags=-Wl,--undefined-version
+      require:
+      - +termlib ldflags=-Wl,--undefined-version
+      - target=x86_64_v3
     tbb:
       require: "intel-tbb"
     binutils:
@@ -71,6 +76,10 @@ spack:
       # Don't build GUI support or GLX rendering for HPC/container deployments
       require:
       - "~qt ^[virtuals=gl] osmesa"
+      - target=x86_64_v3
+    petsc:
+      require:
+      - "+batch"
       - target=x86_64_v3
     trilinos:
       require:

@@ -11,10 +11,24 @@ import os
 import re
 import sys
 import traceback
+import types
 import typing
 import warnings
 from datetime import datetime, timedelta
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Tuple, TypeVar
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 # Ignore emacs backups when listing modules
 ignore_modules = r"^\.#|~$"
@@ -72,7 +86,7 @@ def index_by(objects, *funcs):
     if isinstance(f, str):
         f = lambda x: getattr(x, funcs[0])
     elif isinstance(f, tuple):
-        f = lambda x: tuple(getattr(x, p) for p in funcs[0])
+        f = lambda x: tuple(getattr(x, p, None) for p in funcs[0])
 
     result = {}
     for o in objects:
@@ -423,45 +437,38 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     return cls
 
 
+K = TypeVar("K")
+V = TypeVar("V")
+
+
 @lazy_lexicographic_ordering
-class HashableMap(collections.abc.MutableMapping):
+class HashableMap(typing.MutableMapping[K, V]):
     """This is a hashable, comparable dictionary.  Hash is performed on
     a tuple of the values in the dictionary."""
 
     __slots__ = ("dict",)
 
     def __init__(self):
-        self.dict = {}
+        self.dict: Dict[K, V] = {}
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: K) -> V:
         return self.dict[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: K, value: V) -> None:
         self.dict[key] = value
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[K]:
         return iter(self.dict)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.dict)
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: K) -> None:
         del self.dict[key]
 
     def _cmp_iter(self):
         for _, v in sorted(self.items()):
             yield v
-
-    def copy(self):
-        """Type-agnostic clone method.  Preserves subclass type."""
-        # Construct a new dict of my type
-        self_type = type(self)
-        clone = self_type()
-
-        # Copy everything from this dict into it.
-        for key in self:
-            clone[key] = self[key].copy()
-        return clone
 
 
 def match_predicate(*args):
@@ -707,14 +714,24 @@ class ObjectWrapper:
 
 
 class Singleton:
-    """Simple wrapper for lazily initialized singleton objects."""
+    """Wrapper for lazily initialized singleton objects."""
 
-    def __init__(self, factory):
+    def __init__(self, factory: Callable[[], object]):
         """Create a new singleton to be inited with the factory function.
 
+        Most factories will simply create the object to be initialized and
+        return it.
+
+        In some cases, e.g. when bootstrapping some global state, the singleton
+        may need to be initialized incrementally. If the factory returns a generator
+        instead of a regular object, the singleton will assign each result yielded by
+        the generator to the singleton instance. This allows methods called by
+        the factory in later stages to refer back to the singleton.
+
         Args:
-            factory (function): function taking no arguments that
-                creates the singleton instance.
+            factory (function): function taking no arguments that creates the
+                singleton instance.
+
         """
         self.factory = factory
         self._instance = None
@@ -722,7 +739,16 @@ class Singleton:
     @property
     def instance(self):
         if self._instance is None:
-            self._instance = self.factory()
+            instance = self.factory()
+
+            if isinstance(instance, types.GeneratorType):
+                # if it's a generator, assign every value
+                for value in instance:
+                    self._instance = value
+            else:
+                # if not, just assign the result like a normal singleton
+                self._instance = instance
+
         return self._instance
 
     def __getattr__(self, name):
@@ -996,11 +1022,8 @@ class GroupedExceptionHandler:
     def grouped_message(self, with_tracebacks: bool = True) -> str:
         """Print out an error message coalescing all the forwarded errors."""
         each_exception_message = [
-            "{0} raised {1}: {2}{3}".format(
-                context,
-                exc.__class__.__name__,
-                exc,
-                "\n{0}".format("".join(tb)) if with_tracebacks else "",
+            "\n\t{0} raised {1}: {2}\n{3}".format(
+                context, exc.__class__.__name__, exc, f"\n{''.join(tb)}" if with_tracebacks else ""
             )
             for context, exc, tb in self.exceptions
         ]
@@ -1030,17 +1053,26 @@ class GroupedExceptionForwarder:
         return True
 
 
-class classproperty:
+ClassPropertyType = TypeVar("ClassPropertyType")
+
+
+class classproperty(Generic[ClassPropertyType]):
     """Non-data descriptor to evaluate a class-level property. The function that performs
-    the evaluation is injected at creation time and take an instance (could be None) and
-    an owner (i.e. the class that originated the instance)
+    the evaluation is injected at creation time and takes an owner (i.e., the class that
+    originated the instance).
     """
 
-    def __init__(self, callback):
+    def __init__(self, callback: Callable[[Any], ClassPropertyType]) -> None:
         self.callback = callback
 
-    def __get__(self, instance, owner):
+    def __get__(self, instance, owner) -> ClassPropertyType:
         return self.callback(owner)
+
+
+#: A type alias that represents either a classproperty descriptor or a constant value of the same
+#: type. This allows derived classes to override a computed class-level property with a constant
+#: value while retaining type compatibility.
+ClassProperty = Union[ClassPropertyType, classproperty[ClassPropertyType]]
 
 
 class DeprecatedProperty:

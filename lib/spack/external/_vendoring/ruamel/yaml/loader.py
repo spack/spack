@@ -1,20 +1,20 @@
 # coding: utf-8
 
-from ruamel.yaml.reader import Reader
-from ruamel.yaml.scanner import Scanner, RoundTripScanner
-from ruamel.yaml.parser import Parser, RoundTripParser
-from ruamel.yaml.composer import Composer
-from ruamel.yaml.constructor import (
+from _vendoring.ruamel.yaml.reader import Reader
+from _vendoring.ruamel.yaml.scanner import Scanner, RoundTripScanner
+from _vendoring.ruamel.yaml.parser import Parser, RoundTripParser
+from _vendoring.ruamel.yaml.composer import Composer
+from _vendoring.ruamel.yaml.constructor import (
     BaseConstructor,
     SafeConstructor,
     Constructor,
     RoundTripConstructor,
 )
-from ruamel.yaml.resolver import VersionedResolver
+from _vendoring.ruamel.yaml.resolver import VersionedResolver
 
 if False:  # MYPY
     from typing import Any, Dict, List, Union, Optional  # NOQA
-    from ruamel.yaml.compat import StreamTextType, VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import StreamTextType, VersionType  # NOQA
 
 __all__ = ['BaseLoader', 'SafeLoader', 'Loader', 'RoundTripLoader']
 

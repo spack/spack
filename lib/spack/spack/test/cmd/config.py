@@ -20,6 +20,8 @@ import spack.util.spack_yaml as syaml
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
+pytestmark = pytest.mark.usefixtures("mock_packages")
+
 
 def _create_config(scope=None, data={}, section="packages"):
     scope = scope or spack.config.default_modify_scope()
@@ -213,7 +215,7 @@ def test_config_add_update_dict(mutable_empty_config):
 
 def test_config_with_c_argument(mutable_empty_config):
     # I don't know how to add a spack argument to a Spack Command, so we test this way
-    config_file = "config:install_root:root:/path/to/config.yaml"
+    config_file = "config:install_tree:root:/path/to/config.yaml"
     parser = spack.main.make_argument_parser()
     args = parser.parse_args(["-c", config_file])
     assert config_file in args.config_vars
@@ -221,7 +223,7 @@ def test_config_with_c_argument(mutable_empty_config):
     # Add the path to the config
     config("add", args.config_vars[0], scope="command_line")
     output = config("get", "config")
-    assert "config:\n  install_root:\n    root: /path/to/config.yaml" in output
+    assert "config:\n  install_tree:\n    root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
