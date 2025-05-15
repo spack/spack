@@ -25,6 +25,8 @@ class Mpileaks(Package):
     depends_on("callpath")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Will be used to try raising an exception
     libs = None
