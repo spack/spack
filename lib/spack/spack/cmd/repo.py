@@ -171,7 +171,7 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
 
     for repo in spack.config.get("repos"):
         try:
-            r = spack.repo.from_path(spack.util.path.canonicalize_path(repo))
+            r = spack.repo.from_path(repo)
         except spack.repo.RepoError:
             continue
         if r.namespace == name_or_path or os.path.samefile(r.root, name_or_path):
