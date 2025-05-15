@@ -986,7 +986,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
         per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id)
-        configuration_paths.append(("this-spack-user", per_spack_cfg))
+        configuration_paths.append(("this-spack", per_spack_cfg))
 
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
