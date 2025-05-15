@@ -50,6 +50,13 @@ else:
 
 spack_xdg_cache_home = _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 
+
+# spack_data_home is where we know we can put large amounts of data:
+# users can set SPACK_DATA_HOME to tell spack explicitly about such
+# a location. If XDG_DATA_HOME is set, we assume we can use that.
+# If neither are set, we assume the spack prefix is the only place
+# available to us (we do not use ~ and in particular the default for
+# XDG_DATA_HOME).
 if spack_data_home_varname in os.environ:
     spack_data_home = os.environ[spack_data_home_varname]
 elif spack_xdg_data_home_nodefault:
@@ -146,16 +153,14 @@ elif dir_is_occupied(old_install_path):
 else:
     default_install_location = os.path.join(spack_data_home, "installs")
 
+# Environments follow the same precedence rules as installs
+# (the view and dev_path packages can take up significant space)
 old_envs_path = os.path.join(var_path, "environments")
 if spack_data_home_varname in os.environ:
     envs_path = os.path.join(spack_data_home, "environments")
 elif dir_is_occupied(old_envs_path):
     envs_path = old_envs_path
 else:
-    # Environments can store views and `develop` packages, which
-    # take up too much space for us to place them in ~ unless the
-    # user explicitly requests it
-    # TODO: maybe store views/develop packages in a separate location?
     envs_path = os.path.join(spack_data_home, "environments")
 
 # TODO: we could shutil.mv resources from old paths to new paths
