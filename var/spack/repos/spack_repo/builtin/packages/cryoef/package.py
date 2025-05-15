@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class Cryoef(MakefilePackage):
-    """An open-source software package for robust analysis of the orientation distribution of cryoelectron microscopy data."""
+    """An open-source software package for robust analysis of the orientation distribution
+    of cryoelectron microscopy data."""
 
     homepage = "https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF"
     url = "https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF/cryoEF_v1.1.0.tar.gz"
