@@ -263,7 +263,7 @@ class Vtk(CMakePackage):
     # impacts any clang derivative compiler. But can be patched
     # regardless of compiler
     # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
-    patch("vtk_clang19_size_t.patch", when="@9.2:")
+    patch("vtk_clang19_size_t.patch", when="@9.2:9.4.2")
 
     # Needed to build VTK with external SEACAS >= 2022-10-14
     @when("@9.4:")
