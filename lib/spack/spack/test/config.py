@@ -1216,7 +1216,10 @@ def test_user_config_path_is_overridable(working_env):
 
 def test_user_config_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser(os.path.join("~", ".config", "spack")) == spack.paths._get_user_config_path()
+    assert (
+        os.path.expanduser(os.path.join("~", ".config", "spack"))
+        == spack.paths._get_user_config_path()
+    )
 
 
 def test_default_install_tree(monkeypatch, default_config):
@@ -1257,7 +1260,10 @@ def test_user_cache_path_is_overridable(working_env):
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser(os.path.join("~", ".local", "share", "spack")) == spack.paths._get_user_cache_path()
+    assert (
+        os.path.expanduser(os.path.join("~", ".local", "share", "spack"))
+        == spack.paths._get_user_cache_path()
+    )
 
 
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):
