@@ -902,12 +902,12 @@ def test_cli_spec_roundtrip(args, expected):
         (
             "foo%my_toolchain",
             {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
-            "foo ^[when='%c' virtuals=c] gcc",
+            ["foo %[when='%c' virtuals=c] gcc"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich"},
-            "foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich",
+            ["foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
@@ -916,7 +916,7 @@ def test_cli_spec_roundtrip(args, expected):
                 "my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
             },
             [
-                "foo ^[when='%c' virtuals=c] gcc",
+                "foo %[when='%c' virtuals=c] gcc",
                 "bar %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich",
             ],
         ),
@@ -926,7 +926,7 @@ def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config
     spack.config.CONFIG.set("toolchains", toolchain)
     parser = SpecParser(spec_str)
     for expected in expected_roundtrip:
-        assert expected_roundtrip == str(parser.next_spec())
+        assert expected == str(parser.next_spec())
 
 
 @pytest.mark.parametrize(

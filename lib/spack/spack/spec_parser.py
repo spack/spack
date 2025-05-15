@@ -201,7 +201,10 @@ class TokenContext:
         return self.next_token and self.next_token.kind in kinds
 
     def push(self, token_stream: Iterator[Token]):
-        self.token_stream = itertools.chain(token_stream, self.token_stream)
+        # New tokens need to go before next_token, which comes before the rest of the stream
+        self.token_stream = itertools.chain(token_stream, (self.next_token,), self.token_stream)
+        self.current_token = None
+        self.next_token = None
         self.advance()
 
 
