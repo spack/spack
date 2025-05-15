@@ -13,7 +13,7 @@ class Cryoef(MakefilePackage):
     homepage = "https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF"
     url = "https://www.mrc-lmb.cam.ac.uk/crusso/cryoEF/cryoEF_v1.1.0.tar.gz"
 
-    version('1.1.0', sha256='655ed8543a0226754bdeb6e0dd4efc0467f15dc4c9c963c44ef7b8d3d0e41b62')
+    version("1.1.0", sha256="655ed8543a0226754bdeb6e0dd4efc0467f15dc4c9c963c44ef7b8d3d0e41b62")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
