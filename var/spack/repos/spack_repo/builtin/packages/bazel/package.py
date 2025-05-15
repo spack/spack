@@ -189,8 +189,8 @@ class Bazel(Package):
 
     # https://github.com/bazelbuild/bazel/issues/18642
     patch(
-        "https://github.com/bazelbuild/bazel/pull/20785.patch?full_index=1",
-        sha256="85dde31d129bbd31e004c5c87f23cdda9295fbb22946dc6d362f23d83bae1fd8",
+        "https://github.com/bazelbuild/bazel/commit/fe9754f0c14e15bd02fb231995cba473278d853b.patch?full_index=1",
+        sha256="c2dd258f11786b32f75d91013a3ebd3d0876be2628acadb2ac8331e06fd2e657",
         when="@6.0:6.4",
     )
     conflicts("%gcc@13:", when="@:5")

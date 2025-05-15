@@ -164,16 +164,16 @@ class PyHorovod(PythonPackage, CudaPackage):
     )
     # https://github.com/horovod/horovod/issues/3996
     patch(
-        "https://github.com/horovod/horovod/pull/3998.patch?full_index=1",
-        sha256="9ecd4e8e315764afab20f2086e24baccf8178779a3c663196b24dc55a23a6aca",
+        "https://github.com/horovod/horovod/commit/3a31d933a13c7c885b8a673f4172b17914ad334d.patch?full_index=1",
+        sha256="2c6f296c20abbe15208512c23fc557d3aa970cb6891f68eea3137a2498f722a3",
         when="@0.25:0.28.1",
     )
     conflicts("^py-torch@2.1:", when="@:0.24")
 
     # https://github.com/horovod/horovod/pull/3957
     patch(
-        "https://github.com/horovod/horovod/pull/3957.patch?full_index=1",
-        sha256="9e22e312c0cbf224b4135ba70bd4fd2e4170d8316c996643e360112abaac8f93",
+        "https://github.com/horovod/horovod/commit/ff4ca09d3996ca51de47c4021519e12876847120.patch?full_index=1",
+        sha256="d766be99070faf242e6aec6f9e42cfaaa18838237f8d4ff43f4e8a3b4586876c",
         when="@0.21:0.28.1",
     )
     conflicts("%gcc@13:", when="@:0.20")

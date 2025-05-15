@@ -367,7 +367,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             env.set("ESMF_NFCONFIG", "nf-config")
             netcdfc = spec["netcdf-c"]
             if netcdfc.satisfies("~shared"):
-                nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"))
+                nc_config = which(os.path.join(netcdfc.prefix.bin, "nc-config"), required=True)
                 nc_flags = nc_config("--static", "--libs", output=str).strip()
                 env.set("ESMF_NETCDF_LIBS", nc_flags)
 

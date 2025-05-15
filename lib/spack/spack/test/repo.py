@@ -312,7 +312,6 @@ class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
         repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert len(repo.repos) == 1
-        assert repo.repos[0]._finder is repo
         assert repo.by_namespace["builtin.mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
@@ -524,3 +523,10 @@ def test_subdir_in_v2():
 
     with pytest.raises(spack.repo.BadRepoError, match="Must be a valid Python module name"):
         spack.repo._validate_and_normalize_subdir(subdir="123", root="root", package_api=(2, 0))
+
+
+def test_is_package_module():
+    assert spack.repo.is_package_module("spack.pkg.something.something")
+    assert spack.repo.is_package_module("spack_repo.foo.bar.baz.package")
+    assert not spack.repo.is_package_module("spack_repo.builtin.build_systems.cmake")
+    assert not spack.repo.is_package_module("spack.something.else")

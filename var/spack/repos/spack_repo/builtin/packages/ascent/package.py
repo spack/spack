@@ -155,9 +155,9 @@ class Ascent(CMakePackage, CudaPackage, ROCmPackage):
     # patch for fix typo in coord_type
     # https://github.com/Alpine-DAV/ascent/pull/1408
     patch(
-        "https://github.com/Alpine-DAV/ascent/pull/1408.patch?full_index=1",
+        "https://github.com/Alpine-DAV/ascent/commit/21f33494eed2016f97a266b3c23f33ff1bf39619.patch?full_index=1",
         when="@0.9.3 %oneapi@2025:",
-        sha256="7de7f51e57f3d743c39ad80d8783a4eb482be1def51eb2d3f9259246c661f164",
+        sha256="0dc417d8a454d235cdeb9e0f0bb527dc3c42a1eb6ae80e8bd5b33ead19198329",
     )
 
     ##########################################################################

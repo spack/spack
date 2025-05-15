@@ -39,8 +39,8 @@ class PyScikitsOdes(PythonPackage):
 
     # Remove numpy test runner imports to be compatible with py-numpy@1.25:
     patch(
-        "https://github.com/bmcage/odes/pull/153.patch?full_index=1",
-        sha256="8d05d7bcc3582b7c482a4393bf5a8c0460a58eb62d1e3c86339c95a0d4ce30ac",
+        "https://github.com/bmcage/odes/commit/57466a97a278f687a6b0a92343b767c495834b31.patch?full_index=1",
+        sha256="2316c08d2003d857a8b1e21df736a0fdf37a6d4595f1efa7a56e854b4a377d66",
     )
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:

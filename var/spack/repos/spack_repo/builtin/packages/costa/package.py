@@ -14,13 +14,17 @@ class Costa(CMakePackage):
 
     maintainers("haampie", "kabicm", "RMeli", "mtaillefumier")
     homepage = "https://github.com/eth-cscs/COSTA"
+    url = "https://github.com/eth-cscs/COSTA/archive/refs/tags/v2.2.4.tar.gz"
     git = "https://github.com/eth-cscs/COSTA.git"
+    list_url = "https://github.com/eth-cscs/COSTA/releases"
 
     license("BSD-3-Clause")
 
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version("master", branch="master", submodules=True)
+    version("2.2.4", sha256="2155af3696cd0db1d18f9da7325de6fbcd87833c5b9e62445229e17151f7fd0b")
+    version("2.2.3", sha256="e0b74851603b9da1a104dfaf50504c8af748c73999610a37f9384ed0c23ae5df")
     version("2.2.2", sha256="e87bc37aad14ac0c5922237be5d5390145c9ac6aef0350ed17d86cb2d994e67c")
     version("2.2.1", sha256="aa8aa2a4a79de094f857c22293825de270ff72becd6bd736ff9f2dd8c192446d")
     version("2.2", sha256="3e7333f012af76ec3508276ea90800313f6136504667021fe229e710bf6acdc7")

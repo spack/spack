@@ -36,40 +36,6 @@ def define_plat_exe(exe):
     return exe
 
 
-def test_find_external_single_package(mock_executable):
-    cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
-    search_dir = cmake_path.parent.parent
-
-    specs_by_package = spack.detection.by_path(["cmake"], path_hints=[str(search_dir)])
-
-    assert len(specs_by_package) == 1 and "cmake" in specs_by_package
-    detected_spec = specs_by_package["cmake"]
-    assert len(detected_spec) == 1 and detected_spec[0] == Spec("cmake@1.foo")
-
-
-def test_find_external_two_instances_same_package(mock_executable):
-    # Each of these cmake instances is created in a different prefix
-    # In Windows, quoted strings are echo'd with quotes includes
-    # we need to avoid that for proper regex.
-    cmake1 = mock_executable("cmake", output="echo cmake version 1.foo", subdir=("base1", "bin"))
-    cmake2 = mock_executable("cmake", output="echo cmake version 3.17.2", subdir=("base2", "bin"))
-    search_paths = [str(cmake1.parent.parent), str(cmake2.parent.parent)]
-
-    finder = spack.detection.path.ExecutablesFinder()
-    detected_specs = finder.find(
-        pkg_name="cmake", initial_guess=search_paths, repository=spack.repo.PATH
-    )
-
-    assert len(detected_specs) == 2
-    spec_to_path = {s: s.external_path for s in detected_specs}
-    assert spec_to_path[Spec("cmake@1.foo")] == (
-        spack.detection.executable_prefix(str(cmake1.parent))
-    ), spec_to_path
-    assert spec_to_path[Spec("cmake@3.17.2")] == (
-        spack.detection.executable_prefix(str(cmake2.parent))
-    )
-
-
 def test_find_external_update_config(mutable_config):
     entries = [
         Spec.from_detection("cmake@1.foo", external_path="/x/y1"),

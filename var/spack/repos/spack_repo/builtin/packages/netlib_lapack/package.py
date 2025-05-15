@@ -122,7 +122,7 @@ class NetlibLapack(CMakePackage):
 
     # renaming with _64 suffixes pushes code beyond fortran column 72
     patch(
-        "https://github.com/Reference-LAPACK/lapack/pull/1093.patch?full_index=1",
+        "https://github.com/Reference-LAPACK/lapack/commit/0799b59571a4bbb434c62ef2346146123aa19d8d.patch?full_index=1",
         sha256="b1af8b6ef2113a59aba006319ded0c1a282533c3815289e1c9e91185f63ee9fe",
         when="@3.6:3.12.1",
     )
@@ -132,7 +132,7 @@ class NetlibLapack(CMakePackage):
         when="@3.12:3.12.1",
     )
     patch(
-        "https://github.com/Reference-LAPACK/lapack/pull/1099.patch?full_index=1",
+        "https://github.com/Reference-LAPACK/lapack/commit/447fd4e7844b81e62deff09b6b2f7961eecc7590.patch?full_index=1",
         sha256="3059ebf898cbca5101db77b77c645ab144a3cecbe58dd2bb46d9b84e7debee92",
         when="@3.12:3.12.1",
     )
