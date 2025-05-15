@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import platform
 import sys
 
 import _vendoring.jinja2
@@ -3566,3 +3567,144 @@ def test_concrete_multi_valued_variants_when_args(default_mock_concretization):
     for c in ("foo:=a", "foo:=a,b,c", "foo:=a,b", "foo:=a,c"):
         s = default_mock_concretization(f"mvdefaults {c}")
         assert not s.satisfies("^pkg-b")
+
+
+@pytest.mark.usefixtures("mock_packages")
+@pytest.mark.parametrize(
+    "constraint_in_yaml,unsat_request,sat_request",
+    [
+        # Arch parts
+        pytest.param(
+            "target=x86_64",
+            "target=core2",
+            "target=x86_64",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        pytest.param(
+            "target=core2",
+            "target=x86_64",
+            "target=core2",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        ("os=debian6", "os=redhat6", "os=debian6"),
+        ("platform=test", "platform=linux", "platform=test"),
+        # Variants
+        ("~lld", "+lld", "~lld"),
+        ("+lld", "~lld", "+lld"),
+    ],
+)
+def test_spec_parts_on_fresh_compilers(
+    constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path
+):
+    """Tests that spec parts like targets and variants in `%<package> target=<target> <variants>`
+    are associated with `package` for `%` just as they would be for `^`, when we concretize
+    without reusing.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+    packages:
+      llvm::
+        buildable: false
+        externals:
+        - spec: "llvm+clang@20 {constraint_in_yaml}"
+          prefix: {tmp_path / 'llvm-20'}
+    """
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Check the abstract spec is formed correctly
+    abstract_spec = Spec(f"pkg-a %llvm@20 +clang {unsat_request}")
+    assert abstract_spec["llvm"].satisfies(f"@20 +clang {unsat_request}")
+
+    # Check that we can't concretize the spec, since llvm is not buildable
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one(abstract_spec)
+
+    # Check we can instead concretize if we use the correct constraint
+    s = spack.concretize.concretize_one(f"pkg-a %llvm@20 +clang {sat_request}")
+    assert s["c"].external and s["c"].satisfies(f"@20 +clang {sat_request}")
+
+
+@pytest.mark.usefixtures("mock_packages", "mutable_database")
+@pytest.mark.parametrize(
+    "constraint_in_yaml,unsat_request,sat_request",
+    [
+        # Arch parts
+        pytest.param(
+            "target=x86_64",
+            "target=core2",
+            "target=x86_64",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        pytest.param(
+            "target=core2",
+            "target=x86_64",
+            "target=core2",
+            marks=pytest.mark.skipif(
+                platform.machine() != "x86_64", reason="only valid for x86_64"
+            ),
+        ),
+        ("os=debian6", "os=redhat6", "os=debian6"),
+        ("platform=test", "platform=linux", "platform=test"),
+        # Variants
+        ("~lld", "+lld", "~lld"),
+        ("+lld", "~lld", "+lld"),
+    ],
+)
+def test_spec_parts_on_reused_compilers(
+    constraint_in_yaml, unsat_request, sat_request, mutable_config, tmp_path
+):
+    """Tests that requests of the form <package>%<compiler> <requests> are considered for reused
+    specs, even though build dependency are not part of the ASP problem.
+    """
+    packages_yaml = syaml.load_config(
+        f"""
+    packages:
+      c:
+        require: llvm
+      cxx:
+        require: llvm
+      llvm::
+        buildable: false
+        externals:
+        - spec: "llvm+clang@20 {constraint_in_yaml}"
+          prefix: {tmp_path / 'llvm-20'}
+      mpileaks:
+        buildable: true
+    """
+    )
+    mutable_config.set("packages", packages_yaml["packages"])
+
+    # Install the spec
+    installed_spec = spack.concretize.concretize_one(f"mpileaks %llvm@20 {sat_request}")
+    PackageInstaller([installed_spec.package], fake=True, explicit=True).install()
+
+    # Make mpileaks not buildable
+    mutable_config.set("packages:mpileaks:buildable", False)
+
+    # Check we can't concretize with the unsat request...
+    with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
+        spack.concretize.concretize_one(f"mpileaks %llvm@20 {unsat_request}")
+
+    # ...but we can with the original constraint
+    with spack.config.override("concretizer:reuse", True):
+        s = spack.concretize.concretize_one(f"mpileaks %llvm@20 {sat_request}")
+
+    assert s.dag_hash() == installed_spec.dag_hash()
+
+
+def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
+    """Tests that we can reuse an installed compiler specifying its hash"""
+    installed_spec = spack.concretize.concretize_one("gcc@14.0")
+    PackageInstaller([installed_spec.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
+
+    assert s["c"].dag_hash() == installed_spec.dag_hash()
