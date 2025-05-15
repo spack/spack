@@ -111,7 +111,6 @@ class Scorep(AutotoolsPackage):
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
-
     # Language dependencies
     # TODO: we could allow a +fortran variant here.
     depends_on("c", type="build")  # generated
@@ -230,9 +229,7 @@ class Scorep(AutotoolsPackage):
             config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
         config_args.extend(
             self.with_or_without(
-                "rocm",
-                activation_value=lambda _ : self.spec["hip"].prefix,
-                variant="hip"
+                "rocm", activation_value=lambda _: self.spec["hip"].prefix, variant="hip"
             )
         )
         config_args.extend(self.enable_or_disable("llvm-plugin"))
