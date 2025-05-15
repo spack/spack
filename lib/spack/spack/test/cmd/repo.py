@@ -9,6 +9,7 @@ import pytest
 import spack.config
 import spack.environment as ev
 import spack.main
+import spack.repo
 from spack.main import SpackCommand
 
 repo = spack.main.SpackCommand("repo")
@@ -68,3 +69,65 @@ spack:
         with ev.read("test") as newenv:
             repos_specs = spack.config.get("repos", default={}, scope=newenv.scope_name)
             assert current_dir in repos_specs
+
+
+def test_repo_migrate(tmp_path: pathlib.Path, config):
+    path, _ = spack.repo.create_repo(str(tmp_path), "mockrepo", package_api=(2, 0))
+    pkgs_path = spack.repo.from_path(path).packages_path
+
+    pkg1 = pathlib.Path(os.path.join(pkgs_path, "foo", "package.py"))
+    pkg2 = pathlib.Path(os.path.join(pkgs_path, "bar", "package.py"))
+
+    pkg1.parent.mkdir(parents=True)
+    pkg2.parent.mkdir(parents=True)
+
+    pkg1.write_text(
+        """\
+# some comment
+
+from spack.package import *
+
+class Foo(Package):
+    pass
+""",
+        encoding="utf-8",
+    )
+    pkg2.write_text(
+        """\
+# some comment
+
+from spack.package import *
+
+class Bar(CMakePackage):
+    generator("ninja")
+""",
+        encoding="utf-8",
+    )
+
+    repo("migrate", path)
+
+    assert (
+        pkg1.read_text(encoding="utf-8")
+        == """\
+# some comment
+
+from spack.build_systems.generic import Package
+from spack.package import *
+
+class Foo(Package):
+    pass
+"""
+    )
+
+    assert (
+        pkg2.read_text(encoding="utf-8")
+        == """\
+# some comment
+
+from spack.build_systems.cmake import CMakePackage, generator
+from spack.package import *
+
+class Bar(CMakePackage):
+    generator("ninja")
+"""
+    )

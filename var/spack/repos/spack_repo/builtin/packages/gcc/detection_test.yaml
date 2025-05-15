@@ -119,3 +119,50 @@ paths:
       extra_attributes:
         compilers:
           c: ".*/bin/gcc-14$"
+
+# Tests having two versions of gcc in the same folder
+- layout:
+  - executables:
+    - "bin/gcc"
+    - "bin/g++"
+    script: |
+      if [ "$1" = "-dumpversion" ] ; then
+        echo "9"
+      elif [ "$1" = "-dumpfullversion" ] ; then
+        echo "9.4.0"
+      elif [ "$1" = "--version" ] ; then
+        echo "gcc (Ubuntu 9.4.0-1ubuntu1~20.04.2) 9.4.0"
+        echo "Copyright (C) 2019 Free Software Foundation, Inc."
+        echo "This is free software; see the source for copying conditions.  There is NO"
+        echo "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+      else
+        echo "mock executable got an unexpected flag: $1"
+        exit 1
+      fi
+  - executables:
+    - "bin/gcc-10"
+    script: |
+      if [ "$1" = "-dumpversion" ] ; then
+        echo "10"
+      elif [ "$1" = "-dumpfullversion" ] ; then
+        echo "10.5.0"
+      elif [ "$1" = "--version" ] ; then
+        echo "gcc-10 (Ubuntu 10.5.0-1ubuntu1~20.04) 10.5.0"
+        echo "Copyright (C) 2020 Free Software Foundation, Inc."
+        echo "This is free software; see the source for copying conditions.  There is NO"
+        echo "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+      else
+        echo "mock executable got an unexpected flag: $1"
+        exit 1
+      fi
+  platforms: ["darwin", "linux"]
+  results:
+  - spec: "gcc@9.4.0 languages:=c,c++"
+    extra_attributes:
+      compilers:
+        c: ".*/bin/gcc"
+        cxx: ".*/bin/g\\+\\+"
+  - spec: "gcc@10.5.0 languages:=c"
+    extra_attributes:
+      compilers:
+        c: ".*/bin/gcc-10"

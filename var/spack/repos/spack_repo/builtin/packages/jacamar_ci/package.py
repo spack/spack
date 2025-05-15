@@ -19,6 +19,7 @@ class JacamarCi(GoPackage):
     license("Apache-2.0 OR MIT")
 
     version("develop", branch="develop")
+    version("0.26.0", sha256="da63c396726af313804da5ec3704ce3754ba3eef5ca267746b594422f542dbea")
     version("0.25.0", sha256="20626ed931f5bf6ba1d5a2dd56af5793efa69a4f355bdac9b8bf742aaf806653")
     version("0.24.2", sha256="d2b8be464b88a92df0ad2ba1e846226b993c4162779432cb8366fb9bca5c40db")
     version("0.24.1", sha256="fe1036fee2e97e38457212bf1246895803eeb6e1a6aa1ecd24eba1d3ea994029")
@@ -26,6 +27,7 @@ class JacamarCi(GoPackage):
 
     conflicts("platform=darwin", msg="Jacamar CI does not support MacOS")
 
+    depends_on("go@1.23:", type="build", when="@0.26.0:")
     depends_on("go@1.22.7:", type="build", when="@0.23.0:")
     depends_on("gmake", type="build")
     depends_on("libc", type="link")

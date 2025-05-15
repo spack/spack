@@ -55,7 +55,9 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 
 def is_package_module(fullname: str) -> bool:
     """Check if the given module is a package module."""
-    return fullname.startswith(PKG_MODULE_PREFIX_V1) or fullname.startswith(PKG_MODULE_PREFIX_V2)
+    return fullname.startswith(PKG_MODULE_PREFIX_V1) or (
+        fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package")
+    )
 
 
 def namespace_from_fullname(fullname: str) -> str:

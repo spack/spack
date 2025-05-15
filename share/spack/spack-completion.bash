@@ -1784,7 +1784,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add remove rm"
+        SPACK_COMPREPLY="create list add remove rm migrate"
     fi
 }
 
@@ -1823,6 +1823,15 @@ _spack_repo_rm() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --scope"
+    else
+        _repos
+    fi
+}
+
+_spack_repo_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
     else
         _repos
     fi

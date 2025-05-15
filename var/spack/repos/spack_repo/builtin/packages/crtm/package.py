@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import os
+
 from spack.package import *
 
 
@@ -40,6 +43,7 @@ class Crtm(CMakePackage):
     depends_on("crtm-fix@2.3.0_emc", when="@2.3.0 +fix")
     depends_on("crtm-fix@2.4.0_emc", when="@=2.4.0 +fix")
     depends_on("crtm-fix@2.4.0.1_emc", when="@2.4.0.1 +fix")
+    depends_on("crtm-fix@3.1.1", when="@3.1.1 +fix")
 
     depends_on("ecbuild", type=("build"), when="@v2.3-jedi.4")
     depends_on("ecbuild", type=("build"), when="@v2.4-jedi.1")
@@ -51,7 +55,7 @@ class Crtm(CMakePackage):
     license("CC0-1.0")
 
     version(
-        "v3.1.1-build1", sha256="1ed49e594da5d3769cbaa52cc7fc19c1bb0325ee6324f6057227c31e2d95ca67"
+        "3.1.1-build1", sha256="1ed49e594da5d3769cbaa52cc7fc19c1bb0325ee6324f6057227c31e2d95ca67"
     )
     version(
         "v3.1.0-skylabv8",
@@ -85,6 +89,8 @@ class Crtm(CMakePackage):
     def url_for_version(self, version):
         if version > Version("v3") or version >= Version("3"):
             fmtversion = str(version).replace("-build", "+build")
+            if not fmtversion.startswith("v"):
+                fmtversion = f"v{fmtversion}"
             return f"https://github.com/JCSDA/CRTMv3/archive/refs/tags/{fmtversion}.tar.gz"
         else:
             return f"https://github.com/JCSDA/crtm/archive/refs/tags/{version}.tar.gz"
@@ -101,3 +107,10 @@ class Crtm(CMakePackage):
                 )
         if not self.run_tests:
             filter_file(r"add_subdirectory\(test\)", "# disable testing", "CMakeLists.txt")
+
+    @when("@3.1.1-build1")
+    @run_after("install")
+    def cmake_config_softlinks(self):
+        cmake_config_files = glob.glob(join_path(self.prefix, "cmake/crtm/*"))
+        for srcpath in cmake_config_files:
+            os.symlink(srcpath, join_path(self.prefix, "cmake", os.path.basename(srcpath)))
