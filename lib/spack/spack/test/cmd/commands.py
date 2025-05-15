@@ -23,15 +23,19 @@ spack.main.add_all_commands(parser)
 
 def test_names():
     """Test default output of spack commands."""
-    out1 = commands().strip().split("\n")
+    def cleanup(commands):
+        """Format output and remove any non-command lines, e.g., repo warnings."""
+        return [cmd for cmd in commands.strip().split("\n") if " " not in cmd]
+
+    out1 = cleanup(commands())
     assert out1 == spack.cmd.all_commands()
     assert "rm" not in out1
 
-    out2 = commands("--aliases").strip().split("\n")
+    out2 = cleanup(commands("--aliases"))
     assert out1 != out2
     assert "rm" in out2
 
-    out3 = commands("--format=names").strip().split("\n")
+    out3 = cleanup(commands("--format=names"))
     assert out1 == out3
 
 
