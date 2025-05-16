@@ -4,7 +4,7 @@
 
 from spack.package import *
 
-from ...build_systems.cmake import CMakePackage
+from spack_repo.builtin_mock.build_systems.cmake import CMakePackage
 
 
 class NetlibLapack(CMakePackage):

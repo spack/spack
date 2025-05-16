@@ -10,7 +10,7 @@ import llnl.util.tty as tty
 
 from spack.package import *
 
-from ...build_systems.cmake import CMakePackage
+from spack_repo.builtin_mock.build_systems.cmake import CMakePackage
 
 
 class Hdf5(CMakePackage):
