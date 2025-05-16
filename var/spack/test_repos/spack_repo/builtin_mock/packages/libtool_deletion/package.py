@@ -3,13 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage, AutotoolsBuilder
+from ...build_systems import autotools
 
 
-class LibtoolDeletion(AutotoolsPackage):
+class LibtoolDeletion(autotools.AutotoolsPackage):
     """Mock AutotoolsPackage to check proper deletion
     of libtool archives.
     """
@@ -22,7 +21,7 @@ class LibtoolDeletion(AutotoolsPackage):
         mkdirp(self.stage.source_path)
 
 
-class AutotoolsBuilder(AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     install_libtool_archives = False
 
     def autoreconf(self, pkg, spec, prefix):

@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack_repo.builtin_mock.build_systems.generic import Package
+from spack_repo.builtin_mock.build_systems import generic
 
-import spack
-import spack.build_systems.generic
 from spack.package import *
 
 
-class CustomPhases(Package):
+class CustomPhases(generic.Package):
     """Package used to verify that we can set custom phases on builders"""
 
     homepage = "http://www.example.com"
@@ -20,7 +18,7 @@ class CustomPhases(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     phases = ["configure", "install"]
 
     def configure(self, pkg, spec, prefix):

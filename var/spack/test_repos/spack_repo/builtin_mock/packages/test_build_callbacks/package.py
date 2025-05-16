@@ -1,11 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack
-import spack.build_systems._checks as checks
-import spack.build_systems.generic
 from spack.package import *
 
+from ...build_systems import _checks as checks
+from ...build_systems import generic
 from ...build_systems.generic import Package
 
 
@@ -18,7 +17,7 @@ class TestBuildCallbacks(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     phases = ["build", "install"]
 
     # Include undefined method (runtime failure)
