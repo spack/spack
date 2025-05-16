@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
+import pathlib
 import platform
 import sys
 
@@ -170,18 +171,12 @@ def fuzz_dep_order(request, monkeypatch):
 
 @pytest.fixture()
 def repo_with_changing_recipe(tmp_path_factory, mutable_mock_repo):
-    repo_namespace = "changing"
-    repo_dir = tmp_path_factory.mktemp(repo_namespace)
+    repos_dir: pathlib.Path = tmp_path_factory.mktemp("repos_dir")
+    root, _ = spack.repo.create_repo(str(repos_dir), "changing")
+    packages_dir = pathlib.Path(root, "packages")
 
-    (repo_dir / "repo.yaml").write_text(
-        """
-repo:
-  namespace: changing
-"""
-    )
-
-    packages_dir = repo_dir / "packages"
     root_pkg_str = """
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class Root(Package):
@@ -199,6 +194,7 @@ class Root(Package):
     package_py.write_text(root_pkg_str)
 
     middle_pkg_str = """
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class Middle(Package):
@@ -213,6 +209,7 @@ class Middle(Package):
     package_py.write_text(middle_pkg_str)
 
     changing_template = """
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class Changing(Package):
@@ -235,7 +232,7 @@ class Changing(Package):
 {% endif %}
 """
 
-    with spack.repo.use_repositories(str(repo_dir), override=False) as repository:
+    with spack.repo.use_repositories(root, override=False) as repos:
 
         class _ChangingPackage:
             default_context = [
@@ -244,27 +241,22 @@ class Changing(Package):
                 ("add_variant", False),
             ]
 
-            def __init__(self, repo_directory):
-                self.repo_dir = repo_directory
+            def __init__(self):
                 cache_dir = tmp_path_factory.mktemp("cache")
                 self.repo_cache = spack.util.file_cache.FileCache(str(cache_dir))
-                self.repo = spack.repo.Repo(str(repo_directory), cache=self.repo_cache)
+                self.repo = spack.repo.Repo(root, cache=self.repo_cache)
 
             def change(self, changes=None):
                 changes = changes or {}
                 context = dict(self.default_context)
                 context.update(changes)
                 # Remove the repo object and delete Python modules
-                repository.remove(self.repo)
+                repos.remove(self.repo)
                 # TODO: this mocks a change in the recipe that should happen in a
                 # TODO: different process space. Leaving this comment as a hint
                 # TODO: in case tests using this fixture start failing.
-                if sys.modules.get("spack.pkg.changing.changing"):
-                    del sys.modules["spack.pkg.changing.changing"]
-                if sys.modules.get("spack.pkg.changing.root"):
-                    del sys.modules["spack.pkg.changing.root"]
-                if sys.modules.get("spack.pkg.changing"):
-                    del sys.modules["spack.pkg.changing"]
+                for module in [x for x in sys.modules if x.startswith("spack_repo.changing")]:
+                    del sys.modules[module]
 
                 # Change the recipe
                 t = _vendoring.jinja2.Template(changing_template)
@@ -274,10 +266,10 @@ class Changing(Package):
                 package_py.write_text(changing_pkg_str)
 
                 # Re-add the repository
-                self.repo = spack.repo.Repo(str(self.repo_dir), cache=self.repo_cache)
-                repository.put_first(self.repo)
+                self.repo = spack.repo.Repo(root, cache=self.repo_cache)
+                repos.put_first(self.repo)
 
-        _changing_pkg = _ChangingPackage(repo_dir)
+        _changing_pkg = _ChangingPackage()
         _changing_pkg.change(
             {"delete_version": False, "delete_variant": False, "add_variant": False}
         )
