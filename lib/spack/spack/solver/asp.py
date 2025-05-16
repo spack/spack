@@ -2669,7 +2669,7 @@ class SpackSolverSetup:
                 ###
                 # Dependency expressed with "^"
                 ###
-                if not dspec.depflag == dt.BUILD:
+                if not dspec.direct:
                     edge_clauses.extend(dependency_clauses)
                     continue
 
@@ -3755,7 +3755,7 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"^[deptypes=build] {spec}")
+        when_spec = spack.spec.Spec(f"% {spec}")
         body_str, node_variable = self.rule_body_from(when_spec)
 
         node_placeholder = "XXX"
