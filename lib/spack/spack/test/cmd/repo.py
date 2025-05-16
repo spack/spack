@@ -72,62 +72,65 @@ spack:
 
 
 def test_repo_migrate(tmp_path: pathlib.Path, config):
-    path, _ = spack.repo.create_repo(str(tmp_path), "mockrepo", package_api=(2, 0))
-    pkgs_path = spack.repo.from_path(path).packages_path
+    old_root, _ = spack.repo.create_repo(str(tmp_path), "org.repo", package_api=(1, 0))
+    pkgs_path = pathlib.Path(spack.repo.from_path(old_root).packages_path)
+    new_root = pathlib.Path(old_root) / "spack_repo" / "org" / "repo"
 
-    pkg1 = pathlib.Path(os.path.join(pkgs_path, "foo", "package.py"))
-    pkg2 = pathlib.Path(os.path.join(pkgs_path, "bar", "package.py"))
+    pkg_7zip_old = pkgs_path / "7zip" / "package.py"
+    pkg_numpy_old = pkgs_path / "py-numpy" / "package.py"
+    pkg_py_7zip_new = new_root / "packages" / "_7zip" / "package.py"
+    pkg_py_numpy_new = new_root / "packages" / "py_numpy" / "package.py"
 
-    pkg1.parent.mkdir(parents=True)
-    pkg2.parent.mkdir(parents=True)
+    pkg_7zip_old.parent.mkdir(parents=True)
+    pkg_numpy_old.parent.mkdir(parents=True)
 
-    pkg1.write_text(
-        """\
+    old_7zip = """\
 # some comment
 
 from spack.package import *
 
-class Foo(Package):
+class _7zip(Package):
     pass
-""",
-        encoding="utf-8",
-    )
-    pkg2.write_text(
-        """\
-# some comment
+"""
 
-from spack.package import *
-
-class Bar(CMakePackage):
-    generator("ninja")
-""",
-        encoding="utf-8",
-    )
-
-    repo("migrate", "--fix", path)
-
-    assert (
-        pkg1.read_text(encoding="utf-8")
-        == """\
+    new_7zip = """\
 # some comment
 
 from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
 
-class Foo(Package):
+class _7zip(Package):
     pass
 """
-    )
 
-    assert (
-        pkg2.read_text(encoding="utf-8")
-        == """\
+    old_numpy = """\
+# some comment
+
+from spack.package import *
+
+class PyNumpy(CMakePackage):
+    generator("ninja")
+"""
+
+    new_numpy = """\
 # some comment
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack.package import *
 
-class Bar(CMakePackage):
+class PyNumpy(CMakePackage):
     generator("ninja")
 """
-    )
+
+    pkg_7zip_old.write_text(old_7zip, encoding="utf-8")
+    pkg_numpy_old.write_text(old_numpy, encoding="utf-8")
+
+    repo("migrate", "--fix", old_root)
+
+    # old files are not touched since they are moved
+    assert pkg_7zip_old.read_text(encoding="utf-8") == old_7zip
+    assert pkg_numpy_old.read_text(encoding="utf-8") == old_numpy
+
+    # new files are created and have updated contents
+    assert pkg_py_7zip_new.read_text(encoding="utf-8") == new_7zip
+    assert pkg_py_numpy_new.read_text(encoding="utf-8") == new_numpy
