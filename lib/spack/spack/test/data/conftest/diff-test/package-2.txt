@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack.package_base import PackageBase
 from spack.package import *
 
 
-class DiffTest(AutotoolsPackage):
+class DiffTest(PackageBase):
     """zlib replacement with optimizations for next generation systems."""
 
     homepage = "https://github.com/zlib-ng/zlib-ng"
