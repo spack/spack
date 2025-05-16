@@ -15,6 +15,7 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
 
     license("BSD-3-Clause")
 
+    version("0.10.0", sha256="cdee4e4fe5c5c08c5a7a5a3848175daa62884793988b4284c40df81cc2339c74")
     version("0.9.0", sha256="0297afb46285745413fd4536d8d7fe123e3045d4899cc91eed501bcd4b588ea6")
     version("0.8.0", sha256="4c30c33ee22417514d839a75d99ae4c24860078fb595ee24ce4ebf45fbce5e69")
     version("0.7.3", sha256="8c829b72f4ea9c924abdb6fe2ac7489304be4056ab76b8eba226c33ce7b7dc0e")
@@ -167,6 +168,8 @@ class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
         for arch in CudaPackage.cuda_arch_values:
             depends_on(f"pika cuda_arch={arch}", when=f"cuda_arch={arch}")
             depends_on(f"umpire cuda_arch={arch}", when=f"cuda_arch={arch}")
+
+        conflicts("cuda_arch=none")
 
     patch(
         "https://github.com/eth-cscs/DLA-Future/commit/efc9c176a7a8c512b3f37d079dec8c25ac1b7389.patch?full_index=1",

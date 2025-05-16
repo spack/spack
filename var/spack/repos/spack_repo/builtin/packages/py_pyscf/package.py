@@ -17,6 +17,7 @@ class PyPyscf(PythonPackage):
 
     license("Apache-2.0")
 
+    version("2.9.0", sha256="821dc882f3a5485d8f202abb093330cf1497b26767ba2a1a63b7fa600ddc58a3")
     version("2.8.0", sha256="db720372e7f7d1aa2df0fb90c07f483da363730197c937a6378952d34b6abf3d")
     version("2.7.0", sha256="ca8efc2f28d72c3130f26a967e7fa8d0bbc4a6b47d16a7c4c732ec85a31b7eec")
     version("2.6.2", sha256="744c89a8e4d38c4b5562f75fa68f9d079faeb23602d255fba0eb6d1bac97bca2")
@@ -33,7 +34,8 @@ class PyPyscf(PythonPackage):
     version("1.7.5", sha256="52856b39f0ada2f6340757caa65dc5c1d9a3cdfceea2a6615ad8af92664a6c69")
     version("1.7.3", sha256="62a26146a222140395b276ea33182f87809a21989ddcf78e2dcb8e35ebc57af2")
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     # dependencies
     depends_on("cmake@3.10:", type="build", when="@2.1:")
@@ -41,6 +43,7 @@ class PyPyscf(PythonPackage):
     depends_on("python@3.6:", type=("build", "run"), when="@2.1:")
     depends_on("python@2.6:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@61.0:", type="build", when="@2.9.0:")
     depends_on("py-numpy@1.8.0:", type=("build", "run"))
     depends_on("py-numpy@1.13.0:", type=("build", "run"), when="@2:")
     depends_on("py-numpy@1", type=("build", "run"), when="@:2.6.0")

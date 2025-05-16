@@ -22,12 +22,12 @@ class PyKorniaRs(PythonPackage):
         "adamjstewart",
     )
 
+    version("0.1.9", sha256="a9b8a6afa00d80c9b1b1e3e5ff650762dac9605829a4f768ff5aedf47649efc2")
     version("0.1.1", sha256="b9ac327fae6e982e6d7df9faeadd1d4f6453e65521819ae9ae5b90e9da0ed1a5")
     version("0.1.0", sha256="0fca64f901dddff49b72e51fc92a25f0a7606e9a1a72ef283606245ea6b4f90d")
 
-    build_directory = "py-kornia"
-
-    depends_on("py-maturin@1.3.2:", type="build")
+    depends_on("py-maturin@1", when="@0.1.6:", type="build")
+    depends_on("py-maturin@1.3.2:", when="@:0.1.5", type="build")
 
     # rav1e needs rustdoc
     depends_on("rust+dev", type="build")
@@ -40,3 +40,7 @@ class PyKorniaRs(PythonPackage):
 
     # dlpack-rs needs libclang
     depends_on("llvm+clang")
+
+    @property
+    def build_directory(self):
+        return "kornia-py" if self.spec.satisfies("@0.1.3:") else "py-kornia"

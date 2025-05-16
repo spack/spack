@@ -38,3 +38,7 @@ class PyKiwisolver(PythonPackage):
     depends_on("py-cppy@1.2.0:", type="build", when="@1.4.4:")
     depends_on("py-cppy@1.3.0:", type="build", when="@1.4.8:")
     depends_on("py-typing-extensions", when="@1.4.4: ^python@:3.7", type=("build", "run"))
+
+    # https://github.com/spack/spack/issues/28522
+    # https://github.com/nucleic/kiwi/issues/126
+    patch("macos-gcc.patch", when="@:1.3.2 platform=darwin %gcc")

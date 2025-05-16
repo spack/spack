@@ -18,8 +18,8 @@ import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_yaml
-from spack.spec_parser import SPEC_TOKENIZER, SpecTokens
-from spack.tokenize import Token
+from spack.spec_parser import NAME, VERSION_LIST, SpecTokens
+from spack.tokenize import Token, TokenBase, Tokenizer
 from spack.util.executable import Executable, which
 
 description = "runs source code style checks on spack"
@@ -206,8 +206,8 @@ def setup_parser(subparser):
         "--spec-strings",
         action="store_true",
         help="upgrade spec strings in Python, JSON and YAML files for compatibility with Spack "
-        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: this flag "
-        "will be removed in Spack v1.0.",
+        "v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be "
+        "used only on specs from spack v0.X.",
     )
 
     subparser.add_argument("files", nargs=argparse.REMAINDER, help="specific files to check")
@@ -521,20 +521,52 @@ def _bootstrap_dev_dependencies():
 IS_PROBABLY_COMPILER = re.compile(r"%[a-zA-Z_][a-zA-Z0-9\-]")
 
 
+class _LegacySpecTokens(TokenBase):
+    """Reconstructs the tokens for previous specs, so we can reuse code to rotate them"""
+
+    # Dependency
+    START_EDGE_PROPERTIES = r"(?:\^\[)"
+    END_EDGE_PROPERTIES = r"(?:\])"
+    DEPENDENCY = r"(?:\^)"
+    # Version
+    VERSION_HASH_PAIR = SpecTokens.VERSION_HASH_PAIR.regex
+    GIT_VERSION = SpecTokens.GIT_VERSION.regex
+    VERSION = SpecTokens.VERSION.regex
+    # Variants
+    PROPAGATED_BOOL_VARIANT = SpecTokens.PROPAGATED_BOOL_VARIANT.regex
+    BOOL_VARIANT = SpecTokens.BOOL_VARIANT.regex
+    PROPAGATED_KEY_VALUE_PAIR = SpecTokens.PROPAGATED_KEY_VALUE_PAIR.regex
+    KEY_VALUE_PAIR = SpecTokens.KEY_VALUE_PAIR.regex
+    # Compilers
+    COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
+    COMPILER = rf"(?:%\s*(?:{NAME}))"
+    # FILENAME
+    FILENAME = SpecTokens.FILENAME.regex
+    # Package name
+    FULLY_QUALIFIED_PACKAGE_NAME = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME.regex
+    UNQUALIFIED_PACKAGE_NAME = SpecTokens.UNQUALIFIED_PACKAGE_NAME.regex
+    # DAG hash
+    DAG_HASH = SpecTokens.DAG_HASH.regex
+    # White spaces
+    WS = SpecTokens.WS.regex
+    # Unexpected character(s)
+    UNEXPECTED = SpecTokens.UNEXPECTED.regex
+
+
 def _spec_str_reorder_compiler(idx: int, blocks: List[List[Token]]) -> None:
     # only move the compiler to the back if it exists and is not already at the end
     if not 0 <= idx < len(blocks) - 1:
         return
     # if there's only whitespace after the compiler, don't move it
-    if all(token.kind == SpecTokens.WS for block in blocks[idx + 1 :] for token in block):
+    if all(token.kind == _LegacySpecTokens.WS for block in blocks[idx + 1 :] for token in block):
         return
     # rotate left and always add at least one WS token between compiler and previous token
     compiler_block = blocks.pop(idx)
-    if compiler_block[0].kind != SpecTokens.WS:
-        compiler_block.insert(0, Token(SpecTokens.WS, " "))
+    if compiler_block[0].kind != _LegacySpecTokens.WS:
+        compiler_block.insert(0, Token(_LegacySpecTokens.WS, " "))
     # delete the WS tokens from the new first block if it was at the very start, to prevent leading
     # WS tokens.
-    while idx == 0 and blocks[0][0].kind == SpecTokens.WS:
+    while idx == 0 and blocks[0][0].kind == _LegacySpecTokens.WS:
         blocks[0].pop(0)
     blocks.append(compiler_block)
 
@@ -552,11 +584,13 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
     compiler_block_idx = -1
     in_edge_attr = False
 
-    for token in SPEC_TOKENIZER.tokenize(spec_str):
-        if token.kind == SpecTokens.UNEXPECTED:
+    legacy_tokenizer = Tokenizer(_LegacySpecTokens)
+
+    for token in legacy_tokenizer.tokenize(spec_str):
+        if token.kind == _LegacySpecTokens.UNEXPECTED:
             # parsing error, we cannot fix this string.
             return None
-        elif token.kind in (SpecTokens.COMPILER, SpecTokens.COMPILER_AND_VERSION):
+        elif token.kind in (_LegacySpecTokens.COMPILER, _LegacySpecTokens.COMPILER_AND_VERSION):
             # multiple compilers are not supported in Spack v0.x, so early return
             if compiler_block_idx != -1:
                 return None
@@ -565,19 +599,19 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
             current_block = []
             compiler_block_idx = len(blocks) - 1
         elif token.kind in (
-            SpecTokens.START_EDGE_PROPERTIES,
-            SpecTokens.DEPENDENCY,
-            SpecTokens.UNQUALIFIED_PACKAGE_NAME,
-            SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
+            _LegacySpecTokens.START_EDGE_PROPERTIES,
+            _LegacySpecTokens.DEPENDENCY,
+            _LegacySpecTokens.UNQUALIFIED_PACKAGE_NAME,
+            _LegacySpecTokens.FULLY_QUALIFIED_PACKAGE_NAME,
         ):
             _spec_str_reorder_compiler(compiler_block_idx, blocks)
             compiler_block_idx = -1
-            if token.kind == SpecTokens.START_EDGE_PROPERTIES:
+            if token.kind == _LegacySpecTokens.START_EDGE_PROPERTIES:
                 in_edge_attr = True
             current_block.append(token)
             blocks.append(current_block)
             current_block = []
-        elif token.kind == SpecTokens.END_EDGE_PROPERTIES:
+        elif token.kind == _LegacySpecTokens.END_EDGE_PROPERTIES:
             in_edge_attr = False
             current_block.append(token)
             blocks.append(current_block)
@@ -585,19 +619,19 @@ def _spec_str_format(spec_str: str) -> Optional[str]:
         elif in_edge_attr:
             current_block.append(token)
         elif token.kind in (
-            SpecTokens.VERSION_HASH_PAIR,
-            SpecTokens.GIT_VERSION,
-            SpecTokens.VERSION,
-            SpecTokens.PROPAGATED_BOOL_VARIANT,
-            SpecTokens.BOOL_VARIANT,
-            SpecTokens.PROPAGATED_KEY_VALUE_PAIR,
-            SpecTokens.KEY_VALUE_PAIR,
-            SpecTokens.DAG_HASH,
+            _LegacySpecTokens.VERSION_HASH_PAIR,
+            _LegacySpecTokens.GIT_VERSION,
+            _LegacySpecTokens.VERSION,
+            _LegacySpecTokens.PROPAGATED_BOOL_VARIANT,
+            _LegacySpecTokens.BOOL_VARIANT,
+            _LegacySpecTokens.PROPAGATED_KEY_VALUE_PAIR,
+            _LegacySpecTokens.KEY_VALUE_PAIR,
+            _LegacySpecTokens.DAG_HASH,
         ):
             current_block.append(token)
             blocks.append(current_block)
             current_block = []
-        elif token.kind == SpecTokens.WS:
+        elif token.kind == _LegacySpecTokens.WS:
             current_block.append(token)
         else:
             raise ValueError(f"unexpected token {token}")
