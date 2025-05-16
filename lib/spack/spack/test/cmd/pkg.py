@@ -111,6 +111,7 @@ def split(output):
 pkg = spack.main.SpackCommand("pkg")
 
 
+@pytest.mark.requires_builtin("builtin repository path must exist")
 def test_builtin_repo():
     assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin")
 

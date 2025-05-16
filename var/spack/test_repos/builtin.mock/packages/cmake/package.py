@@ -21,6 +21,7 @@ class Cmake(Package):
     url = "https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz"
 
     tags = ["build-tools"]
+    executables = ["^cmake[0-9]*$"]
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -35,6 +36,12 @@ class Cmake(Package):
         md5="4cb3ff35b2472aae70f542116d616e63",
         url="https://cmake.org/files/v3.4/cmake-3.4.3.tar.gz",
     )
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)("--version", output=str, error=str)
+        match = re.search(r"cmake.*version\s+(\S+)", output)
+        return match.group(1) if match else None
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spack_cc  # Ensure spack module-scope variable is avaiable

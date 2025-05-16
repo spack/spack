@@ -15,6 +15,8 @@ import spack.version
 
 compiler = spack.main.SpackCommand("compiler")
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
 
 @pytest.fixture
 def compilers_dir(mock_executable):
@@ -80,7 +82,7 @@ def test_compiler_find_without_paths(no_packages_yaml, working_env, mock_executa
 
 
 @pytest.mark.regression("37996")
-def test_compiler_remove(mutable_config, mock_packages):
+def test_compiler_remove(mutable_config):
     """Tests that we can remove a compiler from configuration."""
     assert any(
         compiler.satisfies("gcc@=9.4.0") for compiler in spack.compilers.config.all_compilers()
@@ -93,7 +95,7 @@ def test_compiler_remove(mutable_config, mock_packages):
 
 
 @pytest.mark.regression("37996")
-def test_removing_compilers_from_multiple_scopes(mutable_config, mock_packages):
+def test_removing_compilers_from_multiple_scopes(mutable_config):
     # Duplicate "site" scope into "user" scope
     site_config = spack.config.get("packages", scope="site")
     spack.config.set("packages", site_config, scope="user")
@@ -189,12 +191,12 @@ def test_compiler_find_path_order(no_packages_yaml, working_env, compilers_dir):
     }
 
 
-def test_compiler_list_empty(no_packages_yaml, working_env, compilers_dir):
+def test_compiler_list_empty(no_packages_yaml, compilers_dir, monkeypatch):
     """Spack should not automatically search for compilers when listing them and none are
     available. And when stdout is not a tty like in tests, there should be no output and
     no error exit code.
     """
-    os.environ["PATH"] = str(compilers_dir)
+    monkeypatch.setenv("PATH", str(compilers_dir), prepend=":")
     out = compiler("list")
     assert not out
     assert compiler.returncode == 0

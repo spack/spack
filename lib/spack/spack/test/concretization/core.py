@@ -759,7 +759,7 @@ class TestConcretize:
     @pytest.mark.parametrize(
         "spec_str,expected,not_expected",
         [
-            # clang only provides C, and C++ compilers, while gcc has also fortran
+            # clang (llvm~flang) only provides C, and C++ compilers, while gcc has also fortran
             #
             # If we ask mpileaks%clang, then %gcc must be used for fortran, and since
             # %gcc is preferred to clang in config, it will be used for most nodes

@@ -35,10 +35,12 @@ class Mgis(CMakePackage):
 
     # released version
     version(
-        "3.0",
-        sha256="dae915201fd20848b69745dabda1a334eb242d823af600825b8b010ddc597640",
+        "3.0.1",
+        sha256="fb9a7f5008a43c70bdb1c4b80f32f7fd3e4274c912b93c36af7011d3c4f93039",
         preferred=True,
     )
+    version("3.0", sha256="dae915201fd20848b69745dabda1a334eb242d823af600825b8b010ddc597640")
+    version("2.2.1", sha256="a0e6af65f5fd2237f39306354ef786eadb0c6bc6868c23e2681e04a83e629ad2")
     version("2.2", sha256="b3776d7b3a534ca626525a42b97665f7660ae2b28ea57b3f53fd7e8538da1ceb")
     version("2.1", sha256="f5b556aab130da0c423f395fe4c35d6bf509dd8fc958242f2e37ea788464aea9")
     version("2.0", sha256="cb427d77f2c79423e969815b948a8b44da33a4370d1760e8c1e22a569f3585e2")
@@ -60,8 +62,10 @@ class Mgis(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("tfel@5.0.0", when="@3.0")
-    depends_on("tfel@4.2.0", when="@2.2")
+    depends_on("tfel@5.0.1", when="@3.0.1")
+    depends_on("tfel@5.0.0", when="@3.0.0")
+    depends_on("tfel@4.2.3", when="@2.2.1")
+    depends_on("tfel@4.2.0", when="@2.2.0")
     depends_on("tfel@4.1.0", when="@2.1")
     depends_on("tfel@4.0.0", when="@2.0")
     depends_on("tfel@3.4.3", when="@1.2.2")
@@ -112,6 +116,8 @@ class Mgis(CMakePackage):
         args = []
 
         args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
+        args.append("-Denable-website=OFF")
+        args.append("-Denable-doxygen-doc=OFF")
 
         for i in ["c", "fortran", "python"]:
             if "+" + i in self.spec:
