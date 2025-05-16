@@ -3700,11 +3700,11 @@ the build system. The build systems currently supported by Spack are:
 | :class:`~spack_repo.builtin.build_systems.generic`       | Generic build system without any |
 |                                                          | base implementation              |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.makefile       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.makefile`       | Specialized build system for     |
 |                                                          | software built invoking          |
 |                                                          | hand-written Makefiles           |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.autotool       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.autotools`     | Specialized build system for     |
 |                                                          | software built using             |
 |                                                          | GNU Autotools                    |
 +----------------------------------------------------------+----------------------------------+
@@ -3750,7 +3750,7 @@ the build system. The build systems currently supported by Spack are:
 | :class:`~spack_repo.builtin.build_systems.oneapi`        | Specialized build system for     |
 |                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.aspell_d       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.aspell_dict`   | Specialized build system for     |
 |                                                          | Aspell dictionaries              |
 +----------------------------------------------------------+----------------------------------+
 
