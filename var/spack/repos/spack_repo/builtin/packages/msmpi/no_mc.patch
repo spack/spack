@@ -1,3 +1,4 @@
+# Patch partially based on: https://github.com/microsoft/vcpkg/pull/13218
 diff --git a/src/launchSvc/msmpiLaunchSvcMc.vcxproj b/src/launchSvc/msmpiLaunchSvcMc.vcxproj
 index 2a6952b..b9a9eba 100644
 --- a/src/launchSvc/msmpiLaunchSvcMc.vcxproj
