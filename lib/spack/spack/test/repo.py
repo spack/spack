@@ -400,7 +400,7 @@ def test_repo_v2_invalid_module_name(tmp_path: pathlib.Path, capsys):
     (repo_dir / "packages" / "zlib-ng").mkdir()
     (repo_dir / "packages" / "zlib-ng" / "package.py").write_text(
         """
-from spack.package import Package
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 class ZlibNg(Package):
     pass
@@ -409,7 +409,7 @@ class ZlibNg(Package):
     (repo_dir / "packages" / "UPPERCASE").mkdir()
     (repo_dir / "packages" / "UPPERCASE" / "package.py").write_text(
         """
-from spack.package import Package
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 class Uppercase(Package):
     pass
@@ -433,7 +433,7 @@ def test_repo_v2_module_and_class_to_package_name(tmp_path: pathlib.Path, capsys
     (repo_dir / "packages" / "_1example_2_test").mkdir()
     (repo_dir / "packages" / "_1example_2_test" / "package.py").write_text(
         """
-from spack.package import Package
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 class _1example2Test(Package):
     pass
