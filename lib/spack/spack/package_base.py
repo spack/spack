@@ -47,6 +47,7 @@ import spack.store
 import spack.url
 import spack.util.environment
 import spack.util.executable
+import spack.util.git
 import spack.util.naming
 import spack.util.path
 import spack.util.web
@@ -1037,8 +1038,28 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Base implementation will look up git commits when appropriate.
         Packages may override this implementation for custom implementations
         """
-        # TODO in follow on PR adding here so SNL team can begin work ahead of spack core
-        pass
+        sha = None
+        # TODO get commit from mirror
+        # for m in mirrors:
+        #    if self.name in m:
+        #       loop over entries and look for names that match commits regex
+        #       select the newest one as the commit
+        if not sha:
+            version = self.spec.version
+            url = self.version_or_package_attr("git", self.spec.version)
+            tag = self.version_or_package_attr("tag", self.spec.version, "")
+            branch = self.version_or_package_attr("branch", self.spec.version, "")
+
+            assert not (tag and branch)
+            ref = tag or branch
+            assert ref, "Missing git ref"
+
+            git_args = ["ls-remote", url, "--ref", ref] 
+
+            query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull)
+            sha, _ = query.strip().split()
+
+        self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
