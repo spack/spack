@@ -36,6 +36,7 @@ if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
+sys.path.append(os.path.abspath("_spack_root/var/spack/repos/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
@@ -81,6 +82,14 @@ sphinx_apidoc(
     ]
 )
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "--implicit-namespaces",
+        "_spack_root/var/spack/repos/spack_repo",
+        "_spack_root/var/spack/repos/spack_repo/builtin/packages",
+    ]
+)
 
 # Enable todo items
 todo_include_todos = True
