@@ -307,10 +307,56 @@ def test_pkg_hash(mock_packages):
     assert len(output) == 1 and all(len(elt) == 32 for elt in output)
 
 
+group_args = [
+    "/path/one.py",  # 12
+    "/path/two.py",  # 12
+    "/path/three.py",  # 14
+    "/path/four.py",  # 13
+    "/path/five.py",  # 13
+    "/path/six.py",  # 12
+    "/path/seven.py",  # 14
+    "/path/eight.py",  # 14
+    "/path/nine.py",  # 13
+    "/path/ten.py",  # 12
+]
+
+
+@pytest.mark.parametrize(
+    ["max_group_size", "max_group_len", "lengths", "error"],
+    [
+        (3, 1, None, ValueError),
+        (3, 13, None, ValueError),
+        (3, 25, [2, 1, 1, 1, 1, 1, 1, 1, 1], None),
+        (3, 26, [2, 1, 1, 2, 1, 1, 2], None),
+        (3, 40, [3, 3, 2, 2], None),
+        (3, 43, [3, 3, 3, 1], None),
+        (4, 54, [4, 3, 3], None),
+        (4, 56, [4, 4, 2], None),
+    ],
+)
+def test_group_arguments(mock_packages, max_group_size, max_group_len, lengths, error):
+    generator = spack.cmd.group_arguments(
+        group_args, max_group_size=max_group_size, max_group_len=max_group_len
+    )
+
+    # just check that error cases raise
+    if error:
+        with pytest.raises(ValueError):
+            list(generator)
+        return
+
+    groups = list(generator)
+    assert sum(groups, []) == group_args
+    assert [len(group) for group in groups] == lengths
+    assert all(
+        sum(len(elt) for elt in group) + (len(group) - 1) <= max_group_len for group in groups
+    )
+
+
 @pytest.mark.skipif(not spack.cmd.pkg.get_grep(), reason="grep is not installed")
 def test_pkg_grep(mock_packages, capfd):
     # only splice-* mock packages have the string "splice" in them
-    pkg("grep", "-l", "splice", output=str)
+    pkg("grep", "-l", "splice")
     output, _ = capfd.readouterr()
     assert output.strip() == "\n".join(
         spack.repo.PATH.get_pkg_class(name).module.__file__
@@ -330,12 +376,14 @@ def test_pkg_grep(mock_packages, capfd):
         ]
     )
 
-    # ensure that this string isn't fouhnd
-    pkg("grep", "abcdefghijklmnopqrstuvwxyz", output=str, fail_on_error=False)
+    # ensure that this string isn't found
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("grep", "abcdefghijklmnopqrstuvwxyz")
     assert pkg.returncode == 1
     output, _ = capfd.readouterr()
     assert output.strip() == ""
 
     # ensure that we return > 1 for an error
-    pkg("grep", "--foobarbaz-not-an-option", output=str, fail_on_error=False)
+    with pytest.raises(spack.main.SpackCommandError):
+        pkg("grep", "--foobarbaz-not-an-option")
     assert pkg.returncode == 2
