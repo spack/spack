@@ -916,7 +916,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.git_sparse_paths:
             self._sparse_clone_src()
         else:
-            self._clone_src()
+            self._new_clone_src()
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:
@@ -938,6 +938,51 @@ class GitFetchStrategy(VCSFetchStrategy):
             clone_args.append("--quiet")
         clone_args.extend([self.url, dest])
         git(*clone_args)
+
+    def _new_clone_src(self) -> None:
+        """
+        Optimize assuming fetching will always know the commit
+
+        Impl based on https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
+        """
+        dest = self.stage.source_path
+        tty.debug(f"Cloning git repository: {self._repo_info()}")
+
+        git = self.git
+        debug = spack.config.get("config:debug")
+
+        clone_args = ["clone"]
+        checkout_args = ["checkout"]
+
+        if not debug:
+            clone_args.append("--quiet")
+            checkout_args.append("--quiet")
+
+        if not self.get_full_repo:
+            clone_args.extend(["--no-checkout", "--filter=tree:0"])
+
+        git_ref = self.branch or self.tag or self.commit
+
+        checkout_args.append(git_ref)
+        clone_args.append(self.url)
+        with temp_cwd():
+            git(*clone_args)
+            repo_name = get_single_file(".")
+            if self.stage:
+                self.stage.srcdir = repo_name
+            shutil.copytree(repo_name, dest, symlinks=True)
+            shutil.rmtree(
+                repo_name,
+                ignore_errors=False,
+                onerror=fs.readonly_file_handler(ignore_errors=True),
+            )
+
+        with working_dir(dest):
+            checkout_args = ["checkout", self.commit]
+            if not debug:
+                checkout_args.insert(1, "--quiet")
+            git(*checkout_args)
+
 
     def _clone_src(self) -> None:
         """Clone a repository to a path using git."""
@@ -1129,9 +1174,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 if not spack.config.get("config:debug"):
                     args.insert(1, "--quiet")
                 git(*args)
-
-    def archive(self, destination):
-        super().archive(destination, exclude=".git")
 
     @_needs_stage
     def reset(self):
