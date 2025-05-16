@@ -6,7 +6,6 @@ import os
 
 import spack.repo
 import spack.util.editor
-from spack.build_systems import autotools, cmake
 from spack.main import SpackCommand
 
 edit = SpackCommand("edit")

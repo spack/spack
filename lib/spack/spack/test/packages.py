@@ -6,7 +6,6 @@ import os
 
 import pytest
 
-import spack.build_systems.cmake as cmake
 import spack.concretize
 import spack.directives
 import spack.error
@@ -139,7 +138,7 @@ def test_url_for_version_with_no_urls(mock_packages, config):
     with pytest.raises(spack.error.NoURLError):
         pkg_cls(spec).url_for_version("1.1")
 
-
+@pytest.mark.skip(reason="spack.build_systems moved out of spack/spack")
 def test_custom_cmake_prefix_path(mock_packages, config):
     spec = spack.concretize.concretize_one("depends-on-define-cmake-prefix-paths")
 
