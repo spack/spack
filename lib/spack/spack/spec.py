@@ -1802,7 +1802,9 @@ class Spec:
             )
         except StopIteration:
             # Error if we have overlapping or incompatible deptypes
-            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig):
+            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig) and all(
+                dspec.when == when for dspec in orig
+            ):
                 edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
                 required_dep_str = f"^[{edge_attrs}] {str(spec)}"
 
@@ -3425,7 +3427,11 @@ class Spec:
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # Skip checking any conditional edge that is not satisfied
-            if rhs_edge.when != Spec() and not rhs_edge.parent.satisfies(rhs_edge.when):
+            if (
+                rhs_edge.when != Spec()
+                and not rhs_edge.parent.satisfies(rhs_edge.when)
+                and not self.satisfies(rhs_edge.when)
+            ):
                 continue
 
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3516,13 +3522,17 @@ class Spec:
         for rhs in other.traverse(root=False):
             # Possible lhs nodes to match this rhs node
             lhss = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
+            lhs_parents = [
+                lhs
+                for lhs in lhs_nodes
+                if any(lhs.satisfies(parent, deps=False) for parent in rhs.dependents())
+            ]
 
             # Check whether the node needs matching (not a conditional that isn't satisfied)
             in_edges = [
                 e
                 for e in rhs.edges_from_dependents()
-                if e.parent.satisfies(e.when)
-                or (lhss and all(lhs.satisfies(e.when) for lhs in lhss))
+                if e.parent.satisfies(e.when) or any(lhp.satisfies(e.when) for lhp in lhs_parents)
             ]
             if not in_edges:
                 continue
@@ -3665,6 +3675,7 @@ class Spec:
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
                 direct=edge.direct,
+                when=edge.when,
             )
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):

@@ -335,6 +335,27 @@ class TestSpecSemantics:
                 "mpileaks %[deptypes=link] mpich",
                 "mpileaks %[deptypes=build,link] mpich",
             ),
+            # conditional edges
+            (
+                "libelf",
+                "%[when='^c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "libelf %[when='^c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+            ),
+            (
+                "libelf %[when='^c' virtuals=c]gcc",
+                "%[when='^c' virtuals=c]gcc@10.3.1",
+                "libelf%[when='^c' virtuals=c]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='^c' virtuals=c]gcc",
+                "%[when='^c' virtuals=c]gcc@10.3.1 ^[when='+mpi'] mpich",
+                "libelf%[when='^c' virtuals=c]gcc@10.3.1 ^[when='+mpi']mpich",
+            ),
+            (
+                "libelf %[when='^c' virtuals=c]gcc",
+                "%[when='^cxx' virtuals=cxx]gcc@10.3.1",
+                "libelf%[when='^c' virtuals=c]gcc %[when='^cxx' virtuals=cxx]gcc@10.3.1",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -580,6 +601,14 @@ class TestSpecSemantics:
         c = rhs.copy()
         c.constrain(lhs)
         assert c == constrained
+
+    def test_satisfies_conditional_dep(self):
+        concrete = spack.concretize.concretize_one("mpileaks^mpich")
+        assert concrete.satisfies("^[when='^mpi' virtuals=mpi]mpich")
+        assert concrete.satisfies("^[when='^notapackage']zmpi")
+        assert not concrete.satisfies("^[virtuals=blas]mpich")
+        assert not concrete.satisfies("^[when='^mpi' virtuals=blas]mpich")
+        assert not concrete.satisfies("^[when='^mpi']zmpi")
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
