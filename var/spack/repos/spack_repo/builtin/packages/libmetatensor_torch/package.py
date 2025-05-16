@@ -29,9 +29,7 @@ class LibmetatensorTorch(CMakePackage):
     depends_on("c", type="build")
     depends_on("libmetatensor@0.1.13:", type="run")
     conflicts("libmetatensor@0.2.0:")
-    variant("cuda", default=False, description="Use CUDA")
-    depends_on("py-torch@2.6.0:~cuda", type=("build", "link"), when="~cuda")
-    depends_on("py-torch@2.6.0:+cuda+cudnn", type=("build", "link"), when="+cuda")
+    depends_on("py-torch@2.1.0", type=("build", "link"))
 
     def cmake_args(self):
         spec = self.spec

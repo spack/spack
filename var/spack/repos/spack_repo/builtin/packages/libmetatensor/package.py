@@ -25,9 +25,7 @@ class Libmetatensor(CMakePackage):
 
     depends_on("cmake", type="build")
     depends_on("ninja", type="build")
-    depends_on("cxx", type="build")
-    depends_on("c", type="build")
-    depends_on("rust@1.74.0", type="build")
+    depends_on("rust@1.74.0:", type="build")
 
     depends_on("cxx", type="test")
     depends_on("cmake", type="test")
@@ -36,7 +34,6 @@ class Libmetatensor(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = [
-            # "-DRUST_BUILD_TARGET=1.74.0", # {spec['rust'].version} ??? didn't work
             "-DMETATENSOR_INSTALL_BOTH_STATIC_SHARED=OFF", # For now
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]

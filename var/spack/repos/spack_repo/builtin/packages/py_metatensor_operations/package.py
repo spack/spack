@@ -35,4 +35,4 @@ class PyMetatensorOperations(PythonPackage):
     depends_on("py-metatensor@0.1.10:", type="run")
     conflicts("py-metatensor@0.2.0:")
     # XXX: Needs to be declared upstream
-    depends_on("py-numpy", type=("build", "run"))
+    depends_on("py-numpy", type="run")

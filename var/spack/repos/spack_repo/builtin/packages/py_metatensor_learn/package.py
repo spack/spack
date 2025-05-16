@@ -30,11 +30,11 @@ class PyMetatensorLearn(PythonPackage):
     depends_on("py-setuptools@68:", type="build")
     depends_on("py-packaging@23:", type="build")
     depends_on("py-pip@22.1:", type="build")
-    depends_on("py-torch@2.6:", type=("build", "run"), when="+torch")
-    depends_on("py-numpy", type=("build", "run"), when="+torch")
+    depends_on("py-torch@2.6:", type="run", when="+torch")
+    depends_on("py-numpy", type="run", when="+torch")
     # >=0.3.0 and <0.4.0
     depends_on("py-metatensor-operations@0.3:",
-               type=("build", "run"),
+               type="run",
                when="@0.3:")
     conflicts("py-metatensor-operations@0.4.0:",
                when="@0.3:")
