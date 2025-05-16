@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin_mock.build_systems.generic import Package
+
 import spack.paths
 from spack.package import *
 from spack.util.url import path_to_file_url
-
-from spack_repo.builtin_mock.build_systems.generic import Package
 
 
 class UrlListTest(Package):

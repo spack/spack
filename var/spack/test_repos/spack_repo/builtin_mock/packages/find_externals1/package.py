@@ -4,9 +4,9 @@
 import os
 import re
 
-from spack.package import *
-
 from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
+
+from spack.package import *
 
 
 class FindExternals1(AutotoolsPackage):

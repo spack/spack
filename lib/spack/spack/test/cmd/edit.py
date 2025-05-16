@@ -35,7 +35,8 @@ def test_edit_files(monkeypatch, mock_packages):
     def editor(*args: str, **kwargs):
         nonlocal called
         called = True
-        from spack_repo.builtin_mock.build_systems import autotools, cmake
+        from spack_repo.builtin_mock.build_systems import autotools, cmake  # type: ignore
+
         assert os.path.samefile(args[0], autotools.__file__)
         assert os.path.samefile(args[1], cmake.__file__)
 

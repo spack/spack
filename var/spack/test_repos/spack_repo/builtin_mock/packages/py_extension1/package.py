@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack.package import *
-
 from spack_repo.builtin_mock.build_systems.python import PythonPackage
+
+from spack.package import *
 
 
 class PyExtension1(PythonPackage):

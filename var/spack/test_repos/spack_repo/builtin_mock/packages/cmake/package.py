@@ -5,9 +5,9 @@
 import os
 import sys
 
-from spack.package import *
-
 from spack_repo.builtin_mock.build_systems.generic import Package
+
+from spack.package import *
 
 
 def check(condition, msg):

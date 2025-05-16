@@ -2,10 +2,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin_mock.build_systems._checks import (
+    BuilderWithDefaults,
+    execute_install_time_tests,
+)
+
 import spack.builder
 from spack.package import *
 
-from spack_repo.builtin_mock.build_systems._checks import BuilderWithDefaults, execute_install_time_tests
 from ..python.package import Python
 
 

@@ -2331,8 +2331,8 @@ class TestConcretize:
             # Single node with fully qualified namespace
             ("builtin_mock.gmake", {"gmake": "builtin_mock"}),
             # Dependency with fully qualified namespace
-            ("hdf5 ^builtin_mock.gmake", {"gmake": "builtin_mock", "hdf5": "duplicates.test"}),
-            ("hdf5 ^gmake", {"gmake": "duplicates.test", "hdf5": "duplicates.test"}),
+            ("hdf5 ^builtin_mock.gmake", {"gmake": "builtin_mock", "hdf5": "duplicates_test"}),
+            ("hdf5 ^gmake", {"gmake": "duplicates_test", "hdf5": "duplicates_test"}),
         ],
     )
     def test_select_lower_priority_package_from_repository_stack(

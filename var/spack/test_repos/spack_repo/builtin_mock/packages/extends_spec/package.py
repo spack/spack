@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
-
 from spack_repo.builtin_mock.build_systems.generic import Package
+
+from spack.package import *
 
 
 class ExtendsSpec(Package):

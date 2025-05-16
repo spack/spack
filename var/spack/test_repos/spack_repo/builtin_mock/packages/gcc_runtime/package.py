@@ -7,11 +7,10 @@ import os
 import re
 
 from _vendoring.macholib import MachO, mach_o
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 from spack.package import *
 from spack.util.elf import delete_needed_from_elf, parse_elf
-
-from spack_repo.builtin_mock.build_systems.generic import Package
 
 
 class GccRuntime(Package):

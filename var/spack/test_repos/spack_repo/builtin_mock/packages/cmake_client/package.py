@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
-
 from spack_repo.builtin_mock.build_systems.cmake import CMakePackage
+
+from spack.package import *
 
 
 def check(condition, msg):
