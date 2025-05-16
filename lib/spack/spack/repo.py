@@ -55,7 +55,9 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 
 def is_package_module(fullname: str) -> bool:
     """Check if the given module is a package module."""
-    return fullname.startswith(PKG_MODULE_PREFIX_V1) or fullname.startswith(PKG_MODULE_PREFIX_V2)
+    return fullname.startswith(PKG_MODULE_PREFIX_V1) or (
+        fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package")
+    )
 
 
 def namespace_from_fullname(fullname: str) -> str:
@@ -75,6 +77,25 @@ def namespace_from_fullname(fullname: str) -> str:
     elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
         return ".".join(fullname.split(".")[1:-3])
     return fullname
+
+
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
+    def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
+        self.repo = repo
+        self.package_name = package_name
+        path = repo.filename_for_package_name(package_name)
+        self.fullname = fullname
+        self.prepend = b"from spack.build_systems._package_api_v1 import *\n"
+        super().__init__(self.fullname, path)
+
+    def path_stats(self, path):
+        stats = dict(super().path_stats(path))
+        stats["size"] += len(self.prepend)
+        return stats
+
+    def get_data(self, path):
+        data = super().get_data(path)
+        return self.prepend + data if path == self.path else data
 
 
 class SpackNamespaceLoader:
@@ -123,8 +144,7 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    module_path = repo.filename_for_package_name(package_name)
-                    return importlib.machinery.SourceFileLoader(fullname, module_path)
+                    return _PrependFileLoader(fullname, repo, package_name)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:

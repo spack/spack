@@ -101,9 +101,6 @@ VERSION_LIST = rf"(?:{VERSION_RANGE}|{VERSION})(?:\s*,\s*(?:{VERSION_RANGE}|{VER
 
 SPLIT_KVP = re.compile(rf"^({NAME})(:?==?)(.*)$")
 
-#: Regex with groups to use for splitting %[virtuals=...] tokens
-SPLIT_COMPILER_TOKEN = re.compile(rf"^%\[virtuals=({VALUE}|{QUOTED_VALUE})]\s*(.*)$")
-
 #: A filename starts either with a "." or a "/" or a "{name}/, or on Windows, a drive letter
 #: followed by a colon and "\" or "." or {name}\
 WINDOWS_FILENAME = r"(?:\.|[a-zA-Z0-9-_]*\\|[a-zA-Z]:\\)(?:[a-zA-Z0-9-_\.\\]*)(?:\.json|\.yaml)"
@@ -124,9 +121,9 @@ class SpecTokens(TokenBase):
     """
 
     # Dependency
-    START_EDGE_PROPERTIES = r"(?:\^\[)"
+    START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
     END_EDGE_PROPERTIES = r"(?:\])"
-    DEPENDENCY = r"(?:\^)"
+    DEPENDENCY = r"(?:[\^\%])"
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
     GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
@@ -136,14 +133,6 @@ class SpecTokens(TokenBase):
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
-    # Compilers
-    COMPILER_AND_VERSION = rf"(?:%\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
-    COMPILER = rf"(?:%\s*(?:{NAME}))"
-    COMPILER_AND_VERSION_WITH_VIRTUALS = (
-        rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]"
-        rf"\s*(?:{NAME})(?:[\s]*)@\s*(?:{VERSION_LIST}))"
-    )
-    COMPILER_WITH_VIRTUALS = rf"(?:%\[virtuals=(?:{VALUE}|{QUOTED_VALUE})\]\s*(?:{NAME}))"
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
     # Package name
@@ -275,25 +264,58 @@ class SpecParser:
         def add_dependency(dep, **edge_properties):
             """wrapper around root_spec._add_dependency"""
             try:
-                root_spec._add_dependency(dep, **edge_properties)
+                target_spec._add_dependency(dep, **edge_properties)
             except spack.error.SpecError as e:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
+        current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
+                is_direct = self.ctx.current_token.value[0] == "%"
+
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
-                edge_properties.setdefault("depflag", 0)
                 edge_properties.setdefault("virtuals", ())
+                edge_properties["direct"] = is_direct
+
                 dependency, warnings = self._parse_node(root_spec)
+
+                if is_direct:
+                    target_spec = current_spec
+                    edge_properties.setdefault("depflag", spack.deptypes.BUILD)
+                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+
+                else:
+                    current_spec = dependency
+                    target_spec = root_spec
+                    edge_properties.setdefault("depflag", 0)
+
+                # print(f"[{current_spec}], {target_spec}->{dependency} {is_direct}")
                 parser_warnings.extend(warnings)
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
+                is_direct = self.ctx.current_token.value[0] == "%"
                 dependency, warnings = self._parse_node(root_spec)
+                edge_properties = {}
+                edge_properties["direct"] = is_direct
+                edge_properties["virtuals"] = tuple()
+                if is_direct:
+                    target_spec = current_spec
+                    edge_properties.setdefault("depflag", spack.deptypes.BUILD)
+                    if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
+                        dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
+                else:
+                    current_spec = dependency
+                    target_spec = root_spec
+                    edge_properties.setdefault("depflag", 0)
+
+                # print(f"[{current_spec}], {target_spec}->{dependency} {is_direct}")
+
                 parser_warnings.extend(warnings)
-                add_dependency(dependency, depflag=0, virtuals=())
+                add_dependency(dependency, **edge_properties)
 
             else:
                 break
@@ -384,34 +406,6 @@ class SpecNodeParser:
 
         while True:
             if (
-                self.ctx.accept(SpecTokens.COMPILER)
-                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION)
-                or self.ctx.accept(SpecTokens.COMPILER_WITH_VIRTUALS)
-                or self.ctx.accept(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS)
-            ):
-                current_token = self.ctx.current_token
-                if current_token.kind in (
-                    SpecTokens.COMPILER_WITH_VIRTUALS,
-                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS,
-                ):
-                    m = SPLIT_COMPILER_TOKEN.match(current_token.value)
-                    assert m, "SPLIT_COMPILER_TOKEN and COMPILER_* do not agree."
-                    virtuals_str, compiler_str = m.groups()
-                    virtuals = tuple(virtuals_str.strip("'\" ").split(","))
-                else:
-                    virtuals = tuple()
-                    compiler_str = current_token.value[1:]
-
-                build_dependency = spack.spec.Spec(compiler_str)
-                if build_dependency.name in LEGACY_COMPILER_TO_BUILTIN:
-                    build_dependency.name = LEGACY_COMPILER_TO_BUILTIN[build_dependency.name]
-
-                initial_spec._add_dependency(
-                    build_dependency, depflag=spack.deptypes.BUILD, virtuals=virtuals, direct=True
-                )
-                last_compiler = self.ctx.current_token.value
-
-            elif (
                 self.ctx.accept(SpecTokens.VERSION_HASH_PAIR)
                 or self.ctx.accept(SpecTokens.GIT_VERSION)
                 or self.ctx.accept(SpecTokens.VERSION)

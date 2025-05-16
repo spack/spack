@@ -1,14 +1,14 @@
 """
-altgraph.ObjectGraph - Graph of objects with an identifier
+_vendoring.altgraph.ObjectGraph - Graph of objects with an identifier
 ==========================================================
 
 A graph of objects that have a "graphident" attribute.
 graphident is the key for the object in the graph
 """
 
-from altgraph import GraphError
-from altgraph.Graph import Graph
-from altgraph.GraphUtil import filter_stack
+from _vendoring.altgraph import GraphError
+from _vendoring.altgraph.Graph import Graph
+from _vendoring.altgraph.GraphUtil import filter_stack
 
 
 class ObjectGraph(object):

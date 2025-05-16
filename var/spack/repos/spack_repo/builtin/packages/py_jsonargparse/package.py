@@ -16,6 +16,7 @@ class PyJsonargparse(PythonPackage):
 
     license("MIT")
 
+    version("4.39.0", sha256="d72f9e84c251aeac6cd3cd5d91212f4a7c47be9a58e642dd3bce4b990543b360")
     version("4.35.0", sha256="815ecd190e4004d2ce69b184fe16915f8f81fd32ae3e479fa37fbb9b89130446")
     version("4.28.0", sha256="ac835a290ef18cc2a5309e6bfa8ada9c5d63f46ff18701583fc8f3e95314679c")
     version("4.27.5", sha256="88ad908387ea5c8285a48e7d94bfd025e6f536b0dbae616d755d701248ab85d9")
