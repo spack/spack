@@ -90,7 +90,7 @@ class AutotoolsBuilder(BuilderWithDefaults):
 
     They all have sensible defaults and for many packages the only thing necessary
     is to override the helper method
-    :meth:`~spack.build_systems.autotools.AutotoolsBuilder.configure_args`.
+    :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsBuilder.configure_args`.
 
     For a finer tuning you may also override:
 
@@ -658,8 +658,8 @@ To resolve this problem, please try the following:
         variant=None,
     ) -> List[str]:
         """This function contain the current implementation details of
-        :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without` and
-        :meth:`~spack.build_systems.autotools.AutotoolsBuilder.enable_or_disable`.
+        :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsBuilder.with_or_without` and
+        :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsBuilder.enable_or_disable`.
 
         Args:
             name: name of the option that is being activated or not
@@ -808,7 +808,7 @@ To resolve this problem, please try the following:
         variant: Optional[str] = None,
     ) -> List[str]:
         """Same as
-        :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without`
+        :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsBuilder.with_or_without`
         but substitute ``with`` with ``enable`` and ``without`` with ``disable``.
 
         Args:
