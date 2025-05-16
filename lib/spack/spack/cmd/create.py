@@ -150,7 +150,9 @@ class AutotoolsPackageTemplate(PackageTemplate):
     that *do* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
-    package_class_import = "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     body_def = """\
     def configure_args(self):
@@ -165,7 +167,9 @@ class AutoreconfPackageTemplate(PackageTemplate):
     that *do not* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
-    package_class_import = "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     dependencies = """\
     depends_on("autoconf", type="build")
