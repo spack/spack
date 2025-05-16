@@ -31,7 +31,9 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     with when("+rocm"):
         depends_on("petsc+rocm")
         for arch_ in ROCmPackage.amdgpu_targets:
-            depends_on("petsc amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_))
+            depends_on(
+                "petsc amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
+            )
 
     with when("+cuda"):
         depends_on("petsc+cuda")
@@ -51,7 +53,6 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     build_targets = ["all"]
     install_targets = ["install"]
 
-
     def initconfig_package_entries(self):
         spec = self.spec
         entries = []
@@ -60,9 +61,8 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
 
         return entries
 
-
     def cmake_args(self):
         args = []
-        if '+slepc' in self.spec:
-            args.append('-DWITH_SLEPC=ON')
+        if "+slepc" in self.spec:
+            args.append("-DWITH_SLEPC=ON")
         return args
