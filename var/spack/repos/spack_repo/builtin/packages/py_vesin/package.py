@@ -35,7 +35,7 @@ class PyVesin(PythonPackage):
 
     # pyproject.toml
     depends_on("py-numpy")
-    depends_on("ase", type=("build", "run"), when="+ase")
+    depends_on("py-ase", type=("build", "run"), when="+ase")
     depends_on("py-torch@2.6:", type=("build", "run"), when="+torch")
 
     depends_on("py-setuptools@77:", type="build")

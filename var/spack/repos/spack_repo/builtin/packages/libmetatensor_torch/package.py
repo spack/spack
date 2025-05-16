@@ -32,8 +32,5 @@ class LibmetatensorTorch(CMakePackage):
     depends_on("py-torch@2.1.0", type=("build", "link"))
 
     def cmake_args(self):
-        spec = self.spec
-        args = [
-            self.define("CMAKE_BUILD_TYPE", "Release"),
-        ]
+        args = [self.define("CMAKE_BUILD_TYPE", "Release")]
         return args

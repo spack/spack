@@ -18,7 +18,6 @@ class Libmetatensor(CMakePackage):
     version("0.1.14", sha256="dc6cdd9cf0113e2f012ecf68b81cc7cfc71bef3d2020b41574de8fa403dba646")
     version("0.1.13", sha256="c735b1050357b2873e2e07ee1e263fc9d45faf07f5ea63b65e70869ca423adb5")
 
-
     variant("shared", default=True, description="Build shared library version")
 
     generator("ninja")
@@ -32,9 +31,8 @@ class Libmetatensor(CMakePackage):
     depends_on("ninja", type="test")
 
     def cmake_args(self):
-        spec = self.spec
         args = [
-            "-DMETATENSOR_INSTALL_BOTH_STATIC_SHARED=OFF", # For now
+            "-DMETATENSOR_INSTALL_BOTH_STATIC_SHARED=OFF",  # For now
             self.define("CMAKE_BUILD_TYPE", "Release"),
         ]
         return args

@@ -49,7 +49,7 @@ class PyMetatensorTorch(PythonPackage):
     depends_on("cmake", type="build")
     depends_on("py-pip@22.1:", type="build")
     depends_on("py-torch@2.6:", type=("build", "run"), when="+torch")
-    depends_on("vesin", type=("build", "run"), when="+vesin")
+    depends_on("py-vesin", type=("build", "run"), when="+vesin")
 
     depends_on("py-metatensor@0.1.13:", type="run")
     conflicts("py-metatensor@0.2.0:")
