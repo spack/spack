@@ -79,6 +79,25 @@ def namespace_from_fullname(fullname: str) -> str:
     return fullname
 
 
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
+    def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
+        self.repo = repo
+        self.package_name = package_name
+        path = repo.filename_for_package_name(package_name)
+        self.fullname = fullname
+        self.prepend = b"from spack.build_systems._package_api_v1 import *\n"
+        super().__init__(self.fullname, path)
+
+    def path_stats(self, path):
+        stats = dict(super().path_stats(path))
+        stats["size"] += len(self.prepend)
+        return stats
+
+    def get_data(self, path):
+        data = super().get_data(path)
+        return self.prepend + data if path == self.path else data
+
+
 class SpackNamespaceLoader:
     def create_module(self, spec):
         return SpackNamespace(spec.name)
@@ -125,8 +144,7 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    module_path = repo.filename_for_package_name(package_name)
-                    return importlib.machinery.SourceFileLoader(fullname, module_path)
+                    return _PrependFileLoader(fullname, repo, package_name)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:

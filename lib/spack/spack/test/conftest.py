@@ -887,6 +887,7 @@ def no_packages_yaml(mutable_config):
         compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 
@@ -2071,6 +2072,11 @@ def pytest_runtest_setup(item):
     only_windows_marker = item.get_closest_marker(name="only_windows")
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
+
+    # Skip tests marked "requires_builtin" if builtin repo is required
+    requires_builtin_marker = item.get_closest_marker(name="requires_builtin")
+    if requires_builtin_marker and not os.path.exists(spack.paths.packages_path):
+        pytest.skip(*requires_builtin_marker.args)
 
 
 def _sequential_executor(*args, **kwargs):

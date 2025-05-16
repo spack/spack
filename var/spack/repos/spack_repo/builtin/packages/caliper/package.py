@@ -137,6 +137,8 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+libdw", "@:2.4")
     conflicts("+rocm", "@:2.7")
     conflicts("+rocm+cuda")
+    # Legacy nvtx is only supported until cuda@12.8, newer cuda only provides nvtx3.
+    conflicts("^cuda@12.9:", "@:2.12.1")
 
     patch("for_aarch64.patch", when="@:2.11 target=aarch64:")
     patch(
