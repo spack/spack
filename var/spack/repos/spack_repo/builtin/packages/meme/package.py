@@ -13,6 +13,7 @@ class Meme(AutotoolsPackage):
     homepage = "https://meme-suite.org"
     url = "http://meme-suite.org/meme-software/5.1.1/meme-5.1.1.tar.gz"
 
+    version("5.5.7", sha256="1dca8d0e6d1d36570c1a88ab8dbe7e4b177733fbbeacaa2e8c4674febf57aaf4")
     version("5.5.4", sha256="cda6011c2b855bf2563c4e7a2c255e11e99b5b6e5e73736ff008942507580153")
     version("5.3.0", sha256="b2ddec9db972fcf77b29c7deb62df8b1dd8a6638c13c1aa06a5d563c4a7ff756")
     version("5.2.0", sha256="0cbf8c2172e9b6c07855b8aeec457f4825f0b132f8cbb11192880e2f6033f54f")
