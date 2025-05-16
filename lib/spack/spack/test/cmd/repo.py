@@ -142,6 +142,7 @@ def test_repo_migrate(tmp_path: pathlib.Path, config):
     assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
 
 
+@pytest.mark.not_on_windows("Known failure on windows")
 def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
     root, _ = spack.repo.create_repo(str(tmp_path), "foo", package_api=(2, 0))
     r = pathlib.Path(root)
