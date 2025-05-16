@@ -130,11 +130,11 @@ def test_url_for_version_with_no_urls(mock_packages, config):
 
 @pytest.mark.skip(reason="spack.build_systems moved out of spack/spack")
 def test_custom_cmake_prefix_path(mock_packages, config):
-    spec = spack.concretize.concretize_one("depends-on-define-cmake-prefix-paths")
-
-    assert cmake.get_cmake_prefix_path(spec.package) == [
-        spec["define-cmake-prefix-paths"].prefix.test
-    ]
+    pass
+    # spec = spack.concretize.concretize_one("depends-on-define-cmake-prefix-paths")
+    # assert spack.build_systems.cmake.get_cmake_prefix_path(spec.package) == [
+    #     spec["define-cmake-prefix-paths"].prefix.test
+    # ]
 
 
 def test_url_for_version_with_only_overrides(mock_packages, config):

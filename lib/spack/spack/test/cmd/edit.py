@@ -28,13 +28,14 @@ def test_edit_packages(monkeypatch, mock_packages: spack.repo.RepoPath):
     assert called
 
 
-def test_edit_files(monkeypatch):
+def test_edit_files(monkeypatch, mock_packages):
     """Test spack edit --build-system autotools cmake"""
     called = False
 
     def editor(*args: str, **kwargs):
         nonlocal called
         called = True
+        from spack_repo.builtin_mock.build_systems import autotools, cmake
         assert os.path.samefile(args[0], autotools.__file__)
         assert os.path.samefile(args[1], cmake.__file__)
 
