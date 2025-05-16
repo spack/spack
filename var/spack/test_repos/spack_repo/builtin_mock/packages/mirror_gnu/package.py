@@ -4,8 +4,8 @@
 
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.gnu import GNUMirrorPackage
+from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin_mock.build_systems.gnu import GNUMirrorPackage
 
 
 class MirrorGnu(AutotoolsPackage, GNUMirrorPackage):

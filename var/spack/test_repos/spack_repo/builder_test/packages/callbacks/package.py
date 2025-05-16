@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack_repo.builtin_mock.build_systems.generic import GenericBuilder, Package
-
 from spack.package import *
+
+from ....builtin_mock.build_systems.generic import GenericBuilder, Package
 
 
 class Callbacks(Package):

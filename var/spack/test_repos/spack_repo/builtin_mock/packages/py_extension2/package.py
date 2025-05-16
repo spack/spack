@@ -5,7 +5,7 @@ import os
 
 from spack.package import *
 
-from ...build_systems.python import PythonPackage
+from spack_repo.builtin_mock.build_systems.python import PythonPackage
 
 
 class PyExtension2(PythonPackage):

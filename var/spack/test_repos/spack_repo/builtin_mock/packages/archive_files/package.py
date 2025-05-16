@@ -4,7 +4,7 @@
 
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
 
 
 class ArchiveFiles(AutotoolsPackage):

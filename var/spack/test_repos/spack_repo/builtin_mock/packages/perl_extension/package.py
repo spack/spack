@@ -5,7 +5,7 @@ import os
 
 from spack.package import *
 
-from ...build_systems.perl import PerlPackage
+from spack_repo.builtin_mock.build_systems.perl import PerlPackage
 
 
 class PerlExtension(PerlPackage):

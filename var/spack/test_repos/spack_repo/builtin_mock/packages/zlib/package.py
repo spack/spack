@@ -5,7 +5,7 @@
 
 from spack.package import *
 
-from ...build_systems.generic import Package
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 
 # Although zlib comes with a configure script, it does not use Autotools

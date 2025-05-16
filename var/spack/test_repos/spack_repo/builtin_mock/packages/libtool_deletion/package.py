@@ -5,7 +5,7 @@ import os
 
 from spack.package import *
 
-from ...build_systems import autotools
+from spack_repo.builtin_mock.build_systems import autotools
 
 
 class LibtoolDeletion(autotools.AutotoolsPackage):

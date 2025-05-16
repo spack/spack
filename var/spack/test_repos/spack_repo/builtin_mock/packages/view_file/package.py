@@ -6,7 +6,7 @@ import os
 
 from spack.package import *
 
-from ...build_systems.generic import Package
+from spack_repo.builtin_mock.build_systems.generic import Package
 
 
 class ViewFile(Package):

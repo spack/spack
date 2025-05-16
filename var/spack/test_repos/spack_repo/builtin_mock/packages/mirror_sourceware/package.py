@@ -4,8 +4,8 @@
 
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.sourceware import SourcewarePackage
+from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin_mock.build_systems.sourceware import SourcewarePackage
 
 
 class MirrorSourceware(AutotoolsPackage, SourcewarePackage):

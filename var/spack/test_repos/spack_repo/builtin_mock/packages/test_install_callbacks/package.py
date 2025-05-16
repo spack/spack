@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
-from ...build_systems import _checks as checks
-from ...build_systems import generic
+from spack_repo.builtin_mock.build_systems import _checks as checks
+from spack_repo.builtin_mock.build_systems import generic
 
 
 class TestInstallCallbacks(generic.Package):

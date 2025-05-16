@@ -5,7 +5,7 @@
 import spack.builder
 from spack.package import *
 
-from ...build_systems._checks import BuilderWithDefaults, execute_install_time_tests
+from spack_repo.builtin_mock.build_systems._checks import BuilderWithDefaults, execute_install_time_tests
 from ..python.package import Python
 
 

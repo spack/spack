@@ -5,7 +5,7 @@
 
 from spack.package import *
 
-from ...build_systems.makefile import MakefilePackage
+from spack_repo.builtin_mock.build_systems.makefile import MakefilePackage
 
 
 class DevBuildTestDependent(MakefilePackage):
