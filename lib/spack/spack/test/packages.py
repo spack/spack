@@ -59,45 +59,19 @@ class TestPackage:
         assert "_None" == pkg_name_to_class_name("none")  # reserved keyword
         assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
-<<<<<<< HEAD
-    # Below tests target direct imports of spack packages from the
-    # spack.pkg namespace
-    def test_import_package(self):
-        import spack.pkg.builtin.mock.mpich  # type: ignore[import] # noqa: F401
-||||||| parent of 1c05b1dd1b (fix various tests)
-    # Below tests target direct imports of spack packages from the
-    # spack.pkg namespace
-    def test_import_package(self):
-        import spack.pkg.builtin_mock.mpich  # type: ignore[import] # noqa: F401
-=======
     # Below tests target direct imports of spack packages from the spack.pkg namespace
     def test_import_package(self, tmp_path: pathlib.Path):
         root, _ = spack.repo.create_repo(str(tmp_path), "testing_repo", package_api=(1, 0))
         pkg_path = pathlib.Path(root) / "packages" / "mpich" / "package.py"
         pkg_path.parent.mkdir(parents=True)
         pkg_path.write_text("foo = 1")
->>>>>>> 1c05b1dd1b (fix various tests)
 
-<<<<<<< HEAD
-    def test_import_package_as(self):
-        import spack.pkg.builtin.mock  # noqa: F401
-        import spack.pkg.builtin.mock as m  # noqa: F401
-        import spack.pkg.builtin.mock.mpich as mp  # noqa: F401
-        from spack.pkg.builtin import mock  # noqa: F401
-||||||| parent of 1c05b1dd1b (fix various tests)
-    def test_import_package_as(self):
-        import spack.pkg.builtin_mock  # noqa: F401
-        import spack.pkg.builtin_mock as m  # noqa: F401
-        import spack.pkg.builtin_mock.mpich as mp  # noqa: F401
-        from spack.pkg.builtin import mock  # noqa: F401
-=======
         with spack.repo.use_repositories(root):
             importlib.import_module("spack.pkg.testing_repo")
             assert importlib.import_module("spack.pkg.testing_repo.mpich").foo == 1
 
         del sys.modules["spack.pkg.testing_repo"]
         del sys.modules["spack.pkg.testing_repo.mpich"]
->>>>>>> 1c05b1dd1b (fix various tests)
 
     def test_inheritance_of_directives(self):
         pkg_cls = spack.repo.PATH.get_pkg_class("simple-inheritance")
@@ -152,6 +126,7 @@ def test_url_for_version_with_no_urls(mock_packages, config):
 
     with pytest.raises(spack.error.NoURLError):
         pkg_cls(spec).url_for_version("1.1")
+
 
 @pytest.mark.skip(reason="spack.build_systems moved out of spack/spack")
 def test_custom_cmake_prefix_path(mock_packages, config):

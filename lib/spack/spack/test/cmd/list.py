@@ -147,9 +147,9 @@ def test_list_repos():
         os.path.join(spack.paths.test_repos_path, "spack_repo", "builder_test"),
     ):
         total_pkgs = len(list().strip().split())
-        mock_pkgs = len(list("-r", "builtin.mock").strip().split())
+        mock_pkgs = len(list("-r", "builtin_mock").strip().split())
         builder_pkgs = len(list("-r", "builder.test").strip().split())
-        both_repos = len(list("-r", "builtin.mock", "-r", "builder.test").strip().split())
+        both_repos = len(list("-r", "builtin_mock", "-r", "builder.test").strip().split())
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs

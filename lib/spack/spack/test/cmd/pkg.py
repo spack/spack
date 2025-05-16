@@ -92,7 +92,7 @@ def mock_pkg_git_repo(git, tmp_path_factory):
 
 @pytest.fixture(scope="module")
 def mock_pkg_names():
-    repo = spack.repo.PATH.get_repo("builtin.mock")
+    repo = spack.repo.PATH.get_repo("builtin_mock")
 
     # Be sure to include virtual packages since packages with stand-alone
     # tests may inherit additional tests from the virtuals they provide,
@@ -119,7 +119,7 @@ def test_builtin_repo():
 
 
 def test_mock_builtin_repo(mock_packages):
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin.mock")
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
 
 
 def test_pkg_add(git, mock_pkg_git_repo):

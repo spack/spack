@@ -916,7 +916,7 @@ def test_env_repo():
 
     pkg_cls = e.repo.get_pkg_class("mpileaks")
     assert pkg_cls.name == "mpileaks"
-    assert pkg_cls.namespace == "builtin.mock"
+    assert pkg_cls.namespace == "builtin_mock"
 
 
 def test_user_removed_spec(environment_from_manifest):
