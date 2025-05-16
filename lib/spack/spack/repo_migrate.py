@@ -408,7 +408,7 @@ def migrate_v2_imports(
 
         tmp_file = pkg_path + ".tmp"
 
-        with open(tmp_file, "w", encoding="utf-8") as file:
+        with open(tmp_file, "w", encoding="utf-8", newline="") as file:
             file.writelines(lines)
 
         os.replace(tmp_file, pkg_path)
