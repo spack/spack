@@ -104,14 +104,14 @@ class Bar(CMakePackage):
         encoding="utf-8",
     )
 
-    repo("migrate", path)
+    repo("migrate", "--fix", path)
 
     assert (
         pkg1.read_text(encoding="utf-8")
         == """\
 # some comment
 
-from spack.build_systems.generic import Package
+from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
 
 class Foo(Package):
@@ -124,7 +124,7 @@ class Foo(Package):
         == """\
 # some comment
 
-from spack.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack.package import *
 
 class Bar(CMakePackage):
