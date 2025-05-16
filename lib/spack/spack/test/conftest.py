@@ -887,6 +887,7 @@ def no_packages_yaml(mutable_config):
         compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 

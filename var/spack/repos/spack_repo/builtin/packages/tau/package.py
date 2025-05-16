@@ -159,7 +159,8 @@ class Tau(Package):
         depends_on("python@:3.10", when="@:2.32.1")
     depends_on("libunwind", when="+libunwind")
     depends_on("mpi", when="+mpi", type=("build", "run", "link"))
-    depends_on("cuda", when="+cuda")
+    # Legacy nvtx is only supported until cuda@12.8, newer cuda only provides nvtx3.
+    depends_on("cuda@:12.8", when="+cuda")
     depends_on("gasnet", when="+gasnet")
     depends_on("adios2", when="+adios2")
     depends_on("sqlite", when="+sqlite")
