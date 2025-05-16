@@ -4,30 +4,223 @@
 
 import ast
 import os
+import re
+import shutil
 import sys
-from typing import IO, Dict, Optional, Set
+from typing import IO, Dict, List, Optional, Set, Tuple
 
 import spack.repo
+import spack.util.naming
+import spack.util.spack_yaml
 
 
-def migrate_v1_to_v2(repo: spack.repo.Repo, fix: bool) -> bool:
+def _same_contents(f: str, g: str) -> bool:
+    """Return True if the files have the same contents."""
+    try:
+        with open(f, "rb") as f1, open(g, "rb") as f2:
+            while True:
+                b1 = f1.read(4096)
+                b2 = f2.read(4096)
+                if b1 != b2:
+                    return False
+                if not b1 and not b2:
+                    break
+            return True
+    except OSError:
+        return False
+
+
+def migrate_v1_to_v2(
+    repo: spack.repo.Repo, fix: bool, out: IO[str] = sys.stdout, err: IO[str] = sys.stderr
+) -> Tuple[bool, Optional[spack.repo.Repo]]:
     """To upgrade a repo from Package API v1 to v2 we need to:
     1. ensure ``spack_repo/<namespace>`` parent dirs to the ``repo.yaml`` file.
     2. rename <pkg dir>/package.py to <pkg module>/package.py.
     3. bump the version in ``repo.yaml``.
     """
-    return True
+    if not (1, 0) <= repo.package_api < (2, 0):
+        raise RuntimeError(f"Cannot upgrade from {repo.package_api_str} to v2.0")
+
+    with open(os.path.join(repo.root, "repo.yaml"), encoding="utf-8") as f:
+        updated_config = spack.util.spack_yaml.load(f)
+        updated_config["repo"]["api"] = "v2.0"
+
+    namespace = repo.namespace.split(".")
+
+    if not all(
+        spack.util.naming.valid_module_name(part, package_api=(2, 0)) for part in namespace
+    ):
+        print(
+            f"Cannot upgrade from v1 to v2, because the namespace '{repo.namespace}' is not a "
+            "valid Python module",
+            file=err,
+        )
+        return False, None
+
+    try:
+        subdirectory = spack.repo._validate_and_normalize_subdir(
+            repo.subdirectory, repo.root, package_api=(2, 0)
+        )
+    except spack.repo.BadRepoError:
+        print(
+            f"Cannot upgrade from v1 to v2, because the subdirectory '{repo.subdirectory}' is not "
+            "a valid Python module",
+            file=err,
+        )
+        return False, None
+
+    new_root = os.path.join(repo.root, "spack_repo", *namespace)
+
+    ino_to_relpath: Dict[int, str] = {}
+    symlink_to_ino: Dict[str, int] = {}
+
+    prefix_len = len(repo.root) + len(os.sep)
+
+    rename: Dict[str, str] = {}
+    dirs_to_create: List[str] = []
+    files_to_copy: List[str] = []
+
+    errors = False
+
+    stack: List[Tuple[str, int]] = [(repo.root, 0)]
+    while stack:
+        path, depth = stack.pop()
+
+        try:
+            entries = os.scandir(path)
+        except OSError:
+            continue
+
+        for entry in entries:
+            rel_path = entry.path[prefix_len:]
+
+            if depth == 0 and entry.name in ("spack_repo", "repo.yaml"):
+                continue
+
+            ino_to_relpath[entry.inode()] = entry.path[prefix_len:]
+
+            if entry.is_symlink():
+                symlink_to_ino[rel_path] = entry.stat(follow_symlinks=True).st_ino
+                continue
+
+            elif entry.is_dir(follow_symlinks=False):
+                if entry.name == "__pycache__":
+                    continue
+
+                # check if this is a package
+                if (
+                    depth == 1
+                    and rel_path.startswith(f"{subdirectory}{os.sep}")
+                    and os.path.exists(os.path.join(entry.path, "package.py"))
+                ):
+                    if "_" in entry.name:
+                        print(
+                            f"Invalid package name '{entry.name}': underscores are not allowed in "
+                            "package names, rename the package with hyphens as separators",
+                            file=err,
+                        )
+                        errors = True
+                        continue
+                    pkg_dir = spack.util.naming.pkg_name_to_pkg_dir(entry.name, package_api=(2, 0))
+                    if pkg_dir != entry.name:
+                        rename[f"{subdirectory}{os.sep}{entry.name}"] = (
+                            f"{subdirectory}{os.sep}{pkg_dir}"
+                        )
+
+                dirs_to_create.append(rel_path)
+
+                stack.append((entry.path, depth + 1))
+                continue
+
+            files_to_copy.append(rel_path)
+
+    if errors:
+        return False, None
+
+    rename_regex = re.compile("^(" + "|".join(re.escape(k) for k in rename.keys()) + ")")
+
+    if fix:
+        os.makedirs(new_root, exist_ok=True)
+
+    def _relocate(rel_path: str) -> Tuple[str, str]:
+        return os.path.join(repo.root, rel_path), os.path.join(
+            new_root, rename_regex.sub(lambda m: rename[m.group(0)], rel_path)
+        )
+
+    if not fix:
+        print("The following directories, files and symlinks will be created:\n", file=out)
+
+    for rel_path in dirs_to_create:
+        _, new_path = _relocate(rel_path)
+        if fix:
+            try:
+                os.mkdir(new_path)
+            except FileExistsError:  # not an error if the directory already exists
+                continue
+        else:
+            print(f"create directory {new_path}", file=out)
+
+    for rel_path in files_to_copy:
+        old_path, new_path = _relocate(rel_path)
+        if os.path.lexists(new_path):
+            # if we already copied this file, don't error.
+            if not _same_contents(old_path, new_path):
+                print(
+                    f"Cannot upgrade from v1 to v2, because the file '{new_path}' already exists",
+                    file=err,
+                )
+                return False, None
+            continue
+        if fix:
+            shutil.copy2(old_path, new_path)
+        else:
+            print(f"copy {old_path} -> {new_path}", file=out)
+
+    for rel_path, ino in symlink_to_ino.items():
+        old_path, new_path = _relocate(rel_path)
+        if ino in ino_to_relpath:
+            # link by path relative to the new root
+            _, new_target = _relocate(ino_to_relpath[ino])
+            tgt = os.path.relpath(new_target, new_path)
+        else:
+            tgt = os.path.realpath(old_path)
+
+        # no-op if the same, error if different
+        if os.path.lexists(new_path):
+            if not os.path.islink(new_path) or os.readlink(new_path) != tgt:
+                print(
+                    f"Cannot upgrade from v1 to v2, because the file '{new_path}' already exists",
+                    file=err,
+                )
+                return False, None
+            continue
+
+        if fix:
+            os.symlink(tgt, new_path)
+        else:
+            print(f"create symlink {new_path} -> {tgt}", file=out)
+
+    if fix:
+        with open(os.path.join(new_root, "repo.yaml"), "w", encoding="utf-8") as f:
+            spack.util.spack_yaml.dump(updated_config, f)
+        updated_repo = spack.repo.from_path(new_root)
+    else:
+        print(file=out)
+        updated_repo = repo  # compute the import diff on the v1 repo since v2 doesn't exist yet
+
+    result = migrate_v2_imports(
+        updated_repo.packages_path, updated_repo.root, fix=fix, out=out, err=err
+    )
+
+    return result, (updated_repo if fix else None)
 
 
 def migrate_v2_imports(
-    repo: spack.repo.Repo, fix: bool, out: IO[str] = sys.stdout, err: IO[str] = sys.stderr
+    packages_dir: str, root: str, fix: bool, out: IO[str] = sys.stdout, err: IO[str] = sys.stderr
 ) -> bool:
     """In Package API v2.0, packages need to explicitly import package classes and a few other
     symbols from the build_systems module. This function automatically adds the missing imports
     to each package.py file in the repository."""
-
-    if repo.package_api < (2, 0):
-        return True  # nothing to do
 
     symbol_to_module = {
         "AspellDictPackage": "spack.build_systems.aspell_dict",
@@ -77,9 +270,8 @@ def migrate_v2_imports(
 
     success = True
 
-    for f in os.scandir(repo.packages_path):
+    for f in os.scandir(packages_dir):
         pkg_path = os.path.join(f.path, "package.py")
-        rel_pkg_path = os.path.relpath(pkg_path, start=repo.root)
         try:
             if f.name in ("__init__.py", "__pycache__") or not f.is_dir():
                 continue
@@ -201,6 +393,7 @@ def migrate_v2_imports(
             diff_start, diff_end = max(1, best_line - 3), min(best_line + 2, len(lines))
             num_changed = diff_end - diff_start + 1
             num_added = num_changed + len(new_lines)
+            rel_pkg_path = os.path.relpath(pkg_path, start=root)
             out.write(f"--- a/{rel_pkg_path}\n+++ b/{rel_pkg_path}\n")
             out.write(f"@@ -{diff_start},{num_changed} +{diff_start},{num_added} @@\n")
             for line in lines[diff_start - 1 : best_line - 1]:

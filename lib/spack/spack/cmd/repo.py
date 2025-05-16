@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shlex
 import sys
 from typing import Any, List, Optional
 
@@ -183,20 +184,44 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
 
 def repo_migrate(args: Any) -> int:
     """migrate a package repository to the latest Package API"""
+    from spack.repo_migrate import migrate_v1_to_v2, migrate_v2_imports
+
     repo = _get_repo(args.namespace_or_path)
 
     if repo is None:
         tty.die(f"No such repository: {args.namespace_or_path}")
 
-    if repo.package_api < (2, 0):
-        tty.die("Migration from Spack repo API < 2.0 is not supported yet")
+    if (1, 0) <= repo.package_api < (2, 0):
+        success, repo_v2 = migrate_v1_to_v2(repo, fix=args.fix)
+        exit_code = 0 if success else 1
+    elif (2, 0) <= repo.package_api < (3, 0):
+        repo_v2 = None
+        exit_code = 0 if migrate_v2_imports(repo.packages_path, repo.root, fix=args.fix) else 1
+    else:
+        repo_v2 = None
+        exit_code = 0
 
-    import spack.repo_migrate
+    if exit_code == 1 and isinstance(repo_v2, spack.repo.Repo):
+        tty.info(
+            f"Repository '{repo_v2.namespace}' was successfully migrated from "
+            f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
+        )
+        tty.warn(
+            "Remove the old repository from Spack's configuration and add the new one using:\n"
+            f"    spack repo remove {shlex.quote(repo.root)}\n"
+            f"    spack repo add {shlex.quote(repo_v2.root)}"
+        )
 
-    if not spack.repo_migrate.migrate_v2_imports(repo, fix=args.fix):
-        return 1
+    elif exit_code == 0:
+        tty.info(f"Repository '{repo.namespace}' was successfully migrated")
 
-    return 0
+    elif not args.fix and exit_code == 1:
+        tty.error(
+            f"No changes were made to the repository {repo.root} with namespace "
+            f"'{repo.namespace}'. Run with --fix to apply the above changes."
+        )
+
+    return exit_code
 
 
 def repo(parser, args):
