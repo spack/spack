@@ -305,7 +305,7 @@ def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[A
         current_name = x.args[1]
         if current_name in build_deps:
             x.name = "build_requirement"
-            result.append(fn.attr("build_requirement", build_deps[current_name], x))
+            result.append(fn.attr("direct_dependency", build_deps[current_name], x))
             continue
 
         if x.args[0] == "depends_on":
@@ -2322,7 +2322,7 @@ class SpackSolverSetup:
                     for asp_fn in requirements:
                         if asp_fn.args[0] == "depends_on":
                             continue
-                        elif asp_fn.args[0] == "build_requirement":
+                        elif asp_fn.args[0] == "direct_dependency":
                             asp_fn.args = "external_build_requirement", *asp_fn.args[1:]
                         if asp_fn.args[1] != input_spec.name:
                             continue
@@ -2647,7 +2647,7 @@ class SpackSolverSetup:
                         if body is False:
                             for clause in dependency_clauses:
                                 clause.name = "build_requirement"
-                                clauses.append(fn.attr("build_requirement", spec.name, clause))
+                                clauses.append(fn.attr("direct_dependency", spec.name, clause))
                         else:
                             clauses.extend(dependency_clauses)
                     else:
