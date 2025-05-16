@@ -18,7 +18,7 @@ class Uwtools(PythonPackage):
     url = "https://github.com/ufs-community/uwtools/archive/refs/tags/v2.7.1.tar.gz"
     git = "https://github.com/ufs-community/uwtools.git"
 
-    maintainers("NaureenBharwaniNOAA", "christinaholtNOAA", "elcarpenterNOAA", "maddenp-noaa")
+    maintainers("NaureenBharwaniNOAA", "christinaholtNOAA", "elcarpenterNOAA", "maddenp-cu")
 
     license("GPL-2.0-or-later", checked_by="WeirAE")
 
