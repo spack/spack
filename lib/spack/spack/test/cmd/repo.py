@@ -76,7 +76,7 @@ spack:
             assert current_dir in repos_specs
 
 
-OLD_7ZIP = """\
+OLD_7ZIP = b"""\
 # some comment
 
 from spack.package import *
@@ -85,7 +85,7 @@ class _7zip(Package):
     pass
 """
 
-NEW_7ZIP = """\
+NEW_7ZIP = b"""\
 # some comment
 
 from spack_repo.builtin.build_systems.generic import Package
@@ -95,7 +95,7 @@ class _7zip(Package):
     pass
 """
 
-OLD_NUMPY = """\
+OLD_NUMPY = b"""\
 # some comment
 
 from spack.package import *
@@ -104,7 +104,7 @@ class PyNumpy(CMakePackage):
     generator("ninja")
 """
 
-NEW_NUMPY = """\
+NEW_NUMPY = b"""\
 # some comment
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
@@ -128,18 +128,18 @@ def test_repo_migrate(tmp_path: pathlib.Path, config):
     pkg_7zip_old.parent.mkdir(parents=True)
     pkg_numpy_old.parent.mkdir(parents=True)
 
-    pkg_7zip_old.write_text(OLD_7ZIP, encoding="utf-8")
-    pkg_numpy_old.write_text(OLD_NUMPY, encoding="utf-8")
+    pkg_7zip_old.write_bytes(OLD_7ZIP)
+    pkg_numpy_old.write_bytes(OLD_NUMPY)
 
     repo("migrate", "--fix", old_root)
 
     # old files are not touched since they are moved
-    assert pkg_7zip_old.read_text(encoding="utf-8") == OLD_7ZIP
-    assert pkg_numpy_old.read_text(encoding="utf-8") == OLD_NUMPY
+    assert pkg_7zip_old.read_bytes() == OLD_7ZIP
+    assert pkg_numpy_old.read_bytes() == OLD_NUMPY
 
     # new files are created and have updated contents
-    assert pkg_py_7zip_new.read_text(encoding="utf-8") == NEW_7ZIP
-    assert pkg_py_numpy_new.read_text(encoding="utf-8") == NEW_NUMPY
+    assert pkg_py_7zip_new.read_bytes() == NEW_7ZIP
+    assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
 
 
 def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
@@ -152,9 +152,9 @@ def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
     pkg_7zip.parent.mkdir(parents=True)
     pkg_py_numpy_new.parent.mkdir(parents=True)
     pkg_broken.parent.mkdir(parents=True)
-    pkg_7zip.write_text(OLD_7ZIP, encoding="utf-8")
-    pkg_py_numpy_new.write_text(OLD_NUMPY, encoding="utf-8")
-    pkg_broken.write_text("syntax(error", encoding="utf-8")
+    pkg_7zip.write_bytes(OLD_7ZIP)
+    pkg_py_numpy_new.write_bytes(OLD_NUMPY)
+    pkg_broken.write_bytes(b"syntax(error")
 
     stderr = io.StringIO()
 
@@ -169,5 +169,5 @@ def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
     with working_dir(str(r)):
         git("apply", str(tmp_path / "imports.patch"))
 
-    assert pkg_7zip.read_text(encoding="utf-8") == NEW_7ZIP
-    assert pkg_py_numpy_new.read_text(encoding="utf-8") == NEW_NUMPY
+    assert pkg_7zip.read_bytes() == NEW_7ZIP
+    assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
