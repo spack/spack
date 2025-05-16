@@ -43,14 +43,13 @@ class Rclone(GoPackage):
     version("1.55.1", sha256="25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d")
     version("1.55.0", sha256="75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040")
 
-    with default_args(type="build"):
-        depends_on("go@1.23:", when="@1.69.2:")
-        depends_on("go@1.21:", when="@1.68:")
-        depends_on("go@1.20:", when="@1.66:")
-        depends_on("go@1.19:", when="@1.63:")
-        depends_on("go@1.18:", when="@1.62:")
-        depends_on("go@1.17:", when="@1.58:")
-        depends_on("go@1.14:")
+    depends_on("go@1.23:", type="build", when="@1.69.2:")
+    depends_on("go@1.21:", type="build", when="@1.68:")
+    depends_on("go@1.20:", type="build", when="@1.66:")
+    depends_on("go@1.19:", type="build", when="@1.63:")
+    depends_on("go@1.18:", type="build", when="@1.62:")
+    depends_on("go@1.17:", type="build", when="@1.58:")
+    depends_on("go@1.14:", type="build")
 
     @run_after("install")
     def install_completions(self):
