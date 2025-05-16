@@ -41,8 +41,8 @@ class Xnedit(MakefilePackage):
 
     variant("motif", default=True, description="build with motif support")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("automake", type="build")
     depends_on("libx11")
