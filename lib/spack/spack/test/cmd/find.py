@@ -129,7 +129,7 @@ def test_tag2_tag3(parser, specs):
 @pytest.mark.db
 def test_namespaces_shown_correctly(args, with_namespace, database):
     """Test that --namespace(s) works. Old syntax is --namespace"""
-    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
+    assert ("builtin_mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db

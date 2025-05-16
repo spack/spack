@@ -148,8 +148,8 @@ def test_list_repos():
     ):
         total_pkgs = len(list().strip().split())
         mock_pkgs = len(list("-r", "builtin_mock").strip().split())
-        builder_pkgs = len(list("-r", "builder.test").strip().split())
-        both_repos = len(list("-r", "builtin_mock", "-r", "builder.test").strip().split())
+        builder_pkgs = len(list("-r", "builder_test").strip().split())
+        both_repos = len(list("-r", "builtin_mock", "-r", "builder_test").strip().split())
 
         assert total_pkgs > mock_pkgs > builder_pkgs
         assert both_repos == total_pkgs
