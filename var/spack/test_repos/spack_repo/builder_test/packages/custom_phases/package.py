@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin_mock.build_systems.generic import Package
+
 import spack
 import spack.build_systems.generic
 from spack.package import *
-
-from spack_repo.builtin_mock.build_systems.generic import Package
 
 
 class CustomPhases(Package):

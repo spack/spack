@@ -1,11 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.phase_callbacks
-from spack.build_systems import generic
-from spack.package import *
-
+from spack_repo.builtin_mock.build_systems import generic
 from spack_repo.builtin_mock.build_systems.generic import Package
+
+import spack.phase_callbacks
+from spack.package import *
 
 
 class BuilderAndMixins(Package):

@@ -1,12 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin_mock.build_systems import generic
+
 import spack.phase_callbacks
-from spack.build_systems import generic
 from spack.package import *
 
 
-class BuilderAndMixins(Package):
+class BuilderAndMixins(generic.Package):
     """This package defines a mixin for its builder"""
 
     homepage = "http://www.example.com"
