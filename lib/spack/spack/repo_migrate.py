@@ -272,9 +272,14 @@ def migrate_v2_imports(
 
     for f in os.scandir(packages_dir):
         pkg_path = os.path.join(f.path, "package.py")
+        if (
+            f.name in ("__init__.py", "__pycache__")
+            or not f.is_dir(follow_symlinks=False)
+            or os.path.islink(pkg_path)
+        ):
+            print(f"Skipping {f.path}", file=err)
+            continue
         try:
-            if f.name in ("__init__.py", "__pycache__") or not f.is_dir():
-                continue
             with open(pkg_path, "rb") as file:
                 tree = ast.parse(file.read())
         except (OSError, SyntaxError) as e:
