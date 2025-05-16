@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtImagebuilder(PythonPackage):
     """Microsoft Azure Image Builder Client Library for Python."""

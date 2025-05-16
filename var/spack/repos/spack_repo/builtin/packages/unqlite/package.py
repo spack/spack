@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Unqlite(CMakePackage):
     """UnQLite is a in-process software library which implements a self-contained,

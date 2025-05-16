@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class OpenIscsi(MakefilePackage):
     """The Open-iSCSI project is a high-performance, transport independent,

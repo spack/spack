@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Sleef(CMakePackage):
     """SIMD Library for Evaluating Elementary Functions, vectorized libm and DFT."""

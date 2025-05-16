@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Glfmultiples(MakefilePackage):
     """glfMultiples is a GLF-based variant caller for next-generation

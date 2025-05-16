@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ligra(MakefilePackage):
     """A Lightweight Graph Processing Framework for Shared Memory"""

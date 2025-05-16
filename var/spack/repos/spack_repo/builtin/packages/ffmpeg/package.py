@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ffmpeg(AutotoolsPackage):
     """FFmpeg is a complete, cross-platform solution to record,

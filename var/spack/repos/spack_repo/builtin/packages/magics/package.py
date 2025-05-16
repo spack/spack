@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Magics(CMakePackage):
     """Magics is the latest generation of the ECMWF's Meteorological plotting

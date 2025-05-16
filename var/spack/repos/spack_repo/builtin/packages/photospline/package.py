@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Photospline(CMakePackage):
     """Library for interpolating multi-dimensional detector response histograms."""

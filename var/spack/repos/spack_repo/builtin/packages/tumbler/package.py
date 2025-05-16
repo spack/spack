@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tumbler(AutotoolsPackage):
     """Tumbler is a D-Bus service for applications to request thumbnails for XFCE4"""

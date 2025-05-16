@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qb3(CMakePackage):
     """QB3: Fast and Efficient Raster Compression."""

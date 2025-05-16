@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlight(PythonPackage):
     """A catch-all compile-tool wrapper."""

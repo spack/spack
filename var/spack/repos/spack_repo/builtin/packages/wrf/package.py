@@ -12,6 +12,8 @@ from subprocess import PIPE, Popen
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 if sys.platform != "win32":
     from fcntl import F_GETFL, F_SETFL, fcntl
     from os import O_NONBLOCK

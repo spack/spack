@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SuperluMt(Package):
     """SuperLU is a general purpose library for the direct solution of large,

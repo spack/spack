@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bacio(CMakePackage):
     """The bacio library performs binary I/O for the NCEP models, processing

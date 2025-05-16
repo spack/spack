@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHyperlink(PythonPackage):
     """A featureful, immutable, and correct URL for Python."""

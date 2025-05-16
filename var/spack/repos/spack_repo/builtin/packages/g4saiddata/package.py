@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4saiddata(Package):
     """Geant4 data from evaluated cross-sections in SAID data-base"""

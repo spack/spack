@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vizglow(Package):
     """VizGlow software tool is used for high-fidelity multi-dimensional

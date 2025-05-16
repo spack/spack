@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mmseqs2(CMakePackage):
     """MMseqs2 (Many-against-Many sequence searching) is a software suite to

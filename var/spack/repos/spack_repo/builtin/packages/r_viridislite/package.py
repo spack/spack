@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RViridislite(RPackage):
     """Colorblind-Friendly Color Maps (Lite Version).

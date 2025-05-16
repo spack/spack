@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetrics(PythonPackage):
     """metrics for Python, C, C++, Go and Javascript code"""

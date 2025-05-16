@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLinguaEnInflect(PerlPackage):
     """Convert singular to plural. Select "a" or "an"."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Clp(AutotoolsPackage):
     """Clp (Coin-or linear programming) is an open-source

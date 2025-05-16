@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tix(AutotoolsPackage):
     """Tix, the Tk Interface eXtension, is a powerful set of user interface components

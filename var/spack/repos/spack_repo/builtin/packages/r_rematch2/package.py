@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRematch2(RPackage):
     """Tidy Output from Regular Expression Matching.

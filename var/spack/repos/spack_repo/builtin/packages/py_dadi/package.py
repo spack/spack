@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDadi(PythonPackage):
     """Fit population genetic models of demography and selection using

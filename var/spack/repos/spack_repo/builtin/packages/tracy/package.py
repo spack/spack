@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tracy(MakefilePackage):
     """A real time, nanosecond resolution, remote telemetry, hybrid frame and sampling

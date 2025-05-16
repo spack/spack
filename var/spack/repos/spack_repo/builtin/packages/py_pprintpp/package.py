@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPprintpp(PythonPackage):
     """A drop-in replacement for pprint that's actually pretty"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbGromacs(PythonPackage):
     """Biobb_gromacs is the Biobb module collection to perform

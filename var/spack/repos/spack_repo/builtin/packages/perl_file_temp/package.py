@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileTemp(PerlPackage):
     """File::Temp - return name and handle of a temporary file safely."""

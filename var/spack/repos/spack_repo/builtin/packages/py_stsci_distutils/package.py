@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStsciDistutils(PythonPackage):
     """This package contains utilities used to

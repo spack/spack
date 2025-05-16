@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Itk(CMakePackage):
     """The Insight Toolkit (ITK) is an open-source, cross-platform toolkit for

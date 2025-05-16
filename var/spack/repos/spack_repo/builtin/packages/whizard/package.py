@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Whizard(AutotoolsPackage):
     """WHIZARD is a program system designed for the efficient calculation

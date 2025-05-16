@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bats(Package):
     """Bats is a TAP-compliant testing framework for Bash."""

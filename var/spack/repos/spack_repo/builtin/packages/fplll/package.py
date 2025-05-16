@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fplll(AutotoolsPackage):
     """fplll contains implementations of several lattice algorithms.

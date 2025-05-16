@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Flit(MakefilePackage):
     """Floating-point Litmus Tests (FLiT) is a C++ test infrastructure for

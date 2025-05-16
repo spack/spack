@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xmlf90(AutotoolsPackage):
     """xmlf90 is a suite of libraries to handle XML in Fortran."""

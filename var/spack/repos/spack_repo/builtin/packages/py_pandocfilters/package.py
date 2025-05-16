@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPandocfilters(PythonPackage):
     """A python module for writing pandoc filters"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFuture(RPackage):
     """Unified Parallel and Distributed Processing in R for Everyone.

@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hpcviewer(Package):
     """Binary distribution of hpcviewer and integrated hpctraceviewer for

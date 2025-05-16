@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Netcdf95(CMakePackage):
     """NetCDF95 is an alternative Fortran interface to the NetCDF library

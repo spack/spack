@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtDatalakeAnalytics(PythonPackage):
     """Microsoft Azure Data Lake Analytics Management Client Library for

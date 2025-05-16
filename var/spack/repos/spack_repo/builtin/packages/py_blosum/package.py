@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlosum(PythonPackage):
     """The BLOcks SUbstitution Matrices (BLOSUM) are used to score alignments between protein \

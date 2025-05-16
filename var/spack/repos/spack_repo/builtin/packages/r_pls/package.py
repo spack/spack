@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPls(RPackage):
     """Partial Least Squares and Principal Component Regression.

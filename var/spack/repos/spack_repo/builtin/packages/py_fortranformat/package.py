@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFortranformat(PythonPackage):
     """Mimics Fortran textual IO in Python"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class FujitsuSsl2(Package):
     """Fujitsu SSL2 (Scientific Subroutine Library II) is Math library

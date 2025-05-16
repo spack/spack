@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDateException(PerlPackage):
     """Base exception package as Moo Role for Date::* packages."""

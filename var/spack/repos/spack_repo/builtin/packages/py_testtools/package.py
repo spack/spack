@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTesttools(PythonPackage):
     """Extensions to the Python standard library unit testing framework."""

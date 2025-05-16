@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPadwalker(PerlPackage):
     """play with other peoples' lexical variables"""

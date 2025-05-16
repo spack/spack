@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PlanckLikelihood(Package):
     """2015 Cosmic Microwave Background (CMB) spectra and likelihood code"""

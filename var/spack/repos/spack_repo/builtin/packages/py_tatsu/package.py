@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTatsu(PythonPackage):
     """TatSu (the successor to Grako) is a tool that takes grammars in

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bowtie(MakefilePackage):
     """Bowtie is an ultrafast, memory-efficient short read aligner

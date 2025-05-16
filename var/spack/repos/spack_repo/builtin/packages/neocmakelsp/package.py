@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Neocmakelsp(CargoPackage):
     """Another cmake lsp"""

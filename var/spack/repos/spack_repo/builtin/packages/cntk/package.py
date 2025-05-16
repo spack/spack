@@ -6,6 +6,7 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
 from ..boost.package import Boost
 
 

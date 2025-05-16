@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unzip(MakefilePackage):
     """Unzip is a compression and file packaging/archive utility."""

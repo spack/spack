@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColorspacious(PythonPackage):
     """A powerful, accurate, and easy-to-use Python library for doing colorspace

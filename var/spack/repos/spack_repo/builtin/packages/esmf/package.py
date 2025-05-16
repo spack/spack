@@ -5,10 +5,12 @@
 import os
 import sys
 
-import spack.build_systems.makefile
-import spack.build_systems.python
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
+
+from ...build_systems import makefile, python
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.python import PythonExtension
 
 
 class Esmf(MakefilePackage, PythonExtension):
@@ -166,14 +168,14 @@ class Esmf(MakefilePackage, PythonExtension):
         env.set("ESMFMKFILE", os.path.join(self.prefix.lib, "esmf.mk"))
 
 
-class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+class PythonPipBuilder(python.PythonPipBuilder):
 
     @property
     def build_directory(self):
         return os.path.join(self.stage.source_path, "src/addon/esmpy")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     # This is strictly required on Cray systems that use
     # the Cray compiler wrappers, where we need to swap
     # out the spack compiler wrappers in esmf.mk with the

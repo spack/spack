@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pcma(MakefilePackage):
     """PCMA is a progressive multiple sequence alignment program that combines

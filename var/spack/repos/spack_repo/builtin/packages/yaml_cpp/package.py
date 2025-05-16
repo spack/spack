@@ -4,6 +4,7 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
 from ..boost.package import Boost
 
 yaml_cpp_tests_libcxx_error_msg = "yaml-cpp tests incompatible with libc++"

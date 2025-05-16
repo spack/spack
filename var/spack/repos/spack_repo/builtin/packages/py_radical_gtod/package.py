@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRadicalGtod(PythonPackage):
     """RADICAL-GTOD provides a single method, gtod, which returns the current

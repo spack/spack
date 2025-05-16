@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMoreItertools(PythonPackage):
     """Additions to the standard Python itertools package."""

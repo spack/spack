@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Stream(MakefilePackage):
     """The STREAM benchmark is a simple synthetic benchmark program that

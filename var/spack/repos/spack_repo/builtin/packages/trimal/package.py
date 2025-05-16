@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Trimal(MakefilePackage):
     """A tool for automated alignment trimming in large-scale

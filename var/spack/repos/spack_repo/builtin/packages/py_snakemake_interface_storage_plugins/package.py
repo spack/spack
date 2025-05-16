@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeInterfaceStoragePlugins(PythonPackage):
     """This package provides a stable interface for interactions between Snakemake and its storage

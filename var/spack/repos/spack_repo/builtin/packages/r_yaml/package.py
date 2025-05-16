@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RYaml(RPackage):
     """Methods to Convert R Data to YAML and Back.

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xfsinfo(AutotoolsPackage, XorgPackage):
     """xfsinfo is a utility for displaying information about an X font

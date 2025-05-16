@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Enchant(AutotoolsPackage):
     """Enchant is a library (and command-line program) that wraps a

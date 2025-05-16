@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Topaz(PythonPackage):
     """topaz: Pipeline for particle picking in cryo-electron microscopy images using

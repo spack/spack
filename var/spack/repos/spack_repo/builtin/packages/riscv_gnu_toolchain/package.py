@@ -7,6 +7,8 @@ from subprocess import Popen
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class RiscvGnuToolchain(AutotoolsPackage):
     """A cross-compilation tool for RISC-V."""

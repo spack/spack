@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAtropos(PythonPackage):
     """Atropos is tool for specific, sensitive, and speedy trimming of NGS

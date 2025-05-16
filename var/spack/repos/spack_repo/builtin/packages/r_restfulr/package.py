@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRestfulr(RPackage):
     """R Interface to RESTful Web Services.

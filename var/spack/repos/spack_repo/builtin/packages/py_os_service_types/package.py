@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOsServiceTypes(PythonPackage):
     """Python library for consuming OpenStack sevice-types-authority data"""

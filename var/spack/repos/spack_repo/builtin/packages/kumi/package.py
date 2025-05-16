@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kumi(CMakePackage):
     """KUMI - C++20 Tuple & Tuple-base Algorithms Library."""

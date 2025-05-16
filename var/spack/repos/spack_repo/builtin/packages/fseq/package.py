@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fseq(Package):
     """F-Seq: A Feature Density Estimator for High-Throughput Sequence Tags"""

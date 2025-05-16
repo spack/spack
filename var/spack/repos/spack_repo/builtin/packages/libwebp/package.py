@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libwebp(AutotoolsPackage):
     """WebP is a modern image format that provides superior lossless and lossy

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFolium(PythonPackage):
     """Make beautiful maps with Leaflet.js & Python."""

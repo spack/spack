@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fasttree(Package):
     """FastTree infers approximately-maximum-likelihood phylogenetic

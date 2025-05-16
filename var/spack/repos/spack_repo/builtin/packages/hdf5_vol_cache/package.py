@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hdf5VolCache(CMakePackage):
     """Package for HDF5 cache VOL."""

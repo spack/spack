@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nmap(AutotoolsPackage):
     """Nmap ("Network Mapper") is a free and open source (license)

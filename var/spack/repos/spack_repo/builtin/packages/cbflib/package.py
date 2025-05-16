@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cbflib(MakefilePackage):
     """CBFLIB is a library of ANSI-C functions providing a simple mechanism

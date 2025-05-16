@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tiptop(AutotoolsPackage):
     """Tiptop is a performance monitoring tool for Linux."""

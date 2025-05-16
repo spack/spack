@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySmac(PythonPackage):
     """SMAC is a tool for algorithm configuration to optimize

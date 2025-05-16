@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsUnixsocket(PythonPackage):
     """Use requests to talk HTTP via a UNIX domain socket."""

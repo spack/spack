@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtBotservice(PythonPackage):
     """Microsoft Azure Bot Service Client Library for Python."""

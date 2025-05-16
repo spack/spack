@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFairscale(PythonPackage):
     """FairScale is a PyTorch extension library for high performance and large

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Atf(AutotoolsPackage):
     """ATF, or Automated Testing Framework, is a collection of libraries

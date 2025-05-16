@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAppCmd(PerlPackage):
     """Write command line apps with less suffering"""

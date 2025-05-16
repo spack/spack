@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDxchange(PythonPackage):
     """DXchange provides an interface with tomoPy and raw tomographic data

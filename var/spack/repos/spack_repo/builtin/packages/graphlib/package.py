@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Graphlib(CMakePackage):
     """Library to create, manipulate, and export graphs Graphlib."""

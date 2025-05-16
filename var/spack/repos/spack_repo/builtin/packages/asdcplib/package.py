@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Asdcplib(AutotoolsPackage):
     """AS-DCP and AS-02 File Access Library."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Coinutils(AutotoolsPackage):
     """CoinUtils is an open-source collection of classes and helper

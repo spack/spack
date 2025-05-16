@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class NlohmannJsonSchemaValidator(CMakePackage):
     """JSON schema validator for JSON for Modern C++"""

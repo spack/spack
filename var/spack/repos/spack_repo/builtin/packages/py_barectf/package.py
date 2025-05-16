@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBarectf(PythonPackage):
     """barectf (from bare metal and CTF) is a generator of

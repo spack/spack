@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTokenizeRt(PythonPackage):
     """A wrapper around the stdlib `tokenize` which roundtrips."""

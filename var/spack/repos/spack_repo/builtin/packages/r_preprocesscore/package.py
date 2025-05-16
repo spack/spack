@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPreprocesscore(RPackage):
     """A collection of pre-processing functions.

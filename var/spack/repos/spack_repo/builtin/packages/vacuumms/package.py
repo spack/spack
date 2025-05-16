@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vacuumms(CMakePackage):
     """VACUUMMS: (Void Analysis Codes and Unix Utilities for Molecular Modeling and

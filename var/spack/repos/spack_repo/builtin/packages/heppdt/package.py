@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Heppdt(AutotoolsPackage):
     """The HepPID library contains translation methods for particle ID's

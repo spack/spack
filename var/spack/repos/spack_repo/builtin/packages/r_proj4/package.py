@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RProj4(RPackage):
     """A simple interface to the PROJ.4 cartographic projections library.

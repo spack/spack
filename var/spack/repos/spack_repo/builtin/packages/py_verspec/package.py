@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVerspec(PythonPackage):
     """verspec is a Python library for handling software versions and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xxhash(MakefilePackage):
     """xxHash is an Extremely fast Hash algorithm, running at RAM speed

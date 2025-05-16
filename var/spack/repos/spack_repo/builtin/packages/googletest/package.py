@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Googletest(CMakePackage):
     """Google test framework for C++.  Also called gtest."""

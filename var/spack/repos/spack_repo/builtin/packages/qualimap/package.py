@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Qualimap(Package):
     """Qualimap 2 is a platform-independent application written in Java

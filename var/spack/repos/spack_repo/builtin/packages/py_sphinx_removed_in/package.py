@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxRemovedIn(PythonPackage):
     """versionremoved and removed-in directives for Sphinx."""

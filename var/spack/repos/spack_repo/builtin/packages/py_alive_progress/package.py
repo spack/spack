@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAliveProgress(PythonPackage):
     """A new kind of Progress Bar, with real-time

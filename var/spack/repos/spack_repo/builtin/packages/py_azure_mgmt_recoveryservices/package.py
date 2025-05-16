@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtRecoveryservices(PythonPackage):
     """Microsoft Azure Recovery Services Client Library for Python."""

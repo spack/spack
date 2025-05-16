@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHttpTiny(PerlPackage):
     """HTTP::Tiny: A small, simple, correct HTTP/1.1 client perl module"""

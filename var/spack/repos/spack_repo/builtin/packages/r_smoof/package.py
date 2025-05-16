@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSmoof(RPackage):
     """Single and Multi-Objective Optimization Test Functions.

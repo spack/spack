@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Systemtap(AutotoolsPackage):
     """SystemTap provides free software (GPL) infrastructure to

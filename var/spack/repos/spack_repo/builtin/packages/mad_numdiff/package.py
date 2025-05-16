@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MadNumdiff(CMakePackage):
     """compare unformatted text files with numerical content"""

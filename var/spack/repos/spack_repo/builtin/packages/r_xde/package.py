@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXde(RPackage):
     """a Bayesian hierarchical model for cross-study analysis of

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Lcgenv(Package):
     """This package provides environment for packages in SFT LCG releases."""

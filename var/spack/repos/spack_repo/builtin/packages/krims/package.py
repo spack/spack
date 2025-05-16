@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Krims(CMakePackage):
     """The bucket of Krimskrams every C or C++ project needs"""

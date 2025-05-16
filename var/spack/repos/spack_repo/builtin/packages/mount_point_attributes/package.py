@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class MountPointAttributes(AutotoolsPackage):
     """Library to turn expensive, non-scalable file system calls into simple

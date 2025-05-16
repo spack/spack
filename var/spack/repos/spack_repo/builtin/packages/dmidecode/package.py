@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dmidecode(MakefilePackage):
     """Dmidecode reports information about your system's hardware

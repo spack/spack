@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLxml(PythonPackage):
     """lxml is the most feature-rich and easy-to-use library for processing

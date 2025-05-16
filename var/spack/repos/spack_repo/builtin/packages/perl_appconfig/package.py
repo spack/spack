@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAppconfig(PerlPackage):
     """AppConfig - Perl5 module for reading configuration files and parsing

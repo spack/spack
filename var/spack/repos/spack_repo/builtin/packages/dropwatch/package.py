@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dropwatch(AutotoolsPackage):
     """Dropwatch is a project I started in an effort to improve the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qca(CMakePackage):
     """Taking a hint from the similarly-named Java Cryptography Architecture,

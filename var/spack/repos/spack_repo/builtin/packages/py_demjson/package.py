@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDemjson(PythonPackage):
     """demjson is a Python language module for encoding, decoding, and syntax-checking JSON data"""

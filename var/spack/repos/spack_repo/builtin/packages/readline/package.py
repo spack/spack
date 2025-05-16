@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Readline(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Readline library provides a set of functions for use by

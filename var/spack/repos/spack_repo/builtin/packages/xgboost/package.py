@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+
 
 class Xgboost(CMakePackage, CudaPackage):
     """XGBoost is an optimized distributed gradient boosting library designed to be

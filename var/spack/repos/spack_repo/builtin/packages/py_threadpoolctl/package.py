@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyThreadpoolctl(PythonPackage):
     """Python helpers to limit the number of threads used in the

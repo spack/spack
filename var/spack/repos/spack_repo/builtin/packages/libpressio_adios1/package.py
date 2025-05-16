@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpressioAdios1(CMakePackage):
     """LibPressio file reader for legacy ADIOS1 files not supported by ADIOS2"""

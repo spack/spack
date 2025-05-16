@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sumo(CMakePackage):
     """Eclipse SUMO is an open source, highly portable, microscopic and

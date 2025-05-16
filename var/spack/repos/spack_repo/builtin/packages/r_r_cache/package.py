@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRCache(RPackage):
     """Fast and Light-Weight Caching (Memoization) of Objects and Results to

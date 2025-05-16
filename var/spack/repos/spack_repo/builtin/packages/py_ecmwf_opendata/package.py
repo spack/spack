@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEcmwfOpendata(PythonPackage):
     """A package to download ECMWF open data."""

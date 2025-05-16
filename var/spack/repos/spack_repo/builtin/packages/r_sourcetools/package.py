@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSourcetools(RPackage):
     """Tools for Reading, Tokenizing and Parsing R Code.

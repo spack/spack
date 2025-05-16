@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAdbEnhanced(PythonPackage):
     """ADB-Enhanced is a Swiss-army knife for Android testing and

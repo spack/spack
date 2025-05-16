@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTraitsui(PythonPackage):
     """The TraitsUI project contains a toolkit-independent GUI abstraction

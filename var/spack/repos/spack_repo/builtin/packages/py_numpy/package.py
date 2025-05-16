@@ -8,6 +8,8 @@ from typing import Tuple
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumpy(PythonPackage):
     """Fundamental package for array computing in Python."""

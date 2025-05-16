@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCftime(PythonPackage):
     """Python library for decoding time units and variable values in a

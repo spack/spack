@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Etcd(Package):
     """etcd is a distributed reliable key-value store for the most

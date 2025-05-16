@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minixyce(MakefilePackage):
     """Proxy Application. A portable proxy of some of the key

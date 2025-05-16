@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetpy(PythonPackage):
     """Collection of tools for reading, visualizing and performing calculations

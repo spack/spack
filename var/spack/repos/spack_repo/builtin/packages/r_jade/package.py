@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RJade(RPackage):
     """Blind Source Separation Methods Based on Joint Diagonalization and Some

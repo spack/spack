@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSfheaders(RPackage):
     """Converts Between R Objects and Simple Feature Objects.

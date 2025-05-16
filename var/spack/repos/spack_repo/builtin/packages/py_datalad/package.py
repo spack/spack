@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDatalad(PythonPackage):
     """data distribution geared toward scientific datasets.

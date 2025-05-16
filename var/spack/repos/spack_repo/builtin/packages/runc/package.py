@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Runc(MakefilePackage):
     """CLI tool for spawning containers on Linux according to the OCI specification"""

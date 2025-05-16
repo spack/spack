@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Matio(AutotoolsPackage):
     """matio is an C library for reading and writing Matlab MAT files"""

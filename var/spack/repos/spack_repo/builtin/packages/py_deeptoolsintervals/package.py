@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDeeptoolsintervals(PythonPackage):
     """A python module creating/accessing GTF-based interval trees with

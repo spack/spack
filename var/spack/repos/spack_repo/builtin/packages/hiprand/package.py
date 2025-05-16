@@ -7,6 +7,10 @@ import re
 import spack.variant
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
     """The hipRAND project provides an interface for generating pseudo-random

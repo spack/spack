@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyCpuinfo(PythonPackage):
     """Get CPU info with pure Python 2 & 3"""

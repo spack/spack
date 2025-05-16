@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Protobuf(CMakePackage):
     """Google's data interchange format."""

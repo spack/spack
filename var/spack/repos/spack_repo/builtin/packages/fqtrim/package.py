@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fqtrim(MakefilePackage):
     """fqtrim is a versatile stand-alone utility that can be used to trim

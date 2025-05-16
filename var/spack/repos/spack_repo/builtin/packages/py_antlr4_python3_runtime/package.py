@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAntlr4Python3Runtime(PythonPackage):
     """This package provides runtime libraries required to use

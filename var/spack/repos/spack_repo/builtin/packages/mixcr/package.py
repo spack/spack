@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mixcr(Package):
     """MiXCR is a universal framework that processes big immunome data from

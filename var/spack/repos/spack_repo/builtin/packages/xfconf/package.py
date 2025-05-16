@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xfconf(AutotoolsPackage):
     """xfconf - Configuration Storage System for XFCE4"""

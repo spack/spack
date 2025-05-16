@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Cvs(AutotoolsPackage, GNUMirrorPackage):
     """CVS a very traditional source control system"""

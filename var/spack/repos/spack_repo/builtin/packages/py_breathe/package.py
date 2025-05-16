@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBreathe(PythonPackage):
     """This is an extension to reStructuredText and Sphinx to be able to read

@@ -6,6 +6,8 @@ import pathlib
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWaves(PythonPackage):
     """WAVES (LANL code C23004) is a computational science and engineering workflow tool that

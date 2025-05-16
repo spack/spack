@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mscgen(AutotoolsPackage):
     """Mscgen is a small program that parses Message Sequence Chart descriptions

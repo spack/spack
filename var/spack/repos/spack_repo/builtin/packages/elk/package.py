@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Elk(MakefilePackage):
     """An all-electron full-potential linearised augmented-plane wave

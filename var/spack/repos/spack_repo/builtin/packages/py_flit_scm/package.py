@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlitScm(PythonPackage):
     """A PEP 518 build backend that uses setuptools_scm

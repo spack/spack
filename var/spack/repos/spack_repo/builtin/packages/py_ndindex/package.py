@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNdindex(PythonPackage):
     """A Python library for manipulating indices of ndarrays."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BigdftLibabinit(AutotoolsPackage):
     """BigDFT-libABINIT: this is a subsection of files coming from ABINIT software package,

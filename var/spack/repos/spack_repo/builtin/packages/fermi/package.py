@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fermi(MakefilePackage):
     """A WGS de novo assembler based on the FMD-index for large genomes."""

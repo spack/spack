@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NfTowerCli(Package):
     """Tower on the Command Line brings Nextflow Tower concepts

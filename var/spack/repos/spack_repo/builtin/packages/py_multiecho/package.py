@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultiecho(PythonPackage):
     """Combine multi-echoes from a multi-echo fMRI acquisition."""

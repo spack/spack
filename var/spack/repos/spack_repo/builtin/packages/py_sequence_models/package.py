@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySequenceModels(PythonPackage):
     """Pytorch modules and utilities for modeling biological sequence data."""

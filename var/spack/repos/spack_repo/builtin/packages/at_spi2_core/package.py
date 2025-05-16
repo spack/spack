@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class AtSpi2Core(MesonPackage):
     """The At-Spi2 Core package provides a Service Provider Interface for the

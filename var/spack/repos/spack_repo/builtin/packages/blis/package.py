@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 # Although this looks like an Autotools package, it's not one. Refer to:
 # https://github.com/flame/blis/issues/17
 # https://github.com/flame/blis/issues/195

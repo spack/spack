@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Seacr(Package):
     """SEACR (Sparse Enrichment Analysis for CUT&RUN) is intended to call peaks and

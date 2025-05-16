@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RROo(RPackage):
     """R Object-Oriented Programming with or without References.

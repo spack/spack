@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGamm4(RPackage):
     """Generalized Additive Mixed Models using 'mgcv' and 'lme4'.

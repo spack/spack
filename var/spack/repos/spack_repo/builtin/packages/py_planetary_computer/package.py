@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlanetaryComputer(PythonPackage):
     """Python library for interacting with the Microsoft Planetary Computer."""

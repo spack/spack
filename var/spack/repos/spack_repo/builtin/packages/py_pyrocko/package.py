@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyrocko(PythonPackage):
     """Pyrocko is an open source seismology toolbox and library, written in the

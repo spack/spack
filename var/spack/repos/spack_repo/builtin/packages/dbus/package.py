@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
 from spack.package import *
+
+from ...build_systems import autotools, meson
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
 
 
 class Dbus(AutotoolsPackage, MesonPackage):
@@ -75,7 +77,7 @@ class Dbus(AutotoolsPackage, MesonPackage):
         dbus_uuidgen("--ensure")
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = ["--disable-systemd", "--disable-launchd", "--disable-qt-help"]
         args += self.enable_or_disable("xml-docs", variant="xml_docs")
@@ -85,7 +87,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         args = ["-Dsystemd=disabled", "-Dlaunchd=disabled", "-Dqt_help=disabled"]
         args += [f"-Dxml_docs={'enabled' if self.spec.satisfies('+xml_docs') else 'disabled'}"]

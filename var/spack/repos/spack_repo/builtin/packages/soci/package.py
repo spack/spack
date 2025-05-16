@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Soci(CMakePackage):
     """Official repository of the SOCI - The C++ Database Access Library"""

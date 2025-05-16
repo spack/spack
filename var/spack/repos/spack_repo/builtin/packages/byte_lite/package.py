@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ByteLite(CMakePackage):
     """byte lite - A C++17-like byte type for C++98, C++11 and later

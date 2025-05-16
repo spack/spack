@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rnpletal(AutotoolsPackage):
     """The acronym RNPL stands for Rapid Numerical Prototyping Language. It is

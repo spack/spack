@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Medipack(CMakePackage):
     """MeDiPack (Message Differentiation Package) is a tool that handles the MPI communication

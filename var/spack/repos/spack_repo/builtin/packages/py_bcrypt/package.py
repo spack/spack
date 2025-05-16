@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBcrypt(PythonPackage):
     """Modern password hashing for your software and your servers"""

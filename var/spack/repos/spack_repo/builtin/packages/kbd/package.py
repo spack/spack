@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Kbd(AutotoolsPackage):
     """The kbd project contains tools for managing Linux console

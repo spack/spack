@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCustodian(PythonPackage):
     """Custodian is a simple, robust and flexible just-in-time (JIT) job management

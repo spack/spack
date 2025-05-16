@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Codecov(Package):
     """Codecov uploads coverage reports to Codecov for processing."""

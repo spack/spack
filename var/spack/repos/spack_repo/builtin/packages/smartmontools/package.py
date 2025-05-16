@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Smartmontools(AutotoolsPackage):
     """S.M.A.R.T. utility toolset."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xbae(AutotoolsPackage):
     """The Xbae widget set consists of the well known XbaeMatrix widget,

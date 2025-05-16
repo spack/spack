@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class EcmwfAtlas(CMakePackage):
     """A library for numerical weather prediction and climate modelling."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pajeng(CMakePackage):
     """PajeNG is a re-implementation of the well-known Paje visualization

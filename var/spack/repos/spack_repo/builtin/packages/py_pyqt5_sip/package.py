@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyqt5Sip(PythonPackage):
     """The sip module support for PyQt5."""

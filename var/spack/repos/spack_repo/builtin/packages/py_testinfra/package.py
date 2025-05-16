@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTestinfra(PythonPackage):
     """With Testinfra you can write unit tests in Python to test actual state

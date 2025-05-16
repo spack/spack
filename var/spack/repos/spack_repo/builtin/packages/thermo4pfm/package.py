@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Thermo4pfm(CMakePackage):
     """Library to evaluate alloy compositions in Phase-Field models"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXxhash(PythonPackage):
     """xxhash is a Python binding for the xxHash library by

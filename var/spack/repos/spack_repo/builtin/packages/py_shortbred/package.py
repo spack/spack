@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShortbred(PythonPackage):
     """ShortBRED is a system for profiling protein families of interest at

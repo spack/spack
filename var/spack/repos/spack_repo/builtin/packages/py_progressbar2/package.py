@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyProgressbar2(PythonPackage):
     """A progress bar for Python 2 and Python 3"""

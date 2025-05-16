@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Npth(AutotoolsPackage):
     """nPth is a library to provide the GNU Pth API and thus a

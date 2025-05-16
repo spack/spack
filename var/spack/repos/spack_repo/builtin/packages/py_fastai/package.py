@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastai(PythonPackage):
     """You can use fastai without any installation by using

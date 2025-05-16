@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mothur(MakefilePackage):
     """This project seeks to develop a single piece of open-source, expandable

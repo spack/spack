@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJax(PythonPackage):
     """Differentiate, compile, and transform Numpy code.

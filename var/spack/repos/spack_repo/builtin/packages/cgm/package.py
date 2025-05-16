@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cgm(AutotoolsPackage):
     """The Common Geometry Module, Argonne (CGMA) is a code library

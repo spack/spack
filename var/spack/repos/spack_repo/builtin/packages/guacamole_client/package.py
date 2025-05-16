@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class GuacamoleClient(MavenPackage):
     """Apache Guacamole is a clientless remote desktop gateway. It

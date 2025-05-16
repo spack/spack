@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Impute2(Package):
     """IMPUTE2 is a genotype imputation and haplotype phasing program based on

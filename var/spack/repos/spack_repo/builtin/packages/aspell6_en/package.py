@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.aspell_dict import AspellDictPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Aspell6En(AspellDictPackage, GNUMirrorPackage):
     """English (en) dictionary for aspell."""

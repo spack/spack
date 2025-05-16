@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGnuplot(PythonPackage):
     """Gnuplot.py is a Python package that allows you to create graphs from

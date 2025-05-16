@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tempestremap(AutotoolsPackage):
     """TempestRemap is a conservative, consistent and monotone remapping

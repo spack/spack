@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPlackMiddlewareMethodoverride(PerlPackage):
     """Override REST methods to Plack apps via POST"""

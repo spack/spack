@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Collier(CMakePackage):
     """COLLIER: A Complex One-Loop LIbrary with Extended Regularizations

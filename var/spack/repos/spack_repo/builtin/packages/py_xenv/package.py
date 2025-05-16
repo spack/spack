@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXenv(PythonPackage):
     """Helpers to work with the environment in a platform independent way."""

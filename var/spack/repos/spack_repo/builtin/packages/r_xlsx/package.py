@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXlsx(RPackage):
     """Read, Write, Format Excel 2007 and Excel 97/2000/XP/2003 Files.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyImagesize(PythonPackage):
     """Parses image file headers and returns image size. Supports PNG, JPEG,

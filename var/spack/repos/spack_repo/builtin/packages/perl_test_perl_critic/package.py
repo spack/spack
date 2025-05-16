@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestPerlCritic(PerlPackage):
     """Use Perl::Critic in test programs."""

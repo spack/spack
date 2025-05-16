@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyprof2html(PythonPackage):
     """Python cProfile and hotshot profile's data to HTML Converter"""

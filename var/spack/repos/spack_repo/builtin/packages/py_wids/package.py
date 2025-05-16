@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWids(PythonPackage):
     """High performance storage and I/O for deep learning and data processing."""

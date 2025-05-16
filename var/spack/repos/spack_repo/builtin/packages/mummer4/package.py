@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mummer4(AutotoolsPackage):
     """MUMmer is a versatil alignment tool for DNA and protein sequences."""

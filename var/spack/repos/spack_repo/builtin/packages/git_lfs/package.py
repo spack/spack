@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class GitLfs(MakefilePackage):
     """Git LFS is a system for managing and versioning large files in

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsInstant(PythonPackage):
     """Instant is a Python module that allows for instant inlining of C and C++

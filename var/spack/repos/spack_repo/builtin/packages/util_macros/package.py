@@ -5,6 +5,9 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class UtilMacros(AutotoolsPackage, XorgPackage):
     """This is a set of autoconf macros used by the configure.ac scripts in

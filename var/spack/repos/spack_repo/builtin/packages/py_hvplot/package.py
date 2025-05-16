@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHvplot(PythonPackage):
     """A high-level plotting API for pandas, dask, xarray, and networkx built on HoloViews."""

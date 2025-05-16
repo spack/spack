@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScineXtb(CMakePackage):
     """Wrapper around xtb to export it into the Scine tool chain."""

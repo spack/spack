@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCpanMetaCheck(PerlPackage):
     """This module verifies if requirements described in a CPAN::Meta object

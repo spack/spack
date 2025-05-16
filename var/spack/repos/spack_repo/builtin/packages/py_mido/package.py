@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMido(PythonPackage):
     """Mido is a library for working with MIDI messages and ports. It's

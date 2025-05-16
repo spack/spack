@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySlepc4py(PythonPackage):
     """This package provides Python bindings for the SLEPc package."""

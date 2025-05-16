@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNodeSemver(PythonPackage):
     """python version of node-semver (https://github.com/isaacs/node-semver)"""

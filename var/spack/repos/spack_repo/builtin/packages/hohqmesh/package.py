@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hohqmesh(CMakePackage):
     """High Order mesh generator for Hexahedral and Quadrilateral meshes."""

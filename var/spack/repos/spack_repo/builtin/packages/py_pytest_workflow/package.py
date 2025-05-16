@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestWorkflow(PythonPackage):
     """A workflow-system agnostic testing framework

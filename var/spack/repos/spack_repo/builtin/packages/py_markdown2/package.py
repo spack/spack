@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMarkdown2(PythonPackage):
     """A fast and complete Python implementation of Markdown."""

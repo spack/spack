@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNetworkx(PythonPackage):
     """NetworkX is a Python package for the creation, manipulation, and study

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Indicators(CMakePackage):
     """Activity indicators for modern C++."""

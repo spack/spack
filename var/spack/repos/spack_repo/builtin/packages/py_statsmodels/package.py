@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStatsmodels(PythonPackage):
     """Statistical computations and models for use with SciPy"""

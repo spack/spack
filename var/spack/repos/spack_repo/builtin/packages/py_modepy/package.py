@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyModepy(PythonPackage):
     """Basis Functions and Node Sets for Interpolation"""

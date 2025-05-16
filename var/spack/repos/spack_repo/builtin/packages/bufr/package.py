@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bufr(CMakePackage):
     """The NOAA bufr library contains subroutines, functions and other

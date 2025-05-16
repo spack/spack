@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RInfluencer(RPackage):
     """Software Tools to Quantify Structural Importance of Nodes in a Network.

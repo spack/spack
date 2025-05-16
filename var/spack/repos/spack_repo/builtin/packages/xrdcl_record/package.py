@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class XrdclRecord(CMakePackage):
     """XrdClRecorder Plugin. This XRootD Client Plugin can be used to record

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Blaze(CMakePackage):
     """Blaze is an open-source, high-performance C++ math library for dense and

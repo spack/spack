@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbModel(PythonPackage):
     """Biobb_model is the Biobb module collection to check and model 3d structures,

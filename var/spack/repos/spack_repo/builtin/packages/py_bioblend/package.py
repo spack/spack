@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBioblend(PythonPackage):
     """BioBlend is a Python library for interacting with the Galaxy API."""

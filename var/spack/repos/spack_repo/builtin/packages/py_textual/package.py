@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTextual(PythonPackage):
     """Textual is a Rapid Application Development framework for Python."""

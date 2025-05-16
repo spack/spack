@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGcrma(RPackage):
     """Background Adjustment Using Sequence Information.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyworld(PythonPackage):
     """PyWorld wrappers WORLD, which is a free software for high-quality speech

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class QmdProgress(CMakePackage):
     """PROGRESS: Parallel, Rapid O(N) and Graph-based Recursive Electronic

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultiqc(PythonPackage):
     """MultiQC is a tool to aggregate bioinformatics results across many

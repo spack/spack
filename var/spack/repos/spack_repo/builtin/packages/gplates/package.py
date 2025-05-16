@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Gplates(CMakePackage):
     """GPlates is desktop software for the interactive visualisation of plate tectonics.

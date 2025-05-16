@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libopts(AutotoolsPackage):
     """LibOPT is an optimization library developed in C language for the

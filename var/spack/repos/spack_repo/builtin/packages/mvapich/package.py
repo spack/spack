@@ -8,6 +8,7 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
 from ..mpich.package import MpichEnvironmentModifications
 
 

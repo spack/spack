@@ -1,8 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.generic
 from spack.package import *
+
+from ...build_systems import generic
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.generic import Package
 
 
 class Clara(CMakePackage, Package):
@@ -35,7 +38,7 @@ class Clara(CMakePackage, Package):
     depends_on("cxx", type="build")  # generated
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         mkdirp(prefix.include)
         install_tree("single_include", prefix.include)

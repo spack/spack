@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSpiffy(PerlPackage):
     """Spiffy Perl Interface Framework For You"""

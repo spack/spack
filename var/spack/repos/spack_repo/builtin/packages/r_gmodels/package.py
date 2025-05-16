@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGmodels(RPackage):
     """Various R programming tools for model fitting."""

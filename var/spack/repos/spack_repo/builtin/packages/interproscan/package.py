@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Interproscan(Package):
     """InterProScan is the software package that allows sequences

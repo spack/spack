@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCudf(PythonPackage):
     """Built based on the Apache Arrow columnar memory format,

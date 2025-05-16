@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Figcone(CMakePackage):
     """figcone - is a C++17 library, providing a convenient declarative interface for configuration

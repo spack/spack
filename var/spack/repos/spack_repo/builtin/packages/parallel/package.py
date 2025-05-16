@@ -5,6 +5,9 @@
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Parallel(AutotoolsPackage, GNUMirrorPackage):
     """GNU parallel is a shell tool for executing jobs in parallel using

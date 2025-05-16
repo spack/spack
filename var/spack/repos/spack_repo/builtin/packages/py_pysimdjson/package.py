@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPysimdjson(PythonPackage):
     """Python bindings for the simdjson project, a SIMD-accelerated

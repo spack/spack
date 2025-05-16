@@ -5,6 +5,8 @@ from typing import List
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Remhos(MakefilePackage):
     """Remhos (REMap High-Order Solver) is a CEED miniapp that performs monotonic

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Stringtie(MakefilePackage):
     """StringTie is a fast and highly efficient assembler of RNA-Seq alignments

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mdtest(Package):
     """mdtest is an MPI-coordinated metadata benchmark test

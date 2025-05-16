@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyGist(RubyPackage):
     """The gist gem provides a gist command that you can use from your terminal to upload content to https://gist.github.com/."""

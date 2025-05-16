@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Pbbam(MesonPackage):
     """The pbbam software package provides components to create, query,

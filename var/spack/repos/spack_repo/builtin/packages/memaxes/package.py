@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Memaxes(CMakePackage):
     """MemAxes is a visualizer for sampled memory trace data."""

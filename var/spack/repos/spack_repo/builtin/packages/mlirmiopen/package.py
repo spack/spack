@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mlirmiopen(CMakePackage):
     """Multi-Level Intermediate Representation for rocm miopen project."""

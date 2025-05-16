@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class AtomDft(MakefilePackage):
     """ATOM is a program for DFT calculations in atoms and pseudopotential

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyelftools(PythonPackage):
     """A pure-Python library for parsing and analyzing ELF files and DWARF

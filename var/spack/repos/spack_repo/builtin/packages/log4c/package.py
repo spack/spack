@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Log4c(AutotoolsPackage):
     """Library for writing log messages from C programs"""

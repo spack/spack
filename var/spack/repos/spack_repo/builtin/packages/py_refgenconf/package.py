@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRefgenconf(PythonPackage):
     """A Python object for standardized reference genome assets."""

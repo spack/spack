@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPennylane(PythonPackage):
     """PennyLane is a Python quantum machine learning library by Xanadu Inc."""

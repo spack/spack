@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Autofact(Package):
     """An Automatic Functional Annotation and Classification Tool"""

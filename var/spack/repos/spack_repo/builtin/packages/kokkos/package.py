@@ -5,8 +5,12 @@ import os
 
 import llnl.util.lang as lang
 
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems import cmake
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
 
 
 class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
@@ -553,7 +557,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         cmake = self.spec["cmake"].command
         cmake_args = ["-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
         if self.spec.satisfies("+rocm"):
-            prefix_paths = ";".join(spack.build_systems.cmake.get_cmake_prefix_path(self))
+            prefix_paths = ";".join(
+                spack_repo.builtin.build_systems.cmake.get_cmake_prefix_path(self)
+            )
             cmake_args.append("-DCMAKE_PREFIX_PATH={0}".format(prefix_paths))
 
         cmake(cmake_path, *cmake_args)

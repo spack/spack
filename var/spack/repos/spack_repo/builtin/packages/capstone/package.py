@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Capstone(CMakePackage):
     """Capstone is a lightweight multi-platform,

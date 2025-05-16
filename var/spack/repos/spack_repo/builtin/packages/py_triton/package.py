@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTriton(PythonPackage):
     """A language and compiler for custom Deep Learning operations."""

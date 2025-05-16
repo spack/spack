@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySmoteVariants(PythonPackage):
     """Variants of the synthetic minority oversampling technique (SMOTE) for

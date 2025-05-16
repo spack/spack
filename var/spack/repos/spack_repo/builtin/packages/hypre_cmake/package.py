@@ -6,6 +6,9 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class HypreCmake(CMakePackage, CudaPackage):
     """Hypre is a library of high performance preconditioners that

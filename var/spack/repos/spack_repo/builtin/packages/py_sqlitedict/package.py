@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySqlitedict(PythonPackage):
     """Persistent dict in Python, backed up by sqlite3 and pickle, multithread-safe."""

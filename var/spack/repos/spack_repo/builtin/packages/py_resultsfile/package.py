@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyResultsfile(PythonPackage):
     """Python module to read output files of quantum chemistry programs"""

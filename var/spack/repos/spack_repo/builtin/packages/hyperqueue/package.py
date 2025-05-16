@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hyperqueue(Package):
     """Scheduler for sub-node tasks for HPC systems with batch scheduling"""

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class XplorNih(Package):
     """XPLOR-NIH is a structure determination program.

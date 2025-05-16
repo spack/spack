@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH5sh(PythonPackage):
     """Shell-like environment for HDF5."""

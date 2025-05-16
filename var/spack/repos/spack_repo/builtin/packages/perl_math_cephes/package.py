@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathCephes(PerlPackage):
     """This module provides an interface to over 150 functions of the

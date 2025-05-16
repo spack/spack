@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xts(AutotoolsPackage, XorgPackage):
     """This is a revamped version of X Test Suite (XTS) which removes some of

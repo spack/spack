@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMatplotlibScalebar(PythonPackage):
     """Provides a new artist for matplotlib to display a scale bar,

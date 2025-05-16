@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Giblib(AutotoolsPackage):
     """Giblib is a simple library which wraps imlib2's context

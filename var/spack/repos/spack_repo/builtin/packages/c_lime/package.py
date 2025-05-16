@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class CLime(AutotoolsPackage):
     """LIME (which can stand for Lattice QCD Interchange Message Encapsulation

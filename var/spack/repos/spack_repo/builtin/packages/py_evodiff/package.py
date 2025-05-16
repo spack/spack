@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEvodiff(PythonPackage):
     """Python package for generation of protein sequences and evolutionary alignments via \

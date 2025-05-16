@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Spherepack(Package):
     """SPHEREPACK - A Package for Modeling Geophysical Processes"""

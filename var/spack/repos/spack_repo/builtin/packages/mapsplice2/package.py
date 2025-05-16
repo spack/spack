@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mapsplice2(MakefilePackage):
     """MapSplice is a software for mapping RNA-seq data to reference genome

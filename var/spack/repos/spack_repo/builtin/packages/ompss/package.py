@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ompss(Package):
     """OmpSs is an effort to integrate features from the StarSs programming

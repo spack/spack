@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTraceback2(PythonPackage):
     """Backports of the traceback module"""

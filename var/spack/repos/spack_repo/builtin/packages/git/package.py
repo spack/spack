@@ -9,6 +9,8 @@ import spack.fetch_strategy
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Git(AutotoolsPackage):
     """Git is a free and open source distributed version control

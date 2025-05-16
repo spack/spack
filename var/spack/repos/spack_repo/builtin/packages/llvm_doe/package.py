@@ -5,8 +5,10 @@ import os
 import re
 import sys
 
-from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.package import *
+
+from ...build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
+from ...build_systems.cuda import CudaPackage
 
 
 class LlvmDoe(CMakePackage, CudaPackage):

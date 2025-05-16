@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xfce4Settings(AutotoolsPackage):
     """Daemon, manager, and editor to centralize the configuration management for XFCE4"""

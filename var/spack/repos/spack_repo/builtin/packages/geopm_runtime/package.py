@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GeopmRuntime(AutotoolsPackage):
     """The Global Extensible Open Power Manager (GEOPM) Runtime is designed to

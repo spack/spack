@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCanaryStability(PerlPackage):
     """Canary to check perl compatibility for schmorp's modules"""

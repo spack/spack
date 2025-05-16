@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycm(PythonPackage):
     """Multi-class confusion matrix library in Python."""

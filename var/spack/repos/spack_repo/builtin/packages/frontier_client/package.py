@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class FrontierClient(MakefilePackage):
     """The Frontier distributed database caching system distributes data from

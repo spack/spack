@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAccelerate(PythonPackage):
     """A simple way to train and use PyTorch models with multi-GPU, TPU, mixed-precision."""

@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Wxwidgets(AutotoolsPackage):
     """wxWidgets is a C++ library that lets developers create

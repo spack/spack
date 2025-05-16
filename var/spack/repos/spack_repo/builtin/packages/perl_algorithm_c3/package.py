@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAlgorithmC3(PerlPackage):
     """A module for merging hierarchies using the C3 algorithm"""

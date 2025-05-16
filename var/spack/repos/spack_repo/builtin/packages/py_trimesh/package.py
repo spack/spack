@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTrimesh(PythonPackage):
     """Import, export, process, analyze and view triangular meshes"""

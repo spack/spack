@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class GamessRiMp2Miniapp(MakefilePackage):
     """The GAMESS RI-MP2 mini-app computes the correlation energy with the

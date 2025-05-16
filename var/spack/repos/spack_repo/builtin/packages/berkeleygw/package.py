@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Berkeleygw(MakefilePackage):
     """BerkeleyGW is a many-body perturbation theory code for excited states,

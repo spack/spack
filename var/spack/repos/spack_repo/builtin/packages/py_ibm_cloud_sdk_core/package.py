@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIbmCloudSdkCore(PythonPackage):
     """This project contains core functionality required by

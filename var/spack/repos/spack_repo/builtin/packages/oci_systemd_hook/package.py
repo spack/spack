@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OciSystemdHook(AutotoolsPackage):
     """OCI systemd hook enables users to run systemd in docker and OCI

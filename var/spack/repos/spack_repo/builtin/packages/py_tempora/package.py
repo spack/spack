@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTempora(PythonPackage):
     """Objects and routines pertaining to date and time (tempora)"""

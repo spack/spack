@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RJsonlite(RPackage):
     """A Simple and Robust JSON Parser and Generator for R.

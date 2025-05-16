@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Keepassxc(CMakePackage):
     """KeePassXC - Cross-Platform Password Manager, modern, secure, and open-source."""

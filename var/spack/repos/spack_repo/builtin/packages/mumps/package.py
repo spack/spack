@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""

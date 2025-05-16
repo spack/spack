@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCvxopt(PythonPackage):
     """CVXOPT is a free software package for convex optimization based on the

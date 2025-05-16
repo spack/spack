@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRrcov(RPackage):
     """Scalable Robust Estimators with High Breakdown Point.

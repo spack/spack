@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPerl4Corelibs(PerlPackage):
     """Perl4::CoreLibs - libraries historically supplied with Perl 4"""

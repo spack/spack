@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPureEval(PythonPackage):
     """Safely evaluate AST nodes without side effects."""

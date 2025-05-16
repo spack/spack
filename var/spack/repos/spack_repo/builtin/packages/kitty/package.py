@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 # NOTE: This package uses a setup.py file, but does not use distutils/setuptools or any
 # other known build system, so this is a custom package

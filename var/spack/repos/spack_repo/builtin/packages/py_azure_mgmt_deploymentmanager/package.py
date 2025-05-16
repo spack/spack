@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtDeploymentmanager(PythonPackage):
     """Microsoft Azure Deployment Manager Client Library for Python."""

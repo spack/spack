@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxRtdDarkMode(PythonPackage):
     """A Sphinx extension for adding a toggleable dark mode to the Read the Docs theme."""

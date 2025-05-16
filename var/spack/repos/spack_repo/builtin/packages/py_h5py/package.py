@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH5py(PythonPackage):
     """The h5py package provides both a high- and low-level interface to the

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xproxymanagementprotocol(AutotoolsPackage, XorgPackage):
     """The Proxy Management Protocol is an ICE based protocol that provides a

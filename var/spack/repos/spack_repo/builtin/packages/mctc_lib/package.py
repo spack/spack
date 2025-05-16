@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems import cmake, meson
 from spack.package import *
+
+from ...build_systems import cmake, meson
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.meson import MesonPackage
 
 
 class MctcLib(MesonPackage, CMakePackage):

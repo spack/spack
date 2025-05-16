@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgraph(RPackage):
     """An Implementation of Grammar of Graphics for Graphs and Networks.

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Aml(AutotoolsPackage):
     """AML is a memory management library designed to ease the use of complex

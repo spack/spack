@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nginx(AutotoolsPackage):
     """nginx [engine x] is an HTTP and reverse proxy server, a mail proxy

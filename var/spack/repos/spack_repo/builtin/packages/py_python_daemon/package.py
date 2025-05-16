@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonDaemon(PythonPackage):
     """Library to implement a well-behaved Unix daemon process.

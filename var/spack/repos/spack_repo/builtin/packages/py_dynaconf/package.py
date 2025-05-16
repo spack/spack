@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDynaconf(PythonPackage):
     """Dynaconf is a dynamic configuration management package for Python projects"""

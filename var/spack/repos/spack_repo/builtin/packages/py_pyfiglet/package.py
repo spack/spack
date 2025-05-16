@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyfiglet(PythonPackage):
     """pyfiglet is a full port of FIGlet (http://www.figlet.org/)

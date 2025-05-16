@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPsijPython(PythonPackage):
     """PSI/J is an abstraction layer over cluster schedulers to write scheduler

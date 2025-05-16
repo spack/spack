@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Montage(MakefilePackage):
     """Montage is a toolkit for assembling Flexible Image Transport System

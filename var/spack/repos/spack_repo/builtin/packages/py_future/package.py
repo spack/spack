@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFuture(PythonPackage):
     """Clean single-source support for Python 3 and 2"""

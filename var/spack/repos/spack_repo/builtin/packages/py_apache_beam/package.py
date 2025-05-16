@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApacheBeam(PythonPackage):
     """Apache Beam is a unified programming model for Batch and Streaming."""

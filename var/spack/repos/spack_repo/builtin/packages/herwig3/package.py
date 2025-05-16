@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Herwig3(AutotoolsPackage):
     """Herwig is a multi-purpose particle physics event generator."""

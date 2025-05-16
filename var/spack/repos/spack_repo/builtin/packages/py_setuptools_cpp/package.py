@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySetuptoolsCpp(PythonPackage):
     """Simplified packaging for pybind11-based C++ extensions"""

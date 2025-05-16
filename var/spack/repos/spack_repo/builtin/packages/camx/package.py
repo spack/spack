@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Camx(MakefilePackage):
     """Comprehensive Air Quality Model with Extensions."""

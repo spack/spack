@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.lua import LuaPackage
+
 
 class LuaBit32(LuaPackage):
     """Lua 5.2 bit operations for Lua 5.1"""

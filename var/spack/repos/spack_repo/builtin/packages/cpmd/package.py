@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cpmd(MakefilePackage):
     """The CPMD code is a parallelized plane wave / pseudopotential

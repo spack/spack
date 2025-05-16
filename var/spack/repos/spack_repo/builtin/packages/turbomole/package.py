@@ -7,6 +7,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Turbomole(Package):
     """TURBOMOLE: Program Package for ab initio Electronic Structure

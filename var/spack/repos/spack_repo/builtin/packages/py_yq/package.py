@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYq(PythonPackage):
     """yq takes YAML input, converts it to JSON, and pipes it to jq"""

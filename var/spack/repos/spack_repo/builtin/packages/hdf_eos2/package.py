@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class HdfEos2(AutotoolsPackage):
     """HDF-EOS (Hierarchical Data Format - Earth Observing System) is a

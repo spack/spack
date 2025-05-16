@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xwininfo(AutotoolsPackage, XorgPackage):
     """xwininfo prints information about windows on an X server. Various

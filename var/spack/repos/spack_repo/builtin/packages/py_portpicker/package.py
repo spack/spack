@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPortpicker(PythonPackage):
     """A library to choose unique available network ports."""

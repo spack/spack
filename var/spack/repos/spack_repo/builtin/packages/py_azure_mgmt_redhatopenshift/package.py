@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtRedhatopenshift(PythonPackage):
     """Microsoft Azure Red Hat Openshift Management Client Library for Python."""

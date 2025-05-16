@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Snphylo(Package):
     """A pipeline to generate a phylogenetic tree from huge SNP data"""

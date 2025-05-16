@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Julea(MesonPackage):
     """JULEA is a flexible storage framework that allows offering arbitrary

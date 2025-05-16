@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypeg2(PythonPackage):
     """A PEG Parser-Interpreter in Python"""

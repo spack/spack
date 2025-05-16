@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GatbCore(CMakePackage):
     """GATB - The Genome Analysis Toolbox with de-Bruijn graph"""

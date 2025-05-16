@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExtutilsConfig(PerlPackage):
     """ExtUtils::Config - A wrapper for perl's configuration"""

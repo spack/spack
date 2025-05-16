@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybedtools(PythonPackage):
     """Python wrapper -- and more -- for Aaron Quinlan's BEDTools"""

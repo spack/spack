@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAlienLibxml2(PerlPackage):
     """This module provides libxml2 for other modules to use."""

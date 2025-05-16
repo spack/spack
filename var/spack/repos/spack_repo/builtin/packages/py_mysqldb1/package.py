@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMysqldb1(PythonPackage):
     """Legacy mysql bindings for python"""

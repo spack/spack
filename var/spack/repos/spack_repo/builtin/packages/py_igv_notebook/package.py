@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIgvNotebook(PythonPackage):
     """Module for embedding igv.js in an IPython notebook"""

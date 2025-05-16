@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Snappy(CMakePackage):
     """A fast compressor/decompressor: https://code.google.com/p/snappy"""

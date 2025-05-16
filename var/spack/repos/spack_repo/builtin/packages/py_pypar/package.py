@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypar(PythonPackage):
     """Pypar is an efficient but easy-to-use module that allows programs

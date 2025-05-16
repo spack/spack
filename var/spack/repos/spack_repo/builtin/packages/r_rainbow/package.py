@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRainbow(RPackage):
     """Bagplots, Boxplots and Rainbow Plots for Functional Data.

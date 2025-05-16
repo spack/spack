@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRosdep(PythonPackage):
     """rosdep package manager abstraction tool for ROS."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sloccount(MakefilePackage):
     """SLOCCount is a set of tools for counting physical Source Lines of Code

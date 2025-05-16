@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlac(PythonPackage):
     """The smartest command line arguments parser in the world."""

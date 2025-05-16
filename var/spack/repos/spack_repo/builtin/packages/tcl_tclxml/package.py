@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class TclTclxml(AutotoolsPackage):
     """TclXML is an API for parsing XML documents using the Tcl scripting

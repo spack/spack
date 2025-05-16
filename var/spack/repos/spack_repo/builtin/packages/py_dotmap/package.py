@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDotmap(PythonPackage):
     """`DotMap` is a dot-access `dict` subclass that allows dot access to items."""

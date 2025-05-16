@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OpenalSoft(CMakePackage):
     """OpenAL provides capabilities for playing audio in a

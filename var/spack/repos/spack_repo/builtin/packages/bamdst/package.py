@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bamdst(MakefilePackage):
     """Bamdst is a a lightweight bam file depth statistical tool."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Doctest(CMakePackage):
     """The fastest feature-rich C++11/14/17/20/23 single-header testing framework"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParso(PythonPackage):
     """Parso is a Python parser that supports error recovery and round-trip parsing

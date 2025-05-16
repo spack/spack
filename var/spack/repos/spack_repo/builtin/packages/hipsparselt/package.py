@@ -6,6 +6,9 @@
 import spack.variant
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipsparselt(CMakePackage, ROCmPackage):
     """hipSPARSELt is a SPARSE marshalling library, with multiple supported backends.

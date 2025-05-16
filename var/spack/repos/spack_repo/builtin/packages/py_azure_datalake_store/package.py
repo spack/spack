@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureDatalakeStore(PythonPackage):
     """Azure Data Lake Store Filesystem Client Library for Python."""

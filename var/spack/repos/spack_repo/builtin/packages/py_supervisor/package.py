@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySupervisor(PythonPackage):
     """A system for controlling process state under UNIX"""

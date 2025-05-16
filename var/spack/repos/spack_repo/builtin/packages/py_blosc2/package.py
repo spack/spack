@@ -4,8 +4,10 @@
 
 import shlex
 
-from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
+
+from ...build_systems.cmake import CMakeBuilder
+from ...build_systems.python import PythonPackage
 
 
 class PyBlosc2(PythonPackage):

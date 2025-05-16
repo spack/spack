@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConvertdate(PythonPackage):
     """Converts between Gregorian dates and other calendar

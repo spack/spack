@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHydrotsm(RPackage):
     """Time Series Management, Analysis and Interpolation for Hydrological

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGlobusCli(PythonPackage):
     """Globus CLI is a standalone application that can be installed on the user's machine

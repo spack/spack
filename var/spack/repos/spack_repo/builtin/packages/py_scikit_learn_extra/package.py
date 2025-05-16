@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitLearnExtra(PythonPackage):
     """A set of useful tools compatible with scikit-learn

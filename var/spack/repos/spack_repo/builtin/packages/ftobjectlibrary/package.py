@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ftobjectlibrary(CMakePackage):
     """FTObjectLibrary provides a collection of reference counted Fortran 2003

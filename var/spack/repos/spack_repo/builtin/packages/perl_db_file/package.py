@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbFile(PerlPackage):
     """DB_File is a module which allows Perl programs to make use of the

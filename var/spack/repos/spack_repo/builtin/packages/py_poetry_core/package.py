@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoetryCore(PythonPackage):
     """Poetry PEP 517 Build Backend."""

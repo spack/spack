@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Kraken2(Package):
     """Kraken2 is a system for assigning taxonomic labels to short DNA

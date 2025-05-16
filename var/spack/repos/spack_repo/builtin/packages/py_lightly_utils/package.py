@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightlyUtils(PythonPackage):
     """A utility package for lightly."""

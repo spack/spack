@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLscsoftGlue(PythonPackage):
     """Glue (Grid LSC User Environment) is a suite of python modules and

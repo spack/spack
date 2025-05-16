@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libblastrampoline(MakefilePackage):
     """Using PLT trampolines to provide a BLAS and LAPACK demuxing library."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRotaryEmbeddingTorch(PythonPackage):
     """A standalone library for adding rotary embeddings to transformers in Pytorch,

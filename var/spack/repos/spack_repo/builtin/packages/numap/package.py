@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Numap(CMakePackage):
     """Numap is a Linux library dedicated to memory profiling based on

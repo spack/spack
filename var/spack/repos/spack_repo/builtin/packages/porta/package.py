@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Porta(Package):
     """PORTA is a collection of routines for analyzing polytopes and

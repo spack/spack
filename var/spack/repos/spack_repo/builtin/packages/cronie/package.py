@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cronie(AutotoolsPackage):
     """Cronie contains the standard UNIX daemon crond that runs specified

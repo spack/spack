@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mpl(CMakePackage):
     """A C++17 message passing library based on MPI."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDevelSymdump(PerlPackage):
     """Devel::Symdump - dump symbol names or the symbol table"""

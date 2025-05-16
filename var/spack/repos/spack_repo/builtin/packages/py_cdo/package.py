@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCdo(PythonPackage):
     """The cdo package provides an interface to the Climate Data

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladDeprecated(PythonPackage):
     """DataLad extension package for deprecated functionality that was phased

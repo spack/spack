@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Kmergenie(MakefilePackage):
     """KmerGenie estimates the best k-mer length for genome de novo assembly."""

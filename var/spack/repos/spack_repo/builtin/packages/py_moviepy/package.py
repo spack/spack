@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMoviepy(PythonPackage):
     """MoviePy is a Python module for video editing, which can

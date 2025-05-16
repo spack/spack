@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 RELEASES = [
     {
         "version": "16.0-220312",

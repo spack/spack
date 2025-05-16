@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Liftoff(PythonPackage):
     """Liftoff is a tool that accurately maps annotations in GFF or

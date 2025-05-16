@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Cpio(AutotoolsPackage, GNUMirrorPackage):
     """GNU cpio copies files into or out of a cpio or tar archive and the file system.

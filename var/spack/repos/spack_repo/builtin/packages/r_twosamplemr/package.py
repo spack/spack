@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTwosamplemr(RPackage):
     """Two Sample MR functions and interface to MR Base database.

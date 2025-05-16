@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlRegexp(PerlPackage):
     """This package contains regular expressions for the following XML tokens:

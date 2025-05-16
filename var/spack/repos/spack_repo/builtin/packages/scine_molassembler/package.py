@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScineMolassembler(CMakePackage):
     """Chemoinformatics toolkit with support for inorganic molecules."""

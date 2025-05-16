@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bamutil(MakefilePackage):
     """bamUtil is a repository that contains several programs

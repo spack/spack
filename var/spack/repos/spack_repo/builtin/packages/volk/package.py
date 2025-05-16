@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Volk(CMakePackage):
     """VOLK is the Vector-Optimized Library of Kernels. It is a

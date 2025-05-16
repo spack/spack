@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWinUnicodeConsole(PythonPackage):
     """Enable Unicode input and display when running Python from Windows

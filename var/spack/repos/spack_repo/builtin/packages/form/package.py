@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Form(AutotoolsPackage):
     """FORM is a Symbolic Manipulation System."""

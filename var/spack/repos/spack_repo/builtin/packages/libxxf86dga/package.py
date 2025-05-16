@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxxf86dga(AutotoolsPackage, XorgPackage):
     """libXxf86dga - Client library for the XFree86-DGA extension."""

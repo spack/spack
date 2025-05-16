@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoTty(PerlPackage):
     """IO::Tty is used internally by IO::Pty to create a pseudo-tty. You

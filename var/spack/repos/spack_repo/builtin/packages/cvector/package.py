@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cvector(MakefilePackage):
     """CVector -- ANSI C API for Dynamic Arrays"""

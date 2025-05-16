@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibmmtfCpp(CMakePackage):
     """The macromolecular transmission format (MMTF) is a binary encoding of

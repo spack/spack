@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class I3(AutotoolsPackage):
     """i3, improved tiling wm. i3 is a tiling window manager, completely

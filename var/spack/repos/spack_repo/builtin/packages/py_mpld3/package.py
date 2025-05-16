@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMpld3(PythonPackage):
     """An interactive D3js-based viewer which brings matplotlib graphics

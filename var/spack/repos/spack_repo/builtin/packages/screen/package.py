@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Screen(AutotoolsPackage, GNUMirrorPackage):
     """Screen is a full-screen window manager that multiplexes a physical

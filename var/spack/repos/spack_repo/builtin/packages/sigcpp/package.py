@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sigcpp(CMakePackage):
     """libsigc++ : The Typesafe Callback Framework for C++"""

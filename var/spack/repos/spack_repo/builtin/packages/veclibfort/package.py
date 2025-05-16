@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Veclibfort(Package):
     """Lightweight but flexible shim designed to rectify the incompatibilities

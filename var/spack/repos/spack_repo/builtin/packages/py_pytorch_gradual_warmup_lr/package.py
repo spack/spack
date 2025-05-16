@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytorchGradualWarmupLr(PythonPackage):
     """Gradually warm-up (increasing) learning rate for pytorch's optimizer."""

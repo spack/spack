@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLoompy(PythonPackage):
     """Work with Loom files for single-cell RNA-seq data."""

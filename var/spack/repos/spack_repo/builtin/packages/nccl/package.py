@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Nccl(MakefilePackage, CudaPackage):
     """Optimized primitives for collective multi-GPU communication."""

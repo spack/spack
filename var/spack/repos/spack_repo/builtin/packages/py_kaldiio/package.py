@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKaldiio(PythonPackage):
     """A pure python module for reading and writing kaldi ark files"""

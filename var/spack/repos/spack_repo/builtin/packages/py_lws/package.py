@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLws(PythonPackage):
     """Fast spectrogram phase recovery using Local Weighted Sums"""

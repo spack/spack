@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Roms(MakefilePackage):
     """ROMS is a free-surface, terrain-following,

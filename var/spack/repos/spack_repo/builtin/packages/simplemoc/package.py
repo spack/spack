@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Simplemoc(MakefilePackage):
     """The purpose of this mini-app is to demonstrate the performance

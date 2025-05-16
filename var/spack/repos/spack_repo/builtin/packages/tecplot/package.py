@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Tecplot(Package):
     """Tecplot 360 is a Computational Fluid Dynamics (CFD) and numerical

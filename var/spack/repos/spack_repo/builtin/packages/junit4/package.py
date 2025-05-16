@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Junit4(MavenPackage):
     """A programmer-oriented testing framework for Java."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Price(MakefilePackage):
     """PRICE (Paired-Read Iterative Contig Extension): a de novo genome

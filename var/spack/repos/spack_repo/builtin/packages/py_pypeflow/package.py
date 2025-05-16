@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypeflow(PythonPackage):
     """pypeFLOW is light weight and reusable make / flow data process

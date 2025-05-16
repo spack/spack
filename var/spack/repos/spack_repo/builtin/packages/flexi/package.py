@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flexi(CMakePackage):
     """Open Source High-Order Unstructured Discontinuous Galerkin Fluid

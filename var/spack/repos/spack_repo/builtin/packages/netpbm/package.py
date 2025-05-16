@@ -7,6 +7,8 @@ from shutil import copyfile
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Netpbm(MakefilePackage):
     """Netpbm - graphics tools and converters.

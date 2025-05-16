@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lemon(CMakePackage):
     """LEMON stands for Library for Efficient Modeling and Optimization in

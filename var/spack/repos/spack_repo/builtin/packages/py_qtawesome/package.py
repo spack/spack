@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQtawesome(PythonPackage):
     """FontAwesome icons in PyQt and PySide applications"""

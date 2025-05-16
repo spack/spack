@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libqrencode(AutotoolsPackage):
     """libqrencode - a fast and compact QR Code encoding library."""

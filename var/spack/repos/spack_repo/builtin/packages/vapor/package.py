@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vapor(CMakePackage):
     """VAPOR is the Visualization and Analysis Platform for Ocean,

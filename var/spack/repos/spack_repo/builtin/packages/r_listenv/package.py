@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RListenv(RPackage):
     """Environments Behaving (Almost) as Lists.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nest(CMakePackage):
     """NEST is a simulator for spiking neural network models

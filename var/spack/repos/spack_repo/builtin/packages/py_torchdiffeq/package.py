@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchdiffeq(PythonPackage):
     """ODE solvers and adjoint sensitivity analysis in PyTorch."""

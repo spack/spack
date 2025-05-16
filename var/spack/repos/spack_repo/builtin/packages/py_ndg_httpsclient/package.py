@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNdgHttpsclient(PythonPackage):
     """Provides enhanced HTTPS support for httplib and urllib2 using

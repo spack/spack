@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBoot(RPackage):
     """Bootstrap Functions (Originally by Angelo Canty for S).

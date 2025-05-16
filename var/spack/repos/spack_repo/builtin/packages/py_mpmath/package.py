@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMpmath(PythonPackage):
     """A Python library for arbitrary-precision floating-point arithmetic."""

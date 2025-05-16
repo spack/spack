@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class VtableDumper(MakefilePackage):
     """A tool to list content of virtual tables in a shared library."""

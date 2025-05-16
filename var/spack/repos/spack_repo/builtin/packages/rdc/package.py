@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rdc(CMakePackage):
     """ROCm Data Center Tool"""

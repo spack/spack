@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygame(PythonPackage):
     """Pygame is a free and open-source cross-platform library for the development

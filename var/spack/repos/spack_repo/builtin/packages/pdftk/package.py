@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pdftk(MakefilePackage):
     """PDFtk Server is a command-line tool for working with PDFs. It is

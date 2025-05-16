@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jags(AutotoolsPackage):
     """JAGS is Just Another Gibbs Sampler.  It is a program for analysis of

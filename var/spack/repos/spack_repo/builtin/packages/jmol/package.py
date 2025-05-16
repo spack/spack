@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Jmol(Package):
     """Jmol: an open-source Java viewer for chemical structures in 3D

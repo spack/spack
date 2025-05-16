@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class HpcBeeflow(PythonPackage):
     """BEE is a workflow orchestration system designed to build containerized

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xdbedizzy(AutotoolsPackage, XorgPackage):
     """xdbedizzy is a demo of the X11 Double Buffer Extension (DBE)

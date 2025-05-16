@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hipace(CMakePackage):
     """Highly efficient Plasma Accelerator Emulation, quasistatic

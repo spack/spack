@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynn(PythonPackage):
     """A Python package for simulator-independent specification of neuronal

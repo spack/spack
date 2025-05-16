@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Sed(AutotoolsPackage, GNUMirrorPackage):
     """GNU implementation of the famous stream editor."""

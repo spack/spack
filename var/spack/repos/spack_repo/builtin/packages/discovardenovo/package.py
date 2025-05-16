@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Discovardenovo(AutotoolsPackage):
     """DISCOVAR de novo is a large (and small) de novo genome assembler.

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Spatter(CMakePackage, CudaPackage):
     """A microbenchmark for timing Gather/Scatter kernels on CPUs and GPUs."""

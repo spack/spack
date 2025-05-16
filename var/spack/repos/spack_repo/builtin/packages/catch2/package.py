@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Catch2(CMakePackage):
     """Catch2 is a multi-paradigm test framework for C++, which also

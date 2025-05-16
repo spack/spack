@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ArgpStandalone(AutotoolsPackage):
     """Standalone version of the argp interface from glibc for parsing

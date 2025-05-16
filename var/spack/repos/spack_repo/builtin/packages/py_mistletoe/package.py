@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMistletoe(PythonPackage):
     """A fast, extensible Markdown parser in pure Python."""

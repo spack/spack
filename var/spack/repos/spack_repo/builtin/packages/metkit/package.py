@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Metkit(CMakePackage):
     """Toolkit for manipulating and describing meteorological objects,

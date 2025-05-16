@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDmrcate(RPackage):
     """Methylation array and sequencing spatial analysis methods.

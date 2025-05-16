@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNaraWpe(PythonPackage):
     """Background noise and signal reverberation due to reflections in an

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLibcst(PythonPackage):
     """A Concrete Syntax Tree (CST) parser and serializer library for Python."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtContainerservice(PythonPackage):
     """Microsoft Azure Container Service Management Client Library for Python."""

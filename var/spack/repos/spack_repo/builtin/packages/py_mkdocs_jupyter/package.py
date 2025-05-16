@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMkdocsJupyter(PythonPackage):
     """Use Jupyter in mkdocs websites."""

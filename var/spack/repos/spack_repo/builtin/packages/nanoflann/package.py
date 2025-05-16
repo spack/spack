@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nanoflann(CMakePackage):
     """a C++ header-only library for Nearest Neighbor (NN) search wih KD-trees."""

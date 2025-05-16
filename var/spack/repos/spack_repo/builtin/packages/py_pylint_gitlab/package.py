@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylintGitlab(PythonPackage):
     """This project provides pylint formatters for a nice integration with GitLab CI."""

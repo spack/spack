@@ -7,6 +7,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Rocalution(CMakePackage):
     """rocALUTION is a sparse linear algebra library with focus on

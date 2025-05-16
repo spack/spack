@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Beakerlib(MakefilePackage):
     """BeakerLib is a shell-level integration testing library, providing

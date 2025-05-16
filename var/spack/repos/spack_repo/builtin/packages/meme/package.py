@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Meme(AutotoolsPackage):
     """The MEME Suite allows the biologist to discover novel motifs in

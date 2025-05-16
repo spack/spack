@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpyfilechooser(PythonPackage):
     """Python file chooser widget for use in Jupyter/IPython in conjunction with ipywidgets."""

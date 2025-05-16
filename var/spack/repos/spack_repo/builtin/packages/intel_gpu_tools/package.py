@@ -6,6 +6,9 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class IntelGpuTools(AutotoolsPackage, XorgPackage):
     """Intel GPU Tools is a collection of tools for development and testing of

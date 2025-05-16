@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetimeTimezone(PerlPackage):
     """DateTime::TimeZone - Time zone object base class and factory"""

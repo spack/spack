@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDockerpyCreds(PythonPackage):
     """Python bindings for the docker credentials store API"""

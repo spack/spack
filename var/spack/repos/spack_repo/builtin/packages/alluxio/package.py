@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Alluxio(Package):
     """Alluxio (formerly known as Tachyon) is a virtual distributed storage

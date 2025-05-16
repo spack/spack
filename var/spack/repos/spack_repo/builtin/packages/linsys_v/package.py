@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class LinsysV(MakefilePackage):
     """LINSYS_V: Verified Solution of Linear Systems"""

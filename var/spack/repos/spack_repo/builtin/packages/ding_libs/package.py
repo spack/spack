@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class DingLibs(AutotoolsPackage):
     """A meta-package that pulls in libcollection, libdhash, libini_config,

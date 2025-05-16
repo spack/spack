@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bib2xhtml(Package):
     """bib2xhtml is a program that converts BibTeX files into HTML."""

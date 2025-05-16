@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnnotatedTypes(PythonPackage):
     """Reusable constraint types to use with typing.Annotated."""

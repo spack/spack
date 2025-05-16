@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Atk(MesonPackage):
     """ATK provides the set of accessibility interfaces that are

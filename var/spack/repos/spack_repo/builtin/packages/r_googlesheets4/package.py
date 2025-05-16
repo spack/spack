@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGooglesheets4(RPackage):
     """Access Google Sheets using the Sheets API V4.

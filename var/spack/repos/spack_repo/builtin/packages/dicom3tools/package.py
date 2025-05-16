@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dicom3tools(MakefilePackage):
     """Command line utilities for creating, modifying, dumping and validating

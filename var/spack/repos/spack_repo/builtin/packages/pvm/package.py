@@ -6,6 +6,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pvm(MakefilePackage):
     """PVM (Parallel Virtual Machine) is a software package that permits a

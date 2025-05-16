@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestMocktime(PerlPackage):
     """Replaces actual time with simulated time"""

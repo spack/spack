@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXlrd(PythonPackage):
     """Library for developers to extract data from Microsoft Excel (tm)

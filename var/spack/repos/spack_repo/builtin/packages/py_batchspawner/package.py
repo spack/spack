@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBatchspawner(PythonPackage):
     """This is a custom spawner for Jupyterhub that is designed for

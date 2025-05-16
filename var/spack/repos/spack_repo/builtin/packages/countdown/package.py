@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Countdown(CMakePackage, CudaPackage):
     """COUNTDOWN is a tool for identifying and automatically reducing the power

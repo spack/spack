@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hdfview(Package):
     """HDFView is a visual tool written in Java for browsing

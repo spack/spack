@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libnotify(MesonPackage):
     """libnotify is a library for sending desktop notifications"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySentrySdk(PythonPackage):
     """The new Python SDK for Sentry.io"""

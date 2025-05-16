@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Swftools(AutotoolsPackage):
     """SWFTools is a collection of utilities for working with Adobe Flash files

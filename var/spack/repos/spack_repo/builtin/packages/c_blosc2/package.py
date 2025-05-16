@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CBlosc2(CMakePackage):
     """Next generation c-blosc with a new API, a new container and

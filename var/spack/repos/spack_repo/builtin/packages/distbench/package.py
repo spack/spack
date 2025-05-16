@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Distbench(MakefilePackage):
     """Distbench is a tool for synthesizing a variety of network traffic patterns used in

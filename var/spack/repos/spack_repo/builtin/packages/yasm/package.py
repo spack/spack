@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Yasm(AutotoolsPackage):
     """Yasm is a complete rewrite of the NASM-2.11.06 assembler. It

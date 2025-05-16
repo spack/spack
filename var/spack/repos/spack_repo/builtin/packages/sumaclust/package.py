@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sumaclust(MakefilePackage):
     """Sumaclust aims to cluster sequences in a way that is fast and exact at

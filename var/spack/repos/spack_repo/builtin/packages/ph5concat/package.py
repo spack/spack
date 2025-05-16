@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ph5concat(AutotoolsPackage):
     """Parallel Data Concatenation for High Energy Physics Data Analysis"""

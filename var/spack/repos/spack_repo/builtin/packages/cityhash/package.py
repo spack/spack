@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cityhash(AutotoolsPackage):
     """CityHash, a family of hash functions for strings."""

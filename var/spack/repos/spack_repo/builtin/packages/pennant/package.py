@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pennant(MakefilePackage):
     """PENNANT is an unstructured mesh physics mini-app designed

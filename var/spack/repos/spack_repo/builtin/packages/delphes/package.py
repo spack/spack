@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Delphes(CMakePackage):
     """A high energy physics framework for fast simulation

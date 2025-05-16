@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDigestMd5File(PerlPackage):
     """Digest::MD5::File - Perl extension for getting MD5 sums for files and urls."""

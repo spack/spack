@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMditPyPlugins(PythonPackage):
     """Collection of core plugins for markdown-it-py"""

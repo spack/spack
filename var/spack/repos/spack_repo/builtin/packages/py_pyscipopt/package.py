@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyscipopt(PythonPackage):
     """Python interface for the SCIP Optimization Suite"""

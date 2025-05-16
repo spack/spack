@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRich(PythonPackage):
     """Rich is a Python library for rich text and beautiful formatting

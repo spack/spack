@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTensorboardPluginWit(PythonPackage):
     """The What-If Tool makes it easy to efficiently and

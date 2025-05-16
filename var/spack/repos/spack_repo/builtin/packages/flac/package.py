@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Flac(AutotoolsPackage):
     """Encoder/decoder for the Free Lossless Audio Codec"""

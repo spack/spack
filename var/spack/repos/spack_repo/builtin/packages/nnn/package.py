@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Nnn(MakefilePackage):
     """nnn (n³) is a full-featured terminal file manager.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRetworkx(PythonPackage):
     """A high performance Python graph library implemented in Rust."""

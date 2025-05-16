@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtNetapp(PythonPackage):
     """Microsoft Azure NetApp Files Management Client Library for Python."""

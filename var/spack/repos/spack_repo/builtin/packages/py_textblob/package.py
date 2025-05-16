@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTextblob(PythonPackage):
     """TextBlob is a Python (2 and 3) library for processing textual

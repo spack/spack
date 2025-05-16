@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiotite(PythonPackage):
     """Biotite is your Swiss army knife for bioinformatics. \

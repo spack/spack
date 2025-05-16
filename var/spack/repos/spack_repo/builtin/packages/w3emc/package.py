@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class W3emc(CMakePackage):
     """This library contains Fortran 90 decoder/encoder routines for GRIB

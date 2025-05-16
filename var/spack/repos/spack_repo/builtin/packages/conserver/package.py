@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Conserver(AutotoolsPackage):
     """Conserver is an application that allows multiple users to

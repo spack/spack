@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Simsipm(CMakePackage):
     """SimSiPM is a simple and easy to use C++ library providing a set of

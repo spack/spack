@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lis(AutotoolsPackage):
     """Lis (Library of Iterative Solvers for linear systems,

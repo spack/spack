@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Prodigal(MakefilePackage):
     """Fast, reliable protein-coding gene prediction for prokaryotic

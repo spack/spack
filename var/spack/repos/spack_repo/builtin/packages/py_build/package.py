@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBuild(PythonPackage):
     """A simple, correct PEP517 package builder."""

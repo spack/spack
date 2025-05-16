@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Bumpversion(PythonPackage):
     """Version-bump your software with a single command."""

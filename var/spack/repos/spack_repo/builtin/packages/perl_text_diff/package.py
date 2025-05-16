@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTextDiff(PerlPackage):
     """Provides a basic set of services akin to the GNU diff utility."""

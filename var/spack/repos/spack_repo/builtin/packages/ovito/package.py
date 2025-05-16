@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ovito(Package):
     """OVITO is a scientific visualization and analysis software for atomistic

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ecoslim(CMakePackage):
     """EcoSLIM is a Lagrangian, particle-tracking code that simulates

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SentieonGenomics(Package):
     """Sentieon provides complete solutions for secondary DNA analysis.

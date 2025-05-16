@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCommon(PythonPackage):
     """Common tools and data structures implemented in pure python."""

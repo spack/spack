@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Nss(MakefilePackage):
     """Network Security Services (NSS) is a set of libraries designed to

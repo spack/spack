@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmacaroons(AutotoolsPackage):
     """ "This library provides an implementation of macaroons[1], which

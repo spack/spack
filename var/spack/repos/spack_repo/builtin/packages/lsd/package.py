@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Lsd(CargoPackage):
     """A rewrite of GNU ls with lots of added features like colors, icons, tree-view,

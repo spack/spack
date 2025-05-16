@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Estarlight(CMakePackage):
     """Monte Carlo event generator for coherent vector meson photo- and electro-

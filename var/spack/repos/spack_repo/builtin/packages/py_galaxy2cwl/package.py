@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGalaxy2cwl(PythonPackage):
     """Convert a Galaxy workflow to abstract Common Workflow Language (CWL)"""

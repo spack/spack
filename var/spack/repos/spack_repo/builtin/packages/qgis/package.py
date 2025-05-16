@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qgis(CMakePackage):
     """QGIS is a free and open-source cross-platform desktop geographic

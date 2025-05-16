@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDada2(RPackage):
     """Accurate sample inference from amplicon data with single nucleotide

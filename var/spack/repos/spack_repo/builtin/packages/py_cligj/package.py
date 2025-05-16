@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCligj(PythonPackage):
     """Common arguments and options for GeoJSON processing commands, using Click."""

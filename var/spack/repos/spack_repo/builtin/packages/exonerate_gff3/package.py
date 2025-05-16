@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ExonerateGff3(AutotoolsPackage):
     """This is an exonerate fork with added gff3 support.

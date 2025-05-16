@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Atompaw(AutotoolsPackage):
     """A Projector Augmented Wave (PAW) code for generating

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flexiblas(CMakePackage):
     """A BLAS and LAPACK wrapper library with runtime exchangable backends"""

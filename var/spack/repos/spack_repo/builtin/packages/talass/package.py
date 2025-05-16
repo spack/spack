@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Talass(CMakePackage):
     """TALASS: Topological Analysis of Large-Scale Simulations

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class HealpixCxx(AutotoolsPackage):
     """Healpix-CXX is a C/C++ library for calculating

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBleach(PythonPackage):
     """An easy whitelist-based HTML-sanitizing tool."""

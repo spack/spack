@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Orientdb(MavenPackage):
     """OrientDB is an Open Source Multi-Model NoSQL DBMS with the support

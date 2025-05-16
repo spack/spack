@@ -8,6 +8,10 @@ import re
 import spack.variant
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
     """hipSOLVER is a LAPACK marshalling library, with multiple supported backends.

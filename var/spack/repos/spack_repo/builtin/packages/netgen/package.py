@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Netgen(AutotoolsPackage):
     """NETGEN is an automatic 3d tetrahedral mesh generator. It accepts

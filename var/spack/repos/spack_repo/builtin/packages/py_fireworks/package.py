@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFireworks(PythonPackage):
     """FireWorks stores, executes, and manages calculation workflows."""

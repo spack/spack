@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLdheatmap(RPackage):
     """Graphical Display of Pairwise Linkage Disequilibria Between SNPs.

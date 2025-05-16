@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Libidn2(AutotoolsPackage, GNUMirrorPackage):
     """Libidn2 is a free software implementation of IDNA2008, Punycode and

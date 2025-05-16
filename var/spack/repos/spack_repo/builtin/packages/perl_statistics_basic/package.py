@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlStatisticsBasic(PerlPackage):
     """Statistics::Basic - A collection of very basic statistics modules"""

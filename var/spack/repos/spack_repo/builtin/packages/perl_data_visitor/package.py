@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDataVisitor(PerlPackage):
     """Visitor style traversal of Perl data structures"""

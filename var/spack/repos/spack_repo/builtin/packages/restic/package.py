@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Restic(GoPackage):
     """Fast, secure, efficient backup program."""

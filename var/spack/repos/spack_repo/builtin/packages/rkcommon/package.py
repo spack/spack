@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rkcommon(CMakePackage):
     """This project represents a common set of C++ infrastructure and CMake utilities

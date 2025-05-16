@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Psrchive(AutotoolsPackage):
     """PSRCHIVE is a library for the analysis of pulsar astronomical data.

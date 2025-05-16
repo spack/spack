@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Compiz(AutotoolsPackage, XorgPackage):
     """compiz - OpenGL window and compositing manager.

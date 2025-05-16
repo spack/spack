@@ -4,9 +4,11 @@
 
 import pathlib
 
-import spack.build_systems.autotools
-import spack.build_systems.msbuild
 from spack.package import *
+
+from ...build_systems import autotools, msbuild
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.msbuild import MSBuildPackage
 
 
 class Icu4c(AutotoolsPackage, MSBuildPackage):
@@ -86,7 +88,7 @@ class Icu4c(AutotoolsPackage, MSBuildPackage):
         return find_libraries("libicu*", root=self.prefix, recursive=True)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
 
     configure_directory = "source"
 
@@ -111,7 +113,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
 
-class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
+class MSBuildBuilder(msbuild.MSBuildBuilder):
     # Need to make sure that locale is UTF-8 in order to process source files in UTF-8.
     @when("@59:")
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

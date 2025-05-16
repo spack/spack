@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyProfilehooks(PythonPackage):
     """Python decorators for profiling/tracing/timing a single function"""

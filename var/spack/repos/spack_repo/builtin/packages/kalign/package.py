@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+
 
 class Kalign(AutotoolsPackage, CMakePackage):
     """A fast multiple sequence alignment program for biological sequences."""

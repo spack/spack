@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Numamma(CMakePackage):
     """NumaMMa is a lightweight memory profiler that reports the

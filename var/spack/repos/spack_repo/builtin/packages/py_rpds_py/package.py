@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRpdsPy(PythonPackage):
     """Python bindings to the Rust rpds crate for persistent data structures."""

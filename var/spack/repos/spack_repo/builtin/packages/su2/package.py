@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Su2(MesonPackage):
     """SU2 is a suite of open-source software tools written in C++ for

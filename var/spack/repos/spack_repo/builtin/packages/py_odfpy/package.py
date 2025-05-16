@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOdfpy(PythonPackage):
     """Odfpy is a library to read and write OpenDocument v. 1.2 files."""

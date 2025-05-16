@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginFs(PythonPackage):
     """A Snakemake storage plugin that reads and writes from a locally mounted filesystem

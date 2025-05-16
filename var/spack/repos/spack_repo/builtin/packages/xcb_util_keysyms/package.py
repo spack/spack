@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XcbUtilKeysyms(AutotoolsPackage, XorgPackage):
     """The XCB util modules provides a number of libraries which sit on top

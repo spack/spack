@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAlienSvn(PerlPackage):
     """Perl SVN extension."""

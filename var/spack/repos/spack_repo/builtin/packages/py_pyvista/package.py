@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyvista(PythonPackage):
     """Easier Pythonic interface to VTK."""

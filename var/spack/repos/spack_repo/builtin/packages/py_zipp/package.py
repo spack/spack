@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZipp(PythonPackage):
     """Backport of pathlib-compatible object wrapper for zip files."""

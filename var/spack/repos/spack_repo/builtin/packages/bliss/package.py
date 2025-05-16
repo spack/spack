@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bliss(Package):
     """bliss: A Tool for Computing Automorphism Groups and Canonical

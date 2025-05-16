@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RStars(RPackage):
     """Spatiotemporal Arrays, Raster and Vector Data Cubes.

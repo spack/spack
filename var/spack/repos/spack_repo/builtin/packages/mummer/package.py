@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mummer(Package):
     """MUMmer is a system for rapidly aligning entire genomes."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Stinger(CMakePackage):
     """The STINGER in-memory graph store and dynamic graph analysis

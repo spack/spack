@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sbp(CMakePackage):
     """Library providing an API for Piksi GNSS devices."""

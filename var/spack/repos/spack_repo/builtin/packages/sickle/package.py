@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sickle(MakefilePackage):
     """Sickle is a tool that uses sliding windows along with quality and

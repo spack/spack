@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ffte(Package):
     """Fastest Fourier Transform in the East. Provides FFT for powers of 2, 3,

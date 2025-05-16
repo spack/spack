@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCython(PythonPackage):
     """The Cython compiler for writing C extensions for the Python language."""

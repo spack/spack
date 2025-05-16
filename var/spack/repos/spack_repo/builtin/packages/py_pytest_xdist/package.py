@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestXdist(PythonPackage):
     """py.test xdist plugin for distributed testing and loop-on-failing mode"""

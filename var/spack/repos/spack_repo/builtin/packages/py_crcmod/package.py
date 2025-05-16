@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCrcmod(PythonPackage):
     """Python module for generating objects that

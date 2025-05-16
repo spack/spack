@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class IntelPin(Package):
     """Intel Pin is a dynamic binary instrumentation framework for the IA-32,

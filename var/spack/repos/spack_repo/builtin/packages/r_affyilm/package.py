@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAffyilm(RPackage):
     """Linear Model of background subtraction and the Langmuir isotherm.

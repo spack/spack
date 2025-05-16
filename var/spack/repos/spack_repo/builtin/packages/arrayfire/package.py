@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Arrayfire(CMakePackage, CudaPackage):
     """ArrayFire is a high performance software library for parallel computing

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSplitstackshape(RPackage):
     """Stack and Reshape Datasets After Splitting Concatenated Values.

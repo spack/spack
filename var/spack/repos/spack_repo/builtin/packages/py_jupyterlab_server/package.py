@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterlabServer(PythonPackage):
     """A set of server components for JupyterLab and JupyterLab

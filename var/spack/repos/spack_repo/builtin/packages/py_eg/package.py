@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEg(PythonPackage):
     """eg provides examples of common uses of command line tools."""

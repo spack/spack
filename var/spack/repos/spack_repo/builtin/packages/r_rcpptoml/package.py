@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcpptoml(RPackage):
     """'Rcpp' Bindings to Parser for Tom's Obvious Markup Language.

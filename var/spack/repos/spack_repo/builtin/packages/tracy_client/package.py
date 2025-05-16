@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TracyClient(CMakePackage):
     """A real time, nanosecond resolution, remote telemetry, hybrid frame and sampling

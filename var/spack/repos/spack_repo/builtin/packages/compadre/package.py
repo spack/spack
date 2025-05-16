@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Compadre(CMakePackage):
     """The Compadre Toolkit provides a performance portable solution for the

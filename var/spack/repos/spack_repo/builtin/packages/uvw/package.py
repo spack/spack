@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Uvw(CMakePackage):
     """uvw is a header-only, event based, tiny and easy to use libuv

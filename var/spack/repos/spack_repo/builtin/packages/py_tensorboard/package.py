@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTensorboard(PythonPackage):
     """TensorBoard is a suite of web applications for inspecting and understanding

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class DbusGlib(AutotoolsPackage):
     """dbus-glib package provides GLib interface for D-Bus API."""

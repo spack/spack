@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hashcat(MakefilePackage):
     """hashcat is the world's fastest and most advanced password recovery

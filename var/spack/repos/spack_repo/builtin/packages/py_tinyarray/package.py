@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTinyarray(PythonPackage):
     """Tinyarrays are similar to NumPy arrays, but optimized for

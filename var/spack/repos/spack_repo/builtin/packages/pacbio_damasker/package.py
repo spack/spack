@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PacbioDamasker(MakefilePackage):
     """Damasker: The Dazzler Repeat Masking Suite. This is a special fork

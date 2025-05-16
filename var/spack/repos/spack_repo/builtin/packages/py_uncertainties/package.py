@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUncertainties(PythonPackage):
     """Transparent calculations with uncertainties on the quantities involved

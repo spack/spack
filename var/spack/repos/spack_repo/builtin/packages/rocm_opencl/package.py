@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmOpencl(CMakePackage):
     """OpenCL: Open Computing Language on ROCclr"""

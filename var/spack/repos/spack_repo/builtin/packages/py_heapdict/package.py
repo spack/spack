@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHeapdict(PythonPackage):
     """A heap with decrease-key and increase-key operations"""

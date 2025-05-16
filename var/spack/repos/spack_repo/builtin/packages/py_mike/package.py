@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMike(PythonPackage):
     """mike is a Python utility to easily deploy multiple versions of your

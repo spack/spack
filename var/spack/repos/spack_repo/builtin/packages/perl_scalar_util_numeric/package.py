@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlScalarUtilNumeric(PerlPackage):
     """This module exports a number of wrappers around perl's builtin grok_number

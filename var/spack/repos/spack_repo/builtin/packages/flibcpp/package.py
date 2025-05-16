@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flibcpp(CMakePackage):
     """Fortran bindings to the C++ Standard Library."""

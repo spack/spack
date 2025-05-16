@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RQuickplot(RPackage):
     """A System of Plotting Optimized for Speed and Modularity.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Date(CMakePackage):
     """A date and time library based on the C++11/14/17 <chrono> header"""

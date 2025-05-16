@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RWithr(RPackage):
     """Run Code 'With' Temporarily Modified Global State.

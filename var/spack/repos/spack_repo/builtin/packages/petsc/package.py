@@ -5,6 +5,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+from ...build_systems.rocm import ROCmPackage
+
 
 class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable

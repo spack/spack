@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cap3(Package):
     """CAP3 is DNA Sequence Assembly Program"""

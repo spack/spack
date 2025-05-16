@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBluepyefe(PythonPackage):
     """Blue Brain Python E-feature extraction"""

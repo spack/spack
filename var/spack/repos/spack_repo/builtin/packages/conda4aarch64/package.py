@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Conda4aarch64(Package):
     """Conda for aarch64"""

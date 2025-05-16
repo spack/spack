@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Amrfinder(MakefilePackage):
     """NCBI AMRFinderPlus: This software and the accompanying database identify

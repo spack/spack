@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class PyCrossmap(PythonPackage, SourceforgePackage):
     """CrossMap is a program for convenient conversion of genome coordinates

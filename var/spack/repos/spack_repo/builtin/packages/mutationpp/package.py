@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mutationpp(CMakePackage):
     """Mutation++ is an open-source library originally developed

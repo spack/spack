@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OphidiaIoServer(AutotoolsPackage):
     """In-memory IO server of the Ophidia framework"""

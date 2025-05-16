@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Minigan(Package):
     """miniGAN is a generative adversarial network code developed as part of the

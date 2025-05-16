@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Sqoop(MavenPackage):
     """Apache Sqoop is a tool designed for efficiently transferring bulk

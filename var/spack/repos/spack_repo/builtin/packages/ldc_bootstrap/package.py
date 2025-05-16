@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LdcBootstrap(CMakePackage):
     """The LDC project aims to provide a portable D programming language

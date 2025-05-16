@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CaCertificatesMozilla(Package):
     """The Mozilla CA certificate store in PEM format"""

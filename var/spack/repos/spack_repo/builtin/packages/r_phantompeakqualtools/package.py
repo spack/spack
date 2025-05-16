@@ -4,6 +4,7 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
 from ..boost.package import Boost
 
 

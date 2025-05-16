@@ -5,8 +5,10 @@
 
 import os
 
-import spack.build_systems.lua
 from spack.package import *
+
+from ...build_systems import lua
+from ...build_systems.lua import LuaPackage
 
 
 class LuaLpeg(LuaPackage):
@@ -41,7 +43,7 @@ class LuaLpeg(LuaPackage):
         return find_libraries(libraries, root=self.prefix)
 
 
-class LuaBuilder(spack.build_systems.lua.LuaBuilder):
+class LuaBuilder(lua.LuaBuilder):
     # without this, the resulting library cannot be linked by a normal link phase, the
     # way neovim expects to link it, works fine with lua loads though,
     # * replaces `-bundle` from the default flags with `-shared`

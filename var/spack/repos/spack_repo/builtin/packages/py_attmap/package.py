@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAttmap(PythonPackage):
     """Key-value mapping that supports nested attribute-style access."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLocfit(RPackage):
     """Local regression, likelihood and density estimation.

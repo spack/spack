@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class MsrSafe(MakefilePackage):
     """msr_safe provides controlled userspace access to model-specific registers (MSRs).

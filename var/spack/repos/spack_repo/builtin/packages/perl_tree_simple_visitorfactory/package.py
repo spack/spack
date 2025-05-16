@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTreeSimpleVisitorfactory(PerlPackage):
     """A factory object for dispensing Visitor objects"""

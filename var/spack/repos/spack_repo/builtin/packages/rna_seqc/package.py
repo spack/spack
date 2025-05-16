@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class RnaSeqc(Package):
     """RNA-SeQC is a java program which computes a series of quality control

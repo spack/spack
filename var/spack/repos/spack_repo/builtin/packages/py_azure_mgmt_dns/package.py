@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtDns(PythonPackage):
     """Microsoft Azure DNS Management Client Library for Python."""

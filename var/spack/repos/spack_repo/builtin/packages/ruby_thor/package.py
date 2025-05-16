@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyThor(RubyPackage):
     """Thor is a toolkit for building powerful command-line interfaces."""

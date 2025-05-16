@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyscreeze(PythonPackage):
     """PyScreeze can take screenshots, save them to files, and

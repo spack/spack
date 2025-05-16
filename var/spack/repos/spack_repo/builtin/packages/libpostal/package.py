@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpostal(AutotoolsPackage):
     """A C library for parsing/normalizing street addresses around the world.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cloc(Package):
     """Count, or compute differences of, physical lines of source code in the

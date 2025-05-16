@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRfast(RPackage):
     """A Collection of Efficient and Extremely Fast R Functions.

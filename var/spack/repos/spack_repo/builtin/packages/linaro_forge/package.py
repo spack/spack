@@ -8,6 +8,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class LinaroForge(Package):
     """Build reliable and optimized code for the right results on multiple

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybobyqa(PythonPackage):
     """Py-BOBYQA is a flexible package for solving bound-constrained general

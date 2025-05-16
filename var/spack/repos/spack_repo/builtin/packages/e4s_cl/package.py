@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class E4sCl(PythonPackage):
     """Container Launcher for E4S containers, facilitating MPI library

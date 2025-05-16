@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class MatrixSwitch(CMakePackage):
     """Intermediary interface between high-level routines for

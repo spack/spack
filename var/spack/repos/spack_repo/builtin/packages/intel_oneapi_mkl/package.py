@@ -6,6 +6,12 @@ from os.path import dirname, isdir
 
 from spack.package import *
 
+from ...build_systems.oneapi import (
+    IntelOneApiLibraryPackage,
+    IntelOneApiPackage,
+    IntelOneApiStaticLibraryList,
+)
+
 
 @IntelOneApiPackage.update_description
 class IntelOneapiMkl(IntelOneApiLibraryPackage):

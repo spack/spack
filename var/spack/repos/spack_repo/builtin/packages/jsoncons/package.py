@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Jsoncons(CMakePackage):
     """A C++, header-only library for constructing JSON and JSON-like

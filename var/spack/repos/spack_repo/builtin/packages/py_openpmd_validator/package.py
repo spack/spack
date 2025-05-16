@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenpmdValidator(PythonPackage):
     """Validator and Example Scripts for the openPMD markup.

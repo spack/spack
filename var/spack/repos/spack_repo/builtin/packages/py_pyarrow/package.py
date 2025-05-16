@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyarrow(PythonPackage):
     """A cross-language development platform for in-memory data.

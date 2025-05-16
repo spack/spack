@@ -7,6 +7,8 @@ from subprocess import PIPE, run
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Molgw(MakefilePackage):
     """MOLGW is a quantum chemistry code that implements the many-body perturbation theory (MBPT)

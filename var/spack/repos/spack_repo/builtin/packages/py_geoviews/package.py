@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeoviews(PythonPackage):
     """A Python library designed to make data analysis and visualization seamless and simple."""

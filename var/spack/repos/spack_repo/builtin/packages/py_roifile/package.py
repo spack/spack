@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRoifile(PythonPackage):
     """Roifile is a Python library to read, write, create, and plot ImageJ ROIs"""

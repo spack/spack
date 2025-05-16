@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlParseYapp(PerlPackage):
     """Parse::Yapp - Perl extension for generating and using LALR parsers."""

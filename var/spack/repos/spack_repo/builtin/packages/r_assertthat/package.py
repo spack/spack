@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAssertthat(RPackage):
     """Easy Pre and Post Assertions.

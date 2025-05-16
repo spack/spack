@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lcals(MakefilePackage):
     """LCALS ("Livermore Compiler Analysis Loop Suite") is a collection of loop

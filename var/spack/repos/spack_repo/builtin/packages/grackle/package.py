@@ -7,6 +7,8 @@ import os
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Grackle(Package):
     """Grackle is a chemistry and radiative cooling library for astrophysical

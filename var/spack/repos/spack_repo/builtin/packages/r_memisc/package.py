@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMemisc(RPackage):
     """Management of Survey Data and Presentation of Analysis Results.

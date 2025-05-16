@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Pipx(PythonPackage):
     """pipx is a tool to install and run Python applications in isolated environments"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hztool(AutotoolsPackage):
     """HZTool is a library of routines which will allow you to reproduce an

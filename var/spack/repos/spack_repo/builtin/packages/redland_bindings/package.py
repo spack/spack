@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class RedlandBindings(AutotoolsPackage):
     """Redland Language Bindings for language APIs to Redland"""

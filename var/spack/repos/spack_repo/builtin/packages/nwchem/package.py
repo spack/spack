@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Nwchem(Package):
     """High-performance computational chemistry software"""

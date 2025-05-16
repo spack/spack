@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNnet(RPackage):
     """Feed-Forward Neural Networks and Multinomial Log-Linear Models.

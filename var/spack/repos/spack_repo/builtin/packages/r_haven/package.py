@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHaven(RPackage):
     """Import and Export 'SPSS', 'Stata' and 'SAS' Files.

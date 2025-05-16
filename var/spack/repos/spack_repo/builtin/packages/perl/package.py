@@ -14,6 +14,8 @@ from llnl.util.symlink import symlink
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     """Perl 5 is a highly capable, feature-rich programming language with over

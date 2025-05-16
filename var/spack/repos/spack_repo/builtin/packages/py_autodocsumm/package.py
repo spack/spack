@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutodocsumm(PythonPackage):
     """Extended sphinx autodoc including automatic autosummaries."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libaio(MakefilePackage):
     """Linux native Asynchronous I/O interface library.

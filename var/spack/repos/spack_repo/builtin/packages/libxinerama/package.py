@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxinerama(AutotoolsPackage, XorgPackage):
     """libXinerama - API for Xinerama extension to X11 Protocol."""

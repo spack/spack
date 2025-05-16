@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unifdef(MakefilePackage):
     """The unifdef utility selectively processes conditional C preprocessor #if

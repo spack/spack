@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gsl(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Scientific Library (GSL) is a numerical library for C and C++

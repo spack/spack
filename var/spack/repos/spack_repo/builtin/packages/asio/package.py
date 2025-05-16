@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Asio(AutotoolsPackage):
     """C++ library for network and low-level I/O programming."""

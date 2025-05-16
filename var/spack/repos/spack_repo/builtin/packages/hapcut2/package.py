@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hapcut2(MakefilePackage):
     """HapCUT2 is a maximum-likelihood-based tool for assembling haplotypes

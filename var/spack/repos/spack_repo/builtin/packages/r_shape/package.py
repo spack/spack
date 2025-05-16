@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RShape(RPackage):
     """Functions for Plotting Graphical Shapes, Colors.

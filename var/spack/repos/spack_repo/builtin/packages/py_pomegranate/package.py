@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPomegranate(PythonPackage):
     """Fast, flexible and easy to use probabilistic modelling in Python."""

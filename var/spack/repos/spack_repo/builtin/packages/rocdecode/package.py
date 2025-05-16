@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Rocdecode(CMakePackage):
     """rocDecode is a high performance video decode SDK for AMD hardware"""

@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Tasmanian(CMakePackage, CudaPackage, ROCmPackage):
     """The Toolkit for Adaptive Stochastic Modeling and Non-Intrusive

@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Fftx(CMakePackage, CudaPackage, ROCmPackage):
     """FFTX is the exascale follow-on to the FFTW open source discrete FFT

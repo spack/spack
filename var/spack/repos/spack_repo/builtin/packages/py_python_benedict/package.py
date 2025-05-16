@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonBenedict(PythonPackage):
     """A dict subclass with keylist/keypath support, I/O shortcuts

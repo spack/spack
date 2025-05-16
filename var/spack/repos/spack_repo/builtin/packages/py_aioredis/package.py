@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAioredis(PythonPackage):
     """asyncio (PEP 3156) Redis support."""

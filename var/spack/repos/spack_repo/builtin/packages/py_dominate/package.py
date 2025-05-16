@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDominate(PythonPackage):
     """Dominate is a Python library for creating and

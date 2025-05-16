@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Wgl(Package):
     """External WGl and Windows OpenGL emulation representation in Spack"""

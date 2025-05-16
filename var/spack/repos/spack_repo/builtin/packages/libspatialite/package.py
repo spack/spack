@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libspatialite(AutotoolsPackage):
     """SpatiaLite is an open source library intended to extend the

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Aspa(MakefilePackage):
     """A fundamental premise in ExMatEx is that scale-bridging performed in

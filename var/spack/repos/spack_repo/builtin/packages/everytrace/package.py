@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Everytrace(CMakePackage):
     """Get stack trace EVERY time a program exits."""

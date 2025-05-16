@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fasd(MakefilePackage):
     """Fasd (pronounced similar to "fast") is a command-line productivity

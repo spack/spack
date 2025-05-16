@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNgsTools(PythonPackage):
     """Reusable tools for working with next-generation sequencing (NGS)

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSseq(RPackage):
     """Shrinkage estimation of dispersion in Negative Binomial models for RNA-

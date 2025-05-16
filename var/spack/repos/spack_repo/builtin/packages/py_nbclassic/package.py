@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNbclassic(PythonPackage):
     """Jupyter Notebook as a Jupyter Server Extension."""

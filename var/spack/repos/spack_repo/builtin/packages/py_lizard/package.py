@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLizard(PythonPackage):
     """A code analyzer without caring the C/C++ header files.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyProtobuf(PythonPackage):
     """Protocol buffers are Google's language-neutral, platform-neutral,

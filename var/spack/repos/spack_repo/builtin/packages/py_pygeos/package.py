@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygeos(PythonPackage):
     """PyGEOS is a C/Python library with vectorized geometry functions.

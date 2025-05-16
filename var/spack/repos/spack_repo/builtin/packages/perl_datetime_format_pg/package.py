@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetimeFormatPg(PerlPackage):
     """Parse and format PostgreSQL dates and times"""

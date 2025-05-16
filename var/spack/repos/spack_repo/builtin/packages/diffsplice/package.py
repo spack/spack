@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Diffsplice(MakefilePackage):
     """A novel tool for discovering and quantitating alternative splicing

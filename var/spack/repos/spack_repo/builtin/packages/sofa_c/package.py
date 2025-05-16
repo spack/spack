@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SofaC(MakefilePackage):
     """Standards of Fundamental Astronomy (SOFA) library for ANSI C."""

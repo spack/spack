@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lizard(MakefilePackage):
     """Lizard (formerly LZ5) is an efficient compressor with very

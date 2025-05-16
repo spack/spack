@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libvips(AutotoolsPackage):
     """libvips is a demand-driven, horizontally threaded image processing

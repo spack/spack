@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNvidiaMlPy3(PythonPackage):
     """Python Bindings for the NVIDIA Management Library."""

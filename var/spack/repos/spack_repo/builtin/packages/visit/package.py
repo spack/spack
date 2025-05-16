@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Visit(CMakePackage):
     """VisIt is an Open Source, interactive, scalable, visualization,

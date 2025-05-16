@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRadicalEntk(PythonPackage):
     """RADICAL Ensemble Toolkit is used for developing and executing

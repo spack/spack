@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTimeDurationParse(PerlPackage):
     """Parse string that represents time duration"""

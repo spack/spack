@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBottleneck(PythonPackage):
     """A collection of fast NumPy array functions written in Cython."""

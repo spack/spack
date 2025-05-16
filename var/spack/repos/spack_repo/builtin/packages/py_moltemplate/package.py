@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMoltemplate(PythonPackage):
     """Moltemplate is a general cross-platform text-based molecule builder for

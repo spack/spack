@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Nacos(MavenPackage):
     """Nacos is an easy-to-use platform designed for dynamic service

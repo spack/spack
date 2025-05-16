@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycollada(PythonPackage):
     """Python library for reading and writing collada documents"""

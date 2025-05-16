@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPdoc3(PythonPackage):
     """Auto-generate API documentation for Python projects."""

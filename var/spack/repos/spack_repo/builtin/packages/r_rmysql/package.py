@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRmysql(RPackage):
     """Database Interface and 'MySQL' Driver for R.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vdt(CMakePackage):
     """Vectorised math. A collection of fast and inline implementations of

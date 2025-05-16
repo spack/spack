@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NvplFft(Package):
     """NVPL FFT (NVIDIA Performance Libraries FFT) is part of NVIDIA Performance Libraries

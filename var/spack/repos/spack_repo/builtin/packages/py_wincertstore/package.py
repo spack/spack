@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWincertstore(PythonPackage):
     """wincertstore provides an interface to access Windows' CA and CRL certificates.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pharokka(Package):
     """pharokka is a rapid standardised annotation

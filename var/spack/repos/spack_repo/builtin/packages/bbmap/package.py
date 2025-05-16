@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Bbmap(Package, SourceforgePackage):
     """Short read aligner for DNA and RNA-seq data."""

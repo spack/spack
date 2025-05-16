@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySvgutils(PythonPackage):
     """Python tools to create and manipulate SVG files."""

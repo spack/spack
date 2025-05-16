@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNfactors(RPackage):
     """Parallel Analysis and Other Non Graphical Solutions to the Cattell Scree

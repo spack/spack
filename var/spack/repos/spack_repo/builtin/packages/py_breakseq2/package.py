@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBreakseq2(PythonPackage):
     """nucleotide-resolution analysis of structural variants"""

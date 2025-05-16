@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIslr(RPackage):
     """Data for an Introduction to Statistical Learning with Applications in R.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tantan(MakefilePackage):
     """tantan is a tool to mask simple regions (low complexity and

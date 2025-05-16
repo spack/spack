@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Damaris(CMakePackage):
     """Damaris is a middleware for I/O and in situ analytics

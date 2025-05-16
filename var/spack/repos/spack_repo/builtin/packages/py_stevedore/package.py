@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStevedore(PythonPackage):
     """Manage Dynamic Plugins for Python Applications."""

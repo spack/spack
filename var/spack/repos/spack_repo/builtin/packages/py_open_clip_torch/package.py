@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenClipTorch(PythonPackage):
     """Welcome to an open source implementation of OpenAI's CLIP (Contrastive

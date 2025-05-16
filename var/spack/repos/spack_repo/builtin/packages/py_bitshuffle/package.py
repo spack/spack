@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBitshuffle(PythonPackage):
     """Filter for improving compression of typed binary data."""

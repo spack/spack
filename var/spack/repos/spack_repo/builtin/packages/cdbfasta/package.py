@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cdbfasta(MakefilePackage):
     """Fast indexing and retrieval of fasta records from flat file databases"""

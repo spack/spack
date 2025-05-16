@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpades(RPackage):
     """Develop and Run Spatially Explicit Discrete Event Simulation Models.

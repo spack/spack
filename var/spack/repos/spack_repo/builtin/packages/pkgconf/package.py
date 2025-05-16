@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pkgconf(AutotoolsPackage):
     """pkgconf is a program which helps to configure compiler and linker

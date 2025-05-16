@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class REdger(RPackage):
     """Empirical Analysis of Digital Gene Expression Data in R.

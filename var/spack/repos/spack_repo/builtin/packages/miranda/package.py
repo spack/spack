@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Miranda(AutotoolsPackage):
     """miRanda is an algorithm for finding genomic targets for microRNAs."""

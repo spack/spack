@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Coral(CMakePackage):
     """CORAL is an abstraction layer with an SQL-free API to access data stored

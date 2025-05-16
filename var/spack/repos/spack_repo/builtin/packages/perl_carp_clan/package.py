@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCarpClan(PerlPackage):
     """Report errors from perspective of caller of a "clan" of modules"""

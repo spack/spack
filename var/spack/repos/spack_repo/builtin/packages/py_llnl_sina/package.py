@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLlnlSina(PythonPackage):
     """Sina allows codes to store, query, and visualize their data through an

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTransformers(PythonPackage):
     """State-of-the-art Natural Language Processing for TensorFlow 2.0 and

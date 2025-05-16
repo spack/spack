@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycorenlp(PythonPackage):
     """Python wrapper for Stanford CoreNLP. This simply wraps the API from the server

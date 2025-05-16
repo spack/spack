@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bedops(MakefilePackage):
     """BEDOPS is an open-source command-line toolkit that performs highly

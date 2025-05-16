@@ -8,6 +8,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Picard(Package):
     """Picard is a set of command line tools for manipulating high-throughput

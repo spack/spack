@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Usbutils(AutotoolsPackage):
     """This is a collection of USB tools for use on Linux and BSD systems

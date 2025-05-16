@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Addrwatch(AutotoolsPackage):
     """A tool similar to arpwatch for IPv4/IPv6 and ethernet address

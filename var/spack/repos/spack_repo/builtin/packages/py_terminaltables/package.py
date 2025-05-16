@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTerminaltables(PythonPackage):
     """Generate simple tables in terminals from a nested list of strings."""

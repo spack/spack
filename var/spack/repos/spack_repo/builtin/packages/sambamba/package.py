@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Sambamba(Package):
     """Sambamba: process your BAM data faster (bioinformatics)"""

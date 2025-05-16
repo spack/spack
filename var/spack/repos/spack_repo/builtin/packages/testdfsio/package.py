@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Testdfsio(MavenPackage):
     """A corrected and enhanced version of Apache Hadoop TestDFSIO"""

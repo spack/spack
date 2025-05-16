@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Rendercheck(AutotoolsPackage, XorgPackage):
     """rendercheck is a program to test a Render extension implementation

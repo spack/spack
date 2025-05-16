@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Attr(AutotoolsPackage):
     """Commands for Manipulating Filesystem Extended Attributes"""

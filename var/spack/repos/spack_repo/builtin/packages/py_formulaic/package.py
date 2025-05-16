@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFormulaic(PythonPackage):
     """Formulaic is a high-performance implementation of Wilkinson formulas

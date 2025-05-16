@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPlackMiddlewareCrossorigin(PerlPackage):
     """Adds headers to allow Cross-Origin Resource Sharing"""

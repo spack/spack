@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFortranLanguageServer(PythonPackage):
     """A Fortran implementation of the Language Server Protocol using Python

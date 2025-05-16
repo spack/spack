@@ -7,6 +7,9 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceware import SourcewarePackage
+
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):
     """An instrumentation framework for building dynamic analysis.

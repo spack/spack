@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAda(RPackage):
     """The R Package Ada for Stochastic Boosting.

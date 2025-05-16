@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylabSdk(PythonPackage):
     """A development kit that collects simple utilities."""

@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Tree(Package):
     """Tree is a recursive directory listing command that produces a depth

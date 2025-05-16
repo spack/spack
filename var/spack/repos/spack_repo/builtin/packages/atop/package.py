@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Atop(Package):
     """Atop is an ASCII full-screen performance monitor for Linux"""

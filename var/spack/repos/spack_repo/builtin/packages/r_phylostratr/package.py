@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPhylostratr(RPackage):
     """Predict and explore the age of genes using phylostratigraphic methods"""

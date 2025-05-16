@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libva(AutotoolsPackage):
     """Libva is an implementation for VA-API (Video Acceleration API).

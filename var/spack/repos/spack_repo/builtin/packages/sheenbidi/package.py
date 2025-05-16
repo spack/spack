@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Sheenbidi(MesonPackage):
     """A sophisticated implementation of Unicode Bidirectional Algorithm"""

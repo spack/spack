@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.python import PythonExtension
+
 
 class Libseccomp(AutotoolsPackage, PythonExtension):
     """The main libseccomp repository"""

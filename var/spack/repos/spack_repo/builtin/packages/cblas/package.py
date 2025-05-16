@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cblas(Package):
     """The BLAS (Basic Linear Algebra Subprograms) are routines that

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBKeywords(PerlPackage):
     """Lists of reserved barewords and symbol names"""

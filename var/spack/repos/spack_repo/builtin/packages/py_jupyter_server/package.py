@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterServer(PythonPackage):
     """The Jupyter Server provides the backend (i.e. the core services, APIs,

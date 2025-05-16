@@ -7,6 +7,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMacs2(PythonPackage):
     """MACS2 Model-based Analysis of ChIP-Seq"""

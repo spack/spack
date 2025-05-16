@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Py3to2(PythonPackage):
     """lib3to2 is a set of fixers that are intended to backport code written

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRichArgparse(PythonPackage):
     """rich-argparse improves the look and readability of argparse's help while

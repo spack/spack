@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNipype(PythonPackage):
     """Neuroimaging in Python: Pipelines and Interfaces."""

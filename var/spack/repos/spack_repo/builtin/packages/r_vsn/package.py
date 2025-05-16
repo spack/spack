@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RVsn(RPackage):
     """Variance stabilization and calibration for microarray data.

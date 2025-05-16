@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RStatnetCommon(RPackage):
     """Common R Scripts and Utilities Used by the Statnet Project Software.

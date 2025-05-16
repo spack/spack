@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBigmemorySri(RPackage):
     """A shared resource interface for Bigmemory Project packages.

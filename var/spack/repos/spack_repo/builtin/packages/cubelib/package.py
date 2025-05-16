@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cubelib(AutotoolsPackage):
     """Component of CubeBundle: General purpose C++ library and tools"""

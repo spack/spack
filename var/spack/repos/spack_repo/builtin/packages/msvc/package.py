@@ -7,10 +7,13 @@ import subprocess
 
 import archspec.cpu
 
-import spack.build_systems.compiler
 import spack.platforms
 import spack.version
 from spack.package import *
+
+from ...build_systems import compiler
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.generic import Package
 
 FC_PATH: Dict[str, str] = dict()
 
@@ -64,9 +67,7 @@ class Msvc(Package, CompilerPackage):
         is_ifx = "ifx.exe" in str(exe)
         match = re.search(
             cls.compiler_version_regex,
-            spack.build_systems.compiler.compiler_output(
-                exe, version_argument=None, ignore_errors=1
-            ),
+            compiler.compiler_output(exe, version_argument=None, ignore_errors=1),
         )
         if match:
             if is_ifx:

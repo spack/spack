@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SeqGen(MakefilePackage):
     """Seq-Gen is a program that will simulate the evolution of nucleotide or

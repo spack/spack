@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mitofates(Package):
     """MitoFates predicts mitochondrial presequence, a cleavable localization

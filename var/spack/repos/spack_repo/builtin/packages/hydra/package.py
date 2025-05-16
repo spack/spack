@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hydra(AutotoolsPackage):
     """Hydra is a process management system for starting parallel jobs.

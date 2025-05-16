@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMapboxEarcut(PythonPackage):
     """Python bindings for the C++ implementation of the Mapbox Earcut library,

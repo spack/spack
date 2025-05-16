@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySncosmo(PythonPackage):
     """SNCosmo is a Python library for high-level supernova cosmology

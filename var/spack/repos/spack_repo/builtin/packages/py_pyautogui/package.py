@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyautogui(PythonPackage):
     """PyAutoGUI lets your Python scripts control the mouse and

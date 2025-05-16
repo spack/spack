@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Knem(AutotoolsPackage):
     """KNEM is a Linux kernel module enabling high-performance intra-node MPI

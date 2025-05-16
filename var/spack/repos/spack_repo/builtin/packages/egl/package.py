@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Egl(BundlePackage):
     """Placeholder for external EGL(OpenGL) libraries from hardware vendors"""

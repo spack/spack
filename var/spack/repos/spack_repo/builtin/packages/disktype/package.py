@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Disktype(MakefilePackage):
     """A fork of the disktype disk and disk image format detection tool."""

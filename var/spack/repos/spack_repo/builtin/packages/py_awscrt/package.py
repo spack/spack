@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAwscrt(PythonPackage):
     """Python 3 bindings for the AWS Common Runtime."""

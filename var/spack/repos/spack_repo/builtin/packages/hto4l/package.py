@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hto4l(MakefilePackage):
     """Hto4l is an event generator for the SM Higgs decay into 4 charged leptons

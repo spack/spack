@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtEventgrid(PythonPackage):
     """Microsoft Azure EventGrid Management Client Library for Python."""

@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HsaRocrDev(CMakePackage):
     """This repository includes the user mode API nterfaces and libraries

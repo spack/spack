@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHashMoreutils(PerlPackage):
     """Provide the stuff missing in Hash::Util"""

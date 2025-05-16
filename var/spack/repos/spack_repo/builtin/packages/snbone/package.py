@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Snbone(MakefilePackage):
     """This application targets the primary computational solve burden of a SN,

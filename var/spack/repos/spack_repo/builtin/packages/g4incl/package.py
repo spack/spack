@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4incl(Package):
     """Geant4 data for evaluated particle cross-sections on natural

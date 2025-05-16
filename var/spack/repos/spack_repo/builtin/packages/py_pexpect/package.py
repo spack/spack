@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPexpect(PythonPackage):
     """Pexpect allows easy control of interactive console applications."""

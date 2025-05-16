@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTextx(PythonPackage):
     """Meta-language for DSL implementation inspired by Xtext."""

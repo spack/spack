@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanomath(PythonPackage):
     """A few simple math function for other Oxford Nanopore processing scripts"""

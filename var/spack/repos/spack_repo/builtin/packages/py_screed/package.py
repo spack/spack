@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScreed(PythonPackage):
     """screed: a Python library for loading FASTA and FASTQ sequences."""

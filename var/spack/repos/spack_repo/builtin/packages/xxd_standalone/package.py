@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class XxdStandalone(MakefilePackage):
     """xxd creates a hex dump of a given file or standard input.

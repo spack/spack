@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class G2(CMakePackage):
     """Utilities for coding/decoding GRIB2 messages.

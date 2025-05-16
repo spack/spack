@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Librsvg(AutotoolsPackage):
     """Library to render SVG files using Cairo"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GtkorvoAtl(CMakePackage):
     """Libatl provides a library for the creation and manipulation of

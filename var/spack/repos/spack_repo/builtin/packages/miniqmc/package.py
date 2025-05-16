@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Miniqmc(CMakePackage):
     """A simplified real space QMC code for algorithm development,

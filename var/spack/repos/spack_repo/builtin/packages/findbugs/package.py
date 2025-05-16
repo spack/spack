@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Findbugs(Package):
     """a program which uses static analysis to look for bugs in Java code.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Superchic(MakefilePackage):
     """SuperChic is a Fortran based Monte Carlo event generator for exclusive and

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpacyModelsEnCoreWebSm(PythonPackage):
     """English multi-task CNN trained on OntoNotes. Assigns context-specific

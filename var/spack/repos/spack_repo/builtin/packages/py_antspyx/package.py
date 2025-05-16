@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAntspyx(PythonPackage):
     """Advanced Normalization Tools in Python."""

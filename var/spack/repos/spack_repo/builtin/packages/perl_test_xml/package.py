@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestXml(PerlPackage):
     """Compare XML in perl tests"""

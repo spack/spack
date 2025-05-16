@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class CsaC(AutotoolsPackage):
     """csa: Cubic Spline Approximation. csa is a C code for

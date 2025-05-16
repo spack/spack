@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMrpresso(RPackage):
     """Performs the Mendelian Randomization Pleiotropy RESidual Sum and Outlier

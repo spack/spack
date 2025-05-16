@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsamplerate(AutotoolsPackage):
     """libsamplerate (also known as Secret Rabbit Code) is a library for

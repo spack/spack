@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Heaptrack(CMakePackage):
     """Heaptrack is a heap memory profiler that traces all memory allocations

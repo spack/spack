@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileSlurper(PerlPackage):
     """A simple, sane and efficient module to slurp a file"""

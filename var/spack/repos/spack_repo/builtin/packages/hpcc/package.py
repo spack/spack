@@ -9,6 +9,8 @@ import re
 from spack.build_environment import optimization_flags
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hpcc(MakefilePackage):
     """HPC Challenge is a benchmark suite that measures a range memory access

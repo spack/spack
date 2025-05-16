@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CrayPmi(Package):
     """Cray's Process Management Interface library"""

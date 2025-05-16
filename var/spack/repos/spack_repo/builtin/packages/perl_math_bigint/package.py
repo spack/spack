@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathBigint(PerlPackage):
     """Math::BigInt - arbitrary size integer math package"""

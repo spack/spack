@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPkgconfig(PythonPackage):
     """Interface Python with pkg-config."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rasdaemon(AutotoolsPackage):
     """Rasdaemon is a RAS (Reliability, Availability and Serviceability)

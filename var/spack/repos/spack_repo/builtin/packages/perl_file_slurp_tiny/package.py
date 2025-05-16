@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileSlurpTiny(PerlPackage):
     """A simple, sane and efficient file slurper"""

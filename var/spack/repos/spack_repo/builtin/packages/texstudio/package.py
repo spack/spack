@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Texstudio(QMakePackage):
     """TeXstudio is a fully featured LaTeX editor, whose goal is to make

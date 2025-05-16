@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanostat(PythonPackage):
     """Calculate statistics for Oxford Nanopore sequencing data and alignments"""

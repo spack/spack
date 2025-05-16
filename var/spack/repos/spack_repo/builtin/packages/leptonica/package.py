@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Leptonica(CMakePackage):
     """Leptonica is an open source library containing software that is

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Adios(AutotoolsPackage):
     """The Adaptable IO System (ADIOS) provides a simple,

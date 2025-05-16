@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyId(PythonPackage):
     """id is a Python tool for generating OIDC identities."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDmHaiku(PythonPackage):
     """JAX-based neural network library"""

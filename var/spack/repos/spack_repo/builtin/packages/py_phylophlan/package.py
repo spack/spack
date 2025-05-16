@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPhylophlan(PythonPackage):
     """PhyloPhlAn 3.0 is an integrated pipeline for large-scale

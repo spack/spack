@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Shapelib(CMakePackage):
     """The Shapefile C Library provides the ability to write simple C programs

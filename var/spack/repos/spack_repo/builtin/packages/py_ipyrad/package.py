@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpyrad(PythonPackage):
     """An interactive toolkit for assembly and analysis of restriction-site

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlWwwFormUrlencoded(PerlPackage):
     """Parser and builder for application/x-www-form-urlencoded"""

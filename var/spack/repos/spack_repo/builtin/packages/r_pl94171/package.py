@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPl94171(RPackage):
     """Tabulate P.L. 94-171 Redistricting Data Summary Files

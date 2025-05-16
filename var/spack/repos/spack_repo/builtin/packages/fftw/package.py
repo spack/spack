@@ -8,6 +8,8 @@ import llnl.util.lang
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class FftwBase(AutotoolsPackage):
     """Base class for building Fftw, shared with the AMD optimized version

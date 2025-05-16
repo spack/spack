@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConvokit(PythonPackage):
     """This toolkit contains tools to extract conversational features and

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxcomposite(AutotoolsPackage, XorgPackage):
     """libXcomposite - client library for the Composite extension to the

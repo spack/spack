@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGraphlayouts(RPackage):
     """Additional Layout Algorithms for Network Visualizations.

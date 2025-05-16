@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMlinterfaces(RPackage):
     """Uniform interfaces to R machine learning procedures for data in

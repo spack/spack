@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Isoquant(Package):
     """IsoQuant: Transcript discovery and quantification with long RNA reads"""

@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.python import PythonExtension
+
 
 class PyInstaller(Package, PythonExtension):
     """A library for installing Python wheels."""

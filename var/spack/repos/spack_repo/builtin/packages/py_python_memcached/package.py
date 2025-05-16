@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonMemcached(PythonPackage):
     """This software is a 100% Python interface to the memcached memory cache

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mppp(CMakePackage):
     """mp++ is a C++11/14/17/20 library for multiprecision arithmetic"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonpathNg(PythonPackage):
     """A final implementation of JSONPath for Python that aims to be

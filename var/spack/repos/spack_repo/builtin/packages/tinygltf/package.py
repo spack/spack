@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tinygltf(CMakePackage):
     """Header only C++11 tiny glTF 2.0 library."""

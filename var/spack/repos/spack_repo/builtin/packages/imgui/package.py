@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Imgui(Package):
     """Dear ImGui is a bloat-free graphical user interface library for C++.

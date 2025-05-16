@@ -7,6 +7,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libxsmm(MakefilePackage):
     """Library for specialized dense

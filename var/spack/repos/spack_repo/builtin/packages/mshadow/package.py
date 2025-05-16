@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mshadow(Package):
     """MShadow is a lightweight CPU/GPU Matrix/Tensor C++ Template Library.

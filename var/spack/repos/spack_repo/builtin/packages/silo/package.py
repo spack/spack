@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Silo(AutotoolsPackage):
     """Silo is a library for reading and writing a wide variety of scientific

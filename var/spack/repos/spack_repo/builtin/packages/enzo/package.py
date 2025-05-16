@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Enzo(MakefilePackage):
     """The Enzo adaptive mesh-refinement simulation code."""

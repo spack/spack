@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Resolve(CMakePackage, CudaPackage, ROCmPackage):
     """ReSolve is a library of GPU-resident sparse linear solvers. It contains iterative and direct

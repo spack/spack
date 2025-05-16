@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hpccg(MakefilePackage):
     """Proxy Application. Intended to be the 'best approximation

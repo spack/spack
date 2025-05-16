@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minitri(MakefilePackage):
     """A simple, triangle-based data analytics proxy application."""

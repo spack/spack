@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWsproto(PythonPackage):
     """This repository contains a pure-Python implementation of

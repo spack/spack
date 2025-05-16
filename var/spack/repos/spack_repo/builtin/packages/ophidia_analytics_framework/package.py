@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OphidiaAnalyticsFramework(AutotoolsPackage):
     """Core modules and operators of the Ophidia framework"""

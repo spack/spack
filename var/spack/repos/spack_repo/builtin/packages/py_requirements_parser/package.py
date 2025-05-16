@@ -4,6 +4,8 @@
 # ----------------------------------------------------------------------------
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequirementsParser(PythonPackage):
     """This is a small Python module for parsing Pip requirement files.

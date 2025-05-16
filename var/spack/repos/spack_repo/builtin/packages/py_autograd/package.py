@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutograd(PythonPackage):
     """Autograd can automatically differentiate native Python and

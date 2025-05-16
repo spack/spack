@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Yaksa(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Yaksa is a high-performance datatype engine for expressing,

@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CBlosc(CMakePackage):
     """Blosc, an extremely fast, multi-threaded, meta-compressor library"""

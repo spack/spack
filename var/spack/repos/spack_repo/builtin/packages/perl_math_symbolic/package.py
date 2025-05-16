@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathSymbolic(PerlPackage):
     """Math::Symbolic - Symbolic calculations."""

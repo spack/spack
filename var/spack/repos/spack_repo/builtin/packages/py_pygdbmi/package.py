@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygdbmi(PythonPackage):
     """Parse gdb machine interface output with Python"""

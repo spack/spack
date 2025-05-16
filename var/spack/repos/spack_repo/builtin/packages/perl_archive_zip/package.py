@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlArchiveZip(PerlPackage):
     """Archive::Zip - Provide an interface to ZIP archive files."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Memsurfer(PythonPackage):
     """MemSurfer is a tool to compute and analyze membrane surfaces found in a

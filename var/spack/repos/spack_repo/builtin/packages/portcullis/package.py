@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Portcullis(AutotoolsPackage):
     """PORTable CULLing of Invalid Splice junctions"""

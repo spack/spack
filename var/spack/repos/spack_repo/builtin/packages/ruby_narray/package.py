@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyNarray(RubyPackage):
     """Numo::NArray is an Numerical N-dimensional Array class for fast

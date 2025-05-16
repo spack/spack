@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Dislin(Package):
     """DISLIN is a high level and easy to use graphics library for displaying

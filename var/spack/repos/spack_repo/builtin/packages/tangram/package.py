@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tangram(CMakePackage):
     """Tangram is an material interface reconstruction package used in

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class EpicsBase(MakefilePackage):
     """This is the main core of EPICS, the Experimental Physics and Industrial

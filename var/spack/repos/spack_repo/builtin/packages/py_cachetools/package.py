@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCachetools(PythonPackage):
     """This module provides various memoizing collections and decorators,

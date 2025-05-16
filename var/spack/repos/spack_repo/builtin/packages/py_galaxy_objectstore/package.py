@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGalaxyObjectstore(PythonPackage):
     """The Galaxy object store framework and default implementations."""

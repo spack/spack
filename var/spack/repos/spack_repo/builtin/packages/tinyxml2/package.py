@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tinyxml2(CMakePackage):
     """Simple, small, efficient, C++ XML parser"""

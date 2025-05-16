@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsToolbelt(PythonPackage):
     """A toolbelt of useful classes and functions to be used with

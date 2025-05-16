@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIntelOpenmp(PythonPackage):
     """Intel OpenMP* Runtime Library x86_64 dynamic libraries

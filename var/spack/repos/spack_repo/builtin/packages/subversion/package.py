@@ -7,6 +7,8 @@ import re
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Subversion(AutotoolsPackage):
     """Apache Subversion - an open source version control system."""

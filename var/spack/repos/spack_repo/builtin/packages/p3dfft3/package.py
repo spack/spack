@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class P3dfft3(AutotoolsPackage):
     """P3DFFT++ (a.k.a. P3DFFT v. 3) is a new generation of P3DFFT library

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Brynet(CMakePackage):
     """Header Only Cross platform high performance TCP network library

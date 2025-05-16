@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestAstropyHeader(PythonPackage):
     """pytest plugin to add diagnostic information to the header of the test output."""

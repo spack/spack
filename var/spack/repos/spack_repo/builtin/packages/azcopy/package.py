@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Azcopy(Package):
     """AzCopy is a command-line utility that you can use to copy data to and from containers and

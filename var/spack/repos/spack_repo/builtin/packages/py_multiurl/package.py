@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultiurl(PythonPackage):
     """A package to download several URL as one, as well as supporting multi-part URLs."""

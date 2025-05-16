@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyprojectHooks(PythonPackage):
     """Wrappers to call pyproject.toml-based build backend hooks."""

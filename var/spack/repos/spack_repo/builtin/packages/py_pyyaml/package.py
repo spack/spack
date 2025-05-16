@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyyaml(PythonPackage):
     """PyYAML is a YAML parser and emitter for Python."""

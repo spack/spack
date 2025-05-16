@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Xtb(MesonPackage):
     """Semiempirical extended tight binding program package"""

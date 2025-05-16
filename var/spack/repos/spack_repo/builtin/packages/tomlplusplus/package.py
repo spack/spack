@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tomlplusplus(CMakePackage):
     """Header-only TOML config file parser and serializer for C++17"""

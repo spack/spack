@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Qwt(QMakePackage):
     """The Qwt library contains GUI Components and utility classes which are

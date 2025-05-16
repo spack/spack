@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTimedate(PerlPackage):
     """The parser contained here will only parse absolute dates, if you want a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bamaddrg(MakefilePackage):
     """bamaddrg adds read groups to input BAM files,

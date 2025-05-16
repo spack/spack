@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Tmscore(Package):
     """TM-score is a metric for assessing the topological similarity of

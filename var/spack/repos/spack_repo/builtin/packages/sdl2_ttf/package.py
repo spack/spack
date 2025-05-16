@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sdl2Ttf(CMakePackage):
     """Simple DirectMedia Layer 2 TrueType Fonts library"""

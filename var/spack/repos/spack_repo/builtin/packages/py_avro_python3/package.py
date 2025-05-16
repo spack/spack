@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAvroPython3(PythonPackage):
     """Apache Avro is a data serialization system.

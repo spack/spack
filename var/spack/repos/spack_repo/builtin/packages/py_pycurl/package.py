@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycurl(PythonPackage):
     """PycURL is a Python interface to libcurl. PycURL can be used to fetch

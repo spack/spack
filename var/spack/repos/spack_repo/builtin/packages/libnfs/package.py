@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libnfs(CMakePackage):
     """LIBNFS is a client library for accessing NFS shares over a network."""

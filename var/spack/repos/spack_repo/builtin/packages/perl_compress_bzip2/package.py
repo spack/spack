@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCompressBzip2(PerlPackage):
     """Interface to Bzip2 compression library"""

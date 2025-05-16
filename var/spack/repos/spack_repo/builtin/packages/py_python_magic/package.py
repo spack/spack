@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonMagic(PythonPackage):
     """A python wrapper for libmagic.

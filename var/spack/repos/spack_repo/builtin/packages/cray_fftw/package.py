@@ -6,6 +6,8 @@ import llnl.util.lang
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CrayFftw(Package):
     """FFTW is a C subroutine library for computing the discrete Fourier

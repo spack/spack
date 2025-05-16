@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTensorflowDatasets(PythonPackage):
     """tensorflow/datasets is a library of datasets ready to use with

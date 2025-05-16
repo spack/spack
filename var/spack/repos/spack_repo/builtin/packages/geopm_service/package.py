@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GeopmService(AutotoolsPackage):
     """The Global Extensible Open Power Manager (GEOPM) Service provides a

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyZentest(RubyPackage):
     """ZenTest provides 4 different tools: zentest, unit_diff, autotest, and

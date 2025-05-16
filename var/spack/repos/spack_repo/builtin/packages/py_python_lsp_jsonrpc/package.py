@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLspJsonrpc(PythonPackage):
     """A Python 3.7+ server implementation of the JSON RPC 2.0 protocol."""

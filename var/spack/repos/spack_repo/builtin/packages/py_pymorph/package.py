@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymorph(PythonPackage):
     """Pymorph is a collection of pure python implementations of many image

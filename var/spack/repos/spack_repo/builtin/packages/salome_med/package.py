@@ -7,6 +7,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SalomeMed(CMakePackage):
     """salome-med is the MED file format that is the SALOME platform standard

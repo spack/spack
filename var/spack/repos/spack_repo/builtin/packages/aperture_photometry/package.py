@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class AperturePhotometry(Package):
     """Aperture Photometry Tool APT is software for astronomical research"""

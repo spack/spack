@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXattr(PythonPackage):
     """A python interface to access extended file attributes,

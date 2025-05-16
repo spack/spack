@@ -9,6 +9,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class VisitCgns(CMakePackage):
     """This is the CGNS Plug-In for VisIt.

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxtrap(AutotoolsPackage, XorgPackage):
     """libXTrap is the Xlib-based client API for the DEC-XTRAP extension.

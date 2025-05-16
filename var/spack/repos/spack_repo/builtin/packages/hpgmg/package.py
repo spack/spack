@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hpgmg(MakefilePackage):
     """HPGMG implements full multigrid (FMG) algorithms using finite-volume and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCdcfluview(RPackage):
     """Retrieve Flu Season Data from the United States Centers for Disease

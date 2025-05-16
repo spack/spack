@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Glibmm(AutotoolsPackage):
     """Glibmm is a C++ wrapper for the glib library."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDiagram(RPackage):
     """Functions for Visualising Simple Graphs (Networks), Plotting Flow

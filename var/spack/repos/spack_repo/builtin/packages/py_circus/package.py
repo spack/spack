@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCircus(PythonPackage):
     """Circus is a program that will let you run and watch

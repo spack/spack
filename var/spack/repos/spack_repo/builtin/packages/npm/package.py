@@ -8,6 +8,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Npm(Package):
     """npm: A package manager for javascript."""

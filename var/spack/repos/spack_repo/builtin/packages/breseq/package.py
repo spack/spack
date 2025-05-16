@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Breseq(AutotoolsPackage):
     """breseq is a computational pipeline for finding mutations relative to

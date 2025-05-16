@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openscenegraph(CMakePackage):
     """OpenSceneGraph is an open source, high performance 3D graphics toolkit

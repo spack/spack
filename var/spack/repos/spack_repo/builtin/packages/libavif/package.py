@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libavif(CMakePackage):
     """libavif - Library for encoding and decoding .avif files."""

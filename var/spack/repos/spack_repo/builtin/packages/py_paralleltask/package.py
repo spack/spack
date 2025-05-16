@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParalleltask(PythonPackage):
     """Paralleltask is a simple and lightweight parallel task engine. It can launch a given

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPdmPep517(PythonPackage):
     """A PEP 517 backend for PDM that supports PEP 621 metadata."""

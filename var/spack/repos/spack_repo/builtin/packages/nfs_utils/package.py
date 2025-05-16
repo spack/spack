@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NfsUtils(AutotoolsPackage):
     """The NFS Utilities package contains the userspace server and client tools

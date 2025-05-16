@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SalmonTddft(CMakePackage):
     """SALMON is an open-source computer program for ab-initio

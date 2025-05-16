@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEte3(PythonPackage):
     """The Environment for Tree Exploration (ETE) is a Python programming

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPystan(PythonPackage):
     """PyStan is a Python interface to Stan, a package for Bayesian inference."""

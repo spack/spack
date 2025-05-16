@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libbigwig(CMakePackage):
     """A C library for reading/parsing local and remote bigWig and bigBed files."""

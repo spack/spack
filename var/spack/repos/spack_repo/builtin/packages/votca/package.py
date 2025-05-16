@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Votca(CMakePackage):
     """VOTCA is a software package which focuses on the analysis of molecular

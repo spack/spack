@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPathTiny(PerlPackage):
     """This module provides a small, fast utility for working with file paths.

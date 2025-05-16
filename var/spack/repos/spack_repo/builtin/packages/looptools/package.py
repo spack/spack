@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Looptools(AutotoolsPackage):
     """LoopTools is a package for evaluation of scalar and tensor one-loop

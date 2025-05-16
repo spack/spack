@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJinja2Time(PythonPackage):
     """Jinja2 Extension for Dates and Times"""

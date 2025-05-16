@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
+
+from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from ...build_systems.cmake import CMakeBuilder, CMakePackage
 
 
 class Freetype(AutotoolsPackage, CMakePackage):

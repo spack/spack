@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fastqc(Package):
     """A quality control tool for high throughput sequence data."""

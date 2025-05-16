@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPlotmo(RPackage):
     """Plot a Model's Residuals, Response, and Partial Dependence Plots.

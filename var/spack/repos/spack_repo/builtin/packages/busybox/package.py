@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Busybox(MakefilePackage):
     """BusyBox combines tiny versions of many common UNIX utilities into

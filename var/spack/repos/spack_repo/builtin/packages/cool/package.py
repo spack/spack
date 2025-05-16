@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cool(CMakePackage):
     """COOL provides specific software components and tools for the handling of the time

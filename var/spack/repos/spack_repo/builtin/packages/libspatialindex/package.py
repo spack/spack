@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libspatialindex(CMakePackage):
     """C++ implementation of R*-tree, an MVR-tree and a TPR-tree with C API."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CpuFeatures(CMakePackage):
     """A cross platform C99 library to get cpu features at runtime."""

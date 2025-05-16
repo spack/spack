@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sollya(AutotoolsPackage):
     """Sollya is both a tool environment and a library for safe floating-point code

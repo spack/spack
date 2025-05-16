@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class G2o(CMakePackage):
     """g2o is an open-source C++ framework for optimizing graph-based nonlinear

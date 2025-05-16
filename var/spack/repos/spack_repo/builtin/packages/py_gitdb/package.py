@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGitdb(PythonPackage):
     """The GitDB project implements interfaces to allow read and write access

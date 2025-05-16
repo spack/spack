@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWorkloadAutomation(PythonPackage):
     """Workload Automation (WA) is a framework for executing workloads and

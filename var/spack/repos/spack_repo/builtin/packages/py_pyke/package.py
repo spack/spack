@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyke(PythonPackage):
     """Pyke introduces a form of Logic Programming (inspired by Prolog)

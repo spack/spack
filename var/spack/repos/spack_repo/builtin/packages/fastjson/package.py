@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Fastjson(MavenPackage):
     """Fastjson is a Java library that can be used to convert Java Objects

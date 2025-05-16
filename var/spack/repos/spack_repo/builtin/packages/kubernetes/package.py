@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Kubernetes(Package):
     """Kubernetes is an open source system for managing containerized

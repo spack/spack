@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Moreutils(MakefilePackage):
     """Additional Unix utilities. This is a growing collection of the Unix

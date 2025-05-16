@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mgardx(CMakePackage):
     """MGARD implementation for research purposes

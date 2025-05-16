@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFava(PythonPackage):
     """Fava is a web interface for the double-entry bookkeeping software

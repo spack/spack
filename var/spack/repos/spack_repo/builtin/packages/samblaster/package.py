@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Samblaster(MakefilePackage):
     """A tool to mark duplicates and extract discordant and split reads from

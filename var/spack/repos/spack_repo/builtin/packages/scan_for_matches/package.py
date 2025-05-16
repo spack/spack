@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class ScanForMatches(Package):
     """scan_for_matches is a utility written in C for locating patterns in DNA

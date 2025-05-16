@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vifi(Package):
     """ViFi is a collection of python and perl scripts

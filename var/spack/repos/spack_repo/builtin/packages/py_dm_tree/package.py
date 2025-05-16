@@ -6,6 +6,8 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDmTree(PythonPackage):
     """tree is a library for working with nested data structures. In a

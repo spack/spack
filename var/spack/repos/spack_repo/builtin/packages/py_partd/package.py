@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPartd(PythonPackage):
     """Key-value byte store with appendable values."""

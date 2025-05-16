@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMarkovClustering(PythonPackage):
     """Implementation of the Markov clustering (MCL) algorithm in python"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Swfft(MakefilePackage):
     """A stand-alone version of HACC's distributed-memory, pencil-decomposed,

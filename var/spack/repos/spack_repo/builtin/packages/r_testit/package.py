@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTestit(RPackage):
     """A Simple Package for Testing R Packages.

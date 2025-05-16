@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLpsolveapi(RPackage):
     """R Interface to 'lp_solve' Version 5.5.2.0.

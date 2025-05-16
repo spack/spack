@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libszip(AutotoolsPackage):
     """Szip is an implementation of the extended-Rice lossless

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cans(MakefilePackage):
     """CaNS (Canonical Navier-Stokes) is a code for

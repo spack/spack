@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsFile(PythonPackage):
     """File transport adapter for Requests."""

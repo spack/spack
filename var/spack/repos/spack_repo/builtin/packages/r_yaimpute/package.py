@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RYaimpute(RPackage):
     """Nearest Neighbor Observation Imputation and Evaluation Tools.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Distcc(AutotoolsPackage):
     """distcc is a program to distribute compilation of C or C++

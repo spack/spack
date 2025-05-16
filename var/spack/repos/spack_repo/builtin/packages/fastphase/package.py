@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fastphase(Package):
     """Software for haplotype reconstruction, and estimating missing genotypes

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Muscle5(MakefilePackage):
     """MUSCLE is widely-used software for making multiple alignments of

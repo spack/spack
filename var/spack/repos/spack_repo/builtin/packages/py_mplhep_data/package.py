@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMplhepData(PythonPackage):
     """Font (Data) sub-package for mplhep"""

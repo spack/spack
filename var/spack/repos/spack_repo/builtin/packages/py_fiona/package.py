@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFiona(PythonPackage):
     """Fiona reads and writes spatial data files."""

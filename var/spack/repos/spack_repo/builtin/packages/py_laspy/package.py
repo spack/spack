@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLaspy(PythonPackage):
     """Native Python ASPRS LAS read/write library."""

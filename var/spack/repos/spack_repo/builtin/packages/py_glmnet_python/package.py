@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGlmnetPython(PythonPackage):
     """This is a python version of the popular glmnet library (beta release).

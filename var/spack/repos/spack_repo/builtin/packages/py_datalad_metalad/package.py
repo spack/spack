@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladMetalad(PythonPackage):
     """DataLad extension for semantic metadata handling"""

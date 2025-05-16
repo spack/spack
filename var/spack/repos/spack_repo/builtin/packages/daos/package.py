@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 
 class Daos(SConsPackage):
     """The Distributed Asynchronous Object Storage (DAOS) is an open-source

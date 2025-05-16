@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlParamsValidationcompiler(PerlPackage):
     """Params::ValidationCompiler - Build an optimized subroutine parameter validator once,

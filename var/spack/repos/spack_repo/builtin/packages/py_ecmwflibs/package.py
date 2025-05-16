@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEcmwflibs(PythonPackage):
     """A Python package that wraps some of ECMWF libraries to be used by

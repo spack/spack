@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class ByteUnixbench(MakefilePackage):
     """UnixBench is the original BYTE UNIX benchmark suite."""

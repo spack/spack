@@ -7,6 +7,9 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Qrupdate(MakefilePackage, SourceforgePackage):
     """qrupdate is a Fortran library for fast updates of QR and

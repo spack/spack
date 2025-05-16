@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Solr(Package):
     """Solr is highly reliable, scalable and fault tolerant, providing distributed

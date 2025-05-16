@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythran(PythonPackage):
     """Ahead of Time compiler for numeric kernels."""

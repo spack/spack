@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class MlcLlm(CMakePackage, CudaPackage):
     """MLC LLM is a machine learning compiler and high-performance deployment

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginDrmaa(PythonPackage):
     """A snakemake executor plugin for submission of jobs via DRMAA."""

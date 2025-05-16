@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Psipred(MakefilePackage):
     """PSIPRED is a simple and accurate secondary structure prediction method, incorporating

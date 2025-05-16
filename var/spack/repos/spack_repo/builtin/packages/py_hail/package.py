@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PyHail(MakefilePackage):
     """Cloud-native genomic dataframes and batch computing (Python API)"""

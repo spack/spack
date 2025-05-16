@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class EclipseGcjParser(Package):
     """GCJ requires the Eclipse Java parser, but does not ship with it.

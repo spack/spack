@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class DlaFuture(CMakePackage, CudaPackage, ROCmPackage):
     """DLA-Future library: Distributed Linear Algebra with Future"""

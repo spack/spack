@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lastz(MakefilePackage):
     """LASTZ is a program for aligning DNA sequences, a pairwise aligner."""

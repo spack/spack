@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSimpleaffy(RPackage):
     """Very simple high level analysis of Affymetrix data.

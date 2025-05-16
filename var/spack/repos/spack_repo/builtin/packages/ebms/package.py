@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ebms(MakefilePackage):
     """This is a miniapp for the Energy Banding Monte Carlo (EBMC)

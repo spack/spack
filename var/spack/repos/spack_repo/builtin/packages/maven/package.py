@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Maven(Package):
     """Apache Maven is a software project management and comprehension tool."""

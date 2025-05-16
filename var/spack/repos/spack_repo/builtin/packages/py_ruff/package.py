@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRuff(PythonPackage):
     """An extremely fast Python linter and code formatter, written in Rust."""

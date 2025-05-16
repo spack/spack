@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Virtualgl(CMakePackage):
     """VirtualGL redirects 3D commands from a Unix/Linux OpenGL application

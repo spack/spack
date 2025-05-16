@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchGeometric(PythonPackage):
     """Graph Neural Network Library for PyTorch."""

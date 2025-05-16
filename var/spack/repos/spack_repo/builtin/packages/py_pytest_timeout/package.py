@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestTimeout(PythonPackage):
     """A plugin which will terminate tests after a certain timeout,

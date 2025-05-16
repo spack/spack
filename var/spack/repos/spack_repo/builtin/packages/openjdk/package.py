@@ -8,6 +8,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 # If you need to add a new version, please be aware that:
 #  - versions in the following dict are automatically added to the package
 #  - version tuple must be in the form (checksum, url)

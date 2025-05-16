@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Typescript(Package):
     """TypeScript is a superset of JavaScript that compiles to clean JavaScript output."""

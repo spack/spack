@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CommonsLogging(Package):
     """When writing a library it is very useful to log information. However

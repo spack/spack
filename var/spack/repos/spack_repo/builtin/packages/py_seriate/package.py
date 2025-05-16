@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySeriate(PythonPackage):
     """This is a Python implementation of Seriation

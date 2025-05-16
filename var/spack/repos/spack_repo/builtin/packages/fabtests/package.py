@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fabtests(AutotoolsPackage):
     """Fabtests provides a set of runtime analysis tools and examples that use

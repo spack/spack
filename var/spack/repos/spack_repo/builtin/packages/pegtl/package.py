@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 # package has a Makefile, but only to build examples
 class Pegtl(CMakePackage):

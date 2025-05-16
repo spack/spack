@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestDifferences(PerlPackage):
     """Test strings and data structures and show differences if not ok"""

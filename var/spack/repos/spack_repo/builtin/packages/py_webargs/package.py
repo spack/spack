@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWebargs(PythonPackage):
     """Python library for parsing and validating HTTP request objects,

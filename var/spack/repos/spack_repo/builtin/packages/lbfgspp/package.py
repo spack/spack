@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lbfgspp(CMakePackage):
     """A Header-only C++ Library for L-BFGS and L-BFGS-B Algorithms"""

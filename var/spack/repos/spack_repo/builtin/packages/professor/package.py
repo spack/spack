@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Professor(Package):
     """Professor Monte-Carlo tuning package"""

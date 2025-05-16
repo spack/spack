@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtDevtestlabs(PythonPackage):
     """Microsoft Azure DevTestLabs Management Client Library for Python."""

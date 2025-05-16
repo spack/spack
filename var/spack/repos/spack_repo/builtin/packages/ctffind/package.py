@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ctffind(AutotoolsPackage):
     """Fast and accurate defocus estimation from electron micrographs."""

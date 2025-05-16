@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Miniamr(MakefilePackage):
     """Proxy Application. 3D stencil calculation with

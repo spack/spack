@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Samtools(Package):
     """SAM Tools provide various utilities for manipulating alignments in

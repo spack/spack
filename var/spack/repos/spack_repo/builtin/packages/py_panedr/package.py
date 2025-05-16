@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPanedr(PythonPackage):
     """Panedr uses the Pyedr library to read a Gromacs EDR binary energy XDR file and returns

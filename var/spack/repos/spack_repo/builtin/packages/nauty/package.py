@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nauty(AutotoolsPackage):
     """nauty and Traces are programs for computing automorphism groups of

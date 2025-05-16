@@ -7,6 +7,9 @@ import os
 from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+from ...build_systems.rocm import ROCmPackage
 from ..mpich.package import MpichEnvironmentModifications
 
 

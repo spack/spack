@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Verdict(CMakePackage):
     """Verdict mesh quality library for evaluating the geometric qualities of regions of space."""

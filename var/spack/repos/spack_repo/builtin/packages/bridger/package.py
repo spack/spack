@@ -6,6 +6,9 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Bridger(MakefilePackage, SourceforgePackage):
     """Bridger : An Efficient De novo Transcriptome Assembler For

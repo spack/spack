@@ -8,6 +8,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class ArmForge(Package):
     """Arm Forge is the complete toolsuite for software development - with

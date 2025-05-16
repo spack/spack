@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flann(CMakePackage):
     """FLANN is a library for performing fast approximate nearest neighbor

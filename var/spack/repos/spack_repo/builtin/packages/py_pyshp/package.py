@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyshp(PythonPackage):
     """The Python Shapefile Library (pyshp) reads and writes ESRI Shapefiles in

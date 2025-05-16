@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libjpeg(AutotoolsPackage):
     """libjpeg is a widely used free library with functions for handling the

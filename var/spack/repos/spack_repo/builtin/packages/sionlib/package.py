@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sionlib(AutotoolsPackage):
     """Scalable I/O library for parallel access to task-local files"""

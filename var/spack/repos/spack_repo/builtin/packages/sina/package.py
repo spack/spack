@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cached_cmake import CachedCMakePackage, cmake_cache_option, cmake_cache_path
+
 
 class Sina(CachedCMakePackage):
     """Sina C++ Library"""

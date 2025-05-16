@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRtoml(PythonPackage):
     """A better TOML library for python implemented in rust."""

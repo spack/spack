@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlotnine(PythonPackage):
     """plotnine is an implementation of a grammar of graphics in Python, it is

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Serialbox(CMakePackage):
     """Serialbox is a serialization library and tools for C/C++, Python3 and

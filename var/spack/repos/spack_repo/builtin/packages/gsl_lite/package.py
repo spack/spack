@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GslLite(CMakePackage):
     """A single-file header-only version of ISO C++ Guidelines Support Library

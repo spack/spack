@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Landsfcutil(CMakePackage):
     """Utility routines useful for initializing land-surface states in

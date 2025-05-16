@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFactominer(RPackage):
     """Multivariate Exploratory Data Analysis and Data Mining.

@@ -8,6 +8,8 @@ import sys
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 
 

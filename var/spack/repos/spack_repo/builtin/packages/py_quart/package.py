@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQuart(PythonPackage):
     """A Python ASGI web microframework with the same API as

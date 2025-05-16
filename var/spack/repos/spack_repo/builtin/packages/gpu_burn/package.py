@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class GpuBurn(MakefilePackage, CudaPackage):
     """Multi-GPU CUDA stress test."""

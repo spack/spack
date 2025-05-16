@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiohappyeyeballs(PythonPackage):
     """This library exists to allow connecting with Happy Eyeballs (RFC 8305)

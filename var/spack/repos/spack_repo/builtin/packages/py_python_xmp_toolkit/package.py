@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonXmpToolkit(PythonPackage):
     """Python XMP Toolkit for working with metadata."""

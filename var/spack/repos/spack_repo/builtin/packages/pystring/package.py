@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pystring(CMakePackage):
     """Pystring is a collection of C++ functions which match the interface and behavior

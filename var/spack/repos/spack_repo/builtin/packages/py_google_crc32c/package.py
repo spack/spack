@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogleCrc32c(PythonPackage):
     """This package wraps the google/crc32c hardware-based implementation

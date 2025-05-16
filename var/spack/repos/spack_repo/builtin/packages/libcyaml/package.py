@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libcyaml(MakefilePackage):
     """LibCYAML is a C library for reading and writing structured YAML

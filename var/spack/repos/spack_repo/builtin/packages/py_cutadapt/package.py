@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCutadapt(PythonPackage):
     """Cutadapt finds and removes adapter sequences, primers, poly-A tails and

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rstudio(CMakePackage):
     """RStudio is an integrated development environment (IDE) for R."""

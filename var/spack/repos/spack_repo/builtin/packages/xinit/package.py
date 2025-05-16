@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xinit(AutotoolsPackage, XorgPackage):
     """The xinit program is used to start the X Window System server and a

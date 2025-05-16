@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RQuadprog(RPackage):
     """Functions to Solve Quadratic Programming Problems.

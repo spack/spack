@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyasn1(PythonPackage):
     """Pure-Python implementation of ASN.1 types and DER/BER/CER codecs

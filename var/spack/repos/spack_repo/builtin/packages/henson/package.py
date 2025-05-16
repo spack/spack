@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Henson(CMakePackage):
     """Cooperative multitasking for in situ processing."""

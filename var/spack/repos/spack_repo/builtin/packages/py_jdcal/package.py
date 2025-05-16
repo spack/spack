@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJdcal(PythonPackage):
     """Julian dates from proleptic Gregorian and Julian calendars"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Codec2(CMakePackage):
     """Open source speech codec designed for communications quality speech

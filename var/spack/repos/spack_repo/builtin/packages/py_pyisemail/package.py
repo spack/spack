@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyisemail(PythonPackage):
     """pyIsEmail is a no-nonsense approach for checking whether that user-supplied

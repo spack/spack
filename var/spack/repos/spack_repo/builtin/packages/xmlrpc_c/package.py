@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class XmlrpcC(AutotoolsPackage):
     """Programming library for writing an XML-RPC server or client in

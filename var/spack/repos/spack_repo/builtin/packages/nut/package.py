@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nut(CMakePackage):
     """NuT is Monte Carlo code for neutrino transport and

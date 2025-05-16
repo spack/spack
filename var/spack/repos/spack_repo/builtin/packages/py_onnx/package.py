@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOnnx(PythonPackage):
     """Open Neural Network Exchange (ONNX) is an open ecosystem that

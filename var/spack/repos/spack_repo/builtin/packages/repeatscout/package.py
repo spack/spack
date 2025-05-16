@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Repeatscout(MakefilePackage):
     """RepeatScout - De Novo Repeat Finder, Price A.L., Jones N.C. and Pevzner

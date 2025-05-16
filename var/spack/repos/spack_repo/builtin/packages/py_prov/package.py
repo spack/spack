@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyProv(PythonPackage):
     """A Python library for W3C Provenance Data Model (PROV).

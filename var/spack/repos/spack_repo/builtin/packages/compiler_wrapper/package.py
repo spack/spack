@@ -14,6 +14,8 @@ import spack.compilers.libraries
 import spack.package_base
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CompilerWrapper(Package):
     """Spack compiler wrapper script.

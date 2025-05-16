@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMelissaCore(PythonPackage):
     """Melissa is a file-avoiding, adaptive, fault-tolerant and elastic

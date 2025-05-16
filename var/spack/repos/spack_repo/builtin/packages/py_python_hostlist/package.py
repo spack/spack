@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonHostlist(PythonPackage):
     """The hostlist.py module knows how to expand and collect hostlist expressions."""

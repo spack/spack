@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Aria2(AutotoolsPackage):
     """An ultra fast download utility"""

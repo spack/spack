@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUrllib3(PythonPackage):
     """HTTP library with thread-safe connection pooling, file post, and

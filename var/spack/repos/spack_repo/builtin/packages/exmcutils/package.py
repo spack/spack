@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Exmcutils(AutotoolsPackage):
     """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""

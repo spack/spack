@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCustomInherit(PythonPackage):
     """A Python package that provides customized docstring inheritance schemes

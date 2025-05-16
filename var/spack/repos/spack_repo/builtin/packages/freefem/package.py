@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Freefem(AutotoolsPackage):
     """FreeFEM is a popular 2D and 3D partial differential equations (PDE) solver.

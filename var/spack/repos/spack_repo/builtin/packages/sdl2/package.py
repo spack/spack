@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sdl2(CMakePackage):
     """Simple DirectMedia Layer is a cross-platform development library

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMoPack(PythonPackage):
     """Packing methods used to encode and decode the data payloads of

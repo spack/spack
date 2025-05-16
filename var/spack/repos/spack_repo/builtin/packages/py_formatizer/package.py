@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFormatizer(PythonPackage):
     """Literal string formatting for Python versions older than 3.6."""

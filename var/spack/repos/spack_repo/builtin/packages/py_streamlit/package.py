@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStreamlit(PythonPackage):
     """The fastest way to build data apps in Python."""

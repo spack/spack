@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGenomicalignments(RPackage):
     """Representation and manipulation of short genomic alignments.

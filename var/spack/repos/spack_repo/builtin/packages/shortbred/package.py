@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Shortbred(Package):
     """ShortBRED is a system for profiling protein families of interest at

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Telegraf(MakefilePackage):
     """Telegraf is an agent for collecting, processing, aggregating,

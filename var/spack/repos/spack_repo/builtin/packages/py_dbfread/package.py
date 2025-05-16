@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDbfread(PythonPackage):
     """DBF is a file format used by databases such dBase, Visual FoxPro, and

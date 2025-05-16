@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import spack.build_systems.autotools
 from spack.package import *
+
+from ...build_systems import autotools
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
 
 
 class Libuv(CMakePackage, AutotoolsPackage):
@@ -124,7 +127,7 @@ class Libuv(CMakePackage, AutotoolsPackage):
     )
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     @when("@:1.43")
     def autoreconf(self, pkg, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly

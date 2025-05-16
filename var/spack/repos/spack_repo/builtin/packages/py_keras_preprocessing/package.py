@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKerasPreprocessing(PythonPackage):
     """Utilities for working with image data, text data, and sequence data."""

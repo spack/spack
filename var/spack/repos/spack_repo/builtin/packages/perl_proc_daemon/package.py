@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlProcDaemon(PerlPackage):
     """Run Perl program(s) as a daemon process"""

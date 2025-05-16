@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPathlib2(PythonPackage):
     """Backport of pathlib from python 3.4"""

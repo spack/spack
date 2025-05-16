@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPkgdown(RPackage):
     """Make Static HTML Documentation for a Package.

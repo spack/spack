@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLspServer(PythonPackage):
     """A Python 3.7+ implementation of the Language Server Protocol."""

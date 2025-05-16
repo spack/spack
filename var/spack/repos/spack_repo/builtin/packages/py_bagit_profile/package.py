@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBagitProfile(PythonPackage):
     """A simple Python module for validating BagIt profiles."""

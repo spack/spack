@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gegelati(CMakePackage):
     """Class to add the a TPG library(gegelati) into Spack"""

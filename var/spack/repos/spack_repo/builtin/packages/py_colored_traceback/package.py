@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColoredTraceback(PythonPackage):
     """Automatically color Python's uncaught exception tracebacks."""

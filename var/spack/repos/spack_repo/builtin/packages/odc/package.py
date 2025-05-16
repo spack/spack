@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Odc(CMakePackage):
     """ECMWF encoding and decoding of observational data in ODB2 format."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHdbscan(PythonPackage):
     """HDBSCAN - Hierarchical Density-Based Spatial Clustering of

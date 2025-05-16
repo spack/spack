@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cctools(AutotoolsPackage):
     """The Cooperative Computing Tools (cctools) enable large scale

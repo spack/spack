@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceware import SourcewarePackage
+
 
 class Lvm2(AutotoolsPackage, SourcewarePackage):
     """LVM2 is the userspace toolset that provides logical volume

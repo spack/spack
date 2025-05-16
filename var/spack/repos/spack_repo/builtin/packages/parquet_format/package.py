@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class ParquetFormat(MavenPackage):
     """ParquetFormat is a columnar storage format that supports nested data."""

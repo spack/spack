@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDasbus(PythonPackage):
     """Dasbus is a DBus library written in Python 3, based on GLib and inspired by pydbus."""

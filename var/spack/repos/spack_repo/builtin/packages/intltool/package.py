@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Intltool(AutotoolsPackage):
     """intltool is a set of tools to centralize translation of many different

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gccxml(CMakePackage):
     """gccxml dumps an XML description of C++ source code using an extension of

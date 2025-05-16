@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDevtools(RPackage):
     """Tools to Make Developing R Packages Easier.

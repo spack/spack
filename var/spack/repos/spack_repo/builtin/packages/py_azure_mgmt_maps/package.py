@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtMaps(PythonPackage):
     """Microsoft Azure Maps Client Library for Python."""

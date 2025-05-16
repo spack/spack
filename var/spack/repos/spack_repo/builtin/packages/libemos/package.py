@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libemos(CMakePackage):
     """The Interpolation library (EMOSLIB) includes Interpolation software and

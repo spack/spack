@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlEmailAddressXs(PerlPackage):
     """Parse and format RFC 5322 email addresses and groups"""

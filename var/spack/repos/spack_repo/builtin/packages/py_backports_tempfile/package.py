@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsTempfile(PythonPackage):
     """This package provides backports of new features in Python's tempfile

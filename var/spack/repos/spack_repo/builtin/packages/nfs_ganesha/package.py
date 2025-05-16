@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class NfsGanesha(CMakePackage):
     """NFS-Ganesha is an NFSv3,v4,v4.1 fileserver that runs in user mode

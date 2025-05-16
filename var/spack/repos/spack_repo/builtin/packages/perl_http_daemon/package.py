@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHttpDaemon(PerlPackage):
     """A simple http server class"""

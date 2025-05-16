@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScineChemoton(PythonPackage):
     """Software driving the automated exploration of chemical reaction networks"""

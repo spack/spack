@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Graphite2(CMakePackage):
     """Graphite is a system that can be used to create "smart fonts" capable of

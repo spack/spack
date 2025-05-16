@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKeyring(PythonPackage):
     """The Python keyring library provides an easy way to access the system keyring

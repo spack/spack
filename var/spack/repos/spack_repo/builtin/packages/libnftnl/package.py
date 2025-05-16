@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnftnl(AutotoolsPackage):
     """A library for low-level interaction with nftables Netlink's API

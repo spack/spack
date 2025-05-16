@@ -5,8 +5,12 @@ import os
 
 import llnl.util.filesystem as fs
 
-from spack.build_systems import autotools, cmake, nmake
 from spack.package import *
+
+from ...build_systems import autotools, cmake, nmake
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.nmake import NMakePackage
 
 
 class Libxml2(AutotoolsPackage, CMakePackage, NMakePackage):

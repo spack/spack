@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libraw1394(AutotoolsPackage):
     """libbraw1394 provides direct access to the IEEE 1394 bus through the

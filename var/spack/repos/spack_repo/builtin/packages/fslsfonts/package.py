@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Fslsfonts(AutotoolsPackage, XorgPackage):
     """fslsfonts produces a list of fonts served by an X font server."""

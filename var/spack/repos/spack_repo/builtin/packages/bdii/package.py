@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bdii(MakefilePackage):
     """The Berkeley Database Information Index (BDII) consists of a

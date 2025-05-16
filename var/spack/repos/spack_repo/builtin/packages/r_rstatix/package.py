@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRstatix(RPackage):
     """Pipe-Friendly Framework for Basic Statistical Tests.

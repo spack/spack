@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack.build_systems.cmake
-import spack.build_systems.python
 from spack.package import *
+
+from ...build_systems import cmake, python
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.python import PythonExtension
 
 
 class PyPybind11(CMakePackage, PythonExtension):
@@ -98,7 +100,7 @@ class PyPybind11(CMakePackage, PythonExtension):
         )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         return [
             self.define("PYBIND11_TEST", self.pkg.run_tests),
@@ -107,7 +109,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
 
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)
-        python_builder = spack.build_systems.python.PythonPipBuilder(pkg)
+        python_builder = spack_repo.builtin.build_systems.python.PythonPipBuilder(pkg)
         python_builder.install(pkg, spec, prefix)
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

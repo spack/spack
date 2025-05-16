@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dpmjet(MakefilePackage):
     """DPMJET-III is a Monte Carlo event generator for hadron, photon

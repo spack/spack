@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rlwrap(AutotoolsPackage):
     """rlwrap is a 'readline wrapper', a small utility that uses the GNU

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libcuml(CMakePackage):
     """cuML is a suite of libraries that implement machine

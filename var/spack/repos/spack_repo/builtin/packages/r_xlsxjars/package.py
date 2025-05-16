@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXlsxjars(RPackage):
     """Package required POI jars for the xlsx package.

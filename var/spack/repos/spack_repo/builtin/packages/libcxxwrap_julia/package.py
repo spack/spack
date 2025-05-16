@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibcxxwrapJulia(CMakePackage):
     """This is the C++ library component of the CxxWrap.jl package, distributed as a

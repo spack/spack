@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rocksdb(MakefilePackage):
     """RocksDB: A Persistent Key-Value Store for Flash and RAM Storage"""

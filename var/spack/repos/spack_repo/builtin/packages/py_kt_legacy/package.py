@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKtLegacy(PythonPackage):
     """This repository is to support the deprecated import name of Keras Tuner.

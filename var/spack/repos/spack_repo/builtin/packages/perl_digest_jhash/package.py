@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDigestJhash(PerlPackage):
     """Perl extension for 32 bit Jenkins Hashing Algorithm"""

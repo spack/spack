@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dorian3dDlib(CMakePackage):
     """DLib is a collection of C++ classes to solve common tasks in C++

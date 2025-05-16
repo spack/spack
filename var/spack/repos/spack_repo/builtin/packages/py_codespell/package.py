@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCodespell(PythonPackage):
     """check code for common misspellings"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ectrans(CMakePackage):
     """Ectrans is the global spherical Harmonics transforms library,

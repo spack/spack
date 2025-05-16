@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fasttext(CMakePackage):
     """fastText is a library for efficient learning of word representations

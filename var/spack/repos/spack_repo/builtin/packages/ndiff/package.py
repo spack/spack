@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ndiff(Package):
     """The ndiff tool is a binary utility that compares putatively similar

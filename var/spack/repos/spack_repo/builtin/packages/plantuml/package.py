@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Plantuml(Package):
     """PlantUML is a highly versatile tool that facilitates the rapid

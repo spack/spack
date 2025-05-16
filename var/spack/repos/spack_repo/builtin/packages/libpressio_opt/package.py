@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpressioOpt(CMakePackage):
     """Metacompressor which preforms optimization of compressor settings for LibPressio"""

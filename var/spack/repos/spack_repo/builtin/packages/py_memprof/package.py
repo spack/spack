@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMemprof(PythonPackage):
     """memprof logs and plots the memory usage of all the

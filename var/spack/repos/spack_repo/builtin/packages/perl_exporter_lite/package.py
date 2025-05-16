@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExporterLite(PerlPackage):
     """Exporter::Lite is an alternative to Exporter, intended to provide a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxImmaterial(PythonPackage):
     """An adaptation of the popular mkdocs-material theme for the Sphinx documentation tool."""

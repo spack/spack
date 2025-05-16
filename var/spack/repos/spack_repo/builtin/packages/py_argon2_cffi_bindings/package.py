@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArgon2CffiBindings(PythonPackage):
     """Low-level CFFI bindings for Argon2."""

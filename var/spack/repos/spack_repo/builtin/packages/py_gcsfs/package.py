@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGcsfs(PythonPackage):
     """Pythonic file-system for Google Cloud Storage."""

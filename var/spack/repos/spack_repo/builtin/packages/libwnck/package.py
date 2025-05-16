@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
+
 
 class Libwnck(MesonPackage, AutotoolsPackage):
     """Window Navigator Construction Kit"""

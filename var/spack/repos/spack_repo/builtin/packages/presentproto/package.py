@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Presentproto(AutotoolsPackage, XorgPackage):
     """Present protocol specification and Xlib/Xserver headers."""

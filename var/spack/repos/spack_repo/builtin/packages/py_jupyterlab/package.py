@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterlab(PythonPackage):
     """JupyterLab is the next-generation web-based user interface

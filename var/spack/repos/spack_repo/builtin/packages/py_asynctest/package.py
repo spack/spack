@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsynctest(PythonPackage):
     """The package asynctest is built on top of the standard unittest module

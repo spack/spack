@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SstTransports(CMakePackage):
     """Provides transports like uGNI and verbs

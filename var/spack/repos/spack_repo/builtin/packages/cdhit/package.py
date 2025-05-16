@@ -6,6 +6,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cdhit(MakefilePackage):
     """CD-HIT is a very widely used program for clustering and comparing

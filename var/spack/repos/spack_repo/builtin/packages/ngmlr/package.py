@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ngmlr(CMakePackage):
     """Ngmlr is a long-read mapper designed to align PacBilo or Oxford

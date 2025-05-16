@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Blogbench(AutotoolsPackage):
     """A filesystem benchmark tool that simulates a realistic load."""

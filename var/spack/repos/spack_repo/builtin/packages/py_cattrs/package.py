@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCattrs(PythonPackage):
     """An open source Python library for structuring and unstructuring data."""

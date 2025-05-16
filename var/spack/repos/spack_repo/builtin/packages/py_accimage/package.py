@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAccimage(PythonPackage):
     """An accelerated Image loader and preprocessor leveraging Intel IPP.

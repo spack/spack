@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPystache(PythonPackage):
     """Pystache is a Python implementation of Mustache. Mustache is a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RProgressr(RPackage):
     """An Inclusive, Unifying API for Progress Updates.

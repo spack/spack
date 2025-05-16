@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gqrx(CMakePackage):
     """Gqrx is an open source software defined radio (SDR) receiver

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fastme(AutotoolsPackage):
     """FastME is a distance based phylogeny reconstruction program that

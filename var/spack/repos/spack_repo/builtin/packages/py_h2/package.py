@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH2(PythonPackage):
     """HTTP/2 State-Machine based protocol implementation"""

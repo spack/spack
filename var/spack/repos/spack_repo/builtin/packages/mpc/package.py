@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Mpc(AutotoolsPackage, GNUMirrorPackage):
     """Gnu Mpc is a C library for the arithmetic of complex numbers

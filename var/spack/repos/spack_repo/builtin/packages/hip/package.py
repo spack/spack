@@ -8,6 +8,8 @@ import re
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hip(CMakePackage):
     """HIP is a C++ Runtime API and Kernel Language that allows developers to

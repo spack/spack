@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Trompeloeil(CMakePackage):
     """Trompeloeil is a thread-safe header-only mocking framework for C++11/14

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Ldsc(PythonPackage):
     """ldsc is a command line tool for estimating heritability and genetic correlation from

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hicops(CMakePackage):
     """HiCOPS is a software framework for accelerating database peptide search

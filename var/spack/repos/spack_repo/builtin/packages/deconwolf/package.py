@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Deconwolf(CMakePackage):
     """deconwolf is a software for 3-D deconvolution of fluorescent wide-field images."""

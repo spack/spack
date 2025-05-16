@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLme4(RPackage):
     """Linear Mixed-Effects Models using 'Eigen' and S4.

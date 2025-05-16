@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cryptsetup(AutotoolsPackage):
     """Cryptsetup and LUKS - open-source disk encryption."""

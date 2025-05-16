@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsFtp(PythonPackage):
     """FTP Transport Adapter for Requests.."""

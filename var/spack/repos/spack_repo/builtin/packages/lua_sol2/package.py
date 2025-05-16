@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LuaSol2(CMakePackage):
     """sol2 is a C++ library binding to Lua."""

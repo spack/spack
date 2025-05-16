@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBoto(PythonPackage):
     """Boto is a Python package that provides interfaces to

@@ -5,8 +5,11 @@
 import os
 import sys
 
-from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
+
+from ...build_systems.cmake import CMakeBuilder, CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
 
 IS_WINDOWS = sys.platform == "win32"
 

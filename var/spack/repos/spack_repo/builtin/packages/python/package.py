@@ -17,6 +17,8 @@ from llnl.util.lang import dedupe
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 def make_pyvenv_cfg(python_pkg: Package, venv_prefix: str) -> str:
     """Make a pyvenv_cfg file for a given (real) python command and venv prefix."""
@@ -747,7 +749,7 @@ class Python(Package):
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         with working_dir(self.stage.source_path, create=True):

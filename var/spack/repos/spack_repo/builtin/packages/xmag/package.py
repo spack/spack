@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xmag(AutotoolsPackage, XorgPackage):
     """xmag displays a magnified snapshot of a portion of an X11 screen."""

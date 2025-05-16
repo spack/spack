@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIlluminahumanmethylationepicannoIlm10b4Hg19(RPackage):
     """Annotation for Illumina's EPIC methylation arrays."""

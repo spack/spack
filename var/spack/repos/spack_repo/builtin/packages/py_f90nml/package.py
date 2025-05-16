@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyF90nml(PythonPackage):
     """Fortran 90 namelist parser."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynacl(PythonPackage):
     """Python binding to the Networking and Cryptography (NaCl) library."""

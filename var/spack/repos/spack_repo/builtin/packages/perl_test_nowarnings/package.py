@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestNowarnings(PerlPackage):
     """Make sure you didn't emit any warnings while testing"""

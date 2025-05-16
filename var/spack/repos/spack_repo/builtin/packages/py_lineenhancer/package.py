@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLineenhancer(PythonPackage):
     """The line enhancer is only used by crYOLO internally"""

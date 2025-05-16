@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Oommf(Package):
     """The Object Oriented MicroMagnetic Framework (OOMMF) is aimed at

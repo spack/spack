@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Gatetools(PythonPackage):
     """Python tools for GATE, see https://github.com/OpenGATE/Gate"""

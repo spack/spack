@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginGcs(PythonPackage):
     """A Snakemake storage plugin for Google Cloud Storage."""

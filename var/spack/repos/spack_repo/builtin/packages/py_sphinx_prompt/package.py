@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxPrompt(PythonPackage):
     """Sphinx directive to add unselectable prompt."""

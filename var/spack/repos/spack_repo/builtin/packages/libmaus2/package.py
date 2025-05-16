@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmaus2(AutotoolsPackage):
     """libmaus2 is a collection of data structures and algorithmse."""

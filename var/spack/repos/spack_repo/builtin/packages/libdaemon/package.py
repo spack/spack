@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libdaemon(AutotoolsPackage):
     """libdaemon is a lightweight C library which eases the writing of

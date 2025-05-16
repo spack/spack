@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArcp(PythonPackage):
     """arcp (Archive and Package) URI parser and generator"""

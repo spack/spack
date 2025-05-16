@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMypyExtensions(PythonPackage):
     """Experimental type system extensions for programs checked with the

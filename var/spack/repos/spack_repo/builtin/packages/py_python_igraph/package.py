@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonIgraph(PythonPackage):
     """igraph is a collection of network analysis tools with the emphasis on

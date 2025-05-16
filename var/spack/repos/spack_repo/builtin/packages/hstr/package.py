@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hstr(AutotoolsPackage):
     """hstr(hh) is a shell history suggest box for Bash and Zsh,

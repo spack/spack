@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHatchet(PythonPackage):
     """Hatchet is a performance tool for analyzing hierarchical performance data

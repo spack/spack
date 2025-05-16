@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPywcs(PythonPackage):
     """pywcs is a set of routines for

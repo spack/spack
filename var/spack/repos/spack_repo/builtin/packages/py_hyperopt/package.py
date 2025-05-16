@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHyperopt(PythonPackage):
     """Hyperopt is a Python library for serial and parallel optimization over

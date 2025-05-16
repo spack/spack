@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIsoband(RPackage):
     """Generate Isolines and Isobands from Regularly Spaced Elevation Grids.

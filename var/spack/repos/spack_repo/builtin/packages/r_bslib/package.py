@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBslib(RPackage):
     """Custom 'Bootstrap' 'Sass' Themes for 'shiny' and 'rmarkdown'.

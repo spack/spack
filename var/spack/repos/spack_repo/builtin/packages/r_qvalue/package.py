@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RQvalue(RPackage):
     """Q-value estimation for false discovery rate control.

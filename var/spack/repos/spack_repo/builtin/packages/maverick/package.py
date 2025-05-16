@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Maverick(MakefilePackage):
     """MavericK is a program for inferring population structure on the basis

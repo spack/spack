@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanotime(PythonPackage):
     """The nanotime module provides a time object that keeps time as the

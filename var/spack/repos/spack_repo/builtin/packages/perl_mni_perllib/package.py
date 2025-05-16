@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMniPerllib(PerlPackage):
     """MNI Perl Library for scripting long-running scientific computations"""

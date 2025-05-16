@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
     """Matrix multiplication on GPUs for matrices stored on a CPU. Similar to cublasXt,

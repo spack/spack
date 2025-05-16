@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class EpicsCaGateway(MakefilePackage):
     """The EPICS Channel Access PV Gateway is both a Channel Access

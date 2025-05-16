@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Memtester(MakefilePackage):
     """A userspace utility for testing the memory subsystem for faults."""

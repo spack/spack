@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class PopplerData(CMakePackage):
     """This package consists of encoding files for use with poppler. The

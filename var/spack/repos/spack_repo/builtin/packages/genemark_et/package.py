@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class GenemarkEt(Package):
     """Gene Prediction in Bacteria, archaea, Metagenomes and

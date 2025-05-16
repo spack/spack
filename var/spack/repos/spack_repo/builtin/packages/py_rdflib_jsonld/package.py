@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRdflibJsonld(PythonPackage):
     """rdflib extension adding JSON-LD parser and serializer"""

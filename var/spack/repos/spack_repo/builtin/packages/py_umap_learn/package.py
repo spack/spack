@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUmapLearn(PythonPackage):
     """Uniform Manifold Approximation and Projection (UMAP) is a dimension

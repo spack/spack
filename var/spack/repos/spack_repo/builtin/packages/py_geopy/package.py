@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeopy(PythonPackage):
     """geopy is a Python client for several popular geocoding web services."""

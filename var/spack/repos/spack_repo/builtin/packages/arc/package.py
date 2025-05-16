@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Arc(CMakePackage):
     """ARC is an automatic resiliency library designed to provide security

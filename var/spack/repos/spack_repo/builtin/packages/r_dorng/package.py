@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDorng(RPackage):
     """Generic Reproducible Parallel Backend for 'foreach' Loops.

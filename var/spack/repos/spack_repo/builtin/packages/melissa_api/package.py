@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MelissaApi(CMakePackage):
     """Melissa is a file-avoiding, adaptive, fault-tolerant and elastic

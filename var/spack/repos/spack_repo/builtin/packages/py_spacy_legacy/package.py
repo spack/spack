@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpacyLegacy(PythonPackage):
     """Legacy registered functions for spaCy backwards compatibility"""

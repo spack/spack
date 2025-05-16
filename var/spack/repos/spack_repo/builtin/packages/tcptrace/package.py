@@ -6,6 +6,8 @@ from os.path import join
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tcptrace(AutotoolsPackage):
     """tcptrace is a tool written by Shawn Ostermann at Ohio University for

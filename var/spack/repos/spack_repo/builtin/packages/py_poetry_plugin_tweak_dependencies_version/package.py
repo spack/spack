@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoetryPluginTweakDependenciesVersion(PythonPackage):
     """Poetry plugin used to tweak dependency versions."""

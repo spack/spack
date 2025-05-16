@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Slurm(AutotoolsPackage):
     """Slurm is an open source, fault-tolerant, and highly scalable cluster

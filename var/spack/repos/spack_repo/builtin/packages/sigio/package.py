@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sigio(CMakePackage):
     """The SIGIO library provides an Application Program Interface for performing

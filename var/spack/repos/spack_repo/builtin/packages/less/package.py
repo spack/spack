@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Less(AutotoolsPackage):
     """The less utility is a text file browser that resembles more, but

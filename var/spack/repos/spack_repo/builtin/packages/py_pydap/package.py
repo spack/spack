@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydap(PythonPackage):
     """An implementation of the Data Access Protocol."""

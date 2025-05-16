@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypdf(PythonPackage):
     """A pure-python PDF library capable of splitting, merging, cropping, and

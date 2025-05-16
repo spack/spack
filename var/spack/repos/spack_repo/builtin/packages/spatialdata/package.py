@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Spatialdata(AutotoolsPackage):
     """SpatialData provides an interface to Proj.4 for converting coordinates

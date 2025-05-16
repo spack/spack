@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPanel(PythonPackage):
     """A high level app and dashboarding solution for Python."""

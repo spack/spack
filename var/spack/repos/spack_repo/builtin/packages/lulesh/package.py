@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lulesh(MakefilePackage):
     """LULESH is a highly simplified application, hard-coded to only

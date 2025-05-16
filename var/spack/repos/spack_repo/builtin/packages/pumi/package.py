@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pumi(CMakePackage):
     """SCOREC RPI's Parallel Unstructured Mesh Infrastructure (PUMI).

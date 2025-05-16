@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMysqlConnectorPython(PythonPackage):
     """MySQL Connector/Python is implementing the MySQL Client/Server

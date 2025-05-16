@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeurokit2(PythonPackage):
     """The Python Toolbox for Neurophysiological Signal Processing.

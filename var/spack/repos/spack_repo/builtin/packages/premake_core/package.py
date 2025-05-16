@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PremakeCore(MakefilePackage):
     """Premake is a command line utility which reads a scripted

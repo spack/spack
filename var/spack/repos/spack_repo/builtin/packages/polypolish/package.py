@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Polypolish(Package):
     """Polypolish is a tool for polishing genome assemblies with short reads.

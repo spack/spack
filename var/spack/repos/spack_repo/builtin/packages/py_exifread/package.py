@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExifread(PythonPackage):
     """Read Exif metadata from tiff and jpeg files."""

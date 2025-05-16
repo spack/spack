@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySysrsync(PythonPackage):
     """Python module that wraps system calls to rsync."""

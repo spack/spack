@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ncdu(Package):
     """Ncdu is a disk usage analyzer with an ncurses interface. It is designed

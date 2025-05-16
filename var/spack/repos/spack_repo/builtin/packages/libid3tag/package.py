@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libid3tag(AutotoolsPackage):
     """library for id3 tagging"""

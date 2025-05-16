@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyHorovod(PythonPackage, CudaPackage):
     """Horovod is a distributed deep learning training framework for

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBotorch(PythonPackage):
     """BoTorch is a library for Bayesian Optimization built on PyTorch."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPandas(PythonPackage):
     """pandas is a fast, powerful, flexible and easy to use open source

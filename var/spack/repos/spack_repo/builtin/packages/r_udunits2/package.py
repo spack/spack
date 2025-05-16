@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RUdunits2(RPackage):
     """Udunits-2 Bindings for R.

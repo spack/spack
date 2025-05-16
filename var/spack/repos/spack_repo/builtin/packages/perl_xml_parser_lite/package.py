@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlParserLite(PerlPackage):
     """Lightweight pure-perl XML Parser (based on regexps)"""

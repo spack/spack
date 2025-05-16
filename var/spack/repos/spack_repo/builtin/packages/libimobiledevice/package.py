@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libimobiledevice(AutotoolsPackage):
     """Library to communicate with iOS devices natively."""

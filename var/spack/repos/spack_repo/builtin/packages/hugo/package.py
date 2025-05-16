@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Hugo(GoPackage):
     """The world's fastest framework for building websites."""

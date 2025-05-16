@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FrontistrBase(CMakePackage):
     """Base class for building Frontistr, shared with the Fujitsu optimized version

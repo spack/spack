@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumba(PythonPackage):
     """NumPy aware dynamic Python compiler using LLVM"""

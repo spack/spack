@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioDbHts(PerlPackage):
     """Bio::DB::HTS - This is a Perl interface to the HTS Library."""

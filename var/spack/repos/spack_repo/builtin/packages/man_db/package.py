@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ManDb(AutotoolsPackage):
     """man-db is an implementation of the standard Unix

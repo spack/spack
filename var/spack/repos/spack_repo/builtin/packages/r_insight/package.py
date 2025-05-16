@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RInsight(RPackage):
     """Easy Access to Model Information for Various Model Objects.

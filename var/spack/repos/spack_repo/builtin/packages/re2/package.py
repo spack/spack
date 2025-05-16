@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Re2(CMakePackage):
     """RE2 is a fast, safe, thread-friendly alternative to backtracking

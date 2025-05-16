@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlosc(PythonPackage):
     """A Python wrapper for the extremely fast Blosc compression library"""

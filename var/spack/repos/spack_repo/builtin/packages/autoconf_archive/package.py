@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class AutoconfArchive(AutotoolsPackage, GNUMirrorPackage):
     """The GNU Autoconf Archive is a collection of more than 500 macros for

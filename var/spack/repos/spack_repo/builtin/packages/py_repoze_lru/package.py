@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRepozeLru(PythonPackage):
     """A tiny LRU cache implementation and decorator"""

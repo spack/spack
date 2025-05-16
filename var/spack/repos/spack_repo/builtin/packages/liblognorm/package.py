@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Liblognorm(AutotoolsPackage):
     """Liblognorm is a fast-samples based normalization library."""

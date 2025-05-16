@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Snakemake(PythonPackage):
     """Workflow management system to create reproducible and scalable data analyses."""

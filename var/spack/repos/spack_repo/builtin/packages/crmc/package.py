@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Crmc(CMakePackage):
     """CRMC (Cosmic Ray Monte Carlo package). CRMC is a package providing

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGreenlet(PythonPackage):
     """Lightweight in-process concurrent programming"""

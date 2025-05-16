@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCompressRawZlib(PerlPackage):
     """A low-Level Interface to zlib compression library."""

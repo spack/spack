@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymsgbox(PythonPackage):
     """A simple, cross-platform, pure Python module for

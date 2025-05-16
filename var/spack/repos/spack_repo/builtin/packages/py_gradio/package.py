@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGradio(PythonPackage):
     """Python library for easily interacting with trained machine learning models"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDashBootstrapComponents(PythonPackage):
     """Bootstrap themed components for use in Plotly Dash"""

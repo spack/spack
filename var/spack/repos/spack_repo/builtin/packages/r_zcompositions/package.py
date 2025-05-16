@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RZcompositions(RPackage):
     """Treatment of Zeros, Left-Censored and Missing Values in Compositional

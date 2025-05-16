@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rapidjson(CMakePackage):
     """A fast JSON parser/generator for C++ with both SAX/DOM style API"""

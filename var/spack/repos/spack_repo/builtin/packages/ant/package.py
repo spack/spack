@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ant(Package):
     """Apache Ant is a Java library and command-line tool whose mission is to

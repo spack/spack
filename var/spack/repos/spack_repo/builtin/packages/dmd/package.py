@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dmd(MakefilePackage):
     """DMD is the reference compiler for the D programming language."""

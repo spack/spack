@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Miniocli(MakefilePackage):
     """MinIO Client (mc) provides a modern alternative to UNIX commands

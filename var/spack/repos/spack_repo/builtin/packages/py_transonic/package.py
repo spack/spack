@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTransonic(PythonPackage):
     """Make your Python code fly at transonic speeds!"""

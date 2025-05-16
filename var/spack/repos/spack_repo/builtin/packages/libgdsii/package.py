@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libgdsii(AutotoolsPackage):
     """libGDSII is a C++ library for working with GDSII binary data files,

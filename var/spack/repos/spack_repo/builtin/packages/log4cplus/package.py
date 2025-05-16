@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Log4cplus(CMakePackage):
     """log4cplus is a simple to use C++ logging API

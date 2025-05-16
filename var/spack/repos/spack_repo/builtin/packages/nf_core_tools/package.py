@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class NfCoreTools(PythonPackage):
     """A python package with helper tools for the nf-core community."""

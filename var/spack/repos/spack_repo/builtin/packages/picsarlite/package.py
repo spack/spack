@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Picsarlite(MakefilePackage):
     """PICSARlite is a self-contained proxy that adequately portrays the

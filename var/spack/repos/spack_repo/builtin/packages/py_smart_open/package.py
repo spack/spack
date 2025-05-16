@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySmartOpen(PythonPackage):
     """smart_open is a Python 2 & Python 3 library for efficient streaming of

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMkdocs(PythonPackage):
     """MkDocs is a fast, simple and downright gorgeous static site generator

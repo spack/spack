@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NetkitFtp(AutotoolsPackage):
     """netkit-ftp is the original file transfer client program for Linux."""

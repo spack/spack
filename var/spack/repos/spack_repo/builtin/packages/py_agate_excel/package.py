@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAgateExcel(PythonPackage):
     """agate-excel adds read support for Excel files (xls and xlsx) to

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBandit(PythonPackage):
     """Security oriented static analyser for python code."""

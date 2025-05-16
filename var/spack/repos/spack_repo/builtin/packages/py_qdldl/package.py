@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQdldl(PythonPackage):
     """Python interface to the QDLDL free LDL factorization routine for

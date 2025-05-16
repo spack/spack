@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnbc(AutotoolsPackage):
     """LibNBC is a prototypic implementation of a nonblocking

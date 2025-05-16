@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lcc(CMakePackage):
     """Los Alamos Crystal Cut (LCC) is a simple crystal builder. It is an easy-to-use

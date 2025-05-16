@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPox(PythonPackage):
     """Utilities for filesystem exploration and automated builds."""

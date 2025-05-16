@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFunctional(RPackage):
     """Curry, Compose, and other higher-order functions

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
+
 
 class Wayland(MesonPackage, AutotoolsPackage):
     """Wayland is a project to define a protocol for a compositor to talk

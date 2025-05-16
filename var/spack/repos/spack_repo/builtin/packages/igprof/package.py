@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Igprof(CMakePackage):
     """IgProf (the Ignominous Profiler) is a simple nice tool for measuring and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Orfm(AutotoolsPackage):
     """A simple and not slow open reading frame (ORF) caller. No bells or

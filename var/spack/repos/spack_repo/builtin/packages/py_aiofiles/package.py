@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiofiles(PythonPackage):
     """aiofiles is an Apache2 licensed library, written in Python, for

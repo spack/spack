@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppprogress(RPackage):
     """An Interruptible Progress Bar with OpenMP Support for C++ in R Packages.

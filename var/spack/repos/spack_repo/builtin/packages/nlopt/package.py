@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nlopt(CMakePackage):
     """NLopt is a free/open-source library for nonlinear optimization,

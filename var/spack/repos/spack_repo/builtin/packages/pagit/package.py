@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pagit(Package):
     """PAGIT addresses the need for software to generate high quality draft

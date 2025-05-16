@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKbPython(PythonPackage):
     """Python wrapper around kallisto | bustools for scRNA-seq analysis."""

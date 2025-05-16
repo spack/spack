@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynpm(PythonPackage):
     """Python interface to your NPM and package.json."""

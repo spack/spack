@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlUriEncode(PerlPackage):
     """This modules provides simple URI (Percent) encoding/decoding"""

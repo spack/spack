@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Med(CMakePackage):
     """The MED file format is a specialization of the HDF5 standard."""

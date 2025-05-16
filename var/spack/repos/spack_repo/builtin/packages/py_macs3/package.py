@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMacs3(PythonPackage):
     """MACS: Model-based Analysis for ChIP-Seq"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dctz(CMakePackage):
     """DCTZ is a compressor based on FFTs"""

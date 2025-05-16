@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Watch(AutotoolsPackage):
     """Executes a program periodically, showing output fullscreen."""

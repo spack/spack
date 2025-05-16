@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveArduino(OctavePackage, SourceforgePackage):
     """Provides an Octave look-alike implementation of the

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gzip(AutotoolsPackage, GNUMirrorPackage):
     """GNU Gzip is a popular data compression program originally written by

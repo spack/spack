@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRustworkx(PythonPackage):
     """Rustworkx was originally called retworkx and was was created initially to

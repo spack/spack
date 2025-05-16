@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySentencepiece(PythonPackage):
     """Unsupervised text tokenizer for Neural Network-based text generation.

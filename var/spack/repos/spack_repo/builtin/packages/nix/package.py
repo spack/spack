@@ -8,6 +8,7 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
 from ..boost.package import Boost
 
 

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class H5hut(AutotoolsPackage):
     """H5hut (HDF5 Utility Toolkit).

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Typhonio(CMakePackage):
     """TyphonIO is a library of routines that perform input/output (I/O)

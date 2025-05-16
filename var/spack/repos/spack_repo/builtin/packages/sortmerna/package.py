@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sortmerna(CMakePackage):
     """SortMeRNA is a program tool for filtering, mapping and OTU-picking NGS

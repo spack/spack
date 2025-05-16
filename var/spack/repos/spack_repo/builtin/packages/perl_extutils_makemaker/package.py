@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExtutilsMakemaker(PerlPackage):
     """ExtUtils::MakeMaker - Create a module Makefile. This utility is designed

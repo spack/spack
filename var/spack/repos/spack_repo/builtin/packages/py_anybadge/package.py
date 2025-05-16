@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnybadge(PythonPackage):
     """Python project for generating badges for your projects"""

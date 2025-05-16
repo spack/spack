@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Authd(MakefilePackage):
     """authd is a small and fast RFC 1413 ident protocol daemon with

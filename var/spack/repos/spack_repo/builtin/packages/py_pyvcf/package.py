@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyvcf(PythonPackage):
     """A Variant Call Format reader for Python"""

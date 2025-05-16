@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppdate(RPackage):
     """'date' C++ Header Library for Date and Time Functionality.

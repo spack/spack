@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJamo(PythonPackage):
     """Python-jamo is a Python Hangul syllable decomposition

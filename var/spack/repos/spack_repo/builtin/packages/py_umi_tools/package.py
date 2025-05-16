@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUmiTools(PythonPackage):
     """Tools for handling Unique Molecular Identifiers in NGS data sets"""

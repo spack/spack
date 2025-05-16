@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fdb(CMakePackage):
     """FDB (Fields DataBase) is a domain-specific object store developed at

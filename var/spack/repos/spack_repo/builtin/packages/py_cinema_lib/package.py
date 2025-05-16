@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCinemaLib(PythonPackage):
     """cinema_lib is a set of tools and library for interacting with a

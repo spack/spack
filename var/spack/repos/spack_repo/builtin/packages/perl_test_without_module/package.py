@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestWithoutModule(PerlPackage):
     """Test fallback behaviour in absence of modules"""

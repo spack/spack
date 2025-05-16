@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xwud(AutotoolsPackage, XorgPackage):
     """xwud allows X users to display in a window an image saved in a

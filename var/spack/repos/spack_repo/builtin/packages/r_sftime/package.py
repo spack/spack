@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSftime(RPackage):
     """Classes and Methods for Simple Feature Objects that Have a Time Column.

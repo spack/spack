@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class H5cpp(CMakePackage):
     """Easy to use HDF5 C++ templates for Serial and Parallel HDF5"""

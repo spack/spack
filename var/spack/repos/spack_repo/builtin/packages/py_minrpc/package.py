@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMinrpc(PythonPackage):
     """Minimalistic RPC utility (only used within cpymad and pytao)."""

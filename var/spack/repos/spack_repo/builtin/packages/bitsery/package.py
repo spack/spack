@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bitsery(CMakePackage):
     """Header only C++ binary serialization library. It is designed around the

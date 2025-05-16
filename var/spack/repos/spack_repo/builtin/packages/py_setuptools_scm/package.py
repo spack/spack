@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySetuptoolsScm(PythonPackage):
     """The blessed package to manage your versions by scm tags."""

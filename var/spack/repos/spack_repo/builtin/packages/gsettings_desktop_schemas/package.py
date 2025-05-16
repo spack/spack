@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class GsettingsDesktopSchemas(MesonPackage):
     """gsettings-desktop-schemas contains a collection of GSettings schemas

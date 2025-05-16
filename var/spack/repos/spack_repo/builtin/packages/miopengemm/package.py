@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Miopengemm(CMakePackage):
     """An OpenCL general matrix multiplication (GEMM) API

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoetryPluginExport(PythonPackage):
     """Poetry plugin to export the dependencies to various formats"""

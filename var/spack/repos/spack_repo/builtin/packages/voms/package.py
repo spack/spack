@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Voms(AutotoolsPackage):
     """The VOMS native service and APIs."""

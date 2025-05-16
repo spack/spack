@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Gatepet2stir(QMakePackage):
     """A QT/C++ application to convert GATE geometries to STIR format."""

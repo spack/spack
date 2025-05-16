@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShiboken2(PythonPackage):
     """Python / C++ bindings helper module."""

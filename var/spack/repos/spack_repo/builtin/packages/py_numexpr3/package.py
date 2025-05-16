@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumexpr3(PythonPackage):
     """Numexpr3 is a fast numerical expression evaluator for NumPy. With it,

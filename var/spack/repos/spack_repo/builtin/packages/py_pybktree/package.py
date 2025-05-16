@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybktree(PythonPackage):
     """pybktree: pure-Python BK-tree data structure to allow fast querying of close matches"""

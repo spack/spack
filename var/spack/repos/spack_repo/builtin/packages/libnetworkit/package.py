@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libnetworkit(CMakePackage):
     """NetworKit is a growing open-source toolkit for large-scale network

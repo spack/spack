@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrpcioTools(PythonPackage):
     """Protobuf code generator for gRPC"""

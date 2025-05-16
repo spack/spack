@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class FastGlobalFileStatus(AutotoolsPackage):
     """provides a scalable mechanism to retrieve such information of a file,

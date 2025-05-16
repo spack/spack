@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlParallelForkmanager(PerlPackage):
     """A simple parallel processing fork manager"""

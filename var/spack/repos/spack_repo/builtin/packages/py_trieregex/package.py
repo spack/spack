@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTrieregex(PythonPackage):
     """Build efficient trie-based regular expressions from large word lists"""

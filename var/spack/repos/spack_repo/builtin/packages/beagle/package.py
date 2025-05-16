@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Beagle(Package):
     """Beagle is a software package for phasing genotypes and for imputing

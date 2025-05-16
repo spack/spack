@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCmsml(PythonPackage):
     """Python package of the CMS Machine Learning Group."""

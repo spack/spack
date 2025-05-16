@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyInterlap(PythonPackage):
     """interlap: fast, simple interval overlap"""

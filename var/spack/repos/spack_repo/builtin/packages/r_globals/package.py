@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGlobals(RPackage):
     """Identify Global Objects in R Expressions.

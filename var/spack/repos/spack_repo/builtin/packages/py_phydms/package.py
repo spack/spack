@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPhydms(PythonPackage):
     """phydms enables phylogenetic analyses using deep mutational scanning data

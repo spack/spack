@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Prrte(AutotoolsPackage):
     """PRRTE is the Reference RunTime Environment implementation for PMIx.

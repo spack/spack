@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xrdb(AutotoolsPackage, XorgPackage):
     """xrdb - X server resource database utility."""

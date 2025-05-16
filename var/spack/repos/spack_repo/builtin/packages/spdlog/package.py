@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Spdlog(CMakePackage):
     """Very fast, header only, C++ logging library"""

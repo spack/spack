@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGputil(PythonPackage):
     """GPUtil is a Python module for getting the GPU status from NVIDA GPUs

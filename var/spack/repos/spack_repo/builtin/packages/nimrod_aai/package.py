@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class NimrodAai(CMakePackage):
     """NIMROD infrastructure for FEM evaluation, integration and linear algebra

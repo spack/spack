@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLclsKrtc(PythonPackage):
     """Very small utility class for using Kerberos authentication with Python requests."""

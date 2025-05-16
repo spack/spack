@@ -6,6 +6,8 @@ from os import unlink
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Pasta(PythonPackage):
     """PASTA (Practical Alignment using SATe and Transitivity)"""

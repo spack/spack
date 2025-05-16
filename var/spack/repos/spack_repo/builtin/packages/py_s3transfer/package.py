@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyS3transfer(PythonPackage):
     """S3transfer is a Python library for managing Amazon S3 transfers."""

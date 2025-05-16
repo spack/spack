@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lorene(MakefilePackage):
     """LORENE: Langage Objet pour la RElativite NumeriquE.

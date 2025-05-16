@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScorecCore(CMakePackage):
     """The SCOREC Core is a set of C/C++ libraries for unstructured mesh

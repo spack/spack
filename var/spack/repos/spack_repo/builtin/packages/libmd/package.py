@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmd(AutotoolsPackage):
     """This library provides message digest functions found on BSD systems

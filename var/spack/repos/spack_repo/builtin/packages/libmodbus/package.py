@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmodbus(AutotoolsPackage):
     """libmodbus is a free software library to send/receive data

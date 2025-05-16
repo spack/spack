@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jq(AutotoolsPackage):
     """jq is a lightweight and flexible command-line JSON processor."""

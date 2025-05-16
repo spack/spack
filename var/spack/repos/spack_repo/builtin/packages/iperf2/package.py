@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Iperf2(AutotoolsPackage, SourceforgePackage):
     """This code is a continuation based from the no longer maintained iperf

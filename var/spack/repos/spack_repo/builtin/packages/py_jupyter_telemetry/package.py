@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterTelemetry(PythonPackage):
     """Jupyter Telemetry enables Jupyter Applications to record events and transmit them to

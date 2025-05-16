@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybigwig(PythonPackage):
     """A package for accessing bigWig files using libBigWig."""

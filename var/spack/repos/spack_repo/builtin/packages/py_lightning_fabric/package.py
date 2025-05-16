@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightningFabric(PythonPackage):
     """Fabric is the fast and lightweight way to scale PyTorch models without boilerplate."""

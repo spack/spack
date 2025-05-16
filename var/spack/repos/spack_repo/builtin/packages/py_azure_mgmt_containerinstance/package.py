@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtContainerinstance(PythonPackage):
     """Microsoft Azure Container Instance Client Library for Python."""

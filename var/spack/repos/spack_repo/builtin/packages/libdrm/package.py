@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
 from spack.package import *
+
+from ...build_systems import autotools, meson
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
 
 
 class Libdrm(AutotoolsPackage, MesonPackage):
@@ -81,7 +83,7 @@ class Libdrm(AutotoolsPackage, MesonPackage):
             return self.list_url + "libdrm-%s.tar.xz" % version
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args.append("--enable-static")
@@ -98,7 +100,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         return args
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         if self.spec.satisfies("@:2.4.112"):
             return ["-Dman-pages=" + ("true" if self.spec.satisfies("+docs") else "false")]

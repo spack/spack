@@ -7,6 +7,10 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Pika(CMakePackage, CudaPackage, ROCmPackage):
     """C++ runtime system for parallellism and concurrency."""

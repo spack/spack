@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceware import SourcewarePackage
+
 
 class Dwz(MakefilePackage, SourcewarePackage):
     """DWZ: A DWARF optimization and duplicate removal tool"""

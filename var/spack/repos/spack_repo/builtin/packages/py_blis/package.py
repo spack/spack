@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlis(PythonPackage):
     """Cython BLIS: Fast BLAS-like operations from Python and Cython,

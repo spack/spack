@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Helib(CMakePackage):
     """HElib is an open-source (Apache License v2.0) software library that

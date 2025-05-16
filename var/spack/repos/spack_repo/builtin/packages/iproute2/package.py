@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Iproute2(AutotoolsPackage):
     """This is a set of utilities for Linux networking."""

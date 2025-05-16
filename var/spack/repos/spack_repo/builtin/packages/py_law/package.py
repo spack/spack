@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLaw(PythonPackage):
     """Build large-scale task workflows using luigi,

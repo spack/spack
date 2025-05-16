@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 #
 # Please note that you can open issues on the github page of ELPA:
 # https://github.com/marekandreas/elpa/issues

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgpubr(RPackage):
     """'ggplot2' Based Publication Ready Plots.

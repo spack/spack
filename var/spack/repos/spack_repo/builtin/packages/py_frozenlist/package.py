@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFrozenlist(PythonPackage):
     """A list-like structure which implements collections.abc.MutableSequence."""

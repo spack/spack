@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MparkVariant(CMakePackage):
     """C++17 `std::variant` for C++11/14/17"""

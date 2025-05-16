@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RedisPlusPlus(CMakePackage):
     """Redis-plus-plus is a C++ client library for Redis and

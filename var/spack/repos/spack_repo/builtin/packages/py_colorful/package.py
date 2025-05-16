@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColorful(PythonPackage):
     """Terminal string styling done right, in Python."""

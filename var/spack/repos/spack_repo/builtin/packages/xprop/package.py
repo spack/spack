@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xprop(AutotoolsPackage, XorgPackage):
     """xprop is a command line tool to display and/or set window and font

@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Guidance(MakefilePackage):
     """Guidance: Accurate detection of unreliable alignment regions accounting

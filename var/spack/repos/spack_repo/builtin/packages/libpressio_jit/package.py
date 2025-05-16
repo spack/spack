@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpressioJit(CMakePackage):
     """the FZ module compiler"""

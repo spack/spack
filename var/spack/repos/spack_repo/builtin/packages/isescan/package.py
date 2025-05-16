@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Isescan(Package):
     """A python pipeline to identify IS (Insertion Sequence) elements in

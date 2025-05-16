@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cfitsio(AutotoolsPackage):
     """CFITSIO is a library of C and Fortran subroutines for reading and writing

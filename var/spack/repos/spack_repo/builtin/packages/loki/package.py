@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Loki(MakefilePackage):
     """Loki is a C++ library of designs, containing flexible implementations

@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Typst(CargoPackage):
     """Typst is a new markup-based typesetting system for the sciences."""

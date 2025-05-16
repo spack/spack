@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGsd(PythonPackage):
     """The GSD file format is the native file format for HOOMD-blue. GSD files

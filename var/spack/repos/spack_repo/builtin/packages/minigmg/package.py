@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Minigmg(Package):
     """miniGMG is a compact benchmark for understanding the performance

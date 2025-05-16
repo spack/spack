@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mc(AutotoolsPackage):
     """The GNU Midnight Commander is a visual file manager."""

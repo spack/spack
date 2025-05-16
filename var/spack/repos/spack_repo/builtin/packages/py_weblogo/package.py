@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWeblogo(PythonPackage):
     """WebLogo is a web based application designed to make the generation of

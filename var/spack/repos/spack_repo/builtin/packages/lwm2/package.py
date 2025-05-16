@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lwm2(AutotoolsPackage):
     """LWM2: Light Weight Measurement Module.  This is a PMPI module

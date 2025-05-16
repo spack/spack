@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyspice(PythonPackage):
     """Simulate electronic circuit using Python and the Ngspice / Xyce simulators"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpfi(AutotoolsPackage):
     """Library for arbitrary precision interval arithmetic based on MPFR"""

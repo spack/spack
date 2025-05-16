@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWordcloud(PythonPackage):
     """A little word cloud generator in Python."""

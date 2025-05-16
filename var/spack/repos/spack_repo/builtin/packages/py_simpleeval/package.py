@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySimpleeval(PythonPackage):
     """A quick single file library for easily adding evaluatable expressions into python

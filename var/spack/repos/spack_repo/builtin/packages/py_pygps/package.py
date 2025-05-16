@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygps(PythonPackage):
     """pyGPs is a Python library for Gaussian Process (GP)

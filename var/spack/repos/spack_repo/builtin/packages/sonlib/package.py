@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sonlib(MakefilePackage):
     """sonLib is a compact C/Python library for

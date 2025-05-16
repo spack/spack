@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Relax(CMakePackage):
     """A set of Reflex libraries for the most common used general data types in

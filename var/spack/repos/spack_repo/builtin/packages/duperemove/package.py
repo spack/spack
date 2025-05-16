@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Duperemove(MakefilePackage):
     """Duperemove is a simple tool for finding duplicated extents

@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.compiler import CompilerPackage
 from ..llvm.package import LlvmDetection
 
 

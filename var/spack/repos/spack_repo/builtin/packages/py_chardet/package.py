@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyChardet(PythonPackage):
     """Universal encoding detector for Python 3"""

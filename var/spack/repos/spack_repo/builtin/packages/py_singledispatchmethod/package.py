@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySingledispatchmethod(PythonPackage):
     """Backport of functools.singledispatchmethod to Python 2.7-3.7."""

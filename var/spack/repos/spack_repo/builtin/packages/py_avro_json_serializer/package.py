@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAvroJsonSerializer(PythonPackage):
     """Serializes data into a JSON format using AVRO schema."""

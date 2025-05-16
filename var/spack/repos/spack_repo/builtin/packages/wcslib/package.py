@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Wcslib(AutotoolsPackage):
     """WCSLIB a C implementation of the coordinate transformations

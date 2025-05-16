@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyTmuxinator(RubyPackage):
     """Create and manage complex tmux sessions easily."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterhub(PythonPackage):
     """Multi-user server for Jupyter notebooks."""

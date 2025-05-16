@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Cellpose(PythonPackage):
     """A generalist algorithm for cell and nucleus segmentation that can be optimized for

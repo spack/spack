@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDistCheckconflicts(PerlPackage):
     """Declare version conflicts for your dist"""

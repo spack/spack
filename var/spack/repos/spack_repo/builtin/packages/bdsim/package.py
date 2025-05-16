@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bdsim(CMakePackage):
     """Beam Delivery Simulation (BDSIM) is a C++ program that utilises the Geant4 toolkit

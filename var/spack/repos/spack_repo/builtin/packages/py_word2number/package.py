@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWord2number(PythonPackage):
     """This is a Python module to convert number words (eg.

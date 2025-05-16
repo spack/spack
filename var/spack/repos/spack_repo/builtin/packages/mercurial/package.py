@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Mercurial(PythonPackage):
     """Mercurial is a free, distributed source control management tool."""

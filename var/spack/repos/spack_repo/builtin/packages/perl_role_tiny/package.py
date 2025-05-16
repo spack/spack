@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlRoleTiny(PerlPackage):
     """Role::Tiny - Roles: a nouvelle cuisine portion size slice of Moose"""

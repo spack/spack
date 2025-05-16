@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgdendro(RPackage):
     """Create Dendrograms and Tree Diagrams Using 'ggplot2'.

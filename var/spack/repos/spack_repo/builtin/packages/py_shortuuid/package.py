@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShortuuid(PythonPackage):
     """A generator library for concise, unambiguous and URL-safe UUIDs."""

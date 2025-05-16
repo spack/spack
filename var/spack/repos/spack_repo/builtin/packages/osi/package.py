@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Osi(AutotoolsPackage):
     """Osi (Open Solver Interface) provides an abstract base class to

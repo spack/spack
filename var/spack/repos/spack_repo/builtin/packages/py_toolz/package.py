@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyToolz(PythonPackage):
     """A set of utility functions for iterators, functions, and dictionaries"""

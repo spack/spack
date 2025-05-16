@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyContourpy(PythonPackage):
     """Python library for calculating contours of 2D quadrilateral grids."""

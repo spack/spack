@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Simul(Package):
     """simul is an MPI coordinated test of parallel

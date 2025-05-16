@@ -10,6 +10,8 @@ from llnl.util.symlink import readlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Kaldi(Package):  # Does not use Autotools
     """Kaldi is a toolkit for speech recognition written

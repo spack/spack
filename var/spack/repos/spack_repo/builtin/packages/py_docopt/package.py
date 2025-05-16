@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDocopt(PythonPackage):
     """Command-line interface description language."""

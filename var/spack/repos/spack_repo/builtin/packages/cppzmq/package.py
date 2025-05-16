@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cppzmq(CMakePackage):
     """C++ binding for 0MQ"""

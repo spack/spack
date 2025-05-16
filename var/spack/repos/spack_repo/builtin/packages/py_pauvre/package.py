@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPauvre(PythonPackage):
     """pauvre: plotting package designed for nanopore and PacBio long reads"""

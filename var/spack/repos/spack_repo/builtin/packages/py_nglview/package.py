@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNglview(PythonPackage):
     """Jupyter widget to interactively view molecular structures and trajectories."""

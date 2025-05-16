@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libgpuarray(CMakePackage):
     """Make a common GPU ndarray(n dimensions array) that can be reused by all

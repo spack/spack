@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOrbaxCheckpoint(PythonPackage):
     """Orbax includes a checkpointing library oriented towards JAX users, supporting a variety

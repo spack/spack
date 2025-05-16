@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycodestyle(PythonPackage):
     """pycodestyle is a tool to check your Python code against some of the

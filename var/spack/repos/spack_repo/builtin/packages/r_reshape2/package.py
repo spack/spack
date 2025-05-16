@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RReshape2(RPackage):
     """Flexibly Reshape Data: A Reboot of the Reshape Package.

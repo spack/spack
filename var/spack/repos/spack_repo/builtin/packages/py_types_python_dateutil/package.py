@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypesPythonDateutil(PythonPackage):
     """Typing stubs for python-dateutil."""

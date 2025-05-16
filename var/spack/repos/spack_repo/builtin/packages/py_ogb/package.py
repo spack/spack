@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOgb(PythonPackage):
     """The Open Graph Benchmark (OGB) is a collection of benchmark datasets, data

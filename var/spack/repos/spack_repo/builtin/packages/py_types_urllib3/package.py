@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypesUrllib3(PythonPackage):
     """Typing stubs for urllib3."""

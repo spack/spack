@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKmodes(PythonPackage):
     """Python implementations of the k-modes and k-prototypes clustering

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xf86dgaproto(AutotoolsPackage, XorgPackage):
     """X.org XF86DGAProto protocol headers."""

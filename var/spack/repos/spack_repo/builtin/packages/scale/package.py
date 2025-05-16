@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Scale(MakefilePackage):
     """SCALE (Scalable Computing for Advanced Library and Environment) is

@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Ratel(MakefilePackage, CudaPackage, ROCmPackage):
     """Extensible, performance-portable solid mechanics with libCEED and PETSc"""

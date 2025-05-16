@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiohttp(PythonPackage):
     """Supports both client and server side of HTTP protocol.

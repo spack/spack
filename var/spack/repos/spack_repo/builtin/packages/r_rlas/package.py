@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRlas(RPackage):
     """R package to read and write las and laz files used to store LiDAR data"""

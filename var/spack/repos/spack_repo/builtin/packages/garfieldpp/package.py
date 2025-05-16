@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Garfieldpp(CMakePackage):
     """Garfield++ is a toolkit for the detailed simulation of particle

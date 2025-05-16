@@ -5,6 +5,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Scons(PythonPackage):
     """SCons is a software construction tool"""

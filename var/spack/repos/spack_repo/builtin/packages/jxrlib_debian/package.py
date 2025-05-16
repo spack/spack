@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class JxrlibDebian(MakefilePackage):
     """JPEG XR is a still image format based on technology originally

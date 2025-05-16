@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColour(PythonPackage):
     """converts and manipulates various color representation (HSL, RVB, web, X11, ...)"""

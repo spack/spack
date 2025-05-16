@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tethex(CMakePackage):
     """Tethex is designed to convert triangular (in 2D) or tetrahedral (in 3D)

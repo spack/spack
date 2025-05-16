@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSitmo(RPackage):
     """Parallel Pseudo Random Number Generator (PPRNG) 'sitmo' Header Files.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libheif(CMakePackage):
     """libheif is an HEIF and AVIF file format decoder and encoder."""

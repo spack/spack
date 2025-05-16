@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sollve(CMakePackage):
     """The SOLLVE Project aims at scaling OpenMP by leveraging LLVM for

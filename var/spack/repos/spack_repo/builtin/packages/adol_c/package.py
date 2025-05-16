@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AdolC(AutotoolsPackage):
     """A package for the automatic differentiation of first and higher

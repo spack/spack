@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Evemu(AutotoolsPackage):
     """The evemu library and tools are used to describe devices, record data,

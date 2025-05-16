@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDeepsig(PythonPackage):
     """deep-significance: Easy and Better Significance Testing for Deep Neural

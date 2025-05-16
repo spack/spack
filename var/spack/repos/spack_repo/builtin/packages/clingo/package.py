@@ -5,6 +5,8 @@
 from spack.compilers.error import UnsupportedCompilerFlag
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Clingo(CMakePackage):
     """Clingo: A grounder and solver for logic programs

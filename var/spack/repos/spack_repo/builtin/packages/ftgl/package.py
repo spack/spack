@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ftgl(CMakePackage):
     """Library to use arbitrary fonts in OpenGL applications."""

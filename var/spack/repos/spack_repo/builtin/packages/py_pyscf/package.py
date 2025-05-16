@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyscf(PythonPackage):
     """PySCF is a collection of electronic structure programs powered

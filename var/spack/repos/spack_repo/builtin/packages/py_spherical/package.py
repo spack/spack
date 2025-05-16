@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpherical(PythonPackage):
     """Evaluate and transform D matrices, 3-j symbols, and (scalar or

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYour(PythonPackage):
     """Python library to read and process pulsar data in several different formats"""

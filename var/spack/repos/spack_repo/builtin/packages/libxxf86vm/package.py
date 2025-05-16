@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxxf86vm(AutotoolsPackage, XorgPackage):
     """libXxf86vm - Extension library for the XFree86-VidMode X extension."""

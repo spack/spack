@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDashSvg(PythonPackage):
     """SVG support library for Plotly/Dash"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVirtualenvwrapper(PythonPackage):
     """virtualenvwrapper is a set of extensions to Ian Bicking's

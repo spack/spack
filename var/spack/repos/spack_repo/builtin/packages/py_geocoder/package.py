@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeocoder(PythonPackage):
     """Geocoder is a simple and consistent geocoding library."""

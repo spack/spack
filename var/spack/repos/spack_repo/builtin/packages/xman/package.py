@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xman(AutotoolsPackage, XorgPackage):
     """xman is a graphical manual page browser using the Athena Widgets (Xaw)

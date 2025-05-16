@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Gpuscout(CMakePackage, CudaPackage):
     """GPUscout: A tool for discovering data movement-related bottlenecks on NVidia GPUs."""

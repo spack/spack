@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Patch(AutotoolsPackage, GNUMirrorPackage):
     """Patch takes a patch file containing a difference listing produced by

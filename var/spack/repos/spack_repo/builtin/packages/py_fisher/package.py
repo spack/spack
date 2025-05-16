@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFisher(PythonPackage):
     """Fisher's Exact Test.

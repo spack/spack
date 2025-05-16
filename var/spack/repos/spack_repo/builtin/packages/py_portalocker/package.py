@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPortalocker(PythonPackage):
     """Portalocker is a library to provide an easy API to file locking."""

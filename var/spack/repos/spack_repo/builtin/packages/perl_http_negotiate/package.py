@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHttpNegotiate(PerlPackage):
     """Choose a variant to serve"""

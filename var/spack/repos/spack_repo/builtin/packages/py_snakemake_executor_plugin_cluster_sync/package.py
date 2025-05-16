@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginClusterSync(PythonPackage):
     """A Snakemake executor plugin for cluster jobs that are executed synchronously."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Navi(Package):
     """An interactive cheatsheet tool for the command-line"""

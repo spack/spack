@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenmc(PythonPackage):
     """OpenMC is a community-developed Monte Carlo neutron and photon transport

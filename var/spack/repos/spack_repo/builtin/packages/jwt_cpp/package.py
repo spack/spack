@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class JwtCpp(CMakePackage):
     """A header only library for creating and validating JSON Web Tokens in C++11."""

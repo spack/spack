@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bcache(MakefilePackage):
     """Bcache is a patch for the Linux kernel to use SSDs to cache other block

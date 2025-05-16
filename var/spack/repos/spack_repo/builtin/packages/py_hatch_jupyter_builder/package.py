@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHatchJupyterBuilder(PythonPackage):
     """A hatch plugin to help build Jupyter packages."""

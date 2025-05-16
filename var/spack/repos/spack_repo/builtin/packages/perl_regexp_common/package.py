@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlRegexpCommon(PerlPackage):
     """Regexp::Common - Provide commonly requested regular expressions"""

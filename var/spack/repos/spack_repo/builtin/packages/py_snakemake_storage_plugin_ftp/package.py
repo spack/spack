@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginFtp(PythonPackage):
     """A Snakemake plugin for handling input and output via FTP."""

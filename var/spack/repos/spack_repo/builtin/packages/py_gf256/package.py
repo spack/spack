@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGf256(PythonPackage):
     """GF256 is an implementation of GF(2**8). This Galois Field allows you

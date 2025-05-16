@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonEditor(PythonPackage):
     """python-editor is a library that provides the editor module for

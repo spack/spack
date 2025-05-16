@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Debbuild(AutotoolsPackage):
     """Build deb packages from rpm specifications."""

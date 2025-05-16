@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Circe2(AutotoolsPackage):
     """Circe2 is a beam spectrum generator that provides efficient, realistic

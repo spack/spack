@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class _3dtk(CMakePackage):
     """The 3D Toolkit provides algorithms and methods to process 3D point

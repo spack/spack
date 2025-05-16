@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySvgwrite(PythonPackage):
     """A Python library to create SVG drawings."""

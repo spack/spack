@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Tblite(MesonPackage):
     """Light-weight tight-binding framework"""

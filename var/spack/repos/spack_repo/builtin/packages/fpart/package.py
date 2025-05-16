@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fpart(AutotoolsPackage):
     """Fpart is a filesystem partitioner. It helps you sort file trees and pack them

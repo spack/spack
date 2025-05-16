@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCloudpickle(PythonPackage):
     """Extended pickling support for Python objects."""

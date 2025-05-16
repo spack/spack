@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Fonttosfnt(AutotoolsPackage, XorgPackage):
     """Wrap a bitmap font in a sfnt (TrueType) wrapper."""

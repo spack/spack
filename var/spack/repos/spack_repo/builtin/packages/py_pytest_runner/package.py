@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestRunner(PythonPackage):
     """Invoke py.test as distutils command with dependency resolution."""

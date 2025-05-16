@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Pastix(CMakePackage, CudaPackage):
     """a high performance parallel solver for very large sparse linear systems

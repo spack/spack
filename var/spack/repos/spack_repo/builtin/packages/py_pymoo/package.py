@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 # Package automatically generated using 'pip2spack' converter
 
 

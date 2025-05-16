@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutoray(PythonPackage):
     """Write backend agnostic numeric code compatible with any numpy-ish array library."""

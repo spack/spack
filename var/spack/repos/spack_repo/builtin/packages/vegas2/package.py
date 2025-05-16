@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vegas2(Package):
     """ "VEGAS2 is an extension that uses 1,000 Genomes data to model SNP

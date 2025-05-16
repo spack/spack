@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libgta(CMakePackage):
     """Library that reads and writes Generic Tagged Arrays (GTA) files."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCasadi(PythonPackage):
     """CasADi -- framework for algorithmic differentiation and numeric optimization"""

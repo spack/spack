@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgtree(RPackage):
     """an R package for visualization of tree and annotation data.

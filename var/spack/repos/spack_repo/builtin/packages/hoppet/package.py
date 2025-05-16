@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hoppet(AutotoolsPackage):
     """A Fortran 95 package for carrying out QCD DGLAP evolution and other

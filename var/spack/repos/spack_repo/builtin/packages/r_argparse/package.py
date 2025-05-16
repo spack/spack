@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RArgparse(RPackage):
     """Command Line Optional and Positional Argument Parser.

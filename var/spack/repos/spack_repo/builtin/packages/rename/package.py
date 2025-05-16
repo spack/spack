@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Rename(Package):
     """Perl-powered file rename script with many helpful built-ins."""

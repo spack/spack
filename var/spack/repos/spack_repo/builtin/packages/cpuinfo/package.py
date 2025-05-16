@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Cpuinfo(CMakePackage):
     """cpuinfo is a library to detect essential

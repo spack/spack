@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWhatshap(PythonPackage):
     """WhatsHap is a software for phasing genomic variants using DNA

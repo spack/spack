@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlModuleFind(PerlPackage):
     """Find and use installed modules in a (sub)category"""

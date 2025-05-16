@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNetpyne(PythonPackage):
     """Netpyne: A python package to facilitate the development,

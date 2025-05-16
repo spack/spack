@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUv(PythonPackage):
     """An extremely fast Python package and project manager, written in Rust."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWhichcraft(PythonPackage):
     """Cross-platform cross-python shutil.which functionality."""

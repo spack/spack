@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArkouda(PythonPackage):
     """This is the python client for Arkouda."""

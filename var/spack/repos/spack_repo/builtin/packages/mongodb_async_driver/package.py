@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class MongodbAsyncDriver(MavenPackage):
     """The MongoDB Asynchronous Java Driver."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Wtdbg2(MakefilePackage):
     """A fuzzy Bruijn graph approach to long noisy reads assembly"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH11(PythonPackage):
     """A pure-Python, bring-your-own-I/O implementation of HTTP/1.1"""

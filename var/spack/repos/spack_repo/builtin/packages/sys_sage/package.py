@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SysSage(CMakePackage):
     """A library for capturing hardware topology and attributes of compute systems."""

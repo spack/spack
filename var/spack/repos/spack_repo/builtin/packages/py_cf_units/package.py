@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCfUnits(PythonPackage):
     """Units of measure as required by the Climate and Forecast (CF)

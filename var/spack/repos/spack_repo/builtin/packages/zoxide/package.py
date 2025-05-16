@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Zoxide(CargoPackage):
     """zoxide is a smarter cd command, inspired by z and autojump. It

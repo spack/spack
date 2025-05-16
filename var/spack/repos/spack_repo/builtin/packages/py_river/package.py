@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRiver(PythonPackage):
     """River is a Python library for online machine learning. It aims to be the most

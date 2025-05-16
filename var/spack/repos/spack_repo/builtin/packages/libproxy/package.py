@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libproxy(CMakePackage):
     """libproxy is a library that provides automatic proxy configuration

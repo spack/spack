@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWw(PythonPackage):
     """Wrappers for Python builtins with higher-level APIs."""

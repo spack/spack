@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Kyotocabinet(AutotoolsPackage):
     """Kyoto Cabinet is a library of routines for managing a database."""

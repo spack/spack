@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXmlrunner(PythonPackage):
     """PyUnit-based test runner with JUnit like XML reporting."""

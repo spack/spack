@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiobotocore(PythonPackage):
     """Async client for amazon services using botocore and aiohttp/asyncio."""

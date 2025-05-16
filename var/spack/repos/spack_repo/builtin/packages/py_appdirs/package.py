@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAppdirs(PythonPackage):
     """A small Python module for determining appropriate platform-specific

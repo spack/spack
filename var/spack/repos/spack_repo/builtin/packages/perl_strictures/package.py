@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlStrictures(PerlPackage):
     """Turn on strict and make most warnings fatal"""

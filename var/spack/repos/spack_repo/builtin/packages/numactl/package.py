@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Numactl(AutotoolsPackage):
     """NUMA support for Linux"""

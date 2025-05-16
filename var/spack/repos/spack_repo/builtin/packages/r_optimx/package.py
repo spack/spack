@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class ROptimx(RPackage):
     """Expanded Replacement and Extension of the 'optim' Function.

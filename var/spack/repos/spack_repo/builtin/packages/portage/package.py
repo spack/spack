@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Portage(CMakePackage):
     """Portage is a framework that computational physics applications can use

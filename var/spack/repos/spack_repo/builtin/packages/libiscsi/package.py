@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libiscsi(AutotoolsPackage):
     """Libiscsi is a client-side library to implement the iSCSI protocol that can

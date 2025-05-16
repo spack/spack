@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pinentry(AutotoolsPackage):
     """pinentry is a small collection of dialog programs that allow GnuPG to

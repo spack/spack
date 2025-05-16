@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppensmallen(RPackage):
     """Rcpp integration for the Ensmallen templated C++ mathematical    optimization library."""

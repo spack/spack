@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMaturin(PythonPackage):
     """Build and publish crates with pyo3, rust-cpython and cffi bindings

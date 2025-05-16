@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlPipeline(PythonPackage):
     """The Azure Machine Learning SDK for Python can be used to create ML

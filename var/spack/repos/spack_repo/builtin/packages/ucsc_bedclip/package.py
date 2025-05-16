@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class UcscBedclip(Package):
     """Remove lines from bed file that refer to off-chromosome locations."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libdc1394(AutotoolsPackage):
     """Library providing an API for IEEE 1394 cameras."""

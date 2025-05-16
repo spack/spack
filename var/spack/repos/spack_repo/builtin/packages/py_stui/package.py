@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStui(PythonPackage):
     """A Slurm dashboard for the terminal."""

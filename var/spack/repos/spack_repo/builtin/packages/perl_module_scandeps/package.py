@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlModuleScandeps(PerlPackage):
     """Module::ScanDeps - Recursively scan Perl code for dependencies"""

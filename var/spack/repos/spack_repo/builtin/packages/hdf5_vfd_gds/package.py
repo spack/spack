@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Hdf5VfdGds(CMakePackage, CudaPackage):
     """This package enables GPU Direct Storage Virtual File Driver in HDF5."""

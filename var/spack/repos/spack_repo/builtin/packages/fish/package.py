@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fish(CMakePackage):
     """fish is a smart and user-friendly command line shell for OS X, Linux, and

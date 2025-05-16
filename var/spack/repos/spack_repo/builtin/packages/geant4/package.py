@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.variant import ConditionalVariantValues
 
+from ...build_systems.cmake import CMakePackage
+
 
 def _std_when(values):
     for v in values:

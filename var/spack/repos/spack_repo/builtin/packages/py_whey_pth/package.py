@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWheyPth(PythonPackage):
     """Extension to whey to support .pth files."""

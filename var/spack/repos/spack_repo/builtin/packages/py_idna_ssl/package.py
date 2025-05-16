@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIdnaSsl(PythonPackage):
     """Patch ssl.match_hostname for Unicode(idna) domains support"""

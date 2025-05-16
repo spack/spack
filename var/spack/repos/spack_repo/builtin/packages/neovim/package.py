@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Neovim(CMakePackage):
     """Neovim: Vim-fork focused on extensibility and usability"""

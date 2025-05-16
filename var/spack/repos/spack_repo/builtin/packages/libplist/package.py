@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libplist(AutotoolsPackage):
     """Library for Apple Binary- and XML-Property Lists."""

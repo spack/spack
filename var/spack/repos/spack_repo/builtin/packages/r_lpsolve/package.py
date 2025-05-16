@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLpsolve(RPackage):
     """Interface to 'Lp_solve' v. 5.5 to Solve Linear/Integer Programs.

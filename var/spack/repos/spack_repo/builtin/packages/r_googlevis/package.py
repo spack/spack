@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGooglevis(RPackage):
     """R Interface to Google Charts.

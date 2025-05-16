@@ -6,6 +6,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Yambo(AutotoolsPackage):
     """Yambo is a FORTRAN/C code for Many-Body calculations in solid

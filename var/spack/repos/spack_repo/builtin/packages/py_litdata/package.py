@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLitdata(PythonPackage):
     """The Deep Learning framework to train, deploy, and ship AI products Lightning fast."""

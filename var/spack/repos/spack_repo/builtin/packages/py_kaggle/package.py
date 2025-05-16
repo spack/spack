@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKaggle(PythonPackage):
     """Official API for https://www.kaggle.com, accessible using a command line

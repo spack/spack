@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathRound(PerlPackage):
     """Math::Round - Perl extension for rounding numbers"""

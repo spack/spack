@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ampl(Package):
     """AMPL integrates a modeling language for describing optimization data, variables,

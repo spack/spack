@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cromwell(Package):
     """Cromwell is a Workflow Management System geared towards scientific

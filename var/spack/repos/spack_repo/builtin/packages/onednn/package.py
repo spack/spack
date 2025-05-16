@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Onednn(CMakePackage):
     """oneAPI Deep Neural Network Library (oneDNN).

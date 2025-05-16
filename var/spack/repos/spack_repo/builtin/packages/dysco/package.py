@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dysco(CMakePackage):
     """Dysco is a compressing storage manager for Casacore mearement sets."""

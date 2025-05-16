@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtContainerregistry(PythonPackage):
     """Microsoft Azure Container Registry Client Library for Python."""

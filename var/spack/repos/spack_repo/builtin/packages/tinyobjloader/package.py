@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tinyobjloader(CMakePackage):
     """Tiny but powerful single file wavefront obj loader."""

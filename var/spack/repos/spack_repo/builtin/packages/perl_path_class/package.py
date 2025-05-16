@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPathClass(PerlPackage):
     """Cross-platform path specification manipulation"""

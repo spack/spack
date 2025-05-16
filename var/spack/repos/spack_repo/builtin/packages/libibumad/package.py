@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libibumad(CMakePackage):
     """This package installs the user-space libraries and headers for libibumad.

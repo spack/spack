@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMatrixstats(RPackage):
     """Functions that Apply to Rows and Columns of Matrices (and to Vectors).

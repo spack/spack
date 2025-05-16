@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libtommath(MakefilePackage):
     """A portable number theoretic multiple-precision integer library."""

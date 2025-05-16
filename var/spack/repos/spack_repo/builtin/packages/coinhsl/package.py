@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
+
 
 class Coinhsl(MesonPackage, AutotoolsPackage):
     """CoinHSL is a collection of linear algebra libraries (KB22, MA27,

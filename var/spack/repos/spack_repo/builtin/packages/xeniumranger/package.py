@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Xeniumranger(Package):
     """The Xenium In Situ software suite is a set of software applications for analyzing and

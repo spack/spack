@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ddt(Package):
     """Arm DDT is the number one debugger in research, industry, and academia

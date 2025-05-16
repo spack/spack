@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ltp(AutotoolsPackage):
     """Ltp is a joint project started by SGI, developed and maintained by IBM,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyaestro(PythonPackage):
     """A collection of data classes, data structures, and other utility classes

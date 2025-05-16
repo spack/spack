@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class UfsUtils(CMakePackage):
     """The UFS Utilities package contains programs set up the model grid and

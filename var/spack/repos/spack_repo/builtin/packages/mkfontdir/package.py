@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Mkfontdir(AutotoolsPackage, XorgPackage):
     """mkfontdir creates the fonts.dir files needed by the legacy X server

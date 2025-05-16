@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fermisciencetools(Package):
     """The Fermi Science Tools consists of the basic tools necessary to

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+
 
 class Uncrustify(CMakePackage, AutotoolsPackage):
     """Source Code Beautifier for C, C++, C#, ObjectiveC, Java, and others."""

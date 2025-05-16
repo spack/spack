@@ -7,6 +7,8 @@ import tarfile
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Avizo(Package):
     """Avizo is a 3D analysis software for scientific and industrial data.

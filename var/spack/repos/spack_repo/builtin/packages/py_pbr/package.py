@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPbr(PythonPackage):
     """PBR is a library that injects some useful and sensible default

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAlienBuild(PerlPackage):
     """This module provides tools for building external (non-CPAN) dependencies

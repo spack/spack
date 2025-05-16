@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTox(PythonPackage):
     """tox is a generic virtualenv management and test command line tool."""

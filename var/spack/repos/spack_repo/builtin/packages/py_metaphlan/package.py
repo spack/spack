@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetaphlan(PythonPackage):
     """MetaPhlAn is a computational tool for profiling the composition of

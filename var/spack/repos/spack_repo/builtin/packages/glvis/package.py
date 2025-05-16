@@ -4,8 +4,10 @@
 
 import sys
 
-import spack.build_systems.makefile
 from spack.package import *
+
+from ...build_systems import makefile
+from ...build_systems.makefile import MakefilePackage
 
 
 class Glvis(MakefilePackage):
@@ -138,7 +140,7 @@ class Glvis(MakefilePackage):
     depends_on("libtiff", when="screenshots=tiff")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     @property
     def build_targets(self):
         return self.common_args()

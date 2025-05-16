@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Crunch(CMakePackage):
     """Advanced DXTc texture compression and transcoding library."""

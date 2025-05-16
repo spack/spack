@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQudida(PythonPackage):
     """QuDiDA is a micro library for very naive though quick

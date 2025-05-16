@@ -5,6 +5,10 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class PyPyfr(PythonPackage, CudaPackage, ROCmPackage):
     """PyFR is an open-source Python based framework for solving

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mawk(AutotoolsPackage):
     """mawk is an interpreter for the AWK Programming Language."""

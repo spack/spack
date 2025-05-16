@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPfamDb(RPackage):
     """A set of protein ID mappings for PFAM.

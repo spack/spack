@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Scala(Package):
     """Scala is a general-purpose programming language providing support for

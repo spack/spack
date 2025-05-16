@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCmakeFormat(PythonPackage):
     """cmake-format project provides Quality Assurance (QA) tools for

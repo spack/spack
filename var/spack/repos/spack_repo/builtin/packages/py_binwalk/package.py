@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBinwalk(PythonPackage):
     """Binwalk is a fast, easy to use tool for analyzing, reverse engineering,

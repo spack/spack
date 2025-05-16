@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyamg(PythonPackage):
     """PyAMG is a library of Algebraic Multigrid (AMG) solvers with

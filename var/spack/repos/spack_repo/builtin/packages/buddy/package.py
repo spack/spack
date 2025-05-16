@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Buddy(AutotoolsPackage):
     """A Binary Decision Diagram library."""

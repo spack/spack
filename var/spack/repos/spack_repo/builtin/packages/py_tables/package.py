@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTables(PythonPackage):
     """PyTables is a package for managing hierarchical datasets and designed to

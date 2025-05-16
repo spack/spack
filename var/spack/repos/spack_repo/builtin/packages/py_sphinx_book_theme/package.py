@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxBookTheme(PythonPackage):
     """Lightweight Sphinx theme designed to mimic the look-and-feel of an interactive book."""

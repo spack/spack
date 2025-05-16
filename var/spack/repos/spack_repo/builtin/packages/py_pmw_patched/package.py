@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPmwPatched(PythonPackage):
     """Schrodinger's Fork of Python megawidgets with essential patches applied.

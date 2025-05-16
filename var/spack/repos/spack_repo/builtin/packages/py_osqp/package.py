@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOsqp(PythonPackage):
     """OSQP: The Operator Splitting QP Solver"""

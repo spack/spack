@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHtmlTagset(PerlPackage):
     """Data tables useful in parsing HTML"""

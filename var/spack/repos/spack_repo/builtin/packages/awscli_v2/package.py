@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class AwscliV2(PythonPackage):
     """This package provides a unified command line interface to Amazon Web Services."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dfelibs(CMakePackage):
     """Acts fork of dfelibs, a header-only utility library for C++."""

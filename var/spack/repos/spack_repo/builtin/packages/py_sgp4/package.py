@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySgp4(PythonPackage):
     """Track earth satellite TLE orbits using up-to-date 2010 version of SGP4"""

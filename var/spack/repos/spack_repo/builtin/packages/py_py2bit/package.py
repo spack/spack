@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPy2bit(PythonPackage):
     """A package for accessing 2bit files using lib2bit."""

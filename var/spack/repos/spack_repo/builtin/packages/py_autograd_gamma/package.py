@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutogradGamma(PythonPackage):
     """autograd compatible approximations to the derivatives of the

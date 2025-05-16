@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
+
 
 class Openslide(AutotoolsPackage, MesonPackage):
     """OpenSlide reads whole slide image files."""

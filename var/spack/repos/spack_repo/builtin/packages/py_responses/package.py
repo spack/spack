@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyResponses(PythonPackage):
     """A utility library for mocking out the `requests` Python library."""

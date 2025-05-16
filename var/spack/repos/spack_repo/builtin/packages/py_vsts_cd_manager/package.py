@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVstsCdManager(PythonPackage):
     """Python wrapper around some of the VSTS APIs."""

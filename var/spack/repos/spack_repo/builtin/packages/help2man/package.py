@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Help2man(AutotoolsPackage, GNUMirrorPackage):
     """help2man produces simple manual pages from the '--help' and '--version'

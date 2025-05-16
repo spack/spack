@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libestr(AutotoolsPackage):
     """C library for string handling (and a bit more)."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Vcftools(AutotoolsPackage):
     """VCFtools is a program package designed for working with VCF files,

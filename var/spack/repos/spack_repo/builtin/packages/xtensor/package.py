@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xtensor(CMakePackage):
     """Multi-dimensional arrays with broadcasting and lazy computing"""

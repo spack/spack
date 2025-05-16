@@ -5,6 +5,9 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Ucx(AutotoolsPackage, CudaPackage):
     """a communication library implementing high-performance messaging for

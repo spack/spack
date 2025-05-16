@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQuantumXir(PythonPackage):
     """XIR is an intermediate representation language for quantum circuits."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonPtrace(PythonPackage):
     """python-ptrace is a debugger using ptrace (Linux, BSD and Darwin system

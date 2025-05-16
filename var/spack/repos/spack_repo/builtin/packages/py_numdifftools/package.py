@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumdifftools(PythonPackage):
     """Solves automatic numerical differentiation problems in one or more

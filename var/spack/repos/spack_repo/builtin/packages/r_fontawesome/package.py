@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFontawesome(RPackage):
     """Easily Work with 'Font Awesome' Icons.

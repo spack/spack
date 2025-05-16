@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAbadata(RPackage):
     """Averaged gene expression in human brain regions from Allen Brain Atlas.

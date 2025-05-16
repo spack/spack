@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyClikit(PythonPackage):
     """CliKit is a group of utilities to build beautiful and testable

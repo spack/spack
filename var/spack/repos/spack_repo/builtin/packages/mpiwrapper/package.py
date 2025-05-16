@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mpiwrapper(CMakePackage):
     """MPIwrapper wraps MPI implementations so that they can be used with

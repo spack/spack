@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbCommon(PythonPackage):
     """Biobb_common is the base package required to use the biobb packages"""

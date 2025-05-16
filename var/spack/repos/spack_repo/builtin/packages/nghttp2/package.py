@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nghttp2(AutotoolsPackage):
     """nghttp2 is an implementation of HTTP/2 and its header compression

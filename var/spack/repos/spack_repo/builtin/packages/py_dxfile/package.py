@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDxfile(PythonPackage):
     """Scientific Data Exchange [A1] is a set of guidelines for storing scientific

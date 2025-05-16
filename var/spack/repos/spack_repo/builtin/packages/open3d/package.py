@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Open3d(CMakePackage, CudaPackage):
     """Open3D: A Modern Library for 3D Data Processing."""

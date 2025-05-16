@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class H2database(MavenPackage):
     """H2 is an embeddable RDBMS written in Java."""

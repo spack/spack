@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class NetcdfCxx4(CMakePackage):
     """NetCDF (network Common Data Form) is a set of software libraries and

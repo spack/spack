@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vpic(CMakePackage):
     """VPIC is a general purpose particle-in-cell simulation code for modeling

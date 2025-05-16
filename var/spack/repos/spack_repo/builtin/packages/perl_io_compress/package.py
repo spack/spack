@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoCompress(PerlPackage):
     """A perl library for uncompressing gzip, zip, bzip2

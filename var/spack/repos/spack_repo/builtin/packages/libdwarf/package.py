@@ -5,9 +5,11 @@
 import os
 import sys
 
-import spack.build_systems.cmake
-import spack.build_systems.generic
 from spack.package import *
+
+from ...build_systems import cmake, generic
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.generic import Package
 
 # Only build certain parts of dwarf because the other ones break.
 dwarf_dirs = ["libdwarf", "dwarfdump2"]
@@ -93,7 +95,7 @@ class Libdwarf(CMakePackage, Package):
         return f"https://www.prevanders.net/libdwarf-{version}.tar.gz"
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         define = self.define
@@ -113,7 +115,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def patch(self):
         filter_file(r"^typedef struct Elf Elf;$", "", "libdwarf/libdwarf.h.in")
 

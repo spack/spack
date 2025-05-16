@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXtb(PythonPackage):
     """Python API for the extended tight binding program package"""

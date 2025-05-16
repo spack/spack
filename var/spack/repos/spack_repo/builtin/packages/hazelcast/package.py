@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Hazelcast(MavenPackage):
     """Hazelcast is an open-source distributed in-memory data

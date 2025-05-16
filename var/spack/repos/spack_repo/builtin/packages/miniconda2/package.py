@@ -6,6 +6,8 @@ from os.path import split
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Miniconda2(Package):
     """The minimalist bootstrap toolset for conda and Python2."""

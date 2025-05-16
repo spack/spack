@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycosat(PythonPackage):
     """PicoSAT is a popular SAT solver written by Armin Biere in pure C. This

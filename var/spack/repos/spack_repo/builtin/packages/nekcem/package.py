@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Nekcem(Package):
     """Spectral-element solver for Maxwell's equations, drift-diffusion

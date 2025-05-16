@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestDiaginc(PerlPackage):
     """List modules and versions loaded if tests fail"""

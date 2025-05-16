@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestParallel(PythonPackage):
     """A pytest plugin for parallel and concurrent testing."""

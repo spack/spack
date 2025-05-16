@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Canal(MavenPackage):
     """Alibaba MySQL binlog incremental subscription & consumer components."""

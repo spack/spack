@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytesseract(PythonPackage):
     """Python-tesseract is an Optical Character Recognition (OCR) Tool for python."""

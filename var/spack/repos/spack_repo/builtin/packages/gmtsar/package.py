@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gmtsar(CMakePackage):
     """GMTSAR is an open source (GNU General Public License) InSAR processing

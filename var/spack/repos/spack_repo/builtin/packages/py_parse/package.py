@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParse(PythonPackage):
     """parse() is the opposite of format()"""

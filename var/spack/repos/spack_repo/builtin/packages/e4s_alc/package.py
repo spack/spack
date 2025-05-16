@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class E4sAlc(PythonPackage):
     """Container file creator, facilitating the generation of

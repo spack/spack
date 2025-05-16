@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAstropyIersData(PythonPackage):
     """IERS Earth rotation and leap second table

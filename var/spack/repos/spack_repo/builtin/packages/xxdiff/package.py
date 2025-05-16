@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xxdiff(MakefilePackage):
     """Graphical File And Directories Comparator And Merge Tool."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonDeprecated(PythonPackage):
     """Python @deprecated decorator to deprecate old python classes, functions or methods."""

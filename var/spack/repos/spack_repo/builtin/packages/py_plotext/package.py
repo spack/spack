@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlotext(PythonPackage):
     """Plotext plots directly on terminal."""

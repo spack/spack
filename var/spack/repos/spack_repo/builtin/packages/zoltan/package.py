@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Zoltan(AutotoolsPackage):
     """The Zoltan library is a toolkit of parallel combinatorial algorithms

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmbim(AutotoolsPackage):
     """Libmbim is a glib-based library for talking to WWAN modems and

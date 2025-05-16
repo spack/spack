@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GnomeCommon(AutotoolsPackage):
     """Module containing various files needed to bootstrap GNOME modules

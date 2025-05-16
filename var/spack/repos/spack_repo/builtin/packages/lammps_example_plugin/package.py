@@ -6,6 +6,7 @@ import datetime as dt
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
 from ..lammps.package import Lammps
 
 

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyToml(PythonPackage):
     """A Python library for parsing and creating TOML configuration files.

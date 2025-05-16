@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bannergrab(MakefilePackage):
     """Bannergrab is a simple tool, designed to collect information

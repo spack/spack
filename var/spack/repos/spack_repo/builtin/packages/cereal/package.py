@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cereal(CMakePackage):
     """cereal is a header-only C++11 serialization library. cereal takes

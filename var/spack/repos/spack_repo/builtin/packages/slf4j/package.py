@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Slf4j(MavenPackage):
     """The Simple Logging Facade for Java (SLF4J) serves as a simple facade

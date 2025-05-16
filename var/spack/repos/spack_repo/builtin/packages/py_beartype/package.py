@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBeartype(PythonPackage):
     """Unbearably fast near-real-time hybrid runtime-static type-checking in pure Python."""

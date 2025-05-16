@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExpecttest(PythonPackage):
     """This library implements expect tests (also known as "golden" tests)."""

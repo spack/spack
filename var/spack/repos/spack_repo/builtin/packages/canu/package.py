@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Canu(MakefilePackage):
     """A single molecule sequence assembler for genomes large and

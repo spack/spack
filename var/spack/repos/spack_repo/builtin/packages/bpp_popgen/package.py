@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BppPopgen(CMakePackage):
     """The Bio++ Population Genetics Library"""

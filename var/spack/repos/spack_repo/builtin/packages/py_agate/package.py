@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAgate(PythonPackage):
     """agate is a Python data analysis library that is optimized for humans

@@ -6,6 +6,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class AsperaCli(Package):
     """The Aspera CLI client for the Fast and Secure Protocol (FASP)."""

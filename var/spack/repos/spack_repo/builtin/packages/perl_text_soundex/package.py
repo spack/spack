@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTextSoundex(PerlPackage):
     """Soundex is a phonetic algorithm for indexing names by sound, as

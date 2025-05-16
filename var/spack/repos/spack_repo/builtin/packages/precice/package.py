@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Precice(CMakePackage):
     """preCICE (Precise Code Interaction Coupling Environment) is a

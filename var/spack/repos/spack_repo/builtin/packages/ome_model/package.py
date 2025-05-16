@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OmeModel(CMakePackage):
     """Open Microscopy Environment data model specification, code generator and

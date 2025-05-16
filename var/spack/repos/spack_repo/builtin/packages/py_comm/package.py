@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyComm(PythonPackage):
     """Jupyter Python Comm implementation, for usage in ipykernel, xeus-python etc."""

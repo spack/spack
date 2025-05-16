@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGensim(PythonPackage):
     """Gensim is a Python library for topic modelling, document indexing and

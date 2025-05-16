@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBintrees(PythonPackage):
     """Package provides Binary-, RedBlack- and AVL-Trees in Python and Cython."""

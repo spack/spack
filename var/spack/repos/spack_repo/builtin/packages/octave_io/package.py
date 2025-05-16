@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveIo(OctavePackage, SourceforgePackage):
     """The IO package is part of the Octave Forge project

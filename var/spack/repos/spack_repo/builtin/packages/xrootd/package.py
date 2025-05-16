@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xrootd(CMakePackage):
     """The XROOTD project aims at giving high performance, scalable fault

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitFmm(PythonPackage):
     """scikit-fmm is a Python extension module which implements the fast marching

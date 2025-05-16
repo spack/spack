@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXlsxwriter(PythonPackage):
     """XlsxWriter is a Python module for writing files in the Excel 2007+ XLSX

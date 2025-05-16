@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class TestsSos(AutotoolsPackage):
     """Sandia OpenSHMEM unit tests and performance testing suite."""

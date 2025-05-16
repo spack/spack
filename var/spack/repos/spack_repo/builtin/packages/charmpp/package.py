@@ -10,6 +10,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Charmpp(Package):
     """Charm++ is a parallel programming framework in C++ supported by

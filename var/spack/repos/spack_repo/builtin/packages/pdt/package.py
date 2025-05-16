@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pdt(AutotoolsPackage):
     """Program Database Toolkit (PDT) is a framework for analyzing source

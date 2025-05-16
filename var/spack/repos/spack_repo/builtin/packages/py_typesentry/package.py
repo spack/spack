@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypesentry(PythonPackage):
     """Python library for run-time type checking for type-annotated functions."""

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gnuplot(AutotoolsPackage):
     """Gnuplot is a portable command-line driven graphing utility for Linux,

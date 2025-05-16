@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySoupsieve(PythonPackage):
     """A modern CSS selector implementation for Beautiful Soup."""

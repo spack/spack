@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylatex(PythonPackage):
     """A Python library for creating LaTeX files and snippets"""

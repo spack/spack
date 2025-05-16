@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlYamlTiny(PerlPackage):
     """YAML::Tiny - Read/Write YAML files with as little code as possible"""

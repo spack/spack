@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.build_systems import makefile
 from spack.package import *
+
+from ...build_systems import makefile
+from ...build_systems.makefile import MakefilePackage
 
 
 class Fpocket(MakefilePackage):

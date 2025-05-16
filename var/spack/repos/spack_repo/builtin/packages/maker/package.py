@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Maker(Package):
     """MAKER is a portable and easily configurable genome annotation pipeline.

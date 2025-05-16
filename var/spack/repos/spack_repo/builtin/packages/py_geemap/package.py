@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeemap(PythonPackage):
     """A Python package for interactive mapping using Google Earth Engine and ipyleaflet."""

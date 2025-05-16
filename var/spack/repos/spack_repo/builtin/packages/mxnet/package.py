@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonExtension, PythonPipBuilder
 
 
 class Mxnet(CMakePackage, CudaPackage, PythonExtension):

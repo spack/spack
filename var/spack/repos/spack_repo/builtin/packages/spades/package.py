@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Spades(CMakePackage):
     """SPAdes - St. Petersburg genome assembler - is intended for both

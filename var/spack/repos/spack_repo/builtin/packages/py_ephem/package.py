@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEphem(PythonPackage):
     """PyEphem provides an ephem Python package for

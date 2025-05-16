@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     """The MPFR library is a C library for multiple-precision

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlTrainRestclientsHyperdrive(PythonPackage):
     """The azureml-train-restclients-hyperdrive contains functionality for

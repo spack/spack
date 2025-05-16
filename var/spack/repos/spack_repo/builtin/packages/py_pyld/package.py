@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyld(PythonPackage):
     """This library is an implementation of the JSON-LD specification in

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlNamespacesupport(PerlPackage):
     """This module offers a simple to process namespaced XML names (unames)

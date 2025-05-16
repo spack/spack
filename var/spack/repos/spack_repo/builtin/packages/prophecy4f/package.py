@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Prophecy4f(MakefilePackage):
     """Prophecy4f is a Monte Carlo integrator for

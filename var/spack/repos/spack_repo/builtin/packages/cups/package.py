@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cups(AutotoolsPackage):
     """CUPS is the standards-based, open source printing system developed by

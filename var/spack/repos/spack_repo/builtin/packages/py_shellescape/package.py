@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShellescape(PythonPackage):
     """Shell escape a string to safely use it as a token in a shell command"""

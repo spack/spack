@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCuml(PythonPackage):
     """cuML is a suite of libraries that implement machine

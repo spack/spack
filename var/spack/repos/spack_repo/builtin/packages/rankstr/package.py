@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rankstr(CMakePackage):
     """Assign one-to-one mapping of MPI ranks to strings"""

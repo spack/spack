@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fides(CMakePackage):
     """A library that provides a schema for ADIOS2 streams."""

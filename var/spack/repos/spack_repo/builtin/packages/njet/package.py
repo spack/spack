@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Njet(AutotoolsPackage):
     """NJet is a library for multi-parton one-loop matrix elements

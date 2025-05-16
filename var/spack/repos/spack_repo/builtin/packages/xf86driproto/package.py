@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xf86driproto(AutotoolsPackage, XorgPackage):
     """XFree86 Direct Rendering Infrastructure Extension.

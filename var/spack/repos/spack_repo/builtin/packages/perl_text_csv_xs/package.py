@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTextCsvXs(PerlPackage):
     """Comma-Separated Values manipulation routines"""

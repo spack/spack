@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDpath(PythonPackage):
     """Filesystem-like pathing and searching for dictionaries."""

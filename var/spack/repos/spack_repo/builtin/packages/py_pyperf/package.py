@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyperf(PythonPackage):
     """The Python perf module is a toolkit to write, run and

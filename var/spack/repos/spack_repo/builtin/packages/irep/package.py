@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Irep(CMakePackage):
     """IREP is a tool that enables mixed-language simulation codes to use a

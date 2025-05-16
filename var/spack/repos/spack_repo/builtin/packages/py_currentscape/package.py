@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCurrentscape(PythonPackage):
     """Module to easily plot the currents in electrical neuron models."""

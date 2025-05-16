@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFindLibpython(PythonPackage):
     """Finds the libpython associated with your environment, wherever it may be hiding"""

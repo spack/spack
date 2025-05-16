@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTemplateflow(PythonPackage):
     """A python client to query TemplateFlow via pyBIDS."""

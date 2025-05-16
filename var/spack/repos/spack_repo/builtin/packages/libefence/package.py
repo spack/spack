@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libefence(MakefilePackage):
     """Electric Fence (or eFence) is a memory debugger written by Bruce Perens.

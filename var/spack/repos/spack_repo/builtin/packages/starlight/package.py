@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Starlight(CMakePackage):
     """STARlight is a Monte Carlo that simulates two-photon

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class MpiBash(AutotoolsPackage):
     """Parallel scripting right from the Bourne-Again Shell (Bash)"""

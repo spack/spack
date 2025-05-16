@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ParallelHashmap(CMakePackage):
     """A family of header-only, very fast and memory-friendly hashmap and btree

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGlob2(PythonPackage):
     """Version of the glob module that can capture patterns

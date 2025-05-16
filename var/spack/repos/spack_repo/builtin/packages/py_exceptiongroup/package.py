@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExceptiongroup(PythonPackage):
     """A backport of the BaseExceptionGroup and ExceptionGroup classes from Python 3.11."""

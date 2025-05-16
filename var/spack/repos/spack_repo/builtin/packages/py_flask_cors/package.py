@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlaskCors(PythonPackage):
     """A Flask extension for handling Cross Origin Resource Sharing (CORS),

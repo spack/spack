@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRmpfr(RPackage):
     """R MPFR - Multiple Precision Floating-Point Reliable.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlAutomlCore(PythonPackage):
     """The azureml-automl-core package is a package containing functionality

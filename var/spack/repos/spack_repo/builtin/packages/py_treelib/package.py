@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTreelib(PythonPackage):
     """A Python implementation of tree structure."""

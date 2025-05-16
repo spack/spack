@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Shocklibs(Package):
     """The lib for shock: An object store for scientific data."""

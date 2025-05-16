@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class OrcaFaccts(Package):
     """An ab initio, DFT and semiempirical SCF-MO package

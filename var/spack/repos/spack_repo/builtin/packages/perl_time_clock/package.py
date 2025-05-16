@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTimeClock(PerlPackage):
     """Twenty-four hour clock object with nanosecond precision."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyeventsystem(PythonPackage):
     """An event driven middleware library for Python."""

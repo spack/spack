@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeovimRemote(PythonPackage):
     """Remote opening and control for neovim: nvr"""

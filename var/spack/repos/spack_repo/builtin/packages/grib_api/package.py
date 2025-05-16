@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GribApi(CMakePackage):
     """The ECMWF GRIB API is an application program interface accessible from

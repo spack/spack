@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlEvalClosure(PerlPackage):
     """Safely and cleanly create closures via string eval"""

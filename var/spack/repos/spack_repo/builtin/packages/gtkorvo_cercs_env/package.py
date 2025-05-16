@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GtkorvoCercsEnv(CMakePackage):
     """A utility library used by some GTkorvo packages."""

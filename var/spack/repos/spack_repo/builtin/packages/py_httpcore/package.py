@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHttpcore(PythonPackage):
     """The HTTP Core package provides a minimal low-level HTTP client,

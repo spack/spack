@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRgeos(RPackage):
     """Interface to Geometry Engine - Open Source ('GEOS').

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNetScpExpect(PerlPackage):
     """Wrapper for scp that allows passwords via Expect."""

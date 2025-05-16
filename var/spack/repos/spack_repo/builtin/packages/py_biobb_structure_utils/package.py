@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbStructureUtils(PythonPackage):
     """Biobb_structure_utils is the Biobb module collection to modify or extract information

@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PypyBootstrap(Package):
     """Binary build of PyPy 2 for bootstrapping source build of PyPy 3."""

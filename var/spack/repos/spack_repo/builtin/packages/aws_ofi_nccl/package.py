@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AwsOfiNccl(AutotoolsPackage):
     """AWS OFI NCCL is a plug-in which enables EC2 developers to use

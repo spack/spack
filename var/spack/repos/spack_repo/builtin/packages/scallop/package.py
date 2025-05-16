@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Scallop(AutotoolsPackage):
     """Scallop is a reference-based transcriptome assembler for RNA-seq"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Numdiff(AutotoolsPackage):
     """Numdiff is a little program that can be used to compare putatively

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Exiv2(CMakePackage):
     """Exiv2 is a Cross-platform C++ library and a command line utility

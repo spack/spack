@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Multitail(MakefilePackage):
     """MultiTail allows you to monitor logfiles and command output

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cleaveland4(Package):
     """CleaveLand4: Analysis of degradome data to find sliced miRNA and siRNA

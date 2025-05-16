@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZarr(PythonPackage):
     """Zarr is a Python package providing an implementation of chunked,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiomFormat(PythonPackage):
     """The BIOM file format (canonically pronounced biome) is designed to be

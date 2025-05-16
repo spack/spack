@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassLoad(PerlPackage):
     """A working (require "Class::Name") and more"""

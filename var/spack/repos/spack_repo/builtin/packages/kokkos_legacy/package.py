@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class KokkosLegacy(Package):
     """Kokkos implements a programming model in C++ for writing performance

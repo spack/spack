@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApacheLibcloud(PythonPackage):
     """Python library for multiple cloud provider APIs"""

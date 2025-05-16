@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class PrometheusCpp(CMakePackage):
     """Prometheus Client Library for Modern C++."""

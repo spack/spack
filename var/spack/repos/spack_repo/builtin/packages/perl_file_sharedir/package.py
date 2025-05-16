@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileSharedir(PerlPackage):
     """File::ShareDir - Locate per-dist and per-module shared files"""

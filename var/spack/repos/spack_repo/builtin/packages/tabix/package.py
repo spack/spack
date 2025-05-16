@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tabix(MakefilePackage):
     """Generic indexer for TAB-delimited genome position files"""

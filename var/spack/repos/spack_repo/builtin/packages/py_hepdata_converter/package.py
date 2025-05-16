@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHepdataConverter(PythonPackage):
     """This Python 3 library provides support for converting

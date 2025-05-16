@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Ddd(AutotoolsPackage, GNUMirrorPackage):
     """A graphical front-end for command-line debuggers such as GDB, DBX,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCodex(RPackage):
     """A Normalization and Copy Number Variation Detection Method for Whole

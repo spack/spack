@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openvdb(CMakePackage):
     """OpenVDB - a sparse volume data format."""

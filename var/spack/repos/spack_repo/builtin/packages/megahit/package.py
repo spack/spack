@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Megahit(MakefilePackage):
     """MEGAHIT: An ultra-fast single-node solution for

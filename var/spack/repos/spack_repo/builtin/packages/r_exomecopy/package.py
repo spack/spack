@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RExomecopy(RPackage):
     """Copy number variant detection from exome sequencing read depth.

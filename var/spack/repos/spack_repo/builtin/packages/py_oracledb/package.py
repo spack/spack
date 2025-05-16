@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOracledb(PythonPackage):
     """Python-oracledb is the new name for the Python cx_Oracle driver.

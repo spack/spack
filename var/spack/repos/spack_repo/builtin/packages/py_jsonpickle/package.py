@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonpickle(PythonPackage):
     """Python library for serializing any arbitrary object graph into JSON."""

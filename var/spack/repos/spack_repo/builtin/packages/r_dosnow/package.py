@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDosnow(RPackage):
     """Foreach Parallel Adaptor for the 'snow' Package.

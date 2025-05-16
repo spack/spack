@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySympy(PythonPackage):
     """SymPy is a Python library for symbolic mathematics."""

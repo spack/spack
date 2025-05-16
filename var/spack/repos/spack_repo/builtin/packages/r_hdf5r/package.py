@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHdf5r(RPackage):
     """Interface to the 'HDF5' Binary Data Format.

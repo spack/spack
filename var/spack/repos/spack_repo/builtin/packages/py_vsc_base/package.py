@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVscBase(PythonPackage):
     """Common Python libraries tools created by HPC-UGent"""

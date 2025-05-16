@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastfold(PythonPackage):
     """Optimizing Protein Structure Prediction Model Training and Inference on

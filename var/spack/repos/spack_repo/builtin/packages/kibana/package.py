@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Kibana(Package):
     """Kibana lets you visualize your Elasticsearch data and navigate the

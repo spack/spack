@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTomopy(PythonPackage):
     """TomoPy is an open-source Python package for tomographic data

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xdotool(MakefilePackage):
     """fake keyboard/mouse input, window management, and more"""

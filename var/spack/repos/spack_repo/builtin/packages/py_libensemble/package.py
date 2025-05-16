@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""

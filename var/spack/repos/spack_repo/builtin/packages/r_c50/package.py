@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RC50(RPackage):
     """C5.0 Decision Trees and Rule-Based Models.

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+
 
 class MlperfDeepcam(Package, CudaPackage):
     """PyTorch implementation for the climate segmentation benchmark,

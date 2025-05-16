@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzote(PythonPackage):
     """Azote is a GTK+3 - based picture browser and background setter,

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEmbeddingReader(PythonPackage):
     """Embedding reader is a module to make it easy to read efficiently a large

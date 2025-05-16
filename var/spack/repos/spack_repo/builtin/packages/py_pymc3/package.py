@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymc3(PythonPackage):
     """PyMC3 is a Python package for Bayesian statistical modeling and

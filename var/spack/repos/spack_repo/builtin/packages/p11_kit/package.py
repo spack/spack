@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class P11Kit(AutotoolsPackage):
     """p11-kit aims to solve problems with coordinating the use

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gotcha(CMakePackage):
     """C software library for shared library function wrapping,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAnnotationforge(RPackage):
     """Tools for building SQLite-based annotation data packages.

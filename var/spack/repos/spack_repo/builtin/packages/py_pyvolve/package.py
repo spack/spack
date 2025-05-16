@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyvolve(PythonPackage):
     """Pyvolve is an open-source Python module for simulating sequences

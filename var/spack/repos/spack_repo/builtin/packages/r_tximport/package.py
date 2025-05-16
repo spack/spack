@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTximport(RPackage):
     """Import and summarize transcript-level estimates for transcript- and

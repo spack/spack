@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Vt(MakefilePackage):
     """A tool set for short variant discovery in genetic sequence data."""

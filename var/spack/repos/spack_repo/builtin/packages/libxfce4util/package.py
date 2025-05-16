@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libxfce4util(AutotoolsPackage):
     """Libxfce4util common  non-GTK+ utilities among the Xfce applications."""

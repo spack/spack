@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Surfer(CargoPackage):
     """A waveform viewer with a focus on a snappy usable interface, and extensibility."""

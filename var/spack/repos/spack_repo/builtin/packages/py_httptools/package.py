@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHttptools(PythonPackage):
     """httptools is a Python binding for the nodejs HTTP parser."""

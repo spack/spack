@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXarrayTensorstore(PythonPackage):
     """Xarray-TensorStore is a small library that allows opening Zarr arrays into Xarray

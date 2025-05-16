@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cjson(CMakePackage):
     """Ultralightweight JSON parser in ANSI C."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyGnuplot(RubyPackage):
     """Utility library to aid in interacting with gnuplot from ruby"""

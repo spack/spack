@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Sse2neon(Package):
     """A C/C++ header file that converts Intel SSE intrinsics to Arm/Aarch64

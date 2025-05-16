@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Patchelf(AutotoolsPackage):
     """PatchELF is a small utility to modify the dynamic linker and RPATH of

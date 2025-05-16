@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Gmic(MakefilePackage):
     """G'MIC is an open-source framework for digital image processing.

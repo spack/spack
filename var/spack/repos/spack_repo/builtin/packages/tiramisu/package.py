@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonExtension
+
 
 class Tiramisu(CMakePackage, CudaPackage, PythonExtension):
     """Tiramisu is a polyhedral compiler for dense and sparse deep learning

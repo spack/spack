@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jellyfish(AutotoolsPackage):
     """JELLYFISH is a tool for fast, memory-efficient counting of k-mers in DNA."""

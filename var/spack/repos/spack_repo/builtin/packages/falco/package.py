@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Falco(AutotoolsPackage):
     """A C++ drop-in replacement of FastQC to assess the quality of sequence read data"""

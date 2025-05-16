@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libcroco(AutotoolsPackage):
     """Libcroco is a standalone css2 parsing and manipulation library."""

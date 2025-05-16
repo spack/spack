@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Multiverso(CMakePackage):
     """Multiverso is a parameter server based framework for

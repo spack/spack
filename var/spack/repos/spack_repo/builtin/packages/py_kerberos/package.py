@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKerberos(PythonPackage):
     """This Python package is a high-level wrapper for Kerberos

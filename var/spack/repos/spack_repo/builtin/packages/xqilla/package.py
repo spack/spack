@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Xqilla(AutotoolsPackage, SourceforgePackage):
     """XQilla is an XQuery and XPath 2 library and command line utility

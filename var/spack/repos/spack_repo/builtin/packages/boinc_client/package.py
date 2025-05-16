@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BoincClient(AutotoolsPackage):
     """BOINC is a platform for high-throughput computing on a

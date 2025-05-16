@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureCliCore(PythonPackage):
     """Microsoft Azure Command-Line Tools Core Module."""

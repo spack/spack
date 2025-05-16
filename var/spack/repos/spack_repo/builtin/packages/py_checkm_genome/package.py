@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCheckmGenome(PythonPackage):
     """Assess the quality of microbial genomes recovered from isolates, single

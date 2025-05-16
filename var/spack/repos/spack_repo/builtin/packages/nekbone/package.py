@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Nekbone(Package):
     """NEK5000 emulation software called NEKbone. Nekbone captures the basic

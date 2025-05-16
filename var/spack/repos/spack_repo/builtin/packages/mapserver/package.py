@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mapserver(CMakePackage):
     """MapServer is an Open Source geographic data rendering engine written

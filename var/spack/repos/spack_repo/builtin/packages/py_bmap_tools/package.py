@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBmapTools(PythonPackage):
     """Bmaptool is a generic tool for creating the block map (bmap) for a file and

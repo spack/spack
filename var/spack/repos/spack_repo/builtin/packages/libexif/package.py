@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Libexif(AutotoolsPackage, SourceforgePackage):
     """A library to parse an EXIF file and read the data from those tags"""

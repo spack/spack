@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PythonVenv(Package):
     """A Spack managed Python virtual environment"""

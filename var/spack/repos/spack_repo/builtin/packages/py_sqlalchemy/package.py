@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySqlalchemy(PythonPackage):
     """The Python SQL Toolkit and Object Relational Mapper"""

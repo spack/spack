@@ -5,10 +5,12 @@
 import os
 import sys
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
 from spack.util.environment import filter_system_paths
+
+from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from ...build_systems.cmake import CMakeBuilder, CMakePackage, generator
+from ...build_systems.python import PythonExtension
 
 
 class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):

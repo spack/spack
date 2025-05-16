@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PyTorchbenchmark(Package):
     """A collection of open source benchmarks used to evaluate PyTorch performance."""

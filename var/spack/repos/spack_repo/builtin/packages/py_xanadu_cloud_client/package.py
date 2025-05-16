@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXanaduCloudClient(PythonPackage):
     """The Xanadu Cloud Client (XCC) is a Python API and CLI for the Xanadu Cloud."""

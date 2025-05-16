@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Minizip(AutotoolsPackage):
     """C library for zip/unzip via zLib."""

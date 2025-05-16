@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RServr(RPackage):
     """A Simple HTTP Server to Serve Static Files or Dynamic Documents.

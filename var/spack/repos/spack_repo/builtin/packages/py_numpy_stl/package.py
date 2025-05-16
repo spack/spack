@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumpyStl(PythonPackage):
     """Library to make reading, writing and modifying both binary and ascii STL files easy"""

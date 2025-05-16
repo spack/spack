@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlFilterBuffertext(PerlPackage):
     """This is a very simple filter. One common cause of grief (and programmer

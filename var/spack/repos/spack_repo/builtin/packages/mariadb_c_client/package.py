@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MariadbCClient(CMakePackage):
     """MariaDB turns data into structured information in a wide array of

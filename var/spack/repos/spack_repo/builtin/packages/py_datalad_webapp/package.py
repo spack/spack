@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladWebapp(PythonPackage):
     """DataLad extension for exposing commands via a web request API"""

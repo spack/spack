@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MagicEnum(CMakePackage):
     """Header-only C++17 library provides static reflection for enums,

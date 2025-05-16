@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpb(AutotoolsPackage):
     """MPB is a free and open-source software package for computing

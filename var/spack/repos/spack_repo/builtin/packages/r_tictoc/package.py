@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTictoc(RPackage):
     """Functions for timing R scripts, as well as implementations of Stack and

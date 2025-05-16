@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Regtools(CMakePackage):
     """Tools that integrate DNA-seq and RNA-seq data to help interpret mutations in a regulatory

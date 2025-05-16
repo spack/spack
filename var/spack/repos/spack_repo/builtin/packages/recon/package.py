@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Recon(MakefilePackage):
     """RECON: a package for automated de novo identification of repeat families

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xnedit(MakefilePackage):
     """XNEdit is a multi-purpose text editor for the X Window System, which combines a standard,

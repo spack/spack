@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Twm(AutotoolsPackage, XorgPackage):
     """twm is a window manager for the X Window System.  It provides

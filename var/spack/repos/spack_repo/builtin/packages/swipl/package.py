@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Swipl(CMakePackage):
     """SWI-Prolog is a versatile implementation of the Prolog language.

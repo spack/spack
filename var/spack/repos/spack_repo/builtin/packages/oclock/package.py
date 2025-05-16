@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Oclock(AutotoolsPackage, XorgPackage):
     """oclock is a simple analog clock using the SHAPE extension to make

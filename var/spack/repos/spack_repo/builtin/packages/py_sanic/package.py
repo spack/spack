@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySanic(PythonPackage):
     """Sanic is a Flask-like Python 3.5+ web server that is written to go fast.

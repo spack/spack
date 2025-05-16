@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArgon2Cffi(PythonPackage):
     """The secure Argon2 password hashing algorithm.."""

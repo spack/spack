@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGamlss(RPackage):
     """Generalised Additive Models for Location Scale and Shape.

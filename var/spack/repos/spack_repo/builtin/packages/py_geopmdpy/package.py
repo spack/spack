@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeopmdpy(PythonPackage):
     """The Global Extensible Open Power Manager (GEOPM) Service provides a

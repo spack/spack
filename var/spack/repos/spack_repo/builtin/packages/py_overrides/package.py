@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOverrides(PythonPackage):
     """A decorator to automatically detect mismatch when overriding a method."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Powertop(AutotoolsPackage):
     """Powertop is a Linux tool to diagnose issues with power consumption

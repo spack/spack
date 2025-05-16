@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAxPlatform(PythonPackage):
     """Adaptive experimentation is the machine-learning guided process of

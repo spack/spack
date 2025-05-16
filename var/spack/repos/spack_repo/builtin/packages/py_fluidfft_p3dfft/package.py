@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFluidfftP3dfft(PythonPackage):
     """Fluidfft MPI plugin using p3dfft."""

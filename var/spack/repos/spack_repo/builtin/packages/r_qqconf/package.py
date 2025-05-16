@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RQqconf(RPackage):
     """Creates Simultaneous Testing Bands for QQ-Plots.

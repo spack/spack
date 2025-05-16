@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Metal(CMakePackage):
     """METAL is a tool for the meta-analysis of genome-wide association studies"""

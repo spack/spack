@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEmaPytorch(PythonPackage):
     """Easy way to keep track of exponential moving average version of your

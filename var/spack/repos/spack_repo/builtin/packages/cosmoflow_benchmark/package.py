@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+
 
 class CosmoflowBenchmark(Package, CudaPackage):
     """This is a an implementation of the CosmoFlow 3D convolutional neural

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHatchVcs(PythonPackage):
     """Hatch plugin for versioning with your preferred VCS"""

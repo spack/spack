@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Judy(AutotoolsPackage):
     """Judy: General-purpose dynamic array, associative array and hash-trie."""

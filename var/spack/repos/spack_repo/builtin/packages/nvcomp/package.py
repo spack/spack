@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Nvcomp(CMakePackage, CudaPackage):
     """Last open source release of A library for fast lossless compression

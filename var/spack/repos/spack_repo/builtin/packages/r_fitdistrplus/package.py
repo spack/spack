@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFitdistrplus(RPackage):
     """Help to Fit of a Parametric Distribution to Non-Censored or Censored

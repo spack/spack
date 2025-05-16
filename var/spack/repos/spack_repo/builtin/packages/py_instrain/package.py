@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyInstrain(PythonPackage):
     """inStrain is python program for analysis of co-occurring genome

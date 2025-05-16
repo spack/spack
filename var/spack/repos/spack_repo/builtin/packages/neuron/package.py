@@ -5,6 +5,8 @@
 from spack.build_environment import optimization_flags
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Neuron(CMakePackage):
     """NEURON is a simulation environment for single and networks of neurons.

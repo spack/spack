@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Supermagic(AutotoolsPackage):
     """Supermagic is a very simple MPI sanity code. Nothing more, nothing less."""

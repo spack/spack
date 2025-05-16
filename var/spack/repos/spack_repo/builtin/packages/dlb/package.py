@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dlb(AutotoolsPackage):
     """DLB is a dynamic library designed to speed up HPC hybrid applications

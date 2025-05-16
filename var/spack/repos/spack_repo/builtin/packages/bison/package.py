@@ -8,6 +8,9 @@ import sys
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Bison(AutotoolsPackage, GNUMirrorPackage):
     """Bison is a general-purpose parser generator that converts

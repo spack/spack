@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dtcmp(AutotoolsPackage):
     """The Datatype Comparison Library provides comparison operations and

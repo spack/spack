@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFortls(PythonPackage):
     """A Language Server for Fortran providing code completion, diagnostics, hovering and more."""

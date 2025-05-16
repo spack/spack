@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libmolgrid(CMakePackage):
     """libmolgrid is a library to generate tensors from molecular data, with properties

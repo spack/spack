@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCheckpoint(RPackage):
     """Install Packages from Snapshots on the Checkpoint Server for

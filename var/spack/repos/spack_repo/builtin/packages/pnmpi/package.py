@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pnmpi(CMakePackage):
     """PnMPI is a dynamic MPI tool infrastructure that builds on top of

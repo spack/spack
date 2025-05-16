@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLibconf(PythonPackage):
     """A pure-Python libconfig reader/writer with permissive license"""

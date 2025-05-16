@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSetObject(PerlPackage):
     """Unordered collections (sets) of Perl Objects"""

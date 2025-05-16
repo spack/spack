@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPan(RPackage):
     """Multiple imputation for multivariate panel or clustered data.

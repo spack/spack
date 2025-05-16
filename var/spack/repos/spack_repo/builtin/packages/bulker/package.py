@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Bulker(PythonPackage):
     """Bulker: multi-container environment manager"""

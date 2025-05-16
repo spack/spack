@@ -9,6 +9,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class VisitSilo(CMakePackage):
     """This is the Silo Plug-In for VisIt.

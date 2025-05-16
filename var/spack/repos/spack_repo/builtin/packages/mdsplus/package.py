@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mdsplus(AutotoolsPackage):
     """A set of software tools for data acquisition and storage and a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBoomBootManager(PythonPackage):
     """Boom is a boot manager for Linux systems using boot loaders

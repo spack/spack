@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymbolic(PythonPackage):
     """A simple package to do symbolic math (focus on code gen and DSLs)"""

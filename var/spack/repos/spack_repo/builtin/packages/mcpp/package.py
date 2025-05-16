@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Mcpp(AutotoolsPackage, SourceforgePackage):
     """MCPP is an alternative C/C++ preprocessor with the highest

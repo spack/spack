@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class OpenclHeaders(BundlePackage):
     """Bundled OpenCL (Open Computing Language) header files"""

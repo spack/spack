@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libimagequant(MakefilePackage):
     """Small, portable C library for high-quality conversion of RGBA images to

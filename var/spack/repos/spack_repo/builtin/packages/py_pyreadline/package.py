@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyreadline(PythonPackage):
     """A Python implementation of GNU readline functionality."""

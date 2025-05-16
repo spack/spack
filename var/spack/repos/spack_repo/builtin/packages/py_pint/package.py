@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPint(PythonPackage):
     """Pint is a Python package to define, operate and manipulate physical

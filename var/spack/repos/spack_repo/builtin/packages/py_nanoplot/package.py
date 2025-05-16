@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanoplot(PythonPackage):
     """Plotting scripts for long read sequencing data"""

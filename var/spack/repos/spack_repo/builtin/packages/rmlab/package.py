@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rmlab(CMakePackage):
     """C++ File API for the reMarkable tablet"""

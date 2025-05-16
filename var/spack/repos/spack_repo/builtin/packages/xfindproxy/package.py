@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xfindproxy(AutotoolsPackage, XorgPackage):
     """xfindproxy is used to locate available X11 proxy services.

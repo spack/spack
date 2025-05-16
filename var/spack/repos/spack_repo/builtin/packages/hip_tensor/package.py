@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class HipTensor(CMakePackage, ROCmPackage):
     """AMD’s C++ library for accelerating tensor primitives"""

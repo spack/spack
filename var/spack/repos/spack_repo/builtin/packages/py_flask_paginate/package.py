@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlaskPaginate(PythonPackage):
     """Simple paginate for flask (study from will_paginate). Use bootstrap css

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTestscenarios(PythonPackage):
     """Testscenarios, a pyunit extension for dependency injection"""

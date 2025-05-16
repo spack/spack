@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class PyEspressopp(CMakePackage):
     """ESPResSo++ is an extensible, flexible, fast and parallel simulation

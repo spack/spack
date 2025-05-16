@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHatchFancyPypiReadme(PythonPackage):
     """Fancy PyPI READMEs with Hatch."""

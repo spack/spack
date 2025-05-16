@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pstreams(Package):
     """C++ wrapper for the POSIX.2 functions popen(3) and pclose(3)"""

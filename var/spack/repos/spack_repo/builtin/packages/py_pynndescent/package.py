@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynndescent(PythonPackage):
     """PyNNDescent is a Python nearest neighbor descent for

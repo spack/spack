@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rayleigh(MakefilePackage):
     """Rayleigh is a 3-D convection code designed for the study of

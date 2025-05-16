@@ -7,6 +7,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipsycl(CMakePackage, ROCmPackage):
     """hipSYCL is an implementation of the SYCL standard programming model

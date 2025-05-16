@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRepligit(PythonPackage):
     """A Git client for mirroring multiple remotes without storing state."""

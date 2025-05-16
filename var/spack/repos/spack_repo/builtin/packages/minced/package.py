@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Minced(Package):
     """MinCED is a program to find Clustered Regularly Interspaced Short

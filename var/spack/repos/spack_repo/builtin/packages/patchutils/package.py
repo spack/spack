@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Patchutils(AutotoolsPackage):
     """This is patchutils, a collection of tools that operate on patch

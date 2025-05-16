@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestMemoryCycle(PerlPackage):
     """Check for memory leaks and circular memory references"""

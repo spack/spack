@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastapi(PythonPackage):
     """FastAPI framework, high performance, easy to learn, fast to code, ready for production"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureKeyvaultCertificates(PythonPackage):
     """Microsoft Azure Key Vault Certificates Client Library for Python."""

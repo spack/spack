@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydocstyle(PythonPackage):
     """Python docstring style checker."""

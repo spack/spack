@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMkdocsAutorefs(PythonPackage):
     """Automatically link across pages in MkDocs."""

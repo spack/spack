@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySimplejson(PythonPackage):
     """Simplejson is a simple, fast, extensible JSON encoder/decoder for

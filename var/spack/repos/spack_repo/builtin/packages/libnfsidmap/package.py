@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnfsidmap(AutotoolsPackage):
     """Library to help mapping id's, mainly for NFSv4."""

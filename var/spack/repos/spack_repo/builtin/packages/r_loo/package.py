@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLoo(RPackage):
     """Efficient Leave-One-Out Cross-Validation and WAIC for BayesianModels.

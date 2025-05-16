@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCtgan(PythonPackage):
     """CTGAN is a collection of Deep Learning based Synthetic

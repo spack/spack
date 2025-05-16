@@ -6,6 +6,9 @@ import os.path
 
 from spack.package import *
 
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.generic import Package
+
 
 class Nag(Package, CompilerPackage):
     """The NAG Fortran Compiler."""

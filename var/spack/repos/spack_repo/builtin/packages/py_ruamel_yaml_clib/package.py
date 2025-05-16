@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRuamelYamlClib(PythonPackage):
     """C version of reader, parser and emitter for ruamel.yaml derived from libyaml."""

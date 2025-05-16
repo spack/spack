@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Routinator(Package):
     """An RPKI Validator and RTR server written in Rust"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStackData(PythonPackage):
     """Extract data from python stack frames and tracebacks for informative

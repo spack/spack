@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Macfuse(Package):
     """FUSE for macOS allows you to extend macOS via third party file systems."""

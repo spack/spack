@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Occa(Package):
     """OCCA is an open-source (MIT license) library used to program current

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlModuleInstall(PerlPackage):
     """Module::Install - Standalone, extensible Perl module installer"""

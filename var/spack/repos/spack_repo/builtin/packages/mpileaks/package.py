@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpileaks(AutotoolsPackage):
     """Tool to detect and report MPI objects like MPI_Requests and

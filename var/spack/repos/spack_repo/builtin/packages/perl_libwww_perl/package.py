@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLibwwwPerl(PerlPackage):
     """The libwww-perl collection is a set of Perl modules which provides

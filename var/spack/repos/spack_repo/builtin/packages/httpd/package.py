@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Httpd(AutotoolsPackage):
     """The Apache HTTP Server is a powerful and flexible HTTP/1.1 compliant

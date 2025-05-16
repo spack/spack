@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ssmtp(AutotoolsPackage):
     """A program that replaces sendmail on workstations that should send their

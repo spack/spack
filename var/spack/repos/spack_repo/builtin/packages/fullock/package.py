@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fullock(AutotoolsPackage):
     """FULLOCK is a lock library provided by Yahoo! JAPAN,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOlefile(PythonPackage):
     """Python package to parse, read and write Microsoft OLE2 files"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Qemu(AutotoolsPackage):
     """QEMU is a generic and open source machine emulator and virtualizer."""

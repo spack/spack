@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SpiralPackageHcol(Package):
     """This is the SPIRAL package for the Hybrid Control Operator Language

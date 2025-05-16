@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Elsd(MakefilePackage):
     """ELSD: Ellipse and Line Segment Detector"""

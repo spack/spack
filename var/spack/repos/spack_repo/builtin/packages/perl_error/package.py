@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlError(PerlPackage):
     """The Error package provides two interfaces. Firstly Error provides a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fastqvalidator(MakefilePackage):
     """The fastQValidator validates the format of fastq files."""

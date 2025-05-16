@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Opari2(AutotoolsPackage):
     """OPARI2 is a source-to-source instrumentation tool for OpenMP and hybrid

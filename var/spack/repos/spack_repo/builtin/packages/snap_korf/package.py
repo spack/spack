@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SnapKorf(MakefilePackage):
     """SNAP is a general purpose gene finding program suitable for both

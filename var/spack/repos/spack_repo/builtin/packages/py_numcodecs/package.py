@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumcodecs(PythonPackage):
     """Numcodecs is a Python package providing buffer compression and

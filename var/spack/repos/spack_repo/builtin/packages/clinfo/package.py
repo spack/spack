@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Clinfo(MakefilePackage):
     """Print all known information about all available OpenCL platforms and

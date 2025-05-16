@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bcftools(AutotoolsPackage):
     """BCFtools is a set of utilities that manipulate variant calls in the

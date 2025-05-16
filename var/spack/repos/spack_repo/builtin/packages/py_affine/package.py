@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAffine(PythonPackage):
     """Matrices describing affine transformation of the plane."""

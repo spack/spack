@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxrandr(AutotoolsPackage, XorgPackage):
     """libXrandr - X Resize, Rotate and Reflection extension library."""

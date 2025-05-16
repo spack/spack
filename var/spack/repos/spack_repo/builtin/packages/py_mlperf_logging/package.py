@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMlperfLogging(PythonPackage):
     """MLPerf Compliance Logging Utilities and Helper Functions."""

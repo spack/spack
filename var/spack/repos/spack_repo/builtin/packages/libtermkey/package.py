@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libtermkey(MakefilePackage):
     """Easy keyboard entry processing for terminal programs"""

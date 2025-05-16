@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bamtools(CMakePackage):
     """C++ API & command-line toolkit for working with BAM data."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class RpcsvcProto(AutotoolsPackage):
     """rpcsvc protocol definitions from glibc."""

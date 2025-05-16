@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libressl(AutotoolsPackage):
     """LibreSSL is a version of the TLS/crypto stack forked from OpenSSL

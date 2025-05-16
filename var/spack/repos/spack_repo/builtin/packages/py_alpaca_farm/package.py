@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAlpacaFarm(PythonPackage):
     """AlpacaFarm is a simulator that enables research and development on learning

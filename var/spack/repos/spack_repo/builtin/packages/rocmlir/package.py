@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rocmlir(CMakePackage):
     """This is the repository for a MLIR-based convolution and GEMM kernel generator

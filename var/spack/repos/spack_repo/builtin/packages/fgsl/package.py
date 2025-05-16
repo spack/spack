@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 #
 # Author: Gilbert Brietzke
 # Date: June 18, 2019

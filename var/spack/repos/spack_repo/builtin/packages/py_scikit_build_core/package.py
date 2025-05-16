@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitBuildCore(PythonPackage):
     """scikit-build-core is a doubly improved build system generator

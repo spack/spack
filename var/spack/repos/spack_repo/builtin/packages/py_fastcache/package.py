@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastcache(PythonPackage):
     """C implementation of Python 3 functools.lru_cache"""

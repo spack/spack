@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SoapdenovoTrans(MakefilePackage):
     """SOAPdenovo-Trans is a de novo transcriptome assembler basing on the

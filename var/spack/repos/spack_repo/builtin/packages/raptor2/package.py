@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Raptor2(AutotoolsPackage):
     """libraptor2 for parsing and serializing RDF syntaxes"""

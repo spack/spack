@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Idba(AutotoolsPackage):
     """IDBA is a practical iterative De Bruijn Graph De Novo Assembler for

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.lua import LuaPackage
+
 
 class LuaBitlib(LuaPackage):
     """Lua-jit-like bitwise operations for lua"""

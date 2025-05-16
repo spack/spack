@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Qtltools(MakefilePackage):
     """A complete tool set for molecular QTL discovery and analysis."""

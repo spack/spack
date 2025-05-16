@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Gapbs(MakefilePackage):
     """The GAP Benchmark Suite is intended to help graph processing research by

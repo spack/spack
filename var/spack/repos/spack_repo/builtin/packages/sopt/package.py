@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sopt(CMakePackage):
     """SOPT is an open-source C++ package available under the license below. It performs

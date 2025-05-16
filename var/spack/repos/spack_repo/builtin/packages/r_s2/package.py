@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RS2(RPackage):
     """Spherical Geometry Operators Using the S2 Geometry Library.

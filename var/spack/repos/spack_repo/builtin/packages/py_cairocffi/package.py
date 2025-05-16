@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCairocffi(PythonPackage):
     """cairocffi is a CFFI-based drop-in replacement for Pycairo, a set of

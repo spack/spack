@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtManagedservices(PythonPackage):
     """Microsoft Azure Managed Services Client Library for Python."""

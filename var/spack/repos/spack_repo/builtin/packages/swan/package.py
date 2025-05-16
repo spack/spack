@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Swan(MakefilePackage):
     """SWAN is a third-generation wave model, developed at Delft

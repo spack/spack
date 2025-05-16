@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnsl(AutotoolsPackage):
     """This library contains the public client interface for NIS(YP) and NIS+

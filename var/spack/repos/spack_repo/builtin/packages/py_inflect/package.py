@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyInflect(PythonPackage):
     """inflect.py - Correctly generate plurals, singular nouns, ordinals,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPipits(PythonPackage):
     """Automated pipeline for analyses of fungal ITS from the Illumina"""

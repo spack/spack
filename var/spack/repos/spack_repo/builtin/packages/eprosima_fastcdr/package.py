@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class EprosimaFastcdr(CMakePackage):
     """eProsima Fast CDR is a C++ library that provides two serialization mechanisms.

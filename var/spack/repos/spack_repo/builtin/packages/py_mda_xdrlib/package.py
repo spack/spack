@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMdaXdrlib(PythonPackage):
     """A stand-alone XDRLIB module extracted from CPython 3.10.8"""

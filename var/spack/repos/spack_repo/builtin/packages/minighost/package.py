@@ -7,6 +7,8 @@ import tarfile
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minighost(MakefilePackage):
     """Proxy Application. A Finite Difference proxy

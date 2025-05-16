@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libquo(AutotoolsPackage):
     """QUO (as in "status quo") is a runtime library that aids in accommodating

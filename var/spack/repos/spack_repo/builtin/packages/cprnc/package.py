@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cprnc(CMakePackage):
     """CPRNC is a netcdf file comparison tool used by CESM

@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Jdk(Package):
     """The Java Development Kit (JDK) released by Oracle Corporation in the

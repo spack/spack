@@ -6,6 +6,7 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
 from ..boost.package import Boost
 
 # typical working line with extrae 3.0.1

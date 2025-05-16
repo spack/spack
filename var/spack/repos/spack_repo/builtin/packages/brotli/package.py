@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Brotli(CMakePackage):
     """Brotli is a generic-purpose lossless compression algorithm"""

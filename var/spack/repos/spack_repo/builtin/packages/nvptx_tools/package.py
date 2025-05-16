@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NvptxTools(AutotoolsPackage):
     """nvptx-tools: A collection of tools for use with nvptx-none GCC

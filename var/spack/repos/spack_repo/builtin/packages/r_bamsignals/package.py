@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBamsignals(RPackage):
     """Extract read count signals from bam files.

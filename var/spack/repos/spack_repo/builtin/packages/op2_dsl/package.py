@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Op2Dsl(MakefilePackage, CudaPackage):
     """OP2 is a high-level embedded domain specific language for writing

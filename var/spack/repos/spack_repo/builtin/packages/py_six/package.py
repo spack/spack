@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySix(PythonPackage):
     """Python 2 and 3 compatibility utilities."""

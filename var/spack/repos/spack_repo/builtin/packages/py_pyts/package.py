@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyts(PythonPackage):
     """pyts is a Python package for time series classification. It aims to make

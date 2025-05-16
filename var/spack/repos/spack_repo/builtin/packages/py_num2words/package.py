@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNum2words(PythonPackage):
     """Modules to convert numbers to words. Easily extensible."""

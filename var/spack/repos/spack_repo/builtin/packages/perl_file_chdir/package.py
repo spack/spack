@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileChdir(PerlPackage):
     """Perl's chdir() has the unfortunate problem of being very, very, very

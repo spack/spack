@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pngwriter(CMakePackage):
     """PNGwriter is a very easy to use open source graphics library that uses

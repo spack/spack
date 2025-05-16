@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Citcoms(AutotoolsPackage):
     """CitcomS is a finite element code designed to solve compressible

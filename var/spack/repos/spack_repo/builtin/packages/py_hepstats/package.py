@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHepstats(PythonPackage):
     """hepstats is a library for statistical inference aiming

@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Opensubdiv(CMakePackage, CudaPackage):
     """OpenSubdiv is a set of open source libraries that

@@ -7,6 +7,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     """The ncurses (new curses) library is a free software emulation of

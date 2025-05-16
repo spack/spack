@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gprolog(Package):
     """A free Prolog compiler with constraint solving over finite domains."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Vampirtrace(AutotoolsPackage):
     """VampirTrace is an open source library that allows detailed logging of

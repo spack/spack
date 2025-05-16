@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rdkit(CMakePackage):
     """RDKit is a collection of cheminformatics and machine-learning

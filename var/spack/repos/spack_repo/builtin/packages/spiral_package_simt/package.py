@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SpiralPackageSimt(Package):
     """This is the SPIRAL package for SIMT:  SIMT, single instruction multiple

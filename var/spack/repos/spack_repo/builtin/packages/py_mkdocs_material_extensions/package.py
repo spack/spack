@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMkdocsMaterialExtensions(PythonPackage):
     """Markdown extension resources for MkDocs for Material."""

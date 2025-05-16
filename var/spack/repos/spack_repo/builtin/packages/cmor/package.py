@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.python import PythonPipBuilder
 
 
 class Cmor(AutotoolsPackage):

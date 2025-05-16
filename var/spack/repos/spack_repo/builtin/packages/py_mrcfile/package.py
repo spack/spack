@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMrcfile(PythonPackage):
     """Python implementation of the MRC2014 file format, which is used

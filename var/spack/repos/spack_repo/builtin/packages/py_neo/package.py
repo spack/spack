@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeo(PythonPackage):
     """Neo is a package for representing electrophysiology data in Python,

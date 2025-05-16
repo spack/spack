@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStashcp(PythonPackage):
     """Stashcp uses geo located nearby caches in order to copy from the OSG

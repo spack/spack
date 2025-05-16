@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYahmm(PythonPackage):
     """YAHMM is a HMM package for Python, implemented in Cython for speed."""

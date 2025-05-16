@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.lua import LuaPackage
+
 
 class LuaLuaposix(LuaPackage):
     """Lua posix bindings, including ncurses"""

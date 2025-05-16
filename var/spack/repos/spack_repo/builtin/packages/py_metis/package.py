@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetis(PythonPackage):
     """Wrapper for the METIS library for partitioning graphs (and other stuff)."""

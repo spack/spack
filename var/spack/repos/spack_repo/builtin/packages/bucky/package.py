@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bucky(MakefilePackage):
     """BUCKy is a free program to combine molecular data from multiple loci.

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lazyten(CMakePackage):
     """Lightweight linear algebra library based on lazy matrices"""

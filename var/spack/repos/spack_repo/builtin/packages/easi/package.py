@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Easi(CMakePackage):
     """easi is a library for the Easy Initialization of models

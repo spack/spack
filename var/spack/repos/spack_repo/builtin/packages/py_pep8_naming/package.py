@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPep8Naming(PythonPackage):
     """Check PEP-8 naming conventions, plugin for flake8."""

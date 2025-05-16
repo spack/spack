@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cloverleaf3d(MakefilePackage):
     """Proxy Application. CloverLeaf3D is 3D version of the

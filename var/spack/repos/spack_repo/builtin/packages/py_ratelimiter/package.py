@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRatelimiter(PythonPackage):
     """Simple Python module providing rate limiting."""

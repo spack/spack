@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Paml(MakefilePackage):
     """PAML is a package of programs for phylogenetic analyses of DNA or

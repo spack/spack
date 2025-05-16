@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mbdyn(AutotoolsPackage):
     """MBDyn is the first and possibly the only free general purpose

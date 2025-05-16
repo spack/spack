@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShippinglabel(PythonPackage):
     """Utilities for handling packages."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileFindRule(PerlPackage):
     """File::Find::Rule is a friendlier interface to File::Find. It allows you to

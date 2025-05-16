@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Zopfli(CMakePackage):
     """Zopfli Compression Algorithm is a compression library programmed

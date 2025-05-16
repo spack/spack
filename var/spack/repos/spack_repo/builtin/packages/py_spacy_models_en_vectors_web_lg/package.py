@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpacyModelsEnVectorsWebLg(PythonPackage):
     """1.2m 300d vectors trained on Common Crawl with GloVe"""

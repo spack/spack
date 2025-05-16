@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtCore(PythonPackage):
     """Microsoft Azure Management Core Library for Python."""

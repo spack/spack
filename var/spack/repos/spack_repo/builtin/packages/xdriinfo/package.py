@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xdriinfo(AutotoolsPackage, XorgPackage):
     """xdriinfo - query configuration information of X11 DRI drivers."""

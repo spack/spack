@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Opus(AutotoolsPackage):
     """Opus is a totally open, royalty-free, highly versatile audio codec."""

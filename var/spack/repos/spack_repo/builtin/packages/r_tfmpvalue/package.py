@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTfmpvalue(RPackage):
     """Efficient and Accurate P-Value Computation for Position Weight Matrices.

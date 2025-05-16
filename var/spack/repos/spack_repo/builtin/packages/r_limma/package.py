@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLimma(RPackage):
     """Linear Models for Microarray Data.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJmp(PythonPackage):
     """JMP is a Mixed Precision library for JAX."""

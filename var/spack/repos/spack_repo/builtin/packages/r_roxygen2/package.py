@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRoxygen2(RPackage):
     """In-Line Documentation for R.

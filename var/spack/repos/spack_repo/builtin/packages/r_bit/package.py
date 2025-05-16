@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBit(RPackage):
     """Classes and Methods for Fast Memory-Efficient Boolean Selections.

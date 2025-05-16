@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGridbase(RPackage):
     """Integration of base and grid graphics."""

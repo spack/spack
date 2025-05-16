@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cubist(MakefilePackage):
     """Cubist is a powerful tool for generating rule-based models that

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNetaddr(PythonPackage):
     """A system-independent network address manipulation library for Python"""

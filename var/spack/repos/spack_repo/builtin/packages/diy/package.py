@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Diy(CMakePackage):
     """Data-parallel out-of-core library"""

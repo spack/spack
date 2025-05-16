@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLoguru(PythonPackage):
     """Loguru is a library which aims to bring enjoyable logging in Python."""

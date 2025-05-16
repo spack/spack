@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class AbiDumper(Package):
     """ABI Dumper is a tool to dump ABI of an ELF object containing

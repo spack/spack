@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyImbalancedLearn(PythonPackage):
     """imbalanced-learn is a python package offering a number of re-sampling

@@ -8,6 +8,8 @@ import os
 import spack.tengine
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Likwid(Package):
     """Likwid is a simple to install and use toolsuite of command line

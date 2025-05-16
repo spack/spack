@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class ConnectProxy(MakefilePackage):
     """`connect.c` is a simple relaying command to make network connection

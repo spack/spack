@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPuremagic(PythonPackage):
     """puremagic is a pure python module that will identify a file based off its magic numbers."""

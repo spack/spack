@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bird(AutotoolsPackage):
     """The BIRD project aims to develop a dynamic IP routing daemon with

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlLibxml(PerlPackage):
     """This module is an interface to libxml2, providing XML and HTML parsers

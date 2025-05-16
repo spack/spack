@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RClisymbols(RPackage):
     """Unicode Symbols at the R Prompt.

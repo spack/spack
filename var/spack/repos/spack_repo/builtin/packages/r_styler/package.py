@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RStyler(RPackage):
     """Non-Invasive Pretty Printing of R Code.

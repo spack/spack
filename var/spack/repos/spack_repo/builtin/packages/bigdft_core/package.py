@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class BigdftCore(AutotoolsPackage, CudaPackage):
     """BigDFT-core: the core components of BigDFT, an electronic structure calculation

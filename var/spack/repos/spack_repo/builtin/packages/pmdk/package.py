@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pmdk(Package):
     """The Persistent Memory Development Kit (PMDK), formerly known as NVML,

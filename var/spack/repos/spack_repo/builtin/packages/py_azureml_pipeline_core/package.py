@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlPipelineCore(PythonPackage):
     """Core functionality to enable azureml-pipeline feature."""

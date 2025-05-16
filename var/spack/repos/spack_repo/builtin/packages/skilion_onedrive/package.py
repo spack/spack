@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SkilionOnedrive(MakefilePackage):
     """A complete tool to interact with OneDrive on Linux,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMagick(RPackage):
     """Advanced Graphics and Image-Processing in R.

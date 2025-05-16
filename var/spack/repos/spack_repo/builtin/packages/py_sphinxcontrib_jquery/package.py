@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribJquery(PythonPackage):
     """A sphinx extension which ensure that jQuery is installed with Sphinx."""

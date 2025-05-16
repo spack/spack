@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Aspect(CMakePackage):
     """Parallel and extensible Finite Element code to simulate convection in the

@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Freeipmi(AutotoolsPackage, GNUMirrorPackage):
     """FreeIPMI provides in-band and out-of-band IPMI software based on the IPMI

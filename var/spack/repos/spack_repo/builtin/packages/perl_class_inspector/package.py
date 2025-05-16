@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassInspector(PerlPackage):
     """Get information about a class and its structure"""

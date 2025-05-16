@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gflags(CMakePackage):
     """The gflags package contains a C++ library that implements

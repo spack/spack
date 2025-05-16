@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestBenchmark(PythonPackage):
     """A pytest fixture for benchmarking code."""

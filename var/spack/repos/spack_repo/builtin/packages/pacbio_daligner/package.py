@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PacbioDaligner(MakefilePackage):
     """Daligner: The Dazzler "Overlap" Module. This is a special fork

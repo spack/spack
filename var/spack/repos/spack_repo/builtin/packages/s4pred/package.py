@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class S4pred(Package):
     """A tool for accurate prediction of a protein's secondary structure from only its amino

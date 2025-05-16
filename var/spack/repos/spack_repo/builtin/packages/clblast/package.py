@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Clblast(CMakePackage):
     """CLBlast is a modern, lightweight, performant and tunable OpenCL BLAS

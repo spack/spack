@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xcdf(CMakePackage):
     """Binary data format designed to store data fields with user-specified accuracy."""

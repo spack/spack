@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonJsonLogger(PythonPackage):
     """ "A python library adding a json log formatter."""

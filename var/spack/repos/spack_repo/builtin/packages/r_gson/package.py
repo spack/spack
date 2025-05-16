@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGson(RPackage):
     """Base Class and Methods for 'gson' Format.

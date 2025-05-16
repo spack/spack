@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Psrdada(AutotoolsPackage, CudaPackage):
     """Open source software to process some types of astronomy data."""

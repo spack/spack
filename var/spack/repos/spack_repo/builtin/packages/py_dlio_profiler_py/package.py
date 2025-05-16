@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDlioProfilerPy(PythonPackage):
     """A low-level profiler for capture I/O calls from deep learning applications."""

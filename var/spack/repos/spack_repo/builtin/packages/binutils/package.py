@@ -5,8 +5,11 @@ import os
 import pathlib
 import re
 
-import spack.build_systems.autotools
 from spack.package import *
+
+from ...build_systems import autotools
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
@@ -267,7 +270,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                 assert version in out
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         known_targets = {"x86_64": "x86_64", "aarch64": "aarch64", "ppc64le": "powerpc"}
         known_platforms = {"linux": "linux-gnu", "darwin": "apple-darwin"}

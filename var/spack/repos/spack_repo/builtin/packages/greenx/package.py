@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Greenx(CMakePackage):
     """GreenX: An open-source library that supports exascale implementations

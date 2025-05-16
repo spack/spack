@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bml(CMakePackage):
     """The basic matrix library (bml) is an implementation of various matrix data

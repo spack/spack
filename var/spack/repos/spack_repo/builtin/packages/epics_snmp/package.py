@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class EpicsSnmp(MakefilePackage):
     """This module provides EPICS device-layer support for hardware

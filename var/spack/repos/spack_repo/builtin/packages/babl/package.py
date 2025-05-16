@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Babl(MesonPackage):
     """babl is pixel encoding and color space conversion engine in C.

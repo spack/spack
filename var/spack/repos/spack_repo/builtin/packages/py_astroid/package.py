@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAstroid(PythonPackage):
     """A common base representation of python source code for pylint

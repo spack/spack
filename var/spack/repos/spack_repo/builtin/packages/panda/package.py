@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Panda(CMakePackage):
     """PANDA: Parallel AdjaceNcy Decomposition Algorithm"""

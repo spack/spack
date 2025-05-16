@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBase64enc(RPackage):
     """Tools for base64 encoding.

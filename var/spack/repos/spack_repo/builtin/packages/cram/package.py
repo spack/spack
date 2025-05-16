@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cram(CMakePackage):
     """Cram runs many small MPI jobs inside one large MPI job."""

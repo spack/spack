@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Leveldb(CMakePackage):
     """LevelDB is a fast key-value storage library written at Google

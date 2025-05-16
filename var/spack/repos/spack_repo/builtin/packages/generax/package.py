@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Generax(CMakePackage):
     """GeneRax is a parallel tool for species tree-aware maximum likelihood

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCylp(PythonPackage):
     """A Python interface for CLP, CBC, and CGL.

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Icedtea(AutotoolsPackage):
     """The IcedTea project provides a harness to build the source code from

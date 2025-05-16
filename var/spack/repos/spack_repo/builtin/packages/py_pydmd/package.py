@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydmd(PythonPackage):
     """PyDMD is a Python package that uses Dynamic Mode Decomposition

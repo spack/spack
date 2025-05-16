@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class SstMacro(AutotoolsPackage):
     """The Structural Simulation Toolkit Macroscale Element Library simulates

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJson2html(PythonPackage):
     """Python wrapper to convert JSON into a human readable HTML Table

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCoin(RPackage):
     """Conditional Inference Procedures in a Permutation Test Framework.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpipeline(AutotoolsPackage):
     """libpipeline is a C library for manipulating pipelines of subprocesses

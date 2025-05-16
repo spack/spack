@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dimemas(AutotoolsPackage):
     """High-abstracted network simulator for message-passing programs."""

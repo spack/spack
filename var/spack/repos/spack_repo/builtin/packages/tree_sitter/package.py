@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class TreeSitter(MakefilePackage):
     """Tree-sitter is a parser generator tool and an incremental parsing library.

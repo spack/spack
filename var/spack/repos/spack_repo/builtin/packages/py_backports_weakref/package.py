@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsWeakref(PythonPackage):
     """Backports of new features in Python's weakref module"""

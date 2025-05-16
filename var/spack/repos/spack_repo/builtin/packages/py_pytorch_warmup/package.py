@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytorchWarmup(PythonPackage):
     """This library contains PyTorch implementations of the warmup schedules

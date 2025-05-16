@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GtkorvoDill(CMakePackage):
     """DILL provides instruction-level code generation,

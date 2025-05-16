@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtAppconfiguration(PythonPackage):
     """Microsoft Azure App Configuration Management Client Library for Python."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxJinja2Compat(PythonPackage):
     """Patches Jinja2 v3 to restore compatibility with earlier Sphinx versions."""

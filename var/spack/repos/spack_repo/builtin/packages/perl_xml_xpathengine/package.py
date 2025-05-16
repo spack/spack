@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlXpathengine(PerlPackage):
     """This module provides an XPath engine, that can be re-used by other

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytweening(PythonPackage):
     """A collection of tweening / easing functions implemented

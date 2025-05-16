@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Neve(MakefilePackage):
     """Benchmark to study communication and memory-access performance of graphs."""

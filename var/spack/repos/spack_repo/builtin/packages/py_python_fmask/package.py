@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonFmask(PythonPackage):
     """A set of command line utilities and Python modules that implement

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BamReadcount(CMakePackage):
     """Bam-readcount generates metrics at single nucleotide positions."""

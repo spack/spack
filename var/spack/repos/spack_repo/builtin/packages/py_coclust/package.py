@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCoclust(PythonPackage):
     """Coclust provides both a Python package which implements several diagonal and

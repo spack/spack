@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyflakes(PythonPackage):
     """A simple program which checks Python source files for errors."""

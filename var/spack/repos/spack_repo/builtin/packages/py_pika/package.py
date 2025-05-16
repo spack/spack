@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPika(PythonPackage):
     """Pika is a RabbitMQ (AMQP 0-9-1) client library for Python."""

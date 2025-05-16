@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyperclip(PythonPackage):
     """A cross-platform clipboard module for Python."""

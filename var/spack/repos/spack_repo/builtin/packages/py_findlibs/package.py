@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFindlibs(PythonPackage):
     """A package to search for shared libraries on various platforms."""

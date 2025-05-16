@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CassiniHeaders(Package):
     """This package provides hardware definitions and C headers for use by the

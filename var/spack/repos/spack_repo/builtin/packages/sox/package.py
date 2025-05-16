@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sox(AutotoolsPackage):
     """SoX, the Swiss Army knife of sound processing programs."""

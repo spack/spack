@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Musica(CMakePackage):
     """MUSICA - The multi-scale interface for chemistry and aerosols

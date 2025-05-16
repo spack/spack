@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ocamlbuild(MakefilePackage):
     """OCamlbuild is a generic build tool,

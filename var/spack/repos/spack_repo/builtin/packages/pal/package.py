@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pal(AutotoolsPackage):
     """The PAL library is a partial re-implementation of Pat Wallace's

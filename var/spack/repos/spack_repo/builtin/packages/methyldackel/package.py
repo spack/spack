@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Methyldackel(MakefilePackage):
     """MethylDackel (formerly named PileOMeth, which was a temporary name

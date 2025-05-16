@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RReprex(RPackage):
     """Prepare Reproducible Example Code via the Clipboard.

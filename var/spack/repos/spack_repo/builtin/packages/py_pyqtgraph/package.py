@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyqtgraph(PythonPackage):
     """PyQtGraph is a pure-python graphics and GUI library intended for use in mathematics,

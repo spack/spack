@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Genfit(CMakePackage):
     """GenFit is an experiment-independent framework for track reconstruction in

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class LibpthreadStubs(AutotoolsPackage, XorgPackage):
     """The libpthread-stubs package provides weak aliases for pthread

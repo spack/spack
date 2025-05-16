@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Goaccess(AutotoolsPackage):
     """An open source real-time web log analyzer and interactive viewer that

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogledrivedownloader(PythonPackage):
     """Minimal class to download shared files from Google Drive."""

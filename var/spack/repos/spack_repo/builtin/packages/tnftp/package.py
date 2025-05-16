@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tnftp(AutotoolsPackage):
     """Tnftp is an FTP client. It is the default FTP client included with many

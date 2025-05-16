@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class TclItcl(AutotoolsPackage):
     """[incr Tcl] is the most widely used O-O system for Tcl. The name is a

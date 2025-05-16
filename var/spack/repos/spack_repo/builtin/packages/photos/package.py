@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Photos(AutotoolsPackage):
     """Photos is a Monte Carlo program for bremsstrahlung in the decay

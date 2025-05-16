@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTermgraph(PythonPackage):
     """Command-line tool that draws basic graphs in the terminal, written in

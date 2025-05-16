@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGdgraph(PerlPackage):
     """Graph Plotting Module for Perl 5"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVcfKit(PythonPackage):
     """VCF-kit is a command-line based collection of utilities for performing

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyTerminalTable(RubyPackage):
     """Simple, feature rich ascii table generation library"""

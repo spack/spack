@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Impalajit(CMakePackage):
     """A lightweight JIT compiler for flexible data access in simulation applications.

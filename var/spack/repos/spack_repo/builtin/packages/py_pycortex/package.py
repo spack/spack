@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycortex(PythonPackage):
     """Python Cortical mapping software for fMRI data."""

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sw4(MakefilePackage):
     """SW4 implements substantial capabilities for 3-D seismic modeling."""

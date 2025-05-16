@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFilemagic(PythonPackage):
     """A Python API for libmagic, the library behind the Unix file command"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fasta(MakefilePackage):
     """The FASTA programs find regions of local or global similarity

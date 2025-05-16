@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HipRocclr(CMakePackage):
     """Hip-ROCclr is a virtual device interface that compute runtimes interact

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Detray(CMakePackage):
     """Detray is a description library for high energy physics experiments that

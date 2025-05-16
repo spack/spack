@@ -10,6 +10,9 @@ import tempfile
 import spack.util.environment
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Octave(AutotoolsPackage, GNUMirrorPackage):
     """GNU Octave is a high-level language, primarily intended for numerical

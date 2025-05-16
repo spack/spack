@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRversions(RPackage):
     """Query 'R' Versions, Including 'r-release' and 'r-oldrel'.

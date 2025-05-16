@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMass(RPackage):
     """Support Functions and Datasets for Venables and Ripley's MASS.

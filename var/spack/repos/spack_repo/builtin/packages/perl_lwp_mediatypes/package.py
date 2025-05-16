@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLwpMediatypes(PerlPackage):
     """Guess media type for a file or a URL"""

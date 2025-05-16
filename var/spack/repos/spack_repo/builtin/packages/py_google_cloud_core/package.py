@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogleCloudCore(PythonPackage):
     """Google Cloud API client core library."""

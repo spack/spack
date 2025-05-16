@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Bc(AutotoolsPackage, GNUMirrorPackage):
     """bc is an arbitrary precision numeric processing language. Syntax is

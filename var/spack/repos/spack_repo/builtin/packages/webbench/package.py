@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Webbench(MakefilePackage):
     """Webbench is a simple website pressure test tool used in Linux."""

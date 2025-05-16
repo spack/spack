@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbdSqlite(PerlPackage):
     """DBD::SQLite - Self-contained RDBMS in a DBI Driver"""

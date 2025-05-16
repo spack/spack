@@ -4,9 +4,11 @@
 
 import re
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
 from spack.package import *
+
+from ...build_systems import cmake, makefile
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.makefile import MakefilePackage
 
 variant_map_common = {
     "netcdf3": "USE_NETCDF3",
@@ -207,7 +209,7 @@ class Wgrib2(MakefilePackage, CMakePackage):
         return (flags, None, None)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     # Disable parallel build
     parallel = False
 
@@ -219,7 +221,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     # Disable parallel build
     parallel = False
 

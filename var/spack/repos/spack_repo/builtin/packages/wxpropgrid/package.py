@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Wxpropgrid(Package, SourceforgePackage):
     """wxPropertyGrid is a property sheet control for wxWidgets. In

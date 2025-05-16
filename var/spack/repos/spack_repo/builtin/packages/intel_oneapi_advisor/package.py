@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.oneapi import IntelOneApiLibraryPackageWithSdk, IntelOneApiPackage
+
 
 @IntelOneApiPackage.update_description
 class IntelOneapiAdvisor(IntelOneApiLibraryPackageWithSdk):

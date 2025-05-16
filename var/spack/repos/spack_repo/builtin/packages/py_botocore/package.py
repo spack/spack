@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBotocore(PythonPackage):
     """Low-level, data-driven core of boto 3."""

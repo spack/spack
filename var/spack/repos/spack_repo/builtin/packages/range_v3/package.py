@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RangeV3(CMakePackage):
     """Range v3 forms the basis of a proposal to add range support to the

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rockstar(MakefilePackage):
     """The Rockstar Halo Finder"""

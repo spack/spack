@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class OmegaH(CMakePackage, CudaPackage):
     """Omega_h is a C++11 library providing data structures and algorithms

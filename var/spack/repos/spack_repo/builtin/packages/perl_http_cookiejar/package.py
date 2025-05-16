@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHttpCookiejar(PerlPackage):
     """A minimalist HTTP user agent cookie jar"""

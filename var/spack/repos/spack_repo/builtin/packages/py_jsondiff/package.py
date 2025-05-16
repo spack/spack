@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsondiff(PythonPackage):
     """Diff JSON and JSON-like structures in Python."""

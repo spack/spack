@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveQuaternion(OctavePackage, SourceforgePackage):
     """Quaternion package for GNU Octave,

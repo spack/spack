@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xfd(AutotoolsPackage, XorgPackage):
     """xfd - display all the characters in a font using either the

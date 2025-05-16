@@ -5,6 +5,8 @@ from typing import List
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribJsmath(PythonPackage):
     """A sphinx extension which renders display math in HTML via JavaScript."""

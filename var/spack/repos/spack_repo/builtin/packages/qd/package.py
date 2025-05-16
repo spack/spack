@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Qd(AutotoolsPackage):
     """C++/Fortran-90 double-double and quad-double package.

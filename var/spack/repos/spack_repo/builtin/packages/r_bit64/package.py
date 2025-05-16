@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBit64(RPackage):
     """A S3 Class for Vectors of 64bit Integers.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCmseq(PythonPackage):
     """CMSeq is a set of commands to provide an interface

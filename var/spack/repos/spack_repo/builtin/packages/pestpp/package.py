@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pestpp(CMakePackage):
     """PEST++ is a software suite aimed at supporting complex numerical

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVersioneer518(PythonPackage):
     """Versioneer is a tool to automatically update version strings by

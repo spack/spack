@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestMore(PerlPackage):
     """Test2 is a new testing framework produced by forking Test::Builder,

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Archer(CMakePackage):
     """ARCHER, a data race detection tool for large OpenMP applications."""

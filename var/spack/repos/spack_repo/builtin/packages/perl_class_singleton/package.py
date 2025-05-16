@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassSingleton(PerlPackage):
     """Class::Singleton - Implementation of a "Singleton" class"""

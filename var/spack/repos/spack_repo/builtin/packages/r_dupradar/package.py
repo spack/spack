@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDupradar(RPackage):
     """Assessment of duplication rates in RNA-Seq datasets"""

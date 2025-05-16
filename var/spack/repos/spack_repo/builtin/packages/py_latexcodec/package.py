@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLatexcodec(PythonPackage):
     """A lexer and codec to work with LaTeX code in Python."""

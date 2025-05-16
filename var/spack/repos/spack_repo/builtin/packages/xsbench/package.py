@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xsbench(MakefilePackage, CudaPackage):
     """XSBench is a mini-app representing a key computational

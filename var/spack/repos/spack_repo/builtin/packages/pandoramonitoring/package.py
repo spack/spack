@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pandoramonitoring(CMakePackage):
     """ROOT-based Event Visualisation Environment for Pandora with

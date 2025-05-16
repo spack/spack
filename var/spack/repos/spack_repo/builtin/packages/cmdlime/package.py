@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cmdlime(CMakePackage):
     """cmdlime is a C++17 header-only library for command line parsing that

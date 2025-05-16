@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Openstf(MakefilePackage):
     """OpenSTF is an electrostatic field simulator which can calculate

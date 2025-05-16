@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQpsolvers(PythonPackage):
     """Unified interface to convex Quadratic Programming (QP) solvers available in

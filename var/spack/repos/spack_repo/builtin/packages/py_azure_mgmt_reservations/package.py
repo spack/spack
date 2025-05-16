@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtReservations(PythonPackage):
     """Microsoft Azure Reservations Client Library for Python."""

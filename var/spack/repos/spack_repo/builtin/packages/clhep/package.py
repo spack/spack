@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Clhep(CMakePackage):
     """CLHEP is a C++ Class Library for High Energy Physics."""

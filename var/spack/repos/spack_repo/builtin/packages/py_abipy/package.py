@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAbipy(PythonPackage):
     """Python package to automate ABINIT calculations and analyze

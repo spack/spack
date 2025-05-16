@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Armcimpi(AutotoolsPackage):
     """ARMCI-MPI is an implementation of the ARMCI library used by Global Arrays.

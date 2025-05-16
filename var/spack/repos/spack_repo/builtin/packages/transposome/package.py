@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class Transposome(PerlPackage):
     """A toolkit for annotation of transposable element families from

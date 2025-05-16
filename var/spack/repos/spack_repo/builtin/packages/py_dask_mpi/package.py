@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDaskMpi(PythonPackage):
     """Deploying Dask using MPI4Py."""

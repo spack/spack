@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class DocbookXsl(Package):
     """DocBook XSLT 1.0 Stylesheets."""

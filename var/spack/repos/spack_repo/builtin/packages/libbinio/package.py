@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libbinio(AutotoolsPackage):
     """Platform-independent way to access binary data streams in C++."""

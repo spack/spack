@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMrinstruments(RPackage):
     """Data sources for genetic instruments to be used in MR.

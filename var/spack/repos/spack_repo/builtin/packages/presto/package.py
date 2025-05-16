@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Presto(MavenPackage):
     """Presto is a distributed SQL query engine for big data."""

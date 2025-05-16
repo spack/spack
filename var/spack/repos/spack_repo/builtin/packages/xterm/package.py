@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xterm(AutotoolsPackage):
     """The xterm program is a terminal emulator for the X Window System. It

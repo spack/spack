@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class GitFatGit(Package):
     """Simple way to handle fat files without committing them to git, supports

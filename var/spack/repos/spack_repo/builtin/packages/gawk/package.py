@@ -5,6 +5,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gawk(AutotoolsPackage, GNUMirrorPackage):
     """If you are like many computer users, you would frequently like to make

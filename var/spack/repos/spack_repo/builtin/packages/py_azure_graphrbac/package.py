@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureGraphrbac(PythonPackage):
     """Microsoft Azure Graph RBAC Client Library for Python."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyhull(PythonPackage):
     """Pyhull is a Python wrapper to Qhull (http://www.qhull.org/) for the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Graphmap(MakefilePackage):
     """A highly sensitive and accurate mapper for long, error-prone reads"""

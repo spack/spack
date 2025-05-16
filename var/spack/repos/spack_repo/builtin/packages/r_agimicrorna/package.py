@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAgimicrorna(RPackage):
     """Processing and Differential Expression Analysis of Agilent microRNA

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitsOdes(PythonPackage):
     """Odes is a scikit toolkit for scipy to add extra ode solvers.

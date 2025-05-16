@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDevelOverloadinfo(PerlPackage):
     """Returns information about overloaded operators for a given class"""

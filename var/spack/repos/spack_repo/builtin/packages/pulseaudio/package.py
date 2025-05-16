@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pulseaudio(AutotoolsPackage):
     """PulseAudio is a sound system for POSIX OSes, meaning that it is a proxy

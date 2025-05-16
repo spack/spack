@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nanomsg(CMakePackage):
     """The nanomsg library is a simple high-performance

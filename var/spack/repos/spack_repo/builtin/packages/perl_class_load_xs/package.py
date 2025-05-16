@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassLoadXs(PerlPackage):
     """This module provides an XS implementation for portions of

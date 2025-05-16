@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xfce4Appfinder(AutotoolsPackage):
     """Program to find and launch installed applications for XFCE4"""

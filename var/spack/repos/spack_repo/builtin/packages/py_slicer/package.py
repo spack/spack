@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySlicer(PythonPackage):
     """slicer wraps tensor-like objects and provides a uniform slicing interface via __getitem__"""

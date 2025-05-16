@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPid(PythonPackage):
     """Pidfile featuring stale detection and file-locking, can also be

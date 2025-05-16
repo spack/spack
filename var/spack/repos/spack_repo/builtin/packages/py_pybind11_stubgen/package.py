@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybind11Stubgen(PythonPackage):
     """Generates stubs for pybind11-wrapped python modules"""

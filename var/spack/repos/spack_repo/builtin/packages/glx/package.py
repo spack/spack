@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Glx(BundlePackage):
     """Shim package for the GLX library."""

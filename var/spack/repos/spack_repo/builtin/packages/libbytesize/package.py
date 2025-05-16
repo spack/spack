@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libbytesize(AutotoolsPackage):
     """The goal of this project is to provide a tiny library that would

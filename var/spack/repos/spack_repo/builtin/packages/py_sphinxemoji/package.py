@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxemoji(PythonPackage):
     """An extension to use emoji codes in your Sphinx documentation!"""

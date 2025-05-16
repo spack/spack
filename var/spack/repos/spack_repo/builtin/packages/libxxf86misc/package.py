@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxxf86misc(AutotoolsPackage, XorgPackage):
     """libXxf86misc - Extension library for the XFree86-Misc X extension."""

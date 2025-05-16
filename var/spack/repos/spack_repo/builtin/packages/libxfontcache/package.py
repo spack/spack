@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxfontcache(AutotoolsPackage, XorgPackage):
     """Xfontcache - X-TrueType font cache extension client library."""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class KaksCalculator(MakefilePackage, SourceforgePackage):
     """KaKs_Calculator adopts model selection and model averaging to calculate

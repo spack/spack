@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Amdsmi(CMakePackage):
     """The AMD System Management Interface Library, or AMD SMI library,

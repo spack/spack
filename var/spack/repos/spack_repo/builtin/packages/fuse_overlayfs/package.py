@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class FuseOverlayfs(AutotoolsPackage):
     """An implementation of overlay+shiftfs in FUSE for rootless containers."""

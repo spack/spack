@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureCosmos(PythonPackage):
     """Microsoft Azure Cosmos Client Library for Python."""

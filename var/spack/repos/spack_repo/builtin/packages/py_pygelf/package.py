@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygelf(PythonPackage):
     """Python logging handlers with GELF (Graylog Extended Log Format)

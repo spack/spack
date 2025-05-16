@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Barvinok(AutotoolsPackage):
     """barvinok is a library for counting the number of integer points in parametric and

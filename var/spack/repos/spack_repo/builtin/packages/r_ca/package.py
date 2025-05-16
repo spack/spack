@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCa(RPackage):
     """Simple, Multiple and Joint Correspondence Analysis.

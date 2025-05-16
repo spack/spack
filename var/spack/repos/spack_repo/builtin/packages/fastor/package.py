@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fastor(CMakePackage):
     """Fastor is a lightweight high performance tensor algebra framework

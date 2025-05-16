@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGitReview(PythonPackage):
     """git-review is a tool that helps submitting git branches to gerrit"""

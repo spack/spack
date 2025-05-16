@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEzSetup(PythonPackage):
     """Setuptools bootstrap module, which is not always packaged with

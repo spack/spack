@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class KokkosNvccWrapper(Package):
     """The NVCC wrapper provides a wrapper around NVCC to make it a

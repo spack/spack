@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cupla(Package):
     """C++ User interface for the Platform independent Library Alpaka"""

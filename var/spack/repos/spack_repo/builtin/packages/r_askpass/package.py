@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAskpass(RPackage):
     """Safe Password Entry for R, Git, and SSH.

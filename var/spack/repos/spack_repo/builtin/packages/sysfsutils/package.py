@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sysfsutils(AutotoolsPackage):
     """This package's purpose is to provide a set of utilities for interfacing

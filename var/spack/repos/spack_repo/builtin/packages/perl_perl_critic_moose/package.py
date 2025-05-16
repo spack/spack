@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPerlCriticMoose(PerlPackage):
     """Policies for Perl::Critic concerned with using Moose"""

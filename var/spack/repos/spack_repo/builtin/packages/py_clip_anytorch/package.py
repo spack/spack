@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyClipAnytorch(PythonPackage):
     """CLIP (Contrastive Language-Image Pre-Training) is a neural network

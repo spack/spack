@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchvision(PythonPackage):
     """Image and video datasets and models for torch deep learning."""

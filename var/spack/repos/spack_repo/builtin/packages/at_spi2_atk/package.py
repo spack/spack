@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class AtSpi2Atk(MesonPackage):
     """The At-Spi2 Atk package contains a library that bridges ATK to

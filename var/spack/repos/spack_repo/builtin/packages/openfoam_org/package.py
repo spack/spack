@@ -40,6 +40,7 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
 from ..openfoam.package import (
     OpenfoamArch,
     add_extra_files,

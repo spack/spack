@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIrkernel(RPackage):
     """Native R Kernel for the 'Jupyter Notebook'.

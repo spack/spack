@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlit(PythonPackage):
     """Flit is a simple way to put Python packages and modules on PyPI."""

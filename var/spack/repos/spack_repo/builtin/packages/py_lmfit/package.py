@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLmfit(PythonPackage):
     """Least-Squares Minimization with Bounds and Constraints"""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class LibpressioNvcomp(CMakePackage, CudaPackage):
     """LibPressio Bindings for NVCOMP"""

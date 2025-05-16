@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Phylip(Package):
     """PHYLIP (the PHYLogeny Inference Package) is a package of programs for

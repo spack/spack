@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTestresources(PythonPackage):
     """Testresources, a pyunit extension for managing expensive test resources."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySdmetrics(PythonPackage):
     """The SDMetrics library provides a set of dataset-agnostic

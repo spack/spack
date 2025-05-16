@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xcalc(AutotoolsPackage, XorgPackage):
     """xcalc is a scientific calculator X11 client that can emulate a TI-30

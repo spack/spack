@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExecnet(PythonPackage):
     """execnet provides a share-nothing model with channel-send/receive

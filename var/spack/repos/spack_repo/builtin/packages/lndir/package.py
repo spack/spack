@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Lndir(AutotoolsPackage, XorgPackage):
     """lndir - create a shadow directory of symbolic links to another

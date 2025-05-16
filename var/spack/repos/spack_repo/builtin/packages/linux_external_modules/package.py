@@ -6,6 +6,8 @@ from shutil import copy2
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class LinuxExternalModules(MakefilePackage):
     """The Linux kernel provides services to start and stop programs,

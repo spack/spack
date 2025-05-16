@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBiomformat(RPackage):
     """An interface package for the BIOM file format.

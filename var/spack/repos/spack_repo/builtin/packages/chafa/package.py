@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Chafa(AutotoolsPackage):
     """A library and command-line utility that converts image data, including

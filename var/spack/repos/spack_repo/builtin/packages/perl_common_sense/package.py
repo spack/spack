@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCommonSense(PerlPackage):
     """Save a tree AND a kitten, use common::sense!"""

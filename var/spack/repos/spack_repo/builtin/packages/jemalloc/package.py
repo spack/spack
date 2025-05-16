@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jemalloc(AutotoolsPackage):
     """jemalloc is a general purpose malloc(3) implementation that emphasizes

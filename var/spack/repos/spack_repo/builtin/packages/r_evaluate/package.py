@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class REvaluate(RPackage):
     """Parsing and Evaluation Tools that Provide More Details than the Default.

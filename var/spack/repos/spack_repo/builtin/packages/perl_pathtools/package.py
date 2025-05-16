@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPathtools(PerlPackage):
     """File::Spec - portably perform operations on file names."""

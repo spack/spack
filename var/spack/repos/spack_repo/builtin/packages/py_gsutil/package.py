@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGsutil(PythonPackage):
     """A command line tool for interacting with cloud storage services."""

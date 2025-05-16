@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Goma(CMakePackage):
     """A Full-Newton Finite Element Program for Free and Moving Boundary Problems with

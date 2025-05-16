@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyObspy(PythonPackage):
     """ObsPy is an open-source project dedicated to provide a Python

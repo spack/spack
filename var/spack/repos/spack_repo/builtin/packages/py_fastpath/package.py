@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastpath(PythonPackage):
     """Fastpath is a fast and lightweight tool for finding the shortest path in

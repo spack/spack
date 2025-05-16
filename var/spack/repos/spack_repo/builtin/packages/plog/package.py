@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Plog(CMakePackage):
     """Portable, simple and extensible C++ logging library."""

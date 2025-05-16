@@ -6,6 +6,10 @@
 import spack.variant
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     """hipFFT is an FFT marshalling library. Currently, hipFFT supports

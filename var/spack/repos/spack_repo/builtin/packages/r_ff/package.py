@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFf(RPackage):
     """Memory-Efficient Storage of Large Data on Disk and Fast Access

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGpaw(PythonPackage):
     """GPAW is a density-functional theory (DFT) Python code based on the

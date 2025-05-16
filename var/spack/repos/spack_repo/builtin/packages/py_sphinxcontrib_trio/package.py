@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribTrio(PythonPackage):
     """This sphinx extension helps you document Python code that uses

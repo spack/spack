@@ -3,8 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack.build_systems.makefile
 from spack.package import *
+
+from ...build_systems import makefile
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.makefile import MakefilePackage
 
 
 class Alpgen(CMakePackage, MakefilePackage):
@@ -49,7 +52,7 @@ class Alpgen(CMakePackage, MakefilePackage):
             copy(join_path(os.path.dirname(__file__), "cms_install.sh"), "cms_install.sh")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     def build(self, pkg, spec, prefix):
         bash = which("bash")
         bash("./cms_build.sh")

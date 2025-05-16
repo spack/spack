@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygtrie(PythonPackage):
     """A pure Python implementation of a trie data structure."""

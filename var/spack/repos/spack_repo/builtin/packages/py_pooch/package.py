@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPooch(PythonPackage):
     """Pooch manages your Python library's sample data files: it automatically

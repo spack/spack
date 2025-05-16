@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTxdbHsapiensUcscHg19Knowngene(RPackage):
     """Annotation package for TxDb object(s).

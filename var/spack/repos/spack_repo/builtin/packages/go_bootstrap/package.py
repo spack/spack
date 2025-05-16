@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 # THIS PACKAGE SHOULD NOT EXIST
 # it exists to make up for the inability to:
 # * use an external go compiler

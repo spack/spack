@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGfal2Python(PythonPackage):
     """Python2 and 3 bindings for gfal2."""

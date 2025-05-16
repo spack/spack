@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoAll(PerlPackage):
     """IO::All combines all of the best Perl IO modules into a single nifty

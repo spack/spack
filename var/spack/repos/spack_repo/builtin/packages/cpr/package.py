@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cpr(CMakePackage):
     """C++ Requests: Curl for People, a spiritual port of Python Requests."""

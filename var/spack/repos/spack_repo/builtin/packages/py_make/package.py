@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMake(PythonPackage):
     """Create project layout from jinja2 templates"""

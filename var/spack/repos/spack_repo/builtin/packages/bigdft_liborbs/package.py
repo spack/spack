@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class BigdftLiborbs(AutotoolsPackage, CudaPackage):
     """BigDFT-liborbs: a library for orbital treatments in DFT."""

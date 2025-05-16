@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZipfileDeflate64(PythonPackage):
     """Extract Deflate64 ZIP archives with Python's zipfile API."""

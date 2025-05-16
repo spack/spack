@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynisher(PythonPackage):
     """A small Python library to limit the resources used by a

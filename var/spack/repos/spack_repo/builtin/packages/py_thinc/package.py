@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyThinc(PythonPackage):
     """Thinc: Practical Machine Learning for NLP in Python."""

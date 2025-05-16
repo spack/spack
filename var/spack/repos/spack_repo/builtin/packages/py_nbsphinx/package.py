@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNbsphinx(PythonPackage):
     """nbsphinx is a Sphinx extension that provides a source parser for

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Elmerfem(CMakePackage):
     """Elmer is an open source multiphysical simulation software. It

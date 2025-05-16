@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIbmWatson(PythonPackage):
     """Python client library to quickly get started with

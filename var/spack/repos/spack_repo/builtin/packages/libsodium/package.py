@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsodium(AutotoolsPackage):
     """Sodium is a modern, easy-to-use software library for encryption,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsBasix(PythonPackage):
     """Python interface to Basix, a finite element definition and tabulation runtime library"""

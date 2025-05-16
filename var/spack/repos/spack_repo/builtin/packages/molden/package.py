@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Molden(MakefilePackage):
     """A package for displaying Molecular Density from various

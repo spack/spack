@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libtirpc(AutotoolsPackage):
     """Libtirpc is a port of Suns Transport-Independent RPC library to Linux."""

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dsdp(MakefilePackage):
     """The DSDP software is a free open source implementation of an

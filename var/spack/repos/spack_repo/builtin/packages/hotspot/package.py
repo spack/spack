@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hotspot(MakefilePackage):
     """HotSpot is an accurate and fast thermal model suitable for use ini

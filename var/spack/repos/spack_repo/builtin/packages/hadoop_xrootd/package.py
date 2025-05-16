@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class HadoopXrootd(MavenPackage):
     """Connector between Hadoop and XRootD protocols (EOS compatible)."""

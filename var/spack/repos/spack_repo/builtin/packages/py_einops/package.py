@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEinops(PythonPackage):
     """Flexible and powerful tensor operations for readable and reliable code.

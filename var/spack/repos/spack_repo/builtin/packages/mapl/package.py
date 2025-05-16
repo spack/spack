@@ -6,6 +6,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mapl(CMakePackage):
     """

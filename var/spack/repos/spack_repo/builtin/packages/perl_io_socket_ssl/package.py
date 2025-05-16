@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoSocketSsl(PerlPackage):
     """SSL sockets with IO::Socket interface"""

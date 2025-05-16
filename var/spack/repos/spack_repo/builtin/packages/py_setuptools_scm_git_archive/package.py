@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySetuptoolsScmGitArchive(PythonPackage):
     """This is a setuptools_scm plugin that adds support for git archives

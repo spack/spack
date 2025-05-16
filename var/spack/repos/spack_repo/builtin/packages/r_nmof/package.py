@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNmof(RPackage):
     """Numerical Methods and Optimization in Finance.

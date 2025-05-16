@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Parflow(CMakePackage):
     """ParFlow is an open-source parallel watershed simulator which

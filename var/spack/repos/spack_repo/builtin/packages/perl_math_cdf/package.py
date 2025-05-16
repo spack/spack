@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathCdf(PerlPackage):
     """Generate probabilities and quantiles from several statistical

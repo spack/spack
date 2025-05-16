@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class SqliteJdbc(MavenPackage):
     """SQLite JDBC, developed by Taro L. Saito, is a library for accessing

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPathPy(PythonPackage):
     """A module wrapper for os.path"""

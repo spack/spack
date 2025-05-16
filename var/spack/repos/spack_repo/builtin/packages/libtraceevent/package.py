@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libtraceevent(MakefilePackage):
     """Library to parse raw trace event formats."""

@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Repeatmasker(Package):
     """RepeatMasker is a program that screens DNA sequences for interspersed

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestMock(PythonPackage):
     """Thin-wrapper around the mock package for easier use with py.test"""

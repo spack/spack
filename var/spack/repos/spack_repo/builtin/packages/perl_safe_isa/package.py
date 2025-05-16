@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSafeIsa(PerlPackage):
     """Call isa, can, does and DOES safely on things that may not be objects"""

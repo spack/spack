@@ -6,6 +6,9 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyAlphafold(PythonPackage, CudaPackage):
     """AlphaFold is an AI system developed by DeepMind that predicts a

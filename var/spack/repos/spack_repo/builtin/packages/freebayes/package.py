@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Freebayes(MesonPackage):
     """Bayesian haplotype-based genetic polymorphism discovery and

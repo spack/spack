@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCffconvert(PythonPackage):
     """Command line program to validate and convert CITATION.cff files."""

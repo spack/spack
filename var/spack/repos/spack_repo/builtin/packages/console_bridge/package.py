@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ConsoleBridge(CMakePackage):
     """console_bridge is a ROS-independent, pure CMake (i.e.

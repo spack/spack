@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyM2r(PythonPackage):
     """M2R converts a markdown file including reStructuredText (rst) markups to

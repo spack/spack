@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyS3fs(PythonPackage):
     """S3FS builds on aiobotocore to provide a convenient Python filesystem

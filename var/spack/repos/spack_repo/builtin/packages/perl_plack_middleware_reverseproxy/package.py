@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPlackMiddlewareReverseproxy(PerlPackage):
     """Supports app to run as a reverse proxy backend"""

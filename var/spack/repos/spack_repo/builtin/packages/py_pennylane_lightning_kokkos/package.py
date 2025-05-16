@@ -1,9 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.cmake
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems import cmake
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonExtension, PythonPipBuilder
+from ...build_systems.rocm import ROCmPackage
 
 
 class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROCmPackage):
@@ -107,7 +111,7 @@ class PyPennylaneLightningKokkos(CMakePackage, PythonExtension, CudaPackage, ROC
         return f"https://github.com/PennyLaneAI/pennylane-lightning{extra}/archive/refs/tags/v{version}.tar.gz"
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     build_directory = "build"
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

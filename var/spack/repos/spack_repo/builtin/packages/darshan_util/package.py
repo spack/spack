@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class DarshanUtil(AutotoolsPackage):
     """Darshan (util) is collection of tools for parsing and summarizing log

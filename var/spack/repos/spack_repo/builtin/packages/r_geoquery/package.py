@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGeoquery(RPackage):
     """Get data from NCBI Gene Expression Omnibus (GEO).

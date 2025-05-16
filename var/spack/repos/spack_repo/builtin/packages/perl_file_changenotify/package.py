@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileChangenotify(PerlPackage):
     """Watch for changes to files, cross-platform style"""

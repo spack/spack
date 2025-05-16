@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLittleutils(PythonPackage):
     """Small personal collection of python utility functions, partly just for

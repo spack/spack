@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class UnittestCpp(CMakePackage):
     """UnitTest++ is a lightweight unit testing framework for C++. It was

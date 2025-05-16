@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtAdvisor(PythonPackage):
     """Microsoft Azure Advisor Client Library for Python."""

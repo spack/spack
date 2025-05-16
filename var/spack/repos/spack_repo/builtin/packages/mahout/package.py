@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Mahout(MavenPackage):
     """The Apache Mahout project's goal is to build an environment for

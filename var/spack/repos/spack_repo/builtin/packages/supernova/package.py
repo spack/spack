@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Supernova(Package):
     """Supernova is a software package for de novo assembly from Chromium

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDotcall64(RPackage):
     """Enhanced Foreign Function Interface Supporting Long

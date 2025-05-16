@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyInterfaceMeta(PythonPackage):
     """A convenient way to expose an extensible API with enforced method

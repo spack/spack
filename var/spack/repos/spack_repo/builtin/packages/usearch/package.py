@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Usearch(MakefilePackage):
     """USEARCH is a unique sequence analysis tool with thousands of users

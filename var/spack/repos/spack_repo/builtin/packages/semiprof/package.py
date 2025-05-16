@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Semiprof(CMakePackage):
     """Simple thread safe annotation based C++ profiler."""

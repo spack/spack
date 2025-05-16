@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Shamrock(CMakePackage):
     """The Shamrock exascale framework for astrophysics"""

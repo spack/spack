@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAtpublic(PythonPackage):
     """This library provides two very simple decorators that document

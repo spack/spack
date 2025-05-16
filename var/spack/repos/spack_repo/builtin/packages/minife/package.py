@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minife(MakefilePackage):
     """Proxy Application. MiniFE is an proxy application

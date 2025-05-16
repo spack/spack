@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Grep(AutotoolsPackage, GNUMirrorPackage):
     """Grep searches one or more input files for lines containing a match to

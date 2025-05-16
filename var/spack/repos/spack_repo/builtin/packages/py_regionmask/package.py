@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRegionmask(PythonPackage):
     """Create masks of geospatial regions for arbitrary grids"""

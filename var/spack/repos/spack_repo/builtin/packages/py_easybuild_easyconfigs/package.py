@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEasybuildEasyconfigs(PythonPackage):
     """Collection of easyconfig files for EasyBuild, a software build and

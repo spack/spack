@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonSocketio(PythonPackage):
     """Python implementation of the Socket.IO realtime server."""

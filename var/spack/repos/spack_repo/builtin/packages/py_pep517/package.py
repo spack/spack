@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPep517(PythonPackage):
     """Wrappers to build Python packages using PEP 517 hooks."""

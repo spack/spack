@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpacy(PythonPackage):
     """spaCy is a library for advanced Natural Language Processing in

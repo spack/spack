@@ -5,6 +5,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class XsdkExamples(CMakePackage, CudaPackage, ROCmPackage):
     """xSDK Examples show usage of libraries in the xSDK package."""

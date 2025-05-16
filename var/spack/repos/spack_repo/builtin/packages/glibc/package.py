@@ -7,6 +7,9 @@ import os
 from spack.package import *
 from spack.util.elf import delete_rpath
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Glibc(AutotoolsPackage, GNUMirrorPackage):
     """The GNU C Library provides many of the low-level components used

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Orthofiller(Package):
     """OrthoFiller: Identifying missing annotations for evolutionarily

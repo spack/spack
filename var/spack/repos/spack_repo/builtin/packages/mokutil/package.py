@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mokutil(AutotoolsPackage):
     """The utility to manipulate machines owner keys which managed in shim."""

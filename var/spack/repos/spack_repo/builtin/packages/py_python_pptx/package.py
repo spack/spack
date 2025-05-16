@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonPptx(PythonPackage):
     """Generate and manipulate Open XML PowerPoint (.pptx) files."""

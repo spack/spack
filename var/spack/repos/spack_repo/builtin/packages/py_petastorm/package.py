@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPetastorm(PythonPackage):
     """Petastorm is a library enabling the use of Parquet storage from

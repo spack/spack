@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OrTools(CMakePackage):
     """This project hosts operations research tools developed at

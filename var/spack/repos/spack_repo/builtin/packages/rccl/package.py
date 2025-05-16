@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Rccl(CMakePackage):
     """RCCL (pronounced "Rickle") is a stand-alone library

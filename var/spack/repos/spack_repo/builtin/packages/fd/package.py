@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Fd(CargoPackage):
     """fd is a program to find entries in your filesystem. It is a simple, fast

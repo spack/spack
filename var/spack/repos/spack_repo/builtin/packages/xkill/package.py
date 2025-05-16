@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xkill(AutotoolsPackage, XorgPackage):
     """xkill is a utility for forcing the X server to close connections to

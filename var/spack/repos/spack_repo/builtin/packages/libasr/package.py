@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libasr(AutotoolsPackage):
     """libasr is a free, simple and portable asynchronous resolver library."""

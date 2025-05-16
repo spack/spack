@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Umap(CMakePackage):
     """Umap is a library that provides an mmap()-like interface to a

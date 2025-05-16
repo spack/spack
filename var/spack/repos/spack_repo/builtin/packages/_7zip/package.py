@@ -10,6 +10,9 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class _7zip(SourceforgePackage, Package):
     """7-Zip is a file archiver for Windows"""

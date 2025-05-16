@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class H5bench(CMakePackage):
     """A benchmark suite for measuring HDF5 performance."""

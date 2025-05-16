@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxdmcp(AutotoolsPackage, XorgPackage):
     """libXdmcp - X Display Manager Control Protocol library."""

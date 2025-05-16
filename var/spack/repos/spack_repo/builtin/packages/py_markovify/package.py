@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMarkovify(PythonPackage):
     """Markovify is a simple, extensible Markov chain generator. Right

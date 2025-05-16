@@ -7,6 +7,8 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Wps(Package):
     """The Weather Research and Forecasting Pre-Processing System (WPS)"""

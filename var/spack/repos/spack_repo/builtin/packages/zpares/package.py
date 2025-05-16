@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Zpares(MakefilePackage):
     """z-Pares is designed to compute a few eigenvalues

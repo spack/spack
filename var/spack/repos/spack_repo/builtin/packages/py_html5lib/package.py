@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHtml5lib(PythonPackage):
     """HTML parser based on the WHATWG HTML specification."""

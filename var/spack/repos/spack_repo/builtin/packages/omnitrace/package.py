@@ -6,6 +6,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Omnitrace(CMakePackage):
     """Application Profiling, Tracing, and Analysis"""

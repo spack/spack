@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RScran(RPackage):
     """Methods for Single-Cell RNA-Seq Data Analysis.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Prokka(Package):
     """Prokka is a software tool to annotate bacterial, archaeal and viral

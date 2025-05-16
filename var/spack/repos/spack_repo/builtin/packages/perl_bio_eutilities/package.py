@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioEutilities(PerlPackage):
     """BioPerl low-level API for retrieving and storing data from NCBI eUtils"""

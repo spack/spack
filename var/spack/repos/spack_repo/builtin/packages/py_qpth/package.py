@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQpth(PythonPackage):
     """A fast and differentiable QP solver for PyTorch"""

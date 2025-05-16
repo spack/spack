@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Boxlib(CMakePackage):
     """BoxLib, a software framework for massively parallel

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcpparmadillo(RPackage):
     """'Rcpp' Integration for the 'Armadillo' Templated Linear Algebra Library.

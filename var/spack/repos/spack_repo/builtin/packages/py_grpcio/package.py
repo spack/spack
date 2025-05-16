@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrpcio(PythonPackage):
     """HTTP/2-based RPC framework."""

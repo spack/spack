@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Difftastic(CargoPackage):
     """Difftastic is a structural diff tool that compares files based on their syntax."""

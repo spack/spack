@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySetuptoolsGit(PythonPackage):
     """Setuptools revision control system plugin for Git"""

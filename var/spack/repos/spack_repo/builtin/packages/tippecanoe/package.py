@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tippecanoe(MakefilePackage):
     """Build vector tilesets from large collections of GeoJSON features."""

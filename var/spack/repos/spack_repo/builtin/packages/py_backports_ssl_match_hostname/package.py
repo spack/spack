@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsSslMatchHostname(PythonPackage):
     """The ssl.match_hostname() function from Python 3.5"""

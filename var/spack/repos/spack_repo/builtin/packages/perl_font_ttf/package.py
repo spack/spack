@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFontTtf(PerlPackage):
     """Perl module for TrueType Font hacking"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Pango(MesonPackage):
     """Pango is a library for laying out and rendering of text, with

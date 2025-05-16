@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Opdilib(Package):
     """OpDiLib (Open Multiprocessing Differentiation Library) is a universal add-on for

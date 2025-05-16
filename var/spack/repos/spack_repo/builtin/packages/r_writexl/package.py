@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RWritexl(RPackage):
     """Zero-dependency data frame to xlsx exporter based on 'libxlsxwriter'.

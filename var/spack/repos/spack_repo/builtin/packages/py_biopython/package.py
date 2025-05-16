@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiopython(PythonPackage):
     """A distributed collaborative effort to develop Python libraries and

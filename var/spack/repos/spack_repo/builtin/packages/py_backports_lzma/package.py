@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsLzma(PythonPackage):
     """Backport of Python 3.3's standard library module

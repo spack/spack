@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycparser(PythonPackage):
     """A complete parser of the C language, written in pure python."""

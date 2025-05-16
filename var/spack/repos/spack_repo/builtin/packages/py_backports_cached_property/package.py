@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsCachedProperty(PythonPackage):
     """cached_property() - computed once per instance, cached as attribute"""

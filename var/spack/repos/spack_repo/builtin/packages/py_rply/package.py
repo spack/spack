@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRply(PythonPackage):
     """A pure Python Lex/Yacc that works with RPython."""

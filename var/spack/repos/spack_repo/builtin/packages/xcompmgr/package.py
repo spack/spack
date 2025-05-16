@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xcompmgr(AutotoolsPackage, XorgPackage):
     """xcompmgr is a sample compositing manager for X servers supporting the

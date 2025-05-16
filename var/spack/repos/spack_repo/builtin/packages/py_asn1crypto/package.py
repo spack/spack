@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsn1crypto(PythonPackage):
     """Python ASN.1 library with a focus on performance and a pythonic API"""

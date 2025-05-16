@@ -9,6 +9,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class VisitMfem(CMakePackage):
     """This is the MFEM Plug-In for VisIt.

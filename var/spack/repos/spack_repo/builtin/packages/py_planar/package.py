@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlanar(PythonPackage):
     """2D planar geometry library for Python."""

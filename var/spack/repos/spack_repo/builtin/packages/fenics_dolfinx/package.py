@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FenicsDolfinx(CMakePackage):
     """Next generation FEniCS problem solving environment"""

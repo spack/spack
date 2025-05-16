@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Migrate(AutotoolsPackage):
     """Migrate estimates effective population sizes and past migration rates

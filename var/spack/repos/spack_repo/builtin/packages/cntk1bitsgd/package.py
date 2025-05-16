@@ -6,6 +6,8 @@ from os import listdir
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cntk1bitsgd(Package):
     """CNTK1bitSGD is the header-only

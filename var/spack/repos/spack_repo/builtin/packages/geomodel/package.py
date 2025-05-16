@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Geomodel(CMakePackage):
     """GeoModel is a user-friendly C++ Toolkit and Suite for

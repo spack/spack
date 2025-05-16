@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Orthofinder(Package):
     """OrthoFinder is a fast, accurate and comprehensive analysis tool for

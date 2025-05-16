@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAdal(PythonPackage):
     """The ADAL for Python library makes it easy for python application to

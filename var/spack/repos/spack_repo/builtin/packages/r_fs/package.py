@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFs(RPackage):
     """Cross-Platform File System Operations Based on 'libuv'.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTifffile(PythonPackage):
     """Read and write image data from and to TIFF files."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyicu(PythonPackage):
     """Python extension wrapping the ICU C++ API"""

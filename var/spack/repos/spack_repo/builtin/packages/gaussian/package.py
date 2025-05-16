@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gaussian(Package):
     """Gaussian is a computer program for computational chemistry"""

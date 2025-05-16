@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Yoda(AutotoolsPackage):
     """YODA - Yet more Objects for Data Analysis"""

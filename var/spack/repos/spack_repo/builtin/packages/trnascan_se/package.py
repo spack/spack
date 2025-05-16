@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class TrnascanSe(AutotoolsPackage):
     """Seaching for tRNA genes in genomic sequence"""

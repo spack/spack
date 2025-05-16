@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xcmsdb(AutotoolsPackage, XorgPackage):
     """xcmsdb is used to load, query, or remove Device Color Characterization

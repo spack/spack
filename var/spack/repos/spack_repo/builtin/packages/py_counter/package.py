@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCounter(PythonPackage):
     """Counter package defines the "counter.Counter" class similar to

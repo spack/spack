@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4ndl(Package):
     """Geant4 Neutron data files with thermal cross sections"""

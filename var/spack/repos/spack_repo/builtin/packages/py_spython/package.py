@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpython(PythonPackage):
     """The Python API for working with Singularity containers."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class MypaintBrushes(AutotoolsPackage):
     """Brushes used by MyPaint and other software using libmypaint."""

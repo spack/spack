@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Uthash(Package):
     """C macros for hash tables and more."""

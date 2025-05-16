@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonEngineio(PythonPackage):
     """Engine.IO is the implementation of transport-based

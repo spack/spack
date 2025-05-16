@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Flash(MakefilePackage):
     """FLASH (Fast Length Adjustment of SHort reads) is a very

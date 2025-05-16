@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXlwt(PythonPackage):
     """Library to create spreadsheet files compatible with

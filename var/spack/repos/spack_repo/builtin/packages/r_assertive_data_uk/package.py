@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAssertiveDataUk(RPackage):
     """Assertions to Check Properties of Strings.

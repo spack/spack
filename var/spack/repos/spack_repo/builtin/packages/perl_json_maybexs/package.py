@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlJsonMaybexs(PerlPackage):
     """Use Cpanel::JSON::XS with a fallback to JSON::XS and JSON::PP"""

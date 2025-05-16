@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHepdataLib(PythonPackage):
     """Library for getting your data into HEPData"""

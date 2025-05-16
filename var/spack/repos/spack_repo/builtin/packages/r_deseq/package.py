@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDeseq(RPackage):
     """Differential gene expression analysis based on the negative binomial

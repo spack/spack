@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHere(RPackage):
     """A Simpler Way to Find Your Files.

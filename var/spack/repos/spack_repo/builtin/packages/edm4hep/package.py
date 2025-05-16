@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Edm4hep(CMakePackage):
     """Event data model of Key4hep."""

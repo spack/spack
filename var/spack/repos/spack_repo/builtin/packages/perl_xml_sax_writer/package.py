@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlSaxWriter(PerlPackage):
     """A new XML Writer was needed to match the SAX2 effort because quite

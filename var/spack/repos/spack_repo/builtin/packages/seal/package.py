@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Seal(CMakePackage):
     """Microsoft SEAL is an easy-to-use open-source (MIT licensed)

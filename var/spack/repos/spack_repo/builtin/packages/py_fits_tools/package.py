@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFitsTools(PythonPackage):
     """Tools for manipulating FITS images using primarily scipy

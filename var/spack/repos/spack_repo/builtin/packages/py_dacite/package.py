@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDacite(PythonPackage):
     """Simple creation of data classes from dictionaries."""

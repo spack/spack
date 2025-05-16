@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMoosexEmulateClassAccessorFast(PerlPackage):
     """Emulate Class::Accessor::Fast behavior using Moose attributes"""

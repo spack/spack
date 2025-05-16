@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlForks(PerlPackage):
     """The "forks" pragma allows a developer to use threads without having to

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVcstool(PythonPackage):
     """vcstool enables batch commands on multiple different vcs repositories.

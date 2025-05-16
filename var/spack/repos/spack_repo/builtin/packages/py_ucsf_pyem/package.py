@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUcsfPyem(PythonPackage):
     """UCSF pyem is a collection of Python modules and command-line

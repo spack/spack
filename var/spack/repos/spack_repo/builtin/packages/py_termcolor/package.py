@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTermcolor(PythonPackage):
     """ANSII Color formatting for output in terminal."""

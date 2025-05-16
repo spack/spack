@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyxlsb(PythonPackage):
     """Excel 2007-2010 Binary Workbook (xlsb) parser"""

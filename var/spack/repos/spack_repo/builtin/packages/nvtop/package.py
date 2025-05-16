@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Nvtop(CMakePackage, CudaPackage):
     """Nvtop stands for Neat Videocard TOP, a (h)top like task monitor

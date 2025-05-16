@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AsciidocPy3(AutotoolsPackage):
     """Python 3 port of Asciidoc Python.

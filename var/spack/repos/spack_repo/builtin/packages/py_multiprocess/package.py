@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultiprocess(PythonPackage):
     """Better multiprocessing and multithreading in Python"""

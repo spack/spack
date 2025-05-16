@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Moab(AutotoolsPackage):
     """MOAB is a component for representing and evaluating mesh

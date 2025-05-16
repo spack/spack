@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Byacc(AutotoolsPackage):
     """Berkeley Yacc is an LALR(1) parser generator.  Berkeley Yacc has

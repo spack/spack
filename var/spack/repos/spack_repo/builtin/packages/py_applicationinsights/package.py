@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApplicationinsights(PythonPackage):
     """This project extends the Application Insights API surface to support

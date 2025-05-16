@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybrain(PythonPackage):
     """PyBrain is the Swiss army knife for neural networking."""

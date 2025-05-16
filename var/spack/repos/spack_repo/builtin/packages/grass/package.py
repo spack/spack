@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Grass(AutotoolsPackage):
     """GRASS GIS (Geographic Resources Analysis Support System), is a free

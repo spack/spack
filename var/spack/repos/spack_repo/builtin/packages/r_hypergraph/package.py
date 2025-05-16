@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHypergraph(RPackage):
     """A package providing hypergraph data structures.

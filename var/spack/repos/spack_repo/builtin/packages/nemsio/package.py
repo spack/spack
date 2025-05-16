@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nemsio(CMakePackage):
     """The NOAA Environmental Modeling System I/O (NEMSIO) library. The

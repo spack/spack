@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFaststructure(PythonPackage):
     """FastStructure is a fast algorithm for inferring population structure

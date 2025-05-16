@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pnfft(AutotoolsPackage):
     """PNFFT is a parallel software library for the calculation of

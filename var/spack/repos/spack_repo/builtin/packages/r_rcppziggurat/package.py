@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppziggurat(RPackage):
     """'Rcpp' Integration of Different "Ziggurat" Normal RNG Implementations.

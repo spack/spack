@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Figtree(Package):
     """FigTree is designed as a graphical viewer of phylogenetic trees and

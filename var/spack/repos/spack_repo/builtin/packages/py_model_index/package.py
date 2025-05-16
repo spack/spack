@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyModelIndex(PythonPackage):
     """Create a source of truth for ML model results and browse it on Papers with Code"""

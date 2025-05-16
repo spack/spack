@@ -6,6 +6,8 @@
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hipcc(CMakePackage):
     """HIPCC: HIP compiler driver"""

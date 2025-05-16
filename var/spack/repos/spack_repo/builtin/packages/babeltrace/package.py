@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Babeltrace(AutotoolsPackage):
     """Babeltrace is a trace viewer and converter reading and writing the

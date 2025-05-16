@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class IntelGtpin(Package):
     """Intel(R) GtPin is a dynamic binary instrumentation framework for GEN

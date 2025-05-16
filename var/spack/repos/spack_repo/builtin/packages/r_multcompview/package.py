@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMultcompview(RPackage):
     """Visualizations of Paired Comparisons.

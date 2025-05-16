@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Parmetis(CMakePackage):
     """ParMETIS is an MPI-based parallel library that implements a variety of

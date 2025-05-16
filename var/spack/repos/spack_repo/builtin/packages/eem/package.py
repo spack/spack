@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Eem(MakefilePackage):
     """EEM is a program to extract the gene group and expression modules

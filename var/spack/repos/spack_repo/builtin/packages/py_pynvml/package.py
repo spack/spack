@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynvml(PythonPackage):
     """Provides a Python interface to GPU management and monitoring

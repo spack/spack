@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RProxy(RPackage):
     """Distance and Similarity Measures.

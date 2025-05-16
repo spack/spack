@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Brltty(AutotoolsPackage):
     """BRLTTY is a background process (daemon) providing access to the

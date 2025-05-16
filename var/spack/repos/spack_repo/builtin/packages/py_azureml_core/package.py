@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlCore(PythonPackage):
     """The azureml-core contains functionality for creating and managing:

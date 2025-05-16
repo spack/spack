@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Voropp(CMakePackage):
     """Voro++ is a open source software library for the computation of the

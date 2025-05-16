@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PyGenders(Package):
     """Genders is a static cluster configuration database used for cluster

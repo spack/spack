@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fdupes(AutotoolsPackage):
     """FDUPES is a program for identifying or deleting duplicate files

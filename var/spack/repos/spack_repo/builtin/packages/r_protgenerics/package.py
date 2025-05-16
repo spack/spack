@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RProtgenerics(RPackage):
     """S4 generic functions for Bioconductor proteomics infrastructure.

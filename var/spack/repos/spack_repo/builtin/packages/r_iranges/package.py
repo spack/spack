@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIranges(RPackage):
     """Foundation of integer range manipulation in Bioconductor.

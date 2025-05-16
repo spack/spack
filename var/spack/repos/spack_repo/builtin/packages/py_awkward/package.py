@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAwkward(PythonPackage):
     """Manipulate JSON-like data with NumPy-like idioms."""

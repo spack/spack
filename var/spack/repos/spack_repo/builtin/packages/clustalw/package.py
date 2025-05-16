@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Clustalw(AutotoolsPackage):
     """Multiple alignment of nucleic acid and protein sequences."""

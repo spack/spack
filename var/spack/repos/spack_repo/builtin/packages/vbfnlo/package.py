@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Vbfnlo(AutotoolsPackage):
     """VBFNLO is a fully flexible parton level Monte Carlo program

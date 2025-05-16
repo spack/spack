@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileHomedir(PerlPackage):
     """Find your home and other directories on any platform"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTidycensus(RPackage):
     """Load US Census Boundary and Attribute Data as 'tidyverse' and 'sf'-Ready

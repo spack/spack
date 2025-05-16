@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sartre(CMakePackage):
     """Sartre 1 is an event generator for exclusive diffractive vector

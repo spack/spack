@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBitstring(PythonPackage):
     """Simple construction, analysis and modification of binary data."""

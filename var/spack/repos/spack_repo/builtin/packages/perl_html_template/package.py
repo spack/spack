@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHtmlTemplate(PerlPackage):
     """Perl module to use HTML-like templating language"""

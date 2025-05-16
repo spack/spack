@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLit(PythonPackage):
     """lit is a portable tool for executing LLVM and Clang style test suites,

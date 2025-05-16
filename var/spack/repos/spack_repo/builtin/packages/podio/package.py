@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Podio(CMakePackage):
     """PODIO, or plain-old-data I/O, is a C++ library to support the creation

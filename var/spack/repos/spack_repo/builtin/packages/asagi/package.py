@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 # Author: Gilbert Brietzke
 # Date: July 2, 2019
 

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFftwtools(RPackage):
     """Wrapper for 'FFTW3' Includes: One-Dimensional Univariate,

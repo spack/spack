@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Orthomcl(Package):
     """OrthoMCL is a genome-scale algorithm for grouping orthologous protein

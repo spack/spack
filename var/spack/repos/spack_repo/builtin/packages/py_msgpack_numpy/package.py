@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMsgpackNumpy(PythonPackage):
     """This package provides encoding and decoding routines

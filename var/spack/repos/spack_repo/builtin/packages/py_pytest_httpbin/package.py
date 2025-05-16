@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestHttpbin(PythonPackage):
     """Easily test your HTTP library against a local copy of httpbin"""

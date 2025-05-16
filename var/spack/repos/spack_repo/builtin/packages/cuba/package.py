@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cuba(AutotoolsPackage):
     """The Cuba library offers a choice of four independent routines for

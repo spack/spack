@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAppnope(PythonPackage):
     """Disable App Nap on OS X 10.9"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRequire(RPackage):
     """Installing and Loading R Packages for Reproducible Workflows.

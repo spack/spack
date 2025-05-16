@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAssertiveTypes(RPackage):
     """Assertions to Check Types of Variables.

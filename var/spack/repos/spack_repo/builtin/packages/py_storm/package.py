@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStorm(PythonPackage):
     """Storm is an object-relational mapper (ORM) for Python"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydv(PythonPackage):
     """PDV is a 1D graphics and data analysis tool, heavily based on the

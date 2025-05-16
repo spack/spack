@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApscheduler(PythonPackage):
     """In-process task scheduler with Cron-like capabilities."""

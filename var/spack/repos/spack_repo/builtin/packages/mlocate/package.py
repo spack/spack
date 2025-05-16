@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mlocate(AutotoolsPackage):
     """mlocate is a locate/updatedb implementation.  The 'm' stands for "merging":

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class VotcaCsg(CMakePackage):
     """Versatile Object-oriented Toolkit for Coarse-graining

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openvkl(CMakePackage):
     """Intel® Open Volume Kernel Library is a collection of high-performance volume

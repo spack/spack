@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Casper(MakefilePackage):
     """CASPER (Context-Aware Scheme for Paired-End Read) is state-of-the art

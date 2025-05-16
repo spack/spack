@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libgd(AutotoolsPackage):
     """GD is an open source code library for the dynamic creation of images

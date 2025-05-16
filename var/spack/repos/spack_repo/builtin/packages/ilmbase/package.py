@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ilmbase(AutotoolsPackage):
     """OpenEXR ILM Base libraries (high dynamic-range image file format)"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCssParser(PythonPackage):
     """A CSS Cascading Style Sheets library for Python."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEmpy(PythonPackage):
     """A powerful and robust templating system for Python"""

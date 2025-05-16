@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastprogress(PythonPackage):
     """A fast and simple progress bar for Jupyter Notebook and

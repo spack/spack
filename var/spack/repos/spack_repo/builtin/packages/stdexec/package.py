@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Stdexec(CMakePackage):
     """The proposed C++ framework for asynchronous and parallel programming."""

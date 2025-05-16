@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBasemap(PythonPackage):
     """The matplotlib basemap toolkit is a library for plotting

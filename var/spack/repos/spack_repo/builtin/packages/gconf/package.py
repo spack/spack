@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gconf(AutotoolsPackage):
     """GConf is a system for storing application preferences.

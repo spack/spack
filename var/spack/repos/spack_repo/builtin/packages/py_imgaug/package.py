@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyImgaug(PythonPackage):
     """A library for image augmentation in machine learning experiments,

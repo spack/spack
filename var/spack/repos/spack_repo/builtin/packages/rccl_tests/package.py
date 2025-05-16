@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class RcclTests(MakefilePackage):
     """These tests check both the performance and the correctness of RCCL

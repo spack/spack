@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDomToml(PythonPackage):
     """Dom's tools for Tom's Obvious, Minimal Language."""

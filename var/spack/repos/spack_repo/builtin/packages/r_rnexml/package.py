@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRnexml(RPackage):
     """Semantically Rich I/O for the 'NeXML' Format.

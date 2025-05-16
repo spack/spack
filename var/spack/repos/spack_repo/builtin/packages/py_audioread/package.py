@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAudioread(PythonPackage):
     """cross-library (GStreamer + Core Audio + MAD + FFmpeg) audio decoding for

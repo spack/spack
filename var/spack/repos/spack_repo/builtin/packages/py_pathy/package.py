@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPathy(PythonPackage):
     """pathlib.Path subclasses for local and cloud bucket storage"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sensei(CMakePackage):
     """SENSEI is a platform for scalable in-situ analysis and visualization.

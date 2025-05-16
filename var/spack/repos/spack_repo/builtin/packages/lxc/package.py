@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lxc(AutotoolsPackage):
     """LXC is the well-known and heavily tested low-level Linux container

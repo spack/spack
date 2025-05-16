@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTroveClassifiers(PythonPackage):
     """The trove-classifiers pacakge is the canonical source for classifiers

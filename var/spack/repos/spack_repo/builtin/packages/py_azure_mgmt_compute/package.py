@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtCompute(PythonPackage):
     """Microsoft Azure Compute Management Client Library for Python."""

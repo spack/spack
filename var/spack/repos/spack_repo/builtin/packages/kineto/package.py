@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Kineto(CMakePackage):
     """A CPU+GPU Profiling library that provides access to timeline traces

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ply(AutotoolsPackage):
     """A light-weight dynamic tracer for Linux that leverages the

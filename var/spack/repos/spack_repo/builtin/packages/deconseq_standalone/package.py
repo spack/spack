@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class DeconseqStandalone(Package):
     """The DeconSeq tool can be used to automatically detect and efficiently

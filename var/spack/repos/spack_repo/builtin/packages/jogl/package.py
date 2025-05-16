@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Jogl(Package):
     """JOGL provides full access to the APIs in the OpenGL specification

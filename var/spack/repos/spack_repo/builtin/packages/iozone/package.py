@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Iozone(MakefilePackage):
     """IOzone is a filesystem benchmark tool. The benchmark generates and

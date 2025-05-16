@@ -8,6 +8,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PhotosF(MakefilePackage):
     """PHOTOS Monte-Carlo generator (Fortran version)"""

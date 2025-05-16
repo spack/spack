@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class TclTcllib(AutotoolsPackage):
     """Tcllib is a collection of utility modules for Tcl. These modules provide

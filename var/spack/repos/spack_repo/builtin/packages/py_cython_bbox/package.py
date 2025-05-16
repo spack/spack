@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCythonBbox(PythonPackage):
     """cython_bbox is widely used in object detection tasks. To my

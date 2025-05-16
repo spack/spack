@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RReportingtools(RPackage):
     """Tools for making reports in various formats.

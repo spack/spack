@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDatrie(PythonPackage):
     """Super-fast, efficiently stored Trie for Python (2.x and 3.x). Uses libdatrie."""

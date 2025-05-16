@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Formetis(CMakePackage):
     """Automated Fortran bindings to METIS and ParMETIS."""

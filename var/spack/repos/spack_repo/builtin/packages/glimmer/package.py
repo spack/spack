@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Glimmer(MakefilePackage):
     """Glimmer is a system for finding genes in microbial DNA, especially the

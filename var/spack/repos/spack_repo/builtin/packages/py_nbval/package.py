@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNbval(PythonPackage):
     """Py.test plugin for validating Jupyter notebooks.

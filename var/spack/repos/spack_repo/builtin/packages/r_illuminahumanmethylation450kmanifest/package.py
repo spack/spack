@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIlluminahumanmethylation450kmanifest(RPackage):
     """Annotation for Illumina's 450k methylation arrays."""

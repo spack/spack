@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bedtools2(Package):
     """Collectively, the bedtools utilities are a swiss-army knife of

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unigen(MakefilePackage):
     """The United Generators project was launched by the Virtual Institute 146

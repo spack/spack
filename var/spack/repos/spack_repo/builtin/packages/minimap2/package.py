@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Minimap2(PythonPackage):
     """Minimap2 is a versatile sequence alignment program that aligns DNA or

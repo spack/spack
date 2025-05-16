@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Reprimand(MesonPackage):
     """RePrimAnd: Recovery of Primitives And EOS framework

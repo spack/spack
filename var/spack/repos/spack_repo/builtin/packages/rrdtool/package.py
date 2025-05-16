@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rrdtool(AutotoolsPackage):
     """RA tool for data logging and analysis."""

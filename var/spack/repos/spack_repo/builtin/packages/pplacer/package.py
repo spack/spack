@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pplacer(Package):
     """Pplacer places query sequences on a fixed reference phylogenetic tree

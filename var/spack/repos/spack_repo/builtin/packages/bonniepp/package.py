@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bonniepp(AutotoolsPackage):
     """Bonnie++ is a benchmark suite that is aimed at performing a number of

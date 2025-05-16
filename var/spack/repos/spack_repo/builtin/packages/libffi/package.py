@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libffi(AutotoolsPackage):
     """The libffi library provides a portable, high level programming

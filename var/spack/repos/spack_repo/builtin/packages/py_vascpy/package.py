@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVascpy(PythonPackage):
     """Python library for reading, writing, and manipulating large-scale vasculature

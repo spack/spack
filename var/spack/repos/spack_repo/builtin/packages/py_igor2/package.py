@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIgor2(PythonPackage):
     """igor2: interface for reading binary IGOR files."""

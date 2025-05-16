@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUnittest2py3k(PythonPackage):
     """unittest2 is a backport of the new features added to the unittest

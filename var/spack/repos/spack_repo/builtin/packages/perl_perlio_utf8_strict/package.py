@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPerlioUtf8Strict(PerlPackage):
     """This module provides a fast and correct UTF-8 PerlIO layer."""

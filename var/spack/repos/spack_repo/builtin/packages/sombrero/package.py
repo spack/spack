@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sombrero(MakefilePackage):
     "A next-generation conjugate gradient benchmark from computational particle physics"

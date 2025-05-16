@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeoplot(PythonPackage):
     """geoplot is a high-level Python geospatial plotting library.

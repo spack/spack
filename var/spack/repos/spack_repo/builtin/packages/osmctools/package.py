@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Osmctools(AutotoolsPackage):
     """A few really fast tools to convert, filter and update OpenStreetMap

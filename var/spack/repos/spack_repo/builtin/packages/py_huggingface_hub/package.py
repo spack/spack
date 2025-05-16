@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHuggingfaceHub(PythonPackage):
     """Client library to download and publish models, datasets and other repos

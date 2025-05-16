@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Liblouis(AutotoolsPackage):
     """Liblouis is an open-source braille translator and back-translator

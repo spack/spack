@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDataOptlist(PerlPackage):
     """Parse and validate simple name/value option pairs"""

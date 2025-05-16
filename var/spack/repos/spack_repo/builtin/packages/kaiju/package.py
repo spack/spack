@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Kaiju(MakefilePackage):
     """Kaiju is a program for the taxonomic classification

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TensorflowServingClient(CMakePackage):
     """A prebuilt tensorflow serving client from the tensorflow serving

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySortedcollections(PythonPackage):
     """Sorted Collections is an Apache2 licensed Python sorted collections library."""

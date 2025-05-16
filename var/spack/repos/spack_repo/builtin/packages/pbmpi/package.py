@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pbmpi(MakefilePackage):
     """A Bayesian software for phylogenetic reconstruction using mixture models"""

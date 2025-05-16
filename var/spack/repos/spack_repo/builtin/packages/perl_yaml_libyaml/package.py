@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlYamlLibyaml(PerlPackage):
     """Perl YAML Serialization using XS and libyaml"""

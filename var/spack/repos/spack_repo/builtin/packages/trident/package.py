@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Trident(Package):
     """Trident is a fully supported open source project maintained by

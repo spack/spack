@@ -1,9 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.autotools
 import spack.hooks.sbang as sbang
 from spack.package import *
+
+from ...build_systems import autotools
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
 
 
 class GobjectIntrospection(MesonPackage, AutotoolsPackage):
@@ -142,7 +145,7 @@ class GobjectIntrospection(MesonPackage, AutotoolsPackage):
         return not self.spec.satisfies("%fj")
 
 
-class AutotoolsBuilderPackage(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilderPackage(autotools.AutotoolsBuilder):
     @run_before("build")
     def filter_file_to_avoid_overly_long_shebangs(self):
         # we need to filter this file to avoid an overly long hashbang line

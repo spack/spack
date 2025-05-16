@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGidgethub(PythonPackage):
     """An async GitHub API library for Python."""

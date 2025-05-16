@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAlabaster(PythonPackage):
     """Alabaster is a visually (c)lean, responsive, configurable theme

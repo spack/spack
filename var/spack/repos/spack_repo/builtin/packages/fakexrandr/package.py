@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fakexrandr(MakefilePackage):
     """This is a tool to cheat an X11 server to believe that there are more

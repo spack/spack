@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKornia(PythonPackage):
     """Open Source Differentiable Computer Vision Library for PyTorch."""

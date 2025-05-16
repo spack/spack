@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIntbitset(PythonPackage):
     """The intbitset library provides a set implementation to store sorted

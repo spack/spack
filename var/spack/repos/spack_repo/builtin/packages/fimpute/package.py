@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fimpute(Package):
     """FImpute uses an overlapping sliding window approach to efficiently

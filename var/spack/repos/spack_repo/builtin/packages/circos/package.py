@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Circos(Package):
     """Circos is a software package for visualizing data and information."""

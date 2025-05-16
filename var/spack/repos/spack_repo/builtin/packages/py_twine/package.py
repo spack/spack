@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTwine(PythonPackage):
     """Twine is a utility for publishing Python packages on PyPI."""

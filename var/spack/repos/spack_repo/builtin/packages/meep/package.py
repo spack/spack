@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Meep(AutotoolsPackage):
     """Meep (or MEEP) is a free finite-difference time-domain (FDTD) simulation

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSplines2(RPackage):
     """Constructs basis functions of B-splines, M-splines, I-splines, convex

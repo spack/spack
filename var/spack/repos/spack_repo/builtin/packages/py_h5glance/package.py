@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH5glance(PythonPackage):
     """H5Glance lets you explore HDF5 files in the terminal or

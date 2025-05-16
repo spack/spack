@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libxcrypt(AutotoolsPackage):
     """libxcrypt is a modern library for one-way hashing of passwords."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ambertools(CMakePackage):
     """AmberTools is a free, useful standalone package and a prerequisite

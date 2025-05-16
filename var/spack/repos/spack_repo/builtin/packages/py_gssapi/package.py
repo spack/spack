@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGssapi(PythonPackage):
     """Python-GSSAPI provides both low-level and high level wrappers

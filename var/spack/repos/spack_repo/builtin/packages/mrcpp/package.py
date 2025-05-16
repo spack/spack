@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mrcpp(CMakePackage):
     """The MultiResolution Computation Program Package (MRCPP) is a general purpose

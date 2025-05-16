@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Perfstubs(CMakePackage):
     """Profiling API for adding tool instrumentation support to any project.

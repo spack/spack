@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtDatalakeStore(PythonPackage):
     """Microsoft Azure Data Lake Store Management Client Library for Python."""

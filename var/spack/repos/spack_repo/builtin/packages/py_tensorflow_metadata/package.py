@@ -6,6 +6,8 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTensorflowMetadata(PythonPackage):
     """Library and standards for schema and statistics.

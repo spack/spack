@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Redis(MakefilePackage):
     """Redis is an open source (BSD licensed), in-memory data structure store,

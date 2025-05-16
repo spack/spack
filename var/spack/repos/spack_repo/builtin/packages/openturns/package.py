@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openturns(CMakePackage):
     """OpenTURNS is a scientific C++ and Python library featuring an

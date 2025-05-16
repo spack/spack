@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class IsoCodes(AutotoolsPackage):
     """ISO-codes provides lists of various ISO standards"""

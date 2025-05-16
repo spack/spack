@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XcbProto(AutotoolsPackage, XorgPackage):
     """xcb-proto provides the XML-XCB protocol descriptions that libxcb uses to

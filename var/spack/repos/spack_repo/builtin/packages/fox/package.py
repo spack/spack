@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fox(AutotoolsPackage):
     """FOX is a C++ based Toolkit for developing Graphical User Interfaces

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lzma(AutotoolsPackage):
     """LZMA Utils are legacy data compression software with high compression

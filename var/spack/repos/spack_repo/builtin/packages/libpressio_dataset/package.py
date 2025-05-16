@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpressioDataset(CMakePackage):
     """A set of libraries for LibPressio to easily load datasets"""

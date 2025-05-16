@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyassimp(PythonPackage):
     """Python bindings for the Open Asset Import Library (ASSIMP)"""

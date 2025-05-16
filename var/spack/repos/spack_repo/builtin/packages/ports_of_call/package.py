@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class PortsOfCall(CMakePackage):
     """Ports of Call: Performance Portability Utilities"""

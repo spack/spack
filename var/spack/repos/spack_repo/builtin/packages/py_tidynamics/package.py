@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTidynamics(PythonPackage):
     """A tiny package to compute the dynamics of stochastic and molecular simulations."""

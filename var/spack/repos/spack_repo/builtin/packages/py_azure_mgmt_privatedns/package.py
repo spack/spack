@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtPrivatedns(PythonPackage):
     """Microsoft Azure DNS Private Zones Client Library for Python."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Soqt(CMakePackage):
     """Old Coin GUI binding for Qt, replaced by Quarter"""

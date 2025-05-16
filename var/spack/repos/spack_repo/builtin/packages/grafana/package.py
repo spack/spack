@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Grafana(Package):
     """The tool for beautiful monitoring and metric analytics & dashboards

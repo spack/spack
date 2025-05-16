@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPathml(PythonPackage):
     """An open-source toolkit for computational pathology and machine learning."""

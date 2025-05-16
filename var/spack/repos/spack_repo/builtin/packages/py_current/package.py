@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCurrent(PythonPackage):
     """Current module relative paths and imports"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Exempi(AutotoolsPackage):
     """exempi is a port of Adobe XMP SDK to work on UNIX and to be build with

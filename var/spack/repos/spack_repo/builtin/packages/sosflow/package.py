@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sosflow(CMakePackage):
     """SOSflow provides a flexible, scalable, and programmable framework for

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 
 class Gem5(SConsPackage):
     """The gem5 simulator is a modular platform for computer-system

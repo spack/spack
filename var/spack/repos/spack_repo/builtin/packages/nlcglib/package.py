@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Nlcglib(CMakePackage, CudaPackage, ROCmPackage):
     """Nonlinear CG methods for wave-function optimization in DFT."""

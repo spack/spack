@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHttpRequestAscgi(PerlPackage):
     """Set up a CGI environment from an HTTP::Request"""

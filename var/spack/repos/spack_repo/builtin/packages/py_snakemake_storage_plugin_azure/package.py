@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginAzure(PythonPackage):
     """A Snakemake storage plugin to read and write from Azure Blob Storage."""

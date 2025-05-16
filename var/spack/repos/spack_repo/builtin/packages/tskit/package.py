@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Tskit(PythonPackage):
     """The tskit library provides the underlying functionality used to load,

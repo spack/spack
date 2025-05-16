@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tdengine(CMakePackage):
     """An open-source big data platform designed and optimized for the

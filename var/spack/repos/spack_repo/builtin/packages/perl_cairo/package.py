@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCairo(PerlPackage):
     """Perl interface to the cairo 2d vector graphics library"""

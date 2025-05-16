@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dftd3Lib(MakefilePackage):
     """A dispersion correction for density functionals,

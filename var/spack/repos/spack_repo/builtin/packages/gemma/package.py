@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Gemma(MakefilePackage):
     """GEMMA is a software toolkit for fast application of linear mixed models

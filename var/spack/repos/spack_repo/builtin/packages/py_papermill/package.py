@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPapermill(PythonPackage):
     """Parametrize and run Jupyter and nteract Notebooks."""

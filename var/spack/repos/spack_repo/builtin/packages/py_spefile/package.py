@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpefile(PythonPackage):
     """Reader for SPE files part of pyspec a set of python routines for data

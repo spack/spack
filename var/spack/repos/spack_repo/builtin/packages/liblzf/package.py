@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Liblzf(AutotoolsPackage):
     """LibLZF is a very small data compression library.

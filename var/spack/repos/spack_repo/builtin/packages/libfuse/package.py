@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libfuse(MesonPackage):
     """The reference implementation of the Linux FUSE (Filesystem in

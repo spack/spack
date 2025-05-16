@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlJsonAny(PerlPackage):
     """(DEPRECATED) Wrapper Class for the various JSON classes"""

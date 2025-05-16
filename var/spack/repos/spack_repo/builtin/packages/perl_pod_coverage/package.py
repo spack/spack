@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPodCoverage(PerlPackage):
     """Checks if the documentation of a module is comprehensive"""

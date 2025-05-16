@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRios(PythonPackage):
     """Raster I/O Simplification. A set of python modules which makes it easy

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsigcpp(AutotoolsPackage):
     """Libsigc++ is a C++ library for typesafe callbacks"""

@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class WinGpg(Package):
     """GnuPG is a complete and free implementation of the OpenPGP

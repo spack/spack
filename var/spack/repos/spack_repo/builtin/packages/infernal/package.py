@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Infernal(AutotoolsPackage):
     """Infernal (INFERence of RNA ALignment) is for searching DNA sequence

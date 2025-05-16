@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJaconv(PythonPackage):
     """jaconv (Japanese Converter) is interconverter for

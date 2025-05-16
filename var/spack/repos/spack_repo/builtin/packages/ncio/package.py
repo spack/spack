@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ncio(CMakePackage):
     """This is a library used by NCEP GSI system to read the GFS forecast

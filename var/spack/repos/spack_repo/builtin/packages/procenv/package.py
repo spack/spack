@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Procenv(AutotoolsPackage):
     """A command-line tool that displays as much detail about itself and

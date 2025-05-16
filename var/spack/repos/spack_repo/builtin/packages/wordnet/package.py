@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Wordnet(AutotoolsPackage):
     """WordNet is a large lexical database of English. Nouns, verbs, adjectives

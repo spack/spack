@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tixi(CMakePackage):
     """TiXI is a fast and simple XML interface library and could be used

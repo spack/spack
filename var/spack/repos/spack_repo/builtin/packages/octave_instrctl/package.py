@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveInstrctl(OctavePackage, SourceforgePackage):
     """Instrument-Control is a package for interfacing the outside world of hardware

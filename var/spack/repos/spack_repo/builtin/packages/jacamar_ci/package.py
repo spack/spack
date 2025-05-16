@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class JacamarCi(GoPackage):
     """Jacamar CI is a HPC focused CI/CD driver for the GitLab custom executor."""

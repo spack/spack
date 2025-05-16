@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBitstruct(PythonPackage):
     """This module is intended to have a similar interface as the python

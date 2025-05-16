@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Diamond(CMakePackage):
     """DIAMOND is a sequence aligner for protein and translated DNA searches,

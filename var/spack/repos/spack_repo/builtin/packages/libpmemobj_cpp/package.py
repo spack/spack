@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpmemobjCpp(CMakePackage):
     """C++ bindings for libpmemobj (https://github.com/pmem/pmdk)"""

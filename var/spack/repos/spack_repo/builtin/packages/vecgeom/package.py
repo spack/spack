@@ -6,6 +6,9 @@
 from spack.package import *
 from spack.variant import ConditionalVariantValues
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 def _std_when(values):
     for v in values:

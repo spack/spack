@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Any2fasta(Package):
     """any2fasta: Convert various sequence formats to FASTA"""

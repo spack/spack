@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class K8(Package):
     """K8 is a Javascript shell based on Google's V8 Javascript engine."""

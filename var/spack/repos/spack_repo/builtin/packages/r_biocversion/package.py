@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBiocversion(RPackage):
     """Set the appropriate version of Bioconductor packages.

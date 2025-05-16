@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDcm2bids(PythonPackage):
     """Reorganising NIfTI files from dcm2niix into the Brain Imaging Data

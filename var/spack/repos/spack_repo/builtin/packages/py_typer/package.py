@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTyper(PythonPackage):
     """Typer, build great CLIs. Easy to code. Based on Python type hints."""

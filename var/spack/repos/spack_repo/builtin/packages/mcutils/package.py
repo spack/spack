@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mcutils(MakefilePackage):
     """A collection of routines for classification and manipulation of

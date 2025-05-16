@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GribUtil(CMakePackage):
     """This is a collection of NCEP GRIB related utilities.

@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NodeJs(Package):
     """Node.js is an open-source, cross-platform JavaScript runtime environment."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyTes(PythonPackage):
     """Library for communicating with the GA4GH Task Execution API."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRlist(RPackage):
     """Provides a set of functions for data manipulation with

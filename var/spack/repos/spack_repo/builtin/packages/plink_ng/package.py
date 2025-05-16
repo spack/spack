@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PlinkNg(Package):
     """A comprehensive update to the PLINK association analysis toolset."""

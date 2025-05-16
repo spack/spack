@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPdmBackend(PythonPackage):
     """The build backend used by PDM that supports latest packaging standards"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonBioformats(PythonPackage):
     """Python-bioformats is a Python wrapper for Bio-Formats, a standalone

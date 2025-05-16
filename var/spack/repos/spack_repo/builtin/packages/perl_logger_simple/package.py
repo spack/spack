@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLoggerSimple(PerlPackage):
     """Implementation of the Simran-Log-Log and Simran-Error-Error modules"""

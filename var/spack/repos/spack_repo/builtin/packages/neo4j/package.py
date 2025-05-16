@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Neo4j(MavenPackage):
     """Neo4j is the world's leading Graph Database. It is a high performance

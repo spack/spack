@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCffi(PythonPackage):
     """Foreign Function Interface for Python calling C code"""

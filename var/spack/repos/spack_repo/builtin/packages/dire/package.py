@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Dire(Package):
     """DIRE (short for dipole resummation) a C++ program for all-order

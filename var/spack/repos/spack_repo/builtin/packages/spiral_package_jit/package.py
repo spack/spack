@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SpiralPackageJit(Package):
     """This is the SPIRAL package for Just-In-Time (JIT) or Real-Time

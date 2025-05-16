@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Phyluce(PythonPackage):
     """phyluce (phy-loo-chee) is a software package that was initially

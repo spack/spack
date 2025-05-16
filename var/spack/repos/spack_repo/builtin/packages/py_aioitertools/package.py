@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAioitertools(PythonPackage):
     """Implementation of itertools, builtins, and more for AsyncIO and mixed-type

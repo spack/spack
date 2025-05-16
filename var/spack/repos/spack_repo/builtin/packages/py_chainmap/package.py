@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyChainmap(PythonPackage):
     """Clone/backport of ChainMap for Python 2.6, Python 3.2, and PyPy3

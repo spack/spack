@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ferret(Package):
     """Ferret is an interactive computer visualization and analysis environment

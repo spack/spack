@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GrOsmosdr(CMakePackage):
     """While primarily being developed for the OsmoSDR hardware, this

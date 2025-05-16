@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Kinesis(MavenPackage):
     """The Amazon Kinesis Client Library for Java (Amazon KCL) enables Java

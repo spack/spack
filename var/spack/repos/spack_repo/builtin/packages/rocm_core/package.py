@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmCore(CMakePackage):
     """rocm-core is a utility which can be used to get ROCm release version.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Exabayes(AutotoolsPackage):
     """ExaBayes is a software package for Bayesian tree inference. It is

@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gdb(AutotoolsPackage, GNUMirrorPackage):
     """GDB, the GNU Project debugger, allows you to see what is going on

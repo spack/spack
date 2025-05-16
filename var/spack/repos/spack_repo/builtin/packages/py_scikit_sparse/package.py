@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitSparse(PythonPackage):
     """Sparse matrix tools extending scipy.sparse, but with incompatible licenses"""

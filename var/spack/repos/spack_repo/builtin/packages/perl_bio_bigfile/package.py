@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioBigfile(PerlPackage):
     """Bio::DB::BigFile -- Low-level interface to BigWig & BigBed files for perl"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mesquite(AutotoolsPackage):
     """Mesquite (Mesh Quality Improvement Toolkit) is designed to provide a

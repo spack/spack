@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Giraph(MavenPackage):
     """Apache Giraph is an iterative graph processing system built

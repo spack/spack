@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJaracoFunctools(PythonPackage):
     """Functools like those found in stdlib"""

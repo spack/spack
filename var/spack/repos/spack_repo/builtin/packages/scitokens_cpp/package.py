@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScitokensCpp(CMakePackage):
     """A C++ implementation of the SciTokens library with a C library interface.

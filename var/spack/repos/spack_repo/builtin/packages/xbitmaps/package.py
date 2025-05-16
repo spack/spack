@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xbitmaps(AutotoolsPackage, XorgPackage):
     """The xbitmaps package contains bitmap images used by multiple

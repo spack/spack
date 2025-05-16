@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class VectorclassVersion2(Package):
     """This is a C++ class library for using the Single Instruction Multiple

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cgdb(AutotoolsPackage):
     """A curses front-end to GDB"""

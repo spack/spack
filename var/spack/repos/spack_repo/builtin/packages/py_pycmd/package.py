@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycmd(PythonPackage):
     """pycmd is a collection of command line tools for helping with Python

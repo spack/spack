@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gnat(Package):
     """The GNAT Ada compiler. Ada is a modern programming language designed

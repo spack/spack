@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XorgServer(AutotoolsPackage, XorgPackage):
     """X.Org Server is the free and open source implementation of the display

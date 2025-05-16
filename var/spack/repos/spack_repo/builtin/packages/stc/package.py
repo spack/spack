@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Stc(AutotoolsPackage):
     """STC: The Swift-Turbine Compiler"""

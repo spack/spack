@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tpm2Tss(AutotoolsPackage):
     """OSS implementation of the TCG TPM2 Software Stack (TSS2)"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCatools(RPackage):
     """Moving Window Statistics, GIF, Base64, ROC AUC, etc.

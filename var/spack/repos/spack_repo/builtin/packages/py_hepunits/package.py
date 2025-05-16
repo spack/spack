@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHepunits(PythonPackage):
     """Units and constants in the HEP system of units."""

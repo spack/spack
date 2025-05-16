@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDataUuid(PerlPackage):
     """Globally/Universally Unique Identifiers (GUIDs/UUIDs)"""

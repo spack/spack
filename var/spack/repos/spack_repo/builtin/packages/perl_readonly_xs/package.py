@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlReadonlyXs(PerlPackage):
     """Companion module for Readonly.pm, to speed up read-only scalar variables."""

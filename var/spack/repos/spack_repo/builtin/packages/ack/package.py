@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ack(Package):
     """ack 2.14 is a tool like grep, optimized for programmers.

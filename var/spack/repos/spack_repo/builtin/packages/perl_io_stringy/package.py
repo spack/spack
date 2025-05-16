@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoStringy(PerlPackage):
     """This toolkit primarily provides modules for performing both traditional

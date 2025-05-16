@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pacvim(MakefilePackage):
     """Pacvim is a command-line-based game based off of Pacman.

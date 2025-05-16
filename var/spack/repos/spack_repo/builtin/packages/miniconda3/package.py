@@ -7,6 +7,8 @@ from os.path import split
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 _versions = {
     "24.7.1": {
         "Linux-x86_64": (

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Itstool(AutotoolsPackage):
     """ITS Tool allows you to translate your XML documents with PO files, using

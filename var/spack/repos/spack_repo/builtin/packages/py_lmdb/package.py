@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLmdb(PythonPackage):
     """Universal Python binding for the LMDB 'Lightning' Database"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Apktool(Package):
     """A tool for reverse engineering 3rd party, closed, binary

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.racket import RacketPackage
+
 
 class RktBase(RacketPackage):
     """Stub package for packages which are currently part of core

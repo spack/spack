@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyRdiscount(RubyPackage):
     """Fast Implementation of Gruber's Markdown in C."""

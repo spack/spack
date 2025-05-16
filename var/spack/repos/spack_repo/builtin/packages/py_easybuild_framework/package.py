@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEasybuildFramework(PythonPackage):
     """The core of EasyBuild, a software build and installation framework

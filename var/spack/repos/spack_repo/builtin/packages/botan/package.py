@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Botan(MakefilePackage):
     """Crypto and TLS for Modern C++"""

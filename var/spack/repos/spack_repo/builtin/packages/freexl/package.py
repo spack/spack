@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Freexl(AutotoolsPackage):
     """FreeXL is an open source library to extract valid data from within

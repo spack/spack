@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OpenkimModels(CMakePackage):
     """OpenKIM is an online framework for making molecular simulations

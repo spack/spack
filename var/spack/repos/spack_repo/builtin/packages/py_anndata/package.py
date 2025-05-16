@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnndata(PythonPackage):
     """anndata is a Python package for handling annotated data matrices

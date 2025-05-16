@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeInterfaceReportPlugins(PythonPackage):
     """The interface for Snakemake report plugins."""

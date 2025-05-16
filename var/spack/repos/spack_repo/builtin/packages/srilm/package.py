@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Srilm(MakefilePackage):
     """SRILM (SRI Language Modeling Toolkit) is a toolkit for building

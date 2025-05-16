@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Hudi(MavenPackage):
     """Apache Hudi stands for Hadoop Upserts Deletes and Incrementals.

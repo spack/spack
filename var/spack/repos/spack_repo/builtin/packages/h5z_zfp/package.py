@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class H5zZfp(CMakePackage):
     """A highly flexible floating point and integer compression plugin for the

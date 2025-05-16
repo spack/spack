@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Varscan(Package):
     """Variant calling and somatic mutation/CNV detection for next-generation

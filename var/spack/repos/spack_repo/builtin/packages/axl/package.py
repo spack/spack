@@ -5,6 +5,8 @@
 from spack.error import SpackError
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 def async_api_validator(pkg_name, variant_name, values):
     if "none" in values and len(values) != 1:

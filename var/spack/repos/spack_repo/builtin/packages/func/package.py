@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Func(CMakePackage):
     """(Function Comparator) is a C++ tool for quickly profiling the performance

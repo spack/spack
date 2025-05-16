@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Krakenuniq(Package):
     """Metagenomics classifier with unique k-mer counting for more specific results."""

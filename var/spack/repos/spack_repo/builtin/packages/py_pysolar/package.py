@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPysolar(PythonPackage):
     """Pysolar is a collection of Python libraries for simulating the

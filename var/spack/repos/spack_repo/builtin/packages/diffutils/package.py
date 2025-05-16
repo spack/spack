@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Diffutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU Diffutils is a package of several programs related to finding

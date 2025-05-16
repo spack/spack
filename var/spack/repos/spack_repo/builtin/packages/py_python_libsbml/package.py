@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLibsbml(PythonPackage):
     """LibSBML is a library for reading, writing and manipulating the Systems Biology

@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Expect(AutotoolsPackage):
     """Expect is a tool for automating interactive applications such as

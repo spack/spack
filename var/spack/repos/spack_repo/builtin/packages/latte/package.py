@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Latte(CMakePackage):
     """Open source density functional tight binding molecular dynamics."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRjsonio(RPackage):
     """Serialize R Objects to JSON, JavaScript Object Notation.

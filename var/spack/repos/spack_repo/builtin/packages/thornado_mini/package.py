@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class ThornadoMini(MakefilePackage):
     """Code to solve the equation of radiative transfer in the

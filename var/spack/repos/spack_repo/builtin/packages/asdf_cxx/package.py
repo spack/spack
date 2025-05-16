@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class AsdfCxx(CMakePackage):
     """ASDF - Advanced Scientific Data Format, a C++ implementation"""

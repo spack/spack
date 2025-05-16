@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpaper(AutotoolsPackage):
     """The paper library and accompanying files are intended to provide a

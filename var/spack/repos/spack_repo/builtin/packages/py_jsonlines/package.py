@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonlines(PythonPackage):
     """Library with helpers for the jsonlines file format"""

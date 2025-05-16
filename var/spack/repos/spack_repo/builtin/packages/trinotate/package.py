@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Trinotate(Package):
     """Trinotate is a comprehensive annotation suite designed for

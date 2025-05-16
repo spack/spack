@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TinyTensorCompiler(CMakePackage):
     """A compiler for tensor computations on GPUs and other devices,

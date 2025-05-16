@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Affinity(CMakePackage, CudaPackage):
     """Simple applications for determining Linux thread and gpu affinity."""

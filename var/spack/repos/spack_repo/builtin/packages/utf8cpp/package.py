@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Utf8cpp(CMakePackage):
     """A simple, portable and lightweight generic library for handling UTF-8

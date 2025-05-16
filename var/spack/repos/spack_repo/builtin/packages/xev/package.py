@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xev(AutotoolsPackage, XorgPackage):
     """xev creates a window and then asks the X server to send it X11 events

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RKegggraph(RPackage):
     """KEGGgraph: A graph approach to KEGG PATHWAY in R and Bioconductor.

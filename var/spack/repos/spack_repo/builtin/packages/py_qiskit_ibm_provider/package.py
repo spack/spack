@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQiskitIbmProvider(PythonPackage):
     """Qiskit IBM Quantum Provider for accessing the quantum devices and simulators

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFfiChecklib(PerlPackage):
     """This module checks whether a particular dynamic library is available for

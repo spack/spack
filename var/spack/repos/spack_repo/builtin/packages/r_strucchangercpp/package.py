@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RStrucchangercpp(RPackage):
     """Testing, Monitoring, and Dating Structural Changes: C++ Version.

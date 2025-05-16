@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nspr(AutotoolsPackage):
     """Netscape Portable Runtime (NSPR) provides a platform-neutral API

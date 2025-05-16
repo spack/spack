@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlanet(PythonPackage):
     """Python client library and CLI for Planet's public API"""

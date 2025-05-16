@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutopep8(PythonPackage):
     """autopep8 automatically formats Python code to conform to the

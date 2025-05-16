@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tcpdump(AutotoolsPackage):
     """Tcpdump prints out a description of the contents of packets

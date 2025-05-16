@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fpc(Package):
     """Free Pascal is a 32, 64 and 16 bit professional Pascal compiler."""

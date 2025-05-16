@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Examinimd(MakefilePackage):
     """ExaMiniMD is a proxy application and research vehicle for particle codes,

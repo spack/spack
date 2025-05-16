@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Faust(MakefilePackage):
     """Faust (Functional Audio Stream) is a functional programming language

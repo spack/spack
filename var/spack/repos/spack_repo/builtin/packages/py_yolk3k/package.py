@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYolk3k(PythonPackage):
     """Yolk is a Python tool for obtaining information about installed Python

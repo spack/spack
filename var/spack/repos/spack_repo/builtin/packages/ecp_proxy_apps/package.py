@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class EcpProxyApps(BundlePackage):
     """This is a collection of packages that represents the official suite of

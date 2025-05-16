@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Orbit2(AutotoolsPackage):
     """ORBit is a fast and lightweight CORBA server."""

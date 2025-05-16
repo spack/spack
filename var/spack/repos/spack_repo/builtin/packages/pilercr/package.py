@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pilercr(MakefilePackage):
     """Identification and analysis of CRISPR repeats."""

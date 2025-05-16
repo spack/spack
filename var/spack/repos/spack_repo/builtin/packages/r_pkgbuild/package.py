@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPkgbuild(RPackage):
     """Find Tools Needed to Build R Packages.

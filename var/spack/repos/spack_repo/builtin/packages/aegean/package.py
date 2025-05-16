@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Aegean(MakefilePackage):
     """The AEGeAn Toolkit is designed for the Analysis and Evaluation of

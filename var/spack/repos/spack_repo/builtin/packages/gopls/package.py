@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Gopls(GoPackage):
     """The official Go language server developed by the Go team."""

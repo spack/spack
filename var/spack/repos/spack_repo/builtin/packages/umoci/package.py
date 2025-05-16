@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Umoci(MakefilePackage):
     """umoci modifies Open Container images, intending to be a

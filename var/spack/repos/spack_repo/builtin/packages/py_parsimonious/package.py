@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParsimonious(PythonPackage):
     """(Soon to be) the fastest pure-Python PEG parser"""

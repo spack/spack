@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Amg2023(CMakePackage, CudaPackage, ROCmPackage):
     """AMG2023 is a parallel algebraic multigrid solver for linear systems

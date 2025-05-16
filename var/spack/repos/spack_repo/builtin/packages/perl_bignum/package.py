@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBignum(PerlPackage):
     """bigint/bigrat/bignum - transparent big number support"""

@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Soapdenovo2(MakefilePackage):
     """SOAPdenovo is a novel short-read assembly method that can build a de

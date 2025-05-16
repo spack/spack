@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSinglecellexperiment(RPackage):
     """S4 Classes for Single Cell Data.

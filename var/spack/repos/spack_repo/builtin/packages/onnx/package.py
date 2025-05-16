@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Onnx(CMakePackage):
     """Open Neural Network Exchange (ONNX).

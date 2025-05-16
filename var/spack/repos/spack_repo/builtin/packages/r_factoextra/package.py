@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFactoextra(RPackage):
     """Extract and Visualize the Results of Multivariate Data Analyses.

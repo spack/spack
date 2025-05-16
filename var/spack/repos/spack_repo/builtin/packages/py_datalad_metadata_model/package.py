@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladMetadataModel(PythonPackage):
     """This software implements the metadata model that datalad and

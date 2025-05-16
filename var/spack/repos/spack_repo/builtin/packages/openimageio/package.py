@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openimageio(CMakePackage):
     """Reading, writing, and processing images in a wide variety of file formats, using

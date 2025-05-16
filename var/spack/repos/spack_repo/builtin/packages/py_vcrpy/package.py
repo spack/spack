@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVcrpy(PythonPackage):
     """Automatically mock your HTTP interactions to simplify and speed up testing."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBitarray(PythonPackage):
     """Efficient array of booleans - C extension"""

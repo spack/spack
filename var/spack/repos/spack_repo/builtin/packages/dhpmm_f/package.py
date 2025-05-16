@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class DhpmmF(MakefilePackage):
     """DHPMM_P:High-precision Matrix Multiplication with Faithful Rounding"""

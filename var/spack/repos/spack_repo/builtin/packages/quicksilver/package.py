@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Quicksilver(MakefilePackage):
     """Quicksilver is a proxy application that represents some elements of the

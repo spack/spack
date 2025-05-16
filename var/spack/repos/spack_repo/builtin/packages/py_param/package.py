@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParam(PythonPackage):
     """Param is a library providing Parameters: Python attributes extended to have

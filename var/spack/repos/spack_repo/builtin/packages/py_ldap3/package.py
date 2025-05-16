@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLdap3(PythonPackage):
     """A strictly RFC 4510 conforming LDAP V3 pure Python client library."""

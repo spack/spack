@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBrotli(PythonPackage):
     """Python bindings for the Brotli compression library."""

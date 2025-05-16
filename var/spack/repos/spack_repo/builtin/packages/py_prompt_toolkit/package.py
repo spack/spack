@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPromptToolkit(PythonPackage):
     """Library for building powerful interactive command lines in Python"""

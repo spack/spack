@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPatch(PythonPackage):
     """Library to parse and apply unified diffs."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cracklib(AutotoolsPackage):
     """CrackLib tests passwords to determine whether they match certain

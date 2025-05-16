@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class R3d(CMakePackage):
     """Fast, robust polyhedral intersections, analytic integration, and

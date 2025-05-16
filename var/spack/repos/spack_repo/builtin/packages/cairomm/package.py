@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cairomm(AutotoolsPackage):
     """Cairomm is a C++ wrapper for the cairo graphics library."""

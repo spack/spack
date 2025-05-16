@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qoz(CMakePackage):
     """Quality optimized version of SZ3 is the next generation of the SZ compressor framework"""

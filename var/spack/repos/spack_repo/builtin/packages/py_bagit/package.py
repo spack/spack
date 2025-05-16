@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBagit(PythonPackage):
     """bagit is a Python library and command line utility

@@ -5,8 +5,11 @@
 import os
 import socket
 
-from spack.build_systems.cmake import CMakeBuilder
 from spack.package import *
+
+from ...build_systems.cmake import CMakeBuilder
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
 
 
 def propagate_cuda_arch(package, spec=None):

@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Shengbte(MakefilePackage):
     """ShengBTE is a software package for solving the Boltzmann Transport

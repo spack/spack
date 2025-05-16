@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyChex(PythonPackage):
     """Chex is a library of utilities for helping to write reliable JAX code."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Neofoam(CMakePackage):
     """NeoFOAM is a WIP prototype of a modern CFD core."""

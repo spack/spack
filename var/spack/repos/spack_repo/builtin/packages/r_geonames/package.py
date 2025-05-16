@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGeonames(RPackage):
     """Interface to the "Geonames" Spatial Query Web Service.

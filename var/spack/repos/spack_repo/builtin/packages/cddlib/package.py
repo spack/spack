@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cddlib(AutotoolsPackage):
     """The C-library cddlib is a C implementation of the Double Description

@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Opencascade(CMakePackage):
     """Open CASCADE Technology is a software development kit (SDK)

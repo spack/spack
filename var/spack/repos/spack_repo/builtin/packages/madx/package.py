@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Madx(CMakePackage):
     """MAD-X (Methodical Accelerator Design) is an application

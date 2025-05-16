@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Ray(CMakePackage, SourceforgePackage):
     """Parallel genome assemblies for parallel DNA sequencing"""

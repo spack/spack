@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Argon2(MakefilePackage):
     """Argon2 is a password-hashing function that summarizes the state

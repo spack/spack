@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class LibnetfilterConntrack(AutotoolsPackage):
     """libnetfilter_conntrack is a userspace library providing a programming

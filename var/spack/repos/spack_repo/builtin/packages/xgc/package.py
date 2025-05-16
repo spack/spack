@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xgc(AutotoolsPackage, XorgPackage):
     """xgc is an X11 graphics demo that shows various features of the X11

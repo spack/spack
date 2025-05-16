@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNetcdf4(PythonPackage):
     """Python interface to the netCDF Library."""

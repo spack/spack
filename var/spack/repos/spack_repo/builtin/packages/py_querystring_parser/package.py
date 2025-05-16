@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQuerystringParser(PythonPackage):
     """QueryString parser that correctly handles nested dictionaries."""

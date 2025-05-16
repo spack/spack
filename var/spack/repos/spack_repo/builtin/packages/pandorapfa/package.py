@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pandorapfa(Package):
     """Metadata package to bring together and build multiple Pandora libraries.

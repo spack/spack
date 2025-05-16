@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gperf(AutotoolsPackage, GNUMirrorPackage):
     """GNU gperf is a perfect hash function generator. For a given

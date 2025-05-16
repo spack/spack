@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFarver(RPackage):
     """High Performance Colour Space Manipulation.

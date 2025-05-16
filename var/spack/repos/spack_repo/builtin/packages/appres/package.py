@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Appres(AutotoolsPackage, XorgPackage):
     """The appres program prints the resources seen by an application (or

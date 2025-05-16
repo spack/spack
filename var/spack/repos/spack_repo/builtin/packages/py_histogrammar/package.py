@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHistogrammar(PythonPackage):
     """Composable histogram primitives for distributed data reduction."""

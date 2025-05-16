@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlSax(PerlPackage):
     """XML::SAX is a SAX parser access API for Perl. It includes classes and

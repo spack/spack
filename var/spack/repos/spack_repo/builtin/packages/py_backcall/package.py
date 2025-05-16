@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackcall(PythonPackage):
     """Specifications for callback functions passed in to an API"""

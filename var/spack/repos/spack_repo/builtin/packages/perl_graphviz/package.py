@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGraphviz(PerlPackage):
     """Interface to AT&T's GraphViz. Deprecated. See GraphViz2"""

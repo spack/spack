@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libgeotiff(AutotoolsPackage):
     """GeoTIFF represents an effort by over 160 different remote sensing, GIS,

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Eckit(CMakePackage):
     """ecKit is a cross-platform c++ toolkit that supports development of tools

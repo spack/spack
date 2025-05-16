@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGoDb(RPackage):
     """A set of annotation maps describing the entire Gene Ontology.

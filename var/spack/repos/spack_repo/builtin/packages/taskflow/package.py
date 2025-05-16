@@ -5,6 +5,8 @@
 from spack.compilers.error import UnsupportedCompilerFlag
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Taskflow(CMakePackage):
     """Taskflow helps you quickly write parallel tasks programs in

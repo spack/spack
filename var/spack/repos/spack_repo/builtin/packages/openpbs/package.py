@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Openpbs(AutotoolsPackage):
     """OpenPBS software optimizes job scheduling and workload

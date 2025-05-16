@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class NinjaPhylogeny(MakefilePackage):
     """NINJA is software for inferring large-scale neighbor-joining phylogenies."""

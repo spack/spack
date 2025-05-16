@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PerlStarFusion(Package):
     """STAR-Fusion is a component of the Trinity Cancer Transcriptome Analysis

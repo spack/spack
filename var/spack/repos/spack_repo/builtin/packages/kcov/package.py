@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kcov(CMakePackage):
     """Code coverage tool for compiled programs, Python and Bash which uses

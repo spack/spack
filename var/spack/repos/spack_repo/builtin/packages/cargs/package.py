@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cargs(CMakePackage):
     """A lightweight cross-platform C/C++ getopt alternative that works on

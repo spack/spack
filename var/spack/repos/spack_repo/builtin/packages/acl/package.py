@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Acl(AutotoolsPackage):
     """Commands for Manipulating POSIX Access Control Lists."""

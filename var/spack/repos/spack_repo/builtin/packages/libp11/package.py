@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libp11(AutotoolsPackage):
     """The PKCS#11 API is an abstract API to perform operations on

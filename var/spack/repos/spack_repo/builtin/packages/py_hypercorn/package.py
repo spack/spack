@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHypercorn(PythonPackage):
     """A ASGI Server based on Hyper libraries and inspired by

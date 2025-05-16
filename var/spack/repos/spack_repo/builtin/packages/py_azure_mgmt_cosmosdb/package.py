@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtCosmosdb(PythonPackage):
     """Microsoft Azure Cosmos DB Management Client Library for Python."""

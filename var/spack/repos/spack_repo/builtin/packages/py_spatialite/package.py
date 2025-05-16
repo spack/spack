@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpatialite(PythonPackage):
     """Wrapper for standard Python module "sqlite3" which adds SpatiaLite

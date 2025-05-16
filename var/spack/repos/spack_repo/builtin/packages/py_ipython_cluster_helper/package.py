@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpythonClusterHelper(PythonPackage):
     """Quickly and easily parallelize Python functions using IPython on

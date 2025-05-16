@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMako(PythonPackage):
     """A super-fast templating language that borrows the best

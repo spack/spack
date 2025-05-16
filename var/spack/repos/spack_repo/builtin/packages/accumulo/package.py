@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Accumulo(MavenPackage):
     """Apache Accumulo is a sorted, distributed key/value store that

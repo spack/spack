@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class ROsqp(RPackage):
     """Quadratic Programming Solver using the 'OSQP' Library.

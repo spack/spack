@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nbdkit(AutotoolsPackage):
     """NBD(Network Block Device) is a protocol for accessing Block Devices

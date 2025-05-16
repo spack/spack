@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Predixy(MakefilePackage):
     """Predixy is a high performance and fully featured proxy

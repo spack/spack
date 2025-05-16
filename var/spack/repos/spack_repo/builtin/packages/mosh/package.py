@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mosh(AutotoolsPackage):
     """Remote terminal application that allows roaming, supports intermittent

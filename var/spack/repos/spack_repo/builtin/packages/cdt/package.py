@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cdt(CMakePackage):
     """CDT is a C++ library for generating constraint or conforming Delaunay triangulations."""

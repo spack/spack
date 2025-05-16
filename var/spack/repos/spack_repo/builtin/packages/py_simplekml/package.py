@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySimplekml(PythonPackage):
     """simplekml is a python package which enables you to generate KML with as

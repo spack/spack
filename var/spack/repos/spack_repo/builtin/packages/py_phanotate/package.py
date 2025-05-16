@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPhanotate(PythonPackage):
     """PHANOTATE is a tool to annotate phage genomes. It uses the assumption

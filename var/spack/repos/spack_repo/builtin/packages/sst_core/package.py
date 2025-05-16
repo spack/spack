@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class SstCore(AutotoolsPackage):
     """The Structural Simulation Toolkit (SST) core

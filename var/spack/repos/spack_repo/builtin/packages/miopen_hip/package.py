@@ -6,6 +6,7 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
 from ..boost.package import Boost
 
 

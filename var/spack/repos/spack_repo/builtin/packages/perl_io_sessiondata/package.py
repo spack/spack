@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoSessiondata(PerlPackage):
     """A wrapper around a single IO::Socket object"""

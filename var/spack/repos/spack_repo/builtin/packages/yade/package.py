@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Yade(CMakePackage):
     """Yade is an free software for particle based simulations."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbStructureChecking(PythonPackage):
     """Biobb_structure_checking provides a series of functions

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Khmer(PythonPackage):
     """khmer is a software library and toolkit for k-mer based analysis and transformation

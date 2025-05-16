@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMypy(PythonPackage):
     """Optional static typing for Python."""

@@ -8,6 +8,8 @@ import archspec
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlDataprepRslex(PythonPackage):
     """Azure Machine Learning Data Prep RsLex is a Rust implementation of Data Prep's

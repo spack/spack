@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mpitrampoline(CMakePackage):
     """MPItrampoline: A forwarding MPI implementation that can use any other

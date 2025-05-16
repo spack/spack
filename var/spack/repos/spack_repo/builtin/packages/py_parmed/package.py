@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParmed(PythonPackage):
     """ParmEd is a general tool for aiding in investigations of

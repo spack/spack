@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Memkind(AutotoolsPackage):
     """The memkind library is a user extensible heap manager built on top of

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypdf2(PythonPackage):
     """PyPDF2 is a free and open source pure-python PDF library capable of

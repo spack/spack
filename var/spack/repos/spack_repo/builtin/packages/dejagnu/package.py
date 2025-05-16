@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Dejagnu(AutotoolsPackage, GNUMirrorPackage):
     """DejaGnu is a framework for testing other programs. Its purpose

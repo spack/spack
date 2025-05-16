@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExtutilsDepends(PerlPackage):
     """Easily build XS extensions that depend on XS extensions"""

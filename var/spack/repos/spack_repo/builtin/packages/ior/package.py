@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ior(AutotoolsPackage):
     """The IOR software is used for benchmarking parallel file systems

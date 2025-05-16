@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEarth2mip(PythonPackage):
     """Earth-2 Model Intercomparison Project (MIP).

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HoomdBlue(CMakePackage):
     """HOOMD-blue is a general-purpose particle simulation toolkit. It scales

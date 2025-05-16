@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDictdiffer(PythonPackage):
     """Dictdiffer is a helper module that helps you to diff and patch dictionares."""

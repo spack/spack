@@ -5,6 +5,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Which(AutotoolsPackage, GNUMirrorPackage):
     """GNU which - is a utility that is used to find which executable (or

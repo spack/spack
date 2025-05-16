@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cln(AutotoolsPackage):
     """CLN is a library for efficient computations with all kinds of numbers

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQiskitNature(PythonPackage):
     """Qiskit Nature is an open-source framework which supports

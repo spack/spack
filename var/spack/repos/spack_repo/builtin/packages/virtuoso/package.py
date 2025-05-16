@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Virtuoso(AutotoolsPackage):
     """Virtuoso is a high-performance and scalable Multi-Model RDBMS,

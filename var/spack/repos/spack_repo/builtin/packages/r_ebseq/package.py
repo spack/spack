@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class REbseq(RPackage):
     """An R package for gene and isoform differential expression analysis of RNA-seq data.

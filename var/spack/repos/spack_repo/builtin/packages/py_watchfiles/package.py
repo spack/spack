@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWatchfiles(PythonPackage):
     """Simple, modern and high performance file watching and code reload in python."""

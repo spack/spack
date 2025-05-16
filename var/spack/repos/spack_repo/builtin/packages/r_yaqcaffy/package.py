@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RYaqcaffy(RPackage):
     """Affymetrix expression data quality control and reproducibility analysis.

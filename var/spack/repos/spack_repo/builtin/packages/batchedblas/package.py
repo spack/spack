@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Batchedblas(MakefilePackage):
     """Batched BLAS is one of the new approaches for a task-based BLAS

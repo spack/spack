@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWesanderson(PythonPackage):
     """color palettes from Wes Anderson films, based on Karthik Ram's R version."""

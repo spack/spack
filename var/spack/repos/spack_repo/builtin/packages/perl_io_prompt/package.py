@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoPrompt(PerlPackage):
     """By default, this module exports a single function prompt. It prompts the

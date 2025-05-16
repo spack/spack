@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRasterstats(PythonPackage):
     """rasterstats is a Python module for summarizing geospatial raster datasets

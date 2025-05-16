@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Szauto(CMakePackage):
     """SZauto: SZ C++ Version that Supports Second-Order Prediction and Parameter Optimization"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDigestMd5(PerlPackage):
     """Perl interface to the MD5 Algorithm"""

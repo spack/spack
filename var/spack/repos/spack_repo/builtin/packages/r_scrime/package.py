@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RScrime(RPackage):
     """Analysis of High-Dimensional Categorical Data Such as SNP Data.

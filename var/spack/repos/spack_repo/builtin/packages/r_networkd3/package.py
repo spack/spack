@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNetworkd3(RPackage):
     """D3 JavaScript Network Graphs from R.

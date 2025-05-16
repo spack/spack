@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bear(CMakePackage):
     """Bear is a tool that generates a compilation database for clang tooling

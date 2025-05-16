@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Zerosum(CMakePackage):
     """Utility for monitoring process, thread, OS and HW resources,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAgateDbf(PythonPackage):
     """agate-dbf adds read support for dbf files to agate."""

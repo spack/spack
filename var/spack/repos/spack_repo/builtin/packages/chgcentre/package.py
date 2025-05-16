@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Chgcentre(CMakePackage):
     """The chgcentre tool can be used

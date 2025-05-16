@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNvidiaModulus(PythonPackage):
     """A deep learning framework for AI-driven multi-physics systems."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHfTransfer(PythonPackage):
     """Speed up file transfers with the Hugging Face Hub."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Lazygit(GoPackage):
     """A simple terminal UI for git commands"""

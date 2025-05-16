@@ -5,6 +5,9 @@ import os.path
 
 from spack.package import *
 
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.generic import Package
+
 
 class Fj(Package, CompilerPackage):
     """The Fujitsu compiler system is a high performance, production quality

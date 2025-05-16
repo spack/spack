@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class AwsParallelcluster(PythonPackage):
     """AWS ParallelCluster is an AWS supported Open Source cluster management

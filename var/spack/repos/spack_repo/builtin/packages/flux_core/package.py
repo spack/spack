@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class FluxCore(AutotoolsPackage):
     """A next-generation resource manager (pre-alpha)"""

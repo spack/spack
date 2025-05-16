@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUcMicroPy(PythonPackage):
     """Micro subset of unicode data files for linkify-it-py projects."""

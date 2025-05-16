@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Glusterfs(AutotoolsPackage):
     """Gluster is a software defined distributed storage that can scale to

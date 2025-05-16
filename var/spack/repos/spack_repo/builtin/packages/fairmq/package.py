@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Fairmq(CMakePackage):
     """C++ Message Queuing Library and Framework (https://doi.org/10.5281/zenodo.1689985)"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlack(PythonPackage):
     """Black is the uncompromising Python code formatter. By using it, you agree to

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQiskitTerra(PythonPackage):
     """Qiskit is an open-source SDK for working with quantum computers

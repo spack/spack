@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tldd(MakefilePackage):
     """A program similar to ldd(1) but showing the output as a tree."""

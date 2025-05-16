@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Yara(AutotoolsPackage):
     """YARA is a tool aimed at (but not limited to) helping malware researchers

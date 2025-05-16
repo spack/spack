@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hdf5VolAsync(CMakePackage):
     """This package enables asynchronous IO in HDF5.

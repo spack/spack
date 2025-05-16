@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtIotcentral(PythonPackage):
     """Microsoft Azure IoTCentral Management Client Library for Python."""

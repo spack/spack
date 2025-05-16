@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPickle5(PythonPackage):
     """This package backports all features and APIs added in the pickle module

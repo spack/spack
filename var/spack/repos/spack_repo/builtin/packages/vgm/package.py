@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vgm(CMakePackage):
     """Virtual Geometry Model (VGM) is a geometry conversion tool, actually

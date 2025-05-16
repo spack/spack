@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastcluster(PythonPackage):
     """Fast hierarchical clustering routines for R and Python."""

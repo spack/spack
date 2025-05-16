@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCekit(PythonPackage):
     """CEKit is a Container image creation tool.

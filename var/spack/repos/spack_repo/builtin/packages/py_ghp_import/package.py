@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGhpImport(PythonPackage):
     """Copy your docs directly to the gh-pages branch."""

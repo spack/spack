@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestCpp(PythonPackage):
     """Use pytest runner to discover and execute C++ tests."""

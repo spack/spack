@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFusepy(PythonPackage):
     """Fusepy is a Python module that provides a simple interface to FUSE and

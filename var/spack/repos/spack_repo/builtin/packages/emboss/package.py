@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Emboss(AutotoolsPackage):
     """EMBOSS is a free Open Source software analysis package specially

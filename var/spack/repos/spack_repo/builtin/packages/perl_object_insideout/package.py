@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlObjectInsideout(PerlPackage):
     """Implements inside-out objects as anonymous scalar references

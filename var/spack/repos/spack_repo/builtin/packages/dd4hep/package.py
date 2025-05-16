@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Dd4hep(CMakePackage):
     """DD4hep is a software framework for providing a complete solution for

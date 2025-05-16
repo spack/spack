@@ -7,6 +7,9 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceware import SourcewarePackage
+
 
 class Bzip2(Package, SourcewarePackage):
     """bzip2 is a freely available, patent free high-quality data

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPastedeploy(PythonPackage):
     """Load, configure, and compose WSGI applications and servers"""

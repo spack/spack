@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nanopb(CMakePackage):
     """Nanopb is a small code-size Protocol Buffers implementation

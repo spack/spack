@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJplephem(PythonPackage):
     """This package can load and use a Jet Propulsion Laboratory (JPL)

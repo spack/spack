@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeInterfaceCommon(PythonPackage):
     """Common functions and classes for Snakemake and its plugins."""

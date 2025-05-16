@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dtc(MakefilePackage):
     """Device Tree Compiler (dtc) toolchain for working with device tree

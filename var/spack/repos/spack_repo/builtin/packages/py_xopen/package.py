@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXopen(PythonPackage):
     """This small Python module provides a xopen function that works like the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RaxmlNg(CMakePackage):
     """RAxML-NG is a phylogenetic tree inference tool which uses

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCleanText(PythonPackage):
     """User-generated content on the Web and in social media is

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxcvt(MesonPackage, XorgPackage):
     """Implementation of the VESA CVT standard timing modelines generator."""

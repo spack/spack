@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGeomorph(RPackage):
     """Geometric Morphometric Analyses of 2D/3D Landmark Data.

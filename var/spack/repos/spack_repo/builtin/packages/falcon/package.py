@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Falcon(PythonPackage):
     """Falcon: a set of tools for fast aligning long reads for consensus

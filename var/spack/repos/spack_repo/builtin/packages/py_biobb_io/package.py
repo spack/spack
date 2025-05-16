@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBiobbIo(PythonPackage):
     """Biobb_io is the Biobb module collection to fetch data to be

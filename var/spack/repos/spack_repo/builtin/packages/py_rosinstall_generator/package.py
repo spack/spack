@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRosinstallGenerator(PythonPackage):
     """A tool for generating rosinstall files."""

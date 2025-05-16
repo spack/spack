@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtPolicyinsights(PythonPackage):
     """Microsoft Azure Policy Insights Client Library for Python."""

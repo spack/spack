@@ -4,8 +4,11 @@
 
 import pathlib
 
-import spack.build_systems.msbuild
 from spack.package import *
+
+from ...build_systems import msbuild
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.msbuild import MSBuildPackage
 
 
 class Lcms(AutotoolsPackage, MSBuildPackage):
@@ -44,7 +47,7 @@ class Lcms(AutotoolsPackage, MSBuildPackage):
         return find_libraries("liblcms2", root=self.prefix, recursive=True)
 
 
-class MSBuildBuilder(spack.build_systems.msbuild.MSBuildBuilder):
+class MSBuildBuilder(msbuild.MSBuildBuilder):
     @property
     def build_directory(self):
         return (

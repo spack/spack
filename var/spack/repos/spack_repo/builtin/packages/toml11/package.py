@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Toml11(CMakePackage):
     """toml11 is a C++11 (or later) header-only toml parser/encoder depending

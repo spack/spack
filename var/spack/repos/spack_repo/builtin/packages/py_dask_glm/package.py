@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDaskGlm(PythonPackage):
     """Dask-glm is a library for fitting Generalized Linear Models on

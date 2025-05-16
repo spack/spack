@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hpcg(AutotoolsPackage):
     """HPCG is a software package that performs a fixed number of multigrid

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipblaslt(CMakePackage):
     """hipBLASLt is a library that provides general matrix-matrix operations with a flexible API

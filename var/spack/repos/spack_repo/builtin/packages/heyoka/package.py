@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Heyoka(CMakePackage):
     """heyoka is a C++ library for integration of ODEs via Taylor’s method"""

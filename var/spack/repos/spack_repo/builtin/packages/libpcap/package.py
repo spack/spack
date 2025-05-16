@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpcap(AutotoolsPackage):
     """libpcap is a portable library in C/C++ for packet capture."""

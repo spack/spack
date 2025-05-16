@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySend2trash(PythonPackage):
     """Python library to send files to Trash/Recycle on all platforms."""

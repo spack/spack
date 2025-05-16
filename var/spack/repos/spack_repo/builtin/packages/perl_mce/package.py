@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMce(PerlPackage):
     """MCE - Many-Core Engine for Perl providing parallel processing

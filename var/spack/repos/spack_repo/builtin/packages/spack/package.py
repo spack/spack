@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.variant import DisjointSetsOfValues
 
+from ...build_systems.generic import Package
+
 
 class Spack(Package):
     """

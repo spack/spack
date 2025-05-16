@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Universal(CMakePackage):
     """Universal: a header-only C++ template library for universal number arithmetic"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCherrypy(PythonPackage):
     """CherryPy is a pythonic, object-oriented HTTP framework."""

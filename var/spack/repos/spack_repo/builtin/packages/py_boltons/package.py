@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBoltons(PythonPackage):
     """When they're not builtins, they're boltons.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSm(RPackage):
     """Smoothing Methods for Nonparametric Regression and Density Estimation.

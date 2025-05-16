@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySubrosa(PythonPackage):
     """Subrosa is a Python implementation of Shamir's Secret Sharing. An

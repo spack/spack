@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyasn1Modules(PythonPackage):
     """A collection of ASN.1 modules expressed in form of pyasn1 classes.

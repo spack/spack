@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libvori(CMakePackage):
     """Support for Voronoi Integration and lossless BQB compression"""

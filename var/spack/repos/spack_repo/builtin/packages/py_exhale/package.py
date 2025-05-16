@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExhale(PythonPackage):
     """Automatic C++ library api documentation generation: breathe doxygen in

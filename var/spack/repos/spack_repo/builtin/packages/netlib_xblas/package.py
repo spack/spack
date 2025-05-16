@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NetlibXblas(AutotoolsPackage):
     """XBLAS is a reference implementation for extra precision BLAS.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyChainforgecodegen(PythonPackage):
     """A code generator that fuses subsequent batched matrix multiplications (GEMMs)

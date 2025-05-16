@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RChamp(RPackage):
     """Chip Analysis Methylation Pipeline for Illumina HumanMethylation450 and

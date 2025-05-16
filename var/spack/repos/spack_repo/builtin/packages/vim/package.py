@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Vim(AutotoolsPackage):
     """Vim is a highly configurable text editor built to enable efficient text

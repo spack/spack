@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libdmx(AutotoolsPackage, XorgPackage):
     """libdmx - X Window System DMX (Distributed Multihead X) extension

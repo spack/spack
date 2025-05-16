@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pinfo(AutotoolsPackage):
     """Pinfo is user-friendly, console-based viewer for Info documents."""

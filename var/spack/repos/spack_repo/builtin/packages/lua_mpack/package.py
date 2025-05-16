@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.lua import LuaPackage
+
 
 class LuaMpack(LuaPackage):
     """lua bindings to libmpack"""

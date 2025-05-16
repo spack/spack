@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ActsDd4hep(CMakePackage):
     """Glue library to connect Acts to DD4hep"""

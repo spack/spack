@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Delly2(MakefilePackage):
     """Delly2 is an integrated structural variant prediction method that can

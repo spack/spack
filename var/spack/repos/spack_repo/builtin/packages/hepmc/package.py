@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hepmc(CMakePackage):
     """The HepMC package is an object oriented, C++ event record for

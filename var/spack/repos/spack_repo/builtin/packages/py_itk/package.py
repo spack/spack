@@ -8,6 +8,8 @@ import archspec
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyItk(PythonPackage):
     """ITK is an open-source toolkit for multidimensional image analysis"""

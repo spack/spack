@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCommonmark(RPackage):
     """High Performance CommonMark and Github Markdown Rendering in R.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColossalai(PythonPackage):
     """An integrated large-scale model training system with efficient

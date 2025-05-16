@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dedisp(MakefilePackage, CudaPackage):
     """GPU-based dedispersion package."""

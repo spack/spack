@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWradlib(PythonPackage):
     """wradlib is designed to assist you in the most important steps of

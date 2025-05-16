@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Htop(AutotoolsPackage):
     """htop is an interactive text-mode process viewer for Unix systems."""

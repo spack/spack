@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
 from spack.package import *
+
+from ...build_systems import cmake, makefile
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.makefile import MakefilePackage
 
 
 class Pexsi(MakefilePackage, CMakePackage):
@@ -59,7 +61,7 @@ class Pexsi(MakefilePackage, CMakePackage):
         return f"https://bitbucket.org/berkeleylab/pexsi/downloads/pexsi_v{version}.tar.gz"
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     parallel = False
 
     def edit(self, pkg, spec, prefix):
@@ -119,7 +121,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("PEXSI_ENABLE_FORTRAN", "fortran"),

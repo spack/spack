@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySfepy(PythonPackage):
     """SfePy (https://sfepy.org/) is a software for solving systems of coupled

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCacheMemcached(PerlPackage):
     """Client library for memcached (memory cache daemon)"""

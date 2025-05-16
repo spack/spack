@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLmodule(PythonPackage):
     """Lmodule is a Python API for Lmod module system. It's primary purpose is

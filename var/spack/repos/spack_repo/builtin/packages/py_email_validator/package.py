@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEmailValidator(PythonPackage):
     """A robust email address syntax and deliverability validation library."""

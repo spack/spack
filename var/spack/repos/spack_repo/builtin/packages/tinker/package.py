@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tinker(CMakePackage):
     """The Tinker molecular modeling software is a complete and general

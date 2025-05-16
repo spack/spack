@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpyparallel(PythonPackage):
     """IPython's architecture for parallel and distributed computing."""

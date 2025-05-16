@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonschemaSpecifications(PythonPackage):
     """The JSON Schema meta-schemas and vocabularies, exposed as a Registry."""

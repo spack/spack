@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Httping(AutotoolsPackage):
     """Httping is like 'ping' but for http-requests. Give it an url,

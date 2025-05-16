@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CodeServer(Package):
     """code-server is VS Code running on a remote server,

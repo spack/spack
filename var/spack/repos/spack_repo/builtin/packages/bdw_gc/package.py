@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BdwGc(AutotoolsPackage):
     """The Boehm-Demers-Weiser conservative garbage collector is a garbage

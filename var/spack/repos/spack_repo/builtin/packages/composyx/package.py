@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Composyx(CMakePackage):
     """a Massively Parallel Hybrid Solver in C++"""

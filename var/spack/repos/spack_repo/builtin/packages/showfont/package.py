@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Showfont(AutotoolsPackage, XorgPackage):
     """showfont displays data about a font from an X font server.

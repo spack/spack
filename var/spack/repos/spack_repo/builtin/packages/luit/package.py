@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Luit(AutotoolsPackage, XorgPackage):
     """Luit is a filter that can be run between an arbitrary application and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypulse(PythonPackage):
     """Pulse is a package used to handle PSRFITS files and perform subsequent

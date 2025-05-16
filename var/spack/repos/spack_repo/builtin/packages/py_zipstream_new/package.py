@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZipstreamNew(PythonPackage):
     """Zipfile generator that takes input files as well as streams"""

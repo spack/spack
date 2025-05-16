@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gpgme(AutotoolsPackage):
     """GPGME is the standard library to access GnuPG

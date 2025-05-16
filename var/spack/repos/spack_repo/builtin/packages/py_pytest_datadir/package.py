@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestDatadir(PythonPackage):
     """Pytest plugin for manipulating test data directories and files."""

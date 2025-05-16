@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Plsm(CMakePackage, CudaPackage):
     """plsm is a generic library for spatial subdivision within an N-dimensional lattice."""

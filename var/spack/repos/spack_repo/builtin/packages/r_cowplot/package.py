@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCowplot(RPackage):
     """Streamlined Plot Theme and Plot Annotations for 'ggplot2'.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMxfold2(PythonPackage):
     """MXfold2: RNA secondary structure prediction using deep

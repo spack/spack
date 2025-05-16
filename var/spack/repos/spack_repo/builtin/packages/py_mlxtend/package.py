@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMlxtend(PythonPackage):
     """Mlxtend (machine learning extensions) is a Python library of useful

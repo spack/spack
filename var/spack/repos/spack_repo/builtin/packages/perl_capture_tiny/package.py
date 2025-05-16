@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCaptureTiny(PerlPackage):
     """Capture STDOUT and STDERR from Perl, XS or external programs"""

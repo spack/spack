@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Genie(Package):
     """Genie is a neutrino Monte Carlo Generator."""

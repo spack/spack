@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RJanitor(RPackage):
     """Simple Tools for Examining and Cleaning Dirty Data.

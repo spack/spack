@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
 from spack.package import *
+
+from ...build_systems import autotools, meson
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
 
 
 class Libepoxy(AutotoolsPackage, MesonPackage):
@@ -41,7 +43,7 @@ class Libepoxy(AutotoolsPackage, MesonPackage):
             return f"https://github.com/anholt/libepoxy/releases/download/{version}/libepoxy-{version}.tar.xz"
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
 
     def meson_args(self):
         # Disable egl, otherwise configure fails with:
@@ -60,7 +62,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
 
     def configure_args(self):
         # Disable egl, otherwise configure fails with:

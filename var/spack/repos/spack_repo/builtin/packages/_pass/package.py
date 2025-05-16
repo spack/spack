@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pass(MakefilePackage):
     """Pass is a simple password manager that follows the Unix philosophy.

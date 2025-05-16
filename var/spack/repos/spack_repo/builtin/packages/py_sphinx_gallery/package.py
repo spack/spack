@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxGallery(PythonPackage):
     """A `Sphinx` extension that builds an HTML version of any Python script

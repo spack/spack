@@ -6,6 +6,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Parsec(CMakePackage, CudaPackage):
     """PaRSEC: the Parallel Runtime Scheduler and Execution Controller

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCircstats(RPackage):
     """Circular Statistics, from "Topics in Circular Statistics" (2001).

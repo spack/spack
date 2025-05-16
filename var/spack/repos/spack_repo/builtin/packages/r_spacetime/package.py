@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpacetime(RPackage):
     """Classes and Methods for Spatio-Temporal Data.

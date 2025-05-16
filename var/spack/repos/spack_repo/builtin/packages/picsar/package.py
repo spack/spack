@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Picsar(MakefilePackage):
     """PICSAR is a high performance library of optimized versions of the key

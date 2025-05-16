@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMailchecker(PythonPackage):
     """Cross-language email validation. Backed by a database of thousands

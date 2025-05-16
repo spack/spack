@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFnPy(PythonPackage):
     """Functional programming in Python: implementation of missing features

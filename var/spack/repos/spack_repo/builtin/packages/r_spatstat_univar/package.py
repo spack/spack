@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpatstatUnivar(RPackage):
     """Estimation of one-dimensional probability distributions including

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRbtools(PythonPackage):
     """RBTools is a set of command line tools and a rich Python API for

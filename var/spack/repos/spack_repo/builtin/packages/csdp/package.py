@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Csdp(MakefilePackage):
     """CSDP is a library of routines that implements a predictor corrector

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class UniversalCtags(AutotoolsPackage):
     """Universal Ctags generates an index (or tag) file of language

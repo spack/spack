@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AprUtil(AutotoolsPackage):
     """Apache Portable Runtime Utility"""

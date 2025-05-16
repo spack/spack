@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUserpath(PythonPackage):
     """Cross-platform tool for adding locations to the user PATH."""

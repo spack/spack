@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Adiak(CMakePackage):
     """Adiak collects metadata about HPC application runs and provides it

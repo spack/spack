@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Haccabana(CMakePackage):
     """HACCabana: A proxy app for HACC short range forces.

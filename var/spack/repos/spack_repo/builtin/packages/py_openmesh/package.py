@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenmesh(PythonPackage):
     """A versatile halfedge-based data structure for representing and

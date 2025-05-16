@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGevent(PythonPackage):
     """gevent is a coroutine-based Python networking library."""

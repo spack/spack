@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestCheckLinks(PythonPackage):
     """pytest plugin that checks URLs for HTML-containing files."""

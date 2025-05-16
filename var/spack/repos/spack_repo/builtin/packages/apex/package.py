@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Apex(CMakePackage):
     """Autonomic Performance Environment for eXascale (APEX)."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMoo(PerlPackage):
     """Moo - Minimalist Object Orientation (with Moose compatibility)"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPeachpy(PythonPackage):
     """Portable Efficient Assembly Codegen in Higher-level Python."""

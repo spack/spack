@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Lhapdfsets(BundlePackage):
     """A set of disretised data files of parton density functions ,

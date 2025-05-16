@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMatrixgenerics(RPackage):
     """S4 Generic Summary Statistic Functions that Operate on Matrix-Like

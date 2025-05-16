@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cbench(MakefilePackage):
     """Cbench is intended as a relatively straightforward toolbox of tests,

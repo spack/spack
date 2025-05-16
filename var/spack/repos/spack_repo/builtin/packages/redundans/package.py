@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Redundans(Package):
     """Redundans pipeline assists an assembly of heterozygous genomes."""

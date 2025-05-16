@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flatcc(CMakePackage):
     """FlatBuffers C Compiler (flatcc), a memory-efficient serialization

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLazyarray(PythonPackage):
     """a Python package that provides a lazily-evaluated numerical array class,

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyResizeRight(PythonPackage):
     """This is a resizing packge for images or tensors, that supports both

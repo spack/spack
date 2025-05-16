@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCfgrib(PythonPackage):
     """Python interface to map GRIB files to the NetCDF Common Data Model

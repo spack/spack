@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Metaeuk(CMakePackage):
     """MetaEuk is a modular toolkit designed for large-scale gene discovery

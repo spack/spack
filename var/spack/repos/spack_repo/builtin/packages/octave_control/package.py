@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveControl(OctavePackage, SourceforgePackage):
     """Computer-Aided Control System Design (CACSD) Tools for GNU Octave,

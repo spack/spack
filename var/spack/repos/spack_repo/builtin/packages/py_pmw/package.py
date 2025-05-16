@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPmw(PythonPackage):
     """Pmw is a toolkit for building high-level compound widgets, or

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Openmx(MakefilePackage):
     """OpenMX (Open source package for Material eXplorer) is a software

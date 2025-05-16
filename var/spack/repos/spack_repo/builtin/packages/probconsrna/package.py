@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Probconsrna(Package):
     """Experimental version of PROBCONS with parameters estimated via

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Isaac(CMakePackage):
     """In Situ Animation of Accelerated Computations: Header-Only Library"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Direnv(GoPackage):
     """Direnv is an environment switcher for the shell that can load and unload

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Weechat(CMakePackage):
     """WeeChat is a fast, light and extensible chat client, with a

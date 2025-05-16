@@ -4,6 +4,7 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
 from ..boost.package import Boost
 
 

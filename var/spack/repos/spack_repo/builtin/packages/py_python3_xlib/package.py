@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPython3Xlib(PythonPackage):
     """python3-xlib is python3 version of python-xlib."""

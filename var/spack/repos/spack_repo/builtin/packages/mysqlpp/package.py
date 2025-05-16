@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mysqlpp(AutotoolsPackage):
     """MySQL++ is a C++ wrapper for MySQL and MariaDB C APIs. It is built on

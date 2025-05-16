@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAssertive(RPackage):
     """Readable Check Functions to Ensure Code Integrity.

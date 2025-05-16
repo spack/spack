@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRio(RPackage):
     """A Swiss-Army Knife for Data I/O.

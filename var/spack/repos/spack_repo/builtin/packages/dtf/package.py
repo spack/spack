@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dtf(AutotoolsPackage):
     """DTF (Data Transfer Framework) is a general I/O arbitration

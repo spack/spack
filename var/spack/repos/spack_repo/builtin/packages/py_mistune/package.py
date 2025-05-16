@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMistune(PythonPackage):
     """A sane Markdown parser with useful plugins and renderers."""

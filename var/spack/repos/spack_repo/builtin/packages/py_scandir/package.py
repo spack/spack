@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScandir(PythonPackage):
     """scandir, a better directory iterator and faster os.walk()."""

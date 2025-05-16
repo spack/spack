@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LibpressioErrorinjector(CMakePackage):
     """LibPressioErrorInjector injects errors into data for sensitivity studies"""

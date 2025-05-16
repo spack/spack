@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNbstripout(PythonPackage):
     """Strips outputs from Jupyter and IPython notebooks."""

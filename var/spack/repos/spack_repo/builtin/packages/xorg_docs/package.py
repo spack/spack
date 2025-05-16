@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XorgDocs(AutotoolsPackage, XorgPackage):
     """This package provides miscellaneous documentation for the X Window

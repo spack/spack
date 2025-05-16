@@ -2,9 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
 from spack.package import *
+
+from ...build_systems import cmake, makefile
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.rocm import ROCmPackage
 
 
 class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
@@ -298,7 +302,7 @@ class Babelstream(CMakePackage, CudaPackage, ROCmPackage, MakefilePackage):
         )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         model_list = [
             "sycl",
@@ -671,7 +675,7 @@ register_flag_optional(TARGET_PROCESSOR
         return args
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     build_directory = "src/fortran"
 
     # Generate Compiler Specific includes

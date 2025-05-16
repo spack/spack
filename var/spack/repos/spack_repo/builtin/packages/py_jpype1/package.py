@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJpype1(PythonPackage):
     """JPype is an effort to allow python programs full access to java class

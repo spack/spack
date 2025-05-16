@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNcbit(RPackage):
     """Retrieve and build NBCI taxonomic data.

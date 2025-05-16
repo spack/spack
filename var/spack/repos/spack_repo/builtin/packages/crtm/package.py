@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Crtm(CMakePackage):
     """The Community Radiative Transfer Model (CRTM) package.

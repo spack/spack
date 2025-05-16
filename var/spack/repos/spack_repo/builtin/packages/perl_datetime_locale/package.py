@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetimeLocale(PerlPackage):
     """DateTime::Locale - Localization support for DateTime.pm"""

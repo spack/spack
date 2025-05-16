@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYtoptAutotune(PythonPackage):
     """Common interface for autotuning search space and method definition."""

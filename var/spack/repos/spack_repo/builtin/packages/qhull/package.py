@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qhull(CMakePackage):
     """Qhull computes the convex hull, Delaunay triangulation, Voronoi

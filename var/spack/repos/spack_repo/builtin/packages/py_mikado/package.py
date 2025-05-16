@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMikado(PythonPackage):
     """Mikado is a lightweight Python3 pipeline whose purpose is to facilitate

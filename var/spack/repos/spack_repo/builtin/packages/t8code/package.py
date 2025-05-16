@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class T8code(AutotoolsPackage):
     """t8code is a C/C++ library to manage parallel adaptive meshes with various element types.

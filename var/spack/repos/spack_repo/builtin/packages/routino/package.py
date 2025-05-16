@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Routino(MakefilePackage):
     """Routino is an application for finding a route between two points using

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Htslib(AutotoolsPackage):
     """C library for high-throughput sequencing data formats."""

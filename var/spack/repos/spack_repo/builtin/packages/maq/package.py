@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Maq(AutotoolsPackage):
     """Maq is a software that builds mapping assemblies from short reads

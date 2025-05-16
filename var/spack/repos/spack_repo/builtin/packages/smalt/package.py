@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Smalt(AutotoolsPackage, SourceforgePackage):
     """SMALT aligns DNA sequencing reads with a reference genome."""

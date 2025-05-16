@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xforms(AutotoolsPackage):
     """This is the Free Software distribution of the XForms Library, a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libsmeagol(MakefilePackage):
     """Non-equilibrium Green's function (NEGS) code."""

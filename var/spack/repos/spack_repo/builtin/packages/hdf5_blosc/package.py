@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 def _install_shlib(name, src, dst):
     """Install a shared library from directory src to directory dst"""

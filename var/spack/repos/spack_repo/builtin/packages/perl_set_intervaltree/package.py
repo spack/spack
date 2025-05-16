@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSetIntervaltree(PerlPackage):
     """Set::IntervalTree uses Interval Trees to store and efficiently look up

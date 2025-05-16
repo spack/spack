@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOset(PythonPackage):
     """Set that remembers original insertion order."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class MiniappAscent(Package):
     """Pantheon/E4S/Ascent in-situ miniapp example workflow"""

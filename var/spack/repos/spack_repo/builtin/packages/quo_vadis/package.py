@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class QuoVadis(CMakePackage):
     """A cross-stack coordination layer to dynamically

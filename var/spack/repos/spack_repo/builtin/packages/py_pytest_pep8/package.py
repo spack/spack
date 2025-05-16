@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestPep8(PythonPackage):
     """pytest plugin for efficiently checking PEP8 compliance"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Elasticsearch(Package):
     """Elasticsearch is a search engine based on Lucene. It provides a

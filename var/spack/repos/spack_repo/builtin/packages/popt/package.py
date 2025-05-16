@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Popt(AutotoolsPackage):
     """The popt library parses command line options."""

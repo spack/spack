@@ -7,6 +7,8 @@ from shutil import copyfile
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Nek5000(Package):
     """A fast and scalable high-order solver for computational fluid

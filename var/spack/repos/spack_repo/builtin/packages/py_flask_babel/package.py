@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlaskBabel(PythonPackage):
     """Implements i18n and l10n support for Flask."""

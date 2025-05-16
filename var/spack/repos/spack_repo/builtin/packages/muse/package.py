@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Muse(MakefilePackage):
     """Somatic point mutation caller."""

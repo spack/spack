@@ -7,6 +7,10 @@ import os
 from spack.package import *
 from spack.util.environment import set_env
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     """STRUMPACK -- STRUctured Matrix PACKage - provides linear solvers

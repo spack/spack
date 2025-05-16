@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxaw3d(AutotoolsPackage, XorgPackage):
     """Xaw3d is the X 3D Athena Widget Set.

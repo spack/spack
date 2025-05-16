@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Graylog2Server(Package):
     """Free and open source log management."""

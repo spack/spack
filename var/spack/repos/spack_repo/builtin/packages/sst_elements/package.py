@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class SstElements(AutotoolsPackage):
     """SST Elements implements a range of components for performing

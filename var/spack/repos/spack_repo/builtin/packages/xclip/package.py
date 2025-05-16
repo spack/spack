@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xclip(AutotoolsPackage):
     """xclip is a command line utility that is designed to run on any system

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Applewmproto(AutotoolsPackage, XorgPackage):
     """Apple Rootless Window Management Extension.

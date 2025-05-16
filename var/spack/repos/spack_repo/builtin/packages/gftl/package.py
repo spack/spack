@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gftl(CMakePackage):
     """This package generates containers (Vector, Set, Map, ...) with

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAlpacaEval(PythonPackage):
     """An automatic evaluator for instruction-following language models.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBigmemory(RPackage):
     """Manage Massive Matrices with Shared Memory and Memory-Mapped.

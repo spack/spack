@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlStringFormat(PerlPackage):
     """Sprintf-like string formatting capabilities with arbitrary format definitions"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyedr(PythonPackage):
     """Pyedr provides a means of reading a Gromacs EDR binary XDR file and return

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpectral(PythonPackage):
     """Spectral Python (SPy) is a pure Python module for processing

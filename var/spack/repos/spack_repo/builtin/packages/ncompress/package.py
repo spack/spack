@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ncompress(MakefilePackage):
     """This is (N)compress. It is an improved version of compress 4.1."""

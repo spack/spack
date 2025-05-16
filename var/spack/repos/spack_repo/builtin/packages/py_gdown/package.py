@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGdown(PythonPackage):
     """Google Drive Public File/Folder Downloader."""

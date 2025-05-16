@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cppcheck(CMakePackage):
     """A tool for static C/C++ code analysis."""

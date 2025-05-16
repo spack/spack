@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Diffmark(AutotoolsPackage):
     """Diffmark is a DSL for transforming one string to another."""

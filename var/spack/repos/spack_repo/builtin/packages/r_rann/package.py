@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRann(RPackage):
     """Fast Nearest Neighbour Search (Wraps ANN Library) Using L2 Metric.

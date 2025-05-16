@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class ZookeeperBenchmark(MavenPackage):
     """It is designed to measure the per-request latency of a ZooKeeper

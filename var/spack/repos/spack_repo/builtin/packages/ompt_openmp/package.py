@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OmptOpenmp(CMakePackage):
     """LLVM/Clang OpenMP runtime with OMPT support. This is a fork of the

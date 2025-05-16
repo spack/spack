@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWhoosh(PythonPackage):
     """Fast, pure-Python full text indexing, search, and spell checking library."""

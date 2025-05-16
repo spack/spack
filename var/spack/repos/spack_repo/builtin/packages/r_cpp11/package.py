@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCpp11(RPackage):
     """A C++11 Interface for R's C Interface.

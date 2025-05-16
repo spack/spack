@@ -8,6 +8,9 @@ import os
 import spack.util.environment
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+
 
 class Fsl(Package, CudaPackage):
     """FSL is a comprehensive library of analysis tools for FMRI, MRI and DTI

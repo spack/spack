@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Argtable(AutotoolsPackage):
     """Argtable is an ANSI C library for parsing GNU style command line

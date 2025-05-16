@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpatstatRandom(RPackage):
     """Random Generation Functionality for the 'spatstat' Family.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Graphicsmagick(AutotoolsPackage):
     """GraphicsMagick is the swiss army knife of image processing.

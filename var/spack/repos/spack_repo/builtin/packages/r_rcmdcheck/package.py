@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcmdcheck(RPackage):
     """Run 'R CMD check' from 'R' and Capture Results.

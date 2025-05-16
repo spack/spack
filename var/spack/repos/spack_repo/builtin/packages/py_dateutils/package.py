@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDateutils(PythonPackage):
     """Various utilities for working with date and datetime objects."""

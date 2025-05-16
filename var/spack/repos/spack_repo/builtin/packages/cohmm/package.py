@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cohmm(MakefilePackage):
     """An anticipated important use-case for next-generation supercomputing

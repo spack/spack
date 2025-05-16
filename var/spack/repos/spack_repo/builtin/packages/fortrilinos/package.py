@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fortrilinos(CMakePackage):
     """ForTrilinos provides a set of Fortran-2003 wrappers to the Trilinos

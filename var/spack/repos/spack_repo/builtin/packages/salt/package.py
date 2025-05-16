@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Salt(CMakePackage):
     """SALT: A next generation LLVM-based Source Analysis Toolkit for performance instrumentation

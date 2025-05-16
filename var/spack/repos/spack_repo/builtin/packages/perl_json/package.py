@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlJson(PerlPackage):
     """JSON (JavaScript Object Notation) encoder/decoder"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class CyrusSasl(AutotoolsPackage):
     """This is the Cyrus SASL API implementation. It can be used on the

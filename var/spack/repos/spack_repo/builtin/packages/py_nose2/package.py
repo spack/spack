@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNose2(PythonPackage):
     """unittest2 with plugins, the succesor to nose"""

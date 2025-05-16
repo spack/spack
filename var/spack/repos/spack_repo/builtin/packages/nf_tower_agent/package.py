@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NfTowerAgent(Package):
     """Tower Agent allows Nextflow Tower to launch pipelines

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Poamsa(MakefilePackage):
     """POA is Partial Order Alignment, a fast program for multiple sequence

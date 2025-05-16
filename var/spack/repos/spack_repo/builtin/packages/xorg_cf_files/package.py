@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XorgCfFiles(AutotoolsPackage, XorgPackage):
     """The xorg-cf-files package contains the data files for the imake utility,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Args(CMakePackage):
     """A simple header-only C++ argument parser library. Supposed to be

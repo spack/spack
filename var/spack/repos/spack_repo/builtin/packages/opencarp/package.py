@@ -7,6 +7,8 @@ from datetime import datetime
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Opencarp(CMakePackage):
     """The openCARP simulation software,

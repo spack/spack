@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Jchronoss(CMakePackage):
     """JCHRONOSS aims to help HPC application testing process

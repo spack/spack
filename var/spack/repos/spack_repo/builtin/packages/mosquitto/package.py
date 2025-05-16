@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mosquitto(CMakePackage):
     """Mosquitto is an open source implementation of a server

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyControl(PythonPackage):
     """The Python Control Systems Library is a Python module that implements

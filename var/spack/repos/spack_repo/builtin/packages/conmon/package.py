@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Conmon(MakefilePackage):
     """An OCI container runtime monitor that tracks and logs container lifecycle events."""

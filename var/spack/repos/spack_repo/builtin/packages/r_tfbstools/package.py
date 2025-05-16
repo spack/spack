@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTfbstools(RPackage):
     """Software Package for Transcription Factor Binding Site (TFBS) Analysis.

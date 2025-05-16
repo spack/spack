@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDocutilsStubs(PythonPackage):
     """PEP 561 based Type information for docutils."""

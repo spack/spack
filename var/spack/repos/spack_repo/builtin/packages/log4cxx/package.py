@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Log4cxx(CMakePackage):
     """A C++ port of Log4j"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlWwwRobotrules(PerlPackage):
     """Database of robots.txt-derived permissions"""

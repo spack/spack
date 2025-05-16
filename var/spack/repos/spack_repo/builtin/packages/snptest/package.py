@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Snptest(Package):
     """SNPTEST is a program for the analysis of single SNP association in

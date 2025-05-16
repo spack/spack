@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gcta(CMakePackage):
     """GCTA (Genome-wide Complex Trait Analysis) was originally designed to

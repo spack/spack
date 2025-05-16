@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import spack.build_systems.meson
 import spack.variant
 from spack.package import *
+
+from ...build_systems import meson
+from ...build_systems.meson import MesonPackage
 
 
 class Mesa(MesonPackage):
@@ -198,7 +200,7 @@ class Mesa(MesonPackage):
         return find_libraries(lib_name, root=self.spec.prefix, recursive=True)
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         spec = self.spec
         args = [

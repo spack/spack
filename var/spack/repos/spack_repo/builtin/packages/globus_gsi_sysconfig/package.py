@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GlobusGsiSysconfig(AutotoolsPackage):
     """The Grid Community Toolkit (GCT) is an open source software

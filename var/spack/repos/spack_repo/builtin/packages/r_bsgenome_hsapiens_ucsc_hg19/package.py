@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBsgenomeHsapiensUcscHg19(RPackage):
     """Full genome sequences for Homo sapiens (UCSC version hg19, based on

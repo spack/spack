@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Autogen(AutotoolsPackage, GNUMirrorPackage):
     """AutoGen is a tool designed to simplify the creation and maintenance of

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtMonitor(PythonPackage):
     """Microsoft Azure Monitor Client Library for Python."""

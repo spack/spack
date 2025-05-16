@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPackrat(RPackage):
     """A Dependency Management System for Projects and their R Package

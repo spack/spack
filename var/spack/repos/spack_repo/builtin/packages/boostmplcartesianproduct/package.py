@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Boostmplcartesianproduct(Package):
     """Cartesian_product is an extension to the Boost.MPL library and as such

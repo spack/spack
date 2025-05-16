@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlWriter(PerlPackage):
     """XML::Writer is a helper module for Perl programs that write an XML

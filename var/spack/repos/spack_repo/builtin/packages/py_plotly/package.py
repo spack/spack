@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPlotly(PythonPackage):
     """An interactive, browser-based graphing library for Python"""

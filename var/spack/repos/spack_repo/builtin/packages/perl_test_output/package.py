@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestOutput(PerlPackage):
     """Test::Output - Utilities to test STDOUT and STDERR messages."""

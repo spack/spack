@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyyamlEnvTag(PythonPackage):
     """A custom YAML tag for referencing environment variables in YAML files."""

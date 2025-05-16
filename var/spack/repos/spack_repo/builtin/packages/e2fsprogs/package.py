@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class E2fsprogs(AutotoolsPackage):
     """It provides the filesystem utilities for use with the ext2 filesystem.

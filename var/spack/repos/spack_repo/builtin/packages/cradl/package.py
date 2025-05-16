@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cradl(Package):
     """The CRADL proxy application captured performance metrics during

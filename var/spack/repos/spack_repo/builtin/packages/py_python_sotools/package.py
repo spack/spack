@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonSotools(PythonPackage):
     """python-sotools is a collection of tools to work with ELF shared objects"""

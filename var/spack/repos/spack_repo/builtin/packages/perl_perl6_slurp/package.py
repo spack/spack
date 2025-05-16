@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPerl6Slurp(PerlPackage):
     """Perl6::Slurp - Implements the Perl 6 'slurp' built-in"""

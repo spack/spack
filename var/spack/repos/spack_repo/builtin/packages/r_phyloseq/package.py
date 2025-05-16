@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPhyloseq(RPackage):
     """Handling and analysis of high-throughput microbiome census data.

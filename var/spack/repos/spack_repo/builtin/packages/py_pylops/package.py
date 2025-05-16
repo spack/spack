@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylops(PythonPackage):
     """Many useful operators, however, do not lend themselves to an explicit

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlexmock(PythonPackage):
     """flexmock is a testing library for Python that makes it easy to create

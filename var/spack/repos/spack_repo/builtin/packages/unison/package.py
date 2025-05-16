@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unison(MakefilePackage):
     """Unison is a file-synchronization tool for OSX, Unix, and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeobolt(PythonPackage):
     """Neo4j Bolt connector for Python"""

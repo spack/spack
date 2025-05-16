@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Petaca(CMakePackage):
     """A collection of modern Fortran modules.

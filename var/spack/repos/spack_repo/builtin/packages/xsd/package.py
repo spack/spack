@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xsd(MakefilePackage):
     """CodeSynthesis XSD is an open-source, cross-platform W3C XML Schema

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openwsman(CMakePackage):
     """Openwsman server implementation and client api with bindings."""

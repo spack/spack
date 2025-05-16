@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rdptools(MakefilePackage):
     """Collection of commonly used RDP Tools for easy building."""

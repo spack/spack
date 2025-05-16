@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMaestrowf(PythonPackage):
     """A general purpose workflow conductor for running multi-step

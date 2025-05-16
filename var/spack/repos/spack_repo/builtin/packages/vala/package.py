@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Vala(AutotoolsPackage):
     """Vala is a programming language that aims to bring modern programming

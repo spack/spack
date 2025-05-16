@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestPylint(PythonPackage):
     """Run pylint with pytest and have configurable rule types (i.e.

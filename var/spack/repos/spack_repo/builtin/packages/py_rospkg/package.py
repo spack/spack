@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRospkg(PythonPackage):
     """Library for retrieving information about ROS packages and stacks."""

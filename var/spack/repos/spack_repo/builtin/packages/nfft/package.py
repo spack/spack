@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Nfft(AutotoolsPackage):
     """NFFT is a C subroutine library for computing the nonequispaced discrete

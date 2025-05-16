@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApptools(PythonPackage):
     """The apptools project includes a set of packages that Enthought has found

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class AoclSparse(CMakePackage):
     """AOCL-Sparse is a library that contains basic linear algebra subroutines

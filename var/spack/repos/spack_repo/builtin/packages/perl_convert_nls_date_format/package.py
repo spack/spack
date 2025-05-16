@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlConvertNlsDateFormat(PerlPackage):
     """Convert Oracle NLS_DATE_FORMAT <-> strftime Format Strings"""

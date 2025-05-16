@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyomo(PythonPackage):
     """Pyomo is a Python-based open-source software package that supports a

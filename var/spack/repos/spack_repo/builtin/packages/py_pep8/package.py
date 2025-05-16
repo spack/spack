@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPep8(PythonPackage):
     """Python style guide checker (deprecated, use py-pycodestyle instead)."""

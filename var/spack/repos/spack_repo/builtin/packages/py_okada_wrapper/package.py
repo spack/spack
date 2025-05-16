@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOkadaWrapper(PythonPackage):
     """Python and MATLAB wrappers for the Okada Green's function codes"""

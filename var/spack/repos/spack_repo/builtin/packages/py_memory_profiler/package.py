@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMemoryProfiler(PythonPackage):
     """A module for monitoring memory usage of a python program"""

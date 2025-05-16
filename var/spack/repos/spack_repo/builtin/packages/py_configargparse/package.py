@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConfigargparse(PythonPackage):
     """Applications with more than a handful of user-settable

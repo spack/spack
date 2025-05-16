@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMachotools(PythonPackage):
     """Python package for editing Mach-O headers using macholib"""

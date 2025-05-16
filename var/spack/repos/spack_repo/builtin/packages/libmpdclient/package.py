@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libmpdclient(MesonPackage):
     """Libmpdclient is a C library which implements the Music Player

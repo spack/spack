@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class EsysParticle(CMakePackage):
     """ESyS-Particle is Open Source software for particle-based numerical

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRoc(RPackage):
     """utilities for ROC, with microarray focus.

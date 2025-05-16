@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Spaceranger(Package):
     """Space Ranger is a set of analysis pipelines that process Visium data with brightfield

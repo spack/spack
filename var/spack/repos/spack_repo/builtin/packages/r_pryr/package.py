@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPryr(RPackage):
     """Tools for Computing on the Language.

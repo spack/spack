@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class UfsWeatherModel(CMakePackage):
     """The Unified Forecast System (UFS) Weather Model (WM) is a prognostic

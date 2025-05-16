@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rsbench(MakefilePackage):
     """A mini-app to represent the multipole resonance representation lookup

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ccfits(AutotoolsPackage):
     """CCfits is an object oriented interface to the cfitsio library.

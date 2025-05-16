@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gnutls(AutotoolsPackage):
     """GnuTLS: The GNU Transport Layer Security Library

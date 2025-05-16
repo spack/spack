@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xtrans(AutotoolsPackage, XorgPackage):
     """xtrans is a library of code that is shared among various X packages to

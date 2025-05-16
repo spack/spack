@@ -4,8 +4,10 @@
 
 import os
 
-import spack.build_systems.lua
 from spack.package import *
+
+from ...build_systems import lua
+from ...build_systems.lua import LuaPackage
 
 
 class LuaLuafilesystem(LuaPackage):
@@ -35,7 +37,7 @@ class LuaLuafilesystem(LuaPackage):
     depends_on("lua-lang@:5.3", when="@:1.7")
 
 
-class LuaBuilder(spack.build_systems.lua.LuaBuilder):
+class LuaBuilder(lua.LuaBuilder):
     def install(self, pkg, spec, prefix):
         rocks_args = self.luarocks_args()
         if spec.satisfies("@:1.7.0-2"):

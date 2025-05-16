@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sprng(AutotoolsPackage):
     """SPRNG: A Scalable Library For Pseudorandom Number Generation

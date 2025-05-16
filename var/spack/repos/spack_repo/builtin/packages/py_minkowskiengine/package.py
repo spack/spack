@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyMinkowskiengine(PythonPackage, CudaPackage):
     """The MinkowskiEngine is an auto-differentiation

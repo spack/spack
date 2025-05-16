@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Corset(Package):
     """Corset is a command-line software program to go from a de novo

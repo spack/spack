@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Socat(AutotoolsPackage):
     """socat is a relay for bidirectional data transfer between two independent

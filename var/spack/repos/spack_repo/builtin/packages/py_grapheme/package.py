@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrapheme(PythonPackage):
     """A Python package for working with user perceived characters. More

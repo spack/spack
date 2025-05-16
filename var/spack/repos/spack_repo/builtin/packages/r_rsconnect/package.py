@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRsconnect(RPackage):
     """Deployment Interface for R Markdown Documents and Shiny Applications.

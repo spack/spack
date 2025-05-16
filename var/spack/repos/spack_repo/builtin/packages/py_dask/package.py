@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDask(PythonPackage):
     """Dask is a flexible parallel computing library for analytics."""

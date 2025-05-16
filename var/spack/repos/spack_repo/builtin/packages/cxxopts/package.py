@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cxxopts(CMakePackage):
     """Lightweight C++ command line option parser"""

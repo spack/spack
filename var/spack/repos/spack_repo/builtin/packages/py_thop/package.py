@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyThop(PythonPackage):
     """A tool to count the FLOPs of PyTorch model."""

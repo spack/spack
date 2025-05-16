@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGdsfmt(RPackage):
     """R Interface to CoreArray Genomic Data Structure (GDS) Files.

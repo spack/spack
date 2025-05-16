@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RJquerylib(RPackage):
     """Obtain 'jQuery' as an HTML Dependency Object.

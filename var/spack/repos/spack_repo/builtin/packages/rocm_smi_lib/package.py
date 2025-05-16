@@ -9,6 +9,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmSmiLib(CMakePackage):
     """It is a C library for Linux that provides a user space interface

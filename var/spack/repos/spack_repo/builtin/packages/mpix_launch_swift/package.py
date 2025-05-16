@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class MpixLaunchSwift(MakefilePackage):
     """Library that allows a child MPI application to be launched

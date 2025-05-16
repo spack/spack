@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kealib(CMakePackage):
     """An HDF5 Based Raster File Format.

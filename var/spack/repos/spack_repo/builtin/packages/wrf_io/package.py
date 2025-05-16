@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class WrfIo(CMakePackage):
     """The WRFIO package is a lightweight WRF-IO API library for Unified

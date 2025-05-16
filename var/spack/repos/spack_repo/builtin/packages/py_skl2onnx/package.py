@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySkl2onnx(PythonPackage):
     """Convert scikit-learn models to ONNX"""

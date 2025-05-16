@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCalver(PythonPackage):
     """The calver package is a setuptools extension for automatically

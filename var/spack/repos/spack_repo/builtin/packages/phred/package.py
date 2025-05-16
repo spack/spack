@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Phred(MakefilePackage):
     """The phred software reads DNA sequencing trace files, calls bases,

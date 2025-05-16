@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OpenIsns(AutotoolsPackage):
     """This is the iSNS server, supporting persistent storage

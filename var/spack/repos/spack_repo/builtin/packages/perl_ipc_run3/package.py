@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIpcRun3(PerlPackage):
     """Run a subprocess with input/ouput redirection"""

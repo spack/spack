@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySrsly(PythonPackage):
     """srsly: Modern high-performance serialization utilities for Python."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArgh(PythonPackage):
     """An argparse wrapper that doesn't make you say "argh" each time

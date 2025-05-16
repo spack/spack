@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTextGlob(PerlPackage):
     """Text::Glob implements glob(3) style matching that can be used to match

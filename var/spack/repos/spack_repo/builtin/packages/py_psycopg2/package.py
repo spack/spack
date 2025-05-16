@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPsycopg2(PythonPackage):
     """Python interface to PostgreSQL databases"""

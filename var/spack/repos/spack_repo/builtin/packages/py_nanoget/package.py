@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanoget(PythonPackage):
     """Functions to extract information from Oxford Nanopore sequencing data and alignments"""

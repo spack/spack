@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.racket import RacketPackage
+
 
 class RktZoLib(RacketPackage):
     """Libraries for handling zo files."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flux(CMakePackage):
     """A C++20 library for sequence-orientated programming"""

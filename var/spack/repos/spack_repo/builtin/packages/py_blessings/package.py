@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBlessings(PythonPackage):
     """A nicer, kinder way to write to the terminal"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SerenityLibint(CMakePackage):
     """Serenity fork of libint, which is difficult to reproduce from libint itself"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unrar(MakefilePackage):
     """RAR archive extraction utility"""

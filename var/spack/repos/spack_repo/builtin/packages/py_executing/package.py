@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExecuting(PythonPackage):
     """Get the currently executing AST node of a frame, and other information."""

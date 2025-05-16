@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxevie(AutotoolsPackage, XorgPackage):
     """Xevie - X Event Interception Extension (XEvIE)."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUnicycler(PythonPackage):
     """Unicycler is an assembly pipeline for bacterial genomes. It can

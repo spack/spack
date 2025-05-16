@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyfaidx(PythonPackage):
     """pyfaidx: efficient pythonic random access to fasta subsequences"""

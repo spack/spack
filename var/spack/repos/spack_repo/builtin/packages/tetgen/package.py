@@ -7,6 +7,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Tetgen(Package):
     """TetGen is a program and library that can be used to generate

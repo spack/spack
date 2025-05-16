@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXmltodict(PythonPackage):
     """xmltodict is a Python module that makes working with XML feel like

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMgraster(RPackage):
     """API Client for the MG-RAST Server of the US DOE KBase.

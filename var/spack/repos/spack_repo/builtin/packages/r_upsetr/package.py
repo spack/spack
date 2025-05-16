@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RUpsetr(RPackage):
     """A More Scalable Alternative to Venn and Euler Diagrams for Visualizing

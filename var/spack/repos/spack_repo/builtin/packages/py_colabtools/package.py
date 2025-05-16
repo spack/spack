@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColabtools(PythonPackage):
     """Tools to work with colab from google."""

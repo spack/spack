@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMooxTypesMooselike(PerlPackage):
     """Some Moosish types and a type builder"""

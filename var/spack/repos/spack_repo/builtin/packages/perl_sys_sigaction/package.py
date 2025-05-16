@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSysSigaction(PerlPackage):
     """Prior to version 5.8.0 perl implemented 'unsafe' signal handling. The

@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNvidiaDali(PythonPackage):
     """A GPU-accelerated library containing highly optimized building blocks and

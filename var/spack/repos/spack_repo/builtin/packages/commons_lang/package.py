@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CommonsLang(Package):
     """The standard Java libraries fail to provide enough methods for

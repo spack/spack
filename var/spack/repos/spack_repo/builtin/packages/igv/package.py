@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Igv(Package):
     """The Integrative Genomics Viewer (IGV) is a high-performance visualization

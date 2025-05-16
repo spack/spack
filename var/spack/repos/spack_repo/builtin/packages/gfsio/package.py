@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gfsio(CMakePackage):
     """The GFSIO library provides an API to convert GFS Gaussian output into

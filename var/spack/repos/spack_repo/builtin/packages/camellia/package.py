@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Camellia(CMakePackage):
     """Camellia: user-friendly MPI-parallel adaptive finite element package,

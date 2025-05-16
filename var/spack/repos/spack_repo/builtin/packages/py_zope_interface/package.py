@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZopeInterface(PythonPackage):
     """This package provides an implementation of "object interfaces" for

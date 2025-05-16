@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyheadtail(PythonPackage):
     """CERN PyHEADTAIL numerical n-body simulation code for simulating

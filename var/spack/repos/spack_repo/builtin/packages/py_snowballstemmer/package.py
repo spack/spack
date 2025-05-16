@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnowballstemmer(PythonPackage):
     """This package provides 29 stemmers for 28 languages generated from

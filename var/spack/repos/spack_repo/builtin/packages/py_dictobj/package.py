@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDictobj(PythonPackage):
     """A set of Python dictionary objects where keys can be accessed as instance attributes."""

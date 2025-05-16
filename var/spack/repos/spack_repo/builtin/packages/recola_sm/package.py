@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RecolaSm(CMakePackage):
     """Standard Model files for the Recola generator."""

@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Turbine(AutotoolsPackage):
     """Turbine: The Swift/T runtime"""

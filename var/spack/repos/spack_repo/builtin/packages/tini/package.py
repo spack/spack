@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tini(CMakePackage):
     """A tiny but valid `init` for containers"""

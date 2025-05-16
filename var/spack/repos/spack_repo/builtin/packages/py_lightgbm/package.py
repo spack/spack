@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightgbm(PythonPackage):
     """LightGBM is a gradient boosting framework that uses tree

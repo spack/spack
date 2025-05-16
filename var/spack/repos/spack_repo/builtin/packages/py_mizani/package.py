@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMizani(PythonPackage):
     """Mizani is a scales package for graphics. It is based on Hadley Wickham's

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class EprosimaFastdds(CMakePackage):
     """eprosima Fast DDS (formerly Fast RTPS) is a C++ implementation of the DDS

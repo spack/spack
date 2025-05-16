@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDirtyjson(PythonPackage):
     """JSON decoder for Python that can extract data from the muck"""

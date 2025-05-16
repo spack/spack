@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlModuleImplementation(PerlPackage):
     """Loads one of several alternate underlying implementations for a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class GdkPixbuf(MesonPackage):
     """The Gdk Pixbuf is a toolkit for image loading and pixel buffer manipulation. It is used by

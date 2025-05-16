@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CppHttplib(CMakePackage):
     """A C++ header-only HTTP/HTTPS server and client library."""

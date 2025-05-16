@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gl2ps(CMakePackage):
     """GL2PS is a C library providing high quality vector output for any

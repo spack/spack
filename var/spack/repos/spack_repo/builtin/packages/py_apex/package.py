@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyApex(PythonPackage):
     """apex: Pyramid toolkit to add Velruse, Flash Messages,CSRF,

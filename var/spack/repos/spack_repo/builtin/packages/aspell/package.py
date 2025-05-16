@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 # See also: AspellDictPackage
 class Aspell(AutotoolsPackage, GNUMirrorPackage):

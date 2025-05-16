@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmCmake(CMakePackage):
     """rocm-cmake provides CMake modules for common build tasks

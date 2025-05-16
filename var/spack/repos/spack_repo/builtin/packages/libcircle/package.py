@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libcircle(AutotoolsPackage):
     """libcircle provides an efficient distributed queue on a cluster,

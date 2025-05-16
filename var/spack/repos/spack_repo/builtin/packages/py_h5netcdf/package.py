@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyH5netcdf(PythonPackage):
     """A Python interface for the netCDF4 file-format that reads and writes local or

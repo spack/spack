@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLark(PythonPackage):
     """Lark is a modern general-purpose parsing library for Python."""

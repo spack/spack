@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeurora(PythonPackage):
     """A Python Toolbox for Multimodal Neural Data Representation Analysis."""

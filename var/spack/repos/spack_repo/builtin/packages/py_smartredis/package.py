@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySmartredis(PythonPackage):
     """A Python Interface for the SmartRedis Library Client"""

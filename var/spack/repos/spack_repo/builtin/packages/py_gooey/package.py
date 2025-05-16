@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGooey(PythonPackage):
     """Turn (almost) any command line program into

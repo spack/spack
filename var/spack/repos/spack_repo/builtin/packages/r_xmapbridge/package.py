@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXmapbridge(RPackage):
     """Export plotting files to the xmapBridge for visualisation in X:Map.

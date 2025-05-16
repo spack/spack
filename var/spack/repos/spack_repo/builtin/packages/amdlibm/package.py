@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 
 class Amdlibm(SConsPackage):
     """AMD LibM is a software library containing a collection of basic math

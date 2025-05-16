@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRfc3339Validator(PythonPackage):
     """A pure python RFC3339 validator."""

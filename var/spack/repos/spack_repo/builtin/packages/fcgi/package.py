@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fcgi(AutotoolsPackage):
     """FastCGI is simple because it is actually CGI with only a few extensions.

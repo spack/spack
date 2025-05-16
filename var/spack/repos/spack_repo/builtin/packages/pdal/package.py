@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pdal(CMakePackage):
     """PDAL is a C++ library for translating and manipulating point cloud data.

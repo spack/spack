@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAenum(PythonPackage):
     """Advanced Enumerations (compatible with Python's stdlib Enum),

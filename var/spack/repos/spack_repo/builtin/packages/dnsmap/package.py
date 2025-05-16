@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dnsmap(MakefilePackage):
     """dnsmap was originally released back in 2006 and was inspired

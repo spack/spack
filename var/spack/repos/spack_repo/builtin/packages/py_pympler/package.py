@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPympler(PythonPackage):
     """Development tool to measure, monitor and analyze the memory behavior

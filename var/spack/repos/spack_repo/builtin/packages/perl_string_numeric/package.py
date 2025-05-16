@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlStringNumeric(PerlPackage):
     """Determine whether a string represents a numeric value"""

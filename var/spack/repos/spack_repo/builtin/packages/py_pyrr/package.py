@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyrr(PythonPackage):
     """3D mathematical functions using NumPy."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libvterm(MakefilePackage):
     """An abstract library implementation of a terminal emulator"""

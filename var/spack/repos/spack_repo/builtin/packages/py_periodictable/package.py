@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPeriodictable(PythonPackage):
     """nose extends the test loading and running features of unittest,

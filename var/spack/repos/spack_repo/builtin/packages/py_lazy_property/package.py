@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLazyProperty(PythonPackage):
     """A package for making properties lazy"""

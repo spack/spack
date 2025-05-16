@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyElephant(PythonPackage):
     """Elephant is a package for analysis of electrophysiology data in Python"""

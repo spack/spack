@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLogLog4perl(PerlPackage):
     """Log4j implementation for Perl"""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Listres(AutotoolsPackage, XorgPackage):
     """The listres program generates a list of X resources for a widget

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEarthengineApi(PythonPackage):
     """This package allows developers to interact with Google Earth Engine

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Linkphase3(Package):
     """Haplotype reconstruction in pedigreed populations."""

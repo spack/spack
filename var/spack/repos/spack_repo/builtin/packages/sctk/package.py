@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Sctk(Package):
     """The NIST Scoring Toolkit (SCTK) is a collection of software tools

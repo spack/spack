@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyaml(PythonPackage):
     """PyYAML-based python module to produce pretty and readable

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDevito(PythonPackage):
     """Devito is a Python package to implement optimized stencil computation.

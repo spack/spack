@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Chexmix(Package):
     """ChExMix: the ChIP-exo mixture model. ChExMix aims to characterize protein-DNA binding

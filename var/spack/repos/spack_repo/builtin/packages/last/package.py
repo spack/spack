@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Last(MakefilePackage):
     """LAST finds similar regions between sequences, and aligns them. It is

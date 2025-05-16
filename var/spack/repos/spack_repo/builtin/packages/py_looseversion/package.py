@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLooseversion(PythonPackage):
     """Version numbering for anarchists and software realists."""

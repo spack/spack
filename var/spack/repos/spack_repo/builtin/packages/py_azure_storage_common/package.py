@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureStorageCommon(PythonPackage):
     """Microsoft Azure Storage Common Client Library for Python."""

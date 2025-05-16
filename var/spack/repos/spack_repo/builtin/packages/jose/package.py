@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jose(AutotoolsPackage):
     """This package contains a C library for performing JOSE operations."""

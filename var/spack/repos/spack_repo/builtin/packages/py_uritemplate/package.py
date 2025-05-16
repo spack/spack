@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUritemplate(PythonPackage):
     """Simple python library to deal with URI Templates."""

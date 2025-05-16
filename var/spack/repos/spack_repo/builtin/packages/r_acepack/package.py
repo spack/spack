@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAcepack(RPackage):
     """ACE and AVAS for Selecting Multiple Regression Transformations.

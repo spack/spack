@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Zipkin(MavenPackage):
     """Zipkin is a distributed tracing system. It helps gather timing

@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     """C++ API for the Basic Linear Algebra Subroutines. Developed by the

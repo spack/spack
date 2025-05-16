@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMonotonic(PythonPackage):
     """An implementation of time.monotonic() for Python 2 & < 3.3"""

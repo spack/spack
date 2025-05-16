@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAnalysispageserver(RPackage):
     """A framework for sharing interactive data and plots from R through the

@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 # - vanilla CentOS 7, and possibly other systems, fail a test:
 #   TestCloneNEWUSERAndRemapRootDisableSetgroups
 #

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Ico(AutotoolsPackage, XorgPackage):
     """ico is a simple animation program that may be used for testing various

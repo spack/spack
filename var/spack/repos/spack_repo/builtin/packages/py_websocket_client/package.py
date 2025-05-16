@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWebsocketClient(PythonPackage):
     """WebSocket client for Python. hybi13 is supported."""

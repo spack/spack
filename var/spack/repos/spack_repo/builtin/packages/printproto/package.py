@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Printproto(AutotoolsPackage, XorgPackage):
     """Xprint extension to the X11 protocol - a portable, network-transparent

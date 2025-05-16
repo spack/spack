@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetasv(PythonPackage):
     """An accurate and integrative structural-variant caller for next

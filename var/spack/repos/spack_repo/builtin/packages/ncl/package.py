@@ -8,6 +8,8 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ncl(Package):
     """NCL is an interpreted language designed specifically for

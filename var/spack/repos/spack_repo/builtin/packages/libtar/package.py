@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libtar(AutotoolsPackage):
     """libtar is a library for manipulating tar files from within C

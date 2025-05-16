@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNeo4j(PythonPackage):
     """This is the neo4j bolt driver for python from the official repository"""

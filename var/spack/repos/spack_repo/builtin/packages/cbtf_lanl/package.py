@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CbtfLanl(CMakePackage):
     """CBTF LANL project contains a memory tool and data center type system

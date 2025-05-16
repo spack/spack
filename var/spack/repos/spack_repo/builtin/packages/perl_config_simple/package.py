@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlConfigSimple(PerlPackage):
     """Config::Simple - simple configuration file class."""

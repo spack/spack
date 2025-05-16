@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Symlinks(MakefilePackage):
     """Scan or change symbolic links."""

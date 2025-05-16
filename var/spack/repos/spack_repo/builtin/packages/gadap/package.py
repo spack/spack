@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gadap(AutotoolsPackage):
     """Enables OPeNDAP access of in situ data."""

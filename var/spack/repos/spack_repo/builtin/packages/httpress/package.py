@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Httpress(MakefilePackage):
     """High performance HTTP server stress & benchmark utility."""

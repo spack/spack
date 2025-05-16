@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hunspell(AutotoolsPackage):
     """The most popular spellchecking library (sez the author...)."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rempi(AutotoolsPackage):
     """ReMPI is a record-and-replay tool for MPI applications."""

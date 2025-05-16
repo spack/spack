@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOntFast5Api(PythonPackage):
     """This project provides classes and utility functions for working with

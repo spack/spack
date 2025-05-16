@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Seqprep(MakefilePackage):
     """SeqPrep is a program to merge paired end Illumina reads that are

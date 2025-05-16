@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 def get_best_target(microarch, compiler_name, compiler_version):
     for compiler_entry in microarch.compilers[compiler_name]:

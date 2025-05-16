@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TrilinosCatalystIossAdapter(CMakePackage):
     """Adapter for Trilinos Seacas Ioss and Paraview Catalyst"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Zstr(Package):
     """This C++ header-only library enables the use of C++ standard

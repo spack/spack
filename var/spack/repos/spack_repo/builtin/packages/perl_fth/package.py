@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PerlFth(Package):
     """Ftagshtml is a Fortran (and simple C) to HTML browsing,

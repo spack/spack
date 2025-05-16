@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MsgpackC(CMakePackage):
     """A small, fast binary interchange format convertible to/from JSON"""

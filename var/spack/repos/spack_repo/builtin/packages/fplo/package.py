@@ -8,6 +8,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fplo(MakefilePackage):
     """The FPLO(R) package is a full-potential local-orbital code to solve the

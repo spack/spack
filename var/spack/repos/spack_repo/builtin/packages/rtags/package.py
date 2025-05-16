@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rtags(CMakePackage):
     """RTags is a client/server application that indexes C/C++ code"""

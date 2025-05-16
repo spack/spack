@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIncremental(PythonPackage):
     """A small library that versions your Python projects."""

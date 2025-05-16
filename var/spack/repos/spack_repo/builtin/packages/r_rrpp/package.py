@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRrpp(RPackage):
     """Linear Model Evaluation with Randomized Residuals in a Permutation

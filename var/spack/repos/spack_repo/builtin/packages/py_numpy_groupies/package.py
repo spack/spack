@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumpyGroupies(PythonPackage):
     """This package consists of a couple of optimised tools for doing things

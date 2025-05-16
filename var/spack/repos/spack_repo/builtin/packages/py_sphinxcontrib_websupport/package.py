@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribWebsupport(PythonPackage):
     """sphinxcontrib-webuspport provides a Python API to easily integrate

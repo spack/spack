@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathVecstat(PerlPackage):
     """Math::VecStat - Some basic numeric stats on vectors"""

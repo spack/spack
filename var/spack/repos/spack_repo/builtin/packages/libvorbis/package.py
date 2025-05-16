@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libvorbis(AutotoolsPackage):
     """Ogg Vorbis is a fully open, non-proprietary, patent-and-royalty-free,

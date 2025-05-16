@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySqlalchemyUtils(PythonPackage):
     """Various utility functions and custom data types for SQLAlchemy."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGenefilter(RPackage):
     """Methods for filtering genes from high-throughput experiments.

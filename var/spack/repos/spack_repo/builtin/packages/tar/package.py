@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Tar(AutotoolsPackage, GNUMirrorPackage):
     """GNU Tar provides the ability to create tar archives, as well as various

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libunwind(AutotoolsPackage):
     """A portable and efficient C programming interface (API) to determine

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PmgrCollective(Package):
     """PMGR_COLLECTIVE provides a scalable network for bootstrapping

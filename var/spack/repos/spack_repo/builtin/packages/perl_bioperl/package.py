@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioperl(PerlPackage):
     """BioPerl is the product of a community effort to produce Perl code which

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestQt(PythonPackage):
     """A pytest plugin that allows programmers to write tests for

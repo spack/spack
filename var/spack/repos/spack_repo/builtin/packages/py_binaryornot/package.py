@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBinaryornot(PythonPackage):
     """Ultra-lightweight pure Python package to check if a file is binary or text."""

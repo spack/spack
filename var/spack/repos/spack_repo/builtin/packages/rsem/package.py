@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rsem(MakefilePackage):
     """RSEM is a software package for estimating gene and isoform expression

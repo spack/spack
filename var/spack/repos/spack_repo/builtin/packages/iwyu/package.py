@@ -8,6 +8,8 @@ import archspec
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Iwyu(CMakePackage):
     """Include-what-you-use: A tool for use with clang to analyze #includes in

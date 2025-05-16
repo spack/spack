@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class GoogleCrc32c(CMakePackage):
     """CRC32C implementation with support for CPU-specific acceleration instructions."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cppcodec(CMakePackage):
     """Header-only C++11 library to encode/decode base64, base64url, base32,

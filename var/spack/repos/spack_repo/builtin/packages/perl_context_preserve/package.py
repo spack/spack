@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlContextPreserve(PerlPackage):
     """Run code after a subroutine call, preserving the context the subroutine

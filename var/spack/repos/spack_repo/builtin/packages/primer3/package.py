@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Primer3(MakefilePackage):
     """Primer3 is a widely used program for designing PCR primers

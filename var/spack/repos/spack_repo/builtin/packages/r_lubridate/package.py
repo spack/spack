@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLubridate(RPackage):
     """Make Dealing with Dates a Little Easier.

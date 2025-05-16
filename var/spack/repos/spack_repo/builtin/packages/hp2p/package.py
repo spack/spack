@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hp2p(AutotoolsPackage):
     """HP2P (Heavy Peer To Peer) benchmark is a test which performs MPI

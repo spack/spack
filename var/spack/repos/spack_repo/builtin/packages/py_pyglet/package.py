@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyglet(PythonPackage):
     """pyglet is a cross-platform windowing and multimedia library for Python

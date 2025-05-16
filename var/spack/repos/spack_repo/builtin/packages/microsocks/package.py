@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Microsocks(MakefilePackage):
     """Microsocks is a multithreaded, small, efficient SOCKS5 server.

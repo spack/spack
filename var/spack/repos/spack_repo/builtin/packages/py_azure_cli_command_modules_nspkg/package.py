@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureCliCommandModulesNspkg(PythonPackage):
     """Microsoft Azure CLI Command Modules Namespace Package."""

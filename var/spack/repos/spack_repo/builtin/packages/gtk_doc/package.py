@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GtkDoc(AutotoolsPackage):
     """GtkDoc is a tool used to extract API documentation from

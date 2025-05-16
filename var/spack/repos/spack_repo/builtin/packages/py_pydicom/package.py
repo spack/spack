@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydicom(PythonPackage):
     """Pure python package for DICOM medical file reading and writing

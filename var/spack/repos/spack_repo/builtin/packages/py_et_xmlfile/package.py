@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEtXmlfile(PythonPackage):
     """An implementation of lxml.xmlfile for the standard library."""

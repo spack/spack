@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cc65(MakefilePackage):
     """cc65 is a complete cross development package for 65(C)02 systems,

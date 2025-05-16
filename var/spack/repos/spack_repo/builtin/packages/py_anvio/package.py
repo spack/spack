@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnvio(PythonPackage):
     """Anvi’o is a comprehensive platform that brings together many aspects of

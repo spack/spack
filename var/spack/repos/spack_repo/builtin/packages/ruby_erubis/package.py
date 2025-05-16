@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyErubis(RubyPackage):
     """Erubis is a fast, secure, and very extensible implementation of eRuby."""

@@ -6,6 +6,8 @@ from os import environ
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gpi2(AutotoolsPackage):
     """GPI-2 implements GASPI specification, an API specification for

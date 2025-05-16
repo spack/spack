@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dftbplus(CMakePackage, MakefilePackage):
     """DFTB+ is an implementation of the

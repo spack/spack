@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOyaml(PythonPackage):
     """Ordered YAML: a drop-in replacement for PyYAML which preserves dict ordering."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylev(PythonPackage):
     """A pure Python Levenshtein implementation that's not freaking GPL'd."""

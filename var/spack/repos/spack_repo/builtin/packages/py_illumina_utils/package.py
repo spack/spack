@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIlluminaUtils(PythonPackage):
     """A library and collection of scripts to work with Illumina paired-end

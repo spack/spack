@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPubchempy(PythonPackage):
     """PubChemPy provides a way to interact with PubChem in Python. It allows

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hdf5VolLog(AutotoolsPackage):
     """Log-based VOL - an HDF5 VOL Plugin that stores HDF5 datasets in a log-based

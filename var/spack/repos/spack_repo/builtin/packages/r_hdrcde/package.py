@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHdrcde(RPackage):
     """Highest Density Regions and Conditional Density Estimation.

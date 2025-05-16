@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLatticeextra(RPackage):
     """Extra Graphical Utilities Based on Lattice.

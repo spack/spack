@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyh5md(PythonPackage):
     """Read and write H5MD files."""

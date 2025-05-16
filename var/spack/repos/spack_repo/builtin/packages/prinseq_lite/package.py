@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PrinseqLite(Package):
     """PRINSEQ will help you to preprocess your genomic or metagenomic

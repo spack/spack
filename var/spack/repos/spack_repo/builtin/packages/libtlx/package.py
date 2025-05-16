@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libtlx(CMakePackage):
     """tlx is a collection of C++ helpers and extensions universally needed,

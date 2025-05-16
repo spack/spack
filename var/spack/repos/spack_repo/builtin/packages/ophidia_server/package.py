@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OphidiaServer(AutotoolsPackage):
     """Front-end server of the Ophidia framework"""

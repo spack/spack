@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ghostscript(AutotoolsPackage):
     """An interpreter for the PostScript language and for PDF."""

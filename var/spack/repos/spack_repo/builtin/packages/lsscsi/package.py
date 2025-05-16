@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lsscsi(AutotoolsPackage):
     """Uses information provided by the sysfs pseudo file system in Linux

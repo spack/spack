@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPlackMiddlewareRemoveredundantbody(PerlPackage):
     """Plack::Middleware which removes body for HTTP response if it's not required"""

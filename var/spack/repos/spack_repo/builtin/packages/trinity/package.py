@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Trinity(MakefilePackage):
     """Trinity, developed at the Broad Institute and the Hebrew University of

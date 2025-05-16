@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fpchecker(CMakePackage):
     """FPChecker (Floating-Point Checker) is a dynamic analysis tool

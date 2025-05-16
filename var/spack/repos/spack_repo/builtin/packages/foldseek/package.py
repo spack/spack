@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Foldseek(CMakePackage):
     """Foldseek enables fast and sensitive comparisons of large protein structure sets"""

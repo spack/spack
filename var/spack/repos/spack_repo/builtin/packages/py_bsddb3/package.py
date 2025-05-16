@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBsddb3(PythonPackage):
     """This module provides a nearly complete wrapping of the Oracle/Sleepycat

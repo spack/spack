@@ -8,6 +8,8 @@ from pathlib import Path
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Boost(Package):
     """Boost provides free peer-reviewed portable C++ source

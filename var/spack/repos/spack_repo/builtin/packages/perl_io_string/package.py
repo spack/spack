@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoString(PerlPackage):
     """Emulate file interface for in-core strings"""

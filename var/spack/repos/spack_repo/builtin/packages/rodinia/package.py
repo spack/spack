@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rodinia(MakefilePackage, CudaPackage):
     """Rodinia: Accelerating Compute-Intensive Applications with

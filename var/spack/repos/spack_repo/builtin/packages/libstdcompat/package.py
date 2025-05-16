@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libstdcompat(CMakePackage):
     """A compatibility header for C++14, 17, and 20 for C++11"""

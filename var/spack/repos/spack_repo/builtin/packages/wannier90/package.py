@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Wannier90(MakefilePackage):
     """Wannier90 calculates maximally-localised Wannier functions (MLWFs).

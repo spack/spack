@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Freecad(CMakePackage):
     """FreeCAD is an open-source parametric 3D modeler made primarily

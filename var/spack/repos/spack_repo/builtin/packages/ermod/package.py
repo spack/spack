@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ermod(AutotoolsPackage):
     """ERmod (Energy Representation Module) is a program to calculate the

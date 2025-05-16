@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.makefile import MakefileBuilder
-from spack.build_systems.meson import MesonBuilder
 from spack.package import *
+
+from ...build_systems.makefile import MakefileBuilder, MakefilePackage
+from ...build_systems.meson import MesonBuilder, MesonPackage
 
 
 class Dpdk(MakefilePackage, MesonPackage):

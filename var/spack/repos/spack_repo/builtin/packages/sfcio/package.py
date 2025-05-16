@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sfcio(CMakePackage):
     """The SFCIO library provides an API to read the NCEP Spectral model surface

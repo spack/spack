@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Benchmark(CMakePackage):
     """A microbenchmark support library"""

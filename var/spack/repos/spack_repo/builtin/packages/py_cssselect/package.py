@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCssselect(PythonPackage):
     """Python-cssselect parses CSS3 Selectors and translate them to XPath 1.0

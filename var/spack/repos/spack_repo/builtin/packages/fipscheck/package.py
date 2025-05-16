@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fipscheck(AutotoolsPackage):
     """The integrity check is only one of many requirements needed for

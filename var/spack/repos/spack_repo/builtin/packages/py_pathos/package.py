@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPathos(PythonPackage):
     """Parallel graph management and execution in heterogeneous computing"""

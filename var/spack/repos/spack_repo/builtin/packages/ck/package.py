@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Ck(MavenPackage):
     """CK calculates class-level and metric-level code metrics in Java

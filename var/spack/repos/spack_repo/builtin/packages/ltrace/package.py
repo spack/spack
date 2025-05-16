@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ltrace(AutotoolsPackage):
     """Ltrace intercepts and records dynamic library calls which are called

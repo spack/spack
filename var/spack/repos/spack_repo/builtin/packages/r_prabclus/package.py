@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPrabclus(RPackage):
     """Functions for Clustering of Presence-Absence, Abundance and Multilocus

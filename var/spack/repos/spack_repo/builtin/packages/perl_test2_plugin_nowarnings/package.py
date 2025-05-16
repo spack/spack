@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTest2PluginNowarnings(PerlPackage):
     """Fail if tests warn"""

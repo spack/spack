@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Sendme(CargoPackage):
     """A cli tool to send directories over the network, with NAT hole punching"""

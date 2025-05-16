@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultiImbalance(PythonPackage):
     """Multi-class imbalance is a common problem occurring in real-world

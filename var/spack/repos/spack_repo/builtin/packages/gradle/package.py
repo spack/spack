@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gradle(Package):
     """Gradle is an open source build automation system that builds

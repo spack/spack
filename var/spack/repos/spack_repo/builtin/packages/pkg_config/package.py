@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class PkgConfig(AutotoolsPackage):
     """pkg-config is a helper tool used when compiling applications

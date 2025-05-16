@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnfnetlink(AutotoolsPackage):
     """libnfnetlink is a userspace library that provides some low-level

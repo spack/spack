@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGmxapi(PythonPackage):
     """Python bindings and ensemble workflow management for GROMACS.

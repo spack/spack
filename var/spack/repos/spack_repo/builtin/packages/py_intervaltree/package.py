@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIntervaltree(PythonPackage):
     """Editable interval tree data structure for Python 2 and 3."""

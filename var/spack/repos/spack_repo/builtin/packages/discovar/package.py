@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Discovar(AutotoolsPackage):
     """DISCOVAR is a variant caller and small genome assembler."""

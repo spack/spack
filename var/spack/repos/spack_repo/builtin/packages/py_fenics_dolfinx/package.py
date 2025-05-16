@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsDolfinx(PythonPackage):
     """Python interface to the next generation FEniCS problem solving

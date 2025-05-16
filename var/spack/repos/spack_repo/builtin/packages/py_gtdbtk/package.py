@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGtdbtk(PythonPackage):
     """GTDB-Tk is a software toolkit for assigning objective taxonomic

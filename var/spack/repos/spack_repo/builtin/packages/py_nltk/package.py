@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNltk(PythonPackage):
     """The Natural Language Toolkit (NLTK) is a Python package for

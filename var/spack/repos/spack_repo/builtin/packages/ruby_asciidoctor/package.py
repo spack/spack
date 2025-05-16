@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyAsciidoctor(RubyPackage):
     """A fast, open source text processor and publishing toolchain for

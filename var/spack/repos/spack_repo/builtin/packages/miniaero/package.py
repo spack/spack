@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Miniaero(MakefilePackage):
     """Proxy Application. MiniAero is a mini-application for the evaulation

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Jube(PythonPackage):
     """The Juelich benchmarking environment (JUBE) provides a script based

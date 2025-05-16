@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgsci(RPackage):
     """Scientific Journal and Sci-Fi Themed Color Palettes for 'ggplot2'.

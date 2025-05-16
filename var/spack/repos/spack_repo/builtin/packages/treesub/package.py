@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Treesub(Package):
     """A small program (which glues together other programs) that

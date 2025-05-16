@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 _versions = {
     "1.23.2": {
         "Linux-aarch64": "c2f1ca6cec376cb7eaff5807124b6d7ebcef9c84ff9f3fb7ad3ed1e942cfefab",

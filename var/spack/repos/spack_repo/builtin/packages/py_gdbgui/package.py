@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGdbgui(PythonPackage):
     """gdbgui is a modern, free, browser-based frontend to gdb"""

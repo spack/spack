@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Adms(AutotoolsPackage):
     """ADMS is a code generator that converts electrical compact device models

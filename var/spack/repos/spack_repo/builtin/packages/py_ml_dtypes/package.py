@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMlDtypes(PythonPackage):
     """A stand-alone implementation of several NumPy dtype extensions

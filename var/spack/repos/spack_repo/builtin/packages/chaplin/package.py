@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Chaplin(AutotoolsPackage):
     """The FORTRAN library CHAPLIN enables you to numerically

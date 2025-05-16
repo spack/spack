@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyside2(PythonPackage):
     """Python bindings for Qt."""

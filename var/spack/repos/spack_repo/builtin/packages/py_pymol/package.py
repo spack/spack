@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymol(PythonPackage):
     """PyMOL is a Python-enhanced molecular graphics tool. It excels at 3D

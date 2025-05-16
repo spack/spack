@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Blake3(CMakePackage):
     """BLAKE3 is a cryptographic hash function"""

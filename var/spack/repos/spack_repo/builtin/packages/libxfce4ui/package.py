@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libxfce4ui(AutotoolsPackage):
     """Widget sharing library for XFCE4"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OclIcd(AutotoolsPackage):
     """This package aims at creating an Open Source alternative to vendor specific

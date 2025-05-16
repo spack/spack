@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xmodmap(AutotoolsPackage, XorgPackage):
     """The xmodmap program is used to edit and display the keyboard modifier

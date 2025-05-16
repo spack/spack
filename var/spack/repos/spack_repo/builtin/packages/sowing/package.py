@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sowing(AutotoolsPackage):
     """Sowing generates Fortran interfaces and documentation for PETSc

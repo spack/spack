@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.build_systems.python
-from spack.build_systems import cmake, makefile
 from spack.package import *
+
+from ...build_systems import cmake, makefile
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.python import PythonPipBuilder
 
 
 class Jsonnet(MakefilePackage, CMakePackage):
@@ -53,11 +56,7 @@ class MakefileBuilder(makefile.MakefileBuilder):
     @run_after("install")
     def python_install(self):
         if self.pkg.spec.satisfies("+python"):
-            pip(
-                *spack.build_systems.python.PythonPipBuilder.std_args(self.pkg),
-                f"--prefix={self.pkg.prefix}",
-                ".",
-            )
+            pip(*PythonPipBuilder.std_args(self.pkg), f"--prefix={self.pkg.prefix}", ".")
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
@@ -72,8 +71,4 @@ class CMakeBuilder(cmake.CMakeBuilder):
     @run_after("install")
     def python_install(self):
         if self.pkg.spec.satisfies("+python"):
-            pip(
-                *spack.build_systems.python.PythonPipBuilder.std_args(self.pkg),
-                f"--prefix={self.pkg.prefix}",
-                ".",
-            )
+            pip(*PythonPipBuilder.std_args(self.pkg), f"--prefix={self.pkg.prefix}", ".")

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCykhash(PythonPackage):
     """Cython wrapper for khash-sets/maps, efficient implementation of isin and unique."""

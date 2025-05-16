@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tkrzw(AutotoolsPackage):
     """Tkrzw is a C++ library implementing database managers with various algorithms."""

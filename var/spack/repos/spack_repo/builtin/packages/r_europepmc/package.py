@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class REuropepmc(RPackage):
     """R Interface to the Europe PubMed Central RESTful Web Service.

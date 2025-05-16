@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypeshedClient(PythonPackage):
     """A library for accessing stubs in typeshed."""

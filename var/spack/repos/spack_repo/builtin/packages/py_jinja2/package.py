@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJinja2(PythonPackage):
     """Jinja2 is a template engine written in pure Python. It provides

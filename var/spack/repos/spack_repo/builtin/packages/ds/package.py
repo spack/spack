@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ds(AutotoolsPackage):
     """SAOImage DS9 is an astronomical imaging and data visualization

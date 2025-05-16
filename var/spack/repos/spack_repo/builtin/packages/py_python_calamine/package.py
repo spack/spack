@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonCalamine(PythonPackage):
     """Python binding for Rust's library for reading excel and odf file - calamine."""

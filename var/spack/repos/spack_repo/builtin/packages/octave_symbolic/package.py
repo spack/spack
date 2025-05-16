@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.octave import OctavePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class OctaveSymbolic(OctavePackage, SourceforgePackage):
     """Adds symbolic calculation features to GNU Octave.

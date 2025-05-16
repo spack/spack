@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Hsakmt(AutotoolsPackage, XorgPackage):
     """hsakmt is a thunk library that provides a userspace interface to amdkfd

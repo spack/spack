@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Musl(MakefilePackage):
     """Musl is a libc, an implementation of the standard library

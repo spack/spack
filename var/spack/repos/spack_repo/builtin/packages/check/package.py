@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Check(AutotoolsPackage):
     """Check is a unit testing framework for C. It features a simple interface

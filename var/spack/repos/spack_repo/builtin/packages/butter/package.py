@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Butter(Package):
     """butter: Bowtie UTilizing iTerative placEment of Repetitive small rnas.

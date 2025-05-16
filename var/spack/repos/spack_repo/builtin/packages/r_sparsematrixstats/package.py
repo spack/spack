@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSparsematrixstats(RPackage):
     """Summary Statistics for Rows and Columns of Sparse Matrices.

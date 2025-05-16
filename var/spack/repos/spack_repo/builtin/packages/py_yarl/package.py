@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYarl(PythonPackage):
     """The module provides handy URL class for URL parsing and changing."""

@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Fzf(GoPackage):
     """A general-purpose command-line fuzzy finder that provides fast, interactive

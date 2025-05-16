@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtSearch(PythonPackage):
     """Microsoft Azure Search Management Client Library for Python."""

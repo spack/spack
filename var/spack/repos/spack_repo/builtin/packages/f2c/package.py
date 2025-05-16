@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class F2c(MakefilePackage):
     """F2c converts Fortran 77 source code to C or C++ source files."""

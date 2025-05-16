@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoster(PythonPackage):
     """Streaming HTTP uploads and multipart/form-data encoding."""

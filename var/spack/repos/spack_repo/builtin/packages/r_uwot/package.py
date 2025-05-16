@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RUwot(RPackage):
     """The Uniform Manifold Approximation and Projection (UMAP) Method for

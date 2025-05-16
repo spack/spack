@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHclust2(PythonPackage):
     """Hclust2 is a handy tool for plotting heat-maps with several useful

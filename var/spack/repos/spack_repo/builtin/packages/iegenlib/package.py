@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Iegenlib(CMakePackage):
     """Inspector/Executor Generation Library for manipulating sets

@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.build_systems.cmake
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems import cmake
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.python import PythonExtension, PythonPipBuilder
 
 
 class PyPennylaneLightning(CMakePackage, PythonExtension):
@@ -71,7 +73,7 @@ class PyPennylaneLightning(CMakePackage, PythonExtension):
     # depends_on("py-pennylane@0.28:", type=("build", "run"))  # circular dependency
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     build_directory = "build"
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

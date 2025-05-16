@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libev(AutotoolsPackage):
     """A full-featured and high-performance event loop that is loosely modelled

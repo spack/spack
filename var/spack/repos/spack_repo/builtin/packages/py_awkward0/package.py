@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAwkward0(PythonPackage):
     """Manipulate arrays of complex data structures as easily as Numpy.

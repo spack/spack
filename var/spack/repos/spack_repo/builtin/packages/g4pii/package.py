@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4pii(Package):
     """Geant4 data for shell ionisation cross-sections"""

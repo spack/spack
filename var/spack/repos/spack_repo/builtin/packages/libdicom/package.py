@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libdicom(MesonPackage):
     """libdicom is a C library and a set of command-line tools for reading DICOM WSI files."""

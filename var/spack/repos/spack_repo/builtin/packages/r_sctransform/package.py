@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSctransform(RPackage):
     """Variance Stabilizing Transformations for Single Cell UMI Data.

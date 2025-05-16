@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Paddle(CMakePackage):
     """Parallel algebraic domain decomposition for linear algebra software package."""

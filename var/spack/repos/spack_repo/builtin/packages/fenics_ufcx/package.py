@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FenicsUfcx(CMakePackage):
     """FFCx provides the ufcx.h interface header for generated finite element

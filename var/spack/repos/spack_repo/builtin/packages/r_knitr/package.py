@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RKnitr(RPackage):
     """A General-Purpose Package for Dynamic Report Generation in R.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylikwid(PythonPackage):
     """Python interface to the LIKWID tools library with calls for system

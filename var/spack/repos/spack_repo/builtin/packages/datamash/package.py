@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Datamash(AutotoolsPackage, GNUMirrorPackage):
     """GNU datamash is a command-line program which performs basic numeric,

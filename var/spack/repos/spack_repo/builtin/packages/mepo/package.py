@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Mepo(PythonPackage):
     """Tool to manage (m)ultiple git r(epo)sitories"""

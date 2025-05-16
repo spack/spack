@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pmemkv(CMakePackage):
     """pmemkv is a local/embedded key-value datastore,

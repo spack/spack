@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mpifileutils(CMakePackage):
     """mpiFileUtils is a suite of MPI-based tools to manage large datasets,

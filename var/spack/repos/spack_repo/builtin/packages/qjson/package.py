@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Qjson(CMakePackage):
     """QJson is a Qt-based library that maps JSON data to QVariant

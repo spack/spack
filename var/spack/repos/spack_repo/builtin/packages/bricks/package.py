@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bricks(CMakePackage):
     """Bricks is a data layout and code generation framework,

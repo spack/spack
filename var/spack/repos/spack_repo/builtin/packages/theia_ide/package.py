@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class TheiaIde(Package):
     """A modern and open IDE for cloud and desktop.

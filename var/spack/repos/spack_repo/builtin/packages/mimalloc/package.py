@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mimalloc(CMakePackage):
     """mimalloc is a compact general purpose allocator with excellent performance."""

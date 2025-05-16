@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCopulas(PythonPackage):
     """Copulas is a Python library for modeling multivariate

@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+from ...build_systems.compiler import CompilerPackage
 from ..llvm.package import LlvmDetection
 
 

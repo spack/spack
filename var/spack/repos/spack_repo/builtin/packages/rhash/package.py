@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Rhash(MakefilePackage):
     """RHash is a console utility for computing and verifying hash sums of

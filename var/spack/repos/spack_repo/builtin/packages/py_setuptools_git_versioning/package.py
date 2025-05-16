@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySetuptoolsGitVersioning(PythonPackage):
     """Use git repo data for building a version number according PEP-440"""

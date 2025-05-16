@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Procps(AutotoolsPackage):
     """Command line and full screen utilities for browsing procfs, a "pseudo"

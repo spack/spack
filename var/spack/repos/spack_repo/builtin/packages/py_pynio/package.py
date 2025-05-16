@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynio(PythonPackage):
     """PyNIO ("pie-nee-oh") is a Python module that allows read and/or

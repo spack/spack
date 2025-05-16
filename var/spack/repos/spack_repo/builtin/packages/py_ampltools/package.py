@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAmpltools(PythonPackage):
     """This package includes tools to use with AMPL and amplpy."""

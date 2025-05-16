@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Discotec(CMakePackage):
     """This project contains DisCoTec, a code for the distributed sparse

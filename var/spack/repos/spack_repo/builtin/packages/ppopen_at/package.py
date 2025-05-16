@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PpopenAt(MakefilePackage):
     """ppOpen-AT is a part of the ppOpenHPC"""

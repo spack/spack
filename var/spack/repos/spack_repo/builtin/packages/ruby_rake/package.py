@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyRake(RubyPackage):
     """Rake is a Make-like program implemented in Ruby."""

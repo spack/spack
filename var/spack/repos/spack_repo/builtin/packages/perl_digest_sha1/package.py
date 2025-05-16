@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDigestSha1(PerlPackage):
     """Perl interface to the SHA-1 algorithm"""

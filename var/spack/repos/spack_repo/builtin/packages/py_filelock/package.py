@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFilelock(PythonPackage):
     """A platform-independent file lock for Python.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Geoip(AutotoolsPackage):
     """Library for country/city/organization to IP address

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRapidfuzz(PythonPackage):
     """Rapid fuzzy string matching in Python and C++ using the Levenshtein Distance."""

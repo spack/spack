@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Jline3(MavenPackage):
     """JLine is a Java library for handling console input."""

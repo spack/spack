@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRtracklayer(RPackage):
     """R interface to genome annotation files and the UCSC genome browser.

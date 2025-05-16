@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Filtlong(MakefilePackage):
     """Filtlong is a tool for filtering long reads by quality. It can

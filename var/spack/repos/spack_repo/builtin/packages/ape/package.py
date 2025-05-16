@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ape(Package):
     """A tool for generating atomic pseudopotentials within a Density-Functional

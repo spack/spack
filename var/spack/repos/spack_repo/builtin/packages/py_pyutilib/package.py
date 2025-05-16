@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyutilib(PythonPackage):
     """The PyUtilib project supports a collection of Python utilities,

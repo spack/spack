@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class XapianCore(AutotoolsPackage):
     """Xapian is a highly adaptable toolkit which allows developers to easily

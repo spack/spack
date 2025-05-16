@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Aespipe(AutotoolsPackage):
     """aespipe program is AES encrypting or decrypting pipe. It reads from

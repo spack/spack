@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Unixodbc(AutotoolsPackage):
     """ODBC is an open specification for providing application developers with

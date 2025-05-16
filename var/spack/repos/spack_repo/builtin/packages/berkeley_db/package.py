@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BerkeleyDb(AutotoolsPackage):
     """Oracle Berkeley DB"""

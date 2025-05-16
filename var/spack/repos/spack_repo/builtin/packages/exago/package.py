@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Exago(CMakePackage, CudaPackage, ROCmPackage):
     """ExaGO is a package for solving large-scale power grid optimization

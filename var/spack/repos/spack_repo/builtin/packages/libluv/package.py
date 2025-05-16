@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libluv(CMakePackage):
     """This library makes libuv available to lua scripts.

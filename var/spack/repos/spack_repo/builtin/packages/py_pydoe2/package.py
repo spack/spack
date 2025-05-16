@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydoe2(PythonPackage):
     """pyDOE2 is a fork of the pyDOE package that is designed to help the

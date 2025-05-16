@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Wise2(MakefilePackage):
     """The Wise2 package is now a rather stately bioinformatics package that

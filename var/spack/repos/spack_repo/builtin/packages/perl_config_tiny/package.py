@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlConfigTiny(PerlPackage):
     """Read/Write .ini style files with as little code as possible"""

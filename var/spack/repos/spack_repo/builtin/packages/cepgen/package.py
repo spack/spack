@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Cepgen(CMakePackage):
     """A generic central exclusive processes event generator"""

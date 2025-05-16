@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLidr(RPackage):
     """Airborne LiDAR data manipulation and visualisation for forestry application"""

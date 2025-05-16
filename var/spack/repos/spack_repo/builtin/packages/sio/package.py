@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sio(CMakePackage):
     """SIO is a persistency solution for reading and writing binary data in SIO

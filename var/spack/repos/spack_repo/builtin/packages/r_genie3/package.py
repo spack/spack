@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGenie3(RPackage):
     """GEne Network Inference with Ensemble of trees.

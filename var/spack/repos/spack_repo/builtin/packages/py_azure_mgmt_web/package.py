@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtWeb(PythonPackage):
     """Microsoft Azure Web Apps Management Client Library for Python."""

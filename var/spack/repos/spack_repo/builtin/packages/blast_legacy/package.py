@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class BlastLegacy(Package):
     """Legacy NCBI BLAST distribution -- no longer supported.

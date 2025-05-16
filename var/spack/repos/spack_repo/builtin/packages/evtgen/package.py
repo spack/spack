@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Evtgen(CMakePackage):
     """EvtGen is a Monte Carlo event generator that simulates

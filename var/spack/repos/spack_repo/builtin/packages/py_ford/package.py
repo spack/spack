@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFord(PythonPackage):
     """FORD, standing for FORtran Documenter, is an automatic documentation generator

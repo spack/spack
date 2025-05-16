@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCwlUpgrader(PythonPackage):
     """Common Workflow Language standalone document upgrader"""

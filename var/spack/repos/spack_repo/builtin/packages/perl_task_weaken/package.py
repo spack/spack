@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTaskWeaken(PerlPackage):
     """Ensure that a platform has weaken support"""

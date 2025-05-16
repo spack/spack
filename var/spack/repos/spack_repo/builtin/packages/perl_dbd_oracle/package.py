@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbdOracle(PerlPackage):
     """Oracle database driver for the DBI module"""

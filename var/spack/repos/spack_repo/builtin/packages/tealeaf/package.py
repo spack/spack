@@ -7,6 +7,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tealeaf(MakefilePackage):
     """Proxy Application. TeaLeaf is a mini-app that solves

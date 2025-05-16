@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDbf(PythonPackage):
     """Pure python package for reading/writing dBase, FoxPro, and Visual FoxPro

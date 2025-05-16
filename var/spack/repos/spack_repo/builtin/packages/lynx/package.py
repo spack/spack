@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lynx(AutotoolsPackage):
     """Lynx is the text web browser."""

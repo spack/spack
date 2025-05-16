@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCurl(RPackage):
     """A Modern and Flexible Web Client for R.

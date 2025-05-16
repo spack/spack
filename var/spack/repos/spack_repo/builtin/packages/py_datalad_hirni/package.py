@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladHirni(PythonPackage):
     """DataLad extension for raw data capturing and conversion workflows"""

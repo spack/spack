@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySniffio(PythonPackage):
     """This is a tiny package whose only purpose is to let you detect which

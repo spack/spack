@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVcstools(PythonPackage):
     """VCS/SCM source control library for svn, git, hg, and bzr."""

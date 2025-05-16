@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnnoy(PythonPackage):
     """Annoy (Approximate Nearest Neighbors Oh Yeah) is a C++ library with Python

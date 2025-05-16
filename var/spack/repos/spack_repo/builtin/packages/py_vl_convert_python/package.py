@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVlConvertPython(PythonPackage):
     """Convert Vega-Lite chart specifications to SVG, PNG, PDF, or Vega"""

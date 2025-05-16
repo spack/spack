@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchsummary(PythonPackage):
     """Keras has a neat API to view the visualization of the model

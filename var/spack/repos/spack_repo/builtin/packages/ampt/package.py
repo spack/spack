@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ampt(MakefilePackage):
     """A Multi-Phase Transport (AMPT) model is a Monte Carlo transport model for

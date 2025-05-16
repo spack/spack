@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyModin(PythonPackage):
     """Modin: Make your pandas code run faster by changing one line of code."""

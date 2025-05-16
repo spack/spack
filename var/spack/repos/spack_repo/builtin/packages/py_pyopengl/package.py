@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyopengl(PythonPackage):
     """PyOpenGL is the most common cross platform Python binding to OpenGL and related APIs."""

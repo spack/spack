@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySqlparse(PythonPackage):
     """A non-validating SQL parser module for Python."""

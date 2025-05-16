@@ -6,6 +6,8 @@ import itertools
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rocwmma(CMakePackage):
     """AMD's C++ library for accelerating mixed precision matrix multiplication

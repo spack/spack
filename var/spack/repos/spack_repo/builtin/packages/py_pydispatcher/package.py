@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydispatcher(PythonPackage):
     """Multi-producer-multi-consumer signal dispatching mechanism."""

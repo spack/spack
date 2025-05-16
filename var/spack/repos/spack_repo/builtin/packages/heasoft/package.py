@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Heasoft(AutotoolsPackage):
     """A Unified Release of the FTOOLS and XANADU Software Packages.

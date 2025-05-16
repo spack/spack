@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColorcet(PythonPackage):
     """A collection of perceptually acccurate 256-color colormaps for use with

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRtsne(RPackage):
     """T-Distributed Stochastic Neighbor Embedding using a Barnes-Hut

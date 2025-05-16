@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Faircmakemodules(CMakePackage):
     """CMake Modules developed in the context of various FAIR (https://www.gsi.de/en/researchaccelerators/fair) projects"""

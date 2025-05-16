@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySoyclustering(PythonPackage):
     """This package is implementation of Improving spherical k-means for document

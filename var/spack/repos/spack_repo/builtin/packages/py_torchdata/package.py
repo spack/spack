@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchdata(PythonPackage):
     """Composable data loading modules for PyTorch."""

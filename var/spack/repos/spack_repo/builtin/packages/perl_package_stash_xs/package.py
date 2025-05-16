@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPackageStashXs(PerlPackage):
     """Faster and more correct implementation of the Package::Stash API"""

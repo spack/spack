@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioSearchioHmmer(PerlPackage):
     """BioPerl parser to HMMER output."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLockfile(PythonPackage):
     """The lockfile package exports a LockFile class which provides a

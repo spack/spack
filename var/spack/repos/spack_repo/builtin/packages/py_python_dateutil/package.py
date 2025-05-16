@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonDateutil(PythonPackage):
     """Extensions to the standard Python datetime module."""

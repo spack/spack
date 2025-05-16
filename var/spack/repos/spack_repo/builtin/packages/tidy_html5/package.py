@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TidyHtml5(CMakePackage):
     """Tidy is a console application for Mac OS X, Linux, Windows, UNIX, and more.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGlmnet(RPackage):
     """Lasso and Elastic-Net Regularized Generalized Linear Models.

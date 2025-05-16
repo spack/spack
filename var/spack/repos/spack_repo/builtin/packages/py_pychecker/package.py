@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPychecker(PythonPackage):
     """Python source code checking tool."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUcxPy(PythonPackage):
     """UCX-Py is the Python interface for UCX, a low-level

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCharm4py(PythonPackage):
     """Charm4py (Charm++ for Python) is a distributed computing and parallel

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytoml(PythonPackage):
     """A parser for TOML-0.4.0.

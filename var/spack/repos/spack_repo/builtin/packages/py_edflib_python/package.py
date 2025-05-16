@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEdflibPython(PythonPackage):
     """Library to read/write EDF+/BDF+ files written in pure Python by the same

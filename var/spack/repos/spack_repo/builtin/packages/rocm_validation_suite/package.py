@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmValidationSuite(CMakePackage):
     """The ROCm Validation Suite (RVS) is a system administrators

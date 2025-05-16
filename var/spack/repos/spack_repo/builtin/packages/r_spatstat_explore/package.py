@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpatstatExplore(RPackage):
     """Exploratory Data Analysis for the 'spatstat' Family.

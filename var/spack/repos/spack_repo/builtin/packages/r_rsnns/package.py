@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRsnns(RPackage):
     """Neural Networks using the Stuttgart Neural Network Simulator (SNNS).

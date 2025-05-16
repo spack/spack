@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonpointer(PythonPackage):
     """Library to resolve JSON Pointers according to RFC 6901"""

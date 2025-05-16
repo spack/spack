@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HackrfHost(CMakePackage):
     """Software for HackRF, a low cost, open source Software Defined

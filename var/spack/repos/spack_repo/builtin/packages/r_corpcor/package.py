@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCorpcor(RPackage):
     """Efficient Estimation of Covariance and (Partial) Correlation.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUvloop(PythonPackage):
     """uvloop is a fast, drop-in replacement of the built-in asyncio event"""

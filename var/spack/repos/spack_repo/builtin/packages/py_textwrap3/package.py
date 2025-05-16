@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTextwrap3(PythonPackage):
     """textwrap from Python 3.6 backport (plus a few tweaks)."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPhylobase(RPackage):
     """Base Package for Phylogenetic Structures and Comparative Data.

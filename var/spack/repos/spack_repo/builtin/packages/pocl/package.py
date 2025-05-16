@@ -7,6 +7,8 @@ import os
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pocl(CMakePackage):
     """Portable Computing Language (pocl) is an open source implementation

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pslib(AutotoolsPackage):
     """C-library to create PostScript files on the fly."""

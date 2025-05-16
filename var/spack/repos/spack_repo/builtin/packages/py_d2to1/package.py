@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyD2to1(PythonPackage):
     """d2to1 (the 'd' is for 'distutils') allows

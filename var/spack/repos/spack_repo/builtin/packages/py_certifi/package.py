@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCertifi(PythonPackage):
     """Certifi: A carefully curated collection of Root Certificates for validating

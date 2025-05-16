@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSubQuote(PerlPackage):
     """Sub::Quote - Efficient generation of subroutines via string eval"""

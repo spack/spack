@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGalaxyContainers(PythonPackage):
     """The Galaxy containers module - interfaces for modeling and interacting

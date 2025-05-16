@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtHdinsight(PythonPackage):
     """Microsoft Azure HDInsight Management Client Library for Python."""

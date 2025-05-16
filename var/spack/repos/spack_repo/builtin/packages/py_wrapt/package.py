@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWrapt(PythonPackage):
     """Module for decorators, wrappers and monkey patching."""

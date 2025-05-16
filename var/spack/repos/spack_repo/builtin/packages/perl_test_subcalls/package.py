@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestSubcalls(PerlPackage):
     """Track the number of times subs are called"""

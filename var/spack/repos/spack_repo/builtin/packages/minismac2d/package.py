@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minismac2d(MakefilePackage):
     """Proxy Application. Solves the finite-differenced 2D incompressible

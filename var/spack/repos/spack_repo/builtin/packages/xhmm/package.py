@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Xhmm(MakefilePackage):
     """The XHMM C++ software suite was written to

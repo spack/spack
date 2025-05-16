@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 # Maintainer comments:
 # 18/12/2018: fix python detection

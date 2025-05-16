@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libraqm(MesonPackage):
     """Raqm provides a convenient API for the logic of complex text layout."""

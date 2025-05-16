@@ -5,6 +5,8 @@
 from spack.hooks.sbang import sbang_shebang_line
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pdi(CMakePackage):
     """PDI is a library that aims to decouple high-performance simulation codes

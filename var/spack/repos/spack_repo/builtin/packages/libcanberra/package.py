@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libcanberra(AutotoolsPackage):
     """libcanberra is an implementation of the XDG Sound Theme and

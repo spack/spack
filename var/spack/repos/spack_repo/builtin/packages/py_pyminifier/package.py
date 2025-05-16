@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyminifier(PythonPackage):
     """Pyminifier is a Python code minifier, obfuscator, and compressor."""

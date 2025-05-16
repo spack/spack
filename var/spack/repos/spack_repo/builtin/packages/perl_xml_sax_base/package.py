@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlSaxBase(PerlPackage):
     """This module has a very simple task - to be a base class for PerlSAX

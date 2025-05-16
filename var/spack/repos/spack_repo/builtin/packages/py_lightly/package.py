@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightly(PythonPackage):
     """A deep learning package for self-supervised learning."""

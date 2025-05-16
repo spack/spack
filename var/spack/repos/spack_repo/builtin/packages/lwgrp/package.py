@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lwgrp(AutotoolsPackage):
     """Thie light-weight group library provides process group

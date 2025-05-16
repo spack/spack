@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShroud(PythonPackage):
     """Create Fortran wrappers for a C++ library."""

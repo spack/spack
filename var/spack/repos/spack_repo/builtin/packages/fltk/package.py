@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fltk(Package):
     """FLTK (pronounced "fulltick") is a cross-platform C++ GUI toolkit for

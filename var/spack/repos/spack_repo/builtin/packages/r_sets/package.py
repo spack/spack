@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSets(RPackage):
     """Sets, Generalized Sets, Customizable Sets and Intervals

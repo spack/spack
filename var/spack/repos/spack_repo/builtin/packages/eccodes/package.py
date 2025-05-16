@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 _definitions = {
     # German Meteorological Service (Deutscher Wetterdienst, DWD):
     "edzw": {

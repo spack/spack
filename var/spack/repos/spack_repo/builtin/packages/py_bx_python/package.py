@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBxPython(PythonPackage):
     """The bx-python project is a python library and associated set of scripts

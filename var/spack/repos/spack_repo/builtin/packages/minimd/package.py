@@ -6,6 +6,8 @@ import tarfile
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minimd(MakefilePackage):
     """Proxy Application. A simple proxy for the force computations

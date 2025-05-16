@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUnfoldnd(PythonPackage):
     """N-dimensional unfold (im2col) and fold (col2im) in PyTorch."""

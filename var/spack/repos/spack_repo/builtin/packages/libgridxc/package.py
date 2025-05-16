@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libgridxc(MakefilePackage):
     """A library to compute the exchange and correlation energy and potential

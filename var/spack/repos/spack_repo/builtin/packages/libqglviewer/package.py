@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Libqglviewer(QMakePackage):
     """libQGLViewer is a C++ library based on Qt that eases the creation of

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMzr(RPackage):
     """parser for netCDF, mzXML, mzData and mzML and mzIdentML files (mass

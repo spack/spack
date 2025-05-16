@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyqi(PythonPackage):
     """pyqi (canonically pronounced pie chee) is a Python framework designed

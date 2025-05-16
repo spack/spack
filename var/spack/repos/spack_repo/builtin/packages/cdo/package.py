@@ -7,6 +7,8 @@ from collections import defaultdict
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cdo(AutotoolsPackage):
     """CDO is a collection of command line Operators to manipulate and analyse

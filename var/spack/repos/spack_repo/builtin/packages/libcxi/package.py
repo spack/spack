@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libcxi(AutotoolsPackage):
     """The CXI library provides interfaces which interact directly with CXI

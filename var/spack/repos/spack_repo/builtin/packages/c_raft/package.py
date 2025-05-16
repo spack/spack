@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class CRaft(AutotoolsPackage):
     """C implementation of the Raft consensus protocol."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class H5utils(AutotoolsPackage):
     """h5utils is a set of utilities for visualization and conversion of

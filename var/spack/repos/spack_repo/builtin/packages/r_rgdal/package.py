@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRgdal(RPackage):
     """Bindings for the 'Geospatial' Data Abstraction Library.

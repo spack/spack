@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppannoy(RPackage):
     """'Rcpp' Bindings for 'Annoy', a Library for Approximate Nearest

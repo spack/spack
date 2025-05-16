@@ -5,6 +5,8 @@ from typing import List
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribHtmlhelp(PythonPackage):
     """sphinxcontrib-htmlhelp is a sphinx extension which outputs htmlhelp

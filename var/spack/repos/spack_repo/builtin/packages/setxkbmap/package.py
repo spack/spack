@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Setxkbmap(AutotoolsPackage, XorgPackage):
     """setxkbmap is an X11 client to change the keymaps in the X server for a

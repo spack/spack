@@ -6,6 +6,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gchp(CMakePackage):
     """GEOS-Chem High Performance model of atmospheric chemistry"""

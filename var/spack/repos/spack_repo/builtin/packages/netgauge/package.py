@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Netgauge(AutotoolsPackage):
     """Netgauge is a high-precision network parameter measurement

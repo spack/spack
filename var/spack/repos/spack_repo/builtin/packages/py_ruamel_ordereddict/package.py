@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRuamelOrdereddict(PythonPackage):
     """This is an implementation of an ordered dictionary with Key Insertion

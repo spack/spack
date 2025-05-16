@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColorpy(PythonPackage):
     """ColorPy is a Python package to convert physical descriptions of light -

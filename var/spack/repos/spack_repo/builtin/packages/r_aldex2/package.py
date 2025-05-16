@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAldex2(RPackage):
     """Analysis Of Differential Abundance Taking Sample Variation Into Account.

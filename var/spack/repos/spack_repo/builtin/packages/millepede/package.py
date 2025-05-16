@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Millepede(MakefilePackage):
     """Millepede II is a package for linear least squares fits

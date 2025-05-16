@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpppy(PythonPackage):
     """The Output Parse-Plot Python (OPPPY) library is a python based data

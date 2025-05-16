@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVermin(PythonPackage):
     """Concurrently detect the minimum Python versions needed to run code."""

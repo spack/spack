@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlDom(PerlPackage):
     """This module extends the XML::Parser module by Clark Cooper. The

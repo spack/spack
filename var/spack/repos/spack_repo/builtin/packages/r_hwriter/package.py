@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHwriter(RPackage):
     """HTML Writer - Outputs R objects in HTML format.

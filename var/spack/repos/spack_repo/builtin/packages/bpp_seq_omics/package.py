@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BppSeqOmics(CMakePackage):
     """Bio++ Sequence Omics Library"""

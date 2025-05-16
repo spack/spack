@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAnimation(RPackage):
     """A Gallery of Animations in Statistics and Utilities to Create

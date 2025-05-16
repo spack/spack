@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Gsoap(AutotoolsPackage, SourceforgePackage):
     """The gSOAP toolkit is an extensive suite of portable C and C++

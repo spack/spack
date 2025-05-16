@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Neon(CMakePackage):
     """NeoN is a PDE solver for CFD frameworks."""

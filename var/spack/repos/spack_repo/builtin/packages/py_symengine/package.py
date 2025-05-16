@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySymengine(PythonPackage):
     """Python wrappers for SymEngine, a symbolic manipulation library."""

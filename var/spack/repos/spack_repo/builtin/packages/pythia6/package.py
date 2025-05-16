@@ -7,6 +7,8 @@ import urllib.parse
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 def _is_integral(x):
     """Accepts only integral values."""

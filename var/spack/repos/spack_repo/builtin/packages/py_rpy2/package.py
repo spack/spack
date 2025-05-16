@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRpy2(PythonPackage):
     """rpy2 is a redesign and rewrite of rpy. It is providing a low-level

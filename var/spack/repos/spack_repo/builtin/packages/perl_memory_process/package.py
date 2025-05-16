@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMemoryProcess(PerlPackage):
     """Memory::Process - Perl class to determine actual memory usage"""

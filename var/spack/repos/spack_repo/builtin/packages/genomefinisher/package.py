@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Genomefinisher(Package):
     """GFinisher is an application tools for refinement and finalization of

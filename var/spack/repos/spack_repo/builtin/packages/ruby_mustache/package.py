@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyMustache(RubyPackage):
     """Inspired by ctemplate and et, Mustache is a framework-agnostic way to

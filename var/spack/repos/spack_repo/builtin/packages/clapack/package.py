@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Clapack(MakefilePackage):
     """CLAPACK is a f2c'ed version of LAPACK.

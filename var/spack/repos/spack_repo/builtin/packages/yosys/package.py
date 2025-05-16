@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Yosys(MakefilePackage):
     """Yosys is a framework for RTL synthesis tools. It currently has extensive

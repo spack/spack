@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycares(PythonPackage):
     """pycares is a Python module which provides an interface to c-ares. c-ares

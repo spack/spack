@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyct(PythonPackage):
     """Python package common tasks for users (e.g. copy examples, fetch data, ...)"""

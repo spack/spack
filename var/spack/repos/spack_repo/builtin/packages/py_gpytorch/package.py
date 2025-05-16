@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGpytorch(PythonPackage):
     """GPyTorch is a Gaussian process library implemented using PyTorch.

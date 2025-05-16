@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Genesis(AutotoolsPackage, CudaPackage):
     """GENESIS is a Molecular dynamics and modeling software

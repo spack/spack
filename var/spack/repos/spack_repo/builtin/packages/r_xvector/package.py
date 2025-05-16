@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXvector(RPackage):
     """Foundation of external vector representation and manipulation in

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestLongstring(PerlPackage):
     """Tests strings for equality, with more helpful failures"""

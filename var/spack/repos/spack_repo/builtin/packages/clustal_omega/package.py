@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ClustalOmega(AutotoolsPackage):
     """Clustal Omega: the last alignment program you'll ever need."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDistance(PythonPackage):
     """This package provides helpers for computing similarities

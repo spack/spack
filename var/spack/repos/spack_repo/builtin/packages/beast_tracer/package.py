@@ -6,6 +6,8 @@ from os import path
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class BeastTracer(Package):
     """Tracer is a graphical tool for visualization and diagnostics of MCMC

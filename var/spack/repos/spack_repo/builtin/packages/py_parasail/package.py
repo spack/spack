@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParasail(PythonPackage):
     """Python Bindings for the Parasail C Library. Parasail is a SIMD C (C99)

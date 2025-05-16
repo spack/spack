@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sparsehash(AutotoolsPackage):
     """Sparse and dense hash-tables for C++ by Google"""

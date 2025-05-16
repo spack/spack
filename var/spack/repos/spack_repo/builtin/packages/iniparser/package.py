@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Iniparser(MakefilePackage):
     """This modules offers parsing of ini files from the C level."""

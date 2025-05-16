@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAmplpy(PythonPackage):
     """AMPL API is an interface that allows developers to access the features of

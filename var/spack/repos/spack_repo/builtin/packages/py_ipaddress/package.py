@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpaddress(PythonPackage):
     """Python 3.3's ipaddress for older Python versions"""

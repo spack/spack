@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Gexiv2(MesonPackage):
     """gexiv2 is a GObject wrapper around the Exiv2 photo metadata library.

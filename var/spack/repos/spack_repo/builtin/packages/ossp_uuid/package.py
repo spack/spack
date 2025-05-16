@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class OsspUuid(AutotoolsPackage):
     """OSSP uuid is a ISO-C:1999 application programming interface (API) and

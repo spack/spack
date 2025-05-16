@@ -9,6 +9,8 @@ import llnl.util.filesystem as fsys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libcatalyst(CMakePackage):
     """Catalyst is an API specification developed for simulations (and other

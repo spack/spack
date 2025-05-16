@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCylcRose(PythonPackage):
     """A Cylc plugin providing support for the Rose rose-suite.conf file."""

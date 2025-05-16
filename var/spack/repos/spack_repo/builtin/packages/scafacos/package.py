@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Scafacos(AutotoolsPackage):
     """ScaFaCoS is a library of scalable fast coulomb solvers."""

@@ -6,6 +6,8 @@ import datetime
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class HttpPost(MakefilePackage):
     """Http_post does a POST operation to an HTTP URL and dumps the results

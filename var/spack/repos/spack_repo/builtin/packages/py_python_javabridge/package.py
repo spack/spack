@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonJavabridge(PythonPackage):
     """The python-javabridge package makes it easy to start a

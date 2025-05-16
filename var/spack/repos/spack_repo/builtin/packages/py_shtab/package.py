@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyShtab(PythonPackage):
     """Automatically generate shell tab completion scripts for python CLI apps."""

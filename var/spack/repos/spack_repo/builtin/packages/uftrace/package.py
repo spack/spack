@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Uftrace(AutotoolsPackage):
     """Dynamic function graph tracer for Linux which demangles C, C++ and Rust calls"""

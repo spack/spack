@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCondaInject(PythonPackage):
     """Helper functions for injecting a conda environment into the current python environment."""

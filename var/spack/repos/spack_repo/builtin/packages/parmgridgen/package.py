@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 # Note: should probably be named 'mgridgen+mpi' (as per scotch, metis etc)
 class Parmgridgen(Package):

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTiktoken(PythonPackage):
     """tiktoken is a fast BPE tokeniser for use with OpenAI's models."""

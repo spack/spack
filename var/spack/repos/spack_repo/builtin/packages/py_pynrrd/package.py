@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynrrd(PythonPackage):
     """Python library for reading and writing NRRD files into and from numpy arrays"""

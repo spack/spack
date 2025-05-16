@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSnprelate(RPackage):
     """Parallel Computing Toolset for Relatedness and Principal Component

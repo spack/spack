@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterServerTerminals(PythonPackage):
     """A Jupyter Server Extension Providing Terminals."""

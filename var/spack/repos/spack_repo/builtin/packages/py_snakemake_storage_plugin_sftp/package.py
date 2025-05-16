@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginSftp(PythonPackage):
     """A Snakemake storage plugin that handles files on an SFTP server."""

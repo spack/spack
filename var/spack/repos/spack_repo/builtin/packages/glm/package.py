@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Glm(CMakePackage):
     """OpenGL Mathematics (GLM) is a header only C++ mathematics library for

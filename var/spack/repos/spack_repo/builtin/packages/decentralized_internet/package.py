@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class DecentralizedInternet(MakefilePackage):
     """A library for building decentralized and grid computing projects"""

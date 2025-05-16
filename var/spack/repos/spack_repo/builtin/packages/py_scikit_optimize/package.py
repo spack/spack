@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitOptimize(PythonPackage):
     """Scikit-Optimize, or skopt, is a simple and efficient library to

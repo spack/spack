@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xfce4Session(AutotoolsPackage):
     """Session manager for Xfce4"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cistem(AutotoolsPackage):
     """cisTEM is user-friendly software to process cryo-EM images of

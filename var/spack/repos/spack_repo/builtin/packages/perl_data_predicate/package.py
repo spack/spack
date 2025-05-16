@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDataPredicate(PerlPackage):
     """Predicate objects for Perl. A predicate object is an object that encapsulates conditions."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpglib(PythonPackage):
     """Python bindings for C library for finding and handling

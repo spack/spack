@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SpiralPackageFftx(Package):
     """This is the SPIRAL package for FFTX:  FFTX is the exascale follow-on to

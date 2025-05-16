@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTsne(RPackage):
     """T-Distributed Stochastic Neighbor Embedding for R (t-SNE).

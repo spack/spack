@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Harminv(AutotoolsPackage):
     """Harminv is a free program (and accompanying library) to solve the

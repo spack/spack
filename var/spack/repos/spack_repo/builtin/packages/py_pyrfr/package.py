@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyrfr(PythonPackage):
     """This package serves as the python interface to RFR, an

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMarkupsafe(PythonPackage):
     """MarkupSafe is a library for Python that implements a unicode

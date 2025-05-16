@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cplex(Package):
     """The IBM ILOG CPLEX Optimization Studio consists of the CPLEX Optimizer

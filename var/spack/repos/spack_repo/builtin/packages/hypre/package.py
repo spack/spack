@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
     """Hypre is a library of high performance preconditioners that

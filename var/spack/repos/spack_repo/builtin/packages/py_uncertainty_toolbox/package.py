@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUncertaintyToolbox(PythonPackage):
     """Uncertainty Toolbox: a python toolbox for predictive uncertainty quantification,

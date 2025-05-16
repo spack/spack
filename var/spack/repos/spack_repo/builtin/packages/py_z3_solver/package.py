@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZ3Solver(PythonPackage):
     """Z3 is a theorem prover from Microsoft Research. It is licensed under the MIT license."""

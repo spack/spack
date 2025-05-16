@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPerlVersion(PerlPackage):
     """Parse and manipulate Perl version strings"""

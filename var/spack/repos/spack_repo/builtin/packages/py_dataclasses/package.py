@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataclasses(PythonPackage):
     """A backport of the dataclasses module for Python 3.6"""

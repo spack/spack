@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Bloaty(CMakePackage):
     """Bloaty McBloatface: a size profiler for binaries."""

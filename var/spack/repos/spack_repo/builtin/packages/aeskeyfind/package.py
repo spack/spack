@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Aeskeyfind(MakefilePackage):
     """This program illustrates automatic techniques for locating 128-bit

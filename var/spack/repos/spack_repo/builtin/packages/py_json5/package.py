@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJson5(PythonPackage):
     """The JSON5 Data Interchange Format (JSON5) is a superset of JSON that aims

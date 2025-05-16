@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycompadre(PythonPackage):
     """The Compadre Toolkit provides a performance portable solution for the

@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyQiskitAer(PythonPackage, CudaPackage):
     """Aer is a high performance simulator for quantum circuits that

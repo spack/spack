@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassMethodModifiers(PerlPackage):
     """Class::Method::Modifiers - Provides Moose-like method modifiers"""

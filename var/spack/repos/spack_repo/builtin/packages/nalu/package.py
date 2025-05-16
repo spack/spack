@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nalu(CMakePackage):
     """Nalu: a generalized unstructured massively parallel low Mach flow code

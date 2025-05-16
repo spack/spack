@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TemplightTools(CMakePackage):
     """Supporting tools for the Templight Profiler"""

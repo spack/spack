@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cube(AutotoolsPackage):
     """Cube the profile viewer for Score-P and Scalasca profiles. It displays a

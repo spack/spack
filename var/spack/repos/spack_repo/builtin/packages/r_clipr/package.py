@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RClipr(RPackage):
     """Read and Write from the System Clipboard.

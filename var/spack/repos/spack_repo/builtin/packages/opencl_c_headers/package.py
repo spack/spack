@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OpenclCHeaders(CMakePackage):
     """OpenCL (Open Computing Language) C header files"""

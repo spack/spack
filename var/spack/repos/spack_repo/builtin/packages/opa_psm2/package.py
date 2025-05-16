@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class OpaPsm2(MakefilePackage, CudaPackage):
     """Omni-Path Performance Scaled Messaging 2 (PSM2) library"""

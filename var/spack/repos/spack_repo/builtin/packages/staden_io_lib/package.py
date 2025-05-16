@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class StadenIoLib(AutotoolsPackage):
     """Io_lib is a library for reading/writing various bioinformatics

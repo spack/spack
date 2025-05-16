@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mindthegap(CMakePackage):
     """MindTheGap is a software that performs integrated detection and

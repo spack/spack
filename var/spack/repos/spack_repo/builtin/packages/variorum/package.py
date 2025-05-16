@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Variorum(CMakePackage):
     """Variorum is a library providing vendor-neutral interfaces for

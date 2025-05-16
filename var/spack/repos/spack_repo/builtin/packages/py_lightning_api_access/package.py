@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightningApiAccess(PythonPackage):
     """Lightning Frontend Showing how a given API can be accessed."""

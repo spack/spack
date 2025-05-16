@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class ROligoclasses(RPackage):
     """Classes for high-throughput arrays supported by oligo and crlmm.

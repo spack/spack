@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Abacus(MakefilePackage):
     """ABACUS (Atomic-orbital Based Ab-initio Computation at UStc)

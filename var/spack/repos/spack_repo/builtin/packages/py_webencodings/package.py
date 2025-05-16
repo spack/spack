@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWebencodings(PythonPackage):
     """This is a Python implementation of the WHATWG Encoding standard."""

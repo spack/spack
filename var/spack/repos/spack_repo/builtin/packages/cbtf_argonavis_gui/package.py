@@ -6,6 +6,7 @@ import os
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
 from ..boost.package import Boost
 
 

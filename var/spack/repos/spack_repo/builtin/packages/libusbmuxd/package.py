@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libusbmuxd(AutotoolsPackage):
     """A client library to multiplex connections from and to iOS devices."""

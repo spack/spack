@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRhdf5lib(RPackage):
     """hdf5 library as an R package.

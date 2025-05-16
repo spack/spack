@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDeeptools(PythonPackage):
     """deepTools addresses the challenge of handling the large amounts of data

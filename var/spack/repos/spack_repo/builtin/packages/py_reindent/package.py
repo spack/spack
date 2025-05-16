@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyReindent(PythonPackage):
     """Change Python (.py) files to use 4-space indents and no hard tab

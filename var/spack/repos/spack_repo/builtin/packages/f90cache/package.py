@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class F90cache(AutotoolsPackage):
     """f90cache is a compiler cache. It acts as a caching pre-processor to

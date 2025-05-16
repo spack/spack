@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 
 class Mongodb(SConsPackage):
     """MongoDB is a source-available cross-platform document-oriented database

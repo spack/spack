@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlake8Polyfill(PythonPackage):
     """flake8-polyfill is a package that provides some compatibility helpers

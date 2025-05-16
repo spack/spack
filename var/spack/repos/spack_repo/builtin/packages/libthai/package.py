@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libthai(AutotoolsPackage):
     """LibThai is a set of Thai language support routines aimed to ease

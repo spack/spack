@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyChronyk(PythonPackage):
     """A small Python 3 library containing some handy tools for handling time,

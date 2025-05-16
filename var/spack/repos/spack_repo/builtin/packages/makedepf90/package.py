@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Makedepf90(AutotoolsPackage):
     """Makedepf90 is a program for automatic creation of Makefile-style dependency lists for

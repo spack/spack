@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RColorspace(RPackage):
     """A Toolbox for Manipulating and Assessing Colors and Palettes.

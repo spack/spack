@@ -6,6 +6,8 @@ import datetime
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class HttpGet(MakefilePackage):
     """Http_get fetches an HTTP URL and dumps the contents to stdout.

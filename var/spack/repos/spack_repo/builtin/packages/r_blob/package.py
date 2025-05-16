@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBlob(RPackage):
     """A Simple S3 Class for Representing Vectors of Binary Data ('BLOBS').

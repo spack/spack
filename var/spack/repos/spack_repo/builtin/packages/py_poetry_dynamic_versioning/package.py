@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoetryDynamicVersioning(PythonPackage):
     """Plugin for Poetry to enable dynamic versioning based on VCS tags."""

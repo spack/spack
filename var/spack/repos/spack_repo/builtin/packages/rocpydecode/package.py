@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rocpydecode(CMakePackage):
     """rocPyDecode is a set of Python bindings to rocDecode C++ library which provides

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hdf5VolExternalPassthrough(CMakePackage):
     """Package for HDF5 external pass-through VOL."""

@@ -7,6 +7,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cached_cmake import cmake_cache_string
+from ...build_systems.generic import Package
+
 
 def spec_uses_toolchain(spec):
     gcc_toolchain_regex = re.compile(".*gcc-toolchain.*")

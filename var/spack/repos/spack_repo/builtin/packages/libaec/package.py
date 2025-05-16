@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libaec(CMakePackage):
     """Libaec provides fast lossless compression of 1 up to 32 bit wide signed

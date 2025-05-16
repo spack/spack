@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Wgsim(Package):
     """Wgsim is a small tool for simulating sequence reads from a reference

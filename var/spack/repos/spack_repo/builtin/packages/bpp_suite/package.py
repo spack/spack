@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BppSuite(CMakePackage):
     """BppSuite is a suite of ready-to-use programs for phylogenetic and

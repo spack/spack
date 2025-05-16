@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHydrogof(RPackage):
     """Goodness-of-Fit Functions for Comparison of Simulated and Observed

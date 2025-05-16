@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Parallelio(CMakePackage):
     """The Parallel IO libraries (PIO) are high-level parallel I/O C and

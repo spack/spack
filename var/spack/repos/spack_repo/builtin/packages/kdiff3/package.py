@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Kdiff3(Package):
     """Compare and merge 2 or 3 files or directories."""

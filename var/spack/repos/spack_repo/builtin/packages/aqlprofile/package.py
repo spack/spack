@@ -7,6 +7,8 @@ import os
 import spack.platforms
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 _versions = {
     "6.3.3": {
         "apt": (

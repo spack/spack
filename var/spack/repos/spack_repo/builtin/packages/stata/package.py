@@ -7,6 +7,8 @@ from datetime import datetime
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Stata(Package):
     """STATA is a general-purpose statistical software package developed

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScanpy(PythonPackage):
     """Scanpy is a scalable toolkit for analyzing single-cell

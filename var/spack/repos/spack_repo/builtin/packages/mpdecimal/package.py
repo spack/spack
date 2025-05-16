@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpdecimal(AutotoolsPackage):
     """mpdecimal is a package for correctly-rounded arbitrary precision

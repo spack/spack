@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gengeo(AutotoolsPackage):
     """GenGeo is a library of tools for creating complex particle

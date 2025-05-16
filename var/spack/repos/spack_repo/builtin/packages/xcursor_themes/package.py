@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.xorg import XorgPackage
+
 
 class XcursorThemes(Package, XorgPackage):
     """This is a default set of cursor themes for use with libXcursor,

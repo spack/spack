@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class HsfCmaketools(Package):
     """CMake 'Find' modules for commonly used HEP Packages"""

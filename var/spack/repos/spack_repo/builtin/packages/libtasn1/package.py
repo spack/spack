@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Libtasn1(Package, GNUMirrorPackage):
     """ASN.1 structure parser library."""

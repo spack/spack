@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyItsdangerous(PythonPackage):
     """Various helpers to pass trusted data to untrusted environments."""

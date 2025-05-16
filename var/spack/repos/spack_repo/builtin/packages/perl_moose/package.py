@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMoose(PerlPackage):
     """A postmodern object system for Perl 5"""

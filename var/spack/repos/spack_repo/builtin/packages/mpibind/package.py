@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpibind(AutotoolsPackage):
     """A memory-driven algorithm to map parallel codes

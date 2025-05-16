@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Redset(CMakePackage, CudaPackage):
     """Create MPI communicators for disparate redundancy sets"""

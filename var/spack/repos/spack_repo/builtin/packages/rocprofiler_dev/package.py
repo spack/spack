@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocprofilerDev(CMakePackage):
     """ROCPROFILER library for AMD HSA runtime API extension support"""

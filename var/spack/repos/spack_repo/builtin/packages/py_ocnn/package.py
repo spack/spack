@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOcnn(PythonPackage):
     """O-CNN is an octree-based sparse convolutional neural network

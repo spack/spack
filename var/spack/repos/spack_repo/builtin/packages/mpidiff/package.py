@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mpidiff(CMakePackage):
     """Library for comparing numerical differences between binaries."""

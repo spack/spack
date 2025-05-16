@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCachem(RPackage):
     """Cache R Objects with Automatic Pruning.

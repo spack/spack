@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMetricLearn(PythonPackage):
     """metric-learn contains efficient Python implementations of several

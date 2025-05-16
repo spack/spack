@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Dust(Package):
     """du + rust = dust. Like du but more intuitive."""

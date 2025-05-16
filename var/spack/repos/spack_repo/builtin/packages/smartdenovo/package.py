@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Smartdenovo(MakefilePackage):
     """SMARTdenovo is a de novo assembler for PacBio and Oxford Nanopore

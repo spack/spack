@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Parsimonator(MakefilePackage):
     """Parsimonator is a no-frills light-weight implementation for building

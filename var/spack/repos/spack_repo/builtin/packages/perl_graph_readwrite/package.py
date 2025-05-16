@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGraphReadwrite(PerlPackage):
     """Write out directed graph in Dot format"""

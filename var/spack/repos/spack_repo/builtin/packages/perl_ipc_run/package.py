@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIpcRun(PerlPackage):
     """IPC::Run allows you to run and interact with child processes using

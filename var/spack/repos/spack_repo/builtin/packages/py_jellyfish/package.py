@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJellyfish(PythonPackage):
     """a library for doing approximate and phonetic matching of strings."""

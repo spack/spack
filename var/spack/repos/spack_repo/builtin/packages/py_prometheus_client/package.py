@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPrometheusClient(PythonPackage):
     """Prometheus instrumentation library for Python applications."""

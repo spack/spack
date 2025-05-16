@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyRonn(RubyPackage):
     """Ronn builds manuals. It converts simple, human readable textfiles to

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLlvmlite(PythonPackage):
     """A lightweight LLVM python binding for writing JIT compilers"""

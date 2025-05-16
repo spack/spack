@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmetalink(AutotoolsPackage):
     """Libmetalink is a library to read Metalink XML download description

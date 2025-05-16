@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openbabel(CMakePackage):
     """Open Babel is a chemical toolbox designed to speak the many languages

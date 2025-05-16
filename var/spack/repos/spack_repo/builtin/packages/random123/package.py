@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Random123(Package):
     """Random123 is a library of 'counter-based' random number

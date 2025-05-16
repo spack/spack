@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyF90wrap(PythonPackage):
     """f90wrap is a tool to automatically generate Python extension

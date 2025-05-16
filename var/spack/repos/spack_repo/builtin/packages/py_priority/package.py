@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPriority(PythonPackage):
     """Priority is a pure-Python implementation of the priority

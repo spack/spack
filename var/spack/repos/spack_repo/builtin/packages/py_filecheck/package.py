@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFilecheck(PythonPackage):
     """Python port of LLVM's FileCheck, flexible pattern matching file verifier."""

@@ -5,6 +5,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Libsigsegv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libsigsegv is a library for handling page faults in user mode."""

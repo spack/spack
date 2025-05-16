@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class XercesC(AutotoolsPackage):
     """Xerces-C++ is a validating XML parser written in a portable subset of

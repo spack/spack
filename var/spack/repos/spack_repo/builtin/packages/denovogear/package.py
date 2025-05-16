@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Denovogear(CMakePackage):
     """DeNovoGear is a software package to detect de novo mutations using

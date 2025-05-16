@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Smproxy(AutotoolsPackage, XorgPackage):
     """smproxy allows X applications that do not support X11R6 session

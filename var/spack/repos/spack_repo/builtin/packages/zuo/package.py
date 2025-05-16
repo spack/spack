@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Zuo(AutotoolsPackage):
     """A tiny Racket for scripting."""

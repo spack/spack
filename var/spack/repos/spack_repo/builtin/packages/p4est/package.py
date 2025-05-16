@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in

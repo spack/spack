@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFluidfft(PythonPackage):
     """Efficient and easy Fast Fourier Transform (FFT) for Python."""

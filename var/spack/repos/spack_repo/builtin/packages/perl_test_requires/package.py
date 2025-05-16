@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestRequires(PerlPackage):
     """Checks to see if the module can be loaded."""

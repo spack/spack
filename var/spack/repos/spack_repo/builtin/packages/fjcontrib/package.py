@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fjcontrib(AutotoolsPackage):
     """3rd party extensions of FastJet"""

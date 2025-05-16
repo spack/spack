@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyModred(PythonPackage):
     """Modred is a parallelized library for finding

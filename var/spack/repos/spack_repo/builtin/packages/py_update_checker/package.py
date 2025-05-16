@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUpdateChecker(PythonPackage):
     """A python module that will check for package updates."""

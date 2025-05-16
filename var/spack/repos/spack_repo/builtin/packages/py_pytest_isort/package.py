@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestIsort(PythonPackage):
     """py.test plugin to check import ordering using isort"""

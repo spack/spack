@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Triangle(Package):
     """Triangle is a two-dimensional mesh generator and Delaunay

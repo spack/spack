@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hpddm(Package):
     """High-performance unified framework for domain decomposition methods."""

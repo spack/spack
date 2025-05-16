@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Neartree(MakefilePackage):
     """This is a release of an API for finding nearest neighbors among

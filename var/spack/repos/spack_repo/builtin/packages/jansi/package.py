@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Jansi(MavenPackage):
     """Jansi is a small java library that allows you to use

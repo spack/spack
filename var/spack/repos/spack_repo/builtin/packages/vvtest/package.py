@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vvtest(Package):
     """Vvtest is a test harness originally authored by Richard Drake for the

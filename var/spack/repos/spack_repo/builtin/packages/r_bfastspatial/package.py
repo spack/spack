@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBfastspatial(RPackage):
     """Pre-process gridded time-series data in order for them to be

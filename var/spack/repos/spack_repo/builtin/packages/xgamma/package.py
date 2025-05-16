@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xgamma(AutotoolsPackage, XorgPackage):
     """xgamma allows X users to query and alter the gamma correction of a

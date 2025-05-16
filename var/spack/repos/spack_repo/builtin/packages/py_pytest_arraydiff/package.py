@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestArraydiff(PythonPackage):
     """pytest plugin to help with comparing array output from tests"""

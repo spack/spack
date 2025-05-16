@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cotter(CMakePackage):
     """Andre Offringa's cotter pre-processing pipeline."""

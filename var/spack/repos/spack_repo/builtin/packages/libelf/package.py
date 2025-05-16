@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libelf(AutotoolsPackage):
     """libelf lets you read, modify or create ELF object files in an

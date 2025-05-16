@@ -5,6 +5,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ninja(Package):
     """Ninja is a small build system with a focus on speed. It differs from

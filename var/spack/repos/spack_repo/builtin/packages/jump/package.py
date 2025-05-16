@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Jump(GoPackage):
     """Jump integrates with your shell and learns about your navigational habits

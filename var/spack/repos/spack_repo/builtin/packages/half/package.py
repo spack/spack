@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Half(Package):
     """This is a C++ header-only library to provide an IEEE-754 conformant

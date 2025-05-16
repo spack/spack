@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnsimarkup(PythonPackage):
     """Produce colored terminal text with an xml-like markup."""

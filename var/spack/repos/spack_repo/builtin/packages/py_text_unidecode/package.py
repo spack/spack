@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTextUnidecode(PythonPackage):
     """text-unidecode is the most basic port of the Text::Unidecode Perl

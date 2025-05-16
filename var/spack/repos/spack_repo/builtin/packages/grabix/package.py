@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Grabix(MakefilePackage):
     """Grabix leverages the fantastic BGZF library in samtools to provide

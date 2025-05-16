@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtBilling(PythonPackage):
     """Microsoft Azure Billing Client Library for Python."""

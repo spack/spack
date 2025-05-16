@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mpest(MakefilePackage):
     """MP-EST estimates species trees from a set of gene trees by maximizing

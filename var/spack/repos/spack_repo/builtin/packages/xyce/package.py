@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xyce(CMakePackage):
     """Xyce (rhymes with 'spice') is an open source, SPICE-compatible,

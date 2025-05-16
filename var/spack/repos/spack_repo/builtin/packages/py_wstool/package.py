@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWstool(PythonPackage):
     """A tool for managing a workspace of multiple heterogenous SCM

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTinycss2(PythonPackage):
     """tinycss2 is a low-level CSS parser and generator written in Python: it can parse

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlDomXpath(PerlPackage):
     """XML::DOM::XPath allows you to use XML::XPath methods to query a DOM.

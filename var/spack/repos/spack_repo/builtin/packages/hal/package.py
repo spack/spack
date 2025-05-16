@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hal(MakefilePackage):
     """HAL is a structure to efficiently store and index multiple

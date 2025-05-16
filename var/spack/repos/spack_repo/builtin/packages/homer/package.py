@@ -6,6 +6,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Homer(Package):
     """Software for motif discovery and next generation sequencing analysis"""

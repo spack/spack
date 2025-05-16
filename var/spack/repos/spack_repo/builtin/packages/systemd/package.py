@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Systemd(MesonPackage):
     """systemd is a suite of basic building blocks for a Linux system.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJarowinkler(PythonPackage):
     """library for fast approximate string matching using Jaro and Jaro-Winkler similarity."""

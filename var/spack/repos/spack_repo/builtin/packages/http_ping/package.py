@@ -6,6 +6,8 @@ import datetime
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class HttpPing(MakefilePackage):
     """http_ping is like the regular ping command, except that it sends

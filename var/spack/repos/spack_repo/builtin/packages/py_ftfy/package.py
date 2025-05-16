@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFtfy(PythonPackage):
     """Fixes Unicode that's broken in various ways."""

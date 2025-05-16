@@ -8,6 +8,9 @@ import os
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceware import SourcewarePackage
+
 
 class Elfutils(AutotoolsPackage, SourcewarePackage):
     """elfutils is a collection of various binary tools such as

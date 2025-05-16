@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.util.environment import set_env
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sbcl(MakefilePackage):
     """Steel Bank Common Lisp (SBCL) is a high performance Common Lisp compiler.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class SharedMimeInfo(AutotoolsPackage):
     """Database of common MIME types."""

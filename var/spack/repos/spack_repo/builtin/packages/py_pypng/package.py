@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPypng(PythonPackage):
     """PyPNG allows PNG image files to be read and written using pure Python."""

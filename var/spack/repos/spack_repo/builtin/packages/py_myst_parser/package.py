@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMystParser(PythonPackage):
     """A Sphinx and Docutils extension to parse MyST, a rich and

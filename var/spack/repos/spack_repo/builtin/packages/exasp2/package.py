@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Exasp2(MakefilePackage):
     """ExaSP2 is a reference implementation of typical linear algebra algorithms

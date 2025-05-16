@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 
 class Serf(SConsPackage):
     """Apache Serf - a high performance C-based HTTP client library

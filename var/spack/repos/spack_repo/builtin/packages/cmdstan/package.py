@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cmdstan(MakefilePackage):
     """CmdStan is the command line interface to Stan."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRetrying(PythonPackage):
     """Retrying is an Apache 2.0 licensed general-purpose retrying library,

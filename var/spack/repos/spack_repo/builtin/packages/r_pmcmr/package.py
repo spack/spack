@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPmcmr(RPackage):
     """Calculate Pairwise Multiple Comparisons of Mean Rank Sums.

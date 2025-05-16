@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpadesTools(RPackage):
     """Tools for Spatially Explicit Discrete Event Simulation (SpaDES) Models.

@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 _versions = {
     "0.79.47": {
         "Linux-x86_64": (

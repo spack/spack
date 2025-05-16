@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCfXarray(PythonPackage):
     """A convenience wrapper for using CF attributes on xarray objects."""

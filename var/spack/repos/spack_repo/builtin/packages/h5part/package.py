@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class H5part(AutotoolsPackage):
     """Portable High Performance Parallel Data Interface to HDF5"""

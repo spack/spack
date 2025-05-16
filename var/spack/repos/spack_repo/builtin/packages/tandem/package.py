@@ -5,6 +5,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Tandem(CMakePackage, CudaPackage, ROCmPackage):
     """Tandem is a scientific software for SEAS modelling and for solving Poisson

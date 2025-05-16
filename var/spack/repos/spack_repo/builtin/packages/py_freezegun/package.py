@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFreezegun(PythonPackage):
     """FreezeGun is a library that allows your Python tests to travel

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnytree(PythonPackage):
     """Python tree data library - lightweight and extensible Tree data structure."""

@@ -2,11 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.go
 from spack.package import *
 
+from ...build_systems import go
+from ...build_systems.go import GoPackage
 
-class GoBuilder(spack.build_systems.go.GoBuilder):
+
+class GoBuilder(go.GoBuilder):
     @property
     def build_directory(self):
         return join_path(self.pkg.stage.source_path, "seqkit")

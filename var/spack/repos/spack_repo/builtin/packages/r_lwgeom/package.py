@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLwgeom(RPackage):
     """Bindings to Selected 'liblwgeom' Functions for Simple Features.

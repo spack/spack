@@ -6,6 +6,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NcbiToolkit(AutotoolsPackage):
     """NCBI C++ Toolkit"""

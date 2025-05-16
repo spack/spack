@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ensmallen(CMakePackage):
     """ensmallen is a high-quality C++ library for non-linear numerical

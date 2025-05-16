@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NfWaveCli(Package):
     """Command line tool for Wave containers provisioning service."""

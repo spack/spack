@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sqlitebrowser(CMakePackage):
     """DB Browser for SQLite (DB4S) is a high quality, visual,

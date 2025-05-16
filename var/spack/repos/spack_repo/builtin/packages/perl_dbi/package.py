@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbi(PerlPackage):
     """The DBI is the standard database interface module for Perl. It defines

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMgmetis(PythonPackage):
     """METIS partitioner for mesh and graphMETIS partitioner for mesh and graph"""

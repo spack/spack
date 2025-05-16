@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestAllclose(PythonPackage):
     """Pytest fixture extending Numpy's allclose function."""

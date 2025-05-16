@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Keyutils(MakefilePackage):
     """These tools are used to control the key management system built

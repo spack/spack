@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRobocrys(PythonPackage):
     """Robocrystallographer is a tool to generate text descriptions of crystal

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQuantumBlackbird(PythonPackage):
     """Blackbird is a quantum assembly language for continuous-variable quantum

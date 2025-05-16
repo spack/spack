@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPrettydoc(RPackage):
     """Creating Pretty Documents from R Markdown.

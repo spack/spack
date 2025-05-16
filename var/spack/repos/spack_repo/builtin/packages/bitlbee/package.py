@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bitlbee(AutotoolsPackage):
     """An IRC to other chat networks gateway."""

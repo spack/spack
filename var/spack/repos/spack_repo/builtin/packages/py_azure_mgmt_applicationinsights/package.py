@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtApplicationinsights(PythonPackage):
     """Microsoft Azure Application Insights Management Client Library for

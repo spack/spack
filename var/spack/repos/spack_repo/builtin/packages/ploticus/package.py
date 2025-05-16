@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ploticus(MakefilePackage):
     """Ploticus can produce various types of plots and graphs."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPy2neo(PythonPackage):
     """Py2neo is a client library and toolkit for working with Neo4j from

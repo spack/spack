@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Geant4Data(BundlePackage):
     """A bundle package to hold Geant4 data packages"""

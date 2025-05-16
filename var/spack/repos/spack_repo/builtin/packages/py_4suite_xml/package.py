@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Py4suiteXml(PythonPackage):
     """XML tools and libraries for Python: Domlette, XPath, XSLT, XPointer,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hacckernels(CMakePackage):
     """HACCKernels: A Benchmark for HACC's Particle Force Kernels.

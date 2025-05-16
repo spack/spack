@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScineCore(CMakePackage):
     """Core provides the functionality necessary to couple the individual SCINE modules together"""

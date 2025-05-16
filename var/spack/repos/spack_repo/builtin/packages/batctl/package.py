@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Batctl(MakefilePackage):
     """B.A.T.M.A.N. advanced control and management tool"""

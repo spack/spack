@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEmcee(PythonPackage):
     """emcee is an MIT licensed pure-Python implementation of Goodman & Weare's

@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Poke(AutotoolsPackage, GNUMirrorPackage):
     """ "The extensible editor for structured binary data"""

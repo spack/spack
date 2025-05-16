@@ -11,6 +11,8 @@ import llnl.util.lang
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Hdf5(CMakePackage):
     """HDF5 is a data model, library, and file format for storing and managing

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Fp16(CMakePackage):
     """FP16 is a header-only library for

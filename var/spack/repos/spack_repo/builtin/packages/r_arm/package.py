@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RArm(RPackage):
     """Functions to accompany A. Gelman and J. Hill, Data Analysis Using

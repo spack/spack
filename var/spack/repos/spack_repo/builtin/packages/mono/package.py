@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mono(AutotoolsPackage):
     """Mono is a software platform designed to allow developers to easily

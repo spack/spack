@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGriffe(PythonPackage):
     """Signatures for entire Python programs. Extract the structure, the frame,

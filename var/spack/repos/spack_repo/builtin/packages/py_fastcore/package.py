@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastcore(PythonPackage):
     """Python is a powerful, dynamic language. Rather than bake

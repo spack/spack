@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDvc(PythonPackage):
     """Git for data scientists - manage your code and data together."""

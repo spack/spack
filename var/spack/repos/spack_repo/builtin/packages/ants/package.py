@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ants(CMakePackage):
     """ANTs extracts information from complex datasets that include imaging.

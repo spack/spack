@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlApacheLogformatCompiler(PerlPackage):
     """Compile a log format string to perl-code"""

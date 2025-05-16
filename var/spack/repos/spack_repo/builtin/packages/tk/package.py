@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Tk(AutotoolsPackage, SourceforgePackage):
     """Tk is a graphical user interface toolkit that takes developing desktop

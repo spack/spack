@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAsreml(RPackage):
     """ASReml-R is a statistical package that fits linear mixed models using

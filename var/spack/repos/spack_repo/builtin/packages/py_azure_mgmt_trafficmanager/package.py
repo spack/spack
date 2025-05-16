@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtTrafficmanager(PythonPackage):
     """Microsoft Azure Traffic Manager Client Library for Python."""

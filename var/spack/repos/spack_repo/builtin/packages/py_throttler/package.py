@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyThrottler(PythonPackage):
     """Zero dependency Python package for easy throttling with asyncio support."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Breakdancer(CMakePackage):
     """BreakDancer-1.3.6, released under GPLv3, is a perl/Cpp package that

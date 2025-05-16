@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUproot3(PythonPackage):
     """ROOT I/O in pure Python and Numpy.

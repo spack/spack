@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libical(CMakePackage):
     """Libical - an implementation of iCalendar protocols and data formats."""

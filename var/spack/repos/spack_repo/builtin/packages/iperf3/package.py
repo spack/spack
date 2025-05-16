@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Iperf3(AutotoolsPackage):
     """The iperf series of tools perform active measurements to determine the

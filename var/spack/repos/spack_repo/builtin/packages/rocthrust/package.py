@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Rocthrust(CMakePackage):
     """Thrust is a parallel algorithm library. This library has been ported to

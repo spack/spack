@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OtfCpt(CMakePackage):
     """Tool to collect and report model factors (aka. fundamental performance factors)

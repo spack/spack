@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Satsuma2(CMakePackage):
     """Satsuma2 is an optimsed version of Satsuma, a tool to reliably align

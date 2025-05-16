@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNamespaceAutoclean(PerlPackage):
     """Namespace::Autoclean - Keep imports out of your namespace"""

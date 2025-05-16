@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Crow(CMakePackage):
     """Crow is a C++ microframework for creating HTTP and WebSocket services.  It uses routing

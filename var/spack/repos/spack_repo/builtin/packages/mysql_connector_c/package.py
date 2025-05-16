@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MysqlConnectorC(CMakePackage):
     """MySQL Connector/C, the C interface for communicating with MySQL servers.

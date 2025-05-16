@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SnapBerkeley(MakefilePackage):
     """SNAP is a fast and accurate aligner for short DNA reads. It is

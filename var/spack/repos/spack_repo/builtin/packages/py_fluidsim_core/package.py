@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFluidsimCore(PythonPackage):
     """Pure-Python core library for FluidSim framework."""

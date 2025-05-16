@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAssertiveReflection(RPackage):
     """Assertions for Checking the State of R.

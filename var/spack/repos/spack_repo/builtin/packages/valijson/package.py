@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Valijson(CMakePackage):
     """Header-only C++ library for JSON Schema validation,

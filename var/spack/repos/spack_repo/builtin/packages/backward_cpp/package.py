@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BackwardCpp(CMakePackage):
     """A beautiful stack trace pretty printer for C++."""

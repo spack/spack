@@ -6,6 +6,8 @@ import datetime
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class HttpLoad(MakefilePackage):
     """http_load - multiprocessing http test client"""

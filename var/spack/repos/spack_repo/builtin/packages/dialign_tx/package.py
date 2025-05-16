@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class DialignTx(MakefilePackage):
     """DIALIGN-TX: greedy and progressive approaches for segment-based

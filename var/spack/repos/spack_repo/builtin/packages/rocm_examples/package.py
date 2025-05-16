@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmExamples(CMakePackage):
     """A collection of examples for the ROCm software stack"""

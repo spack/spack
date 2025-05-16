@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xf86bigfontproto(AutotoolsPackage, XorgPackage):
     """X.org XF86BigFontProto protocol headers."""

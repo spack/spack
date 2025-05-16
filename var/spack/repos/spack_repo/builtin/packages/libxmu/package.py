@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxmu(AutotoolsPackage, XorgPackage):
     """This library contains miscellaneous utilities and is not part of the

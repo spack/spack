@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xclipboard(AutotoolsPackage, XorgPackage):
     """xclipboard is used to collect and display text selections that are

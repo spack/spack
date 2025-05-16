@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbdMysql(PerlPackage):
     """MySQL driver for the Perl5 Database Interface (DBI)"""

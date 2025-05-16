@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Nettle(AutotoolsPackage, GNUMirrorPackage):
     """The Nettle package contains the low-level cryptographic library

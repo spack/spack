@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dcm2niix(CMakePackage):
     """DICOM to NIfTI converter"""

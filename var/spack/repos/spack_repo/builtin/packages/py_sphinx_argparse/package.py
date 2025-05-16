@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxArgparse(PythonPackage):
     """Sphinx extension to automatically document argparse-based commands."""

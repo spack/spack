@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Lustre(Package):
     """Lustre is a type of parallel distributed file system,

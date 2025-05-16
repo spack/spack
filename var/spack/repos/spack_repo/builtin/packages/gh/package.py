@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Gh(GoPackage):
     """GitHub's official command line tool."""

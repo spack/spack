@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CasacoreMeasures(Package):
     """Install casacore measures tables, and a tool to maintain them."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAromaLight(RPackage):
     """Light-Weight Methods for Normalization and Visualization of Microarray

@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
     """UCC is a collective communication operations API and library that is

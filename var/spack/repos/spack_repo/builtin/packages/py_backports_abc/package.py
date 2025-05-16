@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsAbc(PythonPackage):
     """Backports_ABC: A backport of recent additions to the 'collections.abc'

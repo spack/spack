@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMne(PythonPackage):
     """MNE python project for MEG and EEG data analysis."""

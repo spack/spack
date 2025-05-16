@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Httpie(PythonPackage):
     """Modern, user-friendly command-line HTTP client for the API era."""

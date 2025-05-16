@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDarshan(PythonPackage):
     """Python utilities to interact with Darshan log records of HPC applications."""

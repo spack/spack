@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchmeta(PythonPackage):
     """A collection of extensions and data-loaders for few-shot learning &

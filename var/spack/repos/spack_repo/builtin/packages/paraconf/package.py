@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Paraconf(CMakePackage):
     """Paraconf is a library that provides a simple query language to access a

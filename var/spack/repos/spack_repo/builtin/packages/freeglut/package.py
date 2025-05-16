@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Freeglut(CMakePackage, SourceforgePackage):
     """FreeGLUT is a free-software/open-source alternative to the OpenGL

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUs(PythonPackage):
     """US state meta information and other fun stuff."""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Ndzip(CMakePackage, CudaPackage):
     """A High-Throughput Parallel Lossless Compressor for Scientific Data

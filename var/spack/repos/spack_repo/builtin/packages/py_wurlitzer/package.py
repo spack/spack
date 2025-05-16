@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWurlitzer(PythonPackage):
     """Capture C-level stdout/stderr pipes in Python via os.dup2."""

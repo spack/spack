@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCroniter(PythonPackage):
     """croniter provides iteration for datetime object with cron like format."""

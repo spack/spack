@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Busco(PythonPackage):
     """Assesses genome assembly and annotation completeness with Benchmarking

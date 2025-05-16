@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Banner(AutotoolsPackage):
     """banner is a classic-style banner program similar to the one found

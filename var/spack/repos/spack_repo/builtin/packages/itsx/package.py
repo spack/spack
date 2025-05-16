@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Itsx(Package):
     """Improved software detection and extraction of ITS1 and ITS2 from

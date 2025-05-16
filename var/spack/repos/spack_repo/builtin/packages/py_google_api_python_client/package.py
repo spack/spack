@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogleApiPythonClient(PythonPackage):
     """The Google API Client for Python is a client library for accessing the

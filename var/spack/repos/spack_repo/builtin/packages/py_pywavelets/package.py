@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPywavelets(PythonPackage):
     """PyWavelets is a free Open Source library for wavelet transforms

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppeigen(RPackage):
     """'Rcpp' Integration for the 'Eigen' Templated Linear Algebra Library.

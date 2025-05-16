@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Otf2(AutotoolsPackage):
     """The Open Trace Format 2 is a highly scalable, memory efficient event

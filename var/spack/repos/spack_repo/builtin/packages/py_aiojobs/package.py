@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiojobs(PythonPackage):
     """Jobs scheduler for managing background task (asyncio)."""

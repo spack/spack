@@ -7,6 +7,8 @@ import shlex
 from spack.package import *
 from spack.util.environment import filter_system_paths
 
+from ...build_systems.generic import Package
+
 
 class Nim(Package):
     """Nim is a statically typed compiled systems programming language.

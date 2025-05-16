@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDendropy(PythonPackage):
     """DendroPy is a Python library for phylogenetic computing. It provides

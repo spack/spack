@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypingExtensions(PythonPackage):
     """The typing_extensions module contains both backports of these

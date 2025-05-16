@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Genrich(MakefilePackage):
     """Genrich is a peak-caller for genomic enrichment assays."""

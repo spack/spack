@@ -9,6 +9,8 @@ from textwrap import dedent
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class LinuxPerf(Package):
     """The Linux perf tool."""

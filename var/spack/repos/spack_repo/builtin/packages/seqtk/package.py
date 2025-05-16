@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Seqtk(Package):
     """Toolkit for processing sequences in FASTA/Q formats."""

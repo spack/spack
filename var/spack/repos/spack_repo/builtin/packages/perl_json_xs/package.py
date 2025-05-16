@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlJsonXs(PerlPackage):
     """JSON serialising/deserialising, done correctly and fast"""

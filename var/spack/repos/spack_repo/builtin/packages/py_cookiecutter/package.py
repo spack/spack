@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCookiecutter(PythonPackage):
     """A command-line utility that creates projects from cookiecutters

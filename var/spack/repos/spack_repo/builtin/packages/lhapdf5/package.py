@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lhapdf5(AutotoolsPackage):
     """LHAPDF is a general purpose Fortran 77/90 interpolator,

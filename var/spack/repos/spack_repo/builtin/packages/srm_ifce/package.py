@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SrmIfce(CMakePackage):
     """Client side implementation of the SRMv2 specification."""

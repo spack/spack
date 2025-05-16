@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ecbuild(CMakePackage):
     """ecBuild is the ECMWF build system. It is built on top of CMake and

@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class AutodockVina(MakefilePackage):
     """AutoDock Vina is an open-source program for doing molecular docking"""

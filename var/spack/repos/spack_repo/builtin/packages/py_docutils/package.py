@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDocutils(PythonPackage):
     """Docutils is an open-source text processing system for processing

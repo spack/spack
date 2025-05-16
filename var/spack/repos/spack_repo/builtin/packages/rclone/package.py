@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Rclone(GoPackage):
     """Rclone is a command line program to sync files and directories

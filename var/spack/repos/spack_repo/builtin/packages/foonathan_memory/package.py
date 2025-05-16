@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FoonathanMemory(CMakePackage):
     """STL compatible C++ memory allocator library using a new RawAllocator concept

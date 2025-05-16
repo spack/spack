@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDogpileCache(PythonPackage):
     """dogpile.cache is a Python caching API which provides a generic

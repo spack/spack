@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Librsb(AutotoolsPackage):
     """librsb : A shared memory parallel sparse matrix computations

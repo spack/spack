@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMpi4py(PythonPackage):
     """This package provides Python bindings for the Message Passing

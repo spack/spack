@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnova(AutotoolsPackage):
     """ "libnova is a general purpose, double precision, Celestial Mechanics,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyter(PythonPackage):
     """Jupyter metapackage. Install all the Jupyter components in one go."""

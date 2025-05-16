@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class GitFilterRepo(Package):
     """Quickly rewrite Git repository history (filter-branch replacement)"""

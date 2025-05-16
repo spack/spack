@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribProgramoutput(PythonPackage):
     """A Sphinx extension to literally insert the output of arbitrary commands

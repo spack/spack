@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Biopieces(Package):
     """The Biopieces are a collection of bioinformatics tools that can be

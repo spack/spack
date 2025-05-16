@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class IkeScan(AutotoolsPackage):
     """Discover and fingerprint IKE hosts (IPsec VPN Servers)."""

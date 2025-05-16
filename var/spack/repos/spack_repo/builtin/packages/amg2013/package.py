@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Amg2013(MakefilePackage):
     """AMG is a parallel algebraic multigrid solver for linear systems arising

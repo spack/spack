@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUproot3Methods(PythonPackage):
     """Pythonic mix-ins for ROOT classes.

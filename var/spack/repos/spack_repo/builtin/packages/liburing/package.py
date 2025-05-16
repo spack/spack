@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Liburing(AutotoolsPackage):
     """Linux-native io_uring I/O access library.

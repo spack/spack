@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyImagecodecs(PythonPackage):
     """Imagecodecs is a Python library that provides block-oriented,

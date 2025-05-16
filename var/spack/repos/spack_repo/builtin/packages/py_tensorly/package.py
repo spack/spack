@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTensorly(PythonPackage):
     """TensorLy is a Python library that aims at making tensor learning simple

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Madgraph5amc(MakefilePackage):
     """MadGraph5_aMC@NLO is a framework that aims at providing

@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Rmgdft(CMakePackage, CudaPackage):
     """RMGDFT is a high performance real-space density functional code

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlTelemetry(PythonPackage):
     """Machine learning (ML) telemetry package is used to collect telemetry

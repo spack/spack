@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLeiden(RPackage):
     """R Implementation of Leiden Clustering Algorithm.

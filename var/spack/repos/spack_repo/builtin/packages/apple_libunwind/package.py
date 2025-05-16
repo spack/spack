@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class AppleLibunwind(BundlePackage):
     """This package is intended to be a placeholder for Apple's system-provided,

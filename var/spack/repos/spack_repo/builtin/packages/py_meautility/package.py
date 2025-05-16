@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMeautility(PythonPackage):
     """Python package for multi-electrode array (MEA) handling and stimulation."""

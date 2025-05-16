@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAntimeridian(PythonPackage):
     """Fix shapes that cross the antimeridian."""

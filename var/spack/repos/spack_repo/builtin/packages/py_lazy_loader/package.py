@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLazyLoader(PythonPackage):
     """lazy_loader makes it easy to load subpackages and functions on demand."""

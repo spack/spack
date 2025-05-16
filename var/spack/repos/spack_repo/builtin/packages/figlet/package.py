@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Figlet(MakefilePackage):
     """FIGlet is a program that creates large characters out of ordinary

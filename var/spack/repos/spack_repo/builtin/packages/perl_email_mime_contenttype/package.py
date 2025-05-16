@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlEmailMimeContenttype(PerlPackage):
     """Parse and build a MIME Content-Type or Content-Disposition Header"""

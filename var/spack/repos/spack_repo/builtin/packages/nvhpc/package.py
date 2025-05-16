@@ -9,6 +9,9 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.generic import Package
+
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
 # version, to different binary packages based on the platform that is

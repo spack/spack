@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyProtocGenSwagger(PythonPackage):
     """A python package for swagger annotation proto files."""

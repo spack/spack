@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Libceed(MakefilePackage, CudaPackage, ROCmPackage):
     """The CEED API Library: Code for Efficient Extensible Discretizations."""

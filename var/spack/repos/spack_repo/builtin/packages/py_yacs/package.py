@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYacs(PythonPackage):
     """YACS was created as a lightweight library to define and manage

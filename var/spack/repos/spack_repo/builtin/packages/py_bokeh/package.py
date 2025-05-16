@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBokeh(PythonPackage):
     """Statistical and novel interactive HTML plots for Python"""

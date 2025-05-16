@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 _versions = {
     # cuDNN 9.8.0
     "9.8.0.87-12": {

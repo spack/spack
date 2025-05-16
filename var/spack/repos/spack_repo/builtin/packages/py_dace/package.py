@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDace(PythonPackage):
     """DaCe is a fast parallel programming framework that takes code in

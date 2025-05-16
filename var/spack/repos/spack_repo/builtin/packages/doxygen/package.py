@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Doxygen(CMakePackage):
     """Doxygen is the de facto standard tool for generating documentation

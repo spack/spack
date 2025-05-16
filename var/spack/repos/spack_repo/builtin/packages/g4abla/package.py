@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4abla(Package):
     """Geant4 data for nuclear shell effects in INCL/ABLA hadronic mode"""

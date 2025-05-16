@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FastFloat(CMakePackage):
     """Fast and exact implementation of the C++ from_chars functions for number

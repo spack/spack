@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Biobloom(AutotoolsPackage):
     """BioBloom Tools (BBT) provides the means to create filters for a given

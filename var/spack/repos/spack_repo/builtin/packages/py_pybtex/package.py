@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPybtex(PythonPackage):
     """Pybtex is a BibTeX-compatible bibliography processor written in

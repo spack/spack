@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pandoc(Package):
     """If you need to convert files from one markup format into another, pandoc

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tmux(AutotoolsPackage):
     """Tmux is a terminal multiplexer.

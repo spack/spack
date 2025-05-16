@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Haploview(Package):
     """Haploview is designed to simplify and expedite the process of haplotype

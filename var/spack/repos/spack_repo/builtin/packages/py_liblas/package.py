@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLiblas(PythonPackage):
     """libLAS is a C/C++ library for reading and writing the very common

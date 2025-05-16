@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlEmailStuffer(PerlPackage):
     """A more casual approach to creating and sending Email:: emails"""

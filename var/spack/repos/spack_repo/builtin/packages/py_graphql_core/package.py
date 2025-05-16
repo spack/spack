@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGraphqlCore(PythonPackage):
     """GraphQL-core 3 is a Python 3.6+ port of GraphQL.js, the

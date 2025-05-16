@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lcov(MakefilePackage):
     """LCOV is a graphical front-end for GCC's coverage testing tool gcov.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAutomat(PythonPackage):
     """Self-service finite-state machines for the programmer on the go."""

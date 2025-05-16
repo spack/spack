@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fraggenescan(MakefilePackage):
     """FragGeneScan is an application for finding (fragmented) genes in short

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxcb(AutotoolsPackage, XorgPackage):
     """The X protocol C-language Binding (XCB) is a replacement

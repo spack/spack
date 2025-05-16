@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------\
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
 from spack.package import *
 
+from ...build_systems import autotools, cmake
+from ...build_systems.cmake import CMakePackage, generator
 from ..libflame.package import LibflameBase
 
 
@@ -138,7 +138,7 @@ class Amdlibflame(CMakePackage, LibflameBase):
         return (flags, None, None)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         args = [self.define("LIBAOCLUTILS_INCLUDE_PATH", spec["aocl-utils"].prefix.include)]
@@ -178,7 +178,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         """configure_args function"""
         args = self.pkg.configure_args()

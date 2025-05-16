@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RProdlim(RPackage):
     """Product-Limit Estimation for Censored Event History Analysis.

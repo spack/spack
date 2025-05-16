@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtNspkg(PythonPackage):
     """Microsoft Azure Resource Management Namespace Package [Internal]."""

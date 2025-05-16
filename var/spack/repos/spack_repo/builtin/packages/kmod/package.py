@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Kmod(AutotoolsPackage):
     """kmod is a set of tools to handle common tasks with Linux kernel modules

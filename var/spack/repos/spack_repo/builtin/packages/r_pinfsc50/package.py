@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPinfsc50(RPackage):
     """Sequence ('FASTA'), Annotation ('GFF') and Variants ('VCF') for 17

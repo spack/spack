@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cosp2(MakefilePackage):
     """Proxy Application. CoSP2 represents a sparse linear algebra

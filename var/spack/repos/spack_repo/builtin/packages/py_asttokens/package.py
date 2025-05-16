@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsttokens(PythonPackage):
     """Annotate AST trees with source code positions."""

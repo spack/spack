@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXClip(PythonPackage):
     """A concise but complete implementation of CLIP with various experimental

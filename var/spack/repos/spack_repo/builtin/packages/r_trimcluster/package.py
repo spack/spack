@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTrimcluster(RPackage):
     """Cluster analysis with trimming.

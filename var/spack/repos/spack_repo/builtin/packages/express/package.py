@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Express(CMakePackage):
     """eXpress is a streaming tool for quantifying the abundances of a set of

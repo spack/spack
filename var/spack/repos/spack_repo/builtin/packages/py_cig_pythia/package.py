@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.python import PythonExtension
+
 
 class PyCigPythia(AutotoolsPackage, PythonExtension):
     """This is the Computational Infrastructure for Geodynamics (CIG) fork of

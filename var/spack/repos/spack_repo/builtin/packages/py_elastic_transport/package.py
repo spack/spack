@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyElasticTransport(PythonPackage):
     """Transport classes and utilities shared among Python Elastic client libraries"""

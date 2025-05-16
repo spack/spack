@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class NeicFinitefault(PythonPackage):
     """Wavelet and simulated Annealing SliP inversion (WASP).

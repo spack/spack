@@ -1,9 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.autotools
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems import autotools, cmake
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
 
 
 class Szx(CMakePackage, AutotoolsPackage, CudaPackage):
@@ -36,14 +39,14 @@ class Szx(CMakePackage, AutotoolsPackage, CudaPackage):
         depends_on("automake", type="build")
         depends_on("libtool", type="build")
 
-    class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+    class AutotoolsBuilder(autotools.AutotoolsBuilder):
         force_autoreconf = True
 
         def configure_args(self):
             args = ["--enable-openmp", "--enable-fortran"]
             return args
 
-    class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+    class CMakeBuilder(cmake.CMakeBuilder):
         def cmake_args(self):
             args = [
                 self.define_from_variant("SZx_INSTALL_CLI", "cli"),

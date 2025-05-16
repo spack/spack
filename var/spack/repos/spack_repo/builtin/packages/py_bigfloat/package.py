@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBigfloat(PythonPackage):
     """Arbitrary-precision correctly-rounded floating-point arithmetic, via MPFR."""

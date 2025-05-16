@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GeoipApiC(AutotoolsPackage):
     """The GeoIP Legacy C library enables the user to find geographical

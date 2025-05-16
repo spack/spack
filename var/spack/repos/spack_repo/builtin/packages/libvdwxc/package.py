@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libvdwxc(AutotoolsPackage):
     """Portable C library of density functionals with van der Waals

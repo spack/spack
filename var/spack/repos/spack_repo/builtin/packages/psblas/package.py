@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Psblas(AutotoolsPackage):
     """PSBLAS: Parallel Sparse BLAS. A library of distributed sparse

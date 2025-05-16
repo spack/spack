@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Stacks(AutotoolsPackage):
     """Stacks is a software pipeline for building loci from short-read

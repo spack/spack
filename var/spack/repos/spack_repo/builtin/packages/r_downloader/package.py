@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDownloader(RPackage):
     """Download Files over HTTP and HTTPS.

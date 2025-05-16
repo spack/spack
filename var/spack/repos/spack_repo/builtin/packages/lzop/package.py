@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lzop(CMakePackage):
     """lzop is a file compressor which is very similar to gzip. lzop uses

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Windowswmproto(AutotoolsPackage, XorgPackage):
     """This module provides the definition of the WindowsWM extension to the

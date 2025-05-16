@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libdivsufsort(CMakePackage):
     """libdivsufsort is a software library that implements a

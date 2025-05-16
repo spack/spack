@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYamlreader(PythonPackage):
     """Yamlreader merges YAML data from a directory, a list of files or a

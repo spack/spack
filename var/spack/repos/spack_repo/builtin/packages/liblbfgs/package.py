@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Liblbfgs(AutotoolsPackage):
     """libLBFGS is a C port of the implementation of Limited-memory

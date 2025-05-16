@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBabel(PythonPackage):
     """Babel is an integrated collection of utilities that assist in

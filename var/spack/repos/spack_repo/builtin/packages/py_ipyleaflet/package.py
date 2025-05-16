@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpyleaflet(PythonPackage):
     """A Jupyter widget for dynamic Leaflet maps."""

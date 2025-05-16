@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gluegen(Package):
     """GlueGen is a tool which automatically generates the Java and JNI code

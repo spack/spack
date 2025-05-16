@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Veloc(CMakePackage):
     """Very-Low Overhead Checkpointing System. VELOC is a multi-level

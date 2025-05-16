@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.waf import WafPackage
+
 
 class Qctool(WafPackage):
     """QCTOOL is a command-line utility program for manipulation and quality

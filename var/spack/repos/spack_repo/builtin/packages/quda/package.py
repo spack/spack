@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Quda(CMakePackage, CudaPackage, ROCmPackage):
     """QUDA is a library for performing calculations in lattice QCD on GPUs."""

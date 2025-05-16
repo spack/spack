@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEnvisage(PythonPackage):
     """Envisage is a Python-based framework for building extensible

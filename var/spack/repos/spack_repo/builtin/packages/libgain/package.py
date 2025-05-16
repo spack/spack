@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libgain(AutotoolsPackage):
     """GaIn is intended to provide routines with a relatively simple interface

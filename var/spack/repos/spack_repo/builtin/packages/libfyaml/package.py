@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libfyaml(AutotoolsPackage):
     """Fully feature complete YAML parser and emitter, supporting the latest

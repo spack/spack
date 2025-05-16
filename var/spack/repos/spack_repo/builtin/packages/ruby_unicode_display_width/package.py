@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyUnicodeDisplayWidth(RubyPackage):
     """Determines the monospace display width of a string in Ruby."""

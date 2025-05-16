@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Subread(MakefilePackage):
     """The Subread software package is a tool kit for processing next-gen

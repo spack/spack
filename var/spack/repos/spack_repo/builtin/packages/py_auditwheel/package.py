@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAuditwheel(PythonPackage):
     """Auditing and relabeling of PEP 600 manylinux_x_y, PEP 513 manylinux1,

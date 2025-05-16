@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libecpint(CMakePackage):
     """A C++ library for the efficient evaluation of integrals over effective core

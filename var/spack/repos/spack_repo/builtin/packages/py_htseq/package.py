@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHtseq(PythonPackage):
     """HTSeq is a Python package that provides infrastructure to process

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.waf import WafPackage
+
 
 class Bgen(WafPackage):
     """This repository contains a reference implementation of the BGEN format, written

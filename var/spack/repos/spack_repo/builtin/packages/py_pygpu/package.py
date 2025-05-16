@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygpu(PythonPackage):
     """Python packge for the libgpuarray C library."""

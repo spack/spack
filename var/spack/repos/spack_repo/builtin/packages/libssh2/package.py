@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems import autotools, cmake
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
 
 
 class Libssh2(AutotoolsPackage, CMakePackage):
@@ -57,7 +59,7 @@ class Libssh2(AutotoolsPackage, CMakePackage):
     patch("pr-1114.patch", when="@1.7:1.11.0")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define("BUILD_TESTING", False),
@@ -76,7 +78,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = [
             "--disable-tests",

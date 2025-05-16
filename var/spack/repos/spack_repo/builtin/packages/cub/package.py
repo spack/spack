@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cub(Package):
     """CUB is a C++ header library of cooperative threadblock primitives

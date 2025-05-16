@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Amgx(CMakePackage, CudaPackage):
     """AmgX provides a simple path to accelerated core solver technology on

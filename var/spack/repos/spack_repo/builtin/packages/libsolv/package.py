@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libsolv(CMakePackage):
     """Library for solving packages and reading repositories."""

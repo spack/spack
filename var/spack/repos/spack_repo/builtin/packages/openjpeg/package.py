@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openjpeg(CMakePackage):
     """OpenJPEG is an open-source JPEG 2000 codec written in C language.

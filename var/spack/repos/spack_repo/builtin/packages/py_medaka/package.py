@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMedaka(PythonPackage):
     """medaka is a tool to create consensus sequences and variant calls from

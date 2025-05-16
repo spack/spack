@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIminuit(PythonPackage):
     """Interactive IPython-Friendly Minimizer based on SEAL Minuit2."""

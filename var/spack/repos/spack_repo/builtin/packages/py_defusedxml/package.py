@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDefusedxml(PythonPackage):
     """defusing XML bombs and other exploits"""

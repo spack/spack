@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cnpy(CMakePackage):
     """cnpy: library to read/write .npy and .npz files in C/C++."""

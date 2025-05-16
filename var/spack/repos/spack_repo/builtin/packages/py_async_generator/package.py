@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsyncGenerator(PythonPackage):
     """Provides async generator functionality to python 3.5."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Armadillo(CMakePackage):
     """Armadillo is a high quality linear algebra library (matrix maths)

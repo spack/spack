@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPdf2image(PythonPackage):
     """A python module that wraps the pdftoppm utility to convert PDF to PIL Image object"""

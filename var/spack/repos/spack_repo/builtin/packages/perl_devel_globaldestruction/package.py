@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDevelGlobaldestruction(PerlPackage):
     """Makes Perl's global destruction less tricky to deal with"""

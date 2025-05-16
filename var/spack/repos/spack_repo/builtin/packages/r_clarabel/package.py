@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RClarabel(RPackage):
     """A versatile interior point solver that solves linear programs (LPs),

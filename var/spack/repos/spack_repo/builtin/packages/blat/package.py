@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Blat(Package):
     """BLAT (BLAST-like alignment tool) is a pairwise sequence

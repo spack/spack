@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlListSomeutils(PerlPackage):
     """Provide the stuff missing in List::Util"""

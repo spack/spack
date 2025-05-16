@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribBibtex(PythonPackage):
     """A Sphinx extension for BibTeX style citations."""

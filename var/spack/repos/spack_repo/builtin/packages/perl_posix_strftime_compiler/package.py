@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPosixStrftimeCompiler(PerlPackage):
     """GNU C library compatible strftime for loggers and servers"""

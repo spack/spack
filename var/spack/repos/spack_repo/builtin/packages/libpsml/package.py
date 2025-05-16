@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpsml(AutotoolsPackage):
     """libPSML is a library to handle pseudopotentials in PSML format."""

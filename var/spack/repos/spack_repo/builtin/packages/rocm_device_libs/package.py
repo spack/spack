@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmDeviceLibs(CMakePackage):
     """set of AMD specific device-side language runtime libraries"""

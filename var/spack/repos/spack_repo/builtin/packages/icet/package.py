@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Icet(CMakePackage):
     """The Image Composition Engine for Tiles (IceT) is a high-performance

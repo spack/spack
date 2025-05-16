@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArviz(PythonPackage):
     """ArviZ (pronounced "AR-vees") is a Python package for exploratory

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pmerge(AutotoolsPackage):
     """PMERGE implements a new method that identifies candidate PSVs by

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sdl2Image(AutotoolsPackage):
     """SDL is designed to provide the bare bones of creating a graphical

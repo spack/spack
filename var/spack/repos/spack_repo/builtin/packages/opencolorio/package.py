@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Opencolorio(CMakePackage):
     """OpenColorIO (OCIO) is a complete color management solution geared towards motion

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kassiopeia(CMakePackage):
     """Simulation of electric and magnetic fields and particle tracking."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHistoprint(PythonPackage):
     """Pretty print of NumPy (and other) histograms to the console"""

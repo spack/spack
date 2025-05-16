@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNcdf4(RPackage):
     """Interface to Unidata netCDF (Version 4 or Earlier) Format Data Files.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Serenity(CMakePackage):
     """Subsystem focused quantum chemistry code Serenity"""

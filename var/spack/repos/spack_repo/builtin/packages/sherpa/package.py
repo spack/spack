@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems import autotools, cmake
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
 
 
 class Sherpa(CMakePackage, AutotoolsPackage):
@@ -152,7 +154,7 @@ class Sherpa(CMakePackage, AutotoolsPackage):
         return (None, None, flags)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("SHERPA_ENABLE_ANALYSIS", "analysis"),
@@ -175,7 +177,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args.append("--enable-binreloc")

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xsetroot(AutotoolsPackage, XorgPackage):
     """xsetroot - root window parameter setting utility for X."""

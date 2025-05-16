@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBottle(PythonPackage):
     """Bottle is a fast, simple and lightweight WSGI

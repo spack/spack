@@ -4,8 +4,12 @@
 
 import os
 
-from spack.build_systems import autotools, cmake, python
 from spack.package import *
+
+from ...build_systems import autotools, cmake, python
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
 
 
 class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):

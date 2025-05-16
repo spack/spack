@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class P7zip(MakefilePackage):
     """A Unix port of the 7z file archiver"""

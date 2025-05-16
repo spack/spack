@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWerkzeug(PythonPackage):
     """The Swiss Army knife of Python web development"""

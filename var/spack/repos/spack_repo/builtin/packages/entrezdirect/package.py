@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Entrezdirect(Package):
     """Entrez Direct (EDirect) provides access to the NCBI's suite of

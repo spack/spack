@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLinearTree(PythonPackage):
     """A python library to build Model Trees with Linear Models at the leaves."""

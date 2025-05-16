@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrequests(PythonPackage):
     """GRequests allows you to use Requests with Gevent to make asynchronous

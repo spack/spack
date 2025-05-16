@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Giflib(MakefilePackage, SourceforgePackage):
     """The GIFLIB project maintains the giflib service library, which has

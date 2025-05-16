@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class HicolorIconTheme(AutotoolsPackage):
     """icon-theme contains the standard also references the default

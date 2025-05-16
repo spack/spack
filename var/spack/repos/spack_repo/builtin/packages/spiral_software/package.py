@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SpiralSoftware(CMakePackage):
     """SPIRAL is a program generation system for linear transforms and other

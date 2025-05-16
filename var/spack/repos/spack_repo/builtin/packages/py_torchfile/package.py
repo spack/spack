@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchfile(PythonPackage):
     """Mostly direct port of the torch7 Lua and C serialization

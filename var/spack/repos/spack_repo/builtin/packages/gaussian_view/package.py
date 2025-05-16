@@ -8,6 +8,8 @@ import os
 import spack.tengine
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class GaussianView(Package):
     """GaussView 6 is the latest iteration of a graphical interface used with

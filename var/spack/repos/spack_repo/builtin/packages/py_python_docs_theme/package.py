@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonDocsTheme(PythonPackage):
     """This is the theme for the Python documentation."""

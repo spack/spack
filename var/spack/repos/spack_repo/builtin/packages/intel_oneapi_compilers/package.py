@@ -10,6 +10,9 @@ import warnings
 from spack.build_environment import dso_suffix
 from spack.package import *
 
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.oneapi import IntelOneApiPackage
+
 versions = [
     {
         "version": "2025.1.1",

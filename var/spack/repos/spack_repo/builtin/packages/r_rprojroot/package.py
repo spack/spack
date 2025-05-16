@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRprojroot(RPackage):
     """Finding Files in Project Subdirectories.

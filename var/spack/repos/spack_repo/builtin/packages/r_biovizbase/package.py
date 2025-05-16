@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBiovizbase(RPackage):
     """Basic graphic utilities for visualization of genomic data.

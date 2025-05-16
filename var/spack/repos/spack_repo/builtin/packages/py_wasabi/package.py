@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWasabi(PythonPackage):
     """wasabi: A lightweight console printing and formatting toolkit."""

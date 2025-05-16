@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycubexr(PythonPackage):
     """pyCubexR is a Python package for reading the Cube4 file format."""

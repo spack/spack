@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bracken(Package):
     """Bracken (Bayesian Reestimation of Abundance with KrakEN) is a highly

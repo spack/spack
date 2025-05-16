@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Quartz(MavenPackage):
     """Quartz is a richly featured, open source job scheduling

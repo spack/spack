@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sw4lite(MakefilePackage, CudaPackage):
     """Sw4lite is a bare bone version of SW4 intended for testing

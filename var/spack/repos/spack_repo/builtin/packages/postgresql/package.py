@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Postgresql(AutotoolsPackage):
     """PostgreSQL is a powerful, open source object-relational database system.

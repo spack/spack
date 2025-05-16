@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Openslp(AutotoolsPackage):
     """OpenSLP project is an effort to develop an open-source,

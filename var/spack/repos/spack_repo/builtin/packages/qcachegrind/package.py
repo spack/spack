@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Qcachegrind(QMakePackage):
     """{K,Q}Cachegrind is a KDE/Qt GUI to visualize profiling data.

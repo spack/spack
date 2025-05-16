@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xhost(AutotoolsPackage, XorgPackage):
     """xhost is used to manage the list of host names or user names

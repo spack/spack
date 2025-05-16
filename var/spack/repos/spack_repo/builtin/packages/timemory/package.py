@@ -7,6 +7,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.python import PythonExtension
+
 
 class Timemory(CMakePackage, PythonExtension):
     """Modular profiling toolkit and suite of libraries and tools

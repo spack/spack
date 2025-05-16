@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Snpeff(Package, SourceforgePackage):
     """SnpEff is a variant annotation and effect prediction tool. It

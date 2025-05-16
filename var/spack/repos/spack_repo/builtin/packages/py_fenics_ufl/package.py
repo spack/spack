@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsUfl(PythonPackage):
     """The Unified Form Language (UFL) is a domain specific language for

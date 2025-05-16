@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlListMoreutilsXs(PerlPackage):
     """List::MoreUtils::XS is a backend for List::MoreUtils. Even if it's

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Scs(MakefilePackage):
     """A C package that solves convex cone problems via operator splitting"""

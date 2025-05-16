@@ -6,6 +6,9 @@ from collections import defaultdict
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Icon(AutotoolsPackage):
     """ICON - is a modeling framework for weather, climate, and environmental prediction. It solves

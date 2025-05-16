@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyani(PythonPackage):
     """pyani is a Python3 module that provides support for calculating

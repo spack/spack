@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bismark(Package):
     """A tool to map bisulfite converted sequence reads and determine cytosine

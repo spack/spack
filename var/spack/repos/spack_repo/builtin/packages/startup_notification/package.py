@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class StartupNotification(AutotoolsPackage):
     """startup-notification contains a reference implementation of the

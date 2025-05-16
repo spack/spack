@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Gnina(CMakePackage, CudaPackage):
     """gnina (pronounced NEE-na) is a molecular docking program with integrated support

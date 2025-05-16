@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBroomHelpers(RPackage):
     """Provides suite of functions to work with regression model 'broom::tidy()'

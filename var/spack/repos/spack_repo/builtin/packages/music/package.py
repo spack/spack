@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Music(CMakePackage):
     """MUSIC (Multi-Scale Initial Conditions for Cosmological Simulations).

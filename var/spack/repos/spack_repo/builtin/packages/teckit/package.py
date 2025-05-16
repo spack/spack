@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Teckit(AutotoolsPackage):
     """TECkit is a low-level toolkit intended to be used by applications for

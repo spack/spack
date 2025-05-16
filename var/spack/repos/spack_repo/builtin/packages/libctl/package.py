@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libctl(AutotoolsPackage):
     """libctl is a free Guile-based library implementing flexible

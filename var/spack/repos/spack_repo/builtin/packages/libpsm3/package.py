@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libpsm3(AutotoolsPackage):
     """PSM3 provider for the PSM3 OFI provider"""

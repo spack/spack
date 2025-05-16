@@ -9,6 +9,9 @@ import sys
 import spack.util.environment
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Papi(AutotoolsPackage, ROCmPackage):
     """PAPI provides the tool designer and application engineer with a

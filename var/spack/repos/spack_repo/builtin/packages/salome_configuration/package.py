@@ -7,6 +7,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SalomeConfiguration(Package):
     """salome-configuration is a part of SALOME platform and define general

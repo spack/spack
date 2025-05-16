@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libjson(MakefilePackage):
     """libjson is a simple library without any dependancies to parse and

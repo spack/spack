@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcppblaze(RPackage):
     """'Blaze' is an open-source, high-performance C++ math library for dense

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFastica(RPackage):
     """FastICA Algorithms to Perform ICA and Projection Pursuit.

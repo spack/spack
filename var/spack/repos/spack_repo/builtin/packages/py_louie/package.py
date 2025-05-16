@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLouie(PythonPackage):
     """Louie provides Python programmers with a straightforward way to

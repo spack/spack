@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class AppleLibuuid(BundlePackage):
     """Placeholder package for Apple's analogue to non-GNU libuuid"""

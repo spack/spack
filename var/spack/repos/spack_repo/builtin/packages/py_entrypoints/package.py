@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEntrypoints(PythonPackage):
     """Discover and load entry points from installed packages."""

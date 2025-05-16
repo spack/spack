@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConfigobj(PythonPackage):
     """Config file reading, writing and validation."""

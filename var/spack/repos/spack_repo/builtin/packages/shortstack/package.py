@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Shortstack(Package):
     """ShortStack is a tool developed to process and analyze smallRNA-seq data

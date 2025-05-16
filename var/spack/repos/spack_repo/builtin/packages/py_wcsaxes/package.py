@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWcsaxes(PythonPackage):
     """WCSAxes is a framework for making plots of Astronomical data

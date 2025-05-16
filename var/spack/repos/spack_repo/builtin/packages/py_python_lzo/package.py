@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLzo(PythonPackage):
     """This module provides Python bindings for the LZO data compression

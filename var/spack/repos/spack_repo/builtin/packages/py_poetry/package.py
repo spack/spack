@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPoetry(PythonPackage):
     """Python dependency management and packaging made easy."""

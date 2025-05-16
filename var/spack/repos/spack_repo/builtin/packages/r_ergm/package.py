@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RErgm(RPackage):
     """Fit, Simulate and Diagnose Exponential-Family Models for Networks.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rsl(AutotoolsPackage):
     """This library is an object oriented programming environment for writing

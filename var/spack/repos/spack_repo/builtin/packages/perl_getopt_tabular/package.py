@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGetoptTabular(PerlPackage):
     """Getopt::Tabular is a Perl 5 module for table-driven argument parsing,

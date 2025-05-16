@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLspRuff(PythonPackage):
     """A plugin for python-lsp-server that adds linting, code action and

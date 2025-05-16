@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupytext(PythonPackage):
     """Jupyter Notebooks as Markdown Documents, Julia, Python or R scripts"""

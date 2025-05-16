@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lmdb(MakefilePackage):
     """Symas LMDB is an extraordinarily fast, memory-efficient database we

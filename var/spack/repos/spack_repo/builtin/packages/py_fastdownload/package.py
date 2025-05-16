@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastdownload(PythonPackage):
     """If you have datasets or other archives that you want to

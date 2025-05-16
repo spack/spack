@@ -4,9 +4,10 @@
 
 import sys
 
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
+from ...build_systems.python import PythonPipBuilder
+from ...build_systems.scons import SConsPackage
 from ..boost.package import Boost
 
 

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Grnboost(Package):
     """GRNBoost is a library built on top of Apache Spark that implements a

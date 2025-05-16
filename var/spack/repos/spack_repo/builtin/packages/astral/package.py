@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Astral(Package):
     """ASTRAL is a tool for estimating an unrooted species tree given a set of

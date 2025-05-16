@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Openfdtd(MakefilePackage):
     """OpenFDTD is general purpose FDTD simulator applicable to a wide range

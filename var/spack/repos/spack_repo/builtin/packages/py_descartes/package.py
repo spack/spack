@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDescartes(PythonPackage):
     """Use Shapely or GeoJSON-like geometric objects as matplotlib paths

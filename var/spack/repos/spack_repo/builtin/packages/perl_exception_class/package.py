@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExceptionClass(PerlPackage):
     """A module that allows you to declare real exception classes in Perl"""

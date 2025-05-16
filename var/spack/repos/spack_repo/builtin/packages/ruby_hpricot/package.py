@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyHpricot(RubyPackage):
     """A swift, liberal HTML parser with a fantastic library.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTblib(PythonPackage):
     """Traceback fiddling library. Allows you to pickle tracebacks."""

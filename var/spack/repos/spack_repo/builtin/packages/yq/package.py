@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Yq(GoPackage):
     """yq is a portable command-line YAML, JSON, XML, CSV, TOML and properties processor.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyModulesGui(PythonPackage):
     """MoGui is a Graphical User Interface (GUI) for Environment Modules.

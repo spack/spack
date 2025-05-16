@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Latex2html(AutotoolsPackage):
     """LaTeX2HTML is a utility that converts LaTeX documents to web pages in HTML."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Callflow(PythonPackage):
     """CallFlow is an interactive visual analysis tool that provides a

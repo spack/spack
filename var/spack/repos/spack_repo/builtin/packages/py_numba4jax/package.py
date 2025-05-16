@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNumba4jax(PythonPackage):
     """Use numba-compiled kernels from within Jax"""

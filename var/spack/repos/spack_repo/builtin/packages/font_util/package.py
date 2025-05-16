@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class FontUtil(AutotoolsPackage, XorgPackage):
     """X.Org font package creation/installation utilities and fonts."""

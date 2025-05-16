@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMx(PythonPackage):
     """The eGenix.com mx Base Distribution for Python is a collection of

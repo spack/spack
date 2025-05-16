@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsndfile(AutotoolsPackage):
     """Libsndfile is a C library for reading and writing files containing

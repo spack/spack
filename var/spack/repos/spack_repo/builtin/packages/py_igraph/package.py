@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIgraph(PythonPackage):
     """Python interface to the igraph high performance graph library,

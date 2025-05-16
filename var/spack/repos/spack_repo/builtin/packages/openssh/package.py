@@ -7,6 +7,8 @@ import socket
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Openssh(AutotoolsPackage):
     """OpenSSH is the premier connectivity tool for remote login with the

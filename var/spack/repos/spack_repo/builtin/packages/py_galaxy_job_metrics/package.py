@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGalaxyJobMetrics(PythonPackage):
     """The Galaxy job metrics framework and default plugins."""

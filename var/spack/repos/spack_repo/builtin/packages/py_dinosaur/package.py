@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDinosaur(PythonPackage):
     """Dinosaur: differentiable dynamics for global atmospheric modeling."""

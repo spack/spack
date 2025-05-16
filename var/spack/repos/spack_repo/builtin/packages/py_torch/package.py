@@ -8,6 +8,10 @@ import sys
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     """Tensors and Dynamic neural networks in Python with strong GPU acceleration."""

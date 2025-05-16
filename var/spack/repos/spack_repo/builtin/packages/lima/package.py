@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Lima(Package):
     """Linux virtual machines, with a focus on running containers"""

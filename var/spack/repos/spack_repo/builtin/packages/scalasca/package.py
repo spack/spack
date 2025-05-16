@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Scalasca(AutotoolsPackage):
     """Scalasca is a software tool that supports the performance optimization

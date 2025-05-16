@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchgeo(PythonPackage):
     """TorchGeo: datasets, samplers, transforms, and pre-trained models for geospatial data."""

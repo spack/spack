@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDevelSize(PerlPackage):
     """Devel::Size - Perl extension for finding the memory usage of Perl variables"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Clamr(CMakePackage):
     """The CLAMR code is a cell-based adaptive mesh refinement (AMR)

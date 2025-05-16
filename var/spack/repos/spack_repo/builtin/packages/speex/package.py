@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Speex(AutotoolsPackage):
     """Speex is an Open Source/Free Software patent-free

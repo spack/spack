@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Plink2(MakefilePackage):
     """PLINK2: Whole genome association analysis toolset, designed to perform a

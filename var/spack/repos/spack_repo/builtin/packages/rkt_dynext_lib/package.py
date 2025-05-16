@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.racket import RacketPackage
+
 
 class RktDynextLib(RacketPackage):
     """Racket library for running a C compiler/linker."""

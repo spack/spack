@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libcap(MakefilePackage):
     """Libcap implements the user-space interfaces to the POSIX 1003.1e

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Kakoune(MakefilePackage):
     """mawww's experiment for a better code editor."""

@@ -4,6 +4,11 @@
 
 from spack.package import *
 
+from ...build_systems.cached_cmake import cmake_cache_string
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """

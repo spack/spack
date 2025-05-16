@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rsync(AutotoolsPackage):
     """An open source utility that provides fast incremental file transfer."""

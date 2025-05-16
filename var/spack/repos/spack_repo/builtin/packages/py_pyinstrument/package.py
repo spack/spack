@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyinstrument(PythonPackage):
     """Call stack profiler for Python. Shows you why your code is slow!"""

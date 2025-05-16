@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hpl(AutotoolsPackage):
     """HPL is a software package that solves a (random) dense linear system

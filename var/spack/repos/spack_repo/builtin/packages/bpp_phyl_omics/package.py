@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BppPhylOmics(CMakePackage):
     """Bio++ Phylogenetic Omics Library"""

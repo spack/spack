@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BlastPlus(AutotoolsPackage):
     """Basic Local Alignment Search Tool."""

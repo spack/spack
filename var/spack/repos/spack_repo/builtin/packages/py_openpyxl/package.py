@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenpyxl(PythonPackage):
     """A Python library to read/write Excel 2010 xlsx/xlsm files"""

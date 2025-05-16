@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsdf(PythonPackage):
     """The Advanced Scientific Data Format (ASDF) is a next-generation

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGriddataformats(PythonPackage):
     """The gridDataFormats package provides classes to unify reading

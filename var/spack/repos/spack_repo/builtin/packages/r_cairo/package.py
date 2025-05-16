@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCairo(RPackage):
     """R graphics device using cairo graphics library for creating high-quality

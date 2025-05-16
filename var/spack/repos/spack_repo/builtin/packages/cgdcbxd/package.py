@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cgdcbxd(AutotoolsPackage):
     """cgdcbxd is a daemon used to monitor DCB netlink events and manage

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Digitrounding(CMakePackage):
     """Standalone version of Digit rounding compressor"""

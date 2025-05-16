@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Tensorpipe(CMakePackage):
     """A tensor-aware point-to-point communication primitive for machine learning."""

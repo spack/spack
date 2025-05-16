@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPpixQuotelike(PerlPackage):
     """Parse Perl string literals and string-literal-like things."""

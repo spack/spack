@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Libmicrohttpd(AutotoolsPackage, GNUMirrorPackage):
     """GNU libmicrohttpd is a small C library that is supposed to make

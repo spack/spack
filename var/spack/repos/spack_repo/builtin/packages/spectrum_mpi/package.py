@@ -7,6 +7,8 @@ import re
 import spack.compilers.config
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class SpectrumMpi(BundlePackage):
     """IBM MPI implementation from Spectrum MPI."""

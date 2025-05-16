@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mdspan(CMakePackage):
     """Extension of std::span to enable multidimensional arrays"""

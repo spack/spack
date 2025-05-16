@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSubplex(RPackage):
     """Unconstrained Optimization using the Subplex Algorithm.

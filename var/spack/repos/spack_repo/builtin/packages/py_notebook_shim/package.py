@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNotebookShim(PythonPackage):
     """A shim layer for notebook traits and config."""

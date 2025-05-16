@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cpprestsdk(CMakePackage):
     """The C++ REST SDK is a Microsoft project for cloud-based client-server

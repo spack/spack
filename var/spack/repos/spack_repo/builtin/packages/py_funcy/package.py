@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFuncy(PythonPackage):
     """A collection of fancy functional tools focused on practicality"""

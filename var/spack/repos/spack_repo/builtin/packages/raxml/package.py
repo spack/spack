@@ -5,6 +5,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Raxml(Package):
     """RAxML (Randomized Axelerated Maximum Likelihood) is a program for

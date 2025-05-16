@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Fq(Package):
     """fq is a library to generate and validate FASTQ file pairs.

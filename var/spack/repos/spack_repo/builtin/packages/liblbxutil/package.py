@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Liblbxutil(AutotoolsPackage, XorgPackage):
     """liblbxutil - Low Bandwith X extension (LBX) utility routines."""

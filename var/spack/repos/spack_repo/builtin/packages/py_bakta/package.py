@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBakta(PythonPackage):
     """Bakta: rapid & standardized annotation

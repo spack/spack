@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libsplash(CMakePackage):
     """libSplash aims at developing a HDF5-based I/O library for HPC

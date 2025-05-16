@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xpr(AutotoolsPackage, XorgPackage):
     """xpr takes as input a window dump file produced by xwd

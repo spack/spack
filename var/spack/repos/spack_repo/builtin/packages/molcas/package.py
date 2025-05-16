@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Molcas(CMakePackage):
     """Molcas is an ab initio quantum chemistry software package

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTensora(RPackage):
     """Advanced Tensor Arithmetic with Named Indices.

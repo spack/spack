@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class BigdftAtlab(AutotoolsPackage):
     """BigDFT-atlab: library for ATomic related operations."""

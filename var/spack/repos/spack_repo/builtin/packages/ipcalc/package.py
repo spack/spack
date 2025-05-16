@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ipcalc(MakefilePackage):
     """This is a modern tool to assist in network address calculations

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class PikaAlgorithms(CMakePackage):
     """C++ parallel algorithms built on pika."""

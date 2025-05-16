@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class LibflameBase(AutotoolsPackage):
     """Base class for building Libflame, shared with the AMD

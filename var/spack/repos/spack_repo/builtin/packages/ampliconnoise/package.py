@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ampliconnoise(MakefilePackage):
     """AmpliconNoise is a collection of programs for the removal of noise

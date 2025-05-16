@@ -2,8 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.generic
 from spack.package import *
+
+from ...build_systems import generic
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.generic import Package
 
 
 class Codipack(CMakePackage, Package):
@@ -33,7 +36,7 @@ class Codipack(CMakePackage, Package):
     )
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         mkdirp(join_path(prefix, "include"))
         install_tree(join_path(self.stage.source_path, "include"), join_path(prefix, "include"))

@@ -10,6 +10,9 @@ from os.path import join as pjoin
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 def cmake_cache_entry(name, value, comment=""):
     """Generate a string for a cmake cache variable"""

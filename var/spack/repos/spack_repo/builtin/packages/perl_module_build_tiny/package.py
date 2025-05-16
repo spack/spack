@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlModuleBuildTiny(PerlPackage):
     """Module::Build::Tiny - A tiny replacement for Module::Build"""

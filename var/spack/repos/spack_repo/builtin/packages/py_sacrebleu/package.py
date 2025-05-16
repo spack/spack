@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySacrebleu(PythonPackage):
     """SacreBLEU is a standard BLEU implementation that downloads and manages

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTest2Suite(PerlPackage):
     """Distribution with a rich set of tools built upon the Test2 framework."""

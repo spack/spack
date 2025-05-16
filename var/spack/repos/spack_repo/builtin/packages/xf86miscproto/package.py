@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xf86miscproto(AutotoolsPackage, XorgPackage):
     """This package includes the protocol definitions of the "XFree86-Misc"

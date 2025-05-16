@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class File(AutotoolsPackage):
     """The file command is "a file type guesser", that is, a command-line

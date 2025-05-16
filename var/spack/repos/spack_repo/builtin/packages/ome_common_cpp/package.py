@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OmeCommonCpp(CMakePackage):
     """Open Microscopy Environment: Common functionality for OME C++ libraries and

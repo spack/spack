@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dmtcp(AutotoolsPackage):
     """DMTCP (Distributed MultiThreaded Checkpointing) transparently

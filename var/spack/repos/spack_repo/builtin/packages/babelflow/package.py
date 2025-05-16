@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Babelflow(CMakePackage):
     """BabelFlow is an Embedded Domain Specific Language to describe

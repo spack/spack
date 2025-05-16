@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFnn(RPackage):
     """Fast Nearest Neighbor Search Algorithms and Applications.

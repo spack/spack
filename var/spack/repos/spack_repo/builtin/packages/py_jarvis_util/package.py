@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJarvisUtil(PythonPackage):
     """Jarvis-util is a library which contains various utilities to aid with

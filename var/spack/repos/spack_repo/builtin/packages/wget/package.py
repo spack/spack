@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Wget(AutotoolsPackage, GNUMirrorPackage):
     """GNU Wget is a free software package for retrieving files using

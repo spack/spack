@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 arch, os = platform.machine(), sys.platform
 arch64_32, _ = platform.architecture()
 

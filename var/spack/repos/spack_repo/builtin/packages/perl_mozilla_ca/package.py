@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMozillaCa(PerlPackage):
     """Mozilla's CA cert bundle in PEM format"""

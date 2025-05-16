@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTinytex(RPackage):
     """Helper Functions to Install and Maintain TeX Live, and Compile LaTeX

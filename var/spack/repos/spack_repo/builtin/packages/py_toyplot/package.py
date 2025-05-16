@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyToyplot(PythonPackage):
     """A modern plotting toolkit supporting electronic publishing and reproducibility."""

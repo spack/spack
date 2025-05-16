@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pace(CMakePackage):
     """interatomic Potentials in Atomic Cluster Expansion (PACE)

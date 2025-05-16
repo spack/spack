@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hpx5(AutotoolsPackage):
     """The HPX-5 Runtime System. HPX-5 (High Performance ParalleX) is an

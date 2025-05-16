@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Arrow(CMakePackage, CudaPackage):
     """A cross-language development platform for in-memory data.

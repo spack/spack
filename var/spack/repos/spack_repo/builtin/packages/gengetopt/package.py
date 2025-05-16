@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gengetopt(AutotoolsPackage):
     """Tool to write command line option parsing code for C programs"""

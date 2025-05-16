@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Httperf(AutotoolsPackage):
     """Httperf is a tool for measuring web server performance. It provides

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xorgproto(MesonPackage, XorgPackage):
     """X Window System unified protocol definitions replacing standalone protos"""

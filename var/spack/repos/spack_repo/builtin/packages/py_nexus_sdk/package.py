@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNexusSdk(PythonPackage):
     """A Python API to interface with Blue Brain Nexus REST API."""

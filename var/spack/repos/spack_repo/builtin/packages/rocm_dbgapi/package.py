@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RocmDbgapi(CMakePackage):
     """The AMD Debugger API is a library that provides all the support

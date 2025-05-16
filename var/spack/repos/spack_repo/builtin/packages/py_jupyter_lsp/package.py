@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterLsp(PythonPackage):
     """Multi-Language Server WebSocket proxy for Jupyter Notebook/Lab server."""

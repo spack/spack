@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class SrcmlIdentifierGetterTool(CMakePackage):
     """SCANL's srcml_identifier_getter_tool. reads a srcML

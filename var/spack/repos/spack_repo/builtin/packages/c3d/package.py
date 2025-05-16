@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class C3d(CMakePackage):
     """Image processing and conversion tool based on ITK."""

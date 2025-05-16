@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHealpy(PythonPackage):
     """healpy is a Python package to handle pixelated data on the sphere."""

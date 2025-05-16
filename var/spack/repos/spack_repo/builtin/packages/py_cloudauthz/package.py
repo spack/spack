@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCloudauthz(PythonPackage):
     """Implements means of authorization delegation on cloud-based resource providers."""

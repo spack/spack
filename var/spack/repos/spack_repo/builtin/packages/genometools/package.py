@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Genometools(MakefilePackage):
     """genometools is a free collection of bioinformatics tools (in the realm

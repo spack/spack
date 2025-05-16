@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIrlba(RPackage):
     """Fast Truncated Singular Value Decomposition and Principal Components

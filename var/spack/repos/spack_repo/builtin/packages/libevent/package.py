@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libevent(AutotoolsPackage):
     """The libevent API provides a mechanism to execute a callback function

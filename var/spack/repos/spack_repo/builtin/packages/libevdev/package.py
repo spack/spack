@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libevdev(AutotoolsPackage):
     """libevdev is a wrapper library for evdev devices. it moves the common

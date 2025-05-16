@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rocjpeg(CMakePackage):
     """rocJPEG is a high-performance jpeg decode SDK for decoding jpeg images

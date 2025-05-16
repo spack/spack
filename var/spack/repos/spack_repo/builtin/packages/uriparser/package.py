@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Uriparser(CMakePackage):
     """uriparser is a strictly RFC 3986 compliant URI parsing and handling

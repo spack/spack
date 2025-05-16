@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Umesimd(CMakePackage):
     """UME::SIMD is an explicit vectorization library. The library defines

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWcwidth(PythonPackage):
     """Measures number of Terminal column cells of wide-character codes"""

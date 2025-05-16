@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrandalf(PythonPackage):
     """Grandalf is a Python package made for experimentations with graph

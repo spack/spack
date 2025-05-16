@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPandasDatareader(PythonPackage):
     """Up-to-date remote data access for pandas. Works for multiple versions of pandas"""

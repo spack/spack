@@ -8,6 +8,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Verrou(AutotoolsPackage):
     """A floating-point error checker.

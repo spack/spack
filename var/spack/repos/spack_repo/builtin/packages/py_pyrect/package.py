@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyrect(PythonPackage):
     """PyRect is a simple module with a Rect class for

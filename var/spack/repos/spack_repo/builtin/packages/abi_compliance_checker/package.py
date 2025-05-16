@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class AbiComplianceChecker(MakefilePackage):
     """A tool for checking backward compatibility of a C/C++ library API."""

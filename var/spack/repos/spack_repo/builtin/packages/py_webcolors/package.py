@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWebcolors(PythonPackage):
     """Working with color names and values formats defined by HTML and CSS."""

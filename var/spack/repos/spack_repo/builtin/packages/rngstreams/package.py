@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rngstreams(AutotoolsPackage):
     """Multiple independent streams of pseudo-random numbers."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFiscalyear(PythonPackage):
     """fiscalyear is a small, lightweight Python module providing helpful

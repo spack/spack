@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Librdkafka(AutotoolsPackage):
     """librdkafka is a C library implementation of the Apache Kafka

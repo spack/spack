@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestFatal(PerlPackage):
     """Incredibly simple helpers for testing code with exceptions"""

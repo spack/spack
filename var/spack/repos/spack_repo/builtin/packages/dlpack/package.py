@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dlpack(CMakePackage):
     """DLPack is an RFC for common tensor and operator guidelines

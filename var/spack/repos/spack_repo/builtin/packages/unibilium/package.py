@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class Unibilium(MakefilePackage, AutotoolsPackage):
     """A terminfo parsing library"""

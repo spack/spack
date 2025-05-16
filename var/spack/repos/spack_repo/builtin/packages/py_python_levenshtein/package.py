@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLevenshtein(PythonPackage):
     """Python extension for computing string edit distances and

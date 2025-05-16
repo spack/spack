@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestFailSlow(PythonPackage):
     """Fail tests that take too long to run."""

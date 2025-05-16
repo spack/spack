@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMatrixmodels(RPackage):
     """Modelling with Sparse and Dense Matrices.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDynamictreecut(RPackage):
     """Methods for Detection of Clusters in Hierarchical Clustering Dendrograms

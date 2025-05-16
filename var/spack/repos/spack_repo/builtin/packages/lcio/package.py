@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lcio(CMakePackage):
     """HEP Library for Linear Collider Input/Output"""

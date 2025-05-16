@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyReadmeRenderer(PythonPackage):
     """readme_renderer is a library for rendering "readme" descriptions

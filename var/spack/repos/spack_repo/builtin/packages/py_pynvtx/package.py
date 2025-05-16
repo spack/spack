@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPynvtx(PythonPackage):
     """A thin python wrapper for the nvToolsExt (NVTX) library, using

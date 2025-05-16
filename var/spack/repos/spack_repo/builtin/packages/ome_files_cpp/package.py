@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OmeFilesCpp(CMakePackage):
     """Open Microscopy Environment OME Files is a standalone C++ library for reading

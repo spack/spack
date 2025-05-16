@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libkcapi(AutotoolsPackage):
     """libkcapi allows user-space to access the Linux kernel crypto API."""

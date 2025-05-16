@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Opendatadetector(CMakePackage):
     """Open Data Detector for High Energy Physics."""

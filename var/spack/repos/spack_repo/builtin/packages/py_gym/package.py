@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGym(PythonPackage):
     """OpenAI Gym is a toolkit for developing and comparing

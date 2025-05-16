@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class G2c(CMakePackage):
     """This library contains C decoder/encoder routines for GRIB edition 2.

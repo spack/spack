@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cbc(AutotoolsPackage):
     """Cbc (Coin-or branch and cut) is an open-source mixed integer

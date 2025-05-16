@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     """Ceed is a collection of benchmarks, miniapps, software libraries and

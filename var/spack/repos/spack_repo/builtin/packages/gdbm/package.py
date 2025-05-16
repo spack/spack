@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     """GNU dbm (or GDBM, for short) is a library of database functions

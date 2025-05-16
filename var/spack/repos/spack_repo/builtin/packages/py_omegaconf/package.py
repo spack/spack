@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOmegaconf(PythonPackage):
     """A hierarchical configuration system, with support for merging configurations from

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPreshed(PythonPackage):
     """preshed: Cython Hash Table for Pre-Hashed Keys."""

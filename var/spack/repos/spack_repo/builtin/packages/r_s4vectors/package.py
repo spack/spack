@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RS4vectors(RPackage):
     """Foundation of vector-like and list-like containers in Bioconductor.

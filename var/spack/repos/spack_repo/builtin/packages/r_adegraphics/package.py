@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAdegraphics(RPackage):
     """An S4 Lattice-Based Package for the Representation of Multivariate Data.

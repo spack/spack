@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ospray(CMakePackage):
     """Intel OSPRay is an open source, scalable, and portable ray tracing engine for

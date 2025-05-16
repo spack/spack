@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDose(RPackage):
     """Disease Ontology Semantic and Enrichment analysis.

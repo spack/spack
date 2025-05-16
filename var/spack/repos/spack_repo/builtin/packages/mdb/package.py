@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Mdb(PythonPackage):
     """mdb is a command line debugger aimed at parallel programs using the MPI

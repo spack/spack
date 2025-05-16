@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libeatmydata(AutotoolsPackage):
     """libeatmydata is a small LD_PRELOAD library designed to (transparently)

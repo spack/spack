@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fmt(CMakePackage):
     """fmt (formerly cppformat) is an open-source formatting library.

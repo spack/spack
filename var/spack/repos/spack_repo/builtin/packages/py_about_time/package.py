@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAboutTime(PythonPackage):
     """A cool helper for tracking time and throughput of

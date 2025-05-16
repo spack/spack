@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStdlibList(PythonPackage):
     """This package includes lists of all of the standard libraries

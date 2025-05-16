@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTestpath(PythonPackage):
     """Testpath is a collection of utilities for Python code working with

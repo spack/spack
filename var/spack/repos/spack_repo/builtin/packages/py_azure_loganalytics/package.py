@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureLoganalytics(PythonPackage):
     """Microsoft Azure Log Analytics Client Library for Python."""

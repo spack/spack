@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class MpiTestSuite(AutotoolsPackage):
     """The MPI-testsuite was initially developed for the use with PACX-MPI and has been extended

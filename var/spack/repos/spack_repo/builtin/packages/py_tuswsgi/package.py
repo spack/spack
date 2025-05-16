@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTuswsgi(PythonPackage):
     """python wsgi filter for tus protocol 1.0.0"""

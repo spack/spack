@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPerformance(PythonPackage):
     """The performance project is intended to be an authoritative source

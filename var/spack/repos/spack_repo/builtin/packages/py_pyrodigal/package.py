@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyrodigal(PythonPackage):
     """Cython bindings and Python interface to Prodigal, an ORF finder for

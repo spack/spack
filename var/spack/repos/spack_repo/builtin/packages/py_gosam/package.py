@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class PyGosam(Package):
     """The package GoSam allows for the automated calculation of

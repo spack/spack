@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Jackcess(Package):
     """Jackcess is a pure Java library for reading from and writing to

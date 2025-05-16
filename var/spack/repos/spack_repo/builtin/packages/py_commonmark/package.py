@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCommonmark(PythonPackage):
     """commonmark.py is a pure Python port of jgm's commonmark.js, a Markdown

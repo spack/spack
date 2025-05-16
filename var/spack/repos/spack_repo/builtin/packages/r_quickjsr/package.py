@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RQuickjsr(RPackage):
     """An 'R' interface to the 'QuickJS' portable 'JavaScript' engine.

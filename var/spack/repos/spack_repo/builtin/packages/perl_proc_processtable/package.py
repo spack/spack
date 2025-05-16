@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlProcProcesstable(PerlPackage):
     """Perl extension to access the unix process table"""

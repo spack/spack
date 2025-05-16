@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCallmonitor(PythonPackage):
     """A Simple Tool to Monitor and Log Function Calls"""

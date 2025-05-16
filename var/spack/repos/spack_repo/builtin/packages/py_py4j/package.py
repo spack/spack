@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPy4j(PythonPackage):
     """Enables Python programs to dynamically access arbitrary Java

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CeresSolver(CMakePackage):
     """Ceres Solver is an open source C++ library for modeling and solving

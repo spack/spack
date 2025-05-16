@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Spark(Package):
     """Apache Spark is a fast and general engine

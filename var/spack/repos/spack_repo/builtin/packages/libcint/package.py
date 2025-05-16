@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libcint(CMakePackage):
     """Library for analytical Gaussian integrals for quantum chemistry."""

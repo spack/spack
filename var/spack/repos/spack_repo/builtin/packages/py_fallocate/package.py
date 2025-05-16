@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFallocate(PythonPackage):
     """Module to expose posix_fallocate(3), posix_fadvise(3) and fallocate(2)"""

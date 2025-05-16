@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4neutronxs(Package):
     """Geant4 data for evaluated neutron cross-sections on natural composition

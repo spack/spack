@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Pthreadpool(CMakePackage):
     """pthreadpool is a portable and efficient thread pool implementation."""

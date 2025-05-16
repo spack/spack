@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Exo(AutotoolsPackage):
     """Helper applications for XFCE4"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ctpl(AutotoolsPackage):
     """CTPL is a template engine library written in C and distributed

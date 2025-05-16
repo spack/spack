@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hepmcanalysis(MakefilePackage):
     """The HepMCAnalysis Tool is a tool for generator

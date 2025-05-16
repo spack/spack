@@ -6,6 +6,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.python import PythonExtension
+
 
 class PyPykokkosBase(CMakePackage, PythonExtension):
     """Minimal set of bindings for Kokkos interoperability with Python

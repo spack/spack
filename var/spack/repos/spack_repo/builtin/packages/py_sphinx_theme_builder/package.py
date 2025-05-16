@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxThemeBuilder(PythonPackage):
     """A tool for authoring Sphinx themes with a simple (opinionated) workflow."""

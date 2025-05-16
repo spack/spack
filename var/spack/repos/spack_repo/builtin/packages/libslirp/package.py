@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Libslirp(MesonPackage):
     """General purpose TCP-IP emulator"""

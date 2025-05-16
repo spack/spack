@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pigz(MakefilePackage):
     """A parallel implementation of gzip for modern multi-processor,

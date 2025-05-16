@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Recorder(AutotoolsPackage):
     """A multi-level library for understanding I/O

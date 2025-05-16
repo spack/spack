@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libarchive(AutotoolsPackage):
     """libarchive: C library and command-line tools for reading and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLibrosa(PythonPackage):
     """A python package for music and audio analysis."""

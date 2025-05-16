@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Sparta(Package):
     """small RNA-PARE Target Analyzer (sPARTA) is a tool which utilizes

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sysget(MakefilePackage):
     """sysget is a bridge that lets you use one syntax to every

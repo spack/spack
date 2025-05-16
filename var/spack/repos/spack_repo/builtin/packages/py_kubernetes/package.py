@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKubernetes(PythonPackage):
     """Official Python client library for kubernetes."""

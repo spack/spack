@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlaskCompress(PythonPackage):
     """Flask-Compress allows you to easily compress your Flask application's

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Baurmc(AutotoolsPackage):
     """Baur's Monte Carlo package for simulating W+ gamma production at hadron

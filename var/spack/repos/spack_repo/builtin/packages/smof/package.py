@@ -7,6 +7,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Smof(Package):
     """Explore and analyze biological sequence data"""

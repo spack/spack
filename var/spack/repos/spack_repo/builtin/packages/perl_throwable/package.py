@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlThrowable(PerlPackage):
     """A role for classes that can be thrown"""

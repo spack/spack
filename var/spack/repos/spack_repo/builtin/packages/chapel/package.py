@@ -13,6 +13,10 @@ import spack.platforms.cray
 from spack.package import *
 from spack.util.environment import is_system_path, set_env
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 @llnl.util.lang.memoized
 def is_CrayEX():

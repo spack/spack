@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Reditools(PythonPackage):
     """REDItools: python scripts for RNA editing detection by RNA-Seq data.

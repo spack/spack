@@ -9,6 +9,10 @@ import sys
 from spack.build_environment import optimization_flags
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Namd(MakefilePackage, CudaPackage, ROCmPackage):
     """NAMD is a parallel molecular dynamics code designed for

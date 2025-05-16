@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureIdentity(PythonPackage):
     """Microsoft Azure Identity Library for Python."""

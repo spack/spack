@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Mkfontscale(AutotoolsPackage, XorgPackage):
     """mkfontscale creates the fonts.scale and fonts.dir index files used by the

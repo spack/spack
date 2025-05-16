@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxautomodapi(PythonPackage):
     """Provides Sphinx directives to autogenerate API documentation pages"""

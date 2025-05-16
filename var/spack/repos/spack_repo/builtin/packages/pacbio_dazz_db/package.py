@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PacbioDazzDb(MakefilePackage):
     """The Dazzler Database Library. This version is a special fork

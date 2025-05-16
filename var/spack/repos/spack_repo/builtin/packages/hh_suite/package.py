@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HhSuite(CMakePackage):
     """HH-suite is a widely used open source software suite for

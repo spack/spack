@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mozjpeg(CMakePackage):
     """MozJPEG is a patched version of libjpeg-turbo which improves

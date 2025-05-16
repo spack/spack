@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Trimgalore(Package):
     """Trim Galore! is a wrapper around Cutadapt and FastQC to consistently

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBiocgenerics(RPackage):
     """S4 generic functions used in Bioconductor.

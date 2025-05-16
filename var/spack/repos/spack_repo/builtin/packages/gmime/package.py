@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gmime(AutotoolsPackage):
     """GMime is a C/C++ library which may be used for the creation and

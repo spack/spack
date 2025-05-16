@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWaitress(PythonPackage):
     """Waitress: a production-quality pure-Python WSGI server with very acceptable performance."""

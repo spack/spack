@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Awscli(PythonPackage):
     """This package provides a unified command line interface to

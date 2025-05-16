@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydeface(PythonPackage):
     """A script to remove facial structure from MRI images."""

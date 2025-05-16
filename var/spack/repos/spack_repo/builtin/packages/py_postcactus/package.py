@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPostcactus(PythonPackage):
     """This repository contains a Python package named PostCactus for

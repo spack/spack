@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTzdata(PythonPackage):
     """Provider of IANA time zone data."""

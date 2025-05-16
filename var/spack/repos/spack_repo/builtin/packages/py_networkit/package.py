@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNetworkit(PythonPackage):
     """NetworKit is a growing open-source toolkit for large-scale network

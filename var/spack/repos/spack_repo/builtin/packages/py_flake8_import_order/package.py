@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlake8ImportOrder(PythonPackage):
     """Flake8 and pylama plugin that checks the ordering of import statements."""

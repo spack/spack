@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fastjar(AutotoolsPackage):
     """Fastjar is a version of Sun's 'jar' utility, written entirely in C."""

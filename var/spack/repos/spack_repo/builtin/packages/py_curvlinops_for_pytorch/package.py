@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCurvlinopsForPytorch(PythonPackage):
     """scipy Linear operators for curvature matrices in PyTorch."""

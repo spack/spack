@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Freeimage(MakefilePackage):
     """FreeImage is an Open Source library project for developers who would like

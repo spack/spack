@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassC3(PerlPackage):
     """A pragma to use the C3 method resolution order algorithm"""

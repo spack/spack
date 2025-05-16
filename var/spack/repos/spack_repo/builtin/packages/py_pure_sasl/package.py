@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPureSasl(PythonPackage):
     """This package provides a reasonably high-level SASL client

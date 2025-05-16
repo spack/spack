@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladContainer(PythonPackage):
     """DataLad extension package for working with containerized environments"""

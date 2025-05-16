@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLangsmith(PythonPackage):
     """Client library to connect to the LangSmith LLM Tracing and Evaluation Platform."""

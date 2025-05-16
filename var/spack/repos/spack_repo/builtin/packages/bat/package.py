@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Bat(CargoPackage):
     """A cat(1) clone with wings."""

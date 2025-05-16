@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RClock(RPackage):
     """Date-Time Types and Tools.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Minuit(AutotoolsPackage):
     """MINUIT is a physics analysis tool for function minimization."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rasqal(AutotoolsPackage):
     """Rasqal is a free software / Open Source C library that

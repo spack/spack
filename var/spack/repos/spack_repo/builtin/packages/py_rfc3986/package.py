@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRfc3986(PythonPackage):
     """A Python implementation of RFC 3986 including

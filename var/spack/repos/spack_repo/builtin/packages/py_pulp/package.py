@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPulp(PythonPackage):
     """PuLP is an LP modeler written in Python. PuLP can generate MPS or LP

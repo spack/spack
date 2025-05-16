@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class PrunersNinja(AutotoolsPackage):
     """NINJA: Noise Inject agent tool to expose subtle and unintended message

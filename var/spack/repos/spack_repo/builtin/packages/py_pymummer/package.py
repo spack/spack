@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymummer(PythonPackage):
     """Python3 module for running MUMmer and reading the output"""

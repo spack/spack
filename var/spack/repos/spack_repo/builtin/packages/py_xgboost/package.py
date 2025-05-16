@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXgboost(PythonPackage):
     """XGBoost is an optimized distributed gradient boosting library designed to be

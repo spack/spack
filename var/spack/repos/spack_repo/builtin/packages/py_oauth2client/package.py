@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOauth2client(PythonPackage):
     """OAuth 2.0 client library.

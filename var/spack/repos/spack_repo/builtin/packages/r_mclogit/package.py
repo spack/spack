@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMclogit(RPackage):
     """Multinomial Logit Models, with or without Random Effects or

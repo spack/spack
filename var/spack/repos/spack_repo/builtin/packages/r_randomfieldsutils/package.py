@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRandomfieldsutils(RPackage):
     """Utilities for the Simulation and Analysis of Random Fields and Genetic

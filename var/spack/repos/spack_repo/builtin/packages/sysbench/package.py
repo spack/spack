@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sysbench(AutotoolsPackage):
     """Scriptable database and system performance benchmark."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gblocks(Package):
     """Gblocks is a computer program written in ANSI C language that eliminates

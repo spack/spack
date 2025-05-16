@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlaky(PythonPackage):
     """Flaky is a plugin for nose or pytest that automatically reruns flaky tests."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsMock(PythonPackage):
     """Mock out responses from the requests package."""

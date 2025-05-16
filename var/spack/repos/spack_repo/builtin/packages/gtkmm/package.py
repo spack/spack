@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gtkmm(AutotoolsPackage):
     """Gtkmm is the official C++ interface for the popular GUI library GTK+."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPermute(RPackage):
     """Functions for Generating Restricted Permutations of Data.

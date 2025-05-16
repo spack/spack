@@ -4,6 +4,8 @@
 from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
 
+from ...build_systems.generic import Package
+
 
 class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTestfixtures(PythonPackage):
     """Testfixtures is a collection of helpers and mock objects that are useful

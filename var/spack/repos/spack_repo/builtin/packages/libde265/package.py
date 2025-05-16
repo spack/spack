@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libde265(CMakePackage):
     """libde265 is an open source implementation of the h.265 video codec.

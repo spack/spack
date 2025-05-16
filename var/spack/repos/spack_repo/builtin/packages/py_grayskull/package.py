@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGrayskull(PythonPackage):
     """Project to generate recipes for conda packages."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRomanNumeralsPy(PythonPackage):
     """Manipulate well-formed Roman numerals."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class G4vg(CMakePackage):
     """Generate VecGeom geometry representations from in-memory Geant4 geometry."""

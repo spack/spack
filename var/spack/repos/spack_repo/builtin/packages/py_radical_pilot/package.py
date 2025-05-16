@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRadicalPilot(PythonPackage):
     """RADICAL-Pilot is a Pilot system specialized in executing applications

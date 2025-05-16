@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mrbayes(AutotoolsPackage):
     """MrBayes is a program for Bayesian inference and model choice across a

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Admixtools(MakefilePackage):
     """The ADMIXTOOLS package implements 5 methods described in

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Srcml(CMakePackage):
     """srcML is an XML format for source code. The XML markup identifies elements of

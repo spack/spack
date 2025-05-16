@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRtree(PythonPackage):
     """R-Tree spatial index for Python GIS."""

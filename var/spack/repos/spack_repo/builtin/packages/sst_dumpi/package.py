@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class SstDumpi(AutotoolsPackage):
     """The DUMPI package provides libraries to collect and read traces of MPI

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tengine(AutotoolsPackage):
     """A distribution of Nginx with some advanced features."""

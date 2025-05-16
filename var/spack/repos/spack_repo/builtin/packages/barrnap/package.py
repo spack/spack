@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Barrnap(Package):
     """Barrnap predicts the location of ribosomal RNA genes in genomes."""

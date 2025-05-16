@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygments(PythonPackage):
     """Pygments is a syntax highlighting package written in Python."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPgzip(PythonPackage):
     """A multi-threading implementation of Python gzip module"""

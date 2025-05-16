@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGetoptArgvfile(PerlPackage):
     """Getopt::ArgvFile - interpolates script options from files into @ARGV or another array."""

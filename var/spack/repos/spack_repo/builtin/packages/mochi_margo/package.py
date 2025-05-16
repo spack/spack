@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class MochiMargo(AutotoolsPackage):
     """A library that provides Argobots bindings to the Mercury RPC

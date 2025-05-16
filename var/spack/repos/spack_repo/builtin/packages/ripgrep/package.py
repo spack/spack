@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Ripgrep(CargoPackage):
     """ripgrep is a line-oriented search tool that recursively searches

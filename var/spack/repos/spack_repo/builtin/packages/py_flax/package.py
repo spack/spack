@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlax(PythonPackage):
     """Flax: A neural network library for JAX designed for flexibility."""

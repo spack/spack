@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParseType(PythonPackage):
     """parse_type extends the parse module (opposite of string.format())."""

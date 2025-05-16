@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJsonargparse(PythonPackage):
     """An extension to python's argparse which simplifies parsing of configuration options from

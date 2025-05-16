@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySortedcontainers(PythonPackage):
     """Sorted Containers is an Apache2 licensed sorted collections library,

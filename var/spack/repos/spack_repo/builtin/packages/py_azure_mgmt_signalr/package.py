@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtSignalr(PythonPackage):
     """Microsoft Azure SignalR Client Library for Python."""

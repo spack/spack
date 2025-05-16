@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xscope(AutotoolsPackage, XorgPackage):
     """XSCOPE -- a program to monitor X11/Client conversations."""

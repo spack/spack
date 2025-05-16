@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pxz(MakefilePackage):
     """Pxz is a parallel LZMA compressor using liblzma."""

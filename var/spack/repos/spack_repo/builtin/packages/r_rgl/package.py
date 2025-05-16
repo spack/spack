@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRgl(RPackage):
     """3D Visualization Using OpenGL.

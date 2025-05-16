@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlExporterTiny(PerlPackage):
     """An exporter with the features of Sub::Exporter but only core

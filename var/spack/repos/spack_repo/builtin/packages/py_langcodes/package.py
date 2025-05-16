@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLangcodes(PythonPackage):
     """Tools for labeling human languages with IETF language tags"""

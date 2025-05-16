@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fms(CMakePackage):
     """GFDL's Flexible Modeling System (FMS) is a software environment

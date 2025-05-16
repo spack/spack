@@ -5,6 +5,8 @@ from typing import List
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribQthelp(PythonPackage):
     """sphinxcontrib-qthelp is a sphinx extension which outputs QtHelp

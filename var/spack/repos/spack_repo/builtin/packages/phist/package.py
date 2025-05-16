@@ -6,6 +6,8 @@
 import spack.hooks.sbang as sbang
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Phist(CMakePackage):
     """The Pipelined, Hybrid-parallel Iterative Solver Toolkit provides

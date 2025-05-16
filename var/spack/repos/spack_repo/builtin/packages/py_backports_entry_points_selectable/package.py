@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBackportsEntryPointsSelectable(PythonPackage):
     """Compatibility shim providing selectable entry points for older implementations"""

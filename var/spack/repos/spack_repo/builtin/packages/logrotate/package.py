@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Logrotate(AutotoolsPackage):
     """The logrotate utility is designed to simplify the administration of

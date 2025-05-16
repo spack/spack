@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribModerncmakedomain(PythonPackage):
     """Sphinx Domain for Modern CMake."""

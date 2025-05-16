@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Saws(AutotoolsPackage):
     """The Scientific Application Web server (SAWs) turns any C or C++

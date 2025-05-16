@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFaker(PythonPackage):
     """Faker is a Python package that generates fake data for

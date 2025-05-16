@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cbtf(CMakePackage):
     """CBTF project contains the base code for CBTF that supports creating

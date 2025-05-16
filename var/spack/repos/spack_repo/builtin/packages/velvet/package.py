@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 def is_positive_int(x):
     if x.isdigit() and int(x) > 0:

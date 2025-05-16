@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fckit(CMakePackage):
     """A Fortran toolkit for interoperating Fortran with C/C++."""

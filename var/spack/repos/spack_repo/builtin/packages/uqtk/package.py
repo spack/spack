@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Uqtk(CMakePackage):
     """Sandia Uncertainty Quantification Toolkit. The UQ Toolkit (UQTk) is a

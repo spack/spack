@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPipdeptree(PythonPackage):
     """Command line utility to show dependency tree of packages."""

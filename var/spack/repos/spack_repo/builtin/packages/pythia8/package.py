@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pythia8(AutotoolsPackage):
     """The Pythia program is a standard tool for the generation of events in

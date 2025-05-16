@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Fstobdf(AutotoolsPackage, XorgPackage):
     """The fstobdf program reads a font from a font server and prints a BDF

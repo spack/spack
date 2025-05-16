@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CAres(CMakePackage):
     """c-ares: A C library for asynchronous DNS requests"""

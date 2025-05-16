@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlQuote(PerlPackage):
     """This module provides functions to quote/dequote strings in "xml"-way.

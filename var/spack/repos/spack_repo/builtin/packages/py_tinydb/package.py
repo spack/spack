@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTinydb(PythonPackage):
     """TinyDB is a tiny, document oriented database optimized for your happiness."""

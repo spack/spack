@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class E3smScorpio(CMakePackage):
     """The SCORPIO (Software for Caching Output and Reads for Parallel I/O)

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Miniasm(MakefilePackage):
     """Miniasm is a very fast OLC-based de novo assembler for noisy long

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Vsftpd(MakefilePackage):
     """vsftpd is a GPL licensed FTP server for UNIX systems, including

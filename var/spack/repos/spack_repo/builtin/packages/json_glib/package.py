@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class JsonGlib(MesonPackage):
     """JSON-GLib is a library for reading and parsing JSON using GLib and

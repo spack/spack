@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyogrio(PythonPackage):
     """Vectorized spatial vector file format I/O using GDAL/OGR"""

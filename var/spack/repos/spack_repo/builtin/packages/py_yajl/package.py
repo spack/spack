@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYajl(PythonPackage):
     """Python bindings for the Yajl JSON encoder/decoder library."""

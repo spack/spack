@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Bitmap(AutotoolsPackage, XorgPackage):
     """bitmap, bmtoa, atobm - X bitmap (XBM) editor and converter utilities."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Repeatmodeler(Package):
     """RepeatModeler is a de-novo repeat family identification and modeling

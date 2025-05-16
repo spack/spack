@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConfigspace(PythonPackage):
     """Creation and manipulation of parameter configuration spaces for

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ip2(CMakePackage):
     """The NCEP general interpolation library 2 (ip2lib) contains Fortran

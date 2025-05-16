@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Openipmi(AutotoolsPackage):
     """The Open IPMI project aims to develop an open code base

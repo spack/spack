@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class UfoCore(CMakePackage):
     """The UFO data processing framework is a C library suited to build general

@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Texlive(AutotoolsPackage):
     """TeX Live is an easy (we hope) way to get up and running with the TeX

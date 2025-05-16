@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGseabase(RPackage):
     """Gene set enrichment data structures and methods.

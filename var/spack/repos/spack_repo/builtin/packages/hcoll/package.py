@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hcoll(Package):
     """Modern interface for Mellanox Fabric Collective Accelerator (FCA). FCA

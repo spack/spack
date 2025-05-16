@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ChezScheme(AutotoolsPackage):
     """Compiler and run-time system for the language of the Revised^6 Report

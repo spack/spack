@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class MincToolkit(CMakePackage):
     """Bundles multiple MINC-related packages"""

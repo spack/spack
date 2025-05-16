@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyupgrade(PythonPackage):
     """A tool to automatically upgrade syntax for newer versions."""

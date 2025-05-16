@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNamex(PythonPackage):
     """A simple utility to separate the implementation of your Python package

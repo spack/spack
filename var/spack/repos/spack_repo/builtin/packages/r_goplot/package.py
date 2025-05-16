@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGoplot(RPackage):
     """Visualization of Functional Analysis Data.

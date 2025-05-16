@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cscope(AutotoolsPackage):
     """Cscope is a developer's tool for browsing source code."""

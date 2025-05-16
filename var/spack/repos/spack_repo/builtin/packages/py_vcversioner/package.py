@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVcversioner(PythonPackage):
     """Vcversioner: Take version numbers from version control."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiohttpCors(PythonPackage):
     """aiohttp_cors library implements Cross Origin Resource Sharing (CORS)

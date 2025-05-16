@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxi(AutotoolsPackage, XorgPackage):
     """libXi - library for the X Input Extension."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Qwtpolar(QMakePackage):
     """The QwtPolar library contains classes for displaying values on a polar

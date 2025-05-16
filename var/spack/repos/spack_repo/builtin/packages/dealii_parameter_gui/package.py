@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class DealiiParameterGui(CMakePackage):
     """A qt based graphical user interface for editing deal.II .prm parameter

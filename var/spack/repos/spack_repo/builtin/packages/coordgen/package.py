@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Coordgen(CMakePackage):
     """Schrödinger, Inc's 2D coordinate generation"""

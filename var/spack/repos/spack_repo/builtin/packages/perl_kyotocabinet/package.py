@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlKyotocabinet(PerlPackage):
     """Kyoto Cabinet is a library of routines for managing a database."""

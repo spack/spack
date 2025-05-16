@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCgiSimple(PerlPackage):
     """A Simple totally OO CGI interface that is CGI.pm compliant"""

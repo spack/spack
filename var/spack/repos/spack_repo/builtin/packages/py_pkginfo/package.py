@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPkginfo(PythonPackage):
     """Query metadatdata from sdists / bdists / installed packages."""

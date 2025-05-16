@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySeekpath(PythonPackage):
     """SeeK-path is a python module to obtain band paths in the Brillouin zone of crystal

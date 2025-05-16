@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSpatstatCore(RPackage):
     """Core Functionality of the 'spatstat' Family.

@@ -6,6 +6,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class OmmBundle(MakefilePackage):
     """Omm-bundle is a library implementing the orbital minimization method for

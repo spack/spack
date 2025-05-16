@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAffyrnadegradation(RPackage):
     """Analyze and correct probe positional bias in microarray data due to RNA

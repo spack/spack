@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libgssglue(AutotoolsPackage):
     """GSSAPI interface using mechanisms from other GSSAPI implementations."""

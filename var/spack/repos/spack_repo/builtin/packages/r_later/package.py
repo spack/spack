@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLater(RPackage):
     """Utilities for Scheduling Functions to Execute Later with Event Loops.

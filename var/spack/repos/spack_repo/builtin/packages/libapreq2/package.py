@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libapreq2(AutotoolsPackage):
     """httpd-apreq is subproject of the Apache HTTP Server Project

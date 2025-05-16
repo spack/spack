@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pfunit(CMakePackage):
     """pFUnit is a unit testing framework enabling JUnit-like testing of

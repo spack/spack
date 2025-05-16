@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Cryptopp(MakefilePackage):
     """Crypto++ is an open-source C++ library of cryptographic schemes. The

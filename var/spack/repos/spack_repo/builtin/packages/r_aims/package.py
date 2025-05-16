@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAims(RPackage):
     """Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype.

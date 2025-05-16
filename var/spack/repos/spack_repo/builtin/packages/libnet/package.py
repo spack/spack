@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnet(AutotoolsPackage):
     """Libnet is an API to help with the construction and handling of

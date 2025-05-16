@@ -5,6 +5,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Spfft(CMakePackage, CudaPackage, ROCmPackage):
     """Sparse 3D FFT library with MPI, OpenMP, CUDA and ROCm support."""

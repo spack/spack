@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiocontextvars(PythonPackage):
     """This library experimentally provides the missing asyncio support for

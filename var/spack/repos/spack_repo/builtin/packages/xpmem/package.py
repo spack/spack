@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xpmem(AutotoolsPackage):
     """XPMEM is a Linux kernel module that enables a process to map the memory

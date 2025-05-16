@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCoveralls(PythonPackage):
     """coveralls.io is a service for publishing your coverage stats online."""

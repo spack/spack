@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xwd(AutotoolsPackage, XorgPackage):
     """xwd - dump an image of an X window."""

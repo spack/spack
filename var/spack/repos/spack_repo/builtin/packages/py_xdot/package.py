@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXdot(PythonPackage):
     """xdot.py is an interactive viewer for graphs written in Graphviz's

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Redland(AutotoolsPackage):
     """Redland RDF Library - librdf providing the RDF API and triple stores"""

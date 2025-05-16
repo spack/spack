@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class HsakmtRoct(CMakePackage):
     """This is a thunk python recipe to build and install Thunk Interface.

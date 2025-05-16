@@ -7,6 +7,8 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class WinFile(Package):
     """File "file type guesser" system utility cross compiled for x86_64 Windows

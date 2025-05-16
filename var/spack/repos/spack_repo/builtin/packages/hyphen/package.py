@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Hyphen(AutotoolsPackage):
     """A library of text hyphenation."""

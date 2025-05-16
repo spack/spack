@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNumberFormat(PerlPackage):
     """Number::Format - Perl extension for formatting numbers"""

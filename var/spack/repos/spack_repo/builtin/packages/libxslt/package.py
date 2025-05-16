@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libxslt(AutotoolsPackage):
     """Libxslt is the XSLT C library developed for the GNOME project. XSLT

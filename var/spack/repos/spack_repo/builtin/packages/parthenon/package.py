@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Parthenon(CMakePackage):
     """A performance portable block-structured adaptive mesh refinement framework."""

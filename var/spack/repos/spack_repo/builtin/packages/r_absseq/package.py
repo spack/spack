@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAbsseq(RPackage):
     """ABSSeq: a new RNA-Seq analysis method based on modelling absolute

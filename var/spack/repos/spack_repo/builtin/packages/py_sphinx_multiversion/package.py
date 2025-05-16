@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxMultiversion(PythonPackage):
     """A Sphinx extension for building self-hosted versioned documentation."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pixz(AutotoolsPackage):
     """Pixz (pronounced pixie) is a parallel, indexing version of xz."""

@@ -7,6 +7,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Freesurfer(Package):
     """Freesurfer is an open source software suite for processing and analyzing

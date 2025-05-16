@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDeprecation(PythonPackage):
     """The deprecation library provides a deprecated decorator and a

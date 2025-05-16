@@ -5,6 +5,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+
 
 class Elsi(CMakePackage, CudaPackage):
     """ELSI provides a unified interface for electronic structure

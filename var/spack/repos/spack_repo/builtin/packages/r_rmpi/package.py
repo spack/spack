@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRmpi(RPackage):
     """Interface (Wrapper) to MPI (Message-Passing Interface).

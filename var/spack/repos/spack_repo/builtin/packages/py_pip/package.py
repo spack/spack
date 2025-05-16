@@ -4,8 +4,10 @@
 import os
 import sys
 
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems.generic import Package
+from ...build_systems.python import PythonExtension, PythonPipBuilder
 
 
 class PyPip(Package, PythonExtension):

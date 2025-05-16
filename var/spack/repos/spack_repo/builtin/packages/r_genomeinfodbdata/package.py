@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGenomeinfodbdata(RPackage):
     """for mapping between NCBI taxonomy ID and species. Used by functions

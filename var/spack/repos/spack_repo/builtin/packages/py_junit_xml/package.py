@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJunitXml(PythonPackage):
     """Creates JUnit XML test result documents that can be read by tools

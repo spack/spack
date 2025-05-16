@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMkdocsMaterial(PythonPackage):
     """Write your documentation in Markdown and create a professional static

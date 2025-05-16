@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cvise(CMakePackage):
     """C-Vise is a super-parallel Python port of the C-Reduce. The port is

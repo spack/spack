@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gdl(CMakePackage):
     """A free and open-source IDL/PV-WAVE compiler.

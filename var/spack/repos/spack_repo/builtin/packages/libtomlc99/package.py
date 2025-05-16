@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Libtomlc99(Package):
     """TOML in c99; v0.4.0 compliant."""

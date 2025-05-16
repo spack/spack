@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNetCidrLite(PerlPackage):
     """Perl extension for merging IPv4 or IPv6 CIDR addresses"""

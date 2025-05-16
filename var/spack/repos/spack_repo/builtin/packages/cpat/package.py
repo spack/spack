@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Cpat(PythonPackage):
     """CPAT is an alignment-free method to predict RNA coding potential using four sequence

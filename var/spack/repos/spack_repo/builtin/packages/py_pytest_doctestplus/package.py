@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestDoctestplus(PythonPackage):
     """Pytest plugin with advanced doctest features."""

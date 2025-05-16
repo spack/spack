@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Libiconv(AutotoolsPackage, GNUMirrorPackage):
     """GNU libiconv provides an implementation of the iconv() function

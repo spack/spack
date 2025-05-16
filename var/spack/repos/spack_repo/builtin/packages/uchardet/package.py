@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Uchardet(CMakePackage):
     """uchardet is an encoding detector library, which takes a sequence of

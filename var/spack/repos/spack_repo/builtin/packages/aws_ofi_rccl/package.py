@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AwsOfiRccl(AutotoolsPackage):
     """AWS OFI RCCL is a plug-in which enables EC2 developers to use

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPdbfixer(PythonPackage):
     """PDBFixer is an easy to use application for fixing problems in

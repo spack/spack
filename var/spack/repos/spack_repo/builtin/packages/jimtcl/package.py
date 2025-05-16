@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Jimtcl(AutotoolsPackage):
     """A small-footprint implementation of the Tcl programming language."""

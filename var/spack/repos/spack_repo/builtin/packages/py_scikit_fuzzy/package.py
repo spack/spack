@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitFuzzy(PythonPackage):
     """Fuzzy logic toolkit for SciPy"""

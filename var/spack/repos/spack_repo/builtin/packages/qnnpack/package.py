@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Qnnpack(CMakePackage):
     """QNNPACK (Quantized Neural Networks PACKage) is a mobile-optimized

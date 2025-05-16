@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDonfig(PythonPackage):
     """Donfig is a python library making package and script configuration easy"""

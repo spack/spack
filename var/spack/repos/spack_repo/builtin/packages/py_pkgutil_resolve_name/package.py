@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPkgutilResolveName(PythonPackage):
     """Resolve a name to an object. A backport of Python 3.9 `pkgutil.resolve_name`"""

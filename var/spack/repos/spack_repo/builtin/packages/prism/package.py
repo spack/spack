@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Prism(MakefilePackage):
     """PRISM is a probabilistic model checker, a tool for formal modelling and

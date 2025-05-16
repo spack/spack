@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDict2css(PythonPackage):
     """A μ-library for constructing cascading style sheets from Python dictionaries."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Maloc(AutotoolsPackage):
     """MALOC (Minimal Abstraction Layer for Object-oriented C)

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xkbutils(AutotoolsPackage, XorgPackage):
     """xkbutils is a collection of small utilities utilizing the XKeyboard

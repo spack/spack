@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libhugetlbfs(AutotoolsPackage):
     """libhugetlbfs is a library which provides easy access

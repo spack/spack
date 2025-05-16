@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMinio(PythonPackage):
     """MinIO Python SDK is Simple Storage Service (aka S3) client to perform bucket

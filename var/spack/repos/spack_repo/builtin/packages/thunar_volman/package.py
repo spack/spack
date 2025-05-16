@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class ThunarVolman(AutotoolsPackage):
     """Thunar extension  which enables automatic management of removable drives and media."""

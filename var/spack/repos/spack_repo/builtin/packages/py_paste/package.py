@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPaste(PythonPackage):
     """Tools for using a Web Server Gateway Interface stack"""

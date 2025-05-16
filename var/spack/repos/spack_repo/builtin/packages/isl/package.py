@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Isl(AutotoolsPackage):
     """isl (Integer Set Library) is a thread-safe C library for manipulating

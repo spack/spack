@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gurobi(Package):
     """The Gurobi Optimizer was designed from the ground up to be the fastest,

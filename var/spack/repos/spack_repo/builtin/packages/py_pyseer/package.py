@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyseer(PythonPackage):
     """Sequence Elements Enrichment Analysis (SEER), python implementation"""

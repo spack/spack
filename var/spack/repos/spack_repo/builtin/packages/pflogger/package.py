@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pflogger(CMakePackage):
     """A parallel Fortran logger (based on the design of the Python logger)"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyExtras(PythonPackage):
     """Useful extra bits for Python - things that shold be in the standard

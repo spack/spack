@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Swarm(MakefilePackage):
     """A robust and fast clustering method for amplicon-based studies."""

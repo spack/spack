@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xmlto(AutotoolsPackage):
     """Utility xmlto is a simple shell script for converting XML files to various

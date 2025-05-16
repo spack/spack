@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlParsetemplate(PerlPackage):
     """Parse::Template - Processor for templates containing Perl expressions."""

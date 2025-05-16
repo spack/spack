@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Preseq(MakefilePackage):
     """The preseq package is aimed at predicting and estimating the complexity

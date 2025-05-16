@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUxarray(PythonPackage):
     """Xarray extension for unstructured climate and global weather data analysis and

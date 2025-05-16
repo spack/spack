@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Fairlogger(CMakePackage):
     """Lightweight and fast C++ Logging Library"""

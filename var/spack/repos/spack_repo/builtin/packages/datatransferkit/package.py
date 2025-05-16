@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Datatransferkit(CMakePackage):
     """DataTransferKit is an open-source software library of

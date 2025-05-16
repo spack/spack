@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlTrainAutomlClient(PythonPackage):
     """The azureml-train-automl-client package contains functionality for

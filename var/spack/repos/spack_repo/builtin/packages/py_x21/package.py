@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyX21(PythonPackage):
     """Used for unpacking this author's obfuscated libraries"""

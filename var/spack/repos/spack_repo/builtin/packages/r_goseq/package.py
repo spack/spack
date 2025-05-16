@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGoseq(RPackage):
     """Gene Ontology analyser for RNA-seq and other length biased data.

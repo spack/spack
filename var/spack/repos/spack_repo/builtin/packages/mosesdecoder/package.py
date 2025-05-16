@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mosesdecoder(Package):
     """An implementation of the statistical approach to machine translation"""

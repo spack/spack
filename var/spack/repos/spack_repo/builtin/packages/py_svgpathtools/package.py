@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySvgpathtools(PythonPackage):
     """A collection of tools for manipulating and analyzing SVG Path objects

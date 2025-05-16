@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestWarn(PerlPackage):
     """Perl extension to test methods for warnings"""

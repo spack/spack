@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libyaml(AutotoolsPackage):
     """A C library for parsing and emitting YAML."""

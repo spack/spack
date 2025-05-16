@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Rust(Package):
     """The Rust programming language toolchain."""

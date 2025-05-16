@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Chrpath(AutotoolsPackage):
     """chrpath: Modifies the dynamic library load path (rpath and runpath)

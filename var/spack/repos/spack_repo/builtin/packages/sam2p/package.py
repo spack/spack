@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Sam2p(Package):
     """A raster to PostScript/PDF image conversion program"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRcpphnsw(RPackage):
     """'Rcpp' Bindings for 'hnswlib', a Library for Approximate

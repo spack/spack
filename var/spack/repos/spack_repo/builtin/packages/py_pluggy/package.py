@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPluggy(PythonPackage):
     """Plugin and hook calling mechanisms for python."""

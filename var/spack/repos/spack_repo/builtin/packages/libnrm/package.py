@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnrm(AutotoolsPackage):
     """Libnrm, the application instrumentation library for the Node

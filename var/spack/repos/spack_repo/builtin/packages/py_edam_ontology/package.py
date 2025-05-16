@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEdamOntology(PythonPackage):
     """Versioned, Python packaged EDAM ontology (http://edamontology.org/) data."""

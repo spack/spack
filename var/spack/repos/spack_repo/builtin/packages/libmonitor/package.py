@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmonitor(AutotoolsPackage):
     """Libmonitor is a library providing callback functions for the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyReportseff(PythonPackage):
     """A python script for tabular display of slurm efficiency information."""

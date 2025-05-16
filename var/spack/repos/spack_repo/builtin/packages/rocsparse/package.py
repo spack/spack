@@ -6,6 +6,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Rocsparse(CMakePackage):
     """rocSPARSE exposes a common interface that provides

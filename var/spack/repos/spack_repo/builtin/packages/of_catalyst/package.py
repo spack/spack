@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OfCatalyst(CMakePackage):
     """Of-catalyst is a library for OpenFOAM that provides a runtime-selectable

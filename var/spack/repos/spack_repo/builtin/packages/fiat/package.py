@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fiat(CMakePackage):
     """FIAT (Fortran IFS and Arpege Toolkit) is a collection of selected

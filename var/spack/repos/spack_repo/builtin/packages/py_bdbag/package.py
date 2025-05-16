@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBdbag(PythonPackage):
     """The bdbag utilities are a collection of software programs for working

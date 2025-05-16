@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxClick(PythonPackage):
     """Sphinx plugin that allows you to automatically extract documentation

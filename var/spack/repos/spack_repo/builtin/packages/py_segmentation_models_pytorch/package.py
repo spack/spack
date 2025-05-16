@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySegmentationModelsPytorch(PythonPackage):
     """Python library with Neural Networks for Image Segmentation based on PyTorch."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Unuran(AutotoolsPackage):
     """Universal Non-Uniform Random number generator."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPicrust2(PythonPackage):
     """PICRUSt2 is a software for predicting functional

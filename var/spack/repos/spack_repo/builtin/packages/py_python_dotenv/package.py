@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonDotenv(PythonPackage):
     """Read key-value pairs from a .env file and set them as environment variables"""

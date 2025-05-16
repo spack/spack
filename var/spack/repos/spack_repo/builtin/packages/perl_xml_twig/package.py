@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlTwig(PerlPackage):
     """This module provides a way to process XML documents. It is build on top

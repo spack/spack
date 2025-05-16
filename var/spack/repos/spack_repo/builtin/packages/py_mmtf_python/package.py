@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMmtfPython(PythonPackage):
     """The macromolecular transmission format (MMTF) is a binary encoding of

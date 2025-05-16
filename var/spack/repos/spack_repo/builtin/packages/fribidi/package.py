@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fribidi(AutotoolsPackage):
     """GNU FriBidi: The Free Implementation of the Unicode Bidirectional

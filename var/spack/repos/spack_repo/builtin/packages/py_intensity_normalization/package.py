@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIntensityNormalization(PythonPackage):
     """Normalize intensities of images from various MRI modalities"""

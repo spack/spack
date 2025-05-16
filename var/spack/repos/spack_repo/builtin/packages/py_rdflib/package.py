@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRdflib(PythonPackage):
     """RDFLib is a pure Python package for working with RDF. RDFLib

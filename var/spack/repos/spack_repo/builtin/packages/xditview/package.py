@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xditview(AutotoolsPackage, XorgPackage):
     """xditview displays ditroff output on an X display."""

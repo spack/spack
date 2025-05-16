@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Openssl(Package):  # Uses Fake Autotools, should subclass Package
     """OpenSSL is an open source project that provides a robust, commercial-grade, and

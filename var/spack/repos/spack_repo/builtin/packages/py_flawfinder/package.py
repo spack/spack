@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class PyFlawfinder(PythonPackage, SourceforgePackage):
     """a program that examines source code looking for security weaknesses"""

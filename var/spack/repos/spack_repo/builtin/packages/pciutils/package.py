@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pciutils(MakefilePackage):
     """This package contains the PCI Utilities."""

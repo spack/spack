@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlEmailDateFormat(PerlPackage):
     """Produce RFC 2822 date strings"""

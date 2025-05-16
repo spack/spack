@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Shoremap(MakefilePackage):
     """SHOREmap is a computational tool implementing a method that enables

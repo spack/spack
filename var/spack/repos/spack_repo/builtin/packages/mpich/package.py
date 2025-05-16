@@ -10,6 +10,10 @@ import spack.compilers.config
 import spack.package_base
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class MpichEnvironmentModifications(spack.package_base.PackageBase):
     """Collects the environment modifications that are usually needed for the life-cycle of

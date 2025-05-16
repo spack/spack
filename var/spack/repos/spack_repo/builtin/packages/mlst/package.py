@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mlst(Package):
     """Scan contig files against traditional PubMLST typing schemes"""

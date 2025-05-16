@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mcl(AutotoolsPackage):
     """The MCL algorithm is short for the Markov Cluster Algorithm, a fast

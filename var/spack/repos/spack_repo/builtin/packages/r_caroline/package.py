@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RCaroline(RPackage):
     """A Collection of Database, Data Structure, Visualization, andUtility

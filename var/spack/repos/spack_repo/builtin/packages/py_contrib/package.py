@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyContrib(PythonPackage):
     """A python package for making stacked area plots of contributions over time."""

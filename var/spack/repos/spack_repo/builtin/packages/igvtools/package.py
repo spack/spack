@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Igvtools(Package):
     """IGVTools suite of command-line utilities for preprocessing data

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Racon(CMakePackage):
     """Ultrafast consensus module for raw de novo genome assembly of long

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTuiview(PythonPackage):
     """TuiView is a lightweight raster GIS with powerful raster attribute

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fyba(AutotoolsPackage):
     """OpenFYBA is the source code release of the FYBA library, distributed

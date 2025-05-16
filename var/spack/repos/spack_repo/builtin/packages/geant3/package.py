@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Geant3(CMakePackage):
     """Simulation software using Monte Carlo methods to describe how particles

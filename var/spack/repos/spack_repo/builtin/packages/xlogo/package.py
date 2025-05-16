@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xlogo(AutotoolsPackage, XorgPackage):
     """The xlogo program simply displays the X Window System logo."""

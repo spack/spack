@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGdgraphHistogram(PerlPackage):
     """GD::Graph::histogram extends the GD::Graph module to create histograms.

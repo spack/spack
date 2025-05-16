@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Beatnik(CMakePackage, CudaPackage, ROCmPackage):
     """Fluid interface model solver based on Pandya and Shkoller's Z-Model formulation."""

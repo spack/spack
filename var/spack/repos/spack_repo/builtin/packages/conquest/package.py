@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Conquest(MakefilePackage):
     """CONQUEST is a DFT code designed for large-scale calculations,

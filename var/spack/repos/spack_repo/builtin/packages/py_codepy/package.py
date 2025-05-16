@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCodepy(PythonPackage):
     """CodePy is a C metaprogramming toolkit for Python.

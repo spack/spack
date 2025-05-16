@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rocal(CMakePackage):
     """The AMD rocAL is designed to efficiently decode and process images and videos from a variety

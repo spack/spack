@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPbkrtest(RPackage):
     """Parametric Bootstrap, Kenward-Roger and Satterthwaite Based Methods for

@@ -5,6 +5,10 @@
 import spack.variant
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     """Radeon Open Compute Parallel Primitives Library"""

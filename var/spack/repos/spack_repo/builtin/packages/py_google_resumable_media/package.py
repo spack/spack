@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogleResumableMedia(PythonPackage):
     """Utilities for Google Media Downloads and Resumable Uploads."""

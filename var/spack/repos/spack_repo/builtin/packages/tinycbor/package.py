@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tinycbor(MakefilePackage):
     """Concise Binary Object Representation (CBOR) Library"""

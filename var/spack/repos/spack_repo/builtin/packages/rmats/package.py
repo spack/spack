@@ -7,6 +7,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Rmats(Package):
     """MATS is a computational tool to detect differential alternative

@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.oneapi import IntelOneApiPackage
 from ..gcc_runtime.package import get_elf_libraries
 
 

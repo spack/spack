@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPysqlite3(PythonPackage):
     """DB-API 2.0 interface for Sqlite 3.x"""

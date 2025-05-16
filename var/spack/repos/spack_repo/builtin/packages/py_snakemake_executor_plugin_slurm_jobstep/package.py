@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginSlurmJobstep(PythonPackage):
     """A Snakemake executor plugin for running srun jobs inside of SLURM jobs

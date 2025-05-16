@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libisal(AutotoolsPackage):
     """ISA-L is a collection of optimized low-level functions targeting

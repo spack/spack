@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Slirp4netns(AutotoolsPackage):
     """User-mode networking for unprivileged network namespaces"""

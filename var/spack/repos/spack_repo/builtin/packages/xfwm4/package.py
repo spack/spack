@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xfwm4(AutotoolsPackage):
     """xfwm4 is the window manager for Xfce"""

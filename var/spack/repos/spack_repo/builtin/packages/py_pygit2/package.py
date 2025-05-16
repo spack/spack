@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygit2(PythonPackage):
     """Pygit2 is a set of Python bindings to the libgit2 shared library,

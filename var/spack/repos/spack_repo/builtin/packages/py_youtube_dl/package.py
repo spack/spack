@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyYoutubeDl(PythonPackage):
     """Command-line program to download videos from YouTube.com and other video

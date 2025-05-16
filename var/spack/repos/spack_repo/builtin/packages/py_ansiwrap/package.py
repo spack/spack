@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnsiwrap(PythonPackage):
     """textwrap, but savvy to ANSI colors and styles."""

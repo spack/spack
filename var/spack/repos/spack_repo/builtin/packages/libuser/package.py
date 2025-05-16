@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libuser(AutotoolsPackage):
     """A user and group account administration library."""

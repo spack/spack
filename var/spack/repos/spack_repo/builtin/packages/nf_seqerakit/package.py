@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class NfSeqerakit(PythonPackage):
     """A Python wrapper for the Seqera Platform CLI (formerly Tower CLI)."""

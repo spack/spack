@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUrllib3SecureExtra(PythonPackage):
     """Marker library to detect whether urllib3 was installed with the deprecated [secure] extra"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OpenpmdApi(CMakePackage):
     """C++ & Python API for Scientific I/O"""

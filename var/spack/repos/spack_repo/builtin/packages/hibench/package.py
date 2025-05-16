@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Hibench(MavenPackage):
     """HiBench is a big data benchmark suite that helps evaluate different big

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEccodes(PythonPackage):
     """Python interface to the ecCodes GRIB and BUFR decoder/encoder."""

@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScalapackBase(CMakePackage):
     """Base class for building ScaLAPACK, shared with the AMD optimized version

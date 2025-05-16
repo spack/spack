@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIsaRwval(PythonPackage):
     """Metadata tracking tools help to manage an increasingly diverse set

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyhmmer(PythonPackage):
     """HMMER is a biological sequence analysis tool that uses profile hidden

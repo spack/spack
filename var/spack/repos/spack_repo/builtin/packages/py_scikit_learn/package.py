@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""

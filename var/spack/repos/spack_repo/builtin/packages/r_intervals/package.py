@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIntervals(RPackage):
     """Tools for working with and comparing sets of points and intervals."""

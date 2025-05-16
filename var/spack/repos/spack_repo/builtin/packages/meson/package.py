@@ -5,6 +5,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Meson(PythonPackage):
     """Meson is a portable open source build system meant to be both

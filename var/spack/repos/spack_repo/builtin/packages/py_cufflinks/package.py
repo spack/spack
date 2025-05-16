@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCufflinks(PythonPackage):
     """Productivity Tools for Plotly + Pandas. This library binds the power

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Palace(CMakePackage):
     """3D finite element solver for computational electromagnetics"""

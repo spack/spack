@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Verilator(AutotoolsPackage):
     """Verilator is the fastest free Verilog HDL simulator.

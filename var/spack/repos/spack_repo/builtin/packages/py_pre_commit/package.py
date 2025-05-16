@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPreCommit(PythonPackage):
     """A framework for managing and maintaining multi-language pre-commit

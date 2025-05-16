@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBluepyemodel(PythonPackage):
     """Python library to optimize and evaluate electrical models."""

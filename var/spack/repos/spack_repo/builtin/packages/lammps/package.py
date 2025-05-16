@@ -5,8 +5,12 @@ import datetime as dt
 import os
 
 from spack.build_environment import optimization_flags
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
+
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonExtension, PythonPipBuilder
+from ...build_systems.rocm import ROCmPackage
 
 
 class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):

@@ -5,6 +5,9 @@ import os.path
 
 from spack.package import *
 
+from ...build_systems.compiler import CompilerPackage
+from ...build_systems.generic import Package
+
 
 class Xl(Package, CompilerPackage):
     """IBM XL C/C++/Fortran is an advanced, high-performance compiler that can be

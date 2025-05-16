@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOrderlySet(PythonPackage):
     """Orderly Set is a package containing multiple implementations of

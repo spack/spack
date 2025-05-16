@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJedi(PythonPackage):
     """An autocompletion tool for Python that can be used for text editors."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class JettyProject(MavenPackage):
     """Jetty is a lightweight highly scalable java based web

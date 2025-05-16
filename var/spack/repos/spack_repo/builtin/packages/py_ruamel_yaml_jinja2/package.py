@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRuamelYamlJinja2(PythonPackage):
     """jinja2 pre and post-processor to update with YAML."""

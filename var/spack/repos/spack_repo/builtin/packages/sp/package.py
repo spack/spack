@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sp(CMakePackage):
     """The spectral transform library splib contains FORTRAN subprograms

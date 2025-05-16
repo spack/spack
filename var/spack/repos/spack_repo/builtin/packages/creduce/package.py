@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Creduce(CMakePackage):
     """C-Reduce is a tool that takes a large C, C++, or OpenCL file that has a

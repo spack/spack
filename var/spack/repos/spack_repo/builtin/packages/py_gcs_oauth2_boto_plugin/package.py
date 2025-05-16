@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGcsOauth2BotoPlugin(PythonPackage):
     """Auth plugin allowing use the use of OAuth 2.0 credentials

@@ -7,6 +7,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Gmake(Package, GNUMirrorPackage):
     """GNU Make is a tool which controls the generation of executables and

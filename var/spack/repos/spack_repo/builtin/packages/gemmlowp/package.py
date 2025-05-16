@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Gemmlowp(Package):
     """Google low-precision matrix multiplication library"""

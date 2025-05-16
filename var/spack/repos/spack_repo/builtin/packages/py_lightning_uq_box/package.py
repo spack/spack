@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLightningUqBox(PythonPackage):
     """Lighning-UQ-Box: A toolbox for uncertainty quantification in deep learning."""

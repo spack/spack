@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRobotframework(PythonPackage):
     """Cross-platform lib for process and system monitoring in Python."""

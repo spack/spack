@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+from ...build_systems.cuda import CudaPackage
+
 
 class Gloo(CMakePackage, CudaPackage):
     """Gloo is a collective communications library."""

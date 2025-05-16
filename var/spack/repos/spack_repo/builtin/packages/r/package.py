@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class R(AutotoolsPackage):
     """R is 'GNU S', a freely available language and environment for

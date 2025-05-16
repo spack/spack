@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLsei(RPackage):
     """Solving Least Squares or Quadratic Programming Problems under

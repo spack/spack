@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ncftp(AutotoolsPackage):
     """NcFTP Client is a set of application programs implementing the

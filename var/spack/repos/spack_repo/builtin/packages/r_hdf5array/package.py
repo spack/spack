@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RHdf5array(RPackage):
     """HDF5 backend for DelayedArray objects.

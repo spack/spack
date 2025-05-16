@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlattenDict(PythonPackage):
     """A flexible utility for flattening and unflattening dict-lik objects

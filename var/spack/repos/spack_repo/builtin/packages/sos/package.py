@@ -6,6 +6,8 @@ import warnings
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sos(AutotoolsPackage):
     """Sandia OpenSHMEM."""

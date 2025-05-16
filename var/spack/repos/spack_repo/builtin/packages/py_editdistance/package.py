@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEditdistance(PythonPackage):
     """Fast implementation of the edit distance (Levenshtein distance)."""

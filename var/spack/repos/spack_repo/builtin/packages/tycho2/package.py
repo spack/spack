@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Tycho2(MakefilePackage):
     """A neutral particle transport mini-app to study performance of sweeps

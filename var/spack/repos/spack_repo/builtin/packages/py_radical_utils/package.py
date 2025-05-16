@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRadicalUtils(PythonPackage):
     """RADICAL-Utils contains shared code and tools for various

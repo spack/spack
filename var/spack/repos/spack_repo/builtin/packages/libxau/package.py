@@ -4,6 +4,10 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.meson import MesonPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Libxau(AutotoolsPackage, MesonPackage, XorgPackage):
     """The libXau package contains a library implementing the X11

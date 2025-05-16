@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sandbox(AutotoolsPackage):
     """sandbox'd LD_PRELOAD hack by Gentoo Linux"""

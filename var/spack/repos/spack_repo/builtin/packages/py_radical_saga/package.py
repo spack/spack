@@ -5,6 +5,8 @@
 import spack.url
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRadicalSaga(PythonPackage):
     """RADICAL-SAGA (RS) implements the interface specification of the Open

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtNetwork(PythonPackage):
     """Microsoft Azure Network Management Client Library for Python."""

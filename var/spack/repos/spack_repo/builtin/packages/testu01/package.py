@@ -6,6 +6,8 @@ from os import chmod
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Testu01(AutotoolsPackage):
     """TestU01 is a software library, implemented in the ANSI C language, and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestYaml(PerlPackage):
     """Testing Module for YAML Implementations"""

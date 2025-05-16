@@ -6,6 +6,8 @@ import archspec
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Blast2go(Package):
     """Blast2GO is a bioinformatics platform for high-quality functional

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Goshimmer(Package):
     """GoShimmer is a prototype node for exploring the implementation of IOTA 2.0"""

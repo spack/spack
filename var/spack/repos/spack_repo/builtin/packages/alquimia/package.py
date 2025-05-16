@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Alquimia(CMakePackage):
     """Alquimia is an interface that exposes the capabilities

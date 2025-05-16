@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyThewalrus(PythonPackage):
     """A library for the calculation of hafnians, Hermite polynomials and

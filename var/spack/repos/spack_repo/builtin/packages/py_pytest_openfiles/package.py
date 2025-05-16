@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestOpenfiles(PythonPackage):
     """A plugin for the pytest framework that allows developers to detect

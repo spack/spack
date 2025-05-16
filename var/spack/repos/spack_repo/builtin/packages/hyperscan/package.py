@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 _versions = {
     "v5.2.1": {
         "Linux-aarch64": (

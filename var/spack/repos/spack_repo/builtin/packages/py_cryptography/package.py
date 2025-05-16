@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCryptography(PythonPackage):
     """cryptography is a package which provides cryptographic recipes

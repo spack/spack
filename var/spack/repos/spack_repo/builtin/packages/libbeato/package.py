@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libbeato(AutotoolsPackage):
     """libbeato is a C library containing routines for various uses in Genomics,

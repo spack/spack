@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonLdap(PythonPackage):
     """python-ldap provides an object-oriented API to access LDAP directory

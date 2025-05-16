@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Prettier(Package):
     """Prettier is an opinionated code formatter."""

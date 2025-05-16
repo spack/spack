@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Qmcpack(CMakePackage, CudaPackage):
     """QMCPACK, is a modern high-performance open-source Quantum Monte

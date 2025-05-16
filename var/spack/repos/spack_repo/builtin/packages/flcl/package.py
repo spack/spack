@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flcl(CMakePackage):
     """API for Fortran to C++ and C++ to Fortran multi-dimensional array

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class BigdftPsolver(AutotoolsPackage, CudaPackage):
     """BigDFT-Psolver: a flexible real-space Poisson Solver based on

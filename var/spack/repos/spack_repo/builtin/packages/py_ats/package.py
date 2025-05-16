@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAts(PythonPackage):
     """ATS - Automated Testing System - is an open-source, Python-based tool

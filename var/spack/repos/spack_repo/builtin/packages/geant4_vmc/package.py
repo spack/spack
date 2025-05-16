@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Geant4Vmc(CMakePackage):
     """Geant4 VMC implements the Virtual Monte Carlo (VMC) for Geant4."""

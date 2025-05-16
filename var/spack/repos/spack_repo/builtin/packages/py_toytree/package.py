@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyToytree(PythonPackage):
     """A minimalist tree manipulation and plotting library for use inside

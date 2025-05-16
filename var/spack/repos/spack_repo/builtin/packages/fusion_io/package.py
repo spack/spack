@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FusionIo(CMakePackage):
     """Fusion-IO is a library providing common interface (C++, C, Fortran, Python)

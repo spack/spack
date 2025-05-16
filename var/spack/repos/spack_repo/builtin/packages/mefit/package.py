@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mefit(Package):
     """This pipeline will merge overlapping paired-end reads, calculate

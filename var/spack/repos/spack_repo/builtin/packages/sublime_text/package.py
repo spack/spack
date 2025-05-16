@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class SublimeText(Package):
     """Sublime Text is a sophisticated text editor for code, markup and

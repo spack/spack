@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pdf2svg(AutotoolsPackage):
     """A simple PDF to SVG converter using the Poppler and Cairo libraries."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPandasStubs(PythonPackage):
     """These are public type stubs for pandas, following the convention of

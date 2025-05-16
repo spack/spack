@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Rstart(AutotoolsPackage, XorgPackage):
     """This package includes both the client and server sides implementing

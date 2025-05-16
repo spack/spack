@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmcrypt(AutotoolsPackage):
     """Libmcrypt is a thread-safe library providing a uniform

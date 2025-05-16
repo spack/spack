@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Albany(CMakePackage):
     """Albany is an implicit, unstructured grid, finite element code for the

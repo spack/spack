@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xfontsel(AutotoolsPackage, XorgPackage):
     """xfontsel application provides a simple way to display the X11 core

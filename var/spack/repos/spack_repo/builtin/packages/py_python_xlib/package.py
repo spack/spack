@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonXlib(PythonPackage):
     """The Python X Library is intended to be a fully

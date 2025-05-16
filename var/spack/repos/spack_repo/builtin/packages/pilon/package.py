@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pilon(Package):
     """Pilon is an automated genome assembly improvement and variant

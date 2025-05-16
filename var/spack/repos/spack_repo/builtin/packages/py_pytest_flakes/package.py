@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestFlakes(PythonPackage):
     """py.test plugin for efficiently checking python source with pyflakes."""

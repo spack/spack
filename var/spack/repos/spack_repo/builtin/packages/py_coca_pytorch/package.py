@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCocaPytorch(PythonPackage):
     """CoCa, Contrastive Captioners are Image-Text Foundation Models -

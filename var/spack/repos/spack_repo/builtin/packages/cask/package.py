@@ -6,6 +6,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cask(Package):
     """Cask is a project management tool for Emacs Lisp to automate the package

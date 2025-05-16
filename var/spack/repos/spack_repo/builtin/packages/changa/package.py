@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Changa(AutotoolsPackage, CudaPackage):
     """ChaNGa (Charm N-body GrAvity solver) is a code to perform collisionless

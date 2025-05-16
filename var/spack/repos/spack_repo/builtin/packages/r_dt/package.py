@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDt(RPackage):
     """A Wrapper of the JavaScript Library 'DataTables'.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pandorasdk(CMakePackage):
     """Pandora Software Development Kit for pattern-recognition algorithms"""

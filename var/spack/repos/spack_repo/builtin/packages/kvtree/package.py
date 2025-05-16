@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kvtree(CMakePackage):
     """KVTree provides a fully extensible C datastructure modeled after perl

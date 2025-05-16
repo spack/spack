@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class RdpClassifier(Package, SourceforgePackage):
     """The RDP Classifier is a naive Bayesian classifier that can rapidly and

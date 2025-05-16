@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLinearOperator(PythonPackage):
     """A linear operator implementation, primarily designed for finite-dimensional

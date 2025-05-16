@@ -7,6 +7,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Winbison(CMakePackage):
     """Bison is a general-purpose parser generator that converts

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Czmq(AutotoolsPackage):
     """A C interface to the ZMQ library"""

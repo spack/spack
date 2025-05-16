@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetime(PerlPackage):
     """DateTime - A date and time object for Perl"""

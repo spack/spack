@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Lighttpd(CMakePackage):
     """a secure, fast, compliant and very flexible web-server"""

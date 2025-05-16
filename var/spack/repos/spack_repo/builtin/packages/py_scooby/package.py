@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScooby(PythonPackage):
     """A Great Dane turned Python environment detective."""

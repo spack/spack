@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class AlsaLib(AutotoolsPackage):
     """The Advanced Linux Sound Architecture (ALSA) provides audio and MIDI

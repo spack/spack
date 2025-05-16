@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRnc2rng(PythonPackage):
     """RELAX NG Compact to regular syntax conversion library."""

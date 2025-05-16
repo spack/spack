@@ -5,6 +5,8 @@
 from spack.package import *
 from spack.util.environment import is_system_path
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lftp(AutotoolsPackage):
     """LFTP is a sophisticated file transfer program supporting a number

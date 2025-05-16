@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libzip(CMakePackage):
     """libzip is a C library for reading, creating,

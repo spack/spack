@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMisc3d(RPackage):
     """Miscellaneous 3D Plots.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Lmbench(MakefilePackage):
     """lmbench is a suite of simple, portable, ANSI/C microbenchmarks for

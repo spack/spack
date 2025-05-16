@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCpanelJsonXs(PerlPackage):
     """CPanel fork of JSON::XS, fast and correct serializing"""

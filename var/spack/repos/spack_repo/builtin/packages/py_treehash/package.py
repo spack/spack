@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTreehash(PythonPackage):
     """Calculates a SHA256 (or, potentially, any other hashlib supported

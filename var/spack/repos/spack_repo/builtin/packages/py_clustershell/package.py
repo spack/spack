@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyClustershell(PythonPackage):
     """Scalable cluster administration Python framework - Manage node sets

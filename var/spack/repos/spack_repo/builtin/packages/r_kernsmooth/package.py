@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RKernsmooth(RPackage):
     """Functions for Kernel Smoothing Supporting Wand & Jones (1995).

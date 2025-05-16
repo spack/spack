@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMergedeep(PythonPackage):
     """A deep merge function for Python."""

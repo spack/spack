@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Epsic(AutotoolsPackage):
     """Electromagnetic Polarization Simulation in C++."""

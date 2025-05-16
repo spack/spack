@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mrtrix3(Package):
     """MRtrix provides a set of tools to perform various advanced diffusion MRI

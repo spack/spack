@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pfft(AutotoolsPackage):
     """PFFT is a software library for computing massively parallel,

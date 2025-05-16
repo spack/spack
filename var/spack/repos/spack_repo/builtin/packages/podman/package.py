@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Podman(Package):
     """An optionally rootless and daemonless container engine: alias docker=podman"""

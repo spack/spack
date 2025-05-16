@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Fastmath(BundlePackage):
     """FASTMath is a suite of ~15 numerical libraries frequently used together

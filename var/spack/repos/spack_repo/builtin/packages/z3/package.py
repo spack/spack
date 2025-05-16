@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Z3(CMakePackage):
     """Z3 is a theorem prover from Microsoft Research.

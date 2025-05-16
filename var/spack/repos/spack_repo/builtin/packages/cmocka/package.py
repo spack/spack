@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cmocka(CMakePackage):
     """Unit-testing framework in pure C"""

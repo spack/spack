@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnuga(PythonPackage):
     """ANUGA (pronounced "AHnooGAH") is open-source software for the simulation

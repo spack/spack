@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCgi(PerlPackage):
     """CGI - Handle Common Gateway Interface requests and responses

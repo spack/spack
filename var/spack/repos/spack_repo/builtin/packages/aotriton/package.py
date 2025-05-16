@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Aotriton(CMakePackage):
     """Ahead of Time (AOT) Triton Math Library."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsFiat(PythonPackage):
     """The FInite element Automatic Tabulator FIAT supports generation of

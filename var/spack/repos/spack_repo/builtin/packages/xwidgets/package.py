@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xwidgets(CMakePackage):
     """A C++ backend for Jupyter interactive widgets"""

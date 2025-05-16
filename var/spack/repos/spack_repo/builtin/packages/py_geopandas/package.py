@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeopandas(PythonPackage):
     """GeoPandas is an open source project to make working with geospatial

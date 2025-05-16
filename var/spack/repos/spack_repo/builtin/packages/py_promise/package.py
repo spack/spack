@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPromise(PythonPackage):
     """This is a implementation of Promises in Python. It is a super set of

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOutdated(PythonPackage):
     """This is a mini-library which, given a package name and a version, checks if

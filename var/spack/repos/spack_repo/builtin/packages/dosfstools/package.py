@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dosfstools(AutotoolsPackage):
     """dosfstools consists of the programs mkfs.fat, fsck.fat and fatlabel

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTraits(PythonPackage):
     """Observable typed attributes for Python classes."""

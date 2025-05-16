@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mstk(CMakePackage):
     """MSTK is a mesh framework that allows users to represent,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Yorick(Package):
     """Yorick is an interpreted programming language for scientific simulations

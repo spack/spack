@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMdanalysis(PythonPackage):
     """MDAnalysis is a Python toolkit to analyze molecular dynamics

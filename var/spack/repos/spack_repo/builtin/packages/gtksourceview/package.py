@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Gtksourceview(AutotoolsPackage):
     """GtkSourceView is a GNOME library that extends GtkTextView, the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCinemasci(PythonPackage):
     """A set of python tools for reading, writing and viewing Cinema

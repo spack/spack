@@ -1,9 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.autotools
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems import autotools, cmake
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
 
 
 class Sz(CMakePackage, AutotoolsPackage):
@@ -165,7 +167,7 @@ class Sz(CMakePackage, AutotoolsPackage):
                 exe(*options)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     build_directory = "."
 
     def configure_args(self):
@@ -178,7 +180,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
         make("clean")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         result = [
             self.define_from_variant("BUILD_NETCDF_READER", "netcdf"),

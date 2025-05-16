@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAnnotationfilter(RPackage):
     """Facilities for Filtering Bioconductor Annotation Resources.

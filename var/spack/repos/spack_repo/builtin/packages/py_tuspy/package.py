@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTuspy(PythonPackage):
     """A Python client for the tus resumable upload protocol -> http://tus.io"""

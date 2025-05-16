@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTypesPytz(PythonPackage):
     """This is a PEP 561 type stub package for the pytz package. It can be used

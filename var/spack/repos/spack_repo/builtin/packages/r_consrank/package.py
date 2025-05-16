@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RConsrank(RPackage):
     """Compute the median ranking according to the Kemeny's axiomatic approach."""

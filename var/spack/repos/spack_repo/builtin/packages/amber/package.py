@@ -7,6 +7,9 @@ import shutil
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+
 
 class Amber(Package, CudaPackage):
     """Amber is a suite of biomolecular simulation programs together

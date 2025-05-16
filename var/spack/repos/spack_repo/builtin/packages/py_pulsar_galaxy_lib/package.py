@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPulsarGalaxyLib(PythonPackage):
     """Distributed job execution application built for Galaxy (http://galaxyproject.org/)."""

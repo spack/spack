@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Launchmon(AutotoolsPackage):
     """Software infrastructure that enables HPC run-time tools to

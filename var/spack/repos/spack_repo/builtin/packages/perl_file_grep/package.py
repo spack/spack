@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileGrep(PerlPackage):
     """File::Grep - Find matches to a pattern in a series of files and related functions"""

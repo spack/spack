@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RPlyr(RPackage):
     """Tools for Splitting, Applying and Combining Data.

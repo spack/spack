@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Exonerate(AutotoolsPackage):
     """Pairwise sequence alignment of DNA and proteins"""

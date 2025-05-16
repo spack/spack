@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLifelines(PythonPackage):
     """Survival analysis was originally developed and applied heavily

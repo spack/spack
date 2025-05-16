@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xclock(AutotoolsPackage, XorgPackage):
     """xclock is the classic X Window System clock utility.  It displays

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Xolotl(CMakePackage, CudaPackage):
     """Xolotl is a high-performance computing code using

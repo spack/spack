@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAdios(PythonPackage):
     """NumPy bindings of ADIOS1"""

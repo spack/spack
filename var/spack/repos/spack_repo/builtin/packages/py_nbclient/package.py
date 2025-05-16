@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNbclient(PythonPackage):
     """A client library for executing notebooks.

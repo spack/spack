@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ccache(CMakePackage):
     """ccache is a compiler cache. It speeds up recompilation by caching

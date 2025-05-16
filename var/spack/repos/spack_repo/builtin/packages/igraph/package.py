@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+
 
 class Igraph(CMakePackage, AutotoolsPackage):
     """igraph is a library for creating and manipulating graphs."""

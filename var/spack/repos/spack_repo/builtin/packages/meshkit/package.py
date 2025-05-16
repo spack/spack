@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Meshkit(AutotoolsPackage):
     """MeshKit is an open-source library of mesh generation functionality.

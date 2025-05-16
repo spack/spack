@@ -6,6 +6,8 @@ import time
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class LibuvJulia(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""

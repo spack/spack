@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAnsi2html(PythonPackage):
     """Convert text with ansi color codes to HTML"""

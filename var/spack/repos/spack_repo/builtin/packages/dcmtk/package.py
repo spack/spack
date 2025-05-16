@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dcmtk(CMakePackage):
     """DCMTK is a collection of libraries and applications implementing large

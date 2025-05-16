@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dnsmasq(MakefilePackage):
     """A lightweight, caching DNS proxy with integrated DHCP server."""

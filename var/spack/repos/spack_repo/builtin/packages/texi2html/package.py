@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Texi2html(MakefilePackage):
     """A highly customizable texinfo to HTML and other formats translator."""

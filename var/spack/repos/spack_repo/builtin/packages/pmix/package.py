@@ -7,6 +7,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pmix(AutotoolsPackage):
     """The Process Management Interface (PMI) has been used for quite some

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCartopy(PythonPackage):
     """Cartopy - a cartographic python library with matplotlib support."""

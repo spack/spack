@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xconsole(AutotoolsPackage, XorgPackage):
     """xconsole displays in a X11 window the messages which are usually sent

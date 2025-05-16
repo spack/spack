@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMayavi(PythonPackage):
     """Mayavi: 3D visualization of scientific data in Python."""

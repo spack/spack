@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class CloverleafRef(MakefilePackage):
     """Proxy Application. CloverLeaf_ref is a miniapp that solves the

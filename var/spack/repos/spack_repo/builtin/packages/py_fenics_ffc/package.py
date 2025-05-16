@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsFfc(PythonPackage):
     """The FEniCS Form Compiler FFC is a compiler for finite element

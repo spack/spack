@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDelayedarray(RPackage):
     """A unified framework for working transparently with on-disk and in-memory

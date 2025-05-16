@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlake8(PythonPackage):
     """Flake8 is a wrapper around PyFlakes, pep8 and Ned Batchelder's

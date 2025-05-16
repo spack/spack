@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiosqlite(PythonPackage):
     """asyncio bridge to the standard sqlite3 module"""

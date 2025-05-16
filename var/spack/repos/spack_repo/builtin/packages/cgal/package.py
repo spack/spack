@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cgal(CMakePackage):
     """The Computational Geometry Algorithms Library (CGAL) is a C++ library

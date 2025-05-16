@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libevpath(CMakePackage):
     """EVpath is an event transport middleware layer designed to allow

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDataladNeuroimaging(PythonPackage):
     """DataLad extension package for neuro/medical imaging"""

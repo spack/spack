@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.sip import SIPPackage
+
 
 class PyPyqt6(SIPPackage):
     """PyQt6 is a comprehensive set of Python bindings for Qt v6."""

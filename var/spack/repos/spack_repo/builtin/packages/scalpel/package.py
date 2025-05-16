@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.sourceforge import SourceforgePackage
+
 
 class Scalpel(MakefilePackage, SourceforgePackage):
     """Scalpel is a software package for detecting INDELs (INsertions and

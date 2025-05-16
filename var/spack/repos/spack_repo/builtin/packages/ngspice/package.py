@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ngspice(AutotoolsPackage):
     """ngspice is the open source spice simulator for electric and

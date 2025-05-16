@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Eagle(MakefilePackage):
     """EAGLE: Explicit Alternative Genome Likelihood Evaluator"""

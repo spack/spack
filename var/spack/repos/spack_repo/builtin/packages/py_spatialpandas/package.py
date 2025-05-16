@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpatialpandas(PythonPackage):
     """Pandas extension arrays for spatial/geometric operations."""

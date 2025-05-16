@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Coevp(MakefilePackage):
     """CoEVP is a scale-bridging proxy application for embedded viscoplasticity

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestClass(PerlPackage):
     """Easily create test classes in an xUnit/JUnit style"""

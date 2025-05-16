@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ModernWheel(CMakePackage):
     """C++ utility collection. Provides various facilities of common use in

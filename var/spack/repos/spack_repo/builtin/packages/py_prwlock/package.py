@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPrwlock(PythonPackage):
     """Native process-shared rwlock support for Python"""

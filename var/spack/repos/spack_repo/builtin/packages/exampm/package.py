@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Exampm(CMakePackage):
     """Exascale Material Point Method (MPM) Mini-App"""

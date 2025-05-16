@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Elsdc(MakefilePackage):
     """ELSDc: Ellipse and Line Segment Detector, with Continuous validation."""

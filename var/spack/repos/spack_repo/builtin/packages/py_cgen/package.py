@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCgen(PythonPackage):
     """cgen offers a simple abstract syntax tree for C and related languages

@@ -7,6 +7,8 @@ from os import symlink
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class DotnetCoreSdk(Package):
     """The .NET Core SDK is a powerful development environment to write

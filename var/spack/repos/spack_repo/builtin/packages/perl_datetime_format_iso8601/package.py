@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetimeFormatIso8601(PerlPackage):
     """Parses ISO8601 formats"""

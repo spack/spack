@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ecos(MakefilePackage):
     """A lightweight conic solver for second-order cone programming."""

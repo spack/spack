@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyfftw(PythonPackage):
     """A pythonic wrapper around FFTW, the FFT library,

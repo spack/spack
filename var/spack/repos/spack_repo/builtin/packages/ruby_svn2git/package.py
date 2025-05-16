@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubySvn2git(RubyPackage):
     """svn2git is a tiny utility for migrating projects from Subversion to Git

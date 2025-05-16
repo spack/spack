@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Psi4(CMakePackage):
     """Psi4 is an open-source suite of ab initio quantum chemistry

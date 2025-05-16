@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIsodate(PythonPackage):
     """This module implements ISO 8601 date, time and duration parsing. The

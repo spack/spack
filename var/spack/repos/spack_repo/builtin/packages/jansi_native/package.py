@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class JansiNative(MavenPackage):
     """Jansi is a small ASl 2.0 licensed Java library that allows you to

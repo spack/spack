@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Beforelight(AutotoolsPackage, XorgPackage):
     """The beforelight program is a sample implementation of a screen saver

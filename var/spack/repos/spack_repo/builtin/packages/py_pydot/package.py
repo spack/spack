@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydot(PythonPackage):
     """Python interface to Graphviz's Dot language"""

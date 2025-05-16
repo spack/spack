@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeStoragePluginS3(PythonPackage):
     """A Snakemake storage plugin for S3 API storage (AWS S3, MinIO, etc.)."""

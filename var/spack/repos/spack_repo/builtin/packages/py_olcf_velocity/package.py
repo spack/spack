@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOlcfVelocity(PythonPackage):
     """A tool to help with the maintenance of container build scripts on multiple systems,

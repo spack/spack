@@ -4,6 +4,7 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
 from ..py_fluidsim_core.package import PyFluidsimCore
 
 

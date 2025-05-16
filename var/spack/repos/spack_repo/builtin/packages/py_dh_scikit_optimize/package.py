@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDhScikitOptimize(PythonPackage):
     """A Modified version of scikit-optimize a Sequential model-based

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNetServerSsPrefork(PerlPackage):
     """A hot-deployable variant of Net::Server::PreFork"""

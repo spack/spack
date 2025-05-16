@@ -6,6 +6,10 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class OsuMicroBenchmarks(AutotoolsPackage, CudaPackage, ROCmPackage):
     """The Ohio MicroBenchmark suite is a collection of independent MPI

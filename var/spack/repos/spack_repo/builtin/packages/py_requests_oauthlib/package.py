@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRequestsOauthlib(PythonPackage):
     """This project provides first-class OAuth library support for Requests."""

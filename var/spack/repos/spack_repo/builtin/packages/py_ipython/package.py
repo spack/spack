@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using

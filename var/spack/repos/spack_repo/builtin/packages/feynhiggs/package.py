@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Feynhiggs(AutotoolsPackage):
     """FeynHiggs is a Fortran code for the (diagrammatic/EFT/hybrid) calculation

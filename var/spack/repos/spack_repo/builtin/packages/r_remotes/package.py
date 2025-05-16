@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRemotes(RPackage):
     """R Package Installation from Remote Repositories, Including 'GitHub'.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class LanlCmakeModules(CMakePackage):
     """CMake modules for projects that have not yet adopted modern CMake."""

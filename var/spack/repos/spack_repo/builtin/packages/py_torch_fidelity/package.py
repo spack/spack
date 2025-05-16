@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchFidelity(PythonPackage):
     """High-fidelity performance metrics for generative models in PyTorch"""

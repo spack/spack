@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Rr(CMakePackage):
     """Application execution recorder, player and debugger"""

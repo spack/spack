@@ -5,6 +5,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 def terminate_bash_failures(dir):
     """Ensure bash scripts within the directory fail as soon as a command

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ftjam(AutotoolsPackage):
     """Jam is a small open-source build tool that

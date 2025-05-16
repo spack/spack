@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class BookleafCpp(CMakePackage):
     """BookLeaf is a 2D unstructured hydrodynamics mini-app."""

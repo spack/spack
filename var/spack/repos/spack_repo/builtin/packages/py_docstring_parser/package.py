@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDocstringParser(PythonPackage):
     """Parse Python docstrings in reST, Google and Numpydoc format."""

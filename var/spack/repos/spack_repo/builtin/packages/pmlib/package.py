@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pmlib(CMakePackage):
     """This library records the statistics information of run-time performance

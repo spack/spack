@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlClassC3Componentised(PerlPackage):
     """Load mix-ins or components to your C3-based class"""

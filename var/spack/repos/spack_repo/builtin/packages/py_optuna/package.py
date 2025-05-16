@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOptuna(PythonPackage):
     """Optuna is an automatic hyperparameter optimization software framework,

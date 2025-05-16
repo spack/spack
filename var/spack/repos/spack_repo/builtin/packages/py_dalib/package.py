@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDalib(PythonPackage):
     """Trans-Learn is a Transfer Learning library based on pure PyTorch with high

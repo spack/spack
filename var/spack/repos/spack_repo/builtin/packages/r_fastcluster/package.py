@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RFastcluster(RPackage):
     """Fast Hierarchical Clustering Routines for R and 'Python'.

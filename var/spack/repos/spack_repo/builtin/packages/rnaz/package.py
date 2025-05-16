@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Rnaz(AutotoolsPackage):
     """RNAz - predicting structural noncoding RNAs."""

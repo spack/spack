@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Textparser(CMakePackage):
     """Text Parser library allows us to describe and to parse JSON like

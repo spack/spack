@@ -6,6 +6,10 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 # Each LAPACK++ version requires a specific BLAS++ version
 _versions = [
     # LAPACK++,     BLAS++

@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNinja(PythonPackage):
     """Ninja is a small build system with a focus on speed.

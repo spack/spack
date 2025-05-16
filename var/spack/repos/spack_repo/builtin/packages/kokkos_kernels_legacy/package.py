@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class KokkosKernelsLegacy(MakefilePackage):
     """Kokkos C++ Performance Portability Programming EcoSystem: Math Kernels -

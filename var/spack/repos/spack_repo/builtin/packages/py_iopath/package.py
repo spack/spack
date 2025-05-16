@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIopath(PythonPackage):
     """A library for providing I/O abstraction."""

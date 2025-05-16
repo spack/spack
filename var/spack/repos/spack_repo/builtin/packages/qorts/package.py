@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class Qorts(RPackage):
     """The QoRTs software package is a fast, efficient, and portable

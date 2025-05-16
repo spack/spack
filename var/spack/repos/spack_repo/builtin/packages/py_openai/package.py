@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenai(PythonPackage):
     """The OpenAI Python library provides convenient access to the OpenAI API

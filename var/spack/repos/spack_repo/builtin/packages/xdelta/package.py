@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Xdelta(AutotoolsPackage):
     """Xdelta version 3 is a C library and command-line tool for delta

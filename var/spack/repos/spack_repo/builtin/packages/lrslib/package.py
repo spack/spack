@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Lrslib(Package):
     """lrslib Ver 6.2 is a self-contained ANSI C implementation of the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenpmdViewer(PythonPackage):
     """Python visualization tools for openPMD files"""

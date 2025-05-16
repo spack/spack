@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiodns(PythonPackage):
     """Simple DNS resolver for asyncio.It provides a simple way for

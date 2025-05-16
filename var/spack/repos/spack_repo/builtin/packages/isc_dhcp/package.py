@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class IscDhcp(AutotoolsPackage):
     """ISC DHCP offers a complete open source solution for

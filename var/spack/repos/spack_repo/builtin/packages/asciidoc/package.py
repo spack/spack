@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.python import PythonPackage
+
 
 class Asciidoc(AutotoolsPackage, PythonPackage):
     """A presentable text document format for writing articles, UNIX man

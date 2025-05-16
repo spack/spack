@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtCdn(PythonPackage):
     """Microsoft Azure CDN Management Client Library for Python."""

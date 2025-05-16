@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Gffread(MakefilePackage):
     """gffread: GFF/GTF utility providing format conversions, region filtering,

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLifecycle(RPackage):
     """Manage the Life Cycle of your Package Functions.

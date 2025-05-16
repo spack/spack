@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.sip import SIPPackage
+
 
 class PyPyqt4(SIPPackage):
     """PyQt is a set of Python v2 and v3 bindings for The Qt Company's Qt

@@ -8,6 +8,8 @@ from shutil import Error, copyfile
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NetcdfFortran(AutotoolsPackage):
     """NetCDF (network Common Data Form) is a set of software libraries and

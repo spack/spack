@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class IntelLlvm(CMakePackage):
     """Intel's version of the LLVM compiler."""

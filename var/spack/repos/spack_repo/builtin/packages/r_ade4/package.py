@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAde4(RPackage):
     """Analysis of Ecological Data : Exploratory and Euclidean Methods in

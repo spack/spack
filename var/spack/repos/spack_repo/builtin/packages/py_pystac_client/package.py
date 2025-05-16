@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPystacClient(PythonPackage):
     """Python library for working with Spatiotemporal Asset Catalog (STAC)."""

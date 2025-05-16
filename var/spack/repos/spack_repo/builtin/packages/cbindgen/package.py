@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Cbindgen(CargoPackage):
     """A project for generating C bindings from Rust code."""

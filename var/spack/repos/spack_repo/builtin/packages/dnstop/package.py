@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Dnstop(AutotoolsPackage):
     """Stay on top of your DNS traffic."""

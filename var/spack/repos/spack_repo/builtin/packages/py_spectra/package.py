@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpectra(PythonPackage):
     """Color scales and color conversion made easy for Python."""

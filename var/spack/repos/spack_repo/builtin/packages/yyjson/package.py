@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Yyjson(CMakePackage):
     """The fastest JSON library in C"""

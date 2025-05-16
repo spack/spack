@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyXdg(RubyPackage):
     """Provides a Ruby implementation of the XDG Base Directory Specification."""

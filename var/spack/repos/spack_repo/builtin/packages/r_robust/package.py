@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRobust(RPackage):
     """Port of the S+ Robust Library.

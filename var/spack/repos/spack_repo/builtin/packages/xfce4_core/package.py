@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class Xfce4Core(BundlePackage):
     """Core libraries and applications for the Xfce4 desktop environment"""

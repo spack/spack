@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libuecc(CMakePackage):
     """libuecc is a very small generic-purpose Elliptic Curve Cryptography

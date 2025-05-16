@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Andi(AutotoolsPackage):
     """andi is used for for estimating the

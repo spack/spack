@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFlexx(PythonPackage):
     """Write desktop and web apps in pure Python."""

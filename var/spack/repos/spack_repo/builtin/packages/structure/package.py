@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Structure(MakefilePackage):
     """Structure is a free software package for using multi-locus genotype

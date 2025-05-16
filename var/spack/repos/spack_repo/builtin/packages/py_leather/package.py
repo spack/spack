@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLeather(PythonPackage):
     """Leather is the Python charting library for those who need charts now and

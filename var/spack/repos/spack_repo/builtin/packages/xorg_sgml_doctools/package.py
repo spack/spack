@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class XorgSgmlDoctools(AutotoolsPackage, XorgPackage):
     """This package provides a common set of SGML entities and XML/CSS style

@@ -6,6 +6,8 @@
 from spack.package import *
 from spack.util.environment import set_env
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Arkouda(MakefilePackage):
     """Arkouda is a NumPy-like library for distributed data with a focus on

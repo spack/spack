@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Adf(Package):
     """Amsterdam Density Functional (ADF) is a program for first-principles

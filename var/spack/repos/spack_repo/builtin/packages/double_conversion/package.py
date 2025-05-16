@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class DoubleConversion(CMakePackage):
     """This project (double-conversion) provides binary-decimal and decimal-binary

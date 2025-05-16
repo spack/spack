@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Msmc(MakefilePackage):
     """This software implements MSMC, a method to infer population size

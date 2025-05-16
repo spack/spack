@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRinside(RPackage):
     """C++ Classes to Embed R in C++ (and C) Applications.

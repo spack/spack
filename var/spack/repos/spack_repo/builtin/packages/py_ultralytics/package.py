@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUltralytics(PythonPackage):
     """Ultralytics YOLOv8, developed by Ultralytics, is a cutting-edge, state-of-the-art

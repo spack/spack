@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RWatermelon(RPackage):
     """Illumina 450 methylation array normalization and metrics.

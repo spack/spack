@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Hiptt(MakefilePackage, ROCmPackage):
     """hipTT - Fast GPU Tensor Transpose for NVIDIA and AMD GPU."""

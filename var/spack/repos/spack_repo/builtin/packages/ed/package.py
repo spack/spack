@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Ed(AutotoolsPackage, GNUMirrorPackage):
     """GNU ed is a line-oriented text editor. It is used to create,

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAiosignal(PythonPackage):
     """A project to manage callbacks in asyncio projects."""

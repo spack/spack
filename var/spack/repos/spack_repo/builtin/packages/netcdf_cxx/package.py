@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NetcdfCxx(AutotoolsPackage):
     """Deprecated C++ compatibility bindings for NetCDF.

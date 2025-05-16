@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pangolin(CMakePackage):
     """Pangolin is a lightweight portable rapid development library for

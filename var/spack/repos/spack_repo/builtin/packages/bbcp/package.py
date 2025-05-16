@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bbcp(Package):
     """Securely and quickly copy data from source to target"""

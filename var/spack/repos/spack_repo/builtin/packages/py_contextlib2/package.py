@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyContextlib2(PythonPackage):
     """contextlib2 is a backport of the standard library's contextlib module to

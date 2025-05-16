@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAnnaffy(RPackage):
     """Annotation tools for Affymetrix biological metadata.

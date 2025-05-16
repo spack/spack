@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Chemfiles(CMakePackage):
     """Chemfiles is a library providing a simple and format agnostic interface for

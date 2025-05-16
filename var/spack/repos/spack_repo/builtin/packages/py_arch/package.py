@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArch(PythonPackage):
     """Autoregressive Conditional Heteroskedasticity (ARCH) and other tools

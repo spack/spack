@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGgnewscale(RPackage):
     """Multiple Fill and Colour Scales in 'ggplot2'.

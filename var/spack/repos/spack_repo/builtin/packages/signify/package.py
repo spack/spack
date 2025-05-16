@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Signify(MakefilePackage):
     """OpenBSD tool to signs and verify signatures on files."""

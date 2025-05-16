@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Xeus(CMakePackage):
     """QuantStack C++ implementation of Jupyter kernel protocol"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGenerics(RPackage):
     """Common S3 Generics not Provided by Base R Methods Related to Model

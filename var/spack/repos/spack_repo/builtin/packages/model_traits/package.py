@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ModelTraits(CMakePackage):
     """Model setup and querying in C++."""

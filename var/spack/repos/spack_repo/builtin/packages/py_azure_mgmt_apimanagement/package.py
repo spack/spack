@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtApimanagement(PythonPackage):
     """Microsoft Azure API Management Client Library for Python."""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Editres(AutotoolsPackage, XorgPackage):
     """Dynamic resource editor for X Toolkit applications."""

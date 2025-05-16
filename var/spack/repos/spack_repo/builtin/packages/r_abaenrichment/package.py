@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAbaenrichment(RPackage):
     """Gene expression enrichment in human brain regions.

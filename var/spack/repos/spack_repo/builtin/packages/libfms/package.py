@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libfms(CMakePackage):
     """Field and Mesh Specification (FMS) library"""

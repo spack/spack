@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class ComposableKernel(CMakePackage):
     """Composable Kernel: Performance Portable Programming Model

@@ -5,6 +5,8 @@
 from spack.error import SpackError
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 def class_validator(values):
     """1, 2, 3, 4, 5, 6"""

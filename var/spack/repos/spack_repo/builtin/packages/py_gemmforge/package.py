@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGemmforge(PythonPackage):
     """GPU-GEMM generator for the Discontinuous Galerkin method"""

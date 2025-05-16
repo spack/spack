@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Fluxbox(AutotoolsPackage):
     """Fluxbox is a windowmanager for X that was based on the Blackbox 0.61.1 code.

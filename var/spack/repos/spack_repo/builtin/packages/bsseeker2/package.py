@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bsseeker2(Package):
     """A versatile aligning pipeline for bisulfite sequencing data."""

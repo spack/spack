@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIpdb(PythonPackage):
     """ipdb is the iPython debugger and has many additional features, including

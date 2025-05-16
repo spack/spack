@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sparskit(MakefilePackage):
     """SPARSKIT: A basic tool-kit for sparse matrix computations (Version 2).

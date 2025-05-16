@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBeautifulsoup4(PythonPackage):
     """Beautiful Soup is a Python library for pulling data out of HTML and

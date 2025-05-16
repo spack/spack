@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyface(PythonPackage):
     """The pyface project contains a toolkit-independent GUI abstraction layer,

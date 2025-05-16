@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class XcbDemo(AutotoolsPackage):
     """xcb-demo: A collection of demo programs that use the XCB library."""

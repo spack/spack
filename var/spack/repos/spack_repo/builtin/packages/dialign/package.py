@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dialign(MakefilePackage):
     """DIALIGN is a software program for multiple sequence alignment developed

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzuremlDatasetRuntime(PythonPackage):
     """The purpose of this package is to coordinate dependencies within

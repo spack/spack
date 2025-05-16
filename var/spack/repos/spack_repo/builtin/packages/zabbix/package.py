@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Zabbix(AutotoolsPackage):
     """Real-time monitoring of IT components and services,

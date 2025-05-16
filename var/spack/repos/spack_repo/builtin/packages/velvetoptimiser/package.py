@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Velvetoptimiser(Package):
     """Automatically optimise three of Velvet's assembly parameters."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mtn(MakefilePackage):
     """Movie Thumbnailer is CLI thumbnail generator using FFmpeg."""

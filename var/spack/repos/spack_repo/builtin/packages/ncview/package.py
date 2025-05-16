@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ncview(AutotoolsPackage):
     """Simple viewer for NetCDF files."""

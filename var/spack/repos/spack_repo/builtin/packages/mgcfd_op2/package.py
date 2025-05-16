@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class MgcfdOp2(MakefilePackage):
     """Package for the OP2 port of MGCFD: A 3D unstructured multigrid,

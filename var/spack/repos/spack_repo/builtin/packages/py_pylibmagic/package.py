@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPylibmagic(PythonPackage):
     """scikit-build project with CMake for compiling libmagic"""

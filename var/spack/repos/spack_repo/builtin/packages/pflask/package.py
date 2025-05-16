@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pflask(CMakePackage):
     """Pflask is a simple tool for creating process containers on LInux."""

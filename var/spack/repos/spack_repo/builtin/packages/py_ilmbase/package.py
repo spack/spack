@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class PyIlmbase(AutotoolsPackage):
     """The PyIlmBase libraries provides python bindings for the IlmBase libraries."""

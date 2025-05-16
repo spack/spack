@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQuaternionic(PythonPackage):
     """Interpret numpy arrays as quaternionic arrays with numba acceleration"""

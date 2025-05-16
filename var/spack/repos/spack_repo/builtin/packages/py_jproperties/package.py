@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJproperties(PythonPackage):
     """Java Property file parser and writer for Python"""

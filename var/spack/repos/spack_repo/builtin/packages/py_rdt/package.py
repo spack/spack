@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRdt(PythonPackage):
     """RDT is a Python library used to transform data for data

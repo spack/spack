@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHyperframe(PythonPackage):
     """HTTP/2 framing layer for Python"""

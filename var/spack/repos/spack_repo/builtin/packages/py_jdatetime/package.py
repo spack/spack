@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJdatetime(PythonPackage):
     """jdatetime is Jalali implementation of Python's datetime module"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Muparserx(CMakePackage):
     """A C++ Library for Parsing Expressions with Strings, Complex

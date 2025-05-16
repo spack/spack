@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mark(Package):
     """Program MARK, developed and maintained by Gary White (Colorado State

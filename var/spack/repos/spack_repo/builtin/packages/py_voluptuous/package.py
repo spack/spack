@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyVoluptuous(PythonPackage):
     """Voluptous, despite the name, is a Python data validation library."""

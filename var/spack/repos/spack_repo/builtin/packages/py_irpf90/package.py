@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyIrpf90(PythonPackage):
     """IRPF90 is a Fortran90 preprocessor written in Python for programming

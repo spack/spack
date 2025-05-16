@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Ldak(Package):
     """LDAK is a software package for analyzing GWAS data"""

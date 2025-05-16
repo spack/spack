@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Atmi(CMakePackage):
     """Asynchronous Task and Memory Interface, or ATMI, is a runtime framework

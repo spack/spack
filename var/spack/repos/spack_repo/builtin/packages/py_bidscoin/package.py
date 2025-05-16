@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBidscoin(PythonPackage):
     """Converts and organises raw MRI data-sets according to the Brain Imaging

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xfwp(AutotoolsPackage, XorgPackage):
     """xfwp proxies X11 protocol connections, such as through a firewall."""

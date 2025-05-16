@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPykerberos(PythonPackage):
     """This Python package is a high-level wrapper for Kerberos (GSSAPI) operations."""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4emlow(Package):
     """Geant4 data files for low energy electromagnetic processes."""

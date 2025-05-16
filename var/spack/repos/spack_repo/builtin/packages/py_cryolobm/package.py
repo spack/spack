@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCryolobm(PythonPackage):
     """The crYOLO boxmanger was written to produce annotation data for crYOLO

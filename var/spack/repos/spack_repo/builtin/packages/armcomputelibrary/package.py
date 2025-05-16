@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.scons import SConsPackage
+
 target_arch_list = (
     "armv7a",
     "armv7a-hf",

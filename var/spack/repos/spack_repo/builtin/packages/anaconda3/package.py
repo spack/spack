@@ -7,6 +7,8 @@ from os.path import split
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Anaconda3(Package):
     """

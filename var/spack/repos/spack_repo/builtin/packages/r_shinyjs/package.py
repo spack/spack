@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RShinyjs(RPackage):
     """Easily Improve the User Experience of Your Shiny Apps in Seconds.

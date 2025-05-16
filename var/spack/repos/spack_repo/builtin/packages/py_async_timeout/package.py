@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsyncTimeout(PythonPackage):
     """asyncio-compatible timeout context manager."""

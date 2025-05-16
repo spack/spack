@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cowsay(Package):
     """A program that generates ASCII pictures of a cow with a message."""

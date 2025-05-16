@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xsetpointer(AutotoolsPackage, XorgPackage):
     """Set an X Input device as the main pointer."""

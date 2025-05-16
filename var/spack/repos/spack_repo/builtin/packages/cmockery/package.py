@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cmockery(AutotoolsPackage):
     """A lightweight library to simplify and generalize the process of

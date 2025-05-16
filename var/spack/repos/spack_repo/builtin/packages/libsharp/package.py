@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsharp(AutotoolsPackage):
     """Libsharp is a code library for spherical harmonic transforms (SHTs) and

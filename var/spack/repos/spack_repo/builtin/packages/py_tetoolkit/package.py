@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTetoolkit(PythonPackage):
     """TEToolkit is a software package that utilizes both unambiguously

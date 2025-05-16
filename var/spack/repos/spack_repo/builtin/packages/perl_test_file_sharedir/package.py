@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestFileSharedir(PerlPackage):
     """Create a Fake ShareDir for your modules for testing."""

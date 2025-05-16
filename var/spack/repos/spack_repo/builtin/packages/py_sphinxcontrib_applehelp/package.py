@@ -5,6 +5,8 @@ from typing import List
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxcontribApplehelp(PythonPackage):
     """sphinxcontrib-applehelp is a sphinx extension which outputs Apple

@@ -10,6 +10,9 @@ import sys
 import spack.compilers.config
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Openmpi(AutotoolsPackage, CudaPackage):
     """An open source Message Passing Interface implementation.

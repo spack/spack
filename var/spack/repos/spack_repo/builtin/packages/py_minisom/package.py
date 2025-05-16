@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMinisom(PythonPackage):
     """MiniSom is a minimalistic and Numpy based implementation of the Self

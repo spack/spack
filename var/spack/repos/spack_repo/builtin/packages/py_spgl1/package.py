@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpgl1(PythonPackage):
     """SPGL1 is a solver for large-scale one-norm regularized least squares.  It is

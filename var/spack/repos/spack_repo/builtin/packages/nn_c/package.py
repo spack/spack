@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NnC(AutotoolsPackage):
     """nn: Natural Neighbours interpolation. nn is a C code

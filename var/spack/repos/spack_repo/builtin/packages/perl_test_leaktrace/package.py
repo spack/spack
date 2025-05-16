@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestLeaktrace(PerlPackage):
     """Test::LeakTrace provides several functions that trace memory leaks. This module scans

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMultidict(PythonPackage):
     """Multidict is dict-like collection of key-value pairs where key

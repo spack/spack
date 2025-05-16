@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RSn(RPackage):
     """The Skew-Normal and Related Distributions Such as the Skew-t.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dsrc(MakefilePackage):
     """DNA Sequence Reads Compression is an application designed for

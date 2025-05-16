@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cufflinks(Package):
     """Cufflinks assembles transcripts, estimates their abundances, and tests

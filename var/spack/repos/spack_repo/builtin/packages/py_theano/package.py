@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyTheano(PythonPackage, CudaPackage):
     """Optimizing compiler for evaluating mathematical expressions on CPUs

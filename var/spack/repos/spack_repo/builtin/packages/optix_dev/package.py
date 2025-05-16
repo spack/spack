@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class OptixDev(Package):
     """OptiX is an application framework for achieving optimal ray tracing

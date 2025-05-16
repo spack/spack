@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bioawk(MakefilePackage):
     """Bioawk is an extension to Brian Kernighan's awk, adding the support of

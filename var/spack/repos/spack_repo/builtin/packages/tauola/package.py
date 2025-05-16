@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Tauola(AutotoolsPackage):
     """Tauola is a event generator for tau decays."""

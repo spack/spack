@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Glfw(CMakePackage):
     """GLFW is an Open Source, multi-platform library for

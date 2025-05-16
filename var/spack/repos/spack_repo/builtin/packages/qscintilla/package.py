@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.qmake import QMakePackage
+
 
 class Qscintilla(QMakePackage):
     """

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginKubernetes(PythonPackage):
     """A Snakemake executor plugin for submission of jobs to Kubernetes."""

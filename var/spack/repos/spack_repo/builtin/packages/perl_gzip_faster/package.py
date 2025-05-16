@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlGzipFaster(PerlPackage):
     """Simple and fast gzip and gunzip"""

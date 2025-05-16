@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBitVector(PerlPackage):
     """Efficient bit vector, set of integers and "big int" math library"""

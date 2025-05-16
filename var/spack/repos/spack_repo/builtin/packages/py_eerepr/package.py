@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEerepr(PythonPackage):
     """Code Editor-style reprs for Earth Engine data in a Jupyter notebook."""

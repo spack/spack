@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class PhrapCrossmatchSwat(MakefilePackage):
     """phrap is a program for assembling shotgun DNA sequence data.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonConstraint(PythonPackage):
     """Constraint Solving Problem resolver for Python"""

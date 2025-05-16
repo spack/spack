@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RReadbitmap(RPackage):
     """Simple Unified Interface to Read Bitmap Images (BMP,JPEG,PNG,TIFF).

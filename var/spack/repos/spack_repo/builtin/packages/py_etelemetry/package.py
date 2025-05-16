@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEtelemetry(PythonPackage):
     """A lightweight python client to communicate with the etelemetry server"""

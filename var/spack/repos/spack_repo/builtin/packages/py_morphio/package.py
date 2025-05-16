@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMorphio(PythonPackage):
     """Python library for reading / writing morphology files"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libnids(AutotoolsPackage):
     """Libnids is a library that provides a functionality of one of

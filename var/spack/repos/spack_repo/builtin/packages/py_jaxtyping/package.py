@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJaxtyping(PythonPackage):
     """Type annotations and runtime checking for shape and dtype of JAX arrays, and PyTrees."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Bfs(MakefilePackage):
     """BFS is a breadth-first variant of the UNIX find command that offers

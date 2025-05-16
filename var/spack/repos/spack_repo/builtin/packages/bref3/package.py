@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Bref3(Package):
     """Bref3: Converts from VCF format to bref3 format."""

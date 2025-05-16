@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAstropy(PythonPackage):
     """The Astropy Project is a community effort to develop a single core

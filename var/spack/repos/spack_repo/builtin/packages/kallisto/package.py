@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Kallisto(CMakePackage):
     """kallisto is a program for quantifying abundances of transcripts from

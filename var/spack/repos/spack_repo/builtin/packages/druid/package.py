@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Druid(MavenPackage):
     """Druid is one of the best database connection pools

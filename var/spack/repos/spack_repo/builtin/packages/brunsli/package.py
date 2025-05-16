@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Brunsli(CMakePackage):
     """Brunsli is a lossless JPEG repacking library."""

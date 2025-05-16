@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDataDumper(PerlPackage):
     """Stringified perl data structures, suitable for both printing and eval"""

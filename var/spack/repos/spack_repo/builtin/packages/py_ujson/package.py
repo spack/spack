@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUjson(PythonPackage):
     """Ultra fast JSON decoder and encoder written in C with Python

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyKeyboard(PythonPackage):
     """Take full control of your keyboard with this small

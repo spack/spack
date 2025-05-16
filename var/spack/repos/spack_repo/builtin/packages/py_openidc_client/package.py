@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOpenidcClient(PythonPackage):
     """A python OpenID Connect client with token caching and management"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFabric3(PythonPackage):
     """Fabric is a simple, Pythonic tool for

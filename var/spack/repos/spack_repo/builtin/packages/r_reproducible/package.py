@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RReproducible(RPackage):
     """A Set of Tools that Enhance Reproducibility Beyond Package Management.

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtBatchai(PythonPackage):
     """Microsoft Azure Batch AI Management Client Library for Python."""

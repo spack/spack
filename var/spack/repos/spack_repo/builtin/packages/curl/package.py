@@ -9,9 +9,10 @@ import sys
 
 from llnl.util.filesystem import windows_sfn
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.nmake import NMakeBuilder
 from spack.package import *
+
+from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from ...build_systems.nmake import NMakeBuilder, NMakePackage
 
 is_windows = sys.platform == "win32"
 

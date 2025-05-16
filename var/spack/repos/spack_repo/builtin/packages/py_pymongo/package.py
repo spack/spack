@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymongo(PythonPackage):
     """The PyMongo distribution contains tools for interacting with

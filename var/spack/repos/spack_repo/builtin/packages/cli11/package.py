@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Cli11(CMakePackage):
     """CLI11 is a command line parser for C++11 and beyond that provides a rich

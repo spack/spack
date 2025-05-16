@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyImageioFfmpeg(PythonPackage):
     """The purpose of this project is to provide a simple and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Zsh(AutotoolsPackage):
     """Zsh is a shell designed for interactive use, although it is also a

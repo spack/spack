@@ -8,6 +8,10 @@ from copy import deepcopy
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 def xsdk_depends_on_accl(accl_name, accl_var, *args, **kwargs):
     if accl_name == "cuda":

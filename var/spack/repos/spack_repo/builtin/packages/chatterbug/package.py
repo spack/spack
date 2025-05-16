@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Chatterbug(MakefilePackage):
     """A suite of communication-intensive proxy applications that mimic

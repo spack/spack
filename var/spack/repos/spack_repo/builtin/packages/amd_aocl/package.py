@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.bundle import BundlePackage
+
 
 class AmdAocl(BundlePackage):
     """AMD Optimizing CPU Libraries (AOCL) - AOCL is a set of numerical

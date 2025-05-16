@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydantic(PythonPackage):
     """Data validation and settings management using Python type hinting."""

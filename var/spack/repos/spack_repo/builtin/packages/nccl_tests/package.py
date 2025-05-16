@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.makefile import MakefilePackage
+
 
 class NcclTests(MakefilePackage, CudaPackage):
     """These tests check both the performance and

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gfal2(CMakePackage):
     """Multi-protocol data management library."""

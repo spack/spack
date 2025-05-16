@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Ncvis(CMakePackage):
     """A NetCDF file viewer. ncvis is inspired by David Pierce's

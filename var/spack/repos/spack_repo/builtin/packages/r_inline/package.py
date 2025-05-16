@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RInline(RPackage):
     """Functions to Inline C, C++, Fortran Function Calls from R.

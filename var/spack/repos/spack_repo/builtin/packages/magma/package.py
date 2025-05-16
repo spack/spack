@@ -6,6 +6,10 @@
 import spack.util.environment
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Magma(CMakePackage, CudaPackage, ROCmPackage):
     """The MAGMA project aims to develop a dense linear algebra library similar

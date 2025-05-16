@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMultiapiStorage(PythonPackage):
     """Microsoft Azure Storage Client Library for Python with multi API

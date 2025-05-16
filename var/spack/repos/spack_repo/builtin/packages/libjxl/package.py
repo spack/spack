@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libjxl(CMakePackage):
     """JPEG XL image format reference implementation."""

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xstdcmap(AutotoolsPackage, XorgPackage):
     """The xstdcmap utility can be used to selectively define standard colormap

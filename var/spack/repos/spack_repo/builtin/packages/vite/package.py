@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Vite(CMakePackage):
     """ViTE is a trace explorer. It is a tool to visualize execution

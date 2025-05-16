@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySimplegeneric(PythonPackage):
     """Simple generic functions (similar to Python's own len(),

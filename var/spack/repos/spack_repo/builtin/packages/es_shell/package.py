@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class EsShell(AutotoolsPackage):
     """Es is an extensible shell. The language was derived from the Plan 9

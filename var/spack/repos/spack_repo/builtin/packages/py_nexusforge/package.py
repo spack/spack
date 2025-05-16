@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNexusforge(PythonPackage):
     """Blue Brain Nexus Forge is a domain-agnostic, generic and

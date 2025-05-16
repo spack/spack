@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Opencoarrays(CMakePackage):
     """OpenCoarrays is an open-source software project that produces an

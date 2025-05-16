@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySseclient(PythonPackage):
     """This is a Python client library for iterating over http Server

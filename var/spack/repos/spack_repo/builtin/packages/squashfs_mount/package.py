@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class SquashfsMount(MakefilePackage):
     """Allows non-root users to mount squashfs files without the overhead of

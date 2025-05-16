@@ -7,6 +7,10 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.generic import Package
+from ...build_systems.rocm import ROCmPackage
+
 
 class Slepc(Package, CudaPackage, ROCmPackage):
     """Scalable Library for Eigenvalue Problem Computations."""

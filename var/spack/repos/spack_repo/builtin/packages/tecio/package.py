@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Tecio(CMakePackage):
     """The TecIO library allows third-party applications to read and write

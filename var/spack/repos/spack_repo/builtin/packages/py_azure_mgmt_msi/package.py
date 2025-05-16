@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtMsi(PythonPackage):
     """Microsoft Azure MSI Management Client Library for Python."""

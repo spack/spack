@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGoogleAuthOauthlib(PythonPackage):
     """This library provides oauthlib integration with google-auth."""

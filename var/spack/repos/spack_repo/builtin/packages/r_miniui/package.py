@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RMiniui(RPackage):
     """Shiny UI Widgets for Small Screens.

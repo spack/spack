@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cargo import CargoPackage
+
 
 class Mergiraf(CargoPackage):
     """A syntax-aware git merge driver for a growing collection of programming

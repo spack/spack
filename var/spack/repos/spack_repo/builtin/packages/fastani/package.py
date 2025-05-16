@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cmake import CMakePackage
+
 
 class Fastani(CMakePackage, AutotoolsPackage):
     """Fast, alignment-free computation of whole-genome Average Nucleotide

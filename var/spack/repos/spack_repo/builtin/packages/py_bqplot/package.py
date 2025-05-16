@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBqplot(PythonPackage):
     """Interactive plotting for the Jupyter notebook, using d3.js and ipywidgets."""

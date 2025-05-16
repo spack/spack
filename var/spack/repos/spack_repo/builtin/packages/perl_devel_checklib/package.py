@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDevelChecklib(PerlPackage):
     """Devel::CheckLib - check that a library is available"""

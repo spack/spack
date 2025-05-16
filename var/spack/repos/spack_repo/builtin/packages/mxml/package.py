@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mxml(AutotoolsPackage):
     """Mini-XML is a small XML library that you can use to read and write XML

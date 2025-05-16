@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class NcbiMagicblast(AutotoolsPackage):
     """Magic-BLAST is a tool for mapping large next-generation RNA or DNA

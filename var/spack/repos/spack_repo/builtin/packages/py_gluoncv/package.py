@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGluoncv(PythonPackage):
     """GluonCV provides implementations of state-of-the-art

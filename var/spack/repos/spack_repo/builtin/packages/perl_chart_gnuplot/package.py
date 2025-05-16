@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlChartGnuplot(PerlPackage):
     """Plot graph using Gnuplot in Perl on the fly"""

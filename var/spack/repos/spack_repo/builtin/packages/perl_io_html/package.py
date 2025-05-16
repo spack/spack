@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlIoHtml(PerlPackage):
     """Open an HTML file with automatic charset detection."""

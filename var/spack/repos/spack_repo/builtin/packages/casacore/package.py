@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Casacore(CMakePackage):
     """A suite of c++ libraries for radio astronomy data processing."""

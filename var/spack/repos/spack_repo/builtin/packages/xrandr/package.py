@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xrandr(AutotoolsPackage, XorgPackage):
     """xrandr - primitive command line interface to X11 Resize, Rotate, and

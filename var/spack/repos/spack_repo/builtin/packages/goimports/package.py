@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.go import GoPackage
+
 
 class Goimports(GoPackage):
     """Updates your Go import lines, adding missing ones and removing unreferenced ones."""

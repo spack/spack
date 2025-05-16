@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStrawberryfields(PythonPackage):
     """Open source library for continuous-variable quantum computation"""

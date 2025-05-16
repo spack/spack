@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBioAsn1Entrezgene(PerlPackage):
     """Regular expression-based Perl Parser for NCBI Entrez Gene."""

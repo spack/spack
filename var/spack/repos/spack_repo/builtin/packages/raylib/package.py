@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Raylib(CMakePackage):
     """Simple and easy-to-use library for game development and multimedia applications"""

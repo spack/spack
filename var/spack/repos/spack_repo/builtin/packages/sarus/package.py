@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Sarus(CMakePackage):
     """Sarus is an OCI-compliant container engine for HPC systems."""

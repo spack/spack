@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bertini(AutotoolsPackage):
     """Bertini is a general-purpose solver, written in C, that was created

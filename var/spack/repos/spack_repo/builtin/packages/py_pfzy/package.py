@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPfzy(PythonPackage):
     """Python port of the fzy fuzzy string matching algorithm."""

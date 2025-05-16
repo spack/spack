@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySyned(PythonPackage):
     """A python library to define the components of a synchrotron beamline and

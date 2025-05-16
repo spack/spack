@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlAlgorithmDiff(PerlPackage):
     """Compute 'intelligent' differences between two files / lists"""

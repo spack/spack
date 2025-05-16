@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Anicalculator(Package):
     """This tool will calculate the bidirectional average nucleotide identity

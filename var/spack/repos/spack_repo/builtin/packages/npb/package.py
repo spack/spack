@@ -5,6 +5,8 @@ import numbers
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 def is_integral(x):
     """Any integer value"""

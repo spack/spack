@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydoe(PythonPackage):
     """The pyDOE package is designed to help the scientist, engineer,

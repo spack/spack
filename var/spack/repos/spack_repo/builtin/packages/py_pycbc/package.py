@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPycbc(PythonPackage):
     """PyCBC is a software package used to explore astrophysical sources of

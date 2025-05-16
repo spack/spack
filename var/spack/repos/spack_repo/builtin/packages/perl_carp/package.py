@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlCarp(PerlPackage):
     """Carp - alternative warn and die for modules"""

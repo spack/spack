@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRq(PythonPackage):
     """RQ (Redis Queue) is a simple Python library for queueing

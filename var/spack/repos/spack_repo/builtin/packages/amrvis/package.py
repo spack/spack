@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Amrvis(MakefilePackage):
     """Amrvis is a visualization package specifically designed to

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlBCow(PerlPackage):
     """B::COW additional B helpers to check COW status"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Shiro(MavenPackage):
     """Apache Shiro is a powerful and easy-to-use Java security framework

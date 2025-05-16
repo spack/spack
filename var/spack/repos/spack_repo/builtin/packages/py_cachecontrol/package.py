@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCachecontrol(PythonPackage):
     """CacheControl is a port of the caching algorithms in httplib2

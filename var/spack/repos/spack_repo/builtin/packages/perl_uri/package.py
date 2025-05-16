@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlUri(PerlPackage):
     """Uniform Resource Identifiers (absolute and relative)"""

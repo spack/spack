@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hapdip(Package):
     """The CHM1-NA12878 benchmark for single-sample SNP/INDEL calling from

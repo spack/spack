@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTrxPython(PythonPackage):
     """Experiments with new file format for tractography."""

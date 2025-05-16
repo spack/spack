@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Fmi4cpp(CMakePackage):
     """FMI4cpp is a cross-platform FMI 2.0 implementation written in modern C++.

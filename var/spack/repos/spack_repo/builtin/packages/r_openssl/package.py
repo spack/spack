@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class ROpenssl(RPackage):
     """Toolkit for Encryption, Signatures and Certificates Based on OpenSSL.

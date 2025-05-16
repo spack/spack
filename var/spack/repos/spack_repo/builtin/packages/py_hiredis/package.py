@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHiredis(PythonPackage):
     """Python extension that wraps protocol parsing code in hiredis.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCyordereddict(PythonPackage):
     """The Python standard library's OrderedDict ported to Cython.

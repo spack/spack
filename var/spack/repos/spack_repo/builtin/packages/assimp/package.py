@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Assimp(CMakePackage):
     """Open Asset Import Library (Assimp) is a portable Open Source library to

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Selalib(CMakePackage):
     """SeLaLib is a modular library for the kinetic and gyrokinetic simulation

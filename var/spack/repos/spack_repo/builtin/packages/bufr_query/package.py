@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.python import PythonExtension
+
 
 class BufrQuery(CMakePackage, PythonExtension):
     """The NOAA bufr-query Library can be used to read NCEP and WMO formated BUFR

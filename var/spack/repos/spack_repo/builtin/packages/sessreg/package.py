@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Sessreg(AutotoolsPackage, XorgPackage):
     """Sessreg is a simple program for managing utmp/wtmp entries for X

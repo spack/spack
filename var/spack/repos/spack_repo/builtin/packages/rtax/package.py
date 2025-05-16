@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Rtax(Package):
     """Rapid and accurate taxonomic classification of short paired-end

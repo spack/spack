@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGridgraphics(RPackage):
     """Redraw Base Graphics Using 'grid' Graphics.

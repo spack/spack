@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Mg(MakefilePackage):
     """Mg is intended to be a small, fast, and portable editor for people

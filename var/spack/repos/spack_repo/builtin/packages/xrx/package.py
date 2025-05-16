@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xrx(AutotoolsPackage, XorgPackage):
     """The remote execution (RX) service specifies a MIME format for invoking

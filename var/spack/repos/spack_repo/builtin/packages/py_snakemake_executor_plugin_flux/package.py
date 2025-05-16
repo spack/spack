@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginFlux(PythonPackage):
     """A Snakemake executor plugin for the Flux scheduler."""

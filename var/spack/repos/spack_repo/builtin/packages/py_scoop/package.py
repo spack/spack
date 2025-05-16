@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyScoop(PythonPackage):
     """SCOOP (Scalable COncurrent Operations in Python) is a distributed

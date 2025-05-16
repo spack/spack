@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTbparse(PythonPackage):
     """Load tensorboard event logs as pandas DataFrames."""

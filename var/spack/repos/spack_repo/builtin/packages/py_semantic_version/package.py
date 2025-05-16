@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySemanticVersion(PythonPackage):
     """This small python library provides a few tools to handle SemVer in

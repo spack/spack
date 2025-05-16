@@ -7,6 +7,8 @@ import sys
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 is_windows = sys.platform == "win32"
 
 

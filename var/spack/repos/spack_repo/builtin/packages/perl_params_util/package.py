@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlParamsUtil(PerlPackage):
     """Simple, compact and correct param-checking functions"""

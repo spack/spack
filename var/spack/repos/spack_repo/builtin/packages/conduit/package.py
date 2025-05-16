@@ -10,6 +10,8 @@ from os import environ as env
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 def cmake_cache_entry(name, value, vtype=None, force=False):
     """

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonOauth2(PythonPackage):
     """python-oauth2 is a framework that aims at making it easy to

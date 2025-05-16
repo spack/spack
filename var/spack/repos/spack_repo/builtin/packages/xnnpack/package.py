@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Xnnpack(CMakePackage):
     """High-efficiency floating-point neural network inference operators for

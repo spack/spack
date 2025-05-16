@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDatetimeFormatStrptime(PerlPackage):
     """Parse and format strp and strf time patterns"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXesmf(PythonPackage):
     """Universal Regridder for Geospatial Data."""

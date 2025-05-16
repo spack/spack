@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlNetIp(PerlPackage):
     """Perl extension for manipulating IPv4/IPv6 addresses"""

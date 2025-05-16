@@ -6,8 +6,11 @@
 import os
 import shutil
 
-from spack.build_systems import cmake
 from spack.package import *
+
+from ...build_systems import cmake
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.makefile import MakefilePackage
 
 
 class Siesta(MakefilePackage, CMakePackage):

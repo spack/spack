@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Pindel(MakefilePackage):
     """Pindel can detect breakpoints from next-gen sequence data."""

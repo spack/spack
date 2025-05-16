@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Minivite(MakefilePackage):
     """miniVite is a proxy application that implements a single phase of

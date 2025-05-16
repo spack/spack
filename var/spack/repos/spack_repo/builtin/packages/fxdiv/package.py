@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Fxdiv(CMakePackage):
     """Header-only library for division via fixed-point multiplication by inverse."""

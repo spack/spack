@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xlsfonts(AutotoolsPackage, XorgPackage):
     """xlsfonts lists fonts available from an X server via the X11

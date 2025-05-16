@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlPlackMiddlewareFixmissingbodyinredirect(PerlPackage):
     """Plack::Middleware which sets body for redirect response, if it's not already set"""

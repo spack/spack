@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Abduco(MakefilePackage):
     """abduco provides session management i.e. it allows programs to be

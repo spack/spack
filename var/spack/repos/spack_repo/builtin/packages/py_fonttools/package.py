@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFonttools(PythonPackage):
     """fontTools is a library for manipulating fonts, written in Python.

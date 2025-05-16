@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Cgl(AutotoolsPackage):
     """The COIN-OR Cut Generation Library (Cgl) is a collection of cut

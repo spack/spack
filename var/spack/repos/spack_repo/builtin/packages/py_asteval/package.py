@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsteval(PythonPackage):
     """Safe, minimalistic evaluator of python expression using ast module"""

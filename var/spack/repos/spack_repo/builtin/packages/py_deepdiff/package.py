@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDeepdiff(PythonPackage):
     """Deep Difference and Search of any Python object/data.."""

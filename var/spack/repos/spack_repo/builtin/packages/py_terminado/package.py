@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTerminado(PythonPackage):
     """Terminals served to term.js using Tornado websockets"""

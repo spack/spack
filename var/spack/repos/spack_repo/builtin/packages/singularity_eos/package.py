@@ -6,6 +6,9 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+
 
 class SingularityEos(CMakePackage, CudaPackage):
     """Singularity-EOS: A collection of closure models and tools useful for

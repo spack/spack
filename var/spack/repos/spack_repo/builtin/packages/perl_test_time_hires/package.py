@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestTimeHires(PerlPackage):
     """Drop-in replacement for Test::Time to work with Time::HiRes"""

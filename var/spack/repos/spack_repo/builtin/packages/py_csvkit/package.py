@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCsvkit(PythonPackage):
     """A library of utilities for working with CSV, the king of tabular file

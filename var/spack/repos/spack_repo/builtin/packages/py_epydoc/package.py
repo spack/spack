@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEpydoc(PythonPackage):
     """Epydoc is a tool for generating API documentation documentation for

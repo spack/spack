@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyConfigparser(PythonPackage):
     """This library brings the updated configparser from Python 3.5 to

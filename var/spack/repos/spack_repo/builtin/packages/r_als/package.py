@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RAls(RPackage):
     """Multivariate Curve Resolution Alternating Least Squares (MCR-ALS).

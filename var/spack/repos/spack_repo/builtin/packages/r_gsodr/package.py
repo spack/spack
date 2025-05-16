@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGsodr(RPackage):
     """A Global Surface Summary of the Day (GSOD) Weather Data Client for R.

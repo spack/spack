@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlDbdPg(PerlPackage):
     """DBD::Pg is a Perl module that works with the DBI module to provide

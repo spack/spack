@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFenicsDijitso(PythonPackage):
     """A Python module for distributed just-in-time shared library building"""

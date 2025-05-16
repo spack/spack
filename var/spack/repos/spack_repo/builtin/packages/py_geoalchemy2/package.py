@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeoalchemy2(PythonPackage):
     """Using SQLAlchemy with Spatial Databases"""

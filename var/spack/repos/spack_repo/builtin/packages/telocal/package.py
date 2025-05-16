@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Telocal(PythonPackage):
     """A package for quantifying transposable elements at a locus level for RNAseq datasets"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class EnvironmentModules(Package):
     """The Environment Modules package provides for the dynamic

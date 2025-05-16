@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RIllumina450probevariantsDb(RPackage):
     """Annotation Package combining variant data from 1000 Genomes Project for

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class LtrRetriever(Package):
     """LTR_retriever is a highly accurate and sensitive program for

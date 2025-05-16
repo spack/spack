@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class BigdftFutile(AutotoolsPackage, CudaPackage):
     """BigDFT-futile: a library handling most common FORTRAN low-level operations,

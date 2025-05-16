@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHatchNodejsVersion(PythonPackage):
     """Hatch plugin for versioning from a package.json file."""

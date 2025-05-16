@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Gegl(MesonPackage):
     """GEGL (Generic Graphics Library) is a data flow based image

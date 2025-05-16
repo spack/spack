@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPicmistandard(PythonPackage):
     """Standard input format for Particle-In-Cell codes"""

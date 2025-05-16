@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAniso8601(PythonPackage):
     """A library for parsing ISO 8601 strings."""

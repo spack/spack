@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonMarkdownMath(PythonPackage):
     """Math extension for Python-Markdown"""

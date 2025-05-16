@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Libspng(CMakePackage):
     """libspng (simple png) is a C library for reading and writing

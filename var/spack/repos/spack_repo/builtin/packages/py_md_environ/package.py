@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMdEnviron(PythonPackage):
     """This is an extension to Python-Markdown which allows environment variables

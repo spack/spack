@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Capnproto(AutotoolsPackage):
     """Cap'n'Proto is an insanely fast data interchange

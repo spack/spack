@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEwahBoolUtils(PythonPackage):
     """EWAH Bool Array utils for yt"""

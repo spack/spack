@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class X11perf(AutotoolsPackage, XorgPackage):
     """Simple X server performance benchmarker."""

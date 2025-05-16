@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyElasticsearchDsl(PythonPackage):
     """Elasticsearch DSL is a high-level library whose aim

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFluflLock(PythonPackage):
     """NFS-safe file locking with timeouts for POSIX and Windows"""

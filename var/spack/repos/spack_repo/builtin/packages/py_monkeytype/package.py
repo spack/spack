@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMonkeytype(PythonPackage):
     """Generating type annotations from sampled production types."""

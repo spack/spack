@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RRappdirs(RPackage):
     """Application Directories: Determine Where to Save Data, Caches, and Logs.

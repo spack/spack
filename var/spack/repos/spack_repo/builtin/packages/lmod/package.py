@@ -5,6 +5,8 @@ from glob import glob
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lmod(AutotoolsPackage):
     """Lmod is a Lua based module system that easily handles the MODULEPATH

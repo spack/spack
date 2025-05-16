@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class GuacamoleServer(AutotoolsPackage):
     """The guacamole-server package is a set of software which forms the

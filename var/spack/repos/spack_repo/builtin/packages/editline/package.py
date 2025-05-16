@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Editline(AutotoolsPackage):
     """A readline() replacement for UNIX without termcap (ncurses)"""

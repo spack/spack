@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMgRastTools(PythonPackage):
     """Repository of scripts and libraries for using the MG-RAST API and

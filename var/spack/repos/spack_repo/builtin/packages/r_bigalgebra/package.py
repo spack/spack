@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBigalgebra(RPackage):
     """'BLAS' and 'LAPACK' Routines for Native R Matrices and 'big.matrix'

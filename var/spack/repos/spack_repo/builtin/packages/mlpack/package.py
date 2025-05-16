@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Mlpack(CMakePackage):
     """mlpack is an intuitive, fast, and flexible header-only C++ machine

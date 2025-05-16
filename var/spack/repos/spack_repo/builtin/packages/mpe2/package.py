@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Mpe2(AutotoolsPackage):
     """Message Passing Extensions (MPE): Parallel, shared X window graphics"""

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pugixml(CMakePackage):
     """Light-weight, simple, and fast XML parser for C++ with XPath support"""

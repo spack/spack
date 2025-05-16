@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySphinxCopybutton(PythonPackage):
     """A small sphinx extension to add a "copy" button to code blocks."""

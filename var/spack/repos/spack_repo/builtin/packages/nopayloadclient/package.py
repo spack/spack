@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Nopayloadclient(CMakePackage):
     """NoPayloadClient is the client-side library meant to communicate with NoPayloadDB."""

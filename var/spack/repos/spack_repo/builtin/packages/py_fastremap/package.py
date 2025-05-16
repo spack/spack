@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFastremap(PythonPackage):
     """Renumber and relabel Numpy arrays at C++ speed and physically convert rectangular

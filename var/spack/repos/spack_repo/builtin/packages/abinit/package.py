@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Abinit(AutotoolsPackage):
     """ABINIT is a package whose main program allows one to find the total

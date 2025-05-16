@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMarshmallow(PythonPackage):
     """marshmallow is an ORM/ODM/framework-agnostic library for converting

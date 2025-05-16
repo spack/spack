@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class VepCache(Package):
     """Separate installation and management for the Ensembl Variant Effect Predictor (vep)"""

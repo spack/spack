@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.meson import MesonPackage
+
 
 class Simde(MesonPackage):
     """The SIMDe header-only library provides fast, portable

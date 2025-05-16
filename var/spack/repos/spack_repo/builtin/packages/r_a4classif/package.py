@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RA4classif(RPackage):
     """Automated Affymetrix Array Analysis Classification Package.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Shadow(AutotoolsPackage):
     """Tools to help unprivileged users create uid and gid mappings in

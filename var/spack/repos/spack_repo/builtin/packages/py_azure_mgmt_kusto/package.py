@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtKusto(PythonPackage):
     """Microsoft Azure Kusto Management Client Library for Python."""

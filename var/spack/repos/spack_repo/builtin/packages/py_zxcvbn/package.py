@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyZxcvbn(PythonPackage):
     """A realistic password strength estimator.

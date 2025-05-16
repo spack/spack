@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySpatialist(PythonPackage):
     """This package offers functionalities for user-friendly geo data

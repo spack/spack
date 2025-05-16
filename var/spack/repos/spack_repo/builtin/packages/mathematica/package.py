@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mathematica(Package):
     """Mathematica: high-powered computation with thousands of Wolfram Language

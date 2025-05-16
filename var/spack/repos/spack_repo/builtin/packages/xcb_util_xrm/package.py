@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class XcbUtilXrm(AutotoolsPackage):
     """XCB util-xrm module provides the 'xrm' library, i.e.  utility functions

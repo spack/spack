@@ -6,6 +6,8 @@ import re
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Dos2unix(MakefilePackage):
     """DOS/Mac to Unix and vice versa text file format converter."""

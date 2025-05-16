@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Imath(CMakePackage):
     """Imath is a basic, light-weight, and efficient C++ representation of 2D and 3D

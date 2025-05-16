@@ -45,6 +45,7 @@ import re
 
 from spack.package import *
 
+from ...build_systems.generic import Package
 from ..boost.package import Boost
 
 # Not the nice way of doing things, but is a start for refactoring

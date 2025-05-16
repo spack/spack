@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygetwindow(PythonPackage):
     """A simple, cross-platform module for obtaining GUI

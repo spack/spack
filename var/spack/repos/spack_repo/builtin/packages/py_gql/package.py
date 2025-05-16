@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGql(PythonPackage):
     """This is a GraphQL client for Python. Plays nicely with

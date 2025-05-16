@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.python import PythonPackage
+
 
 class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     """A PyTorch Extension: Tools for easy mixed precision and

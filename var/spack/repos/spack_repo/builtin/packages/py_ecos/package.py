@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyEcos(PythonPackage):
     """This is the Python package for ECOS: Embedded Cone Solver."""

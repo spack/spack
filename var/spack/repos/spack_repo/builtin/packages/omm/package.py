@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage, generator
+
 
 class Omm(CMakePackage):
     """Solution of Kohn-Sham equations using the Orbital Minimization Method (OMM)."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class FastqScreen(Package):
     """FastQ Screen allows you to screen a library of sequences in FastQ format

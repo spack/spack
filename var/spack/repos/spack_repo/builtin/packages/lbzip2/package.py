@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lbzip2(AutotoolsPackage):
     """Multi-threaded compression utility with support for bzip2

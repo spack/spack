@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class XalanC(CMakePackage):
     """Xalan-C++ version is a robust implementation of the W3C Recommendations for

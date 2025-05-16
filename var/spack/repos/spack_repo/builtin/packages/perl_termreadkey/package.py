@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTermreadkey(PerlPackage):
     """Term::ReadKey is a compiled perl module dedicated to providing simple

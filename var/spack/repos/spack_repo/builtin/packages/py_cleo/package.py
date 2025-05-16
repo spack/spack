@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCleo(PythonPackage):
     """Cleo allows you to create beautiful and testable command-line interfaces."""

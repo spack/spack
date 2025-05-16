@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vmatch(Package):
     """Vmatch is a versatile software tool for efficiently solving large scale

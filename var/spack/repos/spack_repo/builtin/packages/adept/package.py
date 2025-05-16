@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Adept(AutotoolsPackage):
     """Combined array and automatic differentiation library in C++."""

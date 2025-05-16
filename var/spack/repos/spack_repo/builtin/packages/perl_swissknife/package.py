@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlSwissknife(PerlPackage):
     """An object-oriented Perl library to handle Swiss-Prot entries"""

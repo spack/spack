@@ -5,8 +5,9 @@
 
 import os
 
-import spack.build_systems.cmake
 from spack.package import *
+
+from ...build_systems.cmake import CMakePackage, get_cmake_prefix_path
 
 
 class HipTests(CMakePackage):
@@ -145,7 +146,7 @@ class HipTests(CMakePackage):
         if self.spec.satisfies("@6.2:"):
             sample_test_binaries.append("2_Cookbook/22_cmake_hip_lang/square2")
         test_dir = join_path(self.test_suite.current_test_cache_dir, "samples")
-        prefix_paths = ";".join(spack.build_systems.cmake.get_cmake_prefix_path(self))
+        prefix_paths = ";".join(get_cmake_prefix_path(self))
         clang_cpp_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang++")
         clang_path = join_path(self.spec["llvm-amdgpu"].prefix, "bin", "clang")
         cc_options = [

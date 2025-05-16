@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWatchdog(PythonPackage):
     """Python library and shell utilities to monitor filesystem events."""

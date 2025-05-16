@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class CxiDriver(Package):
     """This are the Linux driver headers for the Cray/HPE Cassini 1 and 2

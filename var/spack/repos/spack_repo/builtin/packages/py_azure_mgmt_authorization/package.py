@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtAuthorization(PythonPackage):
     """Microsoft Azure Authorization Management Client Library for Python."""

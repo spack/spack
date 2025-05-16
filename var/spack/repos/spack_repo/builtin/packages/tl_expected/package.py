@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class TlExpected(CMakePackage):
     """C++11/14/17 std::expected with functional-style extensions."""

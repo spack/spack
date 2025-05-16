@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Grace(AutotoolsPackage):
     """Grace is a WYSIWYG 2D plotting tool for the X Window System and M*tif."""

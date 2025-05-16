@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RLog4r(RPackage):
     """A Fast and Lightweight Logging System for R, Based on 'log4j'.

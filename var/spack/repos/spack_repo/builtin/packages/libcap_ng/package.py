@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class LibcapNg(AutotoolsPackage):
     """Libcap-ng is a library that makes using posix capabilities easier"""

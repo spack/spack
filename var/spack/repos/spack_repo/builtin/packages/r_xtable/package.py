@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RXtable(RPackage):
     """Export Tables to LaTeX or HTML.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHeat(PythonPackage):
     """Heat is a flexible and seamless open-source software for high performance data analytics

@@ -7,6 +7,8 @@ import subprocess
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Matlab(Package):
     """MATLAB (MATrix LABoratory) is a multi-paradigm numerical computing

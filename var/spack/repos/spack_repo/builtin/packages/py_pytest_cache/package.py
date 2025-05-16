@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytestCache(PythonPackage):
     """pytest plugin to provide cross-test run caching functionality to

@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Chombo(MakefilePackage):
     """The Chombo package provides a set of tools for implementing finite

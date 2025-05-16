@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sshpass(AutotoolsPackage):
     """Sshpass is a tool for non-interactivly performing password

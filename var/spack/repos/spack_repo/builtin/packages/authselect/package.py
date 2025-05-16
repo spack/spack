@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Authselect(AutotoolsPackage):
     """Select authentication and indentity profile to use on the system."""

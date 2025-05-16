@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class UcscBedgraphtobigwig(Package):
     """Convert a bedGraph file to bigWig format."""

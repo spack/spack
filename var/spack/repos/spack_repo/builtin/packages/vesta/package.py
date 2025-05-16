@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Vesta(Package):
     """VESTA is a 3D visualization program for structural models, volumetric data

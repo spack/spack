@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyRseqc(PythonPackage):
     """RSeQC package provides a number of useful modules that can

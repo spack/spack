@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlYaml(PerlPackage):
     """This module has been released to CPAN as YAML::Old, and soon YAML.pm

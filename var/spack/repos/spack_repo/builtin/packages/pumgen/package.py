@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Pumgen(CMakePackage):
     """PUMGen - A mesh converter to the PUML format, as used in SeisSol."""

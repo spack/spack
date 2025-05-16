@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDesolve(RPackage):
     """Solvers for Initial Value Problems of Differential Equations ('ODE',

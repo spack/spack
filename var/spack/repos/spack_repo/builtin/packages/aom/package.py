@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Aom(CMakePackage):
     """Alliance for Open Media AOM AV1 Codec Library"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Damselfly(CMakePackage):
     """Damselfly is a model-based parallel network simulator."""

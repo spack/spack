@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyStestr(PythonPackage):
     """A parallel Python test runner built around subunit."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDevlib(PythonPackage):
     """Library for interaction with and instrumentation of remote devices."""

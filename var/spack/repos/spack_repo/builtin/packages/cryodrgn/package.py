@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class Cryodrgn(PythonPackage):
     """CryoDRGN is a neural network based algorithm for heterogeneous cryo-EM reconstruction.

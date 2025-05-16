@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xmessage(AutotoolsPackage, XorgPackage):
     """xmessage displays a message or query in a window.  The user can click

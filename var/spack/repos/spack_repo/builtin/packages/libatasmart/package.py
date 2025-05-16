@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libatasmart(AutotoolsPackage):
     """A small and lightweight parser library for ATA S.M.A.R.T. hard disk

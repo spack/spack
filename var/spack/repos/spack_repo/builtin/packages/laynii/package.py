@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Laynii(MakefilePackage):
     """Stand alone fMRI software suite for layer-fMRI analyses."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHpccm(PythonPackage):
     """HPC Container Maker (HPCCM - pronounced H-P-see-M) is an open source

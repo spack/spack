@@ -5,6 +5,9 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Eigen(CMakePackage, ROCmPackage):
     """Eigen is a C++ template library for linear algebra matrices,

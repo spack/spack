@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAddict(PythonPackage):
     """addict is a Python module that gives you dictionaries

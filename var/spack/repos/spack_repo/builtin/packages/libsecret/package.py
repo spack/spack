@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libsecret(AutotoolsPackage):
     """libsecret is a library for storing and retrieving passwords and other

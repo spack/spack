@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Sabre(MakefilePackage):
     """Sabre is a tool that will demultiplex barcoded reads into separate

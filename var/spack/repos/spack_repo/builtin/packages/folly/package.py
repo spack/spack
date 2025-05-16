@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Folly(CMakePackage):
     """Folly (acronymed loosely after Facebook Open Source Library) is a

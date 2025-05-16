@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGlmsingle(PythonPackage):
     """A toolbox for accurate single-trial estimates in fMRI time-series data."""

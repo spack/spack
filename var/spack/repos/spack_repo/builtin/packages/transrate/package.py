@@ -6,6 +6,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Transrate(Package):
     """Transrate is software for de-novo transcriptome assembly quality

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gbl(CMakePackage):
     """General Broken Lines: Advanced track fitting library"""

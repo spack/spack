@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Scorpio(CMakePackage):
     """SCORPIO Scalable Parallel I/O module for Environmental Management Applications

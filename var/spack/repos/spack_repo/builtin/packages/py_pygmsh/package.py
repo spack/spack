@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPygmsh(PythonPackage):
     """Easier Pythonic interface to GMSH."""

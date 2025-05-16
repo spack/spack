@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFqdn(PythonPackage):
     """Validates fully-qualified domain names against RFC 1123, so that they

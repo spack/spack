@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class OsgCaCerts(Package):
     """OSG Packaging of the IGTF CA Certs and OSG-specific CAs,

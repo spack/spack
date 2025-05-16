@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHumanize(PythonPackage):
     """This modest package contains various common humanization utilities, like

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Prometheus(MakefilePackage):
     """Prometheus, a Cloud Native Computing Foundation project, is a

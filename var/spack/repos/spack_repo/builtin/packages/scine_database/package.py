@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class ScineDatabase(CMakePackage):
     """The SCINE database module is a database wrapper for a MongoDB encoding reaction networks."""

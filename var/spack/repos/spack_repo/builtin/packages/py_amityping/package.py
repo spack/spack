@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAmityping(PythonPackage):
     """Provides typing hints to be shared between LCLS-II analysis packages."""

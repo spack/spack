@@ -6,6 +6,8 @@ import platform
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class _3proxy(MakefilePackage):
     """3proxy - tiny free proxy server"""

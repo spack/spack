@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Lesstif(AutotoolsPackage):
     """LessTif is the Hungry Programmers' version of OSF/Motif."""

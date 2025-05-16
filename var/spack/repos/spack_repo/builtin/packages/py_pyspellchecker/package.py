@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyspellchecker(PythonPackage):
     """Pure python spell checker based on work by Peter Norvig"""

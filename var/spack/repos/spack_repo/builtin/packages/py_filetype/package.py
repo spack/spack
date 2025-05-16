@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFiletype(PythonPackage):
     """Small and dependency free Python package to infer file type and MIME

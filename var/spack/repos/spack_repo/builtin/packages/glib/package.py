@@ -4,9 +4,11 @@
 
 import os
 
-import spack.build_systems.meson
 from spack.package import *
 from spack.util.environment import is_system_path
+
+from ...build_systems import meson
+from ...build_systems.meson import MesonPackage
 
 
 class Glib(MesonPackage):
@@ -131,7 +133,7 @@ class Glib(MesonPackage):
         return find_libraries(["libglib*"], root=self.prefix, recursive=True)
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
 
     @property
     def dtrace_copy_path(self):

@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pflotran(AutotoolsPackage):
     """PFLOTRAN is an open source, state-of-the-art massively parallel

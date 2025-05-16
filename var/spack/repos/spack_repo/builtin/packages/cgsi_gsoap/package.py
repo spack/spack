@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class CgsiGsoap(CMakePackage):
     """Client and server side library to secure gSOAP

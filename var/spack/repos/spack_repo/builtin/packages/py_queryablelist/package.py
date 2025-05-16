@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyQueryablelist(PythonPackage):
     """Python module to add support for ORM-style filtering to any list of

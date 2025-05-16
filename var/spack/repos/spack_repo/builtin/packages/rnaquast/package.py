@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Rnaquast(Package):
     """Quality assessment of de novo transcriptome assemblies from RNA-Seq data

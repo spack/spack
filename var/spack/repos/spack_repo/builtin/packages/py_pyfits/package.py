@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyfits(PythonPackage):
     """The PyFITS module is a Python library providing access to

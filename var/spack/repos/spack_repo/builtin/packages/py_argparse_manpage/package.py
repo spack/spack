@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyArgparseManpage(PythonPackage):
     """Build manual page from python's ArgumentParser object."""

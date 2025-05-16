@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAsdfStandard(PythonPackage):
     """Standards document describing ASDF, Advanced Scientific Data Format"""

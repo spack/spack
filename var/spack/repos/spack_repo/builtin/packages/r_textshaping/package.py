@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTextshaping(RPackage):
     """Bindings to the 'HarfBuzz' and 'Fribidi' Libraries for Text Shaping.

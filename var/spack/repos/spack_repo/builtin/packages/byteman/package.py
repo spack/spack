@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Byteman(MavenPackage):
     """Byteman is a tool which makes it easy to trace, monitor and test

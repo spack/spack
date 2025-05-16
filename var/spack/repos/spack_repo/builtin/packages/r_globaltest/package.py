@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGlobaltest(RPackage):
     """Testing Groups of Covariates/Features for Association with a Response

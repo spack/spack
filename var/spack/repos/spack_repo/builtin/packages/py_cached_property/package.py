@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCachedProperty(PythonPackage):
     """A decorator for caching properties in classes."""

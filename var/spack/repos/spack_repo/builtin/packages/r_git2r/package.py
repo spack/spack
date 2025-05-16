@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RGit2r(RPackage):
     """Provides Access to Git Repositories.

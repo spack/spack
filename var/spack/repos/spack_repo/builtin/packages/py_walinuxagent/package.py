@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyWalinuxagent(PythonPackage):
     """Microsoft Azure Linux Guest Agent."""

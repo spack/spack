@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Antlr(AutotoolsPackage):
     """ANTLR (ANother Tool for Language Recognition) is a powerful parser

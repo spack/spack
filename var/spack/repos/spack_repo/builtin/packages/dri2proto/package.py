@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Dri2proto(AutotoolsPackage, XorgPackage):
     """Direct Rendering Infrastructure 2 Extension.

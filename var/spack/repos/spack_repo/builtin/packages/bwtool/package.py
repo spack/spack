@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Bwtool(AutotoolsPackage):
     """bwtool is a command-line utility for bigWig files."""

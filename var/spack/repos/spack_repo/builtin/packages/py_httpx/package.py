@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHttpx(PythonPackage):
     """HTTPX is a fully featured HTTP client for Python 3, which provides sync

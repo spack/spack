@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.xorg import XorgPackage
+
 
 class Xbacklight(AutotoolsPackage, XorgPackage):
     """Xbacklight is used to adjust the backlight brightness where supported.

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Flecsph(CMakePackage):
     """FleCSPH is a multi-physics compact application that exercises FleCSI

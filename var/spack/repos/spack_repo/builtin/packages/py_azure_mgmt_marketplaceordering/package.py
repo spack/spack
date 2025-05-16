@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtMarketplaceordering(PythonPackage):
     """Microsoft Azure Market Place Ordering Client Library for Python."""

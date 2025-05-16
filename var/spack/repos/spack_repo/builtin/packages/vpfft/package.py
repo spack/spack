@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Vpfft(MakefilePackage):
     """Proxy Application. VPFFT is an implementation of a mesoscale

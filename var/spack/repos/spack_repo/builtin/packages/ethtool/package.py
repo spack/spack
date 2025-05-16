@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Ethtool(AutotoolsPackage):
     """Ethtool is a small utility for examining and tuning your ethernet-based

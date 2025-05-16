@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyOrderedSet(PythonPackage):
     """An OrderedSet is a mutable data structure that is a hybrid of a list and

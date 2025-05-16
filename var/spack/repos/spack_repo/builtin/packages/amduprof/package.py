@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Amduprof(Package):
     """AMD uProf ("MICRO-prof") is a software profiling analysis tool for x86

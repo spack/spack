@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPymumps(PythonPackage):
     """Python bindings for MUMPS, a parallel sparse direct solver"""

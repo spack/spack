@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPythonCertifiWin32(PythonPackage):
     """This package patches certifi at runtime to also include certificates from the

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlXmlHashXs(PerlPackage):
     """Simple and fast hash to XML and XML to hash conversion written in C"""

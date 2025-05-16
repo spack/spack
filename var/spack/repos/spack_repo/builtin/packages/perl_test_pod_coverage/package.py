@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlTestPodCoverage(PerlPackage):
     """Check for pod coverage in your distribution"""

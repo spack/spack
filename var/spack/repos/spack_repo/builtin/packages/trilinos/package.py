@@ -11,6 +11,9 @@ from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
 from ..kokkos.package import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to

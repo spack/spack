@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.oneapi import IntelOneApiLibraryPackage, IntelOneApiPackage
+
 
 @IntelOneApiPackage.update_description
 class IntelOneapiDpl(IntelOneApiLibraryPackage):

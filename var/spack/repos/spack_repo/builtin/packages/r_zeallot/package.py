@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RZeallot(RPackage):
     """Multiple, Unpacking, and Destructuring Assignment.

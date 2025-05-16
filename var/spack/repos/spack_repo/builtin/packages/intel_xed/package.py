@@ -8,6 +8,8 @@ from pathlib import Path
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class IntelXed(Package):
     """The Intel X86 Encoder Decoder library for encoding and decoding x86

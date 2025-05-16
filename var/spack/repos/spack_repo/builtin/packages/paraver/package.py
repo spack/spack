@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Paraver(Package):
     """ "A very powerful performance visualization and analysis tool

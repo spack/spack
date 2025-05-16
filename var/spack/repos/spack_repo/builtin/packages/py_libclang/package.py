@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLibclang(PythonPackage):
     """The repository contains code that taken from the LLVM project, to make

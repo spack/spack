@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class G4realsurface(Package):
     """Geant4 data for measured optical surface reflectance"""

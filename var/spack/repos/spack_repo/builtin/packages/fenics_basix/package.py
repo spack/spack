@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class FenicsBasix(CMakePackage):
     """Basix is a finite element definition and tabulation runtime library"""

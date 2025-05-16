@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Pv(AutotoolsPackage):
     """Pipe Viewer - is a terminal-based tool for monitoring the progress

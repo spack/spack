@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Scorep(AutotoolsPackage):
     """The Score-P measurement infrastructure is a highly scalable and

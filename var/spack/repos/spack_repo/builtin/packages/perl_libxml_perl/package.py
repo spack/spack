@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlLibxmlPerl(PerlPackage):
     """libxml-perl is a collection of smaller Perl modules, scripts, and

@@ -4,6 +4,9 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.cuda import CudaPackage
+
 
 class Libbeagle(AutotoolsPackage, CudaPackage):
     """Beagle performs genotype calling, genotype phasing, imputation of

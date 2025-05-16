@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlHeap(PerlPackage):
     """Perl extensions for keeping data partially sorted"""

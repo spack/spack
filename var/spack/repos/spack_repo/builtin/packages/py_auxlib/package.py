@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAuxlib(PythonPackage):
     """Auxlib is an auxiliary library to the python standard library."""

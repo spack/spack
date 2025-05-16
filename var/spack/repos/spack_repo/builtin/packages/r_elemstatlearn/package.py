@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RElemstatlearn(RPackage):
     """Data Sets, Functions and Examples from the Book: "The Elements of

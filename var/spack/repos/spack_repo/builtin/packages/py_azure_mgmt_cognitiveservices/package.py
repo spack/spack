@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyAzureMgmtCognitiveservices(PythonPackage):
     """Microsoft Azure Cognitive Services Management Client Library for

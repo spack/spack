@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Openmc(CMakePackage):
     """OpenMC is a community-developed Monte Carlo neutron and photon transport

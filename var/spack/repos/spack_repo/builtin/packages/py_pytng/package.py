@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPytng(PythonPackage):
     """Provides the TNGFileIterator object to allow simple Pythonic

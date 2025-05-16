@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFilterpy(PythonPackage):
     """This library provides Kalman filtering and various

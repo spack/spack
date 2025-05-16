@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Earlyoom(MakefilePackage):
     """The oom-killer generally has a bad reputation among Linux users."""

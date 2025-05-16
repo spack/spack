@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyColoredlogs(PythonPackage):
     """Colored terminal output for Python's logging module"""

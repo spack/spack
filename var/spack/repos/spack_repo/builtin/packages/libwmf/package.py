@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libwmf(AutotoolsPackage):
     """libwmf is a library for reading vector images in Microsft's

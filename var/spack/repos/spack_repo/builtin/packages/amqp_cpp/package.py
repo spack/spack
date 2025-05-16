@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class AmqpCpp(CMakePackage):
     """AMQP-CPP is a C++ library for communicating with a RabbitMQ message

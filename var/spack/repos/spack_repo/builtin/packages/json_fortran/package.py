@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class JsonFortran(CMakePackage):
     """A Fortran 2008 JSON API"""

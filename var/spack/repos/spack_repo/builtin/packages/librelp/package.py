@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Librelp(AutotoolsPackage):
     """Librelp is an easy to use library for the RELP protocol. RELP

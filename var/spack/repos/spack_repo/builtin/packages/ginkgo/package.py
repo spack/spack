@@ -7,6 +7,10 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+from ...build_systems.cuda import CudaPackage
+from ...build_systems.rocm import ROCmPackage
+
 
 class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
     """High-performance linear algebra library for manycore systems,

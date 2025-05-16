@@ -8,6 +8,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Cosmomc(Package):
     """CosmoMC is a Fortran 2008 Markov-Chain Monte-Carlo (MCMC) engine

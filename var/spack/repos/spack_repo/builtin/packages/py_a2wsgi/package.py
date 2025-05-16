@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyA2wsgi(PythonPackage):
     """Convert WSGI app to ASGI app or ASGI app to WSGI app."""

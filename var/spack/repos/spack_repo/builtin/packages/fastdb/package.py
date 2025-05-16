@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fastdb(MakefilePackage):
     """Object-Relational Main-Memory Embedded Database system

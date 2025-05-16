@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyHmmlearn(PythonPackage):
     """hmmlearn is a set of algorithms for unsupervised learning and

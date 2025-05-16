@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyXhistogram(PythonPackage):
     """Fast, flexible, label-aware histograms for numpy and xarray."""

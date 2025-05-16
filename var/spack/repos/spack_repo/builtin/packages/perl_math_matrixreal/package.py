@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlMathMatrixreal(PerlPackage):
     """Implements the data type "matrix of real numbers" (and consequently

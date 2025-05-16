@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class NcbiVdb(CMakePackage):
     """The SRA Toolkit and SDK from NCBI is a collection of tools and

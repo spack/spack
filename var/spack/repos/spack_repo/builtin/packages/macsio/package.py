@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Macsio(CMakePackage):
     """A Multi-purpose, Application-Centric, Scalable I/O Proxy Application."""

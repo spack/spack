@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Yajl(CMakePackage):
     """Yet Another JSON Library (YAJL)"""

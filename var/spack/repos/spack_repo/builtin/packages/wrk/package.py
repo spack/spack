@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Wrk(MakefilePackage):
     """Wrk is a modern HTTP benchmarking tool capable

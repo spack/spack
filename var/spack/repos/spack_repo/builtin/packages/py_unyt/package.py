@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyUnyt(PythonPackage):
     """A package for handling numpy arrays with units."""

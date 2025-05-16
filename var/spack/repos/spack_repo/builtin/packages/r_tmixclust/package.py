@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RTmixclust(RPackage):
     """Time Series Clustering of Gene Expression with Gaussian Mixed-Effects

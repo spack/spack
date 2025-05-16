@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Id3lib(AutotoolsPackage):
     """Library for manipulating ID3v1 and ID3v2 tags"""

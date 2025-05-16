@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class UserspaceRcu(AutotoolsPackage):
     """liburcu is a LGPLv2.1 userspace RCU (read-copy-update) library. This

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGeocube(PythonPackage):
     """Tool to convert geopandas vector data into rasterized xarray data."""

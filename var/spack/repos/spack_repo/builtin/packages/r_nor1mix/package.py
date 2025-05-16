@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RNor1mix(RPackage):
     """Normal aka Gaussian (1-d) Mixture Models (S3 Classes and Methods).

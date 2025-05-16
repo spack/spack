@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Libmnl(AutotoolsPackage):
     """libmnl is a minimalistic user-space library oriented to Netlink

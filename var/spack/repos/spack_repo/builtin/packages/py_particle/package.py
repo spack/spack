@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyParticle(PythonPackage):
     """Particle provides a pythonic interface to the Particle Data Group (PDG)

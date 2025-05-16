@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMock(PythonPackage):
     """mock is a library for testing in Python. It allows you to replace parts

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBasisSetExchange(PythonPackage):
     """Command-line interface for the Basis Set Exchange Website"""

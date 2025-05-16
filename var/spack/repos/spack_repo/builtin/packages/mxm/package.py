@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mxm(Package):
     """Mellanox Messaging Accelerator (MXM) provides enhancements to parallel

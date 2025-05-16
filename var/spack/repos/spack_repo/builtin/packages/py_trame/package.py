@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyTrame(PythonPackage):
     """Trame lets you weave various components and technologies

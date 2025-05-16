@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RDeoptimr(RPackage):
     """Differential Evolution Optimization in Pure R.

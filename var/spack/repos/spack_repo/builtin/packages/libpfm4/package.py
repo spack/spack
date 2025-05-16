@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libpfm4(MakefilePackage):
     """libpfm4 is a userspace library to help

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyJupyterServerMathjax(PythonPackage):
     """MathJax resources as a Jupyter Server Extension."""

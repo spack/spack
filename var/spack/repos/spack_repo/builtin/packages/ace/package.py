@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Ace(MakefilePackage):
     """ACE is an open-source framework that provides many components and

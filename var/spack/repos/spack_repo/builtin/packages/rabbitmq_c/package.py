@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class RabbitmqC(CMakePackage):
     """This is a C-language AMQP client library for use with v2.0+ of the

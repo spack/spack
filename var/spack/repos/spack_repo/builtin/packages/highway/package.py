@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Highway(CMakePackage):
     """Performance-portable, length-agnostic SIMD with runtime dispatch."""

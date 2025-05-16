@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Utf8proc(CMakePackage):
     """A clean C library for processing UTF-8 Unicode data:

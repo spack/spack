@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyMneBids(PythonPackage):
     """MNE-BIDS: Organizing MEG, EEG, and iEEG data according to the BIDS

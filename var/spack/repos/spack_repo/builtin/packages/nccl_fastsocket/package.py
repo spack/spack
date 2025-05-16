@@ -6,6 +6,8 @@ import tempfile
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class NcclFastsocket(Package):
     """NCCL Fast Socket GCP Net plugin for NCCL"""

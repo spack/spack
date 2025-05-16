@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.ruby import RubyPackage
+
 
 class RubyRubyinline(RubyPackage):
     """Inline allows you to write foreign code within your ruby code."""

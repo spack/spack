@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 linkage_url = (
     "https://mamba.readthedocs.io/en/latest/developer_zone/build_locally.html#build-micromamba"
 )

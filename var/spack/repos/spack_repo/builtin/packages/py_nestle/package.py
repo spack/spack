@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNestle(PythonPackage):
     """Nested sampling algorithms for evaluating Bayesian evidence."""

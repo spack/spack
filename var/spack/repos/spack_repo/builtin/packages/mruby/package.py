@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Mruby(Package):
     """mruby is the lightweight implementation of the Ruby language complying

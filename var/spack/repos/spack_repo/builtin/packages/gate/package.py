@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Gate(CMakePackage):
     """Simulations of Preclinical and Clinical Scans in Emission Tomography,

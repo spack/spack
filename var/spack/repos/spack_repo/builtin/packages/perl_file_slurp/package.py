@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.perl import PerlPackage
+
 
 class PerlFileSlurp(PerlPackage):
     """File::Slurp - Simple and Efficient Reading/Writing/Modifying of Complete

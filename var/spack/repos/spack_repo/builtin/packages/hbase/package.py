@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Hbase(Package):
     """Apache HBase is an open-source, distributed, versioned, column-oriented

@@ -7,6 +7,8 @@ import sys
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class OpenclClhpp(CMakePackage):
     """C++ headers for OpenCL development"""

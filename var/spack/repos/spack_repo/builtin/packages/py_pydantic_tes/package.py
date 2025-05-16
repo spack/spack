@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPydanticTes(PythonPackage):
     """Pydantic Models for the GA4GH Task Execution Service"""

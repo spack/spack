@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class PaxUtils(AutotoolsPackage):
     """ELF utils that can check files for security relevant properties"""

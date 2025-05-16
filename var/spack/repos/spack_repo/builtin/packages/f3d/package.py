@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class F3d(CMakePackage):
     """A fast and minimalist scriptable 3D viewer."""

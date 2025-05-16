@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyLz4(PythonPackage):
     """lz4 (compression library) bindings for Python"""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Libsvm(MakefilePackage):
     """Libsvm is a simple, easy-to-use, and efficient software for SVM

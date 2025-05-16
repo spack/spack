@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Axel(AutotoolsPackage):
     """Axel is a light command line download accelerator for Linux and Unix"""

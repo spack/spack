@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PySnakemakeExecutorPluginTes(PythonPackage):
     """A Snakemake executor plugin for submitting jobs via GA4GH TES."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Acpid(AutotoolsPackage):
     """ACPID used to try to handle events internally.  Rather than try to climb

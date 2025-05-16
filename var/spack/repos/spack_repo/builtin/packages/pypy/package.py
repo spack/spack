@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.generic import Package
+
 
 class Pypy(Package):
     """A fast, compliant alternative implementation of Python."""

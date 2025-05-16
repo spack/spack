@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyPyodbc(PythonPackage):
     """A Python DB API 2 module for ODBC. This project provides an up-to-date,

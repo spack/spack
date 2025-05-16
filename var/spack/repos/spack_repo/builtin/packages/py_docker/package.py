@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyDocker(PythonPackage):
     """A Python library for the Docker Engine API."""

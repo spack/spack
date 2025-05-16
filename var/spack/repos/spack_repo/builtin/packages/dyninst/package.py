@@ -6,6 +6,8 @@ import os
 
 from spack.package import *
 
+from ...build_systems.cmake import CMakePackage
+
 
 class Dyninst(CMakePackage):
     """API for dynamic binary instrumentation.  Modify programs while they

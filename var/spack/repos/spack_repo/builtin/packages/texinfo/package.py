@@ -7,6 +7,9 @@ import re
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
+
 
 class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     """Texinfo is the official documentation format of the GNU project.

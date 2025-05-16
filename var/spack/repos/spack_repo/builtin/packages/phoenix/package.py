@@ -5,6 +5,8 @@
 
 from spack.package import *
 
+from ...build_systems.maven import MavenPackage
+
 
 class Phoenix(MavenPackage):
     """Apache Phoenix is a SQL skin over HBase delivered as a client-embedded

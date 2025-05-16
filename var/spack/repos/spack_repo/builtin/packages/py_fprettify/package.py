@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyFprettify(PythonPackage):
     """fprettify is an auto-formatter for modern Fortran code (Fortran 90

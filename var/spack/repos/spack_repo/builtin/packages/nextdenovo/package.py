@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Nextdenovo(MakefilePackage):
     """NextDenovo is a string graph-based de novo assembler for long reads."""

@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyCoapthon3(PythonPackage):
     """CoAPthon3 is a porting to python3 of my CoAPthon library.

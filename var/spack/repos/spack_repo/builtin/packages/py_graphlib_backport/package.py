@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyGraphlibBackport(PythonPackage):
     """Backport of the Python 3.9 graphlib module for Python 3.6+."""

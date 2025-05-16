@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.autotools import AutotoolsPackage
+
 
 class Sga(AutotoolsPackage):
     """SGA is a de novo genome assembler based on the concept of string graphs.

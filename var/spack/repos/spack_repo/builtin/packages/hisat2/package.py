@@ -6,6 +6,8 @@ import glob
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Hisat2(MakefilePackage):
     """HISAT2 is a fast and sensitive alignment program for mapping

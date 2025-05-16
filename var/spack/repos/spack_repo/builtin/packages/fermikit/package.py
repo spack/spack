@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.makefile import MakefilePackage
+
 
 class Fermikit(MakefilePackage):
     """De novo assembly based variant calling pipeline for Illumina short

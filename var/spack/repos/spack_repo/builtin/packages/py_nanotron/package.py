@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyNanotron(PythonPackage):
     """Minimalistic large language model 3D-parallelism training."""

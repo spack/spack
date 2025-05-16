@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.r import RPackage
+
 
 class RBroom(RPackage):
     """Convert Statistical Objects into Tidy Tibbles.

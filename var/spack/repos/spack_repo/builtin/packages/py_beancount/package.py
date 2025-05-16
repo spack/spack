@@ -4,6 +4,8 @@
 
 from spack.package import *
 
+from ...build_systems.python import PythonPackage
+
 
 class PyBeancount(PythonPackage):
     """A double-entry bookkeeping computer language that lets you define
