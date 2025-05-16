@@ -177,7 +177,7 @@ def migrate_v2_imports(
             continue
 
         # Add the missing imports right after the last import statement
-        with open(pkg_path, "r", encoding="utf-8") as file:
+        with open(pkg_path, "r", encoding="utf-8", newline="") as file:
             lines = file.readlines()
 
         # Group missing symbols by their module
