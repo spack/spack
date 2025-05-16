@@ -5,7 +5,7 @@
 
 from spack.package import *
 
-from ...build_systems.generic import Package
+from ....builtin_mock.build_systems.generic import Package
 
 
 class PythonVenv(Package):

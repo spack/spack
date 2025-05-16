@@ -6,8 +6,8 @@ import re
 
 from spack.package import *
 
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
+from ....builtin_mock.build_systems.compiler import CompilerPackage
+from ....builtin_mock.build_systems.generic import Package
 
 
 class Llvm(Package, CompilerPackage):
