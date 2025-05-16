@@ -85,7 +85,7 @@ class _PrependFileLoader(importlib.machinery.SourceFileLoader):
         self.package_name = package_name
         path = repo.filename_for_package_name(package_name)
         self.fullname = fullname
-        self.prepend = b"from spack.build_systems._package_api_v1 import *\n"
+        self.prepend = b"from spack_repo.builtin.build_systems._package_api_v1 import *\n"
         super().__init__(self.fullname, path)
 
     def path_stats(self, path):
