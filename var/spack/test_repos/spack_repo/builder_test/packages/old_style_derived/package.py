@@ -1,8 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from ..old_style_autotools.package import OldStyleAutotools
 from spack.package import *
+
+from ..old_style_autotools.package import OldStyleAutotools
 
 
 class OldStyleDerived(OldStyleAutotools):
