@@ -3427,11 +3427,8 @@ class Spec:
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # Skip checking any conditional edge that is not satisfied
-            if (
-                rhs_edge.when != Spec()
-                and not rhs_edge.parent.satisfies(rhs_edge.when)
-                and not self.satisfies(rhs_edge.when)
-            ):
+            if rhs_edge.when != Spec() and not self.satisfies(rhs_edge.when):
+                # TODO: this misses the case that the rhs statically satisfies its own condition
                 continue
 
             # If we are checking for ^mpi we need to verify if there is any edge
@@ -3495,6 +3492,7 @@ class Spec:
                 for lhs_edge in self.traverse_edges(
                     root=False, cover="edges", deptype=("link", "run")
                 ):
+                    # TODO: do we need to avoid conditional edges here
                     lhs_edges[lhs_edge.spec.name].add(lhs_edge)
                     for virtual_name in lhs_edge.virtuals:
                         lhs_edges[virtual_name].add(lhs_edge)
@@ -3511,6 +3509,7 @@ class Spec:
                 return False
 
             for virtual in rhs_edge.virtuals:
+                # TODO: consider how this could apply to conditional edges
                 has_virtual = any(
                     virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
                 )
@@ -3522,19 +3521,11 @@ class Spec:
         for rhs in other.traverse(root=False):
             # Possible lhs nodes to match this rhs node
             lhss = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
-            lhs_parents = [
-                lhs
-                for lhs in lhs_nodes
-                if any(lhs.satisfies(parent, deps=False) for parent in rhs.dependents())
-            ]
 
             # Check whether the node needs matching (not a conditional that isn't satisfied)
-            in_edges = [
-                e
-                for e in rhs.edges_from_dependents()
-                if e.parent.satisfies(e.when) or any(lhp.satisfies(e.when) for lhp in lhs_parents)
-            ]
-            if not in_edges:
+            if not any(self.satisfies(e.when) for e in rhs.edges_from_dependents()):
+                # TODO: This technically misses the case that the edge is analogous
+                # to an edge lower in the DAG, and could give a false negative in that case
                 continue
 
             # If there is no matching lhs for this rhs node
