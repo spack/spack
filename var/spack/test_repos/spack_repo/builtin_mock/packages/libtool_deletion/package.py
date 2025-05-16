@@ -4,10 +4,9 @@
 import os
 
 import spack
-import spack.build_systems.autotools
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.autotools import AutotoolsPackage, AutotoolsBuilder
 
 
 class LibtoolDeletion(AutotoolsPackage):
@@ -23,7 +22,7 @@ class LibtoolDeletion(AutotoolsPackage):
         mkdirp(self.stage.source_path)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(AutotoolsBuilder):
     install_libtool_archives = False
 
     def autoreconf(self, pkg, spec, prefix):

@@ -2,13 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack
-import spack.build_systems.autotools
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems import autotools
 
 
-class PkgA(AutotoolsPackage):
+class PkgA(autotools.AutotoolsPackage):
     """Simple package with one optional dependency"""
 
     homepage = "http://www.example.com"
@@ -43,7 +42,7 @@ class PkgA(AutotoolsPackage):
     parallel = False
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def with_or_without_fee(self, activated):
         if not activated:
             return "--no-fee"
