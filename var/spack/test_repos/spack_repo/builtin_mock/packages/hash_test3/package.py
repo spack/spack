@@ -4,8 +4,9 @@
 
 import os
 
-from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
+
+from ...build_systems.generic import Package
 
 
 class HashTest3(Package):

@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
-from spack.package import *
-from spack.pkg.builtin.mock.libtool_deletion import AutotoolsBuilder as BuilderBase
-from spack.pkg.builtin.mock.libtool_deletion import LibtoolDeletion
+
+from ...build_systems.autotools import AutotoolsPackage
+from ..libtool_deletion import AutotoolsBuilder as BuilderBase
+from ..libtool_deletion import LibtoolDeletion
 
 
 class LibtoolInstallation(LibtoolDeletion, AutotoolsPackage):

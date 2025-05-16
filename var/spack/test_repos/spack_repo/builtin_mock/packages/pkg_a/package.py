@@ -1,9 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import spack
 import spack.build_systems.autotools
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 from spack.package import *
+
+from ...build_systems.autotools import AutotoolsPackage
 
 
 class PkgA(AutotoolsPackage):

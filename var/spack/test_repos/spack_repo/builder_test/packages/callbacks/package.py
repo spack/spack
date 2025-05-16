@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack.build_systems.generic
-from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
+
+from ...build_systems.generic import GenericBuilder, Package
 
 
 class Callbacks(Package):
@@ -18,7 +18,7 @@ class Callbacks(Package):
     version("1.0", md5="0123456789abcdef0123456789abcdef")
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(GenericBuilder):
     def install(self, pkg, spec, prefix):
         os.environ["CALLBACKS_INSTALL_CALLED"] = "1"
         os.environ["INSTALL_VALUE"] = "CALLBACKS"

@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
-from spack.pkg.builtin.mock.libtool_deletion import AutotoolsBuilder as BuilderBase
-from spack.pkg.builtin.mock.libtool_deletion import LibtoolDeletion
+
+from ..libtool_deletion import AutotoolsBuilder as BuilderBase
+from ..libtool_deletion import LibtoolDeletion
 
 
 class LibtoolInstallation(LibtoolDeletion, AutotoolsPackage):

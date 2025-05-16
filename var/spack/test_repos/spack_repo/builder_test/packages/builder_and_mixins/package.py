@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import spack.phase_callbacks
 from spack.build_systems import generic
-from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
+
+from ...build_systems.generic import Package
 
 
 class BuilderAndMixins(Package):

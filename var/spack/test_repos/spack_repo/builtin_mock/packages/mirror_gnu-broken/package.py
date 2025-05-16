@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
-from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 from spack.package import *
+
+from ...build_systems.autotools import AutotoolsPackage
+from ...build_systems.gnu import GNUMirrorPackage
 
 
 class MirrorGnuBroken(AutotoolsPackage, GNUMirrorPackage):

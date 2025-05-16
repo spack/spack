@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
-from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
+
+from ..multimethod_base import MultimethodBase
 
 
 class MultimethodDiamondParent(MultimethodBase):

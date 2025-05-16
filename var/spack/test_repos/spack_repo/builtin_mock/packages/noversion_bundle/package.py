@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack_repo.builtin.build_systems.bundle import BundlePackage
 from spack.package import *
+
+from ...build_systems.bundle import BundlePackage
 
 
 class NoversionBundle(BundlePackage):

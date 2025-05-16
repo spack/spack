@@ -3,8 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack_repo.builtin.build_systems.makefile import MakefilePackage
 from spack.package import *
+
+from ...build_systems.makefile import MakefilePackage
 
 
 class DevBuildTestDependent(MakefilePackage):

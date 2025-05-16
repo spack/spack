@@ -8,8 +8,9 @@ import sys
 
 import llnl.util.tty as tty
 
-from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack.package import *
+
+from ...build_systems.cmake import CMakePackage
 
 
 class Hdf5(CMakePackage):

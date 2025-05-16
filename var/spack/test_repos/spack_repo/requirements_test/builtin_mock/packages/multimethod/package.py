@@ -4,7 +4,8 @@
 
 import spack.platforms
 from spack.package import *
-from spack.pkg.builtin.mock.multimethod_base import MultimethodBase
+
+from ..multimethod_base import MultimethodBase
 
 
 class Multimethod(MultimethodBase):
