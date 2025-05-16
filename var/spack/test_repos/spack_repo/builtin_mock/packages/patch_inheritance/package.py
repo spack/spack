@@ -4,7 +4,7 @@
 
 from spack.package import *  # noqa: F401
 
-from ..patch import Patch
+from ..patch.package import Patch
 
 
 class PatchInheritance(Patch):

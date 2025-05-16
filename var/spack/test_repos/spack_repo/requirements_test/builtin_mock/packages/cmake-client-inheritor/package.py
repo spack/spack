@@ -4,7 +4,7 @@
 
 from spack.package import *  # noqa: F401
 
-from ..cmake_client import CmakeClient
+from ..cmake_client.package import CmakeClient
 
 
 class CmakeClientInheritor(CmakeClient):

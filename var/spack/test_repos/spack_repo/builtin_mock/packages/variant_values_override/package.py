@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
-from ..variant_values import VariantValues
+from ..variant_values.package import VariantValues
 
 
 class VariantValuesOverride(VariantValues):

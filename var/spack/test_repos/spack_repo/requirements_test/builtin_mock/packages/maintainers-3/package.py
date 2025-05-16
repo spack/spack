@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
 
-from ..maintainers_1 import Maintainers1
+from ..maintainers_1.package import Maintainers1
 
 
 class Maintainers3(Maintainers1):

@@ -4,7 +4,7 @@
 
 from spack.package import *
 
-from ..multimethod_base import MultimethodBase
+from ..multimethod_base.package import MultimethodBase
 
 
 class MultimethodDiamondParent(MultimethodBase):

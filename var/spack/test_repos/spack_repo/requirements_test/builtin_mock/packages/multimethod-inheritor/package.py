@@ -4,7 +4,7 @@
 
 from spack.package import *
 
-from ..multimethod import Multimethod
+from ..multimethod.package import Multimethod
 
 
 class MultimethodInheritor(Multimethod):
