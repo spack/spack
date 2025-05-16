@@ -44,4 +44,5 @@ class PyNvidiaMlPy(PythonPackage):
         else:
             sep = "-"
         return url.format(sep, version)
+
     depends_on("py-setuptools", type="build")
