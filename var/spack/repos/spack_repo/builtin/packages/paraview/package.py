@@ -76,7 +76,7 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("qt", default=False, description="Enable Qt (gui) support")
     variant("opengl2", default=True, description="Enable OpenGL2 backend", when="@5:5")
-    variant("use_x", default=True, description="Enable OpenGL2 backend")
+    variant("x", default=True, description="Enable OpenGL2 backend")
     variant("examples", default=False, description="Build examples")
     variant("hdf5", default=False, description="Use external HDF5")
     variant("shared", default=True, description="Builds a shared version of the library")
@@ -235,19 +235,19 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
 
     # Handle X11 dependencies
     # X is only used on Unix like platforms
-    conflicts("glx", when="~use_x")
+    conflicts("glx", when="~x")
     # When on linux, X is required for Qt
     for plat in ["linux", "freebsd"]:
         with when(f"platform={plat}"):
-            requires("+use_x", when="+qt", msg="Qt support requires GLX on Linux/FreeBSD")
+            requires("+x", when="+qt", msg="Qt support requires GLX on Linux/FreeBSD")
 
-    with when("+use_x"):
+    with when("+x"):
         depends_on("libxt", when="@:5.12")
         depends_on("libx11")
         depends_on("libxcursor")
         # When Qt and X are enabled, GLX is required in the runtime
-        requires("^[virtuals=gl] glx", when="@:5 +use_x")
-        depends_on("glx", when="@6: +use_x", type=("run"))
+        requires("^[virtuals=gl] glx", when="@:5 +x")
+        depends_on("glx", when="@6: +x", type=("run"))
 
     # ParaView@:5 support Qt5 and requires a GL provider to be known at
     # build/link time.
@@ -260,11 +260,6 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
             # Headless rendering not supported with Qt
             conflicts("osmesa")
             conflicts("egl")
-
-            # linux and freebsd require X11 when using Qt
-            for plat in ["linux", "freebsd"]:
-                with when(f"platform={plat}"):
-                    conflicts("~use_x", msg="X is required when building Qt on Linux")
 
         depends_on("gl@3.2:", when="+opengl2")
         depends_on("gl@1.2:", when="~opengl2")
