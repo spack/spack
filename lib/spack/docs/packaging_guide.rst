@@ -3700,7 +3700,7 @@ the build system. The build systems currently supported by Spack are:
 | :class:`~spack_repo.builtin.build_systems.generic`       | Generic build system without any |
 |                                                          | base implementation              |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.makefile`       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.makefile`      | Specialized build system for     |
 |                                                          | software built invoking          |
 |                                                          | hand-written Makefiles           |
 +----------------------------------------------------------+----------------------------------+
