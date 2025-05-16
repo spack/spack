@@ -12,6 +12,7 @@ import spack.package_base
 import spack.paths
 import spack.repo
 import spack.solver.asp
+import spack.spec
 import spack.store
 import spack.util.spack_yaml as syaml
 import spack.version
@@ -1315,7 +1316,12 @@ def test_requirements_on_compilers_and_reuse(
     ],
 )
 def test_requirements_conditional_deps(abstract, req_is_noop, mutable_config, mock_packages):
-    required_spec = "%[when='^c' virtuals=c]gcc@10.3.1 %[when='^cxx' virtuals=cxx]gcc@10.3.1 %[when='^fortran' virtuals=fortran]gcc@10.3.1 ^[when='^mpi' virtuals=mpi]zmpi"
+    required_spec = (
+        "%[when='^c' virtuals=c]gcc@10.3.1 "
+        "%[when='^cxx' virtuals=cxx]gcc@10.3.1 "
+        "%[when='^fortran' virtuals=fortran]gcc@10.3.1 "
+        "^[when='^mpi' virtuals=mpi]zmpi"
+    )
     abstract = spack.spec.Spec(abstract)
 
     # Configure two gcc compilers that could be concretized to
