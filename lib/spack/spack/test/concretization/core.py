@@ -759,22 +759,19 @@ class TestConcretize:
     @pytest.mark.parametrize(
         "spec_str,expected,not_expected",
         [
-            # TODO/TBD: This doesn't appear to be the case anymore with llvm, which
-            # TODO/TBD: is what gets picked now for mpileaks.
-            # TODO/TBD: Should mpileaks be dropped or replaced?
             # clang only provides C, and C++ compilers, while gcc has also fortran
             #
             # If we ask mpileaks%clang, then %gcc must be used for fortran, and since
             # %gcc is preferred to clang in config, it will be used for most nodes
             (
                 "mpileaks %clang",
-                {"mpileaks": "%clang", "libdwarf": "%clang", "libelf": "%clang"},
-                {"libdwarf": "%gcc", "libelf": "%gcc"},
+                {"mpileaks": "%clang", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"libdwarf": "%clang", "libelf": "%clang"},
             ),
             (
                 "mpileaks %clang@:15.0.0",
-                {"mpileaks": "%clang", "libdwarf": "%clang", "libelf": "%clang"},
-                {"libdwarf": "%gcc", "libelf": "%gcc"},
+                {"mpileaks": "%clang", "libdwarf": "%gcc", "libelf": "%gcc"},
+                {"libdwarf": "%clang", "libelf": "%clang"},
             ),
             (
                 "mpileaks %gcc",
@@ -1393,7 +1390,7 @@ class TestConcretize:
         assert root.dag_hash() != new_root_without_reuse.dag_hash()
 
     @pytest.mark.regression("43663")
-    def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database):
+    def test_no_reuse_when_variant_condition_does_not_hold(self, mutable_database, mock_packages):
         spack.config.set("concretizer:reuse", True)
 
         # Install a spec for which the `version_based` variant condition does not hold
