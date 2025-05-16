@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class Iotaa(PythonPackage):
-    """A simple workflow engine with semantics inspired by Luigi and tasks expressed as decorated Python functions"""
+    """A simple workflow engine with semantics inspired by Luigi
+     and tasks expressed as decorated Python functions"""
 
     pypi = "iotaa/iotaa-1.2.3-py3-none-any.whl"
 
@@ -26,15 +27,6 @@ class Iotaa(PythonPackage):
         wheel_dir = join_path("iotaa")
         return join_path(wheel_dir, wheel_file)
 
-#    def install(self, spec, prefix):
-#        spec = self.spec
-#        pip = which("pip")
-#        wheel = self.build_wheel_file_path
-#
-#        # This mimics the install-on-cluster target but avoids anything
-#        # that utilizes pip to resolve dependencies
-#        with working_dir(join_path(self.stage.source_path, "iotaa")):
-#            pip("install", f"--prefix={prefix}", wheel)
     def install(self, spec, prefix):
         whl = self.stage.archive_file
         python("-m", "pip", *PythonPipBuilder.std_args(self), f"--prefix={prefix}", whl)
