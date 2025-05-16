@@ -201,7 +201,7 @@ def repo_migrate(args: Any) -> int:
         repo_v2 = None
         exit_code = 0
 
-    if exit_code == 1 and isinstance(repo_v2, spack.repo.Repo):
+    if exit_code == 0 and isinstance(repo_v2, spack.repo.Repo):
         tty.info(
             f"Repository '{repo_v2.namespace}' was successfully migrated from "
             f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
