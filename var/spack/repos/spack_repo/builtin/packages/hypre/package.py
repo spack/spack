@@ -352,7 +352,7 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         if spec.satisfies("+mpi"):
             env.set("CC", spec["mpi"].mpicc)
             env.set("CXX", spec["mpi"].mpicxx)
-            if spec.satisfies("+fortan"):
+            if spec.satisfies("+fortran"):
                 env.set("F77", spec["mpi"].mpif77)
 
         if spec.satisfies("+cuda"):
@@ -398,8 +398,9 @@ class Hypre(AutotoolsPackage, CudaPackage, ROCmPackage):
         makefile = join_path(install_test_root(self), self.extra_install_tests, "Makefile")
         filter_file(r"^HYPRE_DIR\s* =.*", f"HYPRE_DIR = {self.prefix}", makefile)
         filter_file(r"^CC\s*=.*", f"CC = {os.environ['CC']}", makefile)
-        filter_file(r"^F77\s*=.*", f"F77 = {os.environ['F77']}", makefile)
         filter_file(r"^CXX\s*=.*", f"CXX = {os.environ['CXX']}", makefile)
+        if self.spec.satisfies("+fortran"):
+            filter_file(r"^F77\s*=.*", f"F77 = {os.environ['F77']}", makefile)
 
     @property
     def _cached_tests_work_dir(self):
