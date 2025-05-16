@@ -9,7 +9,7 @@ from spack.package import *
 
 class Iotaa(PythonPackage):
     """A simple workflow engine with semantics inspired by Luigi
-     and tasks expressed as decorated Python functions"""
+    and tasks expressed as decorated Python functions"""
 
     pypi = "iotaa/iotaa-1.2.3-py3-none-any.whl"
 
