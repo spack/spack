@@ -1,19 +1,28 @@
 diff --git a/src/mpi/msmpi/dll/msmpi.vcxproj b/src/mpi/msmpi/dll/msmpi.vcxproj
-index 255b9f5..cc4f096 100644
+index 255b9f5..9eb7dff 100644
 --- a/src/mpi/msmpi/dll/msmpi.vcxproj
 +++ b/src/mpi/msmpi/dll/msmpi.vcxproj
-@@ -57,6 +57,9 @@
+@@ -45,6 +45,7 @@
+         $(PUBLIC_SDK_LIB)\Iphlpapi.lib;
+         $(PUBLIC_SDK_LIB)\authz.lib;
+         $(PUBLIC_SDK_LIB)\ntdsapi.lib;
++        $(ND_DIR)\ndutil.lib;
+         $(OutDir)\..\mpichannels\mpichannels.lib;
+         $(OutDir)\..\mpiio\mpiio.lib;
+         $(OutDir)\..\mpicommon\mpicommon.lib;
+@@ -57,6 +58,10 @@
          $(OutDir)\..\mpi_debugger\mpi_debugger.lib;
          $(CRT_Libs);
        </AdditionalDependencies>
 +      <AdditionalLibraryDirectories>
-+        $(SPACK_IFORT)compiler\lib\intel64
++        $(SPACK_IFORT)\lib;
++        $(ND_DIR);
 +      </AdditionalLibraryDirectories>
        <ModuleDefinitionFile>.\msmpi.def</ModuleDefinitionFile>
      </Link>
    </ItemDefinitionGroup>
 diff --git a/src/mpi/msmpi/fortran/lib/mpifort.vcxproj b/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
-index 24bd29d..57d0292 100644
+index 24bd29d..319153d 100644
 --- a/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
 +++ b/src/mpi/msmpi/fortran/lib/mpifort.vcxproj
 @@ -8,12 +8,12 @@
@@ -28,7 +37,7 @@ index 24bd29d..57d0292 100644
 +      <Fort_Flags>/D _WIN64=1 /D _AMD64_=1 /D AMD64=1</Fort_Flags>
      </PropertyGroup>
 -    <Exec Command="$(GFORTRAN_BIN)\gfortran.exe -I$(MPI_INC_ROOT) -c %(ForCompile.Identity) $(Fort_Flags)  -o $(O)\%(ForCompile.FileName).obj" />
-+    <Exec Command="$(IFORT_BIN)\ifort.exe /I$(MPI_INC_ROOT) /c %(ForCompile.Identity) $(Fort_Flags) /names:lowercase /assume:nounderscore /o $(O)\%(ForCompile.FileName).obj" />
++    <Exec Command="$(IFORT_BIN)\ifx.exe /I$(MPI_INC_ROOT) /c %(ForCompile.Identity) $(Fort_Flags) /names:lowercase /assume:nounderscore /o $(O)\%(ForCompile.FileName).obj" />
      <ItemGroup>
        <Lib Condition="'$(ConfigurationType)'=='StaticLibrary'" Include="@(ForCompile->'$(O)\%(Filename).obj')" />
      </ItemGroup>

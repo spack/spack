@@ -24,6 +24,10 @@ class MSBuildPackage(spack.package_base.PackageBase):
     build_system("msbuild")
     conflicts("platform=linux", when="build_system=msbuild")
     conflicts("platform=darwin", when="build_system=msbuild")
+    conflicts("platform=freebsd", when="build_system=msbuild")
+
+    def define(self, msbuild_arg, value):
+        return define(msbuild_arg, value)
 
 
 @spack.builder.builder("msbuild")
@@ -87,7 +91,7 @@ class MSBuildBuilder(BuilderWithDefaults):
         return "/target:" + ";".join(targets) if targets else ""
 
     def define(self, msbuild_arg, value):
-        return "/p:{}={}".format(msbuild_arg, value)
+        return define(msbuild_arg, value)
 
     def msbuild_args(self):
         """Define build arguments to MSbuild. This is an empty list by default.
@@ -121,3 +125,7 @@ class MSBuildBuilder(BuilderWithDefaults):
             pkg.module.msbuild(
                 *self.msbuild_install_args(), self.define_targets(*self.install_targets)
             )
+
+
+def define(msbuild_arg, value):
+    return "/p:{}={}".format(msbuild_arg, value)

@@ -2793,10 +2793,12 @@ complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -f -a '_bu
 complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -d 'configuration scope to modify'
 
 # spack repo migrate
-set -g __fish_spack_optspecs_spack_repo_migrate h/help
+set -g __fish_spack_optspecs_spack_repo_migrate h/help fix
 complete -c spack -n '__fish_spack_using_command_pos 0 repo migrate' $__fish_spack_force_files -a '(__fish_spack_repos)'
 complete -c spack -n '__fish_spack_using_command repo migrate' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo migrate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -f -a fix
+complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -d 'automatically fix the imports in the package files'
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help

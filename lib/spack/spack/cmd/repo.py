@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import ast
 import os
+import shlex
 import sys
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, List, Optional
 
 import llnl.util.tty as tty
 
@@ -71,6 +71,9 @@ def setup_parser(subparser):
     migrate_parser = sp.add_parser("migrate", help=repo_migrate.__doc__)
     migrate_parser.add_argument(
         "namespace_or_path", help="path to a Spack package repository directory"
+    )
+    migrate_parser.add_argument(
+        "--fix", action="store_true", help="automatically fix the imports in the package files"
     )
 
 
@@ -171,204 +174,62 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
 
     for repo in spack.config.get("repos"):
         try:
-            r = spack.repo.from_path(spack.util.path.canonicalize_path(repo))
+            r = spack.repo.from_path(repo)
         except spack.repo.RepoError:
             continue
-        if r.namespace == name_or_path or os.path.samefile(r.root, name_or_path):
+        if r.namespace == name_or_path:
             return r
-
     return None
 
 
-def repo_migrate(args: Any) -> None:
+def repo_migrate(args: Any) -> int:
     """migrate a package repository to the latest Package API"""
+    from spack.repo_migrate import migrate_v1_to_v2, migrate_v2_imports
+
     repo = _get_repo(args.namespace_or_path)
 
     if repo is None:
         tty.die(f"No such repository: {args.namespace_or_path}")
 
-    if repo.package_api < (2, 0):
-        tty.die("Migration from Spack repo API < 2.0 is not supported yet")
+    if (1, 0) <= repo.package_api < (2, 0):
+        success, repo_v2 = migrate_v1_to_v2(repo, fix=args.fix)
+        exit_code = 0 if success else 1
+    elif (2, 0) <= repo.package_api < (3, 0):
+        repo_v2 = None
+        exit_code = 0 if migrate_v2_imports(repo.packages_path, repo.root, fix=args.fix) else 1
+    else:
+        repo_v2 = None
+        exit_code = 0
 
-    symbol_to_module = {
-        "AspellDictPackage": "spack.build_systems.aspell_dict",
-        "AutotoolsPackage": "spack.build_systems.autotools",
-        "BundlePackage": "spack.build_systems.bundle",
-        "CachedCMakePackage": "spack.build_systems.cached_cmake",
-        "cmake_cache_filepath": "spack.build_systems.cached_cmake",
-        "cmake_cache_option": "spack.build_systems.cached_cmake",
-        "cmake_cache_path": "spack.build_systems.cached_cmake",
-        "cmake_cache_string": "spack.build_systems.cached_cmake",
-        "CargoPackage": "spack.build_systems.cargo",
-        "CMakePackage": "spack.build_systems.cmake",
-        "generator": "spack.build_systems.cmake",
-        "CompilerPackage": "spack.build_systems.compiler",
-        "CudaPackage": "spack.build_systems.cuda",
-        "Package": "spack.build_systems.generic",
-        "GNUMirrorPackage": "spack.build_systems.gnu",
-        "GoPackage": "spack.build_systems.go",
-        "IntelPackage": "spack.build_systems.intel",
-        "LuaPackage": "spack.build_systems.lua",
-        "MakefilePackage": "spack.build_systems.makefile",
-        "MavenPackage": "spack.build_systems.maven",
-        "MesonPackage": "spack.build_systems.meson",
-        "MSBuildPackage": "spack.build_systems.msbuild",
-        "NMakePackage": "spack.build_systems.nmake",
-        "OctavePackage": "spack.build_systems.octave",
-        "INTEL_MATH_LIBRARIES": "spack.build_systems.oneapi",
-        "IntelOneApiLibraryPackage": "spack.build_systems.oneapi",
-        "IntelOneApiLibraryPackageWithSdk": "spack.build_systems.oneapi",
-        "IntelOneApiPackage": "spack.build_systems.oneapi",
-        "IntelOneApiStaticLibraryList": "spack.build_systems.oneapi",
-        "PerlPackage": "spack.build_systems.perl",
-        "PythonExtension": "spack.build_systems.python",
-        "PythonPackage": "spack.build_systems.python",
-        "QMakePackage": "spack.build_systems.qmake",
-        "RPackage": "spack.build_systems.r",
-        "RacketPackage": "spack.build_systems.racket",
-        "ROCmPackage": "spack.build_systems.rocm",
-        "RubyPackage": "spack.build_systems.ruby",
-        "SConsPackage": "spack.build_systems.scons",
-        "SIPPackage": "spack.build_systems.sip",
-        "SourceforgePackage": "spack.build_systems.sourceforge",
-        "SourcewarePackage": "spack.build_systems.sourceware",
-        "WafPackage": "spack.build_systems.waf",
-        "XorgPackage": "spack.build_systems.xorg",
-    }
+    if exit_code == 0 and isinstance(repo_v2, spack.repo.Repo):
+        tty.info(
+            f"Repository '{repo_v2.namespace}' was successfully migrated from "
+            f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
+        )
+        tty.warn(
+            "Remove the old repository from Spack's configuration and add the new one using:\n"
+            f"    spack repo remove {shlex.quote(repo.root)}\n"
+            f"    spack repo add {shlex.quote(repo_v2.root)}"
+        )
 
-    for f in os.scandir(repo.packages_path):
-        pkg_path = os.path.join(f.path, "package.py")
-        try:
-            if f.name in ("__init__.py", "__pycache__") or not f.is_dir():
-                continue
-            with open(pkg_path, "rb") as file:
-                tree = ast.parse(file.read())
-        except (OSError, SyntaxError) as e:
-            print(f"Skipping {pkg_path}: {e}", file=sys.stderr)
-            continue
+    elif exit_code == 0:
+        tty.info(f"Repository '{repo.namespace}' was successfully migrated")
 
-        #: Symbols that are referenced in the package and may need to be imported.
-        referenced_symbols: Set[str] = set()
+    elif not args.fix and exit_code == 1:
+        tty.error(
+            f"No changes were made to the repository {repo.root} with namespace "
+            f"'{repo.namespace}'. Run with --fix to apply the above changes."
+        )
 
-        #: Set of symbols of interest that are already defined through imports, assignments, or
-        #: function definitions.
-        defined_symbols: Set[str] = set()
-
-        best_line: Optional[int] = None
-
-        seen_import = False
-
-        for node in ast.walk(tree):
-            # Get the last import statement from the first block of top-level imports
-            if isinstance(node, ast.Module):
-                for child in ast.iter_child_nodes(node):
-                    # if we never encounter an import statement, the best line to add is right
-                    # before the first node under the module
-                    if best_line is None and isinstance(child, ast.stmt):
-                        best_line = child.lineno
-
-                    # prefer adding right before `from spack.package import ...`
-                    if isinstance(child, ast.ImportFrom) and child.module == "spack.package":
-                        seen_import = True
-                        best_line = child.lineno  # add it right before spack.package
-                        break
-
-                    # otherwise put it right after the last import statement
-                    is_import = isinstance(child, (ast.Import, ast.ImportFrom))
-
-                    if is_import:
-                        if isinstance(child, (ast.stmt, ast.expr)):
-                            best_line = (child.end_lineno or child.lineno) + 1
-
-                    if not seen_import and is_import:
-                        seen_import = True
-                    elif seen_import and not is_import:
-                        break
-
-            # Function definitions or assignments to variables whose name is a symbol of interest
-            # are considered as redefinitions, so we skip them.
-            elif isinstance(node, ast.FunctionDef):
-                if node.name in symbol_to_module:
-                    print(
-                        f"{pkg_path}:{node.lineno}: redefinition of `{node.name}` skipped",
-                        file=sys.stderr,
-                    )
-                    defined_symbols.add(node.name)
-            elif isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id in symbol_to_module:
-                        print(
-                            f"{pkg_path}:{target.lineno}: redefinition of `{target.id}` skipped",
-                            file=sys.stderr,
-                        )
-                        defined_symbols.add(target.id)
-
-            # Register symbols that are not imported.
-            elif isinstance(node, ast.Name) and node.id in symbol_to_module:
-                referenced_symbols.add(node.id)
-
-            # Register imported symbols to make this operation idempotent
-            elif isinstance(node, ast.ImportFrom):
-                for alias in node.names:
-                    if alias.name in symbol_to_module:
-                        defined_symbols.add(alias.name)
-                        if node.module == "spack.package":
-                            print(
-                                f"{pkg_path}:{node.lineno}: `{alias.name}` is imported from "
-                                "`spack.package`, which no longer provides this symbol",
-                                file=sys.stderr,
-                            )
-
-                    if alias.asname and alias.asname in symbol_to_module:
-                        defined_symbols.add(alias.asname)
-
-        # Remove imported symbols from the referenced symbols
-        referenced_symbols.difference_update(defined_symbols)
-
-        if not referenced_symbols:
-            continue
-
-        if best_line is None:
-            print(f"{pkg_path}: failed to update imports", file=sys.stderr)
-            continue
-
-        # Add the missing imports right after the last import statement
-        with open(pkg_path, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-
-        # Group missing symbols by their module
-        missing_imports_by_module: Dict[str, list] = {}
-        for symbol in referenced_symbols:
-            module = symbol_to_module[symbol]
-            if module not in missing_imports_by_module:
-                missing_imports_by_module[module] = []
-            missing_imports_by_module[module].append(symbol)
-
-        new_lines = [
-            f"from {module} import {', '.join(sorted(symbols))}\n"
-            for module, symbols in sorted(missing_imports_by_module.items())
-        ]
-
-        if not seen_import:
-            new_lines.extend(("\n", "\n"))
-
-        lines[best_line - 1 : best_line - 1] = new_lines
-
-        tmp_file = pkg_path + ".tmp"
-
-        with open(tmp_file, "w", encoding="utf-8") as file:
-            file.writelines(lines)
-
-        os.replace(tmp_file, pkg_path)
+    return exit_code
 
 
 def repo(parser, args):
-    action = {
+    return {
         "create": repo_create,
         "list": repo_list,
         "add": repo_add,
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,
-    }
-    action[args.repo_command](args)
+    }[args.repo_command](args)

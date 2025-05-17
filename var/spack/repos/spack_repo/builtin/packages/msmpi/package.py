@@ -2,15 +2,16 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
 import os
 import re
 import sys
 
-from spack.build_systems.generic import GenericBuilder
+import spack.build_systems.msbuild as msbuild
 from spack.package import *
 
 
-class Msmpi(Package):
+class Msmpi(MSBuildPackage):
     """MSMPI is a Windows port of MPICH provided by the Windows team"""
 
     homepage = "https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi"
@@ -31,8 +32,24 @@ class Msmpi(Package):
     depends_on("c", type="build")
 
     depends_on("win-wdk")
+    depends_on("networkdirect")
+    depends_on("perl")
 
-    patch("ifort_compat.patch")
+    # MSMPI's build system is hard coded to assume
+    # paths to gfortran and network direct
+    # This patch makes the build compatible with
+    # ifort/ifx and allows for a dynamically located
+    # network direct install
+    patch("ifort_nd_compat.patch")
+    # the cbt msbuild extension ms-mspi's build sytem
+    # uses has been removed. This patch removes the
+    # associated functionality from the build system
+    patch("burn_cbt.patch")
+    # For whatever reason, specifying the platform toolset
+    # prevents message compiler (mc) detection
+    # We know its present because we have a WDK
+    # patches the build system to just directly call the MC
+    patch("no_mc.patch")
 
     requires("platform=windows")
     requires("%msvc")
@@ -53,27 +70,48 @@ class Msmpi(Package):
         # Note: This is not typical of MPI installations
         self.spec.mpicc = dependent_spec["c"].package.cc
         self.spec.mpicxx = dependent_spec["cxx"].package.cxx
-        self.spec.mpifc = dependent_spec["fortran"].package.fortran
-        self.spec.mpif77 = dependent_spec["fortran"].package.fortran
+        if "fortran" in dependent_spec:
+            self.spec.mpifc = dependent_spec["fortran"].package.fc
+            self.spec.mpif77 = dependent_spec["fortran"].package.f77
 
 
-class GenericBuilder(GenericBuilder):
+class MSBuildBuilder(msbuild.MSBuildBuilder):
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        ifort_root = os.path.join(*self.pkg.compiler.fc.split(os.path.sep)[:-2])
+        # os.path.join interprets C: as an indicator of a relative path
+        # so we need to use the traditional string join here
+        ifort_root = "\\".join(self.pkg.compiler.fc.split(os.path.sep)[:-2])
         env.set("SPACK_IFORT", ifort_root)
+        env.prepend_path("IncludePath", self.spec["networkdirect"].prefix.include)
+        env.set("ND_DIR", self.spec["networkdirect"].prefix.ndutil)
 
-    def is_64bit(self):
-        return "64" in str(self.pkg.spec.target.family)
+    @property
+    def std_msbuild_args(self):
+        return []
 
-    def build_command_line(self):
+    # We will need to burn out the CBT build system and associated files
+    # and instead directly invoke msbuild per sln we're interested in
+    # and generate our own installer
+    def msbuild_args(self):
+        pkg = self.pkg
         args = ["-noLogo"]
-        ifort_bin = self.pkg.compiler.fc
-        args.append("/p:IFORT_BIN=%s" % os.path.dirname(ifort_bin))
-        args.append("/p:VCToolsVersion=%s" % self.pkg.compiler.msvc_version)
-        args.append("/p:WindowsTargetPlatformVersion=%s" % str(self.pkg.spec["wdk"].version))
-        args.append("/p:PlatformToolset=%s" % self.pkg.compiler.cc_version)
+        ifort_bin = '"' + os.path.dirname(pkg.compiler.fc) + '"'
+        args.append(self.define("IFORT_BIN", ifort_bin))
+        args.append(self.define("PlatformToolset", "v" + pkg["msvc"].platform_toolset_ver))
+        args.append(self.define("VCToolsVersion", pkg["msvc"].msvc_version))
+        args.append(
+            self.define("WindowsTargetPlatformVersion", str(pkg["win-sdk"].version) + ".0")
+        )
+        args.append(self.define("Configuration", "Release"))
+        args.append("src\\msmpi.sln")
         return args
 
-    def install(self, spec, prefix):
-        with working_dir(self.pkg.stage.build_directory, create=True):
-            msbuild(*self.build_command_line())
+    def install(self, pkg, spec, prefix):
+        base_build = pkg.stage.source_path
+        out = os.path.join(base_build, "out")
+        build_configuration = glob.glob(os.path.join(out, "*"))[0]
+        for x in glob.glob(os.path.join(build_configuration, "**", "*.*")):
+            install_path = x.replace(build_configuration, prefix)
+            mkdirp(os.path.dirname(install_path))
+            install(x, install_path)
+        include_dir = os.path.join(os.path.join(base_build, "src"), "include")
+        install_tree(include_dir, prefix.include)
