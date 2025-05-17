@@ -10,7 +10,7 @@ def get_spack_sys_paths(spack_prefix):
     """Given a spack prefix, return all the paths Spack needs to function."""
     spack_libs = os.path.join(spack_prefix, "lib", "spack")
     external_libs = os.path.join(spack_libs, "external")
-    # spack externals take precedence, then vendored packages, then spack itself
+    # spack externals take precedence, then spack itself
     return [external_libs, spack_libs]
 
 

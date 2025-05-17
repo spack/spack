@@ -137,7 +137,14 @@ class TestSpecList:
         expected_components = itertools.product(
             ["zlib", "libelf"], ["%gcc", "%intel"], ["+shared", "~shared"]
         )
-        expected = [Spec(" ".join(combo)) for combo in expected_components]
+
+        def _reduce(*, combo):
+            root = Spec(combo[0])
+            for x in combo[1:]:
+                root.constrain(x)
+            return root
+
+        expected = [_reduce(combo=combo) for combo in expected_components]
         assert set(result.specs) == set(expected)
 
     @pytest.mark.regression("16897")

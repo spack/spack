@@ -51,10 +51,6 @@ def dependency_with_version(text):
     )
 
 
-def compiler_with_version_range(text):
-    return text, [Token(SpecTokens.COMPILER_AND_VERSION, value=text)], text
-
-
 @pytest.fixture()
 def specfile_for(default_mock_concretization):
     def _specfile_for(spec_str, filename):
@@ -84,7 +80,6 @@ def specfile_for(default_mock_concretization):
         simple_package_name("3dtk"),
         simple_package_name("ns-3-dev"),
         # Single token anonymous specs
-        ("%intel", [Token(SpecTokens.COMPILER, value="%intel")], "%intel"),
         ("@2.7", [Token(SpecTokens.VERSION, value="@2.7")], "@2.7"),
         ("@2.7:", [Token(SpecTokens.VERSION, value="@2.7:")], "@2.7:"),
         ("@:2.7", [Token(SpecTokens.VERSION, value="@:2.7")], "@:2.7"),
@@ -97,6 +92,14 @@ def specfile_for(default_mock_concretization):
             "arch=test-None-None",
         ),
         # Multiple tokens anonymous specs
+        (
+            "%intel",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "intel"),
+            ],
+            "%intel",
+        ),
         (
             "languages=go @4.2:",
             [
@@ -159,7 +162,9 @@ def specfile_for(default_mock_concretization):
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="foo"),
                 Token(SpecTokens.VERSION, value="@2.0"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%bar@1.0"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="bar"),
+                Token(SpecTokens.VERSION, value="@1.0"),
             ],
             "foo@2.0 %bar@1.0",
         ),
@@ -178,7 +183,9 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
+                Token(SpecTokens.VERSION, value="@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -194,7 +201,9 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.VERSION, value="@1.2:1.4,1.6"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="debug=2"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
+                Token(SpecTokens.VERSION, value="@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -212,7 +221,9 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cppflags=-O3"),
                 Token(SpecTokens.BOOL_VARIANT, value="+debug"),
                 Token(SpecTokens.BOOL_VARIANT, value="~qt_4"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
+                Token(SpecTokens.VERSION, value="@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="stackwalker"),
                 Token(SpecTokens.VERSION, value="@8.1_1e"),
@@ -226,7 +237,9 @@ def specfile_for(default_mock_concretization):
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="yaml-cpp"),
                 Token(SpecTokens.VERSION, value="@0.1.8"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%intel@12.1"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
+                Token(SpecTokens.VERSION, value="@12.1"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
@@ -237,7 +250,8 @@ def specfile_for(default_mock_concretization):
             r"builtin.yaml-cpp%gcc",
             [
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="builtin.yaml-cpp"),
-                Token(SpecTokens.COMPILER, value="%gcc"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
             "yaml-cpp %gcc",
         ),
@@ -245,7 +259,8 @@ def specfile_for(default_mock_concretization):
             r"testrepo.yaml-cpp%gcc",
             [
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="testrepo.yaml-cpp"),
-                Token(SpecTokens.COMPILER, value="%gcc"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
             "yaml-cpp %gcc",
         ),
@@ -254,7 +269,9 @@ def specfile_for(default_mock_concretization):
             [
                 Token(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME, value="builtin.yaml-cpp"),
                 Token(SpecTokens.VERSION, value="@0.1.8"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="%gcc@7.2.0"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@7.2.0"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="boost"),
                 Token(SpecTokens.VERSION, value="@3.1.4"),
@@ -419,11 +436,51 @@ def specfile_for(default_mock_concretization):
             f"develop-branch-version@git.{'a' * 40}=develop+var1+var2",
         ),
         # Compiler with version ranges
-        compiler_with_version_range("%gcc@10.2.1:"),
-        compiler_with_version_range("%gcc@:10.2.1"),
-        compiler_with_version_range("%gcc@10.2.1:12.1.0"),
-        compiler_with_version_range("%gcc@10.1.0,12.2.1:"),
-        compiler_with_version_range("%gcc@:8.4.3,10.2.1:12.1.0"),
+        (
+            "%gcc@10.2.1:",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@10.2.1:"),
+            ],
+            "%gcc@10.2.1:",
+        ),
+        (
+            "%gcc@:10.2.1",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@:10.2.1"),
+            ],
+            "%gcc@:10.2.1",
+        ),
+        (
+            "%gcc@10.2.1:12.1.0",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@10.2.1:12.1.0"),
+            ],
+            "%gcc@10.2.1:12.1.0",
+        ),
+        (
+            "%gcc@10.1.0,12.2.1:",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@10.1.0,12.2.1:"),
+            ],
+            "%gcc@10.1.0,12.2.1:",
+        ),
+        (
+            "%gcc@:8.4.3,10.2.1:12.1.0",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@:8.4.3,10.2.1:12.1.0"),
+            ],
+            "%gcc@:8.4.3,10.2.1:12.1.0",
+        ),
         # Special key value arguments
         ("dev_path=*", [Token(SpecTokens.KEY_VALUE_PAIR, value="dev_path=*")], "dev_path='*'"),
         (
@@ -484,7 +541,9 @@ def specfile_for(default_mock_concretization):
             "+ debug % intel @ 12.1:12.6",
             [
                 Token(SpecTokens.BOOL_VARIANT, value="+ debug"),
-                Token(SpecTokens.COMPILER_AND_VERSION, value="% intel @ 12.1:12.6"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
+                Token(SpecTokens.VERSION, value="@ 12.1:12.6"),
             ],
             "+debug %intel@12.1:12.6",
         ),
@@ -509,7 +568,8 @@ def specfile_for(default_mock_concretization):
             "@:0.4 % nvhpc",
             [
                 Token(SpecTokens.VERSION, value="@:0.4"),
-                Token(SpecTokens.COMPILER, value="% nvhpc"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="nvhpc"),
             ],
             "@:0.4 %nvhpc",
         ),
@@ -602,7 +662,10 @@ def specfile_for(default_mock_concretization):
             "zlib %[virtuals=c] gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c] gcc"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
             "zlib %[virtuals=c] gcc",
         ),
@@ -610,7 +673,10 @@ def specfile_for(default_mock_concretization):
             "zlib %[virtuals=c,cxx] gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c,cxx"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
             "zlib %[virtuals=c,cxx] gcc",
         ),
@@ -618,7 +684,11 @@ def specfile_for(default_mock_concretization):
             "zlib %[virtuals=c,cxx] gcc@14.1",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=c,cxx] gcc@14.1"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c,cxx"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@14.1"),
             ],
             "zlib %[virtuals=c,cxx] gcc@14.1",
         ),
@@ -626,10 +696,15 @@ def specfile_for(default_mock_concretization):
             "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
-                Token(
-                    SpecTokens.COMPILER_AND_VERSION_WITH_VIRTUALS, "%[virtuals=fortran] gcc@14.1"
-                ),
-                Token(SpecTokens.COMPILER_WITH_VIRTUALS, "%[virtuals=c,cxx] clang"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=fortran"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.VERSION, value="@14.1"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, value="%["),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="virtuals=c,cxx"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="clang"),
             ],
             "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
         ),
@@ -649,6 +724,18 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.PROPAGATED_KEY_VALUE_PAIR, "languages:==c,c++"),
             ],
             "gcc languages:=='c,c++'",
+        ),
+        # test <variants> etc. after %
+        (
+            "mvapich %gcc languages:=c,c++ target=x86_64",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "mvapich"),
+                Token(SpecTokens.DEPENDENCY, "%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "languages:=c,c++"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "target=x86_64"),
+            ],
+            "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
         ),
     ],
 )
@@ -694,7 +781,8 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
                 Token(SpecTokens.VERSION, value="@1.1.1"),
                 Token(SpecTokens.KEY_VALUE_PAIR, value="cflags=-O3"),
-                Token(SpecTokens.COMPILER, value="%intel"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
             ],
             ["mvapich", "emacs @1.1.1 cflags=-O3 %intel"],
         ),
@@ -706,9 +794,26 @@ def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_p
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
                 Token(SpecTokens.DEPENDENCY, value="^"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="ncurses"),
-                Token(SpecTokens.COMPILER, value="%intel"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="intel"),
             ],
             ['mvapich cflags="-O3 -fPIC"', "emacs ^ncurses%intel"],
+        ),
+        (
+            "mvapich %gcc languages=c,c++ emacs ^ncurses%gcc languages:=c",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="mvapich"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="languages=c,c++"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="emacs"),
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="ncurses"),
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="languages:=c"),
+            ],
+            ["mvapich %gcc languages=c,c++", "emacs ^ncurses%gcc languages:=c"],
         ),
     ],
 )
