@@ -21,7 +21,11 @@ class Variorum(CMakePackage):
     license("MIT")
 
     version("dev", branch="dev")
-    version("0.8.0", sha256="0e7288d523488b2a585af8ffeb7874721526f46df563b21fc51e8846bf65f7d8", preferred=True)
+    version(
+        "0.8.0",
+        sha256="0e7288d523488b2a585af8ffeb7874721526f46df563b21fc51e8846bf65f7d8",
+        preferred=True,
+    )
     version("0.7.0", sha256="36ec0219379ea2b7c8f9770b3271335c776ff5a3de71585714c33356345b2f0c")
     version("0.6.0", sha256="c0928a0e6901808ee50142d1034de15edc2c90d7d1b9fbce43757226e7c04306")
     version("0.5.0", sha256="de331762e7945ee882d08454ff9c66436e2b6f87f761d2b31c6ab3028723bfed")
@@ -39,10 +43,20 @@ class Variorum(CMakePackage):
         description="CMake build type",
         values=("Debug", "Release"),
     )
-    variant( "cpu", default="Intel", description="Supported CPU architecture",
-        values=("intel", "amd", "ibm", "arm"), multi=False )
-    variant( "gpu", default="none", description="Supported GPU architecture",
-        values=("intel", "amd", "nvidia", "none" ), multi=False )
+    variant(
+        "cpu",
+        default="Intel",
+        description="Supported CPU architecture",
+        values=("intel", "amd", "ibm", "arm"),
+        multi=False,
+    )
+    variant(
+        "gpu",
+        default="none",
+        description="Supported GPU architecture",
+        values=("intel", "amd", "nvidia", "none"),
+        multi=False,
+    )
 
     ########################
     # Package dependencies #
@@ -56,11 +70,11 @@ class Variorum(CMakePackage):
 
     # cuda@10.1.243 works, as does 12.4.1
 
-    depends_on("cuda", type=("build","link"), when="gpu=nvidia") # required for nvml
+    depends_on("cuda", type=("build", "link"), when="gpu=nvidia")  # required for nvml
 
     depends_on("hwloc +nvml", type=("build", "link"), when="gpu=nvidia")
-    depends_on("hwloc",       type=("build", "link"), when="gpu=none")
-    depends_on("hwloc",       type=("build", "link"), when="gpu=amd")
+    depends_on("hwloc", type=("build", "link"), when="gpu=none")
+    depends_on("hwloc", type=("build", "link"), when="gpu=amd")
 
     root_cmakelists_dir = "src"
 
