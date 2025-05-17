@@ -5,12 +5,12 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
-
-from ...build_systems import cmake, makefile
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.makefile import MakefilePackage
 
 
 class Openblas(CMakePackage, MakefilePackage):

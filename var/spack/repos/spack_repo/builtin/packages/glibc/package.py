@@ -4,11 +4,11 @@
 
 import os
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 from spack.package import *
 from spack.util.elf import delete_rpath
-
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.gnu import GNUMirrorPackage
 
 
 class Glibc(AutotoolsPackage, GNUMirrorPackage):

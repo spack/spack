@@ -4,11 +4,11 @@
 import glob
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems import generic
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems import generic
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class Nasm(AutotoolsPackage, Package):

@@ -4,11 +4,11 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.python import PythonExtension, PythonPipBuilder
+from spack.package import *
 
 
 class PyMeldmd(CMakePackage, PythonExtension, CudaPackage):

@@ -5,10 +5,10 @@
 # ----------------------------------------------------------------------------
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.python import PythonExtension
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.python import PythonExtension
+from spack.package import *
 
 
 class Timemory(CMakePackage, PythonExtension):

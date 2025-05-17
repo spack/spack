@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.racket import RacketPackage
 
-from ...build_systems.racket import RacketPackage
+from spack.package import *
 
 
 class RktDynextLib(RacketPackage):

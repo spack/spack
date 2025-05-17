@@ -5,10 +5,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.cmake import CMakeBuilder
-from ...build_systems.generic import Package
+from spack.package import *
 
 tools_url = "https://github.com/ROCm"
 compute_url = "https://github.com/ROCm"

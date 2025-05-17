@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.error import SpackError
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
 
 
 def async_api_validator(pkg_name, variant_name, values):

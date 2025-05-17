@@ -7,11 +7,11 @@ import pathlib
 import platform
 import warnings
 
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
+
 from spack.build_environment import dso_suffix
 from spack.package import *
-
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.oneapi import IntelOneApiPackage
 
 versions = [
     {

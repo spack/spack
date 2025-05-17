@@ -5,13 +5,13 @@
 import os
 import sys
 
+from spack_repo.builtin.build_systems import autotools, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
+
 from spack.package import *
 from spack.util.environment import is_system_path
-
-from ...build_systems import autotools, nmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.nmake import NMakePackage
-from ...build_systems.sourceforge import SourceforgePackage
 
 is_windows = sys.platform == "win32"
 

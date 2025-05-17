@@ -4,11 +4,11 @@
 
 import sys
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 import archspec
 
 from spack.package import *
-
-from ...build_systems.python import PythonPackage
 
 
 class PyItk(PythonPackage):

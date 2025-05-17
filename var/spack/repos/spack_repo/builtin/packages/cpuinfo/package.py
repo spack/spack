@@ -4,9 +4,9 @@
 
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 
-from ...build_systems.cmake import CMakePackage, generator
+from spack.package import *
 
 
 class Cpuinfo(CMakePackage):

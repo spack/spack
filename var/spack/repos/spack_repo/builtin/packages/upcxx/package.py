@@ -5,14 +5,14 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import llnl.util.lang
 
 import spack.platforms
 from spack.package import *
-
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.generic import Package
-from ...build_systems.rocm import ROCmPackage
 
 
 @llnl.util.lang.memoized

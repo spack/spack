@@ -4,9 +4,9 @@
 
 import platform
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 _versions = {
     "v5.2.1": {

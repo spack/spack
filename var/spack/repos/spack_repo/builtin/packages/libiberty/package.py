@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 # Libiberty has two homes: binutils and gcc.  This package uses the
 # binutils tarfile but only builds the libiberty subdirectory.  This

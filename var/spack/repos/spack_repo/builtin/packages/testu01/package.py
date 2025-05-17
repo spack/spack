@@ -4,9 +4,9 @@
 
 from os import chmod
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
-from ...build_systems.autotools import AutotoolsPackage
+from spack.package import *
 
 
 class Testu01(AutotoolsPackage):

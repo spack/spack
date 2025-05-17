@@ -5,9 +5,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage, get_cmake_prefix_path
 
-from ...build_systems.cmake import CMakePackage, get_cmake_prefix_path
+from spack.package import *
 
 
 class HipTests(CMakePackage):

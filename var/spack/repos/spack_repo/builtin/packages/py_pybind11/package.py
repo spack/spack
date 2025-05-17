@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder as _CMakeBuilder
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
 
-from ...build_systems.cmake import CMakeBuilder as _CMakeBuilder
-from ...build_systems.cmake import CMakePackage, generator
-from ...build_systems.python import PythonExtension, PythonPipBuilder
+from spack.package import *
 
 
 class PyPybind11(CMakePackage, PythonExtension):

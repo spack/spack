@@ -4,10 +4,10 @@
 
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 class HypreCmake(CMakePackage, CudaPackage):

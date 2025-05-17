@@ -1,9 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
+from spack_repo.builtin.build_systems.meson import MesonPackage
 
-from ...build_systems.meson import MesonPackage
+from spack.package import *
 
 
 class Btllib(MesonPackage):

@@ -4,10 +4,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin_mock.build_systems.compiler import CompilerPackage
+from spack_repo.builtin_mock.build_systems.generic import Package
 
-from ....builtin_mock.build_systems.compiler import CompilerPackage
-from ....builtin_mock.build_systems.generic import Package
+from spack.package import *
 
 
 class Llvm(Package, CompilerPackage):

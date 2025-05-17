@@ -6,11 +6,11 @@ import glob
 import os
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.util.environment
 from spack.package import *
-
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.rocm import ROCmPackage
 
 
 class Papi(AutotoolsPackage, ROCmPackage):

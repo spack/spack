@@ -5,10 +5,10 @@
 import os
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems.makefile import MakefilePackage
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class Qrupdate(MakefilePackage, SourceforgePackage):

@@ -6,12 +6,12 @@ import re
 import sys
 from tempfile import NamedTemporaryFile
 
+from spack_repo.builtin.build_systems import autotools, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+
 import spack.platforms
 from spack.package import *
-
-from ...build_systems import autotools, nmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.nmake import NMakePackage
 
 is_windows = sys.platform == "win32"
 

@@ -5,9 +5,9 @@
 import platform
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 # THIS PACKAGE SHOULD NOT EXIST
 # it exists to make up for the inability to:

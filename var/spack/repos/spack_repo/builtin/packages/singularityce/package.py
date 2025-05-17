@@ -5,10 +5,10 @@
 import os
 import shutil
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 import spack.tengine
 from spack.package import *
-
-from ...build_systems.makefile import MakefilePackage
 
 
 class SingularityBase(MakefilePackage):

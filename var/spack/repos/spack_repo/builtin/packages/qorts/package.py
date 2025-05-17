@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.r import RPackage
 
-from ...build_systems.r import RPackage
+from spack.package import *
 
 
 class Qorts(RPackage):

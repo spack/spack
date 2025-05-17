@@ -4,10 +4,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage, generator
 
-from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
-from ...build_systems.cmake import CMakeBuilder, CMakePackage, generator
+from spack.package import *
 
 
 class FluxSched(CMakePackage, AutotoolsPackage):

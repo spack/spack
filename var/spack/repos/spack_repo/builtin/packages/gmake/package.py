@@ -5,10 +5,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-from ...build_systems.generic import Package
-from ...build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 
 class Gmake(Package, GNUMirrorPackage):

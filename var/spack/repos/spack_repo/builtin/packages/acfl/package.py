@@ -4,11 +4,11 @@
 import os
 import os.path
 
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 import spack.platforms
 from spack.package import *
-
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
 
 _os_map_before_23 = {
     "ubuntu18.04": "Ubuntu-18.04",

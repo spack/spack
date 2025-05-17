@@ -4,9 +4,9 @@
 
 import glob
 
-from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage, PythonPipBuilder
 
-from ...build_systems.python import PythonPackage, PythonPipBuilder
+from spack.package import *
 
 
 class PyTensorboardDataServer(PythonPackage):

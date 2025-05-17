@@ -5,10 +5,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 
 class Rocrand(CMakePackage):

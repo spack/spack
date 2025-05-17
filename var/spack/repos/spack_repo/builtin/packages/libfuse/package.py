@@ -5,9 +5,9 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.meson import MesonPackage
 
-from ...build_systems.meson import MesonPackage
+from spack.package import *
 
 
 class Libfuse(MesonPackage):

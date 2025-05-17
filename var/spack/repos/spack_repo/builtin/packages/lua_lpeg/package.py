@@ -5,10 +5,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems import lua
+from spack_repo.builtin.build_systems.lua import LuaPackage
 
-from ...build_systems import lua
-from ...build_systems.lua import LuaPackage
+from spack.package import *
 
 
 class LuaLpeg(LuaPackage):

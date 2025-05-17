@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.qmake import QMakePackage
 
-from ...build_systems.qmake import QMakePackage
+from spack.package import *
 
 
 class Qscintilla(QMakePackage):

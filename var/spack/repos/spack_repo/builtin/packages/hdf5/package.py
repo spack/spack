@@ -7,11 +7,11 @@ import re
 import shutil
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 import llnl.util.lang
 
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
 
 
 class Hdf5(CMakePackage):

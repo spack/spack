@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakeBuilder, CMakePackage
+from spack.package import *
 
 
 class Openexr(CMakePackage, AutotoolsPackage):

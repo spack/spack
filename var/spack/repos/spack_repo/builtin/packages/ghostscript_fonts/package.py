@@ -4,10 +4,10 @@
 
 import glob
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems.generic import Package
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class GhostscriptFonts(Package, SourceforgePackage):

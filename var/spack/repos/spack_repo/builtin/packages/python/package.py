@@ -12,12 +12,12 @@ import sys
 from shutil import copy
 from typing import Dict, List
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 
 def make_pyvenv_cfg(python_pkg: Package, venv_prefix: str) -> str:

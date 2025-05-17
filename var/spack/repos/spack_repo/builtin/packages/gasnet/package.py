@@ -5,11 +5,11 @@
 import os
 import warnings
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.generic import Package
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 
 class Gasnet(Package, CudaPackage, ROCmPackage):

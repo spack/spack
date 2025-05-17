@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.r import RPackage
 
-from ...build_systems.r import RPackage
+from spack.package import *
 
 
 class RRstudioapi(RPackage):

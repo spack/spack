@@ -5,18 +5,18 @@
 import os
 import socket
 
-import spack.platforms.cray
-from spack.package import *
-
-from ...build_systems.cached_cmake import (
+from spack_repo.builtin.build_systems.cached_cmake import (
     CachedCMakePackage,
     cmake_cache_option,
     cmake_cache_path,
     cmake_cache_string,
 )
-from ...build_systems.cmake import generator
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
+from spack_repo.builtin.build_systems.cmake import generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
+import spack.platforms.cray
+from spack.package import *
 
 
 class Lbann(CachedCMakePackage, CudaPackage, ROCmPackage):

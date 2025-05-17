@@ -5,12 +5,12 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.variant
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
 
 
 class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):

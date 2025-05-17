@@ -4,11 +4,11 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems import autotools
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class Swig(AutotoolsPackage, SourceforgePackage):

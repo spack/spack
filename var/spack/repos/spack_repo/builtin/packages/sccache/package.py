@@ -5,10 +5,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems import cargo
+from spack_repo.builtin.build_systems.cargo import CargoPackage
 
-from ...build_systems import cargo
-from ...build_systems.cargo import CargoPackage
+from spack.package import *
 
 
 class Sccache(CargoPackage):

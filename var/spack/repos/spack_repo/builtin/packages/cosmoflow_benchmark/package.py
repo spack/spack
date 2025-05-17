@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class CosmoflowBenchmark(Package, CudaPackage):

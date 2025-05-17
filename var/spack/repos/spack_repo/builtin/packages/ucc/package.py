@@ -1,11 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 
 class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):

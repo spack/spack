@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 import spack.url
 from spack.package import *
-
-from ...build_systems.python import PythonPackage
 
 
 class PyRadicalPilot(PythonPackage):

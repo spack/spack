@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
 
-from ....builtin_mock.build_systems.autotools import AutotoolsPackage
+from spack.package import *
 
 
 class Mpich(AutotoolsPackage):

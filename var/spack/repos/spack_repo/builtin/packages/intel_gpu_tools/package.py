@@ -4,10 +4,10 @@
 
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.xorg import XorgPackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.xorg import XorgPackage
+from spack.package import *
 
 
 class IntelGpuTools(AutotoolsPackage, XorgPackage):

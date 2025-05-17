@@ -5,9 +5,9 @@
 import numbers
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 def is_integral(x):

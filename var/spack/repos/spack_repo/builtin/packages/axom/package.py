@@ -7,16 +7,16 @@ import shutil
 import socket
 from os.path import join as pjoin
 
-from spack.package import *
-
-from ...build_systems.cached_cmake import (
+from spack_repo.builtin.build_systems.cached_cmake import (
     CachedCMakePackage,
     cmake_cache_option,
     cmake_cache_path,
     cmake_cache_string,
 )
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
+from spack.package import *
 
 
 def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):

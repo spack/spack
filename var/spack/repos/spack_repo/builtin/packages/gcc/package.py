@@ -5,6 +5,11 @@ import glob
 import os
 import sys
 
+from spack_repo.builtin.build_systems import compiler
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 import archspec.cpu
 
 from llnl.util.symlink import readlink
@@ -14,11 +19,6 @@ import spack.repo
 import spack.util.libc
 from spack.operating_systems.mac_os import macos_sdk_path, macos_version
 from spack.package import *
-
-from ...build_systems import compiler
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.gnu import GNUMirrorPackage
 
 
 class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):

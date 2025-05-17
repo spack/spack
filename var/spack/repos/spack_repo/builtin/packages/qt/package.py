@@ -6,11 +6,11 @@ import os
 import platform
 import sys
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 LINUX_VERSION = kernel_version() if platform.system() == "Linux" else None

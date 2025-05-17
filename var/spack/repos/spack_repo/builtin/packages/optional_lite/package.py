@@ -4,9 +4,9 @@
 
 from shutil import copytree
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 class OptionalLite(CMakePackage):

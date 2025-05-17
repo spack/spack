@@ -6,9 +6,10 @@ import itertools
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
 from ..mpich.package import MpichEnvironmentModifications
 
 

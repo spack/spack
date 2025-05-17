@@ -6,13 +6,13 @@ import glob
 import sys
 import tempfile
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.build_environment import optimization_flags
 from spack.package import *
-
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.generic import Package
-from ...build_systems.python import PythonExtension, PythonPipBuilder
-from ...build_systems.rocm import ROCmPackage
 
 rocm_dependencies = [
     "hip",

@@ -5,11 +5,11 @@ import os
 import pathlib
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-from ...build_systems import autotools
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):

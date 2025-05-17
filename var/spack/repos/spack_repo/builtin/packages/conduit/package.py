@@ -8,9 +8,9 @@ import shutil
 import socket
 from os import environ as env
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None, force=False):

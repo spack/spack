@@ -5,9 +5,9 @@
 import glob
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.meson import MesonPackage
 
-from ...build_systems.meson import MesonPackage
+from spack.package import *
 
 
 class Systemd(MesonPackage):

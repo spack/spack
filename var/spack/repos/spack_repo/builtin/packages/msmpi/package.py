@@ -7,9 +7,9 @@ import os
 import re
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems import msbuild
 
-from ...build_systems import msbuild
+from spack.package import *
 
 
 class Msmpi(msbuild.MSBuildPackage):

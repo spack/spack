@@ -8,10 +8,10 @@ import socket
 import sys
 from os import environ as env
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):

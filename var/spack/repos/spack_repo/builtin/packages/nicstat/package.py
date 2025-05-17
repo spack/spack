@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems.makefile import MakefilePackage
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class Nicstat(MakefilePackage, SourceforgePackage):

@@ -4,11 +4,12 @@
 
 import os
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 from spack.package_test import compare_output
 
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
 from ..boost.package import Boost
 
 

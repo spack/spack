@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
+from spack_repo.builtin_mock.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin_mock.build_systems.gnu import GNUMirrorPackage
 
-from ....builtin_mock.build_systems.autotools import AutotoolsPackage
-from ....builtin_mock.build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 
 class Glibc(AutotoolsPackage, GNUMirrorPackage):

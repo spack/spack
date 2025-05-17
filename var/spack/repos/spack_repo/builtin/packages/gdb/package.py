@@ -4,10 +4,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 
 class Gdb(AutotoolsPackage, GNUMirrorPackage):

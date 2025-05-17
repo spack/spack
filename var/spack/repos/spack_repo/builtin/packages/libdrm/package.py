@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
 
-from ...build_systems import autotools, meson
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.meson import MesonPackage
+from spack.package import *
 
 
 class Libdrm(AutotoolsPackage, MesonPackage):

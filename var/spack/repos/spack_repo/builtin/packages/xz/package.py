@@ -6,11 +6,11 @@ import glob
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.msbuild import MSBuildBuilder, MSBuildPackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
-from ...build_systems.msbuild import MSBuildBuilder, MSBuildPackage
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class Xz(MSBuildPackage, AutotoolsPackage, SourceforgePackage):

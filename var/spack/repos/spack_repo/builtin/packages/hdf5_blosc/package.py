@@ -6,9 +6,9 @@ import os
 import shutil
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 def _install_shlib(name, src, dst):

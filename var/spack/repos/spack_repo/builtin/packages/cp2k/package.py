@@ -5,15 +5,15 @@ import copy
 import os
 import sys
 
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.util.environment
 from spack.build_environment import dso_suffix
 from spack.package import *
-
-from ...build_systems import cmake, makefile
-from ...build_systems.cmake import CMakePackage, generator
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.makefile import MakefilePackage
-from ...build_systems.rocm import ROCmPackage
 
 GPU_MAP = {
     "35": "K40",

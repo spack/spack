@@ -1,11 +1,11 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.build_environment import optimization_flags
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
 
 
 class Arbor(CMakePackage, CudaPackage):

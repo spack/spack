@@ -4,10 +4,10 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.bundle import BundlePackage
+
 import spack.compilers.config
 from spack.package import *
-
-from ...build_systems.bundle import BundlePackage
 
 
 class SpectrumMpi(BundlePackage):

@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems import autotools, cmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage, generator
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 class Libxc(AutotoolsPackage, CudaPackage, CMakePackage):

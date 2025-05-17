@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
-from ...build_systems.autotools import AutotoolsPackage
+from spack.package import *
 
 
 class DarshanRuntime(AutotoolsPackage):

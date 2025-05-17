@@ -6,9 +6,10 @@
 import glob
 import os
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
-from ...build_systems.cmake import CMakePackage
 from ..boost.package import Boost
 
 

@@ -10,9 +10,9 @@ from os.path import basename
 from pathlib import Path
 from subprocess import PIPE, Popen
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 if sys.platform != "win32":
     from fcntl import F_GETFL, F_SETFL, fcntl

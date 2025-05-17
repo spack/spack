@@ -4,9 +4,10 @@
 
 import datetime as dt
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
-from ...build_systems.cmake import CMakePackage
 from ..lammps.package import Lammps
 
 

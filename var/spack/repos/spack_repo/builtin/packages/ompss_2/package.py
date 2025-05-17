@@ -5,9 +5,9 @@
 import glob
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 # OmpSs-2 is a complex package to build as it has multiple parts that need to be built separately
 # Moreover, some of these parts use Autotools and then the LLVM compiler uses CMake

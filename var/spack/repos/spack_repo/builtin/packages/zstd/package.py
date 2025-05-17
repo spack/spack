@@ -4,10 +4,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefileBuilder, MakefilePackage
 
-from ...build_systems.cmake import CMakeBuilder, CMakePackage
-from ...build_systems.makefile import MakefileBuilder, MakefilePackage
+from spack.package import *
 
 
 class Zstd(CMakePackage, MakefilePackage):

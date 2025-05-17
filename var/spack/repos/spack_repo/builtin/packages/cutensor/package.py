@@ -4,9 +4,9 @@
 
 import platform
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 _versions = {
     # cuTensor 1.5.0

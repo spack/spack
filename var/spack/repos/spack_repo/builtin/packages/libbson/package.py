@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems import cmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 class Libbson(AutotoolsPackage, CMakePackage):

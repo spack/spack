@@ -5,10 +5,10 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cached_cmake import cmake_cache_string
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.cached_cmake import cmake_cache_string
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 def spec_uses_toolchain(spec):

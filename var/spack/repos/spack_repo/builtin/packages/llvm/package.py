@@ -5,15 +5,15 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from llnl.util.lang import classproperty
 
 from spack.operating_systems.mac_os import macos_sdk_path
 from spack.package import *
 from spack.package_base import PackageBase
-
-from ...build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.cuda import CudaPackage
 
 
 class LlvmDetection(PackageBase):

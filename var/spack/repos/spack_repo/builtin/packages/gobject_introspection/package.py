@@ -1,12 +1,12 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin.build_systems import autotools
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 import spack.hooks.sbang as sbang
 from spack.package import *
-
-from ...build_systems import autotools
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.meson import MesonPackage
 
 
 class GobjectIntrospection(MesonPackage, AutotoolsPackage):

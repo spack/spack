@@ -4,10 +4,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 class Octopus(AutotoolsPackage, CudaPackage):

@@ -4,10 +4,10 @@
 
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
 
 #
 # Need to add:

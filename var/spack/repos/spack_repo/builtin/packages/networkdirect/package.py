@@ -5,9 +5,9 @@
 import glob
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems import msbuild
 
-from ...build_systems import msbuild
+from spack.package import *
 
 
 class Networkdirect(msbuild.MSBuildPackage):

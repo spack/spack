@@ -4,12 +4,12 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems import cmake, generic
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems import cmake, generic
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class Libogg(CMakePackage, AutotoolsPackage, Package):

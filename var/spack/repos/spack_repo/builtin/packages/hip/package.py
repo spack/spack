@@ -5,10 +5,10 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage
 
 
 class Hip(CMakePackage):

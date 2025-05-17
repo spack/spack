@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 from spack.variant import ConditionalVariantValues
-
-from ...build_systems.cmake import CMakePackage
 
 
 def _std_when(values):

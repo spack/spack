@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack_repo.builtin.build_systems.ruby import RubyPackage
 
-from ...build_systems.ruby import RubyPackage
+from spack.package import *
 
 
 class RubyTerminalTable(RubyPackage):

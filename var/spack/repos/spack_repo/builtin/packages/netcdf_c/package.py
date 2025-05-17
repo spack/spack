@@ -6,14 +6,14 @@ import itertools
 import os
 import sys
 
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from llnl.util.lang import dedupe
 
 from spack.package import *
 from spack.util.environment import filter_system_paths
-
-from ...build_systems import autotools, cmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage
 
 
 class NetcdfC(CMakePackage, AutotoolsPackage):

@@ -5,10 +5,10 @@ import os
 import re
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 class LlvmDoe(CMakePackage, CudaPackage):

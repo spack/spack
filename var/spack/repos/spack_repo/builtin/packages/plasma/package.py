@@ -1,10 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems import cmake, makefile
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 class Plasma(CMakePackage):

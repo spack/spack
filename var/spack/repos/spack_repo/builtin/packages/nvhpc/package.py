@@ -7,10 +7,10 @@ import glob
 import os.path
 import platform
 
-from spack.package import *
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
+from spack.package import *
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same

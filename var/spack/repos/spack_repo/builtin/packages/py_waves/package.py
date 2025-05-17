@@ -4,9 +4,9 @@
 
 import pathlib
 
-from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage
 
-from ...build_systems.python import PythonPackage
+from spack.package import *
 
 
 class PyWaves(PythonPackage):

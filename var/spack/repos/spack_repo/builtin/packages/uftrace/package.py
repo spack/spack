@@ -5,9 +5,9 @@
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 
-from ...build_systems.autotools import AutotoolsPackage
+from spack.package import *
 
 
 class Uftrace(AutotoolsPackage):

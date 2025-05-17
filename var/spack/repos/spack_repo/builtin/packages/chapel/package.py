@@ -6,16 +6,16 @@ import os
 import re
 import subprocess
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import llnl.util.lang
 
 import spack.platforms
 import spack.platforms.cray
 from spack.package import *
 from spack.util.environment import is_system_path, set_env
-
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
 
 
 @llnl.util.lang.memoized

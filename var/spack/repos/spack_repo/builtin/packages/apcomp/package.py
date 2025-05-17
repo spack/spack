@@ -6,10 +6,10 @@
 import os
 import socket
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.cmake import CMakeBuilder
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):

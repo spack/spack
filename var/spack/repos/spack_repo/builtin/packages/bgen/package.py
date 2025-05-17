@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.waf import WafPackage
 
-from ...build_systems.waf import WafPackage
+from spack.package import *
 
 
 class Bgen(WafPackage):

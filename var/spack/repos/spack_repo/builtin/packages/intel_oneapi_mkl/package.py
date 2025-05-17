@@ -4,13 +4,13 @@
 
 from os.path import dirname, isdir
 
-from spack.package import *
-
-from ...build_systems.oneapi import (
+from spack_repo.builtin.build_systems.oneapi import (
     IntelOneApiLibraryPackage,
     IntelOneApiPackage,
     IntelOneApiStaticLibraryList,
 )
+
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description

@@ -8,9 +8,10 @@ import getpass
 # For getting fqdn for defaulting COMPILED_BY
 import socket
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
-from ...build_systems.autotools import AutotoolsPackage
 from ..boost.package import Boost
 
 

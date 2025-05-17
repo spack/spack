@@ -4,10 +4,10 @@
 
 import os
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.hooks.sbang import filter_shebang
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 
 class Grackle(Package):

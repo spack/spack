@@ -4,11 +4,11 @@
 import os
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
 
-from ...build_systems import cmake, makefile
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.makefile import MakefilePackage
+from spack.package import *
 
 
 class Metis(CMakePackage, MakefilePackage):

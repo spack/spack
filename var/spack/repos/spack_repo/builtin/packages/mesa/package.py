@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
+from spack_repo.builtin.build_systems import meson
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 import spack.variant
 from spack.package import *
-
-from ...build_systems import meson
-from ...build_systems.meson import MesonPackage
 
 
 class Mesa(MesonPackage):

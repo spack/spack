@@ -6,9 +6,9 @@ import os
 import platform
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 # If you need to add a new version, please be aware that:
 #  - versions in the following dict are automatically added to the package

@@ -4,10 +4,10 @@
 
 import os
 
+from spack_repo.builtin.build_systems.generic import Package
+
 import spack.platforms
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 _versions = {
     "6.3.3": {

@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.go import GoPackage
 
-from ...build_systems.go import GoPackage
+from spack.package import *
 
 
 class Litestream(GoPackage):

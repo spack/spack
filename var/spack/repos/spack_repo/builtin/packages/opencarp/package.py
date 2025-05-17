@@ -5,9 +5,9 @@
 import os
 from datetime import datetime
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 class Opencarp(CMakePackage):

@@ -7,10 +7,10 @@ import shutil
 import sys
 import tempfile
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage, generator
 
 MACOS_VERSION = macos_version() if sys.platform == "darwin" else None
 

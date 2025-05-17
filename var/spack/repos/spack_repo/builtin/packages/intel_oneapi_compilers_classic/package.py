@@ -4,14 +4,14 @@
 import os
 import sys
 
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
+
 from llnl.util.lang import classproperty
 from llnl.util.link_tree import LinkTree
 
 from spack.package import *
-
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
-from ...build_systems.oneapi import IntelOneApiPackage
 
 
 @IntelOneApiPackage.update_description

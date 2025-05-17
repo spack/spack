@@ -7,14 +7,14 @@ import re
 import sys
 from contextlib import contextmanager
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package

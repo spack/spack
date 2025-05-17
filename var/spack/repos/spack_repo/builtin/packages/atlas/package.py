@@ -4,10 +4,10 @@
 
 import os
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
-
-from ...build_systems.generic import Package
 
 
 class Atlas(Package):

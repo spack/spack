@@ -4,10 +4,10 @@
 import os
 import os.path
 
-from spack.package import *
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class Nag(Package, CompilerPackage):

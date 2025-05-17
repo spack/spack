@@ -6,11 +6,15 @@ import os
 import socket
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+)
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.cached_cmake import CachedCMakePackage, cmake_cache_option, cmake_cache_path
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 
 class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):

@@ -4,11 +4,11 @@
 
 import pathlib
 
-from spack.package import *
+from spack_repo.builtin.build_systems import msbuild
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.msbuild import MSBuildPackage
 
-from ...build_systems import msbuild
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.msbuild import MSBuildPackage
+from spack.package import *
 
 
 class Lcms(AutotoolsPackage, MSBuildPackage):

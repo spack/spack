@@ -6,11 +6,11 @@
 import os
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 from spack.util.environment import is_system_path
-
-from ...build_systems.cmake import CMakePackage
 
 _is_macos = sys.platform == "darwin"
 

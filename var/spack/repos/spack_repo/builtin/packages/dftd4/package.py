@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems import cmake, meson
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
 
-from ...build_systems import cmake, meson
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.meson import MesonPackage
+from spack.package import *
 
 
 class Dftd4(MesonPackage, CMakePackage):

@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+
 from spack.build_environment import optimization_flags
 from spack.package import *
-
-from ...build_systems.cmake import CMakePackage, generator
 
 
 class Neuron(CMakePackage):

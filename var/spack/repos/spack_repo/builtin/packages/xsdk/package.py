@@ -6,11 +6,11 @@
 import sys
 from copy import deepcopy
 
-from spack.package import *
+from spack_repo.builtin.build_systems.bundle import BundlePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.bundle import BundlePackage
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 
 def xsdk_depends_on_accl(accl_name, accl_var, *args, **kwargs):

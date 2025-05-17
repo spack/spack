@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os.path
 
-from spack.package import *
+from spack_repo.builtin_mock.build_systems.compiler import CompilerPackage
+from spack_repo.builtin_mock.build_systems.generic import Package
 
-from ....builtin_mock.build_systems.compiler import CompilerPackage
-from ....builtin_mock.build_systems.generic import Package
+from spack.package import *
 
 
 class Gcc(CompilerPackage, Package):

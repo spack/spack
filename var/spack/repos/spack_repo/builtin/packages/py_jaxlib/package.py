@@ -4,11 +4,11 @@
 
 import glob
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.python import PythonPackage, PythonPipBuilder
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-from ...build_systems.cuda import CudaPackage
-from ...build_systems.python import PythonPackage, PythonPipBuilder
-from ...build_systems.rocm import ROCmPackage
+from spack.package import *
 
 rocm_dependencies = [
     "comgr",

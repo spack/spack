@@ -6,6 +6,8 @@ import shutil
 import sys
 from typing import List
 
+from spack_repo.builtin.build_systems.generic import Package
+
 import archspec.cpu
 
 from llnl.util import lang
@@ -13,8 +15,6 @@ from llnl.util import lang
 import spack.compilers.libraries
 import spack.package_base
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 
 class CompilerWrapper(Package):

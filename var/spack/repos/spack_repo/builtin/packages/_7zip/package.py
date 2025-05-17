@@ -8,10 +8,10 @@ import platform
 import re
 import shutil
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
 
-from ...build_systems.generic import Package
-from ...build_systems.sourceforge import SourceforgePackage
+from spack.package import *
 
 
 class _7zip(SourceforgePackage, Package):

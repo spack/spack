@@ -5,10 +5,10 @@
 import glob
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.sourceware import SourcewarePackage
 
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.sourceware import SourcewarePackage
+from spack.package import *
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):

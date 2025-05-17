@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems import autotools, cmake, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+
 import llnl.util.filesystem as fs
 
 from spack.package import *
-
-from ...build_systems import autotools, cmake, nmake
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.nmake import NMakePackage
 
 
 class Libxml2(AutotoolsPackage, CMakePackage, NMakePackage):

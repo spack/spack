@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
 
-from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
-from ...build_systems.cmake import CMakeBuilder, CMakePackage
+from spack.package import *
 
 
 class Libcerf(AutotoolsPackage, CMakePackage):

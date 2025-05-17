@@ -6,9 +6,9 @@ import os
 import stat
 from pathlib import Path
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class IntelXed(Package):

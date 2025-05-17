@@ -7,12 +7,12 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakeBuilder, NMakePackage
+
 from llnl.util.filesystem import windows_sfn
 
 from spack.package import *
-
-from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
-from ...build_systems.nmake import NMakeBuilder, NMakePackage
 
 is_windows = sys.platform == "win32"
 

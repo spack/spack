@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems import python
+from spack_repo.builtin.build_systems.python import PythonPackage
 
-from ...build_systems import python
-from ...build_systems.python import PythonPackage
+from spack.package import *
 
 
 class PyPlatformdirs(PythonPackage):

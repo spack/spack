@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
 
-from ...build_systems.generic import Package
-from ...build_systems.python import PythonExtension, PythonPipBuilder
+from spack.package import *
 
 
 class PySetuptools(Package, PythonExtension):

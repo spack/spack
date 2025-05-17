@@ -5,9 +5,9 @@ import numbers
 import os
 import urllib.parse
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-from ...build_systems.cmake import CMakePackage
+from spack.package import *
 
 
 def _is_integral(x):

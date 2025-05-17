@@ -9,11 +9,11 @@ import glob
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems import generic, makefile
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
 
-from ...build_systems import generic, makefile
-from ...build_systems.generic import Package
-from ...build_systems.makefile import MakefilePackage
+from spack.package import *
 
 
 class Zlib(MakefilePackage, Package):

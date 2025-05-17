@@ -5,12 +5,12 @@
 import os
 import sys
 
+from spack_repo.builtin.build_systems import makefile, python
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.python import PythonExtension
+
 from spack.build_environment import dso_suffix, stat_suffix
 from spack.package import *
-
-from ...build_systems import makefile, python
-from ...build_systems.makefile import MakefilePackage
-from ...build_systems.python import PythonExtension
 
 
 class Esmf(MakefilePackage, PythonExtension):

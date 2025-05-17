@@ -4,12 +4,12 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools, cmake, python
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
 
-from ...build_systems import autotools, cmake, python
-from ...build_systems.autotools import AutotoolsPackage
-from ...build_systems.cmake import CMakePackage
-from ...build_systems.cuda import CudaPackage
+from spack.package import *
 
 
 class Faiss(AutotoolsPackage, CMakePackage, CudaPackage):

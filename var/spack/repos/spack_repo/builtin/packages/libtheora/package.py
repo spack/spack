@@ -6,10 +6,10 @@ import glob
 import os
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.msbuild import MSBuildBuilder, MSBuildPackage
 
-from ...build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
-from ...build_systems.msbuild import MSBuildBuilder, MSBuildPackage
+from spack.package import *
 
 
 class Libtheora(AutotoolsPackage, MSBuildPackage):

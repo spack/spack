@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.aspell_dict import AspellDictPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-from ...build_systems.aspell_dict import AspellDictPackage
-from ...build_systems.gnu import GNUMirrorPackage
+from spack.package import *
 
 
 class Aspell6Es(AspellDictPackage, GNUMirrorPackage):

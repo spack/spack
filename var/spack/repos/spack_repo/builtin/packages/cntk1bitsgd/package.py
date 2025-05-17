@@ -4,9 +4,9 @@
 
 from os import listdir
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
 
-from ...build_systems.generic import Package
+from spack.package import *
 
 
 class Cntk1bitsgd(Package):

@@ -4,10 +4,10 @@
 
 import shlex
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 from spack.util.environment import filter_system_paths
-
-from ...build_systems.generic import Package
 
 
 class Nim(Package):

@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.generic import Package
+
 import llnl.util.lang
 
 from spack.package import *
-
-from ...build_systems.generic import Package
 
 
 class CrayFftw(Package):

@@ -5,15 +5,15 @@ import os.path
 import re
 import subprocess
 
+from spack_repo.builtin.build_systems import compiler
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 import archspec.cpu
 
 import spack.platforms
 import spack.version
 from spack.package import *
-
-from ...build_systems import compiler
-from ...build_systems.compiler import CompilerPackage
-from ...build_systems.generic import Package
 
 FC_PATH: Dict[str, str] = dict()
 

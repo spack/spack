@@ -4,9 +4,13 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+)
 
-from ...build_systems.cached_cmake import CachedCMakePackage, cmake_cache_option, cmake_cache_path
+from spack.package import *
 
 
 class Sina(CachedCMakePackage):
