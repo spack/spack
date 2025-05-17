@@ -5,9 +5,9 @@ import os
 
 from spack.package import *
 
-from ...build_systems import cmake, python
+from ...build_systems.cmake import CMakeBuilder as _CMakeBuilder
 from ...build_systems.cmake import CMakePackage, generator
-from ...build_systems.python import PythonExtension
+from ...build_systems.python import PythonExtension, PythonPipBuilder
 
 
 class PyPybind11(CMakePackage, PythonExtension):
@@ -100,7 +100,7 @@ class PyPybind11(CMakePackage, PythonExtension):
         )
 
 
-class CMakeBuilder(cmake.CMakeBuilder):
+class CMakeBuilder(_CMakeBuilder):
     def cmake_args(self):
         return [
             self.define("PYBIND11_TEST", self.pkg.run_tests),
@@ -109,7 +109,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
 
     def install(self, pkg, spec, prefix):
         super().install(pkg, spec, prefix)
-        python_builder = spack_repo.builtin.build_systems.python.PythonPipBuilder(pkg)
+        python_builder = PythonPipBuilder(pkg)
         python_builder.install(pkg, spec, prefix)
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
