@@ -33,5 +33,6 @@ class Direnv(GoPackage):
     version("2.11.3", sha256="2d34103a7f9645059270763a0cfe82085f6d9fe61b2a85aca558689df0e7b006")
 
     # Build dependencies
+    depends_on("go@1.24:", type="build", when="@2.36:")
     depends_on("go@1.20:", type="build", when="@2.33:")
     depends_on("go@1.16:", type="build", when="@2.28:")
