@@ -77,10 +77,15 @@ class Chafa(AutotoolsPackage):
     @run_after("install")
     def install_completions(self):
         mkdirp(zsh_completion_path(self.prefix))
-        install("tools/completions/zsh-completion.zsh", zsh_completion_path(self.prefix) / "_chafa")
+        install(
+            "tools/completions/zsh-completion.zsh", zsh_completion_path(self.prefix) / "_chafa"
+        )
         if self.spec.satisfies("@master"):
             mkdirp(fish_completion_path(self.prefix))
-            install("tools/completions/fish-completion.fish", fish_completion_path(self.prefix) / "chafa.fish")
+            install(
+                "tools/completions/fish-completion.fish",
+                fish_completion_path(self.prefix) / "chafa.fish",
+            )
 
     @run_after("install", when="+man")
     def install_man(self):
