@@ -17,6 +17,7 @@ class Kubectl(GoPackage):
 
     license("Apache-2.0")
 
+    version("1.33.1", sha256="f89203e326de4c827a23ef9aa430d8a3133f62cfa1f5a894e8c85784f01bf055")
     version("1.32.3", sha256="b1ed5abe78a626804aadc49ecb8ade6fd33b27ab8c23d43cd59dc86f6462ac09")
     version("1.31.7", sha256="92005ebd010a8d4fe3a532444c4645840e0af486062611a4d9c8d862414c3f56")
     version("1.30.11", sha256="f30e4082b6a554d4a2bfedd8b2308a5e6012287e15bec94f72987f717bab4133")
