@@ -14,6 +14,7 @@ class Podman(Package):
 
     license("Apache-2.0")
 
+    version("5.5.0", sha256="a4abfc72ef9a59ba80d081ea604ad2976ff967ae526e50e234edc1d2481bd9d1")
     version("4.9.3", sha256="37afc5bba2738c68dc24400893b99226c658cc9a2b22309f4d7abe7225d8c437")
     version("4.8.3", sha256="3a99b6c82644fa52929cf4143943c63d6784c84094892bc0e14197fa38a1c7fa")
     version("4.7.2", sha256="10346c5603546427bd809b4d855d1e39b660183232309128ad17a64969a0193d")
