@@ -20,6 +20,7 @@ class Direnv(GoPackage):
 
     # Versions (newest to oldest)
     version("master", branch="master")
+    version("2.36.0", sha256="edb89ca67ef46a792d4e20177dae9dbd229e26dcbcfb17baa9645c1ff7cc47b0")  # FIXME
     version("2.35.0", sha256="a7aaec49d1b305f0745dad364af967fb3dc9bb5befc9f29d268d528b5a474e57")
     version("2.34.0", sha256="3d7067e71500e95d69eac86a271a6b6fc3f2f2817ba0e9a589524bf3e73e007c")
     version("2.33.0", sha256="8ef18051aa6bdcd6b59f04f02acdd0b78849b8ddbdbd372d4957af7889c903ea")
