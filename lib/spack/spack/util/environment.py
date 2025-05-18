@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, Iterable, List, MutableMapping, Optional
 
 from llnl.path import path_to_os_path, system_path_filter
 from llnl.util import tty
-from llnl.util.lang import dedupe
+from llnl.util.lang import dedupe, dedupe_from_end
 
 import spack.error
 
@@ -90,6 +90,13 @@ def deprioritize_system_paths(paths: List[Path]) -> List[Path]:
 def prune_duplicate_paths(paths: List[Path]) -> List[Path]:
     """Returns the input list with duplicates removed, otherwise preserving order."""
     return list(dedupe(paths))
+
+
+def prune_duplicate_paths_from_end(paths: List[Path]) -> List[Path]:
+    """Returns the input list with duplicates removed, keeping later entries,
+    otherwise preserving order.
+    """
+    return list(dedupe_from_end(paths))
 
 
 def get_path(name: str) -> List[Path]:
@@ -437,6 +444,17 @@ class PruneDuplicatePaths(NameModifier):
         env[self.name] = self.separator.join(directories)
 
 
+class PruneDuplicatePathsFromEnd(NameModifier):
+    def execute(self, env: MutableMapping[str, str]):
+        tty.debug(f"PruneDuplicatePathsFromEnd: {self.name}", level=3)
+        environment_value = env.get(self.name, "")
+        directories = environment_value.split(self.separator) if environment_value else []
+        directories = prune_duplicate_paths_from_end(
+            [path_to_os_path(os.path.normpath(x)).pop() for x in directories]
+        )
+        env[self.name] = self.separator.join(directories)
+
+
 def _validate_path_value(name: str, value: Any) -> Union[str, pathlib.PurePath]:
     """Ensure the value for an env variable is string or path"""
     types = (str, pathlib.PurePath)
@@ -667,6 +685,17 @@ class EnvironmentModifications:
             separator: separator for the paths (default: os.pathsep)
         """
         item = PruneDuplicatePaths(name, separator=separator, trace=self._trace())
+        self.env_modifications.append(item)
+
+    def prune_duplicate_paths_from_end(self, name: str, separator: str = os.pathsep):
+        """Stores a request to remove duplicates from a path list, starting from the end, otherwise
+        preserving the order.
+
+        Args:
+            name: name of the environment variable
+            separator: separator for the paths (default: os.pathsep)
+        """
+        item = PruneDuplicatePathsFromEnd(name, separator=separator, trace=self._trace())
         self.env_modifications.append(item)
 
     def group_by_name(self) -> Dict[str, ModificationList]:

@@ -164,13 +164,15 @@ def generator(*names: str, default: Optional[str] = None) -> None:
         conflicts(f"generator={x}")
 
 
-def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
+def get_cmake_prefix_path(
+    pkg: spack.package_base.PackageBase, direct: dt.DepFlag = dt.BUILD | dt.TEST
+) -> List[str]:
     """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
     attribute of direct build/test and transitive link dependencies."""
     edges = traverse.traverse_topo_edges_generator(
         traverse.with_artificial_edges([pkg.spec]),
         visitor=traverse.MixedDepthVisitor(
-            direct=dt.BUILD | dt.TEST, transitive=dt.LINK, key=traverse.by_dag_hash
+            direct=direct, transitive=dt.LINK, key=traverse.by_dag_hash
         ),
         key=traverse.by_dag_hash,
         root=False,

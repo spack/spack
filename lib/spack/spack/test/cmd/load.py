@@ -17,6 +17,12 @@ install = SpackCommand("install")
 location = SpackCommand("location")
 
 
+def extract_value(output, set_command, variable):
+    match = re.search(set_command % variable, output, flags=re.MULTILINE)
+    value = match.group(1)
+    return value.split(os.pathsep)
+
+
 def test_manpath_trailing_colon(
     install_mockery, mock_fetch, mock_archive, mock_packages, working_env
 ):
@@ -44,6 +50,34 @@ def test_manpath_trailing_colon(
     )
 
 
+def test_load_custom_cmake_prefix_path(
+    install_mockery, mock_fetch, mock_archive, mock_packages, working_env
+):
+    def test_load_shell(shell, set_command):
+        """Test that `spack load` includes custom cmake prefix path"""
+        dependency = "define-cmake-prefix-paths"
+        pkg = f"depends-on-{dependency}"
+        install(pkg)
+        pkg_spec = spack.concretize.concretize_one(pkg)
+
+        shell_out = load(shell, pkg)
+        cmake_prefix_paths = extract_value(shell_out, set_command, "CMAKE_PREFIX_PATH")
+
+        # The custom cmake_prefix_path should be the first in the list
+        assert pkg_spec[dependency].prefix.test == cmake_prefix_paths[0]
+
+    if sys.platform == "win32":
+        shell, set_command = ("--bat", r'set "%s=(.*)"')
+        test_load_shell(shell, set_command)
+    else:
+        params = [("--sh", r"export %s=([^;]*)"), ("--csh", r"setenv %s ([^;]*)")]
+        shell, set_command = params[0]
+        paths_sh = test_load_shell(shell, set_command)
+        shell, set_command = params[1]
+        paths_csh = test_load_shell(shell, set_command)
+        assert paths_sh == paths_csh
+
+
 def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages, working_env):
     def test_load_shell(shell, set_command):
         """Test that `spack load` applies prefix inspections of its required runtime deps in
@@ -52,24 +86,20 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
         mpileaks_spec = spack.concretize.concretize_one("mpileaks")
 
         # Ensure our reference variable is clean.
-        os.environ["CMAKE_PREFIX_PATH"] = "/hello" + os.pathsep + "/world"
+        hello_world_paths = [os.path.normpath(p) for p in ("/hello", "/world")]
+        os.environ["CMAKE_PREFIX_PATH"] = os.pathsep.join(hello_world_paths)
 
         shell_out = load(shell, "mpileaks")
-
-        def extract_value(output, variable):
-            match = re.search(set_command % variable, output, flags=re.MULTILINE)
-            value = match.group(1)
-            return value.split(os.pathsep)
 
         # Map a prefix found in CMAKE_PREFIX_PATH back to a package name in mpileaks' DAG.
         prefix_to_pkg = lambda prefix: next(
             s.name for s in mpileaks_spec.traverse() if s.prefix == prefix
         )
 
-        paths_shell = extract_value(shell_out, "CMAKE_PREFIX_PATH")
+        paths_shell = extract_value(shell_out, set_command, "CMAKE_PREFIX_PATH")
 
         # We should've prepended new paths, and keep old ones.
-        assert paths_shell[-2:] == ["/hello", "/world"]
+        assert paths_shell[-2:] == hello_world_paths
 
         # All but the last two paths are added by spack load; lookup what packages they're from.
         pkgs = [prefix_to_pkg(p) for p in paths_shell[:-2]]
@@ -87,7 +117,8 @@ def test_load_recursive(install_mockery, mock_fetch, mock_archive, mock_packages
 
         # Lastly, do we keep track that mpileaks was loaded?
         assert (
-            extract_value(shell_out, uenv.spack_loaded_hashes_var)[0] == mpileaks_spec.dag_hash()
+            extract_value(shell_out, set_command, uenv.spack_loaded_hashes_var)[0]
+            == mpileaks_spec.dag_hash()
         )
         return paths_shell
 
