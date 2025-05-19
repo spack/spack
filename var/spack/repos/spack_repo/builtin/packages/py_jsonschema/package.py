@@ -15,6 +15,7 @@ class PyJsonschema(PythonPackage):
 
     license("MIT", checked_by="wdconinc")
 
+    version("4.23.0", sha256="d71497fef26351a33265337fa77ffeb82423f3ea21283cd9467bb03999266bc4")
     version("4.22.0", sha256="5b22d434a45935119af990552c862e5d6d564e8f6601206b305a61fdf661a2b7")
     version("4.21.1", sha256="85727c00279f5fa6bedbe6238d2aa6403bedd8b4864ab11207d07df3cc1b2ee5")
     version("4.20.0", sha256="4f614fd46d8d61258610998997743ec5492a648b33cf478c1ddc23ed4598a5fa")
