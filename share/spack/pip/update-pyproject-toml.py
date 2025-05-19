@@ -48,7 +48,8 @@ def should_delete(fqn):
 def descend(coll, fqn=""):
     # Get down to strings. Fuzzify fqn if necessary.
     to_delete = []
-    if type(coll) is dict:
+
+    try:
         for k, v in coll.items():
             new_fqn = fqn + "." + k
             if type(v) in [int, bool]:
@@ -63,18 +64,20 @@ def descend(coll, fqn=""):
                     to_delete.append(k)
                 else:
                     descend(coll[k], new_fqn)
-    elif type(coll) is list:
-        for idx in range(len(coll)):
-            new_fqn = fqn  # Explicitly omit index from fqn
-            if type(coll[idx]) is str:
-                coll[idx] = update_value(new_fqn, coll[idx])
-            elif type(coll[idx]) in [int, bool]:
-                pass
-            else:
-                descend(coll[idx], new_fqn)
-    else:
-        print("Collection is of unexpected type:", type(coll))
-        assert coll is not dict and coll is not list
+    except AttributeError:
+        try:
+            for idx in range(len(coll)):
+                new_fqn = fqn  # Explicitly omit index from fqn
+                if type(coll[idx]) is str:
+                    coll[idx] = update_value(new_fqn, coll[idx])
+                elif type(coll[idx]) in [int, bool]:
+                    pass
+                else:
+                    descend(coll[idx], new_fqn)
+        except TypeError:
+            print(__file__, ": Collection is of unexpected type", type(coll))
+            raise
+
     for section in to_delete:
         del coll[section]
 
