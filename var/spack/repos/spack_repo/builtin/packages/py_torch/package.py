@@ -581,7 +581,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             )
         if self.spec.satisfies("@1.5:2.2.2 + rocm"):
             filter_file(
-                r"/opt/rocm/hcc/include",
+                "/opt/rocm/hcc/include",
                 "$ENV{THRUST_PATH}/include $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
                     $ENV{ROCRAND_PATH}/include",
                 "caffe2/CMakeLists.txt",
