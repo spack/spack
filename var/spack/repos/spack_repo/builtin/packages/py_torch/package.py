@@ -579,7 +579,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 "cmake/public/LoadHIP.cmake",
                 string=True,
             )
-        if self.spec.satisfies("@1.5:2.2.2 + rocm"):
+        if self.spec.satisfies("@1.5:2.2+rocm"):
             filter_file(
                 "/opt/rocm/hcc/include",
                 "$ENV{THRUST_PATH}/include $ENV{ROCPRIM_PATH}/include $ENV{HIPCUB_PATH}/include \
