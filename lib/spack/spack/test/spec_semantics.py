@@ -329,6 +329,12 @@ class TestSpecSemantics:
                     "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
                 ),
             ),
+            # deptypes on direct deps
+            (
+                "mpileaks %[deptypes=build] mpich",
+                "mpileaks %[deptypes=link] mpich",
+                "mpileaks %[deptypes=build,link] mpich",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -775,6 +781,8 @@ class TestSpecSemantics:
             ("libelf^foo", "libelf^foo~debug"),
             ("libelf", "^foo"),
             ("mpileaks ^callpath %gcc@14", "mpileaks ^callpath %gcc@14.1"),
+            ("mpileaks %[deptypes=build] mpich", "mpileaks %[deptypes=link] mpich"),
+            ("mpileaks %mpich", "mpileaks %[deptypes=link] mpich"),
         ],
     )
     def test_lhs_is_changed_when_constraining(self, lhs, rhs):
@@ -809,6 +817,7 @@ class TestSpecSemantics:
             ("libelf^foo~debug", "libelf^foo~debug"),
             ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
             ("mpileaks ^callpath %gcc@14.1", "mpileaks ^callpath %gcc@14"),
+            ("mpileaks %[deptypes=build] gcc@14.1", "mpileaks %gcc@14"),
         ],
     )
     def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
