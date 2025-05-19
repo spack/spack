@@ -41,3 +41,4 @@ class CyrusSasl(AutotoolsPackage):
     depends_on("groff", type="build")
     depends_on("openssl", type="link")
     depends_on("libxcrypt", type="link")
+    depends_on("krb5", type="link")
