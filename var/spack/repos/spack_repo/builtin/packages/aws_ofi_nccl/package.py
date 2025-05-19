@@ -19,6 +19,7 @@ class AwsOfiNccl(AutotoolsPackage):
     maintainers("bvanessen")
 
     version("master", branch="master")
+    version("1.14.2", sha256="e523ea08ce0caeff5c949b2134b4897186d793ce908904dd9d47bb08230b9bbd")
     version("1.13.0", sha256="50dd231a0a99cec29300df46b8e828139ced15322a3c3c41b1d22dcc9a62ec02")
     version("1.12.1", sha256="821f0929c016e5448785bbc6795af5096559ecfc6c9479eb3818cafa61424576")
     version("1.12.0", sha256="93029207103b75f4dc15f023b3b8692851202b52b7e2824723dd5d328f0ea65b")
@@ -51,7 +52,7 @@ class AwsOfiNccl(AutotoolsPackage):
     depends_on("libtool", type="build")
 
     def url_for_version(self, version):
-        if version < Version("1.7.0"):
+        if version < Version("1.7.0") or version >= Version("1.14.0"):
             return super().url_for_version(version)
         url_fmt = "https://github.com/aws/aws-ofi-nccl/archive/v{0}-aws.tar.gz"
         return url_fmt.format(version)
