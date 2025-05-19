@@ -7,12 +7,16 @@ from llnl.util.filesystem import find
 
 import spack.builder
 import spack.package_base
-import spack.spec
-import spack.util.environment
-import spack.util.executable
-import spack.util.prefix
-from spack.directives import build_system, depends_on, extends
-from spack.multimethod import when
+from spack.package import (
+    EnvironmentModifications,
+    Executable,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    extends,
+    when,
+)
 
 
 class LuaPackage(spack.package_base.PackageBase):
@@ -40,11 +44,11 @@ class LuaPackage(spack.package_base.PackageBase):
 
     @property
     def lua(self):
-        return spack.util.executable.Executable(self.spec["lua-lang"].prefix.bin.lua)
+        return Executable(self.spec["lua-lang"].prefix.bin.lua)
 
     @property
     def luarocks(self):
-        lr = spack.util.executable.Executable(self.spec["lua-lang"].prefix.bin.luarocks)
+        lr = Executable(self.spec["lua-lang"].prefix.bin.luarocks)
         return lr
 
 
@@ -58,9 +62,7 @@ class LuaBuilder(spack.builder.Builder):
     #: Names associated with package attributes in the old build-system format
     legacy_attributes = ()
 
-    def unpack(
-        self, pkg: LuaPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def unpack(self, pkg: LuaPackage, spec: Spec, prefix: Prefix) -> None:
         if os.path.splitext(pkg.stage.archive_file)[1] == ".rock":
             directory = pkg.luarocks("unpack", pkg.stage.archive_file, output=str)
             dirlines = directory.split("\n")
@@ -71,9 +73,7 @@ class LuaBuilder(spack.builder.Builder):
     def _generate_tree_line(name, prefix):
         return """{{ name = "{name}", root = "{prefix}" }};""".format(name=name, prefix=prefix)
 
-    def generate_luarocks_config(
-        self, pkg: LuaPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def generate_luarocks_config(self, pkg: LuaPackage, spec: Spec, prefix: Prefix) -> None:
         spec = self.pkg.spec
         table_entries = []
         for d in spec.traverse(deptype=("build", "run")):
@@ -92,18 +92,14 @@ class LuaBuilder(spack.builder.Builder):
                 )
             )
 
-    def preprocess(
-        self, pkg: LuaPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def preprocess(self, pkg: LuaPackage, spec: Spec, prefix: Prefix) -> None:
         """Override this to preprocess source before building with luarocks"""
         pass
 
     def luarocks_args(self):
         return []
 
-    def install(
-        self, pkg: LuaPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: LuaPackage, spec: Spec, prefix: Prefix) -> None:
         rock = "."
         specs = find(".", "*.rockspec", recursive=False)
         if specs:
@@ -115,7 +111,5 @@ class LuaBuilder(spack.builder.Builder):
     def _luarocks_config_path(self):
         return os.path.join(self.pkg.stage.source_path, "spack_luarocks.lua")
 
-    def setup_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications
-    ) -> None:
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("LUAROCKS_CONFIG", self._luarocks_config_path())

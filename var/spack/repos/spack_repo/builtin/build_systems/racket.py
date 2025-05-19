@@ -4,19 +4,24 @@
 import os
 from typing import Optional, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 from llnl.util.lang import ClassProperty, classproperty
 
 import spack.builder
-import spack.spec
-import spack.util.prefix
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE
-from spack.config import determine_number_of_jobs
-from spack.directives import build_system, extends, maintainers
+from spack.package import (
+    Executable,
+    Prefix,
+    ProcessError,
+    Spec,
+    build_system,
+    determine_number_of_jobs,
+    extends,
+    maintainers,
+    tty,
+    working_dir,
+)
 from spack.package_base import PackageBase
 from spack.util.environment import env_flag
-from spack.util.executable import Executable, ProcessError
 
 
 def _homepage(cls: "RacketPackage") -> Optional[str]:
@@ -76,12 +81,10 @@ class RacketBuilder(spack.builder.Builder):
             ret = os.path.join(ret, self.subdirectory)
         return ret
 
-    def install(
-        self, pkg: RacketPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: RacketPackage, spec: Spec, prefix: Prefix) -> None:
         """Install everything from build directory."""
         raco = Executable("raco")
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             parallel = pkg.parallel and (not env_flag(SPACK_NO_PARALLEL_MAKE))
             name = pkg.racket_name
             assert name is not None, "Racket package name is not set"

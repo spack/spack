@@ -4,15 +4,19 @@
 import os
 from typing import List
 
-import llnl.util.filesystem as fs
-
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, conflicts, depends_on, variant
-from spack.multimethod import when
+from spack.package import (
+    Prefix,
+    Spec,
+    build_system,
+    conflicts,
+    depends_on,
+    run_after,
+    variant,
+    when,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
@@ -190,9 +194,7 @@ class MesonBuilder(BuilderWithDefaults):
         """
         return []
 
-    def meson(
-        self, pkg: MesonPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def meson(self, pkg: MesonPackage, spec: Spec, prefix: Prefix) -> None:
         """Run ``meson`` in the build directory"""
         options = []
         if self.spec["meson"].satisfies("@0.64:"):
@@ -200,29 +202,25 @@ class MesonBuilder(BuilderWithDefaults):
         options.append(os.path.abspath(self.root_mesonlists_dir))
         options += self.std_meson_args
         options += self.meson_args()
-        with fs.working_dir(self.build_directory, create=True):
+        with working_dir(self.build_directory, create=True):
             pkg.module.meson(*options)
 
-    def build(
-        self, pkg: MesonPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: MesonPackage, spec: Spec, prefix: Prefix) -> None:
         """Make the build targets"""
         options = ["-v"]
         options += self.build_targets
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.ninja(*options)
 
-    def install(
-        self, pkg: MesonPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: MesonPackage, spec: Spec, prefix: Prefix) -> None:
         """Make the install targets"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.ninja(*self.install_targets)
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def check(self) -> None:
         """Search Meson-generated files for the target ``test`` and run it if found."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg._if_ninja_target_execute("test")
             self.pkg._if_ninja_target_execute("check")

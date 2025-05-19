@@ -4,11 +4,8 @@
 from typing import Tuple
 
 import spack.builder
-import spack.directives
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
+from spack.package import Prefix, Spec, build_system, run_after
 
 from ._checks import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 
@@ -24,7 +21,7 @@ class Package(spack.package_base.PackageBase):
     #: Legacy buildsystem attribute used to deserialize and install old specs
     legacy_buildsystem = "generic"
 
-    spack.directives.build_system("generic")
+    build_system("generic")
 
 
 @spack.builder.builder("generic")
@@ -46,12 +43,10 @@ class GenericBuilder(BuilderWithDefaults):
     install_time_test_callbacks = []
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    spack.phase_callbacks.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+    run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
 
     # unconditionally perform any post-install phase tests
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)
 
-    def install(
-        self, pkg: Package, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: Package, spec: Spec, prefix: Prefix) -> None:
         raise NotImplementedError

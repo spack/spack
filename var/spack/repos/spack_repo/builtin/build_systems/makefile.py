@@ -3,15 +3,18 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import List
 
-import llnl.util.filesystem as fs
-
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, conflicts, depends_on
-from spack.multimethod import when
+from spack.package import (
+    Prefix,
+    Spec,
+    build_system,
+    conflicts,
+    depends_on,
+    run_after,
+    when,
+    working_dir,
+)
 
 from ._checks import (
     BuilderWithDefaults,
@@ -97,42 +100,36 @@ class MakefileBuilder(BuilderWithDefaults):
         """Return the directory containing the main Makefile."""
         return self.pkg.stage.source_path
 
-    def edit(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def edit(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
         """Edit the Makefile before calling make. The default is a no-op."""
         pass
 
-    def build(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
         """Run "make" on the build targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.make(*self.build_targets)
 
-    def install(
-        self, pkg: MakefilePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: MakefilePackage, spec: Spec, prefix: Prefix) -> None:
         """Run "make" on the install targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.make(*self.install_targets)
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def check(self) -> None:
         """Run "make" on the ``test`` and ``check`` targets, if found."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg._if_make_target_execute("test")
             self.pkg._if_make_target_execute("check")
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)
 
     def installcheck(self) -> None:
         """Searches the Makefile for an ``installcheck`` target
         and runs it if found.
         """
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg._if_make_target_execute("installcheck")
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    spack.phase_callbacks.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+    run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)

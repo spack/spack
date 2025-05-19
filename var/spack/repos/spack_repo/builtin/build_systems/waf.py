@@ -5,10 +5,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, depends_on
+from spack.package import Prefix, Spec, build_system, depends_on, run_after
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests, execute_install_time_tests
 
@@ -99,9 +96,7 @@ class WafBuilder(BuilderWithDefaults):
         with working_dir(self.build_directory):
             self.python("waf", "-j{0}".format(jobs), *args, **kwargs)
 
-    def configure(
-        self, pkg: WafPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def configure(self, pkg: WafPackage, spec: Spec, prefix: Prefix) -> None:
         """Configures the project."""
         args = ["--prefix={0}".format(self.pkg.prefix)]
         args += self.configure_args()
@@ -112,9 +107,7 @@ class WafBuilder(BuilderWithDefaults):
         """Arguments to pass to configure."""
         return []
 
-    def build(
-        self, pkg: WafPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: WafPackage, spec: Spec, prefix: Prefix) -> None:
         """Executes the build."""
         args = self.build_args()
 
@@ -124,9 +117,7 @@ class WafBuilder(BuilderWithDefaults):
         """Arguments to pass to build."""
         return []
 
-    def install(
-        self, pkg: WafPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: WafPackage, spec: Spec, prefix: Prefix) -> None:
         """Installs the targets on the system."""
         args = self.install_args()
 
@@ -144,7 +135,7 @@ class WafBuilder(BuilderWithDefaults):
         """
         pass
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def install_test(self):
         """Run unit tests after install.
@@ -154,4 +145,4 @@ class WafBuilder(BuilderWithDefaults):
         """
         pass
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)

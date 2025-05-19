@@ -76,10 +76,14 @@
 
 import os
 
-import spack.variant
-from spack.directives import conflicts, depends_on, variant
+from spack.package import (
+    EnvironmentModifications,
+    any_combination_of,
+    conflicts,
+    depends_on,
+    variant,
+)
 from spack.package_base import PackageBase
-from spack.util.environment import EnvironmentModifications
 
 
 class ROCmPackage(PackageBase):
@@ -135,7 +139,7 @@ class ROCmPackage(PackageBase):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.any_combination_of(*amdgpu_targets),
+        values=any_combination_of(*amdgpu_targets),
         sticky=True,
         when="+rocm",
     )

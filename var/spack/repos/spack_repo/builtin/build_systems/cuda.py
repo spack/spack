@@ -5,9 +5,7 @@
 import re
 from typing import Iterable, List
 
-import spack.variant
-from spack.directives import conflicts, depends_on, variant
-from spack.multimethod import when
+from spack.package import any_combination_of, conflicts, depends_on, variant, when
 from spack.package_base import PackageBase
 
 
@@ -71,7 +69,7 @@ class CudaPackage(PackageBase):
     variant(
         "cuda_arch",
         description="CUDA architecture",
-        values=spack.variant.any_combination_of(*cuda_arch_values),
+        values=any_combination_of(*cuda_arch_values),
         sticky=True,
         when="+cuda",
     )

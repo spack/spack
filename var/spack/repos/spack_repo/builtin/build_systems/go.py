@@ -2,16 +2,21 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.filesystem as fs
-
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.environment
-import spack.util.prefix
-from spack.directives import build_system, depends_on
-from spack.multimethod import when
+from spack.package import (
+    EnvironmentModifications,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    install,
+    join_path,
+    mkdirp,
+    run_after,
+    when,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
@@ -69,12 +74,10 @@ class GoBuilder(BuilderWithDefaults):
     #: Callback names for install-time test
     install_time_test_callbacks = ["check"]
 
-    def setup_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications
-    ) -> None:
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("GO111MODULE", "on")
         env.set("GOTOOLCHAIN", "local")
-        env.set("GOPATH", fs.join_path(self.pkg.stage.path, "go"))
+        env.set("GOPATH", join_path(self.pkg.stage.path, "go"))
 
     @property
     def build_directory(self):
@@ -100,24 +103,20 @@ class GoBuilder(BuilderWithDefaults):
         """Argument for ``go test`` during check phase"""
         return []
 
-    def build(
-        self, pkg: GoPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: GoPackage, spec: Spec, prefix: Prefix) -> None:
         """Runs ``go build`` in the source directory"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.go("build", *self.build_args)
 
-    def install(
-        self, pkg: GoPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: GoPackage, spec: Spec, prefix: Prefix) -> None:
         """Install built binaries into prefix bin."""
-        with fs.working_dir(self.build_directory):
-            fs.mkdirp(prefix.bin)
-            fs.install(pkg.name, prefix.bin)
+        with working_dir(self.build_directory):
+            mkdirp(prefix.bin)
+            install(pkg.name, prefix.bin)
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)
 
     def check(self):
         """Run ``go test .`` in the source directory"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg.module.go("test", *self.check_args)

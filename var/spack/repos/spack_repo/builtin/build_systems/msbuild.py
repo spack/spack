@@ -7,9 +7,7 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, conflicts
+from spack.package import Prefix, Spec, build_system, conflicts, working_dir
 
 from ._checks import BuilderWithDefaults
 
@@ -105,23 +103,19 @@ class MSBuildBuilder(BuilderWithDefaults):
         as `msbuild_args` by default."""
         return self.msbuild_args()
 
-    def build(
-        self, pkg: MSBuildPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: MSBuildPackage, spec: Spec, prefix: Prefix) -> None:
         """Run "msbuild" on the build targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.msbuild(
                 *self.std_msbuild_args,
                 *self.msbuild_args(),
                 self.define_targets(*self.build_targets),
             )
 
-    def install(
-        self, pkg: MSBuildPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: MSBuildPackage, spec: Spec, prefix: Prefix) -> None:
         """Run "msbuild" on the install targets specified by the builder.
         This is INSTALL by default"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.msbuild(
                 *self.msbuild_install_args(), self.define_targets(*self.install_targets)
             )

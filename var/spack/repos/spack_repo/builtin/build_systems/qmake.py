@@ -5,10 +5,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, depends_on
+from spack.package import Prefix, Spec, build_system, depends_on, run_after
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
@@ -64,23 +61,17 @@ class QMakeBuilder(BuilderWithDefaults):
         """List of arguments passed to qmake."""
         return []
 
-    def qmake(
-        self, pkg: QMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def qmake(self, pkg: QMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Run ``qmake`` to configure the project and generate a Makefile."""
         with working_dir(self.build_directory):
             pkg.module.qmake(*self.qmake_args())
 
-    def build(
-        self, pkg: QMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: QMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Make the build targets"""
         with working_dir(self.build_directory):
             pkg.module.make()
 
-    def install(
-        self, pkg: QMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: QMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Make the install targets"""
         with working_dir(self.build_directory):
             pkg.module.make("install")
@@ -90,4 +81,4 @@ class QMakeBuilder(BuilderWithDefaults):
         with working_dir(self.build_directory):
             self.pkg._if_make_target_execute("check")
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)

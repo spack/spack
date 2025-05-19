@@ -2,16 +2,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import llnl.util.filesystem as fs
-
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.environment
-import spack.util.prefix
-from spack.directives import build_system, depends_on
-from spack.multimethod import when
+from spack.package import (
+    EnvironmentModifications,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    install_tree,
+    run_after,
+    when,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
@@ -87,30 +90,24 @@ class CargoBuilder(BuilderWithDefaults):
         """Argument for ``cargo test`` during check phase"""
         return []
 
-    def setup_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications
-    ) -> None:
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CARGO_HOME", self.stage.path)
 
-    def build(
-        self, pkg: CargoPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: CargoPackage, spec: Spec, prefix: Prefix) -> None:
         """Runs ``cargo install`` in the source directory"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.cargo(
                 "install", "--root", "out", "--path", ".", *self.std_build_args, *self.build_args
             )
 
-    def install(
-        self, pkg: CargoPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: CargoPackage, spec: Spec, prefix: Prefix) -> None:
         """Copy build files into package prefix."""
-        with fs.working_dir(self.build_directory):
-            fs.install_tree("out", prefix)
+        with working_dir(self.build_directory):
+            install_tree("out", prefix)
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)
 
     def check(self):
         """Run "cargo test"."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg.module.cargo("test", *self.check_args)

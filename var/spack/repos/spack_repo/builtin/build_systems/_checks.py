@@ -7,11 +7,9 @@ from typing import List
 import llnl.util.lang
 
 import spack.builder
-import spack.error
-import spack.phase_callbacks
 import spack.relocate
-import spack.spec
 import spack.store
+from spack.package import InstallError, Spec, run_after
 
 
 def sanity_check_prefix(builder: spack.builder.Builder):
@@ -34,7 +32,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
             if not predicate(abs_path):
                 msg = "Install failed for {0}. No such {1} in prefix: {2}"
                 msg = msg.format(pkg.name, filetype, path)
-                raise spack.error.InstallError(msg)
+                raise InstallError(msg)
 
     check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
     check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
@@ -42,7 +40,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
     ignore_file = llnl.util.lang.match_predicate(spack.store.STORE.layout.hidden_file_regexes)
     if all(map(ignore_file, os.listdir(pkg.prefix))):
         msg = "Install failed for {0}.  Nothing was installed!"
-        raise spack.error.InstallError(msg.format(pkg.name))
+        raise InstallError(msg.format(pkg.name))
 
 
 def apply_macos_rpath_fixups(builder: spack.builder.Builder):
@@ -62,9 +60,7 @@ def apply_macos_rpath_fixups(builder: spack.builder.Builder):
     spack.relocate.fixup_macos_rpaths(builder.spec)
 
 
-def ensure_build_dependencies_or_raise(
-    spec: spack.spec.Spec, dependencies: List[str], error_msg: str
-):
+def ensure_build_dependencies_or_raise(spec: Spec, dependencies: List[str], error_msg: str):
     """Ensure that some build dependencies are present in the concrete spec.
 
     If not, raise a RuntimeError with a helpful error message.
@@ -131,4 +127,4 @@ class BuilderWithDefaults(spack.builder.Builder):
     """Base class for all specific builders with common callbacks registered."""
 
     # Check that self.prefix is there after installation
-    spack.phase_callbacks.run_after("install")(sanity_check_prefix)
+    run_after("install")(sanity_check_prefix)

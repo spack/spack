@@ -8,13 +8,11 @@ import re
 import sys
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-import llnl.util.tty as tty
 from llnl.util.lang import classproperty, memoized
 
-import spack
 import spack.compilers.error
 import spack.package_base
-import spack.util.executable
+from spack.package import Executable, ProcessError, Spec, tty, which_string
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]
@@ -52,7 +50,7 @@ class CompilerPackage(spack.package_base.PackageBase):
     #: Flags for generating debug information
     debug_flags: Sequence[str] = []
 
-    def __init__(self, spec: "spack.spec.Spec"):
+    def __init__(self, spec: Spec):
         super().__init__(spec)
         msg = f"Supported languages for {spec} are not a subset of possible supported languages"
         msg += f"    supports: {self.supported_languages}, valid values: {self.compiler_languages}"
@@ -97,7 +95,7 @@ class CompilerPackage(spack.package_base.PackageBase):
                 match = re.search(cls.compiler_version_regex, output)
                 if match:
                     return ".".join(match.groups())
-            except spack.util.executable.ProcessError:
+            except ProcessError:
                 pass
             except Exception as e:
                 tty.debug(
@@ -230,7 +228,7 @@ def _compiler_output(
         compiler_path: path of the compiler to be invoked
         version_argument: the argument used to extract version information
     """
-    compiler = spack.util.executable.Executable(compiler_path)
+    compiler = Executable(compiler_path)
     if not version_argument:
         return compiler(
             output=str, error=str, ignore_errors=ignore_errors, timeout=120, fail_on_error=True
@@ -253,7 +251,7 @@ def compiler_output(
     # not just executable name. If we don't do this, and the path changes
     # (e.g., during testing), we can get incorrect results.
     if not os.path.isabs(compiler_path):
-        compiler_path = spack.util.executable.which_string(str(compiler_path), required=True)
+        compiler_path = which_string(str(compiler_path), required=True)
 
     return _compiler_output(
         compiler_path, version_argument=version_argument, ignore_errors=ignore_errors

@@ -3,12 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import llnl.util.filesystem as fs
-
-import spack.directives
-import spack.spec
-import spack.util.executable
-import spack.util.prefix
+from spack.package import Executable, Prefix, Spec, extends, filter_file
 
 from .autotools import AutotoolsBuilder, AutotoolsPackage
 
@@ -20,16 +15,13 @@ class AspellBuilder(AutotoolsBuilder):
     """
 
     def configure(
-        self,
-        pkg: "AspellDictPackage",  # type: ignore[override]
-        spec: spack.spec.Spec,
-        prefix: spack.util.prefix.Prefix,
+        self, pkg: "AspellDictPackage", spec: Spec, prefix: Prefix  # type: ignore[override]
     ):
         aspell = spec["aspell"].prefix.bin.aspell
         prezip = spec["aspell"].prefix.bin.prezip
         destdir = prefix
 
-        sh = spack.util.executable.Executable("/bin/sh")
+        sh = Executable("/bin/sh")
         sh("./configure", "--vars", f"ASPELL={aspell}", f"PREZIP={prezip}", f"DESTDIR={destdir}")
 
 
@@ -42,7 +34,7 @@ class AspellBuilder(AutotoolsBuilder):
 class AspellDictPackage(AutotoolsPackage):
     """Specialized class for building aspell dictionairies."""
 
-    spack.directives.extends("aspell", when="build_system=autotools")
+    extends("aspell", when="build_system=autotools")
 
     #: Override the default autotools builder
     AutotoolsBuilder = AspellBuilder
@@ -54,5 +46,5 @@ class AspellDictPackage(AutotoolsPackage):
         datadir = aspell("dump", "config", "data-dir", output=str).strip()
         dictdir = os.path.relpath(dictdir, aspell_spec.prefix)
         datadir = os.path.relpath(datadir, aspell_spec.prefix)
-        fs.filter_file(r"^dictdir=.*$", f"dictdir=/{dictdir}", "configure")
-        fs.filter_file(r"^datadir=.*$", f"datadir=/{datadir}", "configure")
+        filter_file(r"^dictdir=.*$", f"dictdir=/{dictdir}", "configure")
+        filter_file(r"^datadir=.*$", f"datadir=/{datadir}", "configure")

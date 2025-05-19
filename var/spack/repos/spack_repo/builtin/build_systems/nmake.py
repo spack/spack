@@ -7,9 +7,7 @@ import llnl.util.filesystem as fs
 
 import spack.builder
 import spack.package_base
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, conflicts
+from spack.package import Prefix, Spec, build_system, conflicts, working_dir
 
 from ._checks import BuilderWithDefaults
 
@@ -125,20 +123,16 @@ class NMakeBuilder(BuilderWithDefaults):
         Individual packages should override to specify NMake args to command line"""
         return []
 
-    def build(
-        self, pkg: NMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: NMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Run "nmake" on the build targets specified by the builder."""
         opts = self.std_nmake_args
         opts += self.nmake_args()
         if self.makefile_name:
             opts.append("/F{}".format(self.makefile_name))
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.nmake(*opts, *self.build_targets, ignore_quotes=self.ignore_quotes)
 
-    def install(
-        self, pkg: NMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: NMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Run "nmake" on the install targets specified by the builder.
         This is INSTALL by default"""
         opts = self.std_nmake_args
@@ -147,5 +141,5 @@ class NMakeBuilder(BuilderWithDefaults):
         if self.makefile_name:
             opts.append("/F{}".format(self.makefile_name))
         opts.append(self.define("PREFIX", fs.windows_sfn(prefix)))
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.nmake(*opts, *self.install_targets, ignore_quotes=self.ignore_quotes)

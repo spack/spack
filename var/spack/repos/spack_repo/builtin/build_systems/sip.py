@@ -4,18 +4,22 @@
 import os
 import re
 
-import llnl.util.tty as tty
-from llnl.util.filesystem import find, working_dir
-
 import spack.builder
-import spack.install_test
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, depends_on, extends
-from spack.multimethod import when
-from spack.util.executable import Executable
+from spack.package import (
+    Executable,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    extends,
+    find,
+    run_after,
+    test_part,
+    tty,
+    when,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
@@ -96,7 +100,7 @@ class SIPPackage(spack.package_base.PackageBase):
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
         for module in self.import_modules:
-            with spack.install_test.test_part(
+            with test_part(
                 self,
                 "test_imports_{0}".format(module),
                 purpose="checking import of {0}".format(module),
@@ -133,9 +137,7 @@ class SIPBuilder(BuilderWithDefaults):
 
     build_directory = "build"
 
-    def configure(
-        self, pkg: SIPPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def configure(self, pkg: SIPPackage, spec: Spec, prefix: Prefix) -> None:
         """Configure the package."""
 
         # https://www.riverbankcomputing.com/static/Docs/sip/command_line_tools.html
@@ -153,9 +155,7 @@ class SIPBuilder(BuilderWithDefaults):
         """Arguments to pass to configure."""
         return []
 
-    def build(
-        self, pkg: SIPPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: SIPPackage, spec: Spec, prefix: Prefix) -> None:
         """Build the package."""
         args = self.build_args()
 
@@ -166,9 +166,7 @@ class SIPBuilder(BuilderWithDefaults):
         """Arguments to pass to build."""
         return []
 
-    def install(
-        self, pkg: SIPPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: SIPPackage, spec: Spec, prefix: Prefix) -> None:
         """Install the package."""
         args = self.install_args()
 
@@ -179,4 +177,4 @@ class SIPBuilder(BuilderWithDefaults):
         """Arguments to pass to install."""
         return []
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)

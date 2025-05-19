@@ -13,27 +13,37 @@ from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 import archspec
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-from llnl.util.filesystem import HeaderList, LibraryList, join_path
 from llnl.util.lang import ClassProperty, classproperty, match_predicate
 
 import spack.builder
 import spack.config
 import spack.deptypes as dt
 import spack.detection
-import spack.multimethod
 import spack.package_base
-import spack.phase_callbacks
 import spack.platforms
 import spack.repo
 import spack.spec
 import spack.store
-import spack.util.prefix
-from spack.directives import build_system, depends_on, extends
-from spack.error import NoHeadersError, NoLibrariesError
-from spack.install_test import test_part
-from spack.spec import Spec
-from spack.util.prefix import Prefix
+from spack.package import (
+    HeaderList,
+    LibraryList,
+    NoHeadersError,
+    NoLibrariesError,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    extends,
+    filter_file,
+    find,
+    find_all_headers,
+    join_path,
+    run_after,
+    test_part,
+    tty,
+    when,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
@@ -86,7 +96,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
             # Some Python libraries are packages: collections of modules
             # distributed in directories containing __init__.py files
-            for path in fs.find(root, "__init__.py", recursive=True):
+            for path in find(root, "__init__.py", recursive=True):
                 modules.append(
                     path.replace(root + os.sep, "", 1)
                     .replace(os.sep + "__init__.py", "")
@@ -95,7 +105,7 @@ class PythonExtension(spack.package_base.PackageBase):
 
             # Some Python libraries are modules: individual *.py files
             # found in the site-packages directory
-            for path in fs.find(root, "*.py", recursive=False):
+            for path in find(root, "*.py", recursive=False):
                 modules.append(
                     path.replace(root + os.sep, "", 1).replace(".py", "").replace("/", ".")
                 )
@@ -180,7 +190,7 @@ class PythonExtension(spack.package_base.PackageBase):
             if (s.st_mode & 0b111) and fs.has_shebang(src):
                 copied_files[(s.st_dev, s.st_ino)] = dst
                 shutil.copy2(src, dst)
-                fs.filter_file(
+                filter_file(
                     python.prefix, os.path.abspath(view.get_projection_for_spec(self.spec)), dst
                 )
             else:
@@ -362,7 +372,7 @@ class PythonPackage(PythonExtension):
 
     build_system("python_pip")
 
-    with spack.multimethod.when("build_system=python_pip"):
+    with when("build_system=python_pip"):
         extends("python")
         depends_on("py-pip", type="build")
         # FIXME: technically wheel is only needed when building from source, not when
@@ -395,7 +405,7 @@ class PythonPackage(PythonExtension):
         platlib = self.prefix.join(python.package.platlib).join(name)
         purelib = self.prefix.join(python.package.purelib).join(name)
 
-        headers_list = map(fs.find_all_headers, [include, platlib, purelib])
+        headers_list = map(find_all_headers, [include, platlib, purelib])
         headers = functools.reduce(operator.add, headers_list)
 
         if headers:
@@ -543,7 +553,7 @@ class PythonPipBuilder(BuilderWithDefaults):
         else:
             args.append(".")
 
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pip(*args)
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)

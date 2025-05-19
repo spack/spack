@@ -10,20 +10,25 @@ import sys
 from itertools import chain
 from typing import Any, List, Optional, Tuple
 
-import llnl.util.filesystem as fs
-from llnl.util import tty
 from llnl.util.lang import stable_partition
 
 import spack.builder
 import spack.deptypes as dt
-import spack.error
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
 from spack import traverse
-from spack.directives import build_system, conflicts, depends_on, variant
-from spack.multimethod import when
+from spack.package import (
+    InstallError,
+    Prefix,
+    Spec,
+    build_system,
+    conflicts,
+    depends_on,
+    run_after,
+    tty,
+    variant,
+    when,
+    working_dir,
+)
 from spack.util.environment import filter_system_paths
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
@@ -382,7 +387,7 @@ class CMakeBuilder(BuilderWithDefaults):
             msg = "Invalid CMake generator: '{0}'\n".format(generator)
             msg += "CMakePackage currently supports the following "
             msg += "primary generators: '{0}'".format("', '".join(valid_primary_generators))
-            raise spack.error.InstallError(msg)
+            raise InstallError(msg)
 
         try:
             build_type = pkg.spec.variants["build_type"].value
@@ -454,9 +459,7 @@ class CMakeBuilder(BuilderWithDefaults):
         """
         return []
 
-    def cmake(
-        self, pkg: CMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def cmake(self, pkg: CMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Runs ``cmake`` in the build directory"""
 
         if spec.is_develop:
@@ -480,37 +483,33 @@ class CMakeBuilder(BuilderWithDefaults):
         options = self.std_cmake_args
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
-        with fs.working_dir(self.build_directory, create=True):
+        with working_dir(self.build_directory, create=True):
             pkg.module.cmake(*options)
 
-    def build(
-        self, pkg: CMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: CMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Make the build targets"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
                 pkg.module.make(*self.build_targets)
             elif self.generator == "Ninja":
                 self.build_targets.append("-v")
                 pkg.module.ninja(*self.build_targets)
 
-    def install(
-        self, pkg: CMakePackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: CMakePackage, spec: Spec, prefix: Prefix) -> None:
         """Make the install targets"""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
                 pkg.module.make(*self.install_targets)
             elif self.generator == "Ninja":
                 pkg.module.ninja(*self.install_targets)
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def check(self) -> None:
         """Search the CMake-generated files for the targets ``test`` and ``check``,
         and runs them if found.
         """
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             if self.generator == "Unix Makefiles":
                 self.pkg._if_make_target_execute("test", jobs_env="CTEST_PARALLEL_LEVEL")
                 self.pkg._if_make_target_execute("check")

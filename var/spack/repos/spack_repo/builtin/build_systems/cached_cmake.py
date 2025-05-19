@@ -7,14 +7,7 @@ import os
 import re
 from typing import Optional, Tuple
 
-import llnl.util.filesystem as fs
-import llnl.util.tty as tty
-
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import depends_on
-from spack.util.executable import which_string
+from spack.package import Prefix, Spec, depends_on, install, mkdirp, run_after, tty, which_string
 
 from .cmake import CMakeBuilder, CMakePackage
 
@@ -375,9 +368,7 @@ class CachedCMakeBuilder(CMakeBuilder):
         """This method is to be overwritten by the package"""
         return []
 
-    def initconfig(
-        self, pkg: "CachedCMakePackage", spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def initconfig(self, pkg: "CachedCMakePackage", spec: Spec, prefix: Prefix) -> None:
         cache_entries = (
             self.std_initconfig_entries()
             + self.initconfig_compiler_entries()
@@ -397,10 +388,10 @@ class CachedCMakeBuilder(CMakeBuilder):
         args.extend(["-C", self.cache_path])
         return args
 
-    @spack.phase_callbacks.run_after("install")
+    @run_after("install")
     def install_cmake_cache(self):
-        fs.mkdirp(self.pkg.spec.prefix.share.cmake)
-        fs.install(self.cache_path, self.pkg.spec.prefix.share.cmake)
+        mkdirp(self.pkg.spec.prefix.share.cmake)
+        install(self.cache_path, self.pkg.spec.prefix.share.cmake)
 
 
 class CachedCMakePackage(CMakePackage):

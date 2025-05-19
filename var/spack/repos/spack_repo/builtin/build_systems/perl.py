@@ -4,18 +4,24 @@
 import os
 from typing import Iterable
 
-from llnl.util.filesystem import filter_file, find
 from llnl.util.lang import memoized
 
 import spack.builder
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.prefix
-from spack.directives import build_system, depends_on, extends
-from spack.install_test import SkipTest, test_part
-from spack.multimethod import when
-from spack.util.executable import Executable
+from spack.package import (
+    Executable,
+    Prefix,
+    SkipTest,
+    Spec,
+    build_system,
+    depends_on,
+    extends,
+    filter_file,
+    find,
+    run_after,
+    test_part,
+    when,
+)
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
@@ -151,9 +157,7 @@ class PerlBuilder(BuilderWithDefaults):
         """
         return []
 
-    def configure(
-        self, pkg: PerlPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def configure(self, pkg: PerlPackage, spec: Spec, prefix: Prefix) -> None:
         """Run Makefile.PL or Build.PL with arguments consisting of
         an appropriate installation base directory followed by the
         list returned by :py:meth:`~.PerlBuilder.configure_args`.
@@ -170,28 +174,24 @@ class PerlBuilder(BuilderWithDefaults):
     # Build.PL may be too long causing the build to fail. Patching the shebang
     # does not happen until after install so set '/usr/bin/env perl' here in
     # the Build script.
-    @spack.phase_callbacks.run_after("configure")
+    @run_after("configure")
     def fix_shebang(self):
         if self.build_method == "Build.PL":
             pattern = "#!{0}".format(self.spec["perl"].command.path)
             repl = "#!/usr/bin/env perl"
             filter_file(pattern, repl, "Build", backup=False)
 
-    def build(
-        self, pkg: PerlPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: PerlPackage, spec: Spec, prefix: Prefix) -> None:
         """Builds a Perl package."""
         self.build_executable()
 
     # Ensure that tests run after build (if requested):
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def check(self):
         """Runs built-in tests of a Perl package."""
         self.build_executable("test")
 
-    def install(
-        self, pkg: PerlPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: PerlPackage, spec: Spec, prefix: Prefix) -> None:
         """Installs a Perl package."""
         self.build_executable("install")

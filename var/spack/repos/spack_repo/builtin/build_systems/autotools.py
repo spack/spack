@@ -12,17 +12,30 @@ import llnl.util.tty as tty
 import spack.build_environment
 import spack.builder
 import spack.compilers.libraries
-import spack.error
 import spack.package_base
-import spack.phase_callbacks
-import spack.spec
-import spack.util.environment
-import spack.util.prefix
-from spack.directives import build_system, conflicts, depends_on
-from spack.multimethod import when
 from spack.operating_systems.mac_os import macos_version
-from spack.util.executable import Executable
-from spack.version import Version
+from spack.package import (
+    EnvironmentModifications,
+    Executable,
+    FileFilter,
+    InstallError,
+    Prefix,
+    Spec,
+    Version,
+    build_system,
+    conflicts,
+    copy,
+    depends_on,
+    find,
+    force_remove,
+    is_exe,
+    keep_modification_time,
+    mkdirp,
+    run_after,
+    run_before,
+    when,
+    working_dir,
+)
 
 from ._checks import (
     BuilderWithDefaults,
@@ -192,7 +205,7 @@ class AutotoolsBuilder(BuilderWithDefaults):
             files.append(self._removed_la_files_log)
         return files
 
-    @spack.phase_callbacks.run_after("autoreconf")
+    @run_after("autoreconf")
     def _do_patch_config_files(self) -> None:
         """Some packages ship with older config.guess/config.sub files and need to
         have these updated when installed on a newer architecture.
@@ -230,7 +243,7 @@ class AutotoolsBuilder(BuilderWithDefaults):
             return True
 
         # Get the list of files that needs to be patched
-        to_be_patched = fs.find(self.pkg.stage.path, files=["config.sub", "config.guess"])
+        to_be_patched = find(self.pkg.stage.path, files=["config.sub", "config.guess"])
         to_be_patched = [f for f in to_be_patched if not runs_ok(f)]
 
         # If there are no files to be patched, return early
@@ -249,13 +262,13 @@ class AutotoolsBuilder(BuilderWithDefaults):
 
         # An external gnuconfig may not not have a prefix.
         if gnuconfig_dir is None:
-            raise spack.error.InstallError(
+            raise InstallError(
                 "Spack could not find substitutes for GNU config files because no "
                 "prefix is available for the `gnuconfig` package. Make sure you set a "
                 "prefix path instead of modules for external `gnuconfig`."
             )
 
-        candidates = fs.find(gnuconfig_dir, files=to_be_found, recursive=False)
+        candidates = find(gnuconfig_dir, files=to_be_found, recursive=False)
 
         # For external packages the user may have specified an incorrect prefix.
         # otherwise the installation is just corrupt.
@@ -269,7 +282,7 @@ class AutotoolsBuilder(BuilderWithDefaults):
                 msg += (
                     " or the `gnuconfig` package prefix is misconfigured as" " an external package"
                 )
-            raise spack.error.InstallError(msg)
+            raise InstallError(msg)
 
         # Filter working substitutes
         candidates = [f for f in candidates if runs_ok(f)]
@@ -294,29 +307,29 @@ To resolve this problem, please try the following:
    and set the prefix to the directory containing the `config.guess` and
    `config.sub` files.
 """
-            raise spack.error.InstallError(msg.format(", ".join(to_be_found), self.pkg.name))
+            raise InstallError(msg.format(", ".join(to_be_found), self.pkg.name))
 
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
             name = os.path.basename(abs_path)
             mode = os.stat(abs_path).st_mode
             os.chmod(abs_path, stat.S_IWUSR)
-            fs.copy(substitutes[name], abs_path)
+            copy(substitutes[name], abs_path)
             os.chmod(abs_path, mode)
 
-    @spack.phase_callbacks.run_before("configure")
+    @run_before("configure")
     def _patch_usr_bin_file(self) -> None:
         """On NixOS file is not available in /usr/bin/file. Patch configure
         scripts to use file from path."""
 
         if self.spec.os.startswith("nixos"):
-            x = fs.FileFilter(
-                *filter(fs.is_exe, fs.find(self.build_directory, "configure", recursive=True))
+            x = FileFilter(
+                *filter(is_exe, find(self.build_directory, "configure", recursive=True))
             )
-            with fs.keep_modification_time(*x.filenames):
+            with keep_modification_time(*x.filenames):
                 x.filter(regex="/usr/bin/file", repl="file", string=True)
 
-    @spack.phase_callbacks.run_before("configure")
+    @run_before("configure")
     def _set_autotools_environment_variables(self) -> None:
         """Many autotools builds use a version of mknod.m4 that fails when
         running as root unless FORCE_UNSAFE_CONFIGURE is set to 1.
@@ -330,7 +343,7 @@ To resolve this problem, please try the following:
         """
         os.environ["FORCE_UNSAFE_CONFIGURE"] = "1"
 
-    @spack.phase_callbacks.run_before("configure")
+    @run_before("configure")
     def _do_patch_libtool_configure(self) -> None:
         """Patch bugs that propagate from libtool macros into "configure" and
         further into "libtool". Note that patches that can be fixed by patching
@@ -341,14 +354,12 @@ To resolve this problem, please try the following:
         if not self.patch_libtool:
             return
 
-        x = fs.FileFilter(
-            *filter(fs.is_exe, fs.find(self.build_directory, "configure", recursive=True))
-        )
+        x = FileFilter(*filter(is_exe, find(self.build_directory, "configure", recursive=True)))
 
         # There are distributed automatically generated files that depend on the configure script
         # and require additional tools for rebuilding.
         # See https://github.com/spack/spack/pull/30768#issuecomment-1219329860
-        with fs.keep_modification_time(*x.filenames):
+        with keep_modification_time(*x.filenames):
             # Fix parsing of compiler output when collecting predeps and postdeps
             # https://lists.gnu.org/archive/html/bug-libtool/2016-03/msg00003.html
             x.filter(regex=r'^(\s*if test x-L = )("\$p" \|\|\s*)$', repl=r"\1x\2")
@@ -365,7 +376,7 @@ To resolve this problem, please try the following:
             # 82f7f52123e4e7e50721049f7fa6f9b870e09c9d.
             x.filter("lt_cv_apple_cc_single_mod=no", "lt_cv_apple_cc_single_mod=yes", string=True)
 
-    @spack.phase_callbacks.run_after("configure")
+    @run_after("configure")
     def _do_patch_libtool(self) -> None:
         """If configure generates a "libtool" script that does not correctly
         detect the compiler (and patch_libtool is set), patch in the correct
@@ -387,9 +398,7 @@ To resolve this problem, please try the following:
         if not self.patch_libtool:
             return
 
-        x = fs.FileFilter(
-            *filter(fs.is_exe, fs.find(self.build_directory, "libtool", recursive=True))
-        )
+        x = FileFilter(*filter(is_exe, find(self.build_directory, "libtool", recursive=True)))
 
         # Exit early if there is nothing to patch:
         if not x.filenames:
@@ -545,10 +554,10 @@ To resolve this problem, please try the following:
             build_dir = os.path.join(self.pkg.stage.source_path, build_dir)
         return build_dir
 
-    @spack.phase_callbacks.run_before("autoreconf")
+    @run_before("autoreconf")
     def _delete_configure_to_force_update(self) -> None:
         if self.force_autoreconf:
-            fs.force_remove(self.configure_abs_path)
+            force_remove(self.configure_abs_path)
 
     @property
     def autoreconf_search_path_args(self) -> List[str]:
@@ -558,7 +567,7 @@ To resolve this problem, please try the following:
         spack dependencies."""
         return _autoreconf_search_path_args(self.spec)
 
-    @spack.phase_callbacks.run_after("autoreconf")
+    @run_after("autoreconf")
     def _set_configure_or_die(self) -> None:
         """Ensure the presence of a "configure" script, or raise. If the "configure"
         is found, a module level attribute is set.
@@ -582,9 +591,7 @@ To resolve this problem, please try the following:
         """
         return []
 
-    def autoreconf(
-        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def autoreconf(self, pkg: AutotoolsPackage, spec: Spec, prefix: Prefix) -> None:
         """Not needed usually, configure should be already there"""
 
         # If configure exists nothing needs to be done
@@ -603,7 +610,7 @@ To resolve this problem, please try the following:
         tty.warn("* If the default procedure fails, consider implementing *")
         tty.warn("*        a custom AUTORECONF phase in the package       *")
         tty.warn("*********************************************************")
-        with fs.working_dir(self.configure_directory):
+        with working_dir(self.configure_directory):
             # This line is what is needed most of the time
             # --install, --verbose, --force
             autoreconf_args = ["-ivf"]
@@ -611,9 +618,7 @@ To resolve this problem, please try the following:
             autoreconf_args += self.autoreconf_extra_args
             self.pkg.module.autoreconf(*autoreconf_args)
 
-    def configure(
-        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def configure(self, pkg: AutotoolsPackage, spec: Spec, prefix: Prefix) -> None:
         """Run "configure", with the arguments specified by the builder and an
         appropriately set prefix.
         """
@@ -621,31 +626,27 @@ To resolve this problem, please try the following:
         options += ["--prefix={0}".format(prefix)]
         options += self.configure_args()
 
-        with fs.working_dir(self.build_directory, create=True):
+        with working_dir(self.build_directory, create=True):
             pkg.module.configure(*options)
 
-    def build(
-        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def build(self, pkg: AutotoolsPackage, spec: Spec, prefix: Prefix) -> None:
         """Run "make" on the build targets specified by the builder."""
         # See https://autotools.io/automake/silent.html
         params = ["V=1"]
         params += self.build_targets
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.make(*params)
 
-    def install(
-        self, pkg: AutotoolsPackage, spec: spack.spec.Spec, prefix: spack.util.prefix.Prefix
-    ) -> None:
+    def install(self, pkg: AutotoolsPackage, spec: Spec, prefix: Prefix) -> None:
         """Run "make" on the install targets specified by the builder."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             pkg.module.make(*self.install_targets)
 
-    spack.phase_callbacks.run_after("build")(execute_build_time_tests)
+    run_after("build")(execute_build_time_tests)
 
     def check(self) -> None:
         """Run "make" on the ``test`` and ``check`` targets, if found."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg._if_make_target_execute("test")
             self.pkg._if_make_target_execute("check")
 
@@ -713,7 +714,7 @@ To resolve this problem, please try the following:
         Raises:
             KeyError: if name is not among known variants
         """
-        spec: spack.spec.Spec = self.pkg.spec
+        spec: Spec = self.pkg.spec
         args: List[str] = []
 
         if activation_value == "prefix":
@@ -824,14 +825,14 @@ To resolve this problem, please try the following:
         """
         return self._activate_or_not(name, "enable", "disable", activation_value, variant)
 
-    spack.phase_callbacks.run_after("install")(execute_install_time_tests)
+    run_after("install")(execute_install_time_tests)
 
     def installcheck(self) -> None:
         """Run "make" on the ``installcheck`` target, if found."""
-        with fs.working_dir(self.build_directory):
+        with working_dir(self.build_directory):
             self.pkg._if_make_target_execute("installcheck")
 
-    @spack.phase_callbacks.run_after("install")
+    @run_after("install")
     def _remove_libtool_archives(self) -> None:
         """Remove all .la files in prefix sub-folders if the package sets
         ``install_libtool_archives`` to be False.
@@ -841,25 +842,23 @@ To resolve this problem, please try the following:
             return
 
         # Remove the files and create a log of what was removed
-        libtool_files = fs.find(str(self.pkg.prefix), "*.la", recursive=True)
+        libtool_files = find(str(self.pkg.prefix), "*.la", recursive=True)
         with fs.safe_remove(*libtool_files):
-            fs.mkdirp(os.path.dirname(self._removed_la_files_log))
+            mkdirp(os.path.dirname(self._removed_la_files_log))
             with open(self._removed_la_files_log, mode="w", encoding="utf-8") as f:
                 f.write("\n".join(libtool_files))
 
-    def setup_build_environment(
-        self, env: spack.util.environment.EnvironmentModifications
-    ) -> None:
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.platform == "darwin" and macos_version() >= Version("11"):
             # Many configure files rely on matching '10.*' for macOS version
             # detection and fail to add flags if it shows as version 11.
             env.set("MACOSX_DEPLOYMENT_TARGET", "10.16")
 
     # On macOS, force rpaths for shared library IDs and remove duplicate rpaths
-    spack.phase_callbacks.run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
+    run_after("install", when="platform=darwin")(apply_macos_rpath_fixups)
 
 
-def _autoreconf_search_path_args(spec: spack.spec.Spec) -> List[str]:
+def _autoreconf_search_path_args(spec: Spec) -> List[str]:
     dirs_seen: Set[Tuple[int, int]] = set()
     flags_spack: List[str] = []
     flags_external: List[str] = []

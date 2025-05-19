@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import Optional, Tuple
 
-from llnl.util.filesystem import mkdirp
 from llnl.util.lang import ClassProperty, classproperty
 
-from spack.directives import extends
+from spack.package import extends, mkdirp
 
 from .generic import GenericBuilder, Package
 
