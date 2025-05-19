@@ -360,6 +360,13 @@ def clean_user_environment():
         os.environ[ev.spack_env_var] = spack_env_value
 
 
+@pytest.fixture(scope="session", autouse=True)
+def clear_xdg_vars():
+    saved = spack.paths._unset_xdg_vars(os.environ)
+    yield
+    os.environ.update(saved)
+
+
 #
 # Make sure global state of active env does not leak between tests.
 #
