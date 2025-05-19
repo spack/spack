@@ -3,14 +3,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, extends, maintainers
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    extends,
+    maintainers,
+    register_builder,
+)
 
 from ._checks import BuilderWithDefaults
 
 
-class RubyPackage(spack.package_base.PackageBase):
+class RubyPackage(PackageBase):
     """Specialized class for building Ruby gems."""
 
     maintainers("Kerilk")
@@ -26,7 +32,7 @@ class RubyPackage(spack.package_base.PackageBase):
     extends("ruby", when="build_system=ruby")
 
 
-@spack.builder.register_builder("ruby")
+@register_builder("ruby")
 class RubyBuilder(BuilderWithDefaults):
     """The Ruby builder provides two phases that can be overridden if required:
 

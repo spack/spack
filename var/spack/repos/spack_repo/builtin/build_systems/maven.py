@@ -1,14 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.builder
-import spack.package_base
 from spack.package import (
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     depends_on,
     install_tree,
+    register_builder,
     when,
     which,
     working_dir,
@@ -17,7 +17,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults
 
 
-class MavenPackage(spack.package_base.PackageBase):
+class MavenPackage(PackageBase):
     """Specialized class for packages that are built using the
     Maven build system. See https://maven.apache.org/index.html
     for more information.
@@ -37,7 +37,7 @@ class MavenPackage(spack.package_base.PackageBase):
         depends_on("maven", type="build")
 
 
-@spack.builder.register_builder("maven")
+@register_builder("maven")
 class MavenBuilder(BuilderWithDefaults):
     """The Maven builder encodes the default way to build software with Maven.
     It has two phases that can be overridden, if need be:

@@ -2,10 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.builder
-import spack.package_base
 from spack.package import (
     EnvironmentModifications,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
@@ -13,6 +12,7 @@ from spack.package import (
     install,
     join_path,
     mkdirp,
+    register_builder,
     run_after,
     when,
     working_dir,
@@ -21,7 +21,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
 
-class GoPackage(spack.package_base.PackageBase):
+class GoPackage(PackageBase):
     """Specialized class for packages built using the Go toolchain."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -37,7 +37,7 @@ class GoPackage(spack.package_base.PackageBase):
         depends_on("go", type="build")
 
 
-@spack.builder.register_builder("go")
+@register_builder("go")
 class GoBuilder(BuilderWithDefaults):
     """The Go builder encodes the most common way of building software with
     a golang go.mod file. It has two phases that can be overridden, if need be:

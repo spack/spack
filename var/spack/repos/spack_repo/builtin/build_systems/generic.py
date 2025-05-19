@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import Tuple
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, run_after
+from spack.package import PackageBase, Prefix, Spec, build_system, register_builder, run_after
 
 from ._checks import BuilderWithDefaults, apply_macos_rpath_fixups, execute_install_time_tests
 
 
-class Package(spack.package_base.PackageBase):
+class Package(PackageBase):
     """General purpose class with a single ``install`` phase that needs to be
     coded by packagers.
     """
@@ -24,7 +22,7 @@ class Package(spack.package_base.PackageBase):
     build_system("generic")
 
 
-@spack.builder.register_builder("generic")
+@register_builder("generic")
 class GenericBuilder(BuilderWithDefaults):
     """A builder for a generic build system, that require packagers
     to implement an "install" phase.

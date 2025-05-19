@@ -4,14 +4,14 @@
 import os
 from typing import List
 
-import spack.builder
-import spack.package_base
 from spack.package import (
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     conflicts,
     depends_on,
+    register_builder,
     run_after,
     variant,
     when,
@@ -21,7 +21,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
 
-class MesonPackage(spack.package_base.PackageBase):
+class MesonPackage(PackageBase):
     """Specialized class for packages built using Meson. For more information
     on the Meson build system, see https://mesonbuild.com/
     """
@@ -70,7 +70,7 @@ class MesonPackage(spack.package_base.PackageBase):
         setattr(self, "meson_flag_args", [])
 
 
-@spack.builder.register_builder("meson")
+@register_builder("meson")
 class MesonBuilder(BuilderWithDefaults):
     """The Meson builder encodes the default way to build software with Meson.
     The builder has three phases that can be overridden, if need be:

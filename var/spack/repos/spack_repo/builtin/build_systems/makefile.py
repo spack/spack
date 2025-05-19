@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import List
 
-import spack.builder
-import spack.package_base
 from spack.package import (
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     conflicts,
     depends_on,
+    register_builder,
     run_after,
     when,
     working_dir,
@@ -24,7 +24,7 @@ from ._checks import (
 )
 
 
-class MakefilePackage(spack.package_base.PackageBase):
+class MakefilePackage(PackageBase):
     """Specialized class for packages built using Makefiles."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -40,7 +40,7 @@ class MakefilePackage(spack.package_base.PackageBase):
         depends_on("gmake", type="build")
 
 
-@spack.builder.register_builder("makefile")
+@register_builder("makefile")
 class MakefileBuilder(BuilderWithDefaults):
     """The Makefile builder encodes the most common way of building software with
     Makefiles. It has three phases that can be overridden, if need be:

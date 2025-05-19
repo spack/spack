@@ -4,11 +4,11 @@
 
 from typing import Optional
 
-import spack.package_base
 import spack.util.url
+from spack.package import PackageBase
 
 
-class XorgPackage(spack.package_base.PackageBase):
+class XorgPackage(PackageBase):
     """Mixin that takes care of setting url and mirrors for x.org
     packages."""
 

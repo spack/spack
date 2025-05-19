@@ -3,14 +3,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from llnl.util.filesystem import working_dir
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, depends_on, run_after
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    register_builder,
+    run_after,
+)
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests, execute_install_time_tests
 
 
-class WafPackage(spack.package_base.PackageBase):
+class WafPackage(PackageBase):
     """Specialized class for packages that are built using the
     Waf build system. See https://waf.io/book/ for more information.
     """
@@ -28,7 +34,7 @@ class WafPackage(spack.package_base.PackageBase):
     depends_on("python@2.5:", type="build", when="build_system=waf")
 
 
-@spack.builder.register_builder("waf")
+@register_builder("waf")
 class WafBuilder(BuilderWithDefaults):
     """The WAF builder provides the following phases that can be overridden:
 

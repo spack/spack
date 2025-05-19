@@ -5,8 +5,7 @@
 import re
 from typing import Iterable, List
 
-from spack.package import any_combination_of, conflicts, depends_on, variant, when
-from spack.package_base import PackageBase
+from spack.package import PackageBase, any_combination_of, conflicts, depends_on, variant, when
 
 
 class CudaPackage(PackageBase):

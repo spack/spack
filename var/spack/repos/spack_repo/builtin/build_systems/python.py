@@ -15,11 +15,9 @@ import archspec
 import llnl.util.filesystem as fs
 from llnl.util.lang import ClassProperty, classproperty, match_predicate
 
-import spack.builder
 import spack.config
 import spack.deptypes as dt
 import spack.detection
-import spack.package_base
 import spack.platforms
 import spack.repo
 import spack.spec
@@ -29,6 +27,7 @@ from spack.package import (
     LibraryList,
     NoHeadersError,
     NoLibrariesError,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
@@ -38,6 +37,7 @@ from spack.package import (
     find,
     find_all_headers,
     join_path,
+    register_builder,
     run_after,
     test_part,
     tty,
@@ -67,7 +67,7 @@ def _flatten_dict(dictionary: Mapping[str, object]) -> Iterable[str]:
             yield f"{key}={item}"
 
 
-class PythonExtension(spack.package_base.PackageBase):
+class PythonExtension(PackageBase):
     @property
     def import_modules(self) -> Iterable[str]:
         """Names of modules that the Python package provides.
@@ -437,7 +437,7 @@ class PythonPackage(PythonExtension):
         raise NoLibrariesError(msg.format(self.spec.name, platlib, purelib))
 
 
-@spack.builder.register_builder("python_pip")
+@register_builder("python_pip")
 class PythonPipBuilder(BuilderWithDefaults):
     phases = ("install",)
 

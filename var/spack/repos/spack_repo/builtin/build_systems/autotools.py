@@ -12,13 +12,13 @@ import llnl.util.tty as tty
 import spack.build_environment
 import spack.builder
 import spack.compilers.libraries
-import spack.package_base
 from spack.operating_systems.mac_os import macos_version
 from spack.package import (
     EnvironmentModifications,
     Executable,
     FileFilter,
     InstallError,
+    PackageBase,
     Prefix,
     Spec,
     Version,
@@ -31,6 +31,7 @@ from spack.package import (
     is_exe,
     keep_modification_time,
     mkdirp,
+    register_builder,
     run_after,
     run_before,
     when,
@@ -46,7 +47,7 @@ from ._checks import (
 )
 
 
-class AutotoolsPackage(spack.package_base.PackageBase):
+class AutotoolsPackage(PackageBase):
     """Specialized class for packages built using GNU Autotools."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -91,7 +92,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         return spack.builder.create(self).with_or_without(*args, **kwargs)
 
 
-@spack.builder.register_builder("autotools")
+@register_builder("autotools")
 class AutotoolsBuilder(BuilderWithDefaults):
     """The autotools builder encodes the default way of installing software built
     with autotools. It has four phases that can be overridden, if need be:

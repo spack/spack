@@ -6,10 +6,11 @@ from typing import Optional, Tuple
 
 from llnl.util.lang import ClassProperty, classproperty
 
-import spack.builder
 from spack.build_environment import SPACK_NO_PARALLEL_MAKE
 from spack.package import (
+    Builder,
     Executable,
+    PackageBase,
     Prefix,
     ProcessError,
     Spec,
@@ -17,10 +18,10 @@ from spack.package import (
     determine_number_of_jobs,
     extends,
     maintainers,
+    register_builder,
     tty,
     working_dir,
 )
-from spack.package_base import PackageBase
 from spack.util.environment import env_flag
 
 
@@ -51,8 +52,8 @@ class RacketPackage(PackageBase):
     homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
 
 
-@spack.builder.register_builder("racket")
-class RacketBuilder(spack.builder.Builder):
+@register_builder("racket")
+class RacketBuilder(Builder):
     """The Racket builder provides an ``install`` phase that can be overridden."""
 
     phases = ("install",)

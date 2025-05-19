@@ -5,14 +5,20 @@ from typing import List  # novm
 
 import llnl.util.filesystem as fs
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, conflicts, working_dir
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    conflicts,
+    register_builder,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults
 
 
-class MSBuildPackage(spack.package_base.PackageBase):
+class MSBuildPackage(PackageBase):
     """Specialized class for packages built using Visual Studio project files or solutions."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -28,7 +34,7 @@ class MSBuildPackage(spack.package_base.PackageBase):
         return define(msbuild_arg, value)
 
 
-@spack.builder.register_builder("msbuild")
+@register_builder("msbuild")
 class MSBuildBuilder(BuilderWithDefaults):
     """The MSBuild builder encodes the most common way of building software with
     Mircosoft's MSBuild tool. It has two phases that can be overridden, if need be:

@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.builder
-import spack.package_base
 from spack.package import (
     EnvironmentModifications,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     depends_on,
     install_tree,
+    register_builder,
     run_after,
     when,
     working_dir,
@@ -19,7 +19,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
 
-class CargoPackage(spack.package_base.PackageBase):
+class CargoPackage(PackageBase):
     """Specialized class for packages built using cargo."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -32,7 +32,7 @@ class CargoPackage(spack.package_base.PackageBase):
         depends_on("rust", type="build")
 
 
-@spack.builder.register_builder("cargo")
+@register_builder("cargo")
 class CargoBuilder(BuilderWithDefaults):
     """The Cargo builder encodes the most common way of building software with
     a rust Cargo.toml file. It has two phases that can be overridden, if need be:

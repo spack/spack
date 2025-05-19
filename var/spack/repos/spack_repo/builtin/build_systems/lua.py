@@ -5,21 +5,22 @@ import os
 
 from llnl.util.filesystem import find
 
-import spack.builder
-import spack.package_base
 from spack.package import (
+    Builder,
     EnvironmentModifications,
     Executable,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     depends_on,
     extends,
+    register_builder,
     when,
 )
 
 
-class LuaPackage(spack.package_base.PackageBase):
+class LuaPackage(PackageBase):
     """Specialized class for lua packages"""
 
     #: This attribute is used in UI queries that need to know the build
@@ -52,8 +53,8 @@ class LuaPackage(spack.package_base.PackageBase):
         return lr
 
 
-@spack.builder.register_builder("lua")
-class LuaBuilder(spack.builder.Builder):
+@register_builder("lua")
+class LuaBuilder(Builder):
     phases = ("unpack", "generate_luarocks_config", "preprocess", "install")
 
     #: Names associated with package methods in the old build-system format

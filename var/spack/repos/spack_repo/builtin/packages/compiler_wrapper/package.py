@@ -13,7 +13,6 @@ import archspec.cpu
 from llnl.util import lang
 
 import spack.compilers.libraries
-import spack.package_base
 from spack.package import *
 
 
@@ -279,7 +278,7 @@ class CompilerWrapper(Package):
         return "--enable-new-dtags"
 
 
-def _implicit_rpaths(pkg: spack.package_base.PackageBase) -> List[str]:
+def _implicit_rpaths(pkg: PackageBase) -> List[str]:
     detector = spack.compilers.libraries.CompilerPropertyDetector(pkg.spec)
     paths = detector.implicit_rpaths()
     return paths

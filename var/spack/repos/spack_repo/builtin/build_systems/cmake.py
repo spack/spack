@@ -12,17 +12,17 @@ from typing import Any, List, Optional, Tuple
 
 from llnl.util.lang import stable_partition
 
-import spack.builder
 import spack.deptypes as dt
-import spack.package_base
 from spack import traverse
 from spack.package import (
     InstallError,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     conflicts,
     depends_on,
+    register_builder,
     run_after,
     tty,
     variant,
@@ -46,7 +46,7 @@ def _extract_primary_generator(generator):
     return _primary_generator_extractor.match(generator).group(1)
 
 
-def _maybe_set_python_hints(pkg: spack.package_base.PackageBase, args: List[str]) -> None:
+def _maybe_set_python_hints(pkg: PackageBase, args: List[str]) -> None:
     """Set the PYTHON_EXECUTABLE, Python_EXECUTABLE, and Python3_EXECUTABLE CMake variables
     if the package has Python as build or link dep and ``find_python_hints`` is set to True. See
     ``find_python_hints`` for context."""
@@ -64,7 +64,7 @@ def _maybe_set_python_hints(pkg: spack.package_base.PackageBase, args: List[str]
     )
 
 
-def _supports_compilation_databases(pkg: spack.package_base.PackageBase) -> bool:
+def _supports_compilation_databases(pkg: PackageBase) -> bool:
     """Check if this package (and CMake) can support compilation databases."""
 
     # CMAKE_EXPORT_COMPILE_COMMANDS only exists for CMake >= 3.5
@@ -78,7 +78,7 @@ def _supports_compilation_databases(pkg: spack.package_base.PackageBase) -> bool
     return True
 
 
-def _conditional_cmake_defaults(pkg: spack.package_base.PackageBase, args: List[str]) -> None:
+def _conditional_cmake_defaults(pkg: PackageBase, args: List[str]) -> None:
     """Set a few default defines for CMake, depending on its version."""
     cmakes = pkg.spec.dependencies("cmake", dt.BUILD)
 
@@ -169,7 +169,7 @@ def generator(*names: str, default: Optional[str] = None) -> None:
         conflicts(f"generator={x}")
 
 
-def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
+def get_cmake_prefix_path(pkg: PackageBase) -> List[str]:
     """Obtain the CMAKE_PREFIX_PATH entries for a package, based on the cmake_prefix_path package
     attribute of direct build/test and transitive link dependencies."""
     edges = traverse.traverse_topo_edges_generator(
@@ -190,7 +190,7 @@ def get_cmake_prefix_path(pkg: spack.package_base.PackageBase) -> List[str]:
     )
 
 
-class CMakePackage(spack.package_base.PackageBase):
+class CMakePackage(PackageBase):
     """Specialized class for packages built using CMake
 
     For more information on the CMake build system, see:
@@ -288,7 +288,7 @@ class CMakePackage(spack.package_base.PackageBase):
         return define_from_variant(self, cmake_var, variant)
 
 
-@spack.builder.register_builder("cmake")
+@register_builder("cmake")
 class CMakeBuilder(BuilderWithDefaults):
     """The cmake builder encodes the default way of building software with CMake. IT
     has three phases that can be overridden:
@@ -375,9 +375,7 @@ class CMakeBuilder(BuilderWithDefaults):
         return args
 
     @staticmethod
-    def std_args(
-        pkg: spack.package_base.PackageBase, generator: Optional[str] = None
-    ) -> List[str]:
+    def std_args(pkg: PackageBase, generator: Optional[str] = None) -> List[str]:
         """Computes the standard cmake arguments for a generic package"""
         default_generator = "Ninja" if sys.platform == "win32" else "Unix Makefiles"
         generator = generator or default_generator
@@ -425,11 +423,11 @@ class CMakeBuilder(BuilderWithDefaults):
         return args
 
     @staticmethod
-    def define_cuda_architectures(pkg: spack.package_base.PackageBase) -> str:
+    def define_cuda_architectures(pkg: PackageBase) -> str:
         return define_cuda_architectures(pkg)
 
     @staticmethod
-    def define_hip_architectures(pkg: spack.package_base.PackageBase) -> str:
+    def define_hip_architectures(pkg: PackageBase) -> str:
         return define_hip_architectures(pkg)
 
     @staticmethod
@@ -556,9 +554,7 @@ def define(cmake_var: str, value: Any) -> str:
     return "".join(["-D", cmake_var, ":", kind, "=", value])
 
 
-def define_from_variant(
-    pkg: spack.package_base.PackageBase, cmake_var: str, variant: Optional[str] = None
-) -> str:
+def define_from_variant(pkg: PackageBase, cmake_var: str, variant: Optional[str] = None) -> str:
     """Return a CMake command line argument from the given variant's value.
 
     The optional ``variant`` argument defaults to the lower-case transform
@@ -618,7 +614,7 @@ def define_from_variant(
     return define(cmake_var, value)
 
 
-def define_hip_architectures(pkg: spack.package_base.PackageBase) -> str:
+def define_hip_architectures(pkg: PackageBase) -> str:
     """Returns the str ``-DCMAKE_HIP_ARCHITECTURES:STRING=(expanded amdgpu_target)``.
 
     ``amdgpu_target`` is variant composed of a list of the target HIP
@@ -634,7 +630,7 @@ def define_hip_architectures(pkg: spack.package_base.PackageBase) -> str:
     return ""
 
 
-def define_cuda_architectures(pkg: spack.package_base.PackageBase) -> str:
+def define_cuda_architectures(pkg: PackageBase) -> str:
     """Returns the str ``-DCMAKE_CUDA_ARCHITECTURES:STRING=(expanded cuda_arch)``.
 
     ``cuda_arch`` is variant composed of a list of target CUDA architectures and

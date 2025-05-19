@@ -78,12 +78,12 @@ import os
 
 from spack.package import (
     EnvironmentModifications,
+    PackageBase,
     any_combination_of,
     conflicts,
     depends_on,
     variant,
 )
-from spack.package_base import PackageBase
 
 
 class ROCmPackage(PackageBase):

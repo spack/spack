@@ -1,12 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system
+from spack.package import Builder, PackageBase, Prefix, Spec, build_system, register_builder
 
 
-class BundlePackage(spack.package_base.PackageBase):
+class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
 
     #: This attribute is used in UI queries that require to know which
@@ -22,8 +20,8 @@ class BundlePackage(spack.package_base.PackageBase):
     build_system("bundle")
 
 
-@spack.builder.register_builder("bundle")
-class BundleBuilder(spack.builder.Builder):
+@register_builder("bundle")
+class BundleBuilder(Builder):
     phases = ("install",)
 
     def install(self, pkg: BundlePackage, spec: Spec, prefix: Prefix) -> None:

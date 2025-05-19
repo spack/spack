@@ -6,10 +6,9 @@ from typing import Iterable
 
 from llnl.util.lang import memoized
 
-import spack.builder
-import spack.package_base
 from spack.package import (
     Executable,
+    PackageBase,
     Prefix,
     SkipTest,
     Spec,
@@ -18,6 +17,7 @@ from spack.package import (
     extends,
     filter_file,
     find,
+    register_builder,
     run_after,
     test_part,
     when,
@@ -26,7 +26,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
 
-class PerlPackage(spack.package_base.PackageBase):
+class PerlPackage(PackageBase):
     """Specialized class for packages that are built using Perl."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -94,7 +94,7 @@ class PerlPackage(spack.package_base.PackageBase):
                 assert "OK" in out
 
 
-@spack.builder.register_builder("perl")
+@register_builder("perl")
 class PerlBuilder(BuilderWithDefaults):
     """The perl builder provides four phases that can be overridden, if required:
 

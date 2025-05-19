@@ -6,13 +6,12 @@ from typing import List
 
 import llnl.util.lang
 
-import spack.builder
 import spack.relocate
 import spack.store
-from spack.package import InstallError, Spec, run_after
+from spack.package import Builder, InstallError, Spec, run_after
 
 
-def sanity_check_prefix(builder: spack.builder.Builder):
+def sanity_check_prefix(builder: Builder):
     """Check that specific directories and files are created after installation.
 
     The files to be checked are in the ``sanity_check_is_file`` attribute of the
@@ -43,7 +42,7 @@ def sanity_check_prefix(builder: spack.builder.Builder):
         raise InstallError(msg.format(pkg.name))
 
 
-def apply_macos_rpath_fixups(builder: spack.builder.Builder):
+def apply_macos_rpath_fixups(builder: Builder):
     """On Darwin, make installed libraries more easily relocatable.
 
     Some build systems (handrolled, autotools, makefiles) can set their own
@@ -97,7 +96,7 @@ def ensure_build_dependencies_or_raise(spec: Spec, dependencies: List[str], erro
     raise RuntimeError(msg)
 
 
-def execute_build_time_tests(builder: spack.builder.Builder):
+def execute_build_time_tests(builder: Builder):
     """Execute the build-time tests prescribed by builder.
 
     Args:
@@ -110,7 +109,7 @@ def execute_build_time_tests(builder: spack.builder.Builder):
     builder.pkg.tester.phase_tests(builder, "build", builder.build_time_test_callbacks)
 
 
-def execute_install_time_tests(builder: spack.builder.Builder):
+def execute_install_time_tests(builder: Builder):
     """Execute the install-time tests prescribed by builder.
 
     Args:
@@ -123,7 +122,7 @@ def execute_install_time_tests(builder: spack.builder.Builder):
     builder.pkg.tester.phase_tests(builder, "install", builder.install_time_test_callbacks)
 
 
-class BuilderWithDefaults(spack.builder.Builder):
+class BuilderWithDefaults(Builder):
     """Base class for all specific builders with common callbacks registered."""
 
     # Check that self.prefix is there after installation

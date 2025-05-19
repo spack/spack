@@ -1,14 +1,20 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, depends_on, run_after
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    register_builder,
+    run_after,
+)
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
 
-class SConsPackage(spack.package_base.PackageBase):
+class SConsPackage(PackageBase):
     """Specialized class for packages built using SCons.
 
     See http://scons.org/documentation.html for more information.
@@ -26,7 +32,7 @@ class SConsPackage(spack.package_base.PackageBase):
     depends_on("scons", type="build", when="build_system=scons")
 
 
-@spack.builder.register_builder("scons")
+@register_builder("scons")
 class SConsBuilder(BuilderWithDefaults):
     """The Scons builder provides the following phases that can be overridden:
 

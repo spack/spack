@@ -3,11 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from typing import Optional
 
-import spack.package_base
 import spack.util.url
+from spack.package import PackageBase
 
 
-class SourcewarePackage(spack.package_base.PackageBase):
+class SourcewarePackage(PackageBase):
     """Mixin that takes care of setting url and mirrors for Sourceware.org
     packages."""
 

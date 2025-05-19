@@ -5,14 +5,20 @@ from typing import List  # novm
 
 import llnl.util.filesystem as fs
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, conflicts, working_dir
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    conflicts,
+    register_builder,
+    working_dir,
+)
 
 from ._checks import BuilderWithDefaults
 
 
-class NMakePackage(spack.package_base.PackageBase):
+class NMakePackage(PackageBase):
     """Specialized class for packages built using a Makefiles."""
 
     #: This attribute is used in UI queries that need to know the build
@@ -24,7 +30,7 @@ class NMakePackage(spack.package_base.PackageBase):
     conflicts("platform=darwin", when="build_system=nmake")
 
 
-@spack.builder.register_builder("nmake")
+@register_builder("nmake")
 class NMakeBuilder(BuilderWithDefaults):
     """The NMake builder encodes the most common way of building software with
     Mircosoft's NMake tool. It has two phases that can be overridden, if need be:

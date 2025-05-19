@@ -11,14 +11,13 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 from llnl.util.lang import classproperty, memoized
 
 import spack.compilers.error
-import spack.package_base
-from spack.package import Executable, ProcessError, Spec, tty, which_string
+from spack.package import Executable, PackageBase, ProcessError, Spec, tty, which_string
 
 # Local "type" for type hints
 Path = Union[str, pathlib.Path]
 
 
-class CompilerPackage(spack.package_base.PackageBase):
+class CompilerPackage(PackageBase):
     """A Package mixin for all common logic for packages that implement compilers"""
 
     # TODO: how do these play nicely with other tags

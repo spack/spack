@@ -1,14 +1,21 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.builder
-import spack.package_base
-from spack.package import EnvironmentModifications, Prefix, Spec, build_system, extends, when
+from spack.package import (
+    EnvironmentModifications,
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    extends,
+    register_builder,
+    when,
+)
 
 from ._checks import BuilderWithDefaults
 
 
-class OctavePackage(spack.package_base.PackageBase):
+class OctavePackage(PackageBase):
     """Specialized class for Octave packages. See
     https://www.gnu.org/software/octave/doc/v4.2.0/Installing-and-Removing-Packages.html
     for more information.
@@ -26,7 +33,7 @@ class OctavePackage(spack.package_base.PackageBase):
         extends("octave")
 
 
-@spack.builder.register_builder("octave")
+@register_builder("octave")
 class OctaveBuilder(BuilderWithDefaults):
     """The octave builder provides the following phases that can be overridden:
 

@@ -3,14 +3,20 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from llnl.util.filesystem import working_dir
 
-import spack.builder
-import spack.package_base
-from spack.package import Prefix, Spec, build_system, depends_on, run_after
+from spack.package import (
+    PackageBase,
+    Prefix,
+    Spec,
+    build_system,
+    depends_on,
+    register_builder,
+    run_after,
+)
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests
 
 
-class QMakePackage(spack.package_base.PackageBase):
+class QMakePackage(PackageBase):
     """Specialized class for packages built using qmake.
 
     For more information on the qmake build system, see:
@@ -29,7 +35,7 @@ class QMakePackage(spack.package_base.PackageBase):
     depends_on("gmake", type="build")
 
 
-@spack.builder.register_builder("qmake")
+@register_builder("qmake")
 class QMakeBuilder(BuilderWithDefaults):
     """The qmake builder provides three phases that can be overridden:
 

@@ -4,16 +4,16 @@
 import os
 import re
 
-import spack.builder
-import spack.package_base
 from spack.package import (
     Executable,
+    PackageBase,
     Prefix,
     Spec,
     build_system,
     depends_on,
     extends,
     find,
+    register_builder,
     run_after,
     test_part,
     tty,
@@ -24,7 +24,7 @@ from spack.package import (
 from ._checks import BuilderWithDefaults, execute_install_time_tests
 
 
-class SIPPackage(spack.package_base.PackageBase):
+class SIPPackage(PackageBase):
     """Specialized class for packages that are built using the
     SIP build system. See https://www.riverbankcomputing.com/software/sip/intro
     for more information.
@@ -109,7 +109,7 @@ class SIPPackage(spack.package_base.PackageBase):
                 self.python("-c", "import {0}".format(module))
 
 
-@spack.builder.register_builder("sip")
+@register_builder("sip")
 class SIPBuilder(BuilderWithDefaults):
     """The SIP builder provides the following phases that can be overridden:
 
