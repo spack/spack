@@ -279,6 +279,29 @@ e4s-build:
       job: e4s-generate
 
 ########################################
+# E4S x86_64_v3-linux-gnu
+########################################
+.e4s-x86_64_v3-linux-gnu:
+  extends: [ ".linux_x86_64_v3" ]
+  variables:
+    SPACK_CI_STACK_NAME: e4s-x86_64_v3-linux-gnu
+
+e4s-x86_64_v3-linux-gnu-generate:
+  extends: [ ".e4s-x86_64_v3-linux-gnu", ".generate-x86_64"]
+  image:  ghcr.io/spack/x86_64_v3-linux-gnu:2024-12-12
+
+e4s-x86_64_v3-linux-gnu-build:
+  extends: [ ".e4s-x86_64_v3-linux-gnu", ".build" ]
+  trigger:
+    include:
+      - artifact: jobs_scratch_dir/cloud-ci-pipeline.yml
+        job: e4s-x86_64_v3-linux-gnu-generate
+    strategy: depend
+  needs:
+    - artifacts: True
+      job: e4s-x86_64_v3-linux-gnu-generate
+
+########################################
 # E4S Neoverse V2
 ########################################
 .e4s-neoverse-v2:

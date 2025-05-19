@@ -1,0 +1,228 @@
+spack:
+  view: false
+
+  concretizer:
+    reuse: false
+    unify: false
+    static_analysis: true
+
+  packages:
+    all:
+      require:
+      - target=x86_64_v3
+      - ~cuda
+      - ~rocm
+      prefer:
+        - "%gcc"
+      variants: +mpi
+    c:
+      require: gcc
+    cxx:
+      require: gcc
+    fortran:
+      require: gcc
+    mpi:
+      require:
+      - mpich
+    blas:
+      require:
+      - openblas
+    lapack:
+      require:
+      - openblas
+    binutils:
+      variants: +ld +gold +headers +libiberty ~nls
+    cmake:
+      require:
+      - "~qtgui"
+      - 'target=x86_64_v3 %gcc'
+    gmake:
+      require:
+      - "~guile"
+      - 'target=x86_64_v3 %gcc'
+    hdf5:
+      variants: +fortran +hl +shared
+    libfabric:
+      variants: fabrics=sockets,tcp,udp,rxm
+    libunwind:
+      variants: +pic +xz
+    openblas:
+      variants: threads=openmp
+    trilinos:
+      variants: +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext
+        +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu
+        +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos
+        +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+    mpich:
+      require:
+      - '~wrapperrpath ~hwloc'
+      - 'target=x86_64_v3 %gcc'
+    tbb:
+      require:
+      - intel-tbb
+    vtk-m:
+      require:
+      - "+examples"
+      - 'target=x86_64_v3 %gcc'
+    visit:
+      require:
+      - "~gui target=x86_64_v3"
+    paraview:
+      # Don't build GUI support or GLX rendering for HPC/container deployments
+      require:
+      - "+examples"
+      - "~qt ^[virtuals=gl] osmesa" # Headless
+      - "target=x86_64_v3 %gcc"
+
+  specs:
+  # CPU
+  - adios
+  - alquimia
+  - aml
+  - amrex
+  - arborx
+  - argobots
+  - axom
+  - bolt
+  - boost
+  - bricks ~cuda
+  - butterflypack
+  - cabana
+  - caliper
+  - chai
+  - chapel ~rocm ~cuda
+  - charliecloud
+  - conduit
+  - cp2k +mpi
+  - datatransferkit
+  - dealii ~vtk # https://github.com/spack/spack/pull/45554#issuecomment-2457255720
+  - drishti
+  - dxt-explorer
+  - dyninst
+  - e4s-cl
+  - ecp-data-vis-sdk ~cuda ~rocm +adios2 +ascent +cinema +darshan +faodel +hdf5 +paraview +pnetcdf +sz +unifyfs +veloc +visit +vtkm +zfp # 
+  - exaworks
+  - fftx
+  - flecsi
+  - flit
+  - flux-core
+  - fortrilinos
+  - fpm
+  - gasnet
+  - geopm-runtime
+  - ginkgo
+  - globalarrays
+  - glvis
+  - gmp
+  - gotcha
+  - gptune ~mpispawn
+  - gromacs +cp2k ^cp2k +dlaf build_system=cmake
+  - h5bench
+  - hdf5-vol-async
+  - hdf5-vol-cache
+  - hdf5-vol-log
+  - heffte +fftw
+  - hpctoolkit
+  - hpx networking=mpi
+  - hypre
+  - julia ^llvm ~clang ~gold ~polly targets=amdgpu,bpf,nvptx,webassembly
+  - kokkos +openmp
+  - kokkos-kernels +openmp
+  - laghos
+  - lammps +amoeba +asphere +bocs +body +bpm +brownian +cg-dna +cg-spica +class2 +colloid +colvars +compress +coreshell +dielectric +diffraction +dipole +dpd-basic +dpd-meso +dpd-react +dpd-smooth +drude +eff +electrode +extra-compute +extra-dump +extra-fix +extra-molecule +extra-pair +fep +granular +interlayer +kspace +lepton +machdyn +manybody +mc +meam +mesont +misc +ml-iap +ml-pod +ml-snap +mofff +molecule +openmp-package +opt +orient +peri +phonon +plugin +poems +qeq +reaction +reaxff +replica +rigid +shock +sph +spin +srd +tally +uef +voronoi +yaff
+  - lbann
+  - legion
+  - libceed
+  - libnrm
+  - libpressio +bitgrooming +bzip2 ~cuda ~cusz +fpzip +hdf5 +libdistributed +lua +openmp +python +sz +sz3 +unix +zfp
+  - libquo
+  - libunwind
+  - loki
+  - mercury
+  - metall
+  - mfem
+  - mgard +serial +openmp +timing +unstructured ~cuda
+  - mpark-variant
+  - mpifileutils ~xattr
+  - nccmp
+  - nco
+  - nekbone +mpi
+  - netcdf-fortran
+  - netlib-scalapack
+  - nrm
+  - nvhpc
+  - nwchem
+  - omega-h
+  - openfoam
+  - openmpi
+  - openpmd-api
+  - papi
+  - papyrus
+  - parsec ~cuda
+  - pdt
+  - petsc
+  - phist
+  - plasma
+  - plumed
+  - precice
+  - pruners-ninja
+  - pumi
+  - py-amrex
+  - py-h5py
+  - py-jupyterhub
+  - py-libensemble
+  - py-petsc4py
+  - qthreads scheduler=distrib
+  - quantum-espresso
+  - raja
+  - rempi
+  - scr
+  - slate ~cuda
+  - slepc
+  - stc
+  - strumpack ~slate
+  - sundials
+  - superlu
+  - superlu-dist
+  - swig@4.0.2-fortran
+  - sz3
+  - tasmanian
+  - tau +mpi +python +syscall
+  - trilinos +amesos +amesos2 +anasazi +aztec +belos +boost +epetra +epetraext +ifpack +ifpack2 +intrepid +intrepid2 +isorropia +kokkos +ml +minitensor +muelu +nox +piro +phalanx +rol +rythmos +sacado +stk +shards +shylu +stokhos +stratimikos +teko +tempus +tpetra +trilinoscouplings +zoltan +zoltan2 +superlu-dist gotype=long_long
+  - turbine
+  - umap
+  - umpire
+  - upcxx
+  - variorum
+  - wannier90
+  - wps
+  - wrf
+  - xyce +mpi +shared +pymi +pymi_static_tpls
+  # INCLUDED IN ECP DAV CPU
+  - adios2
+  - ascent
+  - darshan-runtime
+  - darshan-util
+  - faodel
+  - hdf5
+  - libcatalyst
+  - parallel-netcdf
+  - paraview
+  - py-cinemasci
+  - sz
+  - unifyfs
+  - veloc
+  - visit                           # silo: https://github.com/spack/spack/issues/39538
+  - vtk-m
+  - warpx +python
+  - zfp
+  # --
+  # - nek5000 +mpi +visit             # nek5000: KeyError: 'No spec with name visit in nek5000@19.0/4mtjged6gb5yqgzlpjftjxxasqwqdysh'
+
+  ci:
+    pipeline-gen:
+    - build-job:
+        image: ghcr.io/spack/x86_64_v3-linux-gnu:2024-12-12
+
+  cdash:
+    build-group: E4S x86_64_v3-linux-gnu
