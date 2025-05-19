@@ -5,7 +5,9 @@
 import os
 import re
 
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 tools_url = "https://github.com/ROCm"

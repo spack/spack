@@ -6,6 +6,8 @@ import shutil
 import sys
 from typing import List
 
+from spack_repo.builtin.build_systems.generic import Package
+
 import archspec.cpu
 
 from llnl.util import lang

@@ -5,6 +5,10 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import llnl.util.lang
 
 import spack.platforms

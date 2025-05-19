@@ -5,11 +5,12 @@
 import glob
 import os
 
-import spack.build_systems.msbuild as msbuild
+from spack_repo.builtin.build_systems import msbuild
+
 from spack.package import *
 
 
-class Networkdirect(MSBuildPackage):
+class Networkdirect(msbuild.MSBuildPackage):
     """NetworkDirect is a user-mode programming interface specification
     for Remote Direct Memory Access (RDMA)"""
 

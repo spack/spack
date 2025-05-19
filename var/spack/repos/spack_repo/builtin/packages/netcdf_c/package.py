@@ -6,9 +6,12 @@ import itertools
 import os
 import sys
 
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from llnl.util.lang import dedupe
 
-from spack.build_systems import autotools, cmake
 from spack.package import *
 from spack.util.environment import filter_system_paths
 

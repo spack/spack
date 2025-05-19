@@ -6,6 +6,10 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.compilers.config
 import spack.package_base
 from spack.package import *

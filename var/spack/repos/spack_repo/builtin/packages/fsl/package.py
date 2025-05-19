@@ -5,6 +5,9 @@
 import glob
 import os
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 import spack.util.environment
 from spack.package import *
 

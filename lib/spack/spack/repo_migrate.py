@@ -100,7 +100,11 @@ def migrate_v1_to_v2(
             ino_to_relpath[entry.inode()] = entry.path[prefix_len:]
 
             if entry.is_symlink():
-                symlink_to_ino[rel_path] = entry.stat(follow_symlinks=True).st_ino
+                try:
+                    symlink_to_ino[rel_path] = entry.stat(follow_symlinks=True).st_ino
+                except OSError:
+                    symlink_to_ino[rel_path] = -1  # dangling or no access
+
                 continue
 
             elif entry.is_dir(follow_symlinks=False):
@@ -143,9 +147,13 @@ def migrate_v1_to_v2(
         os.makedirs(new_root, exist_ok=True)
 
     def _relocate(rel_path: str) -> Tuple[str, str]:
-        return os.path.join(repo.root, rel_path), os.path.join(
-            new_root, rename_regex.sub(lambda m: rename[m.group(0)], rel_path)
-        )
+        old = os.path.join(repo.root, rel_path)
+        if rename:
+            new_rel = rename_regex.sub(lambda m: rename[m.group(0)], rel_path)
+        else:
+            new_rel = rel_path
+        new = os.path.join(new_root, new_rel)
+        return old, new
 
     if not fix:
         print("The following directories, files and symlinks will be created:\n", file=out)

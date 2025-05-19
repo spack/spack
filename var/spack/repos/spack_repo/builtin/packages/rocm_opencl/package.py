@@ -6,6 +6,8 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 

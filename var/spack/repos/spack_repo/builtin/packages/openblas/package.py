@@ -5,8 +5,10 @@
 import os
 import re
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 from spack.package_test import compare_output_file, compile_c_and_execute
 
@@ -320,7 +322,7 @@ class Openblas(CMakePackage, MakefilePackage):
         return find_libraries(name, spec.prefix, shared=search_shared, recursive=True)
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     @staticmethod
     def _read_targets(target_file):
         """Parse a list of available targets from the OpenBLAS/TargetList.txt
@@ -584,7 +586,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
         compare_output_file(output, blessed_file)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         cmake_defs = [
             self.define("TARGET", "GENERIC"),

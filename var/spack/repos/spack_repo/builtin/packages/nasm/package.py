@@ -4,7 +4,10 @@
 import glob
 import os
 
-import spack.build_systems.generic
+from spack_repo.builtin.build_systems import generic
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -62,7 +65,7 @@ class Nasm(AutotoolsPackage, Package):
             )
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         with working_dir(self.stage.source_path, create=True):
             # build NASM with nmake

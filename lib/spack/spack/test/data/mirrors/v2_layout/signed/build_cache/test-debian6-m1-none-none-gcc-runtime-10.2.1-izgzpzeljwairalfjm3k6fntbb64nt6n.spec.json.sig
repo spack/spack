@@ -1,5 +1,5 @@
 -----BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA256
+Hash: SHA512
 
 {
 "spec":{
@@ -57,7 +57,7 @@ Hash: SHA256
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -93,7 +93,7 @@ Hash: SHA256
 "platform_os":"debian6",
 "target":"aarch64"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "languages":[
@@ -135,17 +135,17 @@ Hash: SHA256
 }
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCAAdFiEEqYoEuILhnYX9Nu4GlWXYCwVckv8FAmf23+QACgkQlWXYCwVc
-kv+MsRAAsaQjZbB9iW/Lq9b87H/E5Zmv6RrClvpjSnwvhLR4nhPL3p0G70k6tI/b
-NEdXctDyvBOJOEoLaEBrCODl/3GjV8B9Gj7OhT/BIKQjlOfJqVdwIrnHgav5ri+Q
-UUXLtejhJiUNoxeILI/xZx2CoKT9q/3EpQ5ysqdybJmYJCf/hv+lXEhnwUIv8vV/
-xdRYY//rfeMowCNIZtFPjSejMywXJfFKjl7h5dN5kwM63D6z/sh4zW7tqHq4kk+A
-2m0WcorVg93wAm+YoJaQJVx8bYeMGfV/TjmY/cSouCt8PM4Vi93vwieZCkzEpXbM
-BkVN4X3PTMZSOf0WTkEbnQD5v090/DoQPZyBrcDoJ/HmWDiz5Is2wUI0mLVkbg2L
-+rKNC3ZajJhsWElMGNNtZRLmGeTIe8hT+LNAejo221vrOJbnUmpIjKxVjStDbXmW
-nulgyEPSTfsJaXgbXmeJ8LOk0tWpBAGC16VzgXrPxoGD2XKxoiPCGLNrF/l1wyl+
-n+nw3TchNFrofpPrqJzT/vS71B6KDb0PVSTQZfM9+FahrQ+YbsIkzDAuxVZb5t3q
-HUME95RgoIBbccUGxAPwkaNme2OLaLzsJZ/Xhl5I8T1fraLYapsKNjQ5+CSKO8+t
-MlJYgSHuazWSetRbZ2H7g7QJWqeHUAWi9i1szpNDYxTFSs8wgDY=
-=edPy
+iQIzBAEBCgAdFiEEy6ssEDLG/1B4BJ7A+mHVDBLK034FAmgnhqIACgkQ+mHVDBLK
+037zHBAAsqy4wItctMqauuna+JjxT1HM7YJElXzqjOWmxyuAzUzjXlhR2DBd/2TI
+ZEN2q3Z3XY9sCjhZ/4c9wDfMNYLUBLMHuenyV3fOqsfIVL8NprrkGc5mOiJ8HbRk
+u00qXWogsYSEmbGrlfDKf4HmZtgPNs82+Li1MD5udDUzyApuVbObJumSRh6/1QHm
+BcQZgMlSCd8xsTxJudXKAnfpemqE41LF0znuU0x5Hj/hU1A3CELynQrLEYnJpzpR
+ja2l341cBQKNy86kX1/eHQtBJverjFoD3Nx4per8/qUc+xTH0ejMuseyd9P3RLnd
+WShY8Uk72f1OLGzq5RvayP1M/dBWedajKz5gYOD19pCuFEdQm1LkZhxRWJ35PYMV
+CqzY/uJgs33zyYkNJKO8CKG5j7Y8zOuZ3YFN8DKmoWa+lC4gFIsXm42BttqiQ5+x
+Q65YkX/DdPYO6dcUety1j3NuNr70W6PsLyqKBny1WOzKCx25nmzftS0OA76F6UZA
+hDneqltGrYEQTowU5I7V14f3SMeO8xje3BcqhOAn956/JJObd5VbwqcHwcslwEJA
+tL3361qbpkc7xURnhciV1eL3RYR9Q4xDnvI1i/k8J8E8W373TviK3r2MG/oKZ6N9
+n+ehBZhSIT+QUgqylATekoMQfohNVbDQEsQhj96Ky1CC2Iqo1/c=
+=UIyv
 -----END PGP SIGNATURE-----

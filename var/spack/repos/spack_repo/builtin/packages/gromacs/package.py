@@ -4,7 +4,10 @@
 
 import os
 
-import spack.build_systems.cmake
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 
 
@@ -640,7 +643,7 @@ class Gromacs(CMakePackage, CudaPackage):
             )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     @run_after("build")
     def build_test_binaries(self):
         """Build the test binaries.

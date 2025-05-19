@@ -7,11 +7,12 @@ import os
 import re
 import sys
 
-import spack.build_systems.msbuild as msbuild
+from spack_repo.builtin.build_systems import msbuild
+
 from spack.package import *
 
 
-class Msmpi(MSBuildPackage):
+class Msmpi(msbuild.MSBuildPackage):
     """MSMPI is a Windows port of MPICH provided by the Windows team"""
 
     homepage = "https://docs.microsoft.com/en-us/message-passing-interface/microsoft-mpi"

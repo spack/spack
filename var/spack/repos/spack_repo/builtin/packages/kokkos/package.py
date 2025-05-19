@@ -3,9 +3,12 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, get_cmake_prefix_path
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import llnl.util.lang as lang
 
-import spack.build_systems.cmake
 from spack.package import *
 
 
@@ -556,7 +559,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         cmake = self.spec["cmake"].command
         cmake_args = ["-DEXECUTABLE_OUTPUT_PATH=" + cmake_path]
         if self.spec.satisfies("+rocm"):
-            prefix_paths = ";".join(spack.build_systems.cmake.get_cmake_prefix_path(self))
+            prefix_paths = ";".join(get_cmake_prefix_path(self))
             cmake_args.append("-DCMAKE_PREFIX_PATH={0}".format(prefix_paths))
 
         cmake(cmake_path, *cmake_args)
