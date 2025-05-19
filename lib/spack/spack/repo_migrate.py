@@ -247,7 +247,6 @@ def migrate_v2_imports(
         "Package": "spack_repo.builtin.build_systems.generic",
         "GNUMirrorPackage": "spack_repo.builtin.build_systems.gnu",
         "GoPackage": "spack_repo.builtin.build_systems.go",
-        "IntelPackage": "spack_repo.builtin.build_systems.intel",
         "LuaPackage": "spack_repo.builtin.build_systems.lua",
         "MakefilePackage": "spack_repo.builtin.build_systems.makefile",
         "MavenPackage": "spack_repo.builtin.build_systems.maven",

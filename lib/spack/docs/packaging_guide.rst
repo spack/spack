@@ -3744,9 +3744,6 @@ the build system. The build systems currently supported by Spack are:
 | :class:`~spack_repo.builtin.build_systems.ruby`          | Specialized build system for     |
 |                                                          | Ruby extensions                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.intel`         | Specialized build system for     |
-|                                                          | licensed Intel software          |
-+----------------------------------------------------------+----------------------------------+
 | :class:`~spack_repo.builtin.build_systems.oneapi`        | Specialized build system for     |
 |                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+

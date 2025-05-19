@@ -23,7 +23,6 @@ from .cuda import CudaPackage
 from .generic import Package
 from .gnu import GNUMirrorPackage
 from .go import GoPackage
-from .intel import IntelPackage
 from .lua import LuaPackage
 from .makefile import MakefilePackage
 from .maven import MavenPackage
@@ -69,7 +68,6 @@ __all__ = [
     "Package",
     "GNUMirrorPackage",
     "GoPackage",
-    "IntelPackage",
     "IntelOneApiLibraryPackageWithSdk",
     "IntelOneApiLibraryPackage",
     "IntelOneApiStaticLibraryList",
