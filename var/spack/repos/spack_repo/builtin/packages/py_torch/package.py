@@ -425,7 +425,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     patch(
         "https://github.com/ROCm/pytorch/commit/bac5378c734e74b5d58b8e82f9dbaa1454cfa5bd.patch?full_index=1",
         sha256="f0a64e6347e67ec84286994f1ac5e77dba7fa6992c5f083e70a4e2765a86c0c6",
-        when="@1.5:2.2.2 +rocm",
+        when="@1.5:2.2 +rocm",
     )
     # Fixes build failure from pytorch version 2.3 to 2.5.1 with with rocm
     # Fixes 'FindOpenMP.cmake'
