@@ -42,13 +42,13 @@ find = SpackCommand("find")
 
 
 # A test goes in here that ensures that a non-writable opt defaults to
-# per_spack_user.
+# spack instance location.
 
-# A test goes in here that ensures that per_spack_user is a reasonable
-# value in the absence of XDG_DATA_HOME.
+# A test goes in here that ensures that spack instance location is a
+# reasonable value in the absence of XDG_DATA_HOME.
 
-# A test goes in here that ensures that per_spack_user is a reasonable
-# value when XDG_DATA_HOME is set.
+# A test goes in here that ensures that spack instance location is a
+# reasonable value when XDG_DATA_HOME is set.
 
 
 @pytest.fixture()
