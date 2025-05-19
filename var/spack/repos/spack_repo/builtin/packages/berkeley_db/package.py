@@ -75,6 +75,18 @@ class BerkeleyDb(AutotoolsPackage):
             filter_file(r"bdb-sql", "", "dist/Makefile.in")
             filter_file(r"gsg_db_server", "", "dist/Makefile.in")
 
+    def flag_handler(self, name, flags):
+        # GCC 15 defaults to C23 which gives a warning (and by default error)
+        # about assignment to an incompatible function pointer type
+        # (https://gcc.gnu.org/gcc-15/porting_to.html#c23-fn-decls-without-parameters):
+        #
+        # error: initialization of 'int (*)(void)' from incompatible pointer
+        # type 'int (*)(DB_ENV *, const char *)' {aka 'int (*)(struct __db_env
+        # *, const char *)'} [-Wincompatible-pointer-types]
+        if name == "cflags" and self.spec.satisfies("%[virtuals=c] gcc@15:"):
+            flags.append("-Wno-error=incompatible-pointer-types")
+        return (flags, None, None)
+
     def configure_args(self):
         spec = self.spec
 

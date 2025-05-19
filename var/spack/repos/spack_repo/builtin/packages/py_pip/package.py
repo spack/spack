@@ -26,6 +26,8 @@ class PyPip(Package, PythonExtension):
 
     license("MIT")
 
+    version("25.1.1", sha256="2913a38a2abf4ea6b64ab507bd9e967f3b53dc1ede74b01b0931e1ce548751af")
+    version("25.1", sha256="13b4aa0aaad055020a11bec8a1c2a70a2b2d080e12d89b962266029fff0a16ba")
     version("25.0.1", sha256="c46efd13b6aa8279f33f2864459c8ce587ea6a1a59ee20de055868d8f7688f7f")
     version("25.0", sha256="b6eb97a803356a52b2dd4bb73ba9e65b2ba16caa6bcb25a7497350a4e5859b65")
     version("24.3.1", sha256="3790624780082365f47549d032f3770eeb2b1e8bd1f7b2e02dace1afa361b4ed")
@@ -51,6 +53,7 @@ class PyPip(Package, PythonExtension):
     extends("python")
 
     with default_args(type=("build", "run")):
+        depends_on("python@3.9:", when="@25.1:")
         depends_on("python@3.8:", when="@24.1:")
         depends_on("python@3.7:", when="@22:")
 
