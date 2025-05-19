@@ -15,6 +15,8 @@ class PyGpaw(PythonPackage):
     homepage = "https://wiki.fysik.dtu.dk/gpaw/index.html"
     pypi = "gpaw/gpaw-1.3.0.tar.gz"
 
+    maintainers("alikhamze", "Chronum94")
+
     license("GPL-3.0-only")
 
     version("21.1.0", sha256="96843b68e04bd1c12606036c9f99b0ddfa5e6ee08ce46835e6bb347a6bd560a3")
