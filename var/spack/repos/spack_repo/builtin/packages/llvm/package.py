@@ -13,7 +13,6 @@ from llnl.util.lang import classproperty
 
 from spack.operating_systems.mac_os import macos_sdk_path
 from spack.package import *
-from spack.package import PackageBase
 
 
 class LlvmDetection(PackageBase):
