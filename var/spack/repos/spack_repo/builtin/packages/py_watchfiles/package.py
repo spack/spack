@@ -13,6 +13,8 @@ class PyWatchfiles(PythonPackage):
     homepage = "https://github.com/samuelcolvin/watchfiles"
     pypi = "watchfiles/watchfiles-0.18.1.tar.gz"
 
+    maintainers("viperML")
+
     license("MIT")
 
     version("1.0.5", sha256="b7529b5dcc114679d43827d8c35a07c493ad6f083633d573d81c660abc5979e9")
