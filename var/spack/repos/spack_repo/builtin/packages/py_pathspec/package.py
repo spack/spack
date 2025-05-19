@@ -16,6 +16,9 @@ class PyPathspec(PythonPackage):
 
     license("MPL-2.0")
 
+    version("0.12.1", sha256="a482d51503a1ab33b1c67a6c3813a26953dbdc71c31dacaef9a838c4e29f5712")
+    version("0.12.0", sha256="c57e16065a97b7beb175f13c84d27cb05f7b7315741c2fbd5de541042f4ea6e1")
+    version("0.11.2", sha256="e0d8d0ac2f12da61956eb2306b69f9469b42f4deb0f3cb6ed47b9cce9996ced3")
     version("0.11.1", sha256="2798de800fa92780e33acca925945e9a19a133b715067cf165b8866c15a31687")
     version("0.11.0", sha256="64d338d4e0914e91c1792321e6907b5a593f1ab1851de7fc269557a21b30ebbc")
     version("0.10.3", sha256="56200de4077d9d0791465aa9095a01d421861e405b5096955051deefd697d6f6")
