@@ -33,6 +33,7 @@ class PyGpaw(PythonPackage):
     variant("scalapack", default=True, description="Build with ScaLAPACK support")
     variant("fftw", default=True, description="Build with FFTW support")
     variant("libvdwxc", default=True, description="Build with libvdwxc support")
+    variant("elpa", default=True, description="Build with ELPA support")
 
     # Build dependencies
     depends_on("c", type="build")  # generated
@@ -83,6 +84,9 @@ class PyGpaw(PythonPackage):
     depends_on("fftw~mpi", when="+fftw ~mpi")
     depends_on("scalapack", when="+scalapack")
     depends_on("libvdwxc", when="+libvdwxc")
+    # Fixed elpa version due to compilation/linking errors on older and newer versions.
+    # Tested for versions @23.6.1:25.1.0
+    depends_on("elpa@2022.11.001", when="+elpa")
 
     patch("libxc.patch", when="@1.3.0")
 
