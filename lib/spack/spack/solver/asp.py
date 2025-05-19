@@ -2573,6 +2573,7 @@ class SpackSolverSetup:
         # add all clauses from dependencies
         if transitive:
             # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
+            edge_clauses = []
             for dspec in spec.edges_to_dependencies():
                 dep = dspec.spec
 
@@ -2580,7 +2581,7 @@ class SpackSolverSetup:
                     # GCC runtime is solved again by clingo, even on concrete specs, to give
                     # the possibility to reuse specs built against a different runtime.
                     if dep.name == "gcc-runtime":
-                        clauses.append(
+                        edge_clauses.append(
                             fn.attr("compatible_runtime", spec.name, dep.name, f"{dep.version}:")
                         )
                         constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
@@ -2590,10 +2591,10 @@ class SpackSolverSetup:
                     # libc is also solved again by clingo, but in this case the compatibility
                     # is not encoded in the parent node - so we need to emit explicit facts
                     if "libc" in dspec.virtuals:
-                        clauses.append(fn.attr("needs_libc", spec.name))
+                        edge_clauses.append(fn.attr("needs_libc", spec.name))
                         for libc in self.libcs:
                             if libc_is_compatible(libc, dep):
-                                clauses.append(
+                                edge_clauses.append(
                                     fn.attr("compatible_libc", spec.name, libc.name, libc.version)
                                 )
                         continue
@@ -2605,29 +2606,29 @@ class SpackSolverSetup:
                             continue
                         # skip build dependencies of already-installed specs
                         if concrete_build_deps or dtype != dt.BUILD:
-                            clauses.append(
+                            edge_clauses.append(
                                 fn.attr(
                                     "depends_on", spec.name, dep.name, dt.flag_to_string(dtype)
                                 )
                             )
                             for virtual_name in dspec.virtuals:
-                                clauses.append(
+                                edge_clauses.append(
                                     fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
                                 )
-                                clauses.append(fn.attr("virtual_node", virtual_name))
+                                edge_clauses.append(fn.attr("virtual_node", virtual_name))
 
                     # imposing hash constraints for all but pure build deps of
                     # already-installed concrete specs.
                     if concrete_build_deps or dspec.depflag != dt.BUILD:
-                        clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
+                        edge_clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
                     elif not concrete_build_deps and dspec.depflag:
-                        clauses.append(
+                        edge_clauses.append(
                             fn.attr(
                                 "concrete_build_dependency", spec.name, dep.name, dep.dag_hash()
                             )
                         )
                         for virtual_name in dspec.virtuals:
-                            clauses.append(
+                            edge_clauses.append(
                                 fn.attr("virtual_on_build_edge", spec.name, dep.name, virtual_name)
                             )
 
@@ -2643,16 +2644,17 @@ class SpackSolverSetup:
                         context=context,
                     )
                     if dspec.depflag == dt.BUILD:
-                        clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
+                        edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
                         if body is False:
                             for clause in dependency_clauses:
                                 clause.name = "build_requirement"
-                                clauses.append(fn.attr("direct_dependency", spec.name, clause))
+                                edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
                         else:
-                            clauses.extend(dependency_clauses)
+                            edge_clauses.extend(dependency_clauses)
                     else:
-                        clauses.extend(dependency_clauses)
+                        edge_clauses.extend(dependency_clauses)
 
+            clauses.extend(edge_clauses)
         return clauses
 
     def define_package_versions_and_validate_preferences(
