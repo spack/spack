@@ -37,7 +37,7 @@ class GoPackage(spack.package_base.PackageBase):
         depends_on("go", type="build")
 
 
-@spack.builder.builder("go")
+@spack.builder.register_builder("go")
 class GoBuilder(BuilderWithDefaults):
     """The Go builder encodes the most common way of building software with
     a golang go.mod file. It has two phases that can be overridden, if need be:

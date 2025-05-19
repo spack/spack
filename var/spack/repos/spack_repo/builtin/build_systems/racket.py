@@ -51,7 +51,7 @@ class RacketPackage(PackageBase):
     homepage: ClassProperty[Optional[str]] = classproperty(_homepage)
 
 
-@spack.builder.builder("racket")
+@spack.builder.register_builder("racket")
 class RacketBuilder(spack.builder.Builder):
     """The Racket builder provides an ``install`` phase that can be overridden."""
 

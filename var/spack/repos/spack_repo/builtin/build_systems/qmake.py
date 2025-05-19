@@ -29,7 +29,7 @@ class QMakePackage(spack.package_base.PackageBase):
     depends_on("gmake", type="build")
 
 
-@spack.builder.builder("qmake")
+@spack.builder.register_builder("qmake")
 class QMakeBuilder(BuilderWithDefaults):
     """The qmake builder provides three phases that can be overridden:
 

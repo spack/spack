@@ -94,7 +94,7 @@ class PerlPackage(spack.package_base.PackageBase):
                 assert "OK" in out
 
 
-@spack.builder.builder("perl")
+@spack.builder.register_builder("perl")
 class PerlBuilder(BuilderWithDefaults):
     """The perl builder provides four phases that can be overridden, if required:
 

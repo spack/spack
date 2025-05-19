@@ -78,7 +78,7 @@ class AutotoolsPackage(spack.package_base.PackageBase):
         return spack.builder.create(self).with_or_without(*args, **kwargs)
 
 
-@spack.builder.builder("autotools")
+@spack.builder.register_builder("autotools")
 class AutotoolsBuilder(BuilderWithDefaults):
     """The autotools builder encodes the default way of installing software built
     with autotools. It has four phases that can be overridden, if need be:

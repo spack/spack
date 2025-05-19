@@ -37,7 +37,7 @@ class MakefilePackage(spack.package_base.PackageBase):
         depends_on("gmake", type="build")
 
 
-@spack.builder.builder("makefile")
+@spack.builder.register_builder("makefile")
 class MakefileBuilder(BuilderWithDefaults):
     """The Makefile builder encodes the most common way of building software with
     Makefiles. It has three phases that can be overridden, if need be:

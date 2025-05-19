@@ -24,7 +24,7 @@ class Package(spack.package_base.PackageBase):
     build_system("generic")
 
 
-@spack.builder.builder("generic")
+@spack.builder.register_builder("generic")
 class GenericBuilder(BuilderWithDefaults):
     """A builder for a generic build system, that require packagers
     to implement an "install" phase.

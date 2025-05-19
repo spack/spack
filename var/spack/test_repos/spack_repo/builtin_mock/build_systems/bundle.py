@@ -22,7 +22,7 @@ class BundlePackage(spack.package_base.PackageBase):
     spack.directives.build_system("bundle")
 
 
-@spack.builder.builder("bundle")
+@spack.builder.register_builder("bundle")
 class BundleBuilder(spack.builder.Builder):
     phases = ("install",)
 

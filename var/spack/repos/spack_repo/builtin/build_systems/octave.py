@@ -26,7 +26,7 @@ class OctavePackage(spack.package_base.PackageBase):
         extends("octave")
 
 
-@spack.builder.builder("octave")
+@spack.builder.register_builder("octave")
 class OctaveBuilder(BuilderWithDefaults):
     """The octave builder provides the following phases that can be overridden:
 

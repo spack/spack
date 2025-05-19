@@ -26,7 +26,7 @@ class SConsPackage(spack.package_base.PackageBase):
     depends_on("scons", type="build", when="build_system=scons")
 
 
-@spack.builder.builder("scons")
+@spack.builder.register_builder("scons")
 class SConsBuilder(BuilderWithDefaults):
     """The Scons builder provides the following phases that can be overridden:
 

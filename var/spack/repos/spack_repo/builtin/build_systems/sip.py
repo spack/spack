@@ -109,7 +109,7 @@ class SIPPackage(spack.package_base.PackageBase):
                 self.python("-c", "import {0}".format(module))
 
 
-@spack.builder.builder("sip")
+@spack.builder.register_builder("sip")
 class SIPBuilder(BuilderWithDefaults):
     """The SIP builder provides the following phases that can be overridden:
 

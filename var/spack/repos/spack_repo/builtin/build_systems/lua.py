@@ -52,7 +52,7 @@ class LuaPackage(spack.package_base.PackageBase):
         return lr
 
 
-@spack.builder.builder("lua")
+@spack.builder.register_builder("lua")
 class LuaBuilder(spack.builder.Builder):
     phases = ("unpack", "generate_luarocks_config", "preprocess", "install")
 

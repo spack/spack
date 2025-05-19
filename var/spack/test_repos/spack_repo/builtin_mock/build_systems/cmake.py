@@ -283,7 +283,7 @@ class CMakePackage(spack.package_base.PackageBase):
         return define_from_variant(self, cmake_var, variant)
 
 
-@spack.builder.builder("cmake")
+@spack.builder.register_builder("cmake")
 class CMakeBuilder(BuilderWithDefaults):
     """The cmake builder encodes the default way of building software with CMake. IT
     has three phases that can be overridden:

@@ -427,7 +427,7 @@ class PythonPackage(PythonExtension):
         raise NoLibrariesError(msg.format(self.spec.name, platlib, purelib))
 
 
-@spack.builder.builder("python_pip")
+@spack.builder.register_builder("python_pip")
 class PythonPipBuilder(BuilderWithDefaults):
     phases = ("install",)
 

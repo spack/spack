@@ -32,7 +32,7 @@ class CargoPackage(spack.package_base.PackageBase):
         depends_on("rust", type="build")
 
 
-@spack.builder.builder("cargo")
+@spack.builder.register_builder("cargo")
 class CargoBuilder(BuilderWithDefaults):
     """The Cargo builder encodes the most common way of building software with
     a rust Cargo.toml file. It has two phases that can be overridden, if need be:

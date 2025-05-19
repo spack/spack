@@ -28,7 +28,7 @@ class WafPackage(spack.package_base.PackageBase):
     depends_on("python@2.5:", type="build", when="build_system=waf")
 
 
-@spack.builder.builder("waf")
+@spack.builder.register_builder("waf")
 class WafBuilder(BuilderWithDefaults):
     """The WAF builder provides the following phases that can be overridden:
 

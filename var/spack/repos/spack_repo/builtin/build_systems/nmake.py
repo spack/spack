@@ -24,7 +24,7 @@ class NMakePackage(spack.package_base.PackageBase):
     conflicts("platform=darwin", when="build_system=nmake")
 
 
-@spack.builder.builder("nmake")
+@spack.builder.register_builder("nmake")
 class NMakeBuilder(BuilderWithDefaults):
     """The NMake builder encodes the most common way of building software with
     Mircosoft's NMake tool. It has two phases that can be overridden, if need be:

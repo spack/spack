@@ -26,7 +26,7 @@ class RubyPackage(spack.package_base.PackageBase):
     extends("ruby", when="build_system=ruby")
 
 
-@spack.builder.builder("ruby")
+@spack.builder.register_builder("ruby")
 class RubyBuilder(BuilderWithDefaults):
     """The Ruby builder provides two phases that can be overridden if required:
 

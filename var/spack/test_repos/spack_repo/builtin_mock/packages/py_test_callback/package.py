@@ -35,7 +35,7 @@ class PyTestCallback(Python):
         print("PyTestCallback test")
 
 
-@spack.builder.builder("testcallback")
+@spack.builder.register_builder("testcallback")
 class MyBuilder(BuilderWithDefaults):
     phases = ("install",)
 
