@@ -30,13 +30,18 @@ class PyGpaw(PythonPackage):
     variant("fftw", default=True, description="Build with FFTW support")
     variant("libvdwxc", default=True, description="Build with libvdwxc support")
 
+    # Build dependencies
     depends_on("c", type="build")  # generated
+    depends_on("py-setuptools", type="build")
 
-    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
+    # Version-agnostic dependencies
+    depends_on("blas")
+    depends_on("lapack")
+
+    # Version-specific required dependencies
     depends_on("python@2.6:", type=("build", "run"), when="@:1.3.0")
     depends_on("python@3.5:", type=("build", "run"), when="@19.8.1:")
     depends_on("python@3.6:", type=("build", "run"), when="@20.10.0:")
-    depends_on("py-setuptools", type="build")
     depends_on("py-ase@3.13.0:", type=("build", "run"), when="@1.3.0")
     depends_on("py-ase@3.18.0:", type=("build", "run"), when="@19.8.1")
     depends_on("py-ase@3.19.0:", type=("build", "run"), when="@20.1.0")
@@ -45,8 +50,9 @@ class PyGpaw(PythonPackage):
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-scipy", type=("build", "run"))
     depends_on("libxc@3:4.3.4")
-    depends_on("blas")
-    depends_on("lapack")
+
+    # Variant dependencies
+    depends_on("mpi", when="+mpi", type=("build", "link", "run"))
     depends_on("fftw+mpi", when="+fftw +mpi")
     depends_on("fftw~mpi", when="+fftw ~mpi")
     depends_on("scalapack", when="+scalapack")
