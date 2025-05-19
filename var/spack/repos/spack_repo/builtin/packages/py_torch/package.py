@@ -587,7 +587,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 "caffe2/CMakeLists.txt",
                 string=True,
             )
-        if self.spec.satisfies("@2.1:2.2.2 + rocm"):
+        if self.spec.satisfies("@2.1:2.2+rocm"):
             filter_file(
                 r"__HIP_PLATFORM_HCC__",
                 "__HIP_PLATFORM_AMD__",
