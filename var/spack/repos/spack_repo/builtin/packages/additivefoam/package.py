@@ -33,10 +33,10 @@ class Additivefoam(Package):
 
     depends_on("openfoam-org@10")
 
-    common = ["spack-derived-Allwmake"]
-    assets = [join_path("applications", "Allwmake"), "Allwmake"]
+    common = []
+    assets = ["Allwmake"]
 
-    build_script = "./spack-derived-Allwmake"
+    build_script = "./Allwmake"
 
     phases = ["configure", "build", "install"]
 
@@ -59,13 +59,42 @@ class Additivefoam(Package):
     def patch(self):
         spec = self.spec
         asset_dir = ""
-        if Version("main") in spec.versions:
+        if any([ver in spec.versions for ver in [Version("main"), Version("1.1.0")]]):
             asset_dir = "assets_main"
         elif Version("1.0.0") in spec.versions:
             asset_dir = "assets_1.0.0"
         self.add_extra_files(self.common, asset_dir, self.assets)
 
+    def setup_build_environment(self, env):
+        """Set up the build environment variables."""
+
+        # Ensure that the directories exist
+        mkdirp(self.prefix.bin)
+        mkdirp(self.prefix.lib)
+
+        # Add to the environment
+        env.set("FOAM_USER_APPBIN", self.prefix.bin)
+        env.set("FOAM_USER_LIBBIN", self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        """Set up the run environment variables."""
+
+        # Add to the environment
+        env.prepend_path("PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+
+    def activate(self, spec, prefix):
+        """Activate the package to modify the environment."""
+        self.setup_run_environment(self.spec.environment())
+
+    def deactivate(self, spec, prefix):
+        """Deactivate the package and clean up the environment."""
+        env = self.spec.environment()
+        env.pop("FOAM_USER_APPBIN", None)
+        env.pop("FOAM_USER_LIBBIN", None)
+
     def configure(self, spec, prefix):
+        """Configure the environment for building."""
         pass
 
     def build(self, spec, prefix):
