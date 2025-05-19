@@ -312,8 +312,6 @@ class SpecParser:
                     target_spec = root_spec
                     edge_properties.setdefault("depflag", 0)
 
-                # print(f"[{current_spec}], {target_spec}->{dependency} {is_direct}")
-
                 parser_warnings.extend(warnings)
                 add_dependency(dependency, **edge_properties)
 
