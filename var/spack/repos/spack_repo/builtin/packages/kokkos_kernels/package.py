@@ -187,6 +187,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     )
 
     depends_on("cxx", type="build")
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
