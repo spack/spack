@@ -983,7 +983,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                 checkout_args.insert(1, "--quiet")
             git(*checkout_args)
 
-
     def _clone_src(self) -> None:
         """Clone a repository to a path using git."""
         # Default to spack source path

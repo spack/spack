@@ -329,3 +329,29 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
     y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
     assert y.spec._package is y
+
+
+@pytest.mark.parametrize("version,ref_type", (("main", "branch"), ("1.0", "tag")))
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+def test_binary_provenance_find_commit_ls_remote(
+    git, mock_git_version_info, mock_packages, config, monkeypatch, version, ref_type
+):
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+    spec = spack.concretize.concretize_one(f"git-test-commit@{version}")
+
+    git_ref = spec.package.version_or_package_attr(ref_type, spec.version, "")
+    actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
+    assert spec.variants["commit"].value == actual_commit
+
+
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+def test_binary_provenance_find_commit_ls_remote_no_access(mock_packages, config, capsys):
+    # force git to fail instead of prompt since we are giving it a junk url
+    os.environ["GIT_TERMINAL_PROMPT"] = "0"
+    spec = spack.concretize.concretize_one("git-ref-package@develop")
+    captured = capsys.readouterr()
+    assert "commit" not in spec.variants
+    assert "Warning: Unable to resolve the git commit" in captured.err

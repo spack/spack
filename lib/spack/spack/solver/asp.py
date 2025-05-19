@@ -4257,16 +4257,23 @@ def _specs_with_commits(spec):
     if not spec.package.needs_commit(spec.version):
         return
 
-    # check integrity of specified commit shas
-    if "commit" in spec.variants:
-        invalid_commit_msg = (
-            f"Internal Error: {spec.name}'s assigned commit {spec.variants['commit'].value}"
-            " does not meet commit syntax requirements."
-        )
-        assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
+    if "commit" not in spec.variants:
+        spec.package.resolve_binary_provenance()
 
-    spec.package.resolve_binary_provenance()
-    # TODO(psakiev) assert commit is associated with ref
+    if "commit" not in spec.variants:
+        # what if users want to test concretization, but aren't configured for an airgapped system?
+        # working from a plane or something like that
+        tty.warn(
+            f"Unable to resolve the git commit for {spec.name}. Need to think about this case"
+        )
+        return
+
+    # check integrity of user specified commit shas
+    invalid_commit_msg = (
+        f"Internal Error: {spec.name}'s assigned commit {spec.variants['commit'].value}"
+        " does not meet commit syntax requirements."
+    )
+    assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
     if isinstance(spec.version, spack.version.GitVersion):
         if not spec.version.commit_sha:

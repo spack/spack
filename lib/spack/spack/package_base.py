@@ -1054,9 +1054,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             ref = tag or branch
             assert ref, "Missing git ref"
 
-            git_args = ["ls-remote", url, "--ref", ref] 
+            git_args = ["ls-remote", url, "--ref", ref]
 
-            query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull)
+            try:
+                query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull)
+            except spack.util.executable.ProcessError:
+                return
+
             sha, _ = query.strip().split()
 
         self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
