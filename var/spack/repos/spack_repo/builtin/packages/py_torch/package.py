@@ -564,7 +564,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             "torch_global_deps PROPERTIES LINKER_LANGUAGE CXX",
             "caffe2/CMakeLists.txt",
         )
-        if self.spec.satisfies("@2.1:2.7 + rocm"):
+        if self.spec.satisfies("@2.1:2.7+rocm"):
             filter_file(
                 "${ROCM_INCLUDE_DIRS}/rocm-core/rocm_version.h",
                 "{0}/include/rocm-core/rocm_version.h".format(self.spec["rocm-core"].prefix),
