@@ -24,7 +24,9 @@ if __name__ == "__main__":
         in_str = sys.stdin.read(in_str)
 
     config_yaml = yaml.safe_load(in_str)
-    config_yaml["config"]["install_tree"]["root"] = "$spack_xdg_state_home/$spack_instance_id/opt/spack"
+    config_yaml["config"]["install_tree"][
+        "root"
+    ] = "$spack_xdg_state_home/$spack_instance_id/opt/spack"
 
     out_str = yaml.dump(config_yaml)
     if args.output != sys.stdout:
