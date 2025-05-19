@@ -19,6 +19,10 @@ class PyGpaw(PythonPackage):
 
     license("GPL-3.0-or-later", checked_by="alikhamze")
 
+    version("25.1.0", sha256="80236e779784df3317e7da395dc59ea403bc0213bb3a68d02c17957162e972ea")
+    version("24.6.0", sha256="fb48ef0db48c0e321ce5967126a47900bba20c7efb420d6e7b5459983bd8f6f6")
+    version("23.9.1", sha256="19a24840b876003528864b7a0b38fc0d456800b83b8666b1f724273660745b47")
+    version("23.6.1", sha256="ff56d323a499972c8991770a6ab0334a6dd18df36e9c94360e0aa1ddf8867dfd")
     version("21.1.0", sha256="96843b68e04bd1c12606036c9f99b0ddfa5e6ee08ce46835e6bb347a6bd560a3")
     version("20.10.0", sha256="77c3d3918f5cc118e448f8063af4807d163b31d502067f5cbe31fc756eb3971d")
     version("20.1.0", sha256="c84307eb9943852d78d966c0c8856fcefdefa68621139906909908fb641b8421")
@@ -39,6 +43,28 @@ class PyGpaw(PythonPackage):
     depends_on("lapack")
 
     # Version-specific required dependencies
+
+    with when("@25.1.0:"):
+        depends_on("libxc")
+        depends_on("python@3.9:", type=("build", "run"))
+        depends_on("py-ase@3.23.0:", type=("build", "run"))
+        depends_on("py-numpy", type=("build", "run"))
+        depends_on("py-scipy@1.6.0:", type=("build", "run"))
+
+    with when("@24.1.0:24.6.0"):
+        depends_on("libxc@:6.2.2")
+        depends_on("python@3.8:", type=("build", "run"))
+        depends_on("py-ase@3.23.0:", type=("build", "run"))
+        depends_on("py-numpy@1.17:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.6.0:", type=("build", "run"))
+
+    with when("@23.6.1:23.9.1"):
+        depends_on("libxc@:6.2.2")
+        depends_on("python@3.7:", type=("build", "run"))
+        depends_on("py-ase@3.22.1:", type=("build", "run"))
+        depends_on("py-numpy@1.17:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.6.0:", type=("build", "run"))
+
     depends_on("python@2.6:", type=("build", "run"), when="@:1.3.0")
     depends_on("python@3.5:", type=("build", "run"), when="@19.8.1:")
     depends_on("python@3.6:", type=("build", "run"), when="@20.10.0:")
