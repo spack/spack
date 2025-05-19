@@ -317,7 +317,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         depends_on("aotriton@0.8.1b", when="@2.5:2.6")
         depends_on("aotriton@0.9.1b", when="@2.7")
         depends_on("aotriton@0.9.1b", when="@main")
-        depends_on("composable-kernel@:6.3.2", when="@2.5.0:2.5.2")
+        depends_on("composable-kernel@:6.3.2", when="@2.5")
         depends_on("composable-kernel@6.3.2:", when="@2.6:")
     depends_on("mpi", when="+mpi")
     depends_on("ucc", when="+ucc")
