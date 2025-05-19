@@ -572,7 +572,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
                 string=True,
             )
             filter_file(
-                r"-DINCLUDE_DIRECTORIES=${ROCM_INCLUDE_DIRS}",
+                "-DINCLUDE_DIRECTORIES=${ROCM_INCLUDE_DIRS}",
                 "-DINCLUDE_DIRECTORIES={0}/include/rocm-core".format(
                     self.spec["rocm-core"].prefix
                 ),
