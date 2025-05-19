@@ -566,7 +566,7 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         )
         if self.spec.satisfies("@2.1:2.7 + rocm"):
             filter_file(
-                r"${ROCM_INCLUDE_DIRS}/rocm-core/rocm_version.h",
+                "${ROCM_INCLUDE_DIRS}/rocm-core/rocm_version.h",
                 "{0}/include/rocm-core/rocm_version.h".format(self.spec["rocm-core"].prefix),
                 "cmake/public/LoadHIP.cmake",
                 string=True,
