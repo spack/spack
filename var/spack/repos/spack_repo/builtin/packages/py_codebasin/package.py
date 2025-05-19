@@ -8,7 +8,8 @@ from spack.package import *
 
 
 class PyCodebasin(PythonPackage):
-    """An analysis tool providing insight into the portability and maintainability of an application's source code."""
+    """An analysis tool providing insight into the portability and
+    maintainability of an application's source code."""
 
     homepage = "https://intel.github.io/code-base-investigator/"
 
