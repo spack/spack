@@ -15,9 +15,9 @@ from ..openfoam import package as openfoam
 class Additivefoam(Package):
     """AdditiveFOAM is a heat and mass transfer software for Additive Manufacturing (AM)"""
 
-    homepage = "https://github.com/ORNL/AdditiveFOAM"
+    homepage = "https://ornl.github.io/AdditiveFOAM/"
     git = "https://github.com/ORNL/AdditiveFOAM.git"
-    url = "https://github.com/ORNL/AdditiveFOAM/archive/1.0.0.tar.gz"
+    url = "https://github.com/ORNL/AdditiveFOAM/archive/1.1.0.tar.gz"
 
     maintainers("streeve", "colemanjs", "gknapp1")
 
@@ -26,6 +26,7 @@ class Additivefoam(Package):
     license("GPL-3.0-only")
 
     version("main", branch="main")
+    version("1.1.0", sha256="a13770bd66fe10224705fb3a2bfb557e63e0aea98c917b0084cf8b91eaa53ee2")
     version("1.0.0", sha256="abbdf1b0230cd2f26f526be76e973f508978611f404fe8ec4ecdd7d5df88724c")
 
     depends_on("cxx", type="build")  # generated
