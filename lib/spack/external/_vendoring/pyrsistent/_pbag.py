@@ -1,6 +1,6 @@
 from collections.abc import Container, Iterable, Sized, Hashable
 from functools import reduce
-from pyrsistent._pmap import pmap
+from _vendoring.pyrsistent._pmap import pmap
 
 
 def _add_to_counters(counters, element):

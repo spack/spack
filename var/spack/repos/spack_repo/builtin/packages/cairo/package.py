@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems import autotools, meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 

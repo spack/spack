@@ -1,5 +1,5 @@
 """
-altgraph.Graph - Base Graph class
+_vendoring.altgraph.Graph - Base Graph class
 =================================
 
 ..
@@ -15,7 +15,7 @@ altgraph.Graph - Base Graph class
 
 from collections import deque
 
-from altgraph import GraphError
+from _vendoring.altgraph import GraphError
 
 
 class Graph(object):

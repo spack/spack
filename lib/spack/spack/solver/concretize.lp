@@ -530,6 +530,32 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
    attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
 
+error(100, "Cannot satisfy the request on {0} to have {1}={2}", BuildDependency, Variant, Value)
+:- attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "variant_value", BuildDependency, Variant, Value).
+
+error(100, "Cannot satisfy the request on {0} to have the target set to {1}", BuildDependency, Target)
+:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_target", BuildDependency, Target).
+
+error(100, "Cannot satisfy the request on {0} to have the os set to {1}", BuildDependency, NodeOS)
+:- attr("build_requirement", ParentNode, build_requirement("node_os_set", BuildDependency, NodeOS)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_os", BuildDependency, NodeOS).
+
+error(100, "Cannot satisfy the request on {0} to have the platform set to {1}", BuildDependency, Platform)
+:- attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, Platform)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   not hash_attr(BuildDependencyHash, "node_platform", BuildDependency, Platform).
+
+error(100, "Cannot satisfy the request on {0} to have the following hash {1}", BuildDependency, BuildHash)
+:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+   attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
+   attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
+   BuildHash != BuildDependencyHash.
+
 % External nodes
 :- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
    external(ParentNode),
@@ -574,6 +600,32 @@ build_requirement(ParentNode, ProviderNode) :- virtual_build_requirement(ParentN
 % version constraints on "gcc" in the "imposed_constraint".
 attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
   attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+% Account for properties on the build requirements
+%
+% root %gcc@12.0 <properties for gcc> ^dep
+%
+attr("variant_set", node(X, BuildDependency), Variant, Value) :-
+  attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
+
+attr("node_target_set", node(X, BuildDependency), Target) :-
+  attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("node_os_set", node(X, BuildDependency), NodeOS) :-
+  attr("build_requirement", ParentNode, build_requirement("node_os_set", BuildDependency, NodeOS)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("node_platform_set", node(X, BuildDependency), NodePlatform) :-
+  attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, NodePlatform)),
+  build_requirement(ParentNode, node(X, BuildDependency)).
+
+attr("hash", node(X, BuildDependency), BuildHash) :-
+  attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 

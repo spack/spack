@@ -12,10 +12,10 @@ from threading import Lock
 from types import CodeType
 from urllib.parse import quote_from_bytes
 
-import markupsafe
+import _vendoring.markupsafe
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
 
@@ -28,7 +28,7 @@ concat = "".join
 
 
 def pass_context(f: F) -> F:
-    """Pass the :class:`~jinja2.runtime.Context` as the first argument
+    """Pass the :class:`~_vendoring.jinja2.runtime.Context` as the first argument
     to the decorated function when called while rendering a template.
 
     Can be used on functions, filters, and tests.
@@ -45,7 +45,7 @@ def pass_context(f: F) -> F:
 
 
 def pass_eval_context(f: F) -> F:
-    """Pass the :class:`~jinja2.nodes.EvalContext` as the first argument
+    """Pass the :class:`~_vendoring.jinja2.nodes.EvalContext` as the first argument
     to the decorated function when called while rendering a template.
     See :ref:`eval-context`.
 
@@ -62,7 +62,7 @@ def pass_eval_context(f: F) -> F:
 
 
 def pass_environment(f: F) -> F:
-    """Pass the :class:`~jinja2.Environment` as the first argument to
+    """Pass the :class:`~_vendoring.jinja2.Environment` as the first argument to
     the decorated function when called while rendering a template.
 
     Can be used on functions, filters, and tests.
@@ -104,7 +104,7 @@ def contextfunction(f: F) -> F:
     """Pass the context as the first argument to the decorated function.
 
     .. deprecated:: 3.0
-        Will be removed in Jinja 3.1. Use :func:`~jinja2.pass_context`
+        Will be removed in Jinja 3.1. Use :func:`~_vendoring.jinja2.pass_context`
         instead.
     """
     warnings.warn(
@@ -122,7 +122,7 @@ def evalcontextfunction(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_eval_context` instead.
+        :func:`~_vendoring.jinja2.pass_eval_context` instead.
 
     .. versionadded:: 2.4
     """
@@ -141,7 +141,7 @@ def environmentfunction(f: F) -> F:
 
     .. deprecated:: 3.0
         Will be removed in Jinja 3.1. Use
-        :func:`~jinja2.pass_environment` instead.
+        :func:`~_vendoring.jinja2.pass_environment` instead.
     """
     warnings.warn(
         "'environmentfunction' is renamed to 'pass_environment', the"
@@ -335,9 +335,9 @@ def urlize(
         def trim_url(x: str) -> str:
             return x
 
-    words = re.split(r"(\s+)", str(markupsafe.escape(text)))
-    rel_attr = f' rel="{markupsafe.escape(rel)}"' if rel else ""
-    target_attr = f' target="{markupsafe.escape(target)}"' if target else ""
+    words = re.split(r"(\s+)", str(_vendoring.markupsafe.escape(text)))
+    rel_attr = f' rel="{_vendoring.markupsafe.escape(rel)}"' if rel else ""
+    target_attr = f' target="{_vendoring.markupsafe.escape(target)}"' if target else ""
 
     for i, word in enumerate(words):
         head, middle, tail = "", word, ""
@@ -455,8 +455,8 @@ def generate_lorem_ipsum(
 
     if not html:
         return "\n\n".join(result)
-    return markupsafe.Markup(
-        "\n".join(f"<p>{markupsafe.escape(x)}</p>" for x in result)
+    return _vendoring.markupsafe.Markup(
+        "\n".join(f"<p>{_vendoring.markupsafe.escape(x)}</p>" for x in result)
     )
 
 
@@ -658,7 +658,7 @@ def select_autoescape(
     If you want to enable it for all templates created from strings or
     for all templates with `.html` and `.xml` extensions::
 
-        from jinja2 import Environment, select_autoescape
+        from _vendoring.jinja2 import Environment, select_autoescape
         env = Environment(autoescape=select_autoescape(
             enabled_extensions=('html', 'xml'),
             default_for_string=True,
@@ -667,7 +667,7 @@ def select_autoescape(
     Example configuration to turn it on at all times except if the template
     ends with `.txt`::
 
-        from jinja2 import Environment, select_autoescape
+        from _vendoring.jinja2 import Environment, select_autoescape
         env = Environment(autoescape=select_autoescape(
             disabled_extensions=('txt',),
             default_for_string=True,
@@ -703,10 +703,10 @@ def select_autoescape(
 
 def htmlsafe_json_dumps(
     obj: t.Any, dumps: t.Optional[t.Callable[..., str]] = None, **kwargs: t.Any
-) -> markupsafe.Markup:
+) -> _vendoring.markupsafe.Markup:
     """Serialize an object to a string of JSON with :func:`json.dumps`,
     then replace HTML-unsafe characters with Unicode escapes and mark
-    the result safe with :class:`~markupsafe.Markup`.
+    the result safe with :class:`~_vendoring.markupsafe.Markup`.
 
     This is available in templates as the ``|tojson`` filter.
 
@@ -732,7 +732,7 @@ def htmlsafe_json_dumps(
     if dumps is None:
         dumps = json.dumps
 
-    return markupsafe.Markup(
+    return _vendoring.markupsafe.Markup(
         dumps(obj, **kwargs)
         .replace("<", "\\u003c")
         .replace(">", "\\u003e")
@@ -833,11 +833,11 @@ class Namespace:
         return f"<Namespace {self.__attrs!r}>"
 
 
-class Markup(markupsafe.Markup):
+class Markup(_vendoring.markupsafe.Markup):
     def __new__(cls, base="", encoding=None, errors="strict"):  # type: ignore
         warnings.warn(
-            "'jinja2.Markup' is deprecated and will be removed in Jinja"
-            " 3.1. Import 'markupsafe.Markup' instead.",
+            "'_vendoring.jinja2.Markup' is deprecated and will be removed in Jinja"
+            " 3.1. Import '_vendoring.markupsafe.Markup' instead.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -846,9 +846,9 @@ class Markup(markupsafe.Markup):
 
 def escape(s: t.Any) -> str:
     warnings.warn(
-        "'jinja2.escape' is deprecated and will be removed in Jinja"
-        " 3.1. Import 'markupsafe.escape' instead.",
+        "'_vendoring.jinja2.escape' is deprecated and will be removed in Jinja"
+        " 3.1. Import '_vendoring.markupsafe.escape' instead.",
         DeprecationWarning,
         stacklevel=2,
     )
-    return markupsafe.escape(s)
+    return _vendoring.markupsafe.escape(s)

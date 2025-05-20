@@ -9,8 +9,10 @@ import glob
 import os
 import re
 
-import spack.build_systems.generic
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import generic, makefile
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -100,7 +102,7 @@ class SetupEnvironment:
             env.append_flags("CFLAGS", "-O2")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
+class MakefileBuilder(makefile.MakefileBuilder, SetupEnvironment):
     def edit(self, pkg, spec, prefix):
         config_args = []
         if "~shared" in self.spec:
@@ -144,7 +146,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
                     )
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder, SetupEnvironment):
+class GenericBuilder(generic.GenericBuilder, SetupEnvironment):
     def install(self, pkg, spec, prefix):
         nmake("-f" "win32\\Makefile.msc")
         build_dir = pkg.stage.source_path

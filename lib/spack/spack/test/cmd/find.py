@@ -14,12 +14,12 @@ import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
+import spack.paths
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
-from spack.test.conftest import create_test_repo
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
 
@@ -129,7 +129,7 @@ def test_tag2_tag3(parser, specs):
 @pytest.mark.db
 def test_namespaces_shown_correctly(args, with_namespace, database):
     """Test that --namespace(s) works. Old syntax is --namespace"""
-    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
+    assert ("builtin_mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -462,89 +462,16 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_p
     assert "zlib" in output
 
 
-_pkga = (
-    "a0",
-    """\
-from spack.package import *
-
-class A0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("b0")
-    depends_on("c0")
-""",
-)
-
-
-_pkgb = (
-    "b0",
-    """\
-from spack.package import *
-
-class B0(Package):
-    version("1.2")
-    version("1.1")
-""",
-)
-
-
-_pkgc = (
-    "c0",
-    """\
-from spack.package import *
-
-class C0(Package):
-    version("1.2")
-    version("1.1")
-
-    tags = ["tag0", "tag1"]
-""",
-)
-
-
-_pkgd = (
-    "d0",
-    """\
-from spack.package import *
-
-class D0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("c0")
-    depends_on("e0")
-""",
-)
-
-
-_pkge = (
-    "e0",
-    """\
-from spack.package import *
-
-class E0(Package):
-    tags = ["tag1", "tag2"]
-
-    version("1.2")
-    version("1.1")
-""",
-)
+#   a0  d0
+#  / \ / \
+# b0  c0  e0
 
 
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    r"""
-      a0  d0
-     / \ / \
-    b0  c0  e0
-    """
-    yield create_test_repo(tmpdir, [_pkga, _pkgb, _pkgc, _pkgd, _pkge])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
+def test_repo(mock_stage):
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
+    ) as mock_repo_path:
         yield mock_repo_path
 
 

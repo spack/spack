@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -750,6 +754,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             env["MPICXX_CXX"] = env["CXX"]
 
     def configure(self, spec, prefix):
+        if spec.satisfies("@:3.23.1 +cuda ^cuda@12.9:"):
+            filter_file(
+                "libnvToolsExt.a",
+                "libnvtx3interop.a",
+                "config/BuildSystem/config/packages/cuda.py",
+                string=True,
+            )
         self.revert_kokkos_nvcc_wrapper()
         python("configure", "--prefix=%s" % prefix, *self.configure_options())
 

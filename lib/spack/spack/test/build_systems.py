@@ -12,8 +12,7 @@ import archspec.cpu
 
 import llnl.util.filesystem as fs
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
+import spack
 import spack.builder
 import spack.concretize
 import spack.environment
@@ -27,6 +26,8 @@ from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
+
+pytestmark = pytest.mark.skip(reason="build_systems module is moved out of spack")
 
 
 @pytest.fixture()

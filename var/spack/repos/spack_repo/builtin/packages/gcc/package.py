@@ -5,11 +5,15 @@ import glob
 import os
 import sys
 
+from spack_repo.builtin.build_systems import compiler
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 import archspec.cpu
 
 from llnl.util.symlink import readlink
 
-import spack.build_systems.compiler
 import spack.platforms
 import spack.repo
 import spack.util.libc
@@ -652,9 +656,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             not_apple_clang = []
             for exe in exes_in_prefix:
                 try:
-                    output = spack.build_systems.compiler.compiler_output(
-                        exe, version_argument="--version"
-                    )
+                    output = compiler.compiler_output(exe, version_argument="--version")
                 except Exception:
                     output = ""
                 if "clang version" in output:
@@ -670,7 +672,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
         languages = set()
         translation = {"cxx": "c++"}
-        for lang, compiler in compilers.items():
+        for lang, _ in compilers.items():
             languages.add(translation.get(lang, lang))
         variant_str = "languages:={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
