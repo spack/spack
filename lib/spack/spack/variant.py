@@ -208,7 +208,7 @@ class Variant:
         else:
             return VariantType.SINGLE
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"Variant('{self.name}', "
             f"default='{self.default}', "
@@ -493,7 +493,7 @@ class DisjointSetsOfValues(collections.abc.Sequence):
 
     _empty_set = {"none"}
 
-    def __init__(self, *sets):
+    def __init__(self, *sets: Tuple[str, ...]) -> None:
         self.sets = [set(_flatten(x)) for x in sets]
 
         # 'none' is a special value and can appear only in a set of
