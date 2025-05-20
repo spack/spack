@@ -161,22 +161,22 @@ class PyGpaw(PythonPackage):
             cfgfile = "siteconfig.py"
 
         with open(cfgfile, "w") as f:
-            f.write("libraries = {0}\n".format(repr(libs)))
-            f.write("include_dirs = {0}\n".format(repr(include_dirs)))
-            f.write("library_dirs = {0}\n".format(repr(lib_dirs)))
-            f.write("extra_link_args += ['-Wl,-rpath={0}']\n".format(rpath_str))
+            f.write(f"libraries = {repr(libs)}\n")
+            f.write(f"include_dirs = {repr(include_dirs)}\n")
+            f.write(f"library_dirs = {repr(lib_dirs)}\n")
+            f.write(f"extra_link_args += ['-Wl,-rpath={rpath_str}']\n")
             if "+mpi" in spec:
                 f.write("define_macros += [('PARALLEL', '1')]\n")
-                f.write("compiler='{0}'\n".format(spec["mpi"].mpicc))
-                f.write("mpicompiler = '{0}'\n".format(spec["mpi"].mpicc))
-                f.write("mpi_include_dirs = {0}\n".format(mpi_include_dirs))
-                f.write("mpi_library_dirs = {0}\n".format(mpi_library_dirs))
+                f.write(f"compiler='{spec["mpi"].mpicc}'\n")
+                f.write(f"mpicompiler = '{spec["mpi"].mpicc}'\n")
+                f.write(f"mpi_include_dirs = {mpi_include_dirs}\n")
+                f.write(f"mpi_library_dirs = {mpi_library_dirs}\n")
             else:
-                f.write("compiler='{0}'\n".format(self.compiler.cc))
+                f.write(f"compiler='{self.compiler.cc}'\n")
                 f.write("mpicompiler = None\n")
             if "+scalapack" in spec:
                 f.write("scalapack = True\n")
-                f.write("define_macros += {0}\n".format(scalapack_macros))
+                f.write(f"define_macros += {scalapack_macros}\n")
             if "+fftw" in spec:
                 f.write("fftw = True\n")
             if "+libvdwxc" in spec:
