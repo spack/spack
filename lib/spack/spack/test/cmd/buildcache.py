@@ -23,10 +23,12 @@ import spack.main
 import spack.mirrors.mirror
 import spack.spec
 import spack.util.url as url_util
+import spack.util.web as web_util
 from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
+    BuildcacheEntryError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     check_mirror_for_layout,
@@ -748,3 +750,86 @@ def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):
 
     # If the buildcache has no index, spack fails and explains why
     assert error.value.message == "Buildcache migration requires a buildcache index"
+
+
+def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gnupghome):
+    with capsys.disabled():
+        mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+        spec = mutable_database.query_local("libelf", installed=True)[0]
+        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    output = buildcache("prune", "my-mirror")
+
+    assert "No orphaned manifest(s) or blob(s) found" in output
+
+
+def test_buildcache_prune_orphaned_blobs(capsys, tmp_path, mutable_database, mock_gnupghome):
+    # Create a mirror and push a package to it
+    mirror_directory = str(tmp_path)
+
+    with capsys.disabled():
+        mirror("add", "--unsigned", "my-mirror", mirror_directory)
+        spec = mutable_database.query_local("libelf", installed=True)[0]
+        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
+    )
+    cache_entry.fetch_metadata()
+
+    blob_urls = [
+        URLBuildcacheEntry.get_blob_url(mirror_url=f"file://{mirror_directory}", record=blob)
+        for blob in cache_entry.manifest.data
+    ]
+
+    # Remove the manifest from the cache, orphaning the blobs
+    manifest_url = URLBuildcacheEntry.get_manifest_url(
+        spec, mirror_url=f"file://{mirror_directory}"
+    )
+    web_util.remove_url(manifest_url)
+
+    # Ensure the blobs are still there before pruning
+    assert all(web_util.url_exists(blob_url) for blob_url in blob_urls)
+
+    output = buildcache("prune", "my-mirror")
+
+    # Ensure the blobs are gone after pruning
+    assert all(not web_util.url_exists(blob_url) for blob_url in blob_urls)
+
+    assert "Found 2 blob(s) with no manifest" in output
+
+    cache_entry.destroy()
+
+
+def test_buildcache_prune_orphaned_manifest(capsys, tmp_path, mutable_database, mock_gnupghome):
+    # Create a mirror and push a package to it
+    mirror_directory = str(tmp_path)
+
+    with capsys.disabled():
+        mirror("add", "--unsigned", "my-mirror", mirror_directory)
+        spec = mutable_database.query_local("libelf", installed=True)[0]
+        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+
+    # Create a cache entry and read the manifest, which should succeed
+    # as we haven't pruned anything yet
+    cache_entry = URLBuildcacheEntry(
+        mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
+    )
+    cache_entry.read_manifest()
+
+    # Remove the blobs from the cache, orphaning the manifest
+    for blob_file in cache_entry.read_manifest().data:
+        blob_url = cache_entry.get_blob_url(mirror_url=mirror_directory, record=blob_file)
+        web_util.remove_url(url=f"file://{blob_url}")
+
+    output = buildcache("prune", "my-mirror")
+
+    # Clear the local cache entry's manifest and try to read it again, which
+    # should raise an error because it has been pruned
+    with pytest.raises(BuildcacheEntryError):
+        cache_entry.manifest = None
+        cache_entry.read_manifest()
+
+    assert "Found 1 manifest(s) that are missing blobs" in output
+
+    cache_entry.destroy()
