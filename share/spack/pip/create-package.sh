@@ -16,7 +16,6 @@ git clone "${SPACK_REPO_ROOT}" spack #--branch v1.0.0-alpha.3
 SPACK_PKG_SRC="${PWD}"
 popd
 
-export PIP_CERT=/etc/ssl/certs/ca-bundle.crt
 # Python 3.9 is the minimum version due to a cryptography dependency.
 if ! [[ -e build-tools-venv ]]; then
     python3.9 -m venv build-tools-venv
