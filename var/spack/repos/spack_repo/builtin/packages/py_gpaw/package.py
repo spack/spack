@@ -133,28 +133,37 @@ class PyGpaw(PythonPackage):
             lapack.prefix.include,
             libxc.prefix.include,
         ]
+        runtime_library_dirs = []
+
+        bools = ""
+
         if "+mpi" in spec:
             libs += spec["mpi"].libs
             mpi_include_dirs = repr([spec["mpi"].prefix.include])
             mpi_library_dirs = repr(list(spec["mpi"].libs.directories))
             include_dirs.append(spec["mpi"].prefix.include)
+
         if "+scalapack" in spec:
             libs += spec["scalapack"].libs
             include_dirs.append(spec["scalapack"].prefix.include)
             scalapack_macros = repr(
                 [("GPAW_NO_UNDERSCORE_CBLACS", "1"), ("GPAW_NO_UNDERSCORE_CSCALAPACK", "1")]
             )
+            bools += "scalapack = True\n"
+
         if "+fftw" in spec:
             libs += spec["fftw"].libs
             include_dirs.append(spec["fftw"].prefix.include)
+            bools += "fftw = True\n"
+
         if "+libvdwxc" in spec:
             libs += spec["libvdwxc"].libs
             include_dirs.append(spec["libvdwxc"].prefix.include)
+            bools += "libvdwxc = True\n"
 
         if "+elpa" in spec:
             libs += spec["elpa"].libs
             include_dirs.append(spec["elpa"].prefix.include)
-            #include_dirs.append(join_path(spec["elpa"].headers.directories[0], "modules"))
             bools += "elpa = True\n"
             runtime_library_dirs += [spec["elpa"].libs.directories]
 
@@ -168,6 +177,7 @@ class PyGpaw(PythonPackage):
             cfgfile = "siteconfig.py"
 
         with open(cfgfile, "w") as f:
+            f.write(bools)
             f.write(f"libraries = {repr(libs)}\n")
             f.write(f"include_dirs = {repr(include_dirs)}\n")
             f.write(f"library_dirs = {repr(lib_dirs)}\n")
@@ -182,11 +192,6 @@ class PyGpaw(PythonPackage):
                 f.write(f"compiler='{self.compiler.cc}'\n")
                 f.write("mpicompiler = None\n")
             if "+scalapack" in spec:
-                f.write("scalapack = True\n")
                 f.write(f"define_macros += {scalapack_macros}\n")
-            if "+fftw" in spec:
-                f.write("fftw = True\n")
-            if "+libvdwxc" in spec:
-                f.write("libvdwxc = True\n")
             if "+elpa" in spec:
                 f.write(f"runtime_library_dirs = {repr(runtime_library_dirs)}")
