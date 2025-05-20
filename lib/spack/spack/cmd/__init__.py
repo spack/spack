@@ -705,7 +705,11 @@ def first_line(docstring):
 
 
 def group_arguments(
-    args: Sequence[str], max_group_size: int = 500, max_group_len: Optional[int] = None
+    args: Sequence[str],
+    *,
+    max_group_size: int = 500,
+    prefix_length: int = 0,
+    max_group_length: Optional[int] = None,
 ) -> Generator[List[str], None, None]:
     """Splits the supplied list of arguments into groups for passing to CLI tools.
 
@@ -722,30 +726,32 @@ def group_arguments(
     Arguments:
         args: list of arguments to split into groups
         max_group_size: max number of elements in any group (default 500)
-        max_group_len: max length of characters that if a group of args is joined by " "
+        prefix_length: length of any additional arguments to be passed before the groups from args;
+            defaults to 0 characters.
+        max_group_length: max length of characters that if a group of args is joined by " "
             On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
 
     """
-    if max_group_len is None:
-        max_group_len = 32768  # default to the Windows limit
+    if max_group_length is None:
+        max_group_length = 32768  # default to the Windows limit
         if hasattr(os, "sysconf"):
             # sysconf is only on unix and returns -1 if an option isn't present
             sysconf_max = os.sysconf("SC_ARG_MAX")
             if sysconf_max != -1:
-                max_group_len = sysconf_max
+                max_group_length = sysconf_max
 
     group: List[str] = []
-    grouplen, space = 0, 0
+    grouplen, space = prefix_length, 0
     for i, arg in enumerate(args):
         arglen = len(arg)
-        if arglen > max_group_len:
+        if arglen > max_group_length:
             raise ValueError(f"Argument is longer than the maximum command line size: '{arg}'")
 
         next_grouplen = grouplen + arglen + space
-        if len(group) == max_group_size or next_grouplen > max_group_len:
+        if len(group) == max_group_size or next_grouplen > max_group_length:
             yield group
-            group, grouplen, space = [], 0, 0
+            group, grouplen, space = [], prefix_length, 0
 
         group.append(arg)
         grouplen += arglen + space

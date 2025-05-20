@@ -322,7 +322,7 @@ group_args = [
 
 
 @pytest.mark.parametrize(
-    ["max_group_size", "max_group_len", "lengths", "error"],
+    ["max_group_size", "max_group_length", "lengths", "error"],
     [
         (3, 1, None, ValueError),
         (3, 13, None, ValueError),
@@ -334,9 +334,9 @@ group_args = [
         (4, 56, [4, 4, 2], None),
     ],
 )
-def test_group_arguments(mock_packages, max_group_size, max_group_len, lengths, error):
+def test_group_arguments(mock_packages, max_group_size, max_group_length, lengths, error):
     generator = spack.cmd.group_arguments(
-        group_args, max_group_size=max_group_size, max_group_len=max_group_len
+        group_args, max_group_size=max_group_size, max_group_length=max_group_length
     )
 
     # just check that error cases raise
@@ -349,7 +349,7 @@ def test_group_arguments(mock_packages, max_group_size, max_group_len, lengths, 
     assert sum(groups, []) == group_args
     assert [len(group) for group in groups] == lengths
     assert all(
-        sum(len(elt) for elt in group) + (len(group) - 1) <= max_group_len for group in groups
+        sum(len(elt) for elt in group) + (len(group) - 1) <= max_group_length for group in groups
     )
 
 
