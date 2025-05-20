@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import tempfile
-from typing import Dict, Set
-
+from typing import cast, Dict, Optional, Set
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import llnl.util.tty as tty
-
 import spack.binary_distribution as bindist
 import spack.stage
 import spack.util.url as url_util
@@ -42,16 +41,27 @@ def _prune_orphans(mirror: Mirror) -> int:
 
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
         file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
-        for blob_name in file_list:
-            try:
-                cache_entry: URLBuildcacheEntry = read_fn(manifest_url=blob_name)
-                for data in cache_entry.manifest.data:
-                    blob_url = cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data)
-                    blob_to_manifest_mapping[blob_url] = blob_name
 
+        def process_manifest(blob_name: str) -> Dict[str, str]:
+            cache_entry: Optional[URLBuildcacheEntry] = None
+            try:
+                cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
+                return {
+                    cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
+                    for data in cache_entry.manifest.data
+                }
             except Exception as e:
                 tty.warn(f"Unable to fetch spec for manifest {blob_name} due to: {e}")
-                continue
+                return {}
+            finally:
+                if cache_entry:
+                    cache_entry.destroy()
+
+        with ThreadPoolExecutor() as executor:
+            futures = {executor.submit(process_manifest, blob): blob for blob in file_list}
+            for future in as_completed(futures):
+                result = future.result()
+                blob_to_manifest_mapping.update(result)
 
     url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
     tty.debug(f"Listing blobs in {url_to_list}")
@@ -84,33 +94,39 @@ def _prune_orphans(mirror: Mirror) -> int:
 
     if not orphaned_blobs and not orphaned_manifests:
         tty.info("No orphaned manifest(s) or blob(s) found")
-    else:
-        if orphaned_blobs:
-            tty.info(f"Found {len(orphaned_blobs)} blob(s) with no manifest")
-        if orphaned_manifests:
-            tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
+        return 0
+
+    if orphaned_blobs:
+        tty.info(f"Found {len(orphaned_blobs)} blob(s) with no manifest")
+    if orphaned_manifests:
+        tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
 
     pruned_objects = 0
-    tty.debug(f"Pruning {len(orphaned_manifests)} orphaned manifest(s)...")
-    for orphaned_manifest_url in orphaned_manifests:
-        # Get the manifest URL that references the non-existing blob
-        try:
-            web_util.remove_url(url=orphaned_manifest_url)
-            tty.info(f"Removed manifest {orphaned_manifest_url}")
-            pruned_objects += 1
-        except Exception as e:
-            tty.info(f"Unable to prune manifest {orphaned_manifest_url} due to: {e}")
-            continue
 
-    tty.debug(f"Pruning {len(orphaned_blobs)} orphaned blobs...")
-    for orphaned_blob_url in orphaned_blobs:
+    def remove_manifest(url: str) -> int:
         try:
-            web_util.remove_url(url=orphaned_blob_url)
-            tty.debug(f"Removed {orphaned_blob_url}")
-            pruned_objects += 1
+            web_util.remove_url(url=url)
+            tty.info(f"Removed manifest {url}")
+            return 1
         except Exception as e:
-            tty.warn(f"Unable to prune blob {orphaned_blob_url} due to: {e}")
-            continue
+            tty.warn(f"Unable to prune manifest {url} due to: {e}")
+            return 0
+
+    def remove_blob(url: str) -> int:
+        try:
+            web_util.remove_url(url=url)
+            tty.debug(f"Removed {url}")
+            return 1
+        except Exception as e:
+            tty.warn(f"Unable to prune blob {url} due to: {e}")
+            return 0
+
+    with ThreadPoolExecutor() as executor:
+        manifest_futures = [executor.submit(remove_manifest, url) for url in orphaned_manifests]
+        blob_futures = [executor.submit(remove_blob, url) for url in orphaned_blobs]
+
+        for future in as_completed(manifest_futures + blob_futures):
+            pruned_objects += future.result()
 
     return pruned_objects
 
