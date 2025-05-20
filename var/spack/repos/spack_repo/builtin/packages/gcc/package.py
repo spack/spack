@@ -10,8 +10,6 @@ from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
 from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
-import archspec.cpu
-
 from llnl.util.symlink import readlink
 
 import spack.platforms
@@ -773,7 +771,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except archspec.cpu.UnsupportedMicroarchitecture:
+            except ValueError:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""

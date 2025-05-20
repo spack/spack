@@ -6,8 +6,6 @@ import re
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage
 
-import archspec
-
 from spack.package import *
 
 
@@ -62,10 +60,7 @@ class Iwyu(CMakePackage):
     depends_on("llvm+clang@8.0:8", when="@0.12")
     depends_on("llvm+clang@7.0:7", when="@0.11")
 
-    # iwyu uses X86AsmParser so must have the x86 target on non-x86 arch
-    _arches = set(str(x.family) for x in archspec.cpu.TARGETS.values())
-    for _arch in _arches - set(["x86", "x86_64"]):
-        depends_on("llvm targets=x86", when=f"arch={_arch}:")
+    requires("llvm targets=all", "llvm targets=x86", msg="iwyu needs the X86AsmParser")
 
     patch("iwyu-013-cmake.patch", when="@0.13:0.14")
 
