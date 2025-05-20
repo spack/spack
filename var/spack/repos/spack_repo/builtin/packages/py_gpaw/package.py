@@ -36,10 +36,10 @@ class PyGpaw(PythonPackage):
     variant("elpa", default=True, description="Build with ELPA support")
 
     # Build dependencies
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
     depends_on("py-setuptools", type="build")
 
-    # Version-agnostic dependencies
+    # Version-agnostic required dependencies
     depends_on("blas")
     depends_on("lapack")
 
@@ -104,8 +104,7 @@ class PyGpaw(PythonPackage):
 
     # Variant dependencies
     depends_on("mpi", when="+mpi", type=("build", "link", "run"))
-    depends_on("fftw+mpi", when="+fftw +mpi")
-    depends_on("fftw~mpi", when="+fftw ~mpi")
+    depends_on("fftw-api", when="+fftw")
     depends_on("scalapack", when="+scalapack")
     depends_on("libvdwxc", when="+libvdwxc")
     # Fixed elpa version due to compilation/linking errors on older and newer versions.
@@ -120,6 +119,7 @@ class PyGpaw(PythonPackage):
         blas = spec["blas"]
         lapack = spec["lapack"]
 
+        # These aren't necessary for newer versions, test if we can remove them compeletely.
         python_include = spec["python"].headers.directories[0]
         numpy_include = join_path(
             self["py-numpy"].module.python_platlib, "numpy", "core", "include"
@@ -146,8 +146,10 @@ class PyGpaw(PythonPackage):
         if "+scalapack" in spec:
             libs += spec["scalapack"].libs
             include_dirs.append(spec["scalapack"].prefix.include)
+            # Are these necessary?
             scalapack_macros = repr(
-                [("GPAW_NO_UNDERSCORE_CBLACS", "1"), ("GPAW_NO_UNDERSCORE_CSCALAPACK", "1")]
+                [("GPAW_NO_UNDERSCORE_CBLACS", "1"), 
+                 ("GPAW_NO_UNDERSCORE_CSCALAPACK", "1")]
             )
             bools += "scalapack = True\n"
 
@@ -183,9 +185,12 @@ class PyGpaw(PythonPackage):
             f.write(f"library_dirs = {repr(lib_dirs)}\n")
             f.write(f"extra_link_args += ['-Wl,-rpath={rpath_str}']\n")
             if "+mpi" in spec:
+                # Do we need this macro for older versions? Newer versions don't seem to.
                 f.write("define_macros += [('PARALLEL', '1')]\n")
                 f.write(f"compiler='{spec["mpi"].mpicc}'\n")
                 f.write(f"mpicompiler = '{spec["mpi"].mpicc}'\n")
+                # These may not be needed for versions @23.6.0:
+                # We can add logic to only apply them for older versions, but they don't cause problems even when not needed.
                 f.write(f"mpi_include_dirs = {mpi_include_dirs}\n")
                 f.write(f"mpi_library_dirs = {mpi_library_dirs}\n")
             else:
