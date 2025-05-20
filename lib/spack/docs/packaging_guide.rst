@@ -2507,7 +2507,7 @@ necessary when there are breaking changes in the dependency that the
 package cannot handle. In Spack we often add forward compatibility
 bounds only at the time a new, breaking version of a dependency is
 released. As with backward compatibility, it is typical to see a list
-of forward compatibility bounds in a package file as seperate lines:
+of forward compatibility bounds in a package file as separate lines:
 
 .. code-block:: python
 
