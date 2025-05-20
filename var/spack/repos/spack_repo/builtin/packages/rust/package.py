@@ -221,7 +221,7 @@ class Rust(Package):
 
         # by default a `-nightly` suffix we be applied even on
         # non-nightly stable builds
-        if self.spec.version != Version("nightly"):
+        if not self.spec.satisfies("@=nightly"):
             flags.append("--release-channel=stable")
 
         configure(*flags)
