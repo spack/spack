@@ -10,8 +10,6 @@ from contextlib import contextmanager
 from spack_repo.builtin.build_systems.generic import Package
 
 from llnl.util.filesystem import windows_sfn
-from llnl.util.lang import match_predicate
-from llnl.util.symlink import symlink
 
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
@@ -579,23 +577,6 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         os.chmod(path, perm | 0o200)
         yield
         os.chmod(path, perm)
-
-    # ========================================================================
-    # Handle specifics of activating and deactivating perl modules.
-    # ========================================================================
-
-    def perl_ignore(self, ext_pkg, args):
-        """Add some ignore files to activate/deactivate args."""
-        ignore_arg = args.get("ignore", lambda f: False)
-
-        # Many perl packages describe themselves in a perllocal.pod file,
-        # so the files conflict when multiple packages are activated.
-        # We could merge the perllocal.pod files in activated packages,
-        # but this is unnecessary for correct operation of perl.
-        # For simplicity, we simply ignore all perllocal.pod files:
-        patterns = [r"perllocal\.pod$"]
-
-        return match_predicate(ignore_arg, patterns)
 
     @property
     def command(self):
