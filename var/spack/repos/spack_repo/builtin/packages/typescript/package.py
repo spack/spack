@@ -20,9 +20,10 @@ class Typescript(Package):
 
     license("Apache-2.0")
 
+    version("5.8.3", sha256="d3ce895a57b59a41eba1053ee7c22c55261213d915a77f572fdb024f61f14a1e")
     version("5.3.2", sha256="c5a12507006e7d2b8020dec9589191ce070fd88203f2c80aca00d641cee7866f")
 
-    depends_on("node-js", type=("build", "link", "run"))
+    depends_on("node-js@16:", type=("build", "link", "run"))
     depends_on("npm", type="build")
 
     executables = ["^tsc$"]
