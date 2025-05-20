@@ -28,10 +28,11 @@ class PyCodebasin(PythonPackage):
 
     depends_on("py-setuptools", type="build")
 
-    depends_on("py-numpy@2.2.4", type=("build", "run"))
-    depends_on("py-matplotlib@3.10.1", type=("build", "run"))
-    depends_on("py-pathspec@0.12.1", type=("build", "run"))
-    depends_on("py-scipy@1.15.2", type=("build", "run"))
-    depends_on("py-jsonschema@4.23.0", type=("build", "run"))
-    depends_on("py-tabulate@0.9.0", type=("build", "run"))
-    depends_on("py-tqdm@4.67.1", type=("build", "run"))
+    with default_args(type=("build", "run")):
+        depends_on("py-numpy@2.2.4")
+        depends_on("py-matplotlib@3.10.1")
+        depends_on("py-pathspec@0.12.1")
+        depends_on("py-scipy@1.15.2")
+        depends_on("py-jsonschema@4.23.0")
+        depends_on("py-tabulate@0.9.0")
+        depends_on("py-tqdm@4.67.1")
