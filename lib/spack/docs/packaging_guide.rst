@@ -1343,7 +1343,7 @@ Submodules
 
      version("1.0.1", tag="v1.0.1", submodules=True)
 
-  If a package has needs more fine-grained control over submodules, define
+  If a package needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
   its only argument.  The function should return a list of submodules to be fetched.
 
@@ -5728,7 +5728,7 @@ running each executable, ``foo`` and ``bar``, as independent test parts.
 .. note::
 
    The method name ``copy_test_files`` here is for illustration purposes.
-   You are free to use a name that is more suited to your package.
+   You are free to use a name that is better suited to your package.
 
    The key to copying files for stand-alone testing at build time is use
    of the ``run_after`` directive, which ensures the associated files are
