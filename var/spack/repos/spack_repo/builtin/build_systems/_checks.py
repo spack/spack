@@ -2,12 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import List
-
-import llnl.util.lang
+from typing import Callable, List
 
 import spack.relocate
-import spack.store
 from spack.package import Builder, InstallError, Spec, run_after
 
 
@@ -22,24 +19,28 @@ def sanity_check_prefix(builder: Builder):
     """
     pkg = builder.pkg
 
-    def check_paths(path_list, filetype, predicate):
+    def check_paths(path_list: List[str], filetype: str, predicate: Callable[[str], bool]) -> None:
         if isinstance(path_list, str):
             path_list = [path_list]
 
         for path in path_list:
-            abs_path = os.path.join(pkg.prefix, path)
-            if not predicate(abs_path):
-                msg = "Install failed for {0}. No such {1} in prefix: {2}"
-                msg = msg.format(pkg.name, filetype, path)
-                raise InstallError(msg)
+            if not predicate(os.path.join(pkg.prefix, path)):
+                raise InstallError(
+                    f"Install failed for {pkg.name}. No such {filetype} in prefix: {path}"
+                )
 
     check_paths(pkg.sanity_check_is_file, "file", os.path.isfile)
     check_paths(pkg.sanity_check_is_dir, "directory", os.path.isdir)
 
-    ignore_file = llnl.util.lang.match_predicate(spack.store.STORE.layout.hidden_file_regexes)
-    if all(map(ignore_file, os.listdir(pkg.prefix))):
-        msg = "Install failed for {0}.  Nothing was installed!"
-        raise InstallError(msg.format(pkg.name))
+    # Check that the prefix is not empty apart from the .spack/ directory
+    with os.scandir(pkg.prefix) as entries:
+        f = next(
+            (f for f in entries if not (f.name == ".spack" and f.is_dir(follow_symlinks=False))),
+            None,
+        )
+
+    if f is None:
+        raise InstallError(f"Install failed for {pkg.name}.  Nothing was installed!")
 
 
 def apply_macos_rpath_fixups(builder: Builder):
