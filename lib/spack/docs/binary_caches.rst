@@ -89,7 +89,7 @@ You can see that the mirror is added with ``spack mirror list`` as follows:
     spack-public       https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
 
 
-At this point, you've create a buildcache, but spack hasn't indexed it, so if
+At this point, you've created a buildcache, but spack hasn't indexed it, so if
 you run ``spack buildcache list`` you won't see any results. You need to index
 this new build cache as follows:
 
