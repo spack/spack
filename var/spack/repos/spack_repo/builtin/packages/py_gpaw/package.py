@@ -66,17 +66,41 @@ class PyGpaw(PythonPackage):
         depends_on("py-numpy@1.17:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.6.0:", type=("build", "run"))
 
-    depends_on("python@2.6:", type=("build", "run"), when="@:1.3.0")
-    depends_on("python@3.5:", type=("build", "run"), when="@19.8.1:")
-    depends_on("python@3.6:", type=("build", "run"), when="@20.10.0:")
-    depends_on("py-ase@3.13.0:", type=("build", "run"), when="@1.3.0")
-    depends_on("py-ase@3.18.0:", type=("build", "run"), when="@19.8.1")
-    depends_on("py-ase@3.19.0:", type=("build", "run"), when="@20.1.0")
-    depends_on("py-ase@3.20.1:", type=("build", "run"), when="@20.10.0")
-    depends_on("py-ase@3.21.0:", type=("build", "run"), when="@21.1.0")
-    depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-scipy", type=("build", "run"))
-    depends_on("libxc@3:4.3.4")
+    with when("@21.1.0"):
+        depends_on("libxc@3:4.3.4")
+        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("py-ase@3.21.0:", type=("build", "run"))
+        depends_on("py-numpy@:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.2.0:", type=("build", "run"))
+
+    with when("@20.10.0"):
+        depends_on("libxc@3:4.3.4")
+        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("py-ase@3.20.1:", type=("build", "run"))
+        depends_on("py-numpy@:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.2.0:", type=("build", "run"))
+
+    with when("@20.1.0"):
+        depends_on("libxc@3:4.3.4")
+        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("py-ase@3.19.0:", type=("build", "run"))
+        depends_on("py-numpy@:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.2.0:", type=("build", "run"))
+
+    with when("@19.8.1"):
+        depends_on("libxc@3:4.3.4")
+        depends_on("python@3.5:", type=("build", "run"))
+        depends_on("py-ase@3.18.0:", type=("build", "run"))
+        depends_on("py-numpy@:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.2.0:", type=("build", "run"))
+
+    with when("@:1.3.0"):
+        depends_on("libxc@3:4.3.4")
+        depends_on("python@2.6:", type=("build", "run"))
+        depends_on("py-ase@3.13.0:", type=("build", "run"))
+        depends_on("py-numpy@:1.26.4", type=("build", "run"))
+        depends_on("py-scipy@1.2.0:", type=("build", "run"))
+        patch("libxc.patch")
 
     # Variant dependencies
     depends_on("mpi", when="+mpi", type=("build", "link", "run"))
@@ -87,8 +111,6 @@ class PyGpaw(PythonPackage):
     # Fixed elpa version due to compilation/linking errors on older and newer versions.
     # Tested for versions @23.6.1:25.1.0
     depends_on("elpa@2022.11.001", when="+elpa")
-
-    patch("libxc.patch", when="@1.3.0")
 
     def patch(self):
         spec = self.spec
