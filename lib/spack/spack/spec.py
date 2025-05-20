@@ -2673,7 +2673,7 @@ class Spec:
                 return name, depflag
 
             def spec_and_dependency_types(
-                s: Union[Spec, Tuple[Spec, str]]
+                s: Union[Spec, Tuple[Spec, str]],
             ) -> Tuple[Spec, dt.DepFlag]:
                 """Given a non-string key in the literal, extracts the spec
                 and its dependency types.
@@ -3838,90 +3838,76 @@ class Spec:
         # need for the complexity here. It was not clear at the time of writing that how
         # much optimization was possible in `spack.traverse`.
 
-        if not self._dependencies:
-            # Spec has no dependencies -- simplest case
-            def nodes():
-                yield self._cmp_node  # just yield this node
+        sorted_l1_edges = None
+        edge_list = None
+        node_ids = None
 
-            def edges():
+        def nodes():
+            nonlocal sorted_l1_edges
+            nonlocal edge_list
+            nonlocal node_ids
+
+            yield self._cmp_node  # always yield the root (this node)
+            if not self._dependencies:  # done if there are no dependencies
                 return
-                yield
 
-        elif not any(
-            dep.spec._dependencies for deplist in self._dependencies.values() for dep in deplist
-        ):
-            # Spec has dependencies, but none of them have any dependencies. Avoid calling traverse
-            # need to track visited nodes or do any of the other fancy and expensive
-            # things traverse_edges does.
-            sorted_edges = None
+            # first level: yield sorted direct dependencies (inlines first level of BFS)
+            deps_have_deps = False
+            sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
+            if len(sorted_l1_edges) > 1:
+                sorted_l1_edges = spack.traverse.sort_edges(sorted_l1_edges)
 
-            def nodes():
-                # We generate sorted_edges once, in nodes, lazily. If the comparison can
-                # end with just _cmp_node, we never have to sort.
-                nonlocal sorted_edges
+            for edge in sorted_l1_edges:
+                yield edge.spec._cmp_node
+                if edge.spec._dependencies:
+                    deps_have_deps = True
 
-                # yield the root node comparator
-                yield self._cmp_node
+            if not deps_have_deps:  # done if level 1 specs have no dependencies
+                return
 
-                # sort only if roots were equal and caller needs to look at deps
-                sorted_edges = spack.traverse.sort_edges(
-                    self.edges_to_dependencies(depflag=dt.ALL)
-                )
+            # second level: now it's general; we need full traverse() to track visited nodes
+            l1_specs = [edge.spec for edge in sorted_l1_edges]
 
-                # yield dependency node comparators in BFS order
-                for edge in sorted_edges:
-                    yield edge.spec._cmp_node
-
-            def edges():
-                # we've already sorted to yield dependency nodes in order, now yield
-                # edges for comparison in the same order, with BFS-consistent ids
-                for i, edge in enumerate(sorted_edges, start=1):
-
-                    def yield_edge(i=i, edge=edge):
-                        yield 0  # id of root
-                        yield i  # id of dependency in BFS order
-                        yield edge.depflag
-                        yield edge.virtuals
-
-                    yield yield_edge
-
-        else:
-            # Spec has dependencies, and they have dependencies. Need to do a full traversal here.
-
-            # We need a way to compare edges consistently between two arbitrary specs.
             # node_ids generates consistent node ids based on BFS traversal order.
             node_ids = collections.defaultdict(lambda: len(node_ids))
+            node_ids[id(self)]  # self is 0
+            for spec in l1_specs:
+                node_ids[id(spec)]  # l1 starts at 1
 
-            # To avoid traversing twice, we put edges in this list as we yield the nodes.
-            # edges() yields the edge functions later, if necessary.
             edge_list = []
+            for edge in spack.traverse.traverse_edges(
+                l1_specs, order="breadth", cover="edges", root=False, visited=set([0])
+            ):
+                # yield each node only once, and generate a consistent id for it the
+                # first time it's encountered.
+                if id(edge.spec) not in node_ids:
+                    yield edge.spec._cmp_node
+                    node_ids[id(edge.spec)]
 
-            def nodes():
-                # Breadth-first edge traversal, yielding nodes as they're encountered.
-                for edge in self.traverse_edges(order="breadth", cover="edges", deptype=dt.ALL):
-                    # yield each node only once, and generate a consistent id for it the
-                    # first time it's encountered.
-                    if id(edge.spec) not in node_ids:
-                        yield edge.spec._cmp_node
-                        node_ids[id(edge.spec)]
+                if edge.parent is None:  # skip fake edge to root
+                    continue
 
-                    # skip fake edge to root
-                    if edge.parent is None:
-                        continue
+                edge_list.append(
+                    (
+                        node_ids[id(edge.parent)],
+                        node_ids[id(edge.spec)],
+                        edge.depflag,
+                        edge.virtuals,
+                    )
+                )
 
-                    # create "edges" with the ids we generated above
-                    def yield_edge(edge=edge):
-                        yield node_ids[id(edge.parent)]
-                        yield node_ids[id(edge.spec)]
-                        yield edge.depflag
-                        yield edge.virtuals
+        def edges():
+            # no edges in single-node graph
+            if not self._dependencies:
+                return
 
-                    edge_list.append(yield_edge)
+            # level 1 edges all start with zero
+            for i, edge in enumerate(sorted_l1_edges, start=1):
+                yield (0, i, edge.depflag, edge.virtuals)
 
-            def edges():
-                # yield edges in the order they were encountered during traversal
-                for yield_edge_func in edge_list:
-                    yield yield_edge_func
+            # yield remaining edges in the order they were encountered during traversal
+            if edge_list:
+                yield from edge_list
 
         yield nodes
         yield edges

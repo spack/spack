@@ -2140,6 +2140,9 @@ EMPTY_FLG = Spec().compiler_flags
     ],
 )
 def test_spec_canonical_comparison_form(spec, expected_tuplified):
+    print()
+    print()
+    print()
     assert llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
 
 
