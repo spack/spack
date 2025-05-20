@@ -3847,11 +3847,13 @@ class Spec:
             nonlocal edge_list
             nonlocal node_ids
 
+            # Level 0: root node
             yield self._cmp_node  # always yield the root (this node)
             if not self._dependencies:  # done if there are no dependencies
                 return
 
-            # first level: yield sorted direct dependencies (inlines first level of BFS)
+            # Level 1: direct dependencies
+            # we can yield these in sorted order without tracking visited nodes
             deps_have_deps = False
             sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
             if len(sorted_l1_edges) > 1:
@@ -3865,10 +3867,12 @@ class Spec:
             if not deps_have_deps:  # done if level 1 specs have no dependencies
                 return
 
-            # second level: now it's general; we need full traverse() to track visited nodes
+            # Level 2: dependencies of direct dependencies
+            # now it's general; we need full traverse() to track visited nodes
             l1_specs = [edge.spec for edge in sorted_l1_edges]
 
-            # node_ids generates consistent node ids based on BFS traversal order.
+            # the node_ids dict generates consistent ids based on BFS traversal order
+            # these are used to identify edges later
             node_ids = collections.defaultdict(lambda: len(node_ids))
             node_ids[id(self)]  # self is 0
             for spec in l1_specs:
