@@ -35,8 +35,8 @@ link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
 sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
 sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
+sys.path.append(os.path.abspath("_spack_root/var/spack/repos/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
@@ -76,11 +76,20 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
         "_spack_root/lib/spack/spack/test/*.py",
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
 )
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "--implicit-namespaces",
+        "_spack_root/var/spack/repos/spack_repo",
+        "_spack_root/var/spack/repos/spack_repo/builtin/packages",
+    ]
+)
 
 # Enable todo items
 todo_include_todos = True
@@ -209,7 +218,7 @@ nitpick_ignore = [
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
-    ("py:class", "spack.build_systems._checks.BuilderWithDefaults"),
+    ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
@@ -225,8 +234,14 @@ nitpick_ignore = [
     ("py:class", "llnl.util.lang.T"),
     ("py:class", "llnl.util.lang.KT"),
     ("py:class", "llnl.util.lang.VT"),
+    ("py:class", "llnl.util.lang.K"),
+    ("py:class", "llnl.util.lang.V"),
+    ("py:class", "llnl.util.lang.ClassPropertyType"),
     ("py:obj", "llnl.util.lang.KT"),
     ("py:obj", "llnl.util.lang.VT"),
+    ("py:obj", "llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "llnl.util.lang.K"),
+    ("py:obj", "llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

@@ -46,6 +46,12 @@ Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
 ``mirrors.yaml`` starts with ``mirrors:``, etc.
 
+.. tip::
+
+   Validation and autocompletion of Spack config files can be enabled in
+   your editor with the YAML language server. See `spack/schemas
+   <https://github.com/spack/schemas>`_ for more information.
+
 .. _configuration-scopes:
 
 --------------------

@@ -89,7 +89,7 @@ data_path = os.path.join(spack.paths.test_path, "data", "patch")
         (os.path.join(data_path, "foo.patch"), platform_url_sha, None),
     ],
 )
-def test_url_patch(mock_patch_stage, filename, sha256, archive_sha256, config):
+def test_url_patch(mock_packages, mock_patch_stage, filename, sha256, archive_sha256, config):
     # Make a patch object
     url = url_util.path_to_file_url(filename)
     s = spack.concretize.concretize_one("patch")
@@ -360,11 +360,11 @@ def check_multi_dependency_patch_specs(
     assert foo_patch.path == os.path.join(package_dir, "foo.patch")
     assert foo_patch.sha256 == foo_sha256
 
-    assert bar_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert bar_patch.owner == "builtin_mock.patch-several-dependencies"
     assert bar_patch.path == os.path.join(package_dir, "bar.patch")
     assert bar_patch.sha256 == bar_sha256
 
-    assert baz_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert baz_patch.owner == "builtin_mock.patch-several-dependencies"
     assert baz_patch.path == os.path.join(package_dir, "baz.patch")
     assert baz_patch.sha256 == baz_sha256
 
@@ -376,11 +376,11 @@ def check_multi_dependency_patch_specs(
     url1_patch = get_patch(fake, "urlpatch.patch")
     url2_patch = get_patch(fake, "urlpatch2.patch.gz")
 
-    assert url1_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert url1_patch.owner == "builtin_mock.patch-several-dependencies"
     assert url1_patch.url == "http://example.com/urlpatch.patch"
     assert url1_patch.sha256 == url1_sha256
 
-    assert url2_patch.owner == "builtin.mock.patch-several-dependencies"
+    assert url2_patch.owner == "builtin_mock.patch-several-dependencies"
     assert url2_patch.url == "http://example.com/urlpatch2.patch.gz"
     assert url2_patch.sha256 == url2_sha256
     assert url2_patch.archive_sha256 == url2_archive_sha256
@@ -397,7 +397,7 @@ def test_conditional_patched_deps_with_conditions(mock_packages, config):
     fake = spec["fake"]
 
     check_multi_dependency_patch_specs(
-        libelf, libdwarf, fake, "builtin.mock.patch-several-dependencies", spec.package.package_dir
+        libelf, libdwarf, fake, "builtin_mock.patch-several-dependencies", spec.package.package_dir
     )
 
 
@@ -417,7 +417,7 @@ def test_write_and_read_sub_dags_with_patched_deps(mock_packages, config):
 
     # make sure we can still read patches correctly for these specs
     check_multi_dependency_patch_specs(
-        libelf, libdwarf, fake, "builtin.mock.patch-several-dependencies", spec.package.package_dir
+        libelf, libdwarf, fake, "builtin_mock.patch-several-dependencies", spec.package.package_dir
     )
 
 
@@ -466,7 +466,7 @@ def test_equality():
     assert patch1 != "not a patch"
 
 
-def test_sha256_setter(mock_patch_stage, config):
+def test_sha256_setter(mock_packages, mock_patch_stage, config):
     path = os.path.join(data_path, "foo.patch")
     s = spack.concretize.concretize_one("patch")
     patch = spack.patch.FilePatch(s.package, path, level=1, working_dir=".")

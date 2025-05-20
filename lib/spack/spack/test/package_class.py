@@ -1,7 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-"""Test class methods on Package objects.
+"""Test class methods on PackageBase objects.
 
 This doesn't include methods on package *instances* (like do_patch(),
 etc.).  Only methods like ``possible_dependencies()`` that deal with the
@@ -20,12 +20,12 @@ import spack.concretize
 import spack.deptypes as dt
 import spack.error
 import spack.install_test
-import spack.package
 import spack.package_base
 import spack.spec
 import spack.store
-from spack.build_systems.generic import Package
+import spack.subprocess_context
 from spack.error import InstallError
+from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
 
 
@@ -240,35 +240,40 @@ def test_cache_extra_sources_fails(install_mockery):
 def test_package_exes_and_libs():
     with pytest.raises(spack.error.SpackError, match="defines both"):
 
-        class BadDetectablePackage(spack.package.Package):
+        class BadDetectablePackage(PackageBase):
             executables = ["findme"]
             libraries = ["libFindMe.a"]
 
 
 def test_package_url_and_urls():
-    class URLsPackage(spack.package.Package):
-        url = "https://www.example.com/url-package-1.0.tgz"
-        urls = ["https://www.example.com/archive"]
+    UrlsPackage = type(
+        "URLsPackage",
+        (PackageBase,),
+        {
+            "__module__": "spack.pkg.builtin.urls_package",
+            "url": "https://www.example.com/url-package-1.0.tgz",
+            "urls": ["https://www.example.com/archive"],
+        },
+    )
 
-    s = spack.spec.Spec("pkg-a")
+    s = spack.spec.Spec("urls-package")
     with pytest.raises(ValueError, match="defines both"):
-        URLsPackage(s)
+        UrlsPackage(s)
 
 
 def test_package_license():
-    class LicensedPackage(spack.package.Package):
-        extendees = None  # currently a required attribute for is_extension()
-        license_files = None
+    LicensedPackage = type(
+        "LicensedPackage", (PackageBase,), {"__module__": "spack.pkg.builtin.licensed_package"}
+    )
 
-    s = spack.spec.Spec("pkg-a")
-    pkg = LicensedPackage(s)
+    pkg = LicensedPackage(spack.spec.Spec("licensed-package"))
     assert pkg.global_license_file is None
 
     pkg.license_files = ["license.txt"]
     assert os.path.basename(pkg.global_license_file) == pkg.license_files[0]
 
 
-class BaseTestPackage(Package):
+class BaseTestPackage(PackageBase):
     extendees = None  # currently a required attribute for is_extension()
 
 
@@ -316,3 +321,11 @@ def test_package_subscript(default_mock_concretization):
     # Subscript on concrete
     for d in root.traverse():
         assert isinstance(root_pkg[d.name], spack.package_base.PackageBase)
+
+
+def test_deserialize_preserves_package_attribute(default_mock_concretization):
+    x = default_mock_concretization("mpileaks").package
+    assert x.spec._package is x
+
+    y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
+    assert y.spec._package is y

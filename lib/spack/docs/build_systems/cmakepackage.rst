@@ -129,8 +129,8 @@ Adding flags to cmake
 To add additional flags to the ``cmake`` call, simply override the
 ``cmake_args`` function. The following example defines values for the flags
 ``WHATEVER``, ``ENABLE_BROKEN_FEATURE``, ``DETECT_HDF5``, and ``THREADS`` with
-and without the :meth:`~spack.build_systems.cmake.CMakeBuilder.define` and
-:meth:`~spack.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
+and without the :meth:`~spack_repo.builtin.build_systems.cmake.CMakeBuilder.define` and
+:meth:`~spack_repo.builtin.build_systems.cmake.CMakeBuilder.define_from_variant` helper functions:
 
 .. code-block:: python
 
@@ -199,7 +199,7 @@ a variant to control this:
 However, not every CMake package accepts all four of these options.
 Grep the ``CMakeLists.txt`` file to see if the default values are
 missing or replaced. For example, the
-`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/dealii/package.py>`_
+`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/dealii/package.py>`_
 package overrides the default variant with:
 
 .. code-block:: python

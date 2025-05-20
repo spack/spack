@@ -15,8 +15,8 @@ import json
 import os
 import pickle
 
+import _vendoring.ruamel.yaml
 import pytest
-import ruamel.yaml
 
 import spack.concretize
 import spack.config
@@ -420,18 +420,24 @@ def test_load_json_specfiles(specfile, expected_hash, reader_cls):
     openmpi_edges = s2.edges_to_dependencies(name="openmpi")
     assert len(openmpi_edges) == 1
 
-    # Check that virtuals have been reconstructed
-    assert "mpi" in openmpi_edges[0].virtuals
+    # Check that virtuals have been reconstructed for specfiles conforming to
+    # version 4 on.
+    if reader_cls.SPEC_VERSION >= spack.spec.SpecfileV4.SPEC_VERSION:
+        assert "mpi" in openmpi_edges[0].virtuals
 
-    # The virtuals attribute must be a tuple, when read from a
-    # JSON or YAML file, not a list
-    for edge in s2.traverse_edges():
-        assert isinstance(edge.virtuals, tuple), edge
+        # The virtuals attribute must be a tuple, when read from a
+        # JSON or YAML file, not a list
+        for edge in s2.traverse_edges():
+            assert isinstance(edge.virtuals, tuple), edge
 
     # Ensure we can format {compiler} tokens
     assert s2.format("{compiler}") != "none"
     assert s2.format("{compiler.name}") == "gcc"
     assert s2.format("{compiler.version}") != "none"
+
+    # Ensure satisfies still works with compilers
+    assert s2.satisfies("%gcc")
+    assert s2.satisfies("%gcc@9.4.0")
 
 
 def test_anchorify_1():
@@ -445,7 +451,7 @@ def test_anchorify_1():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\
@@ -468,7 +474,7 @@ def test_anchorify_2():
 
     # Check if anchors are used
     out = io.StringIO()
-    ruamel.yaml.YAML().dump(after, out)
+    _vendoring.ruamel.yaml.YAML().dump(after, out)
     assert (
         out.getvalue()
         == """\

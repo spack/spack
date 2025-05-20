@@ -563,14 +563,14 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download get-buildcache-name save-specfile sync update-index rebuild-index"
+        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index migrate"
     fi
 }
 
 _spack_buildcache_push() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
     else
         _mirrors
     fi
@@ -579,7 +579,7 @@ _spack_buildcache_push() {
 _spack_buildcache_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --spec-file --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
+        SPACK_COMPREPLY="-h --help -f --force --unsigned -u --signed --key -k --update-index --rebuild-index --only --with-build-dependencies --without-build-dependencies --fail-fast --base-image --tag -t --private -j --jobs"
     else
         _mirrors
     fi
@@ -610,22 +610,18 @@ _spack_buildcache_keys() {
 _spack_buildcache_check() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope -s --spec --spec-file"
+        SPACK_COMPREPLY="-h --help -m --mirror-url -o --output-file --scope"
     else
         _all_packages
     fi
 }
 
 _spack_buildcache_download() {
-    SPACK_COMPREPLY="-h --help -s --spec --spec-file -p --path"
-}
-
-_spack_buildcache_get_buildcache_name() {
-    SPACK_COMPREPLY="-h --help -s --spec --spec-file"
+    SPACK_COMPREPLY="-h --help -s --spec -p --path"
 }
 
 _spack_buildcache_save_specfile() {
-    SPACK_COMPREPLY="-h --help --root-spec --root-specfile -s --specs --specfile-dir"
+    SPACK_COMPREPLY="-h --help --root-spec -s --specs --specfile-dir"
 }
 
 _spack_buildcache_sync() {
@@ -650,6 +646,15 @@ _spack_buildcache_rebuild_index() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -k --keys"
+    else
+        _mirrors
+    fi
+}
+
+_spack_buildcache_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -u --unsigned -d --delete-existing -y --yes-to-all"
     else
         _mirrors
     fi
@@ -700,7 +705,7 @@ _spack_ci_rebuild_index() {
 }
 
 _spack_ci_rebuild() {
-    SPACK_COMPREPLY="-h --help -t --tests --fail-fast -j --jobs"
+    SPACK_COMPREPLY="-h --help -t --tests --fail-fast --timeout -j --jobs"
 }
 
 _spack_ci_reproduce_build() {
@@ -753,7 +758,7 @@ _spack_compiler() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find add remove rm list info"
+        SPACK_COMPREPLY="find add remove rm list ls info"
     fi
 }
 
@@ -794,6 +799,10 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_compiler_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
@@ -1177,7 +1186,7 @@ _spack_external() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="find list read-cray-manifest"
+        SPACK_COMPREPLY="find list ls read-cray-manifest"
     fi
 }
 
@@ -1191,6 +1200,10 @@ _spack_external_find() {
 }
 
 _spack_external_list() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_external_ls() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -1210,7 +1223,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format -H --hashes --json -I --install-status -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -r --only-roots -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --only-deprecated --deprecated --install-tree --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format -H --hashes --json -I --install-status --specfile-format -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -N --namespaces -r --only-roots -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --only-deprecated --deprecated --install-tree --start-date --end-date"
     else
         _installed_packages
     fi
@@ -1771,7 +1784,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add remove rm"
+        SPACK_COMPREPLY="create list add remove rm migrate"
     fi
 }
 
@@ -1810,6 +1823,15 @@ _spack_repo_rm() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --scope"
+    else
+        _repos
+    fi
+}
+
+_spack_repo_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --fix"
     else
         _repos
     fi
@@ -1903,7 +1925,7 @@ _spack_test() {
 _spack_test_run() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --externals -x --explicit --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --clean --dirty"
+        SPACK_COMPREPLY="-h --help --alias --fail-fast --fail-first --externals -x --explicit --keep-stage --log-format --log-file --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp --help-cdash --timeout --clean --dirty"
     else
         _installed_packages
     fi

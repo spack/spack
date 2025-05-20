@@ -4,9 +4,9 @@ from __future__ import print_function
 
 import sys
 
-from macholib._cmdline import main as _main
-from macholib.mach_o import CPU_TYPE_NAMES, MH_CIGAM_64, MH_MAGIC_64, get_cpu_subtype
-from macholib.MachO import MachO
+from _vendoring.macholib._cmdline import main as _main
+from _vendoring.macholib.mach_o import CPU_TYPE_NAMES, MH_CIGAM_64, MH_MAGIC_64, get_cpu_subtype
+from _vendoring.macholib.MachO import MachO
 
 ARCH_MAP = {
     ("<", "64-bit"): "x86_64",
@@ -45,7 +45,7 @@ def print_file(fp, path):
 
 def main():
     print(
-        "WARNING: 'macho_dump' is deprecated, use 'python -mmacholib dump' " "instead"
+        "WARNING: 'macho_dump' is deprecated, use 'python -m_vendoring.macholib dump' " "instead"
     )
     _main(print_file)
 

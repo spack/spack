@@ -75,6 +75,7 @@ or refer to the full manual below.
    packages_yaml
    build_settings
    environments
+   env_vars_yaml
    containers
    mirrors
    module_file_support
@@ -102,6 +103,7 @@ or refer to the full manual below.
    :caption: API Docs
 
    Spack API Docs <spack>
+   Spack Builtin Repo <spack_repo>
    LLNL API Docs <llnl>
 
 ==================

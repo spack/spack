@@ -259,9 +259,9 @@ def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeyp
     Important attributes of the repo for test coverage are: multiple package
     versions are added with some coming from a tarball and some from git refs.
     """
-    filename = "diff-test/package.py"
+    filename = "diff_test/package.py"
 
-    repo_path, _ = spack.repo.create_repo(str(tmpdir.mkdir("myrepo")))
+    repo_path, _ = spack.repo.create_repo(str(tmpdir), namespace="myrepo")
     repo_cache = spack.util.file_cache.FileCache(str(tmpdir.mkdir("cache")))
 
     repo = spack.repo.Repo(repo_path, cache=repo_cache)
@@ -654,7 +654,7 @@ def mock_pkg_install(monkeypatch):
 
 @pytest.fixture(scope="function")
 def mock_packages(mock_repo_path, mock_pkg_install, request):
-    """Use the 'builtin.mock' repository instead of 'builtin'"""
+    """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:
         yield mock_repo
@@ -887,6 +887,7 @@ def no_packages_yaml(mutable_config):
         compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 
@@ -1068,9 +1069,7 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
 @pytest.fixture(scope="module")
 def temporary_mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
     yield str(dir)
-    dir.join("build_cache").remove()
 
 
 @pytest.fixture(scope="function")
@@ -1084,9 +1083,7 @@ def temporary_mirror(temporary_mirror_dir):
 @pytest.fixture(scope="function")
 def mutable_temporary_mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
     yield str(dir)
-    dir.join("build_cache").remove()
 
 
 @pytest.fixture(scope="function")
@@ -1437,7 +1434,7 @@ def mock_git_repository(git, tmpdir_factory):
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
-    associated builtin.mock package 'git-test'. c3 is a commit in the
+    associated builtin_mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
     suburls = []
@@ -2076,6 +2073,11 @@ def pytest_runtest_setup(item):
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
 
+    # Skip tests marked "requires_builtin" if builtin repo is required
+    requires_builtin_marker = item.get_closest_marker(name="requires_builtin")
+    if requires_builtin_marker and not os.path.exists(spack.paths.packages_path):
+        pytest.skip(*requires_builtin_marker.args)
+
 
 def _sequential_executor(*args, **kwargs):
     return spack.util.parallel.SequentialExecutor()
@@ -2096,35 +2098,6 @@ def mock_modules_root(tmp_path, monkeypatch):
     """Sets the modules root to a temporary directory, to avoid polluting configuration scopes."""
     fn = functools.partial(_root_path, path=str(tmp_path))
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
-
-
-_repo_name_id = 0
-
-
-def create_test_repo(tmpdir, pkg_name_content_tuples):
-    global _repo_name_id
-
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
-repo:
-  namespace: testrepo{str(_repo_name_id)}
-"""
-        )
-
-    _repo_name_id += 1
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in pkg_name_content_tuples:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w", encoding="utf-8") as f:
-            f.write(pkg_str)
-
-    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
-    return spack.repo.Repo(repo_path, cache=repo_cache)
 
 
 @pytest.fixture()

@@ -1,17 +1,17 @@
 # coding: utf-8
 
-from ruamel.yaml.error import *  # NOQA
-from ruamel.yaml.nodes import *  # NOQA
-from ruamel.yaml.compat import ordereddict
-from ruamel.yaml.compat import _F, nprint, nprintf  # NOQA
-from ruamel.yaml.scalarstring import (
+from _vendoring.ruamel.yaml.error import *  # NOQA
+from _vendoring.ruamel.yaml.nodes import *  # NOQA
+from _vendoring.ruamel.yaml.compat import ordereddict
+from _vendoring.ruamel.yaml.compat import _F, nprint, nprintf  # NOQA
+from _vendoring.ruamel.yaml.scalarstring import (
     LiteralScalarString,
     FoldedScalarString,
     SingleQuotedScalarString,
     DoubleQuotedScalarString,
     PlainScalarString,
 )
-from ruamel.yaml.comments import (
+from _vendoring.ruamel.yaml.comments import (
     CommentedMap,
     CommentedOrderedMap,
     CommentedSeq,
@@ -22,11 +22,11 @@ from ruamel.yaml.comments import (
     merge_attrib,
     TaggedScalar,
 )
-from ruamel.yaml.scalarint import ScalarInt, BinaryInt, OctalInt, HexInt, HexCapsInt
-from ruamel.yaml.scalarfloat import ScalarFloat
-from ruamel.yaml.scalarbool import ScalarBoolean
-from ruamel.yaml.timestamp import TimeStamp
-from ruamel.yaml.anchor import Anchor
+from _vendoring.ruamel.yaml.scalarint import ScalarInt, BinaryInt, OctalInt, HexInt, HexCapsInt
+from _vendoring.ruamel.yaml.scalarfloat import ScalarFloat
+from _vendoring.ruamel.yaml.scalarbool import ScalarBoolean
+from _vendoring.ruamel.yaml.timestamp import TimeStamp
+from _vendoring.ruamel.yaml.anchor import Anchor
 
 import datetime
 import sys

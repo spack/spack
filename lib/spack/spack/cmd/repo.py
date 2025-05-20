@@ -3,10 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shlex
 import sys
+from typing import Any, List, Optional
 
 import llnl.util.tty as tty
 
+import spack
 import spack.config
 import spack.repo
 import spack.util.path
@@ -24,9 +27,7 @@ def setup_parser(subparser):
     create_parser = sp.add_parser("create", help=repo_create.__doc__)
     create_parser.add_argument("directory", help="directory to create the repo in")
     create_parser.add_argument(
-        "namespace",
-        help="namespace to identify packages in the repository (defaults to the directory name)",
-        nargs="?",
+        "namespace", help="name or namespace to identify packages in the repository"
     )
     create_parser.add_argument(
         "-d",
@@ -64,6 +65,15 @@ def setup_parser(subparser):
         action=arguments.ConfigScope,
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
+    )
+
+    # Migrate
+    migrate_parser = sp.add_parser("migrate", help=repo_migrate.__doc__)
+    migrate_parser.add_argument(
+        "namespace_or_path", help="path to a Spack package repository directory"
+    )
+    migrate_parser.add_argument(
+        "--fix", action="store_true", help="automatically fix the imports in the package files"
     )
 
 
@@ -138,7 +148,7 @@ def repo_remove(args):
 def repo_list(args):
     """show registered repositories and their namespaces"""
     roots = spack.config.get("repos", scope=args.scope)
-    repos = []
+    repos: List[spack.repo.Repo] = []
     for r in roots:
         try:
             repos.append(spack.repo.from_path(r))
@@ -146,25 +156,80 @@ def repo_list(args):
             continue
 
     if sys.stdout.isatty():
-        msg = "%d package repositor" % len(repos)
-        msg += "y." if len(repos) == 1 else "ies."
-        tty.msg(msg)
+        tty.msg(f"{len(repos)} package repositor" + ("y." if len(repos) == 1 else "ies."))
 
     if not repos:
         return
 
     max_ns_len = max(len(r.namespace) for r in repos)
     for repo in repos:
-        fmt = "%%-%ds%%s" % (max_ns_len + 4)
-        print(fmt % (repo.namespace, repo.root))
+        print(f"{repo.namespace:<{max_ns_len + 4}}{repo.package_api_str:<8}{repo.root}")
+
+
+def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
+    try:
+        return spack.repo.from_path(name_or_path)
+    except spack.repo.RepoError:
+        pass
+
+    for repo in spack.config.get("repos"):
+        try:
+            r = spack.repo.from_path(repo)
+        except spack.repo.RepoError:
+            continue
+        if r.namespace == name_or_path:
+            return r
+    return None
+
+
+def repo_migrate(args: Any) -> int:
+    """migrate a package repository to the latest Package API"""
+    from spack.repo_migrate import migrate_v1_to_v2, migrate_v2_imports
+
+    repo = _get_repo(args.namespace_or_path)
+
+    if repo is None:
+        tty.die(f"No such repository: {args.namespace_or_path}")
+
+    if (1, 0) <= repo.package_api < (2, 0):
+        success, repo_v2 = migrate_v1_to_v2(repo, fix=args.fix)
+        exit_code = 0 if success else 1
+    elif (2, 0) <= repo.package_api < (3, 0):
+        repo_v2 = None
+        exit_code = 0 if migrate_v2_imports(repo.packages_path, repo.root, fix=args.fix) else 1
+    else:
+        repo_v2 = None
+        exit_code = 0
+
+    if exit_code == 0 and isinstance(repo_v2, spack.repo.Repo):
+        tty.info(
+            f"Repository '{repo_v2.namespace}' was successfully migrated from "
+            f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
+        )
+        tty.warn(
+            "Remove the old repository from Spack's configuration and add the new one using:\n"
+            f"    spack repo remove {shlex.quote(repo.root)}\n"
+            f"    spack repo add {shlex.quote(repo_v2.root)}"
+        )
+
+    elif exit_code == 0:
+        tty.info(f"Repository '{repo.namespace}' was successfully migrated")
+
+    elif not args.fix and exit_code == 1:
+        tty.error(
+            f"No changes were made to the repository {repo.root} with namespace "
+            f"'{repo.namespace}'. Run with --fix to apply the above changes."
+        )
+
+    return exit_code
 
 
 def repo(parser, args):
-    action = {
+    return {
         "create": repo_create,
         "list": repo_list,
         "add": repo_add,
         "remove": repo_remove,
         "rm": repo_remove,
-    }
-    action[args.repo_command](args)
+        "migrate": repo_migrate,
+    }[args.repo_command](args)

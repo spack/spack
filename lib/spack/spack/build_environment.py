@@ -36,9 +36,11 @@ import io
 import multiprocessing
 import os
 import re
+import signal
 import sys
 import traceback
 import types
+import warnings
 from collections import defaultdict
 from enum import Flag, auto
 from itertools import chain
@@ -66,9 +68,6 @@ from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 
-import spack.build_systems.cmake
-import spack.build_systems.meson
-import spack.build_systems.python
 import spack.builder
 import spack.compilers.libraries
 import spack.config
@@ -565,19 +564,14 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
-    if context == Context.BUILD:
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
     module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
     module.ninja = DeprecatedExecutable(pkg.name, "ninja", "ninja")
-    # TODO: johnwparent: add package or builder support to define these build tools
-    # for now there is no entrypoint for builders to define these on their
-    # own
+
     if sys.platform == "win32":
-        module.nmake = Executable("nmake")
-        module.msbuild = Executable("msbuild")
+        module.nmake = DeprecatedExecutable(pkg.name, "nmake", "msvc")
+        module.msbuild = DeprecatedExecutable(pkg.name, "msbuild", "msvc")
         # analog to configure for win32
         module.cscript = Executable("cscript")
 
@@ -998,15 +992,6 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-        if self.context == Context.BUILD:
-            pkg = self.specs[0].package
-            module = ModuleChangePropagator(pkg)
-            # std_cmake_args is not sufficiently static to be defined
-            # in set_package_py_globals and is deprecated so its handled
-            # here as a special case
-            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-            module.propagate_changes_to_mro()
-
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
@@ -1189,11 +1174,9 @@ def _setup_pkg_and_run(
         if isinstance(e, (spack.multimethod.NoSuchMethodError, AttributeError)):
             process = "test the installation" if context == "test" else "build from sources"
             error_msg = (
-                "The '{}' package cannot find an attribute while trying to {}. "
-                "This might be due to a change in Spack's package format "
-                "to support multiple build-systems for a single package. You can fix this "
-                "by updating the {} recipe, and you can also report the issue as a bug. "
-                "More information at https://spack.readthedocs.io/en/latest/packaging_guide.html#installation-procedure"
+                "The '{}' package cannot find an attribute while trying to {}. You can fix this "
+                "by updating the {} recipe, and you can also report the issue as a build-error or "
+                "a bug at https://github.com/spack/spack/issues"
             ).format(pkg.name, process, context)
             error_msg = colorize("@*R{{{}}}".format(error_msg))
             error_msg = "{}\n\n{}".format(str(e), error_msg)
@@ -1218,15 +1201,45 @@ def _setup_pkg_and_run(
             input_pipe.close()
 
 
-def start_build_process(pkg, function, kwargs):
+class BuildProcess:
+    def __init__(self, *, target, args) -> None:
+        self.p = multiprocessing.Process(target=target, args=args)
+
+    def start(self) -> None:
+        self.p.start()
+
+    def is_alive(self) -> bool:
+        return self.p.is_alive()
+
+    def join(self, *, timeout: Optional[int] = None):
+        self.p.join(timeout=timeout)
+
+    def terminate(self):
+        # Opportunity for graceful termination
+        self.p.terminate()
+        self.p.join(timeout=1)
+
+        # If the process didn't gracefully terminate, forcefully kill
+        if self.p.is_alive():
+            # TODO (python 3.6 removal): use self.p.kill() instead, consider removing this class
+            assert isinstance(self.p.pid, int), f"unexpected value for PID: {self.p.pid}"
+            os.kill(self.p.pid, signal.SIGKILL)
+            self.p.join()
+
+    @property
+    def exitcode(self):
+        return self.p.exitcode
+
+
+def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None):
     """Create a child process to do part of a spack build.
 
     Args:
 
         pkg (spack.package_base.PackageBase): package whose environment we should set up the
             child process for.
-        function (typing.Callable): argless function to run in the child
-            process.
+        function (typing.Callable): argless function to run in the child process.
+        timeout: maximum time allowed to finish the execution of function
 
     Usage::
 
@@ -1254,14 +1267,14 @@ def start_build_process(pkg, function, kwargs):
         # Forward sys.stdin when appropriate, to allow toggling verbosity
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
-        mflags = os.environ.get("MAKEFLAGS", False)
-        if mflags:
+        mflags = os.environ.get("MAKEFLAGS")
+        if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
             if m:
                 jobserver_fd1 = Connection(int(m.group(1)))
                 jobserver_fd2 = Connection(int(m.group(2)))
 
-        p = multiprocessing.Process(
+        p = BuildProcess(
             target=_setup_pkg_and_run,
             args=(
                 serialized_pkg,
@@ -1295,13 +1308,16 @@ def start_build_process(pkg, function, kwargs):
         typ = "exit" if p.exitcode >= 0 else "signal"
         return f"{typ} {abs(p.exitcode)}"
 
+    p.join(timeout=timeout)
+    if p.is_alive():
+        warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
+        p.terminate()
+        p.join()
+
     try:
         child_result = read_pipe.recv()
     except EOFError:
-        p.join()
         raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
-
-    p.join()
 
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):

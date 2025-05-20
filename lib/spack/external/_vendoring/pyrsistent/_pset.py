@@ -1,6 +1,6 @@
 from collections.abc import Set, Hashable
 import sys
-from pyrsistent._pmap import pmap
+from _vendoring.pyrsistent._pmap import pmap
 
 
 class PSet(object):
