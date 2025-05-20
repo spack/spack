@@ -24,7 +24,7 @@ class PyCodebasin(PythonPackage):
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
 
-    depends_on("python@3.12", type=("build", "run"))
+    depends_on("python@3.12:", type=("build", "run"))
 
     depends_on("py-setuptools@64:", type="build")
     depends_on("py-setuptools-scm@8:", type="build")
