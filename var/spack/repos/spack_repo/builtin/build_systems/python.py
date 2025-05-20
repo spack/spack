@@ -250,7 +250,7 @@ class PythonExtension(spack.package_base.PackageBase):
             ):
                 python("-c", f"import {module}")
 
-    def update_external_dependencies(self, extendee_spec=None):
+    def _update_external_dependencies(self, extendee_spec: Optional[Spec] = None) -> None:
         """
         Ensure all external python packages have a python dependency
 

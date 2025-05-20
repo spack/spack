@@ -3894,7 +3894,7 @@ class SpecBuilder:
 
         if extendee_spec:
             extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package.update_external_dependencies(self._specs.get(extendee_node, None))
+            package._update_external_dependencies(self._specs.get(extendee_node))
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
