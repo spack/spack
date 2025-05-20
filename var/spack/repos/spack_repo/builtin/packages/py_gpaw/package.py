@@ -176,16 +176,11 @@ class PyGpaw(PythonPackage):
             if "+mpi" in spec:
                 # Do we need this macro for older versions? Newer versions don't seem to.
                 f.write("define_macros += [('PARALLEL', '1')]\n")
-                f.write(f"compiler='{spec["mpi"].mpicc}'\n")
-                f.write(f"mpicompiler = '{spec["mpi"].mpicc}'\n")
                 # These may not be needed for versions @23.6.0:
                 # We can add logic to only apply them for older versions,
                 # but they don't cause problems even when not needed.
                 f.write(f"mpi_include_dirs = {mpi_include_dirs}\n")
                 f.write(f"mpi_library_dirs = {mpi_library_dirs}\n")
-            else:
-                f.write(f"compiler='{self.compiler.cc}'\n")
-                f.write("mpicompiler = None\n")
             if "+scalapack" in spec:
                 f.write(f"define_macros += {scalapack_macros}\n")
             if "+elpa" in spec:
