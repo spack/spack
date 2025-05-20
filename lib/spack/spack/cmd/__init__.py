@@ -726,8 +726,8 @@ def group_arguments(
     Arguments:
         args: list of arguments to split into groups
         max_group_size: max number of elements in any group (default 500)
-        prefix_length: length of any additional arguments to be passed before the groups from args;
-            defaults to 0 characters.
+        prefix_length: length of any additional arguments (including spaces) to be passed before
+            the groups from args; default is 0 characters
         max_group_length: max length of characters that if a group of args is joined by " "
             On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
             the max usable for CreateProcess (32,768 chars)
@@ -735,18 +735,22 @@ def group_arguments(
     """
     if max_group_length is None:
         max_group_length = 32768  # default to the Windows limit
-        if hasattr(os, "sysconf"):
-            # sysconf is only on unix and returns -1 if an option isn't present
-            sysconf_max = os.sysconf("SC_ARG_MAX")
-            if sysconf_max != -1:
-                max_group_length = sysconf_max
+        if hasattr(os, "sysconf"):  # sysconf is only on unix
+            try:
+                sysconf_max = os.sysconf("SC_ARG_MAX")
+                if sysconf_max != -1:  # returns -1 if an option isn't present
+                    max_group_length = sysconf_max
+            except (ValueError, OSError):
+                pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
 
     group: List[str] = []
     grouplen, space = prefix_length, 0
-    for i, arg in enumerate(args):
+    for arg in args:
         arglen = len(arg)
         if arglen > max_group_length:
-            raise ValueError(f"Argument is longer than the maximum command line size: '{arg}'")
+            raise ValueError(f"Argument is longer than max command line size: '{arg}'")
+        if arglen + prefix_length > max_group_length:
+            raise ValueError(f"Argument with prefix is longer than max command line size: '{arg}'")
 
         next_grouplen = grouplen + arglen + space
         if len(group) == max_group_size or next_grouplen > max_group_length:

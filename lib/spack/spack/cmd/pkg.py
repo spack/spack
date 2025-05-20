@@ -185,8 +185,11 @@ def pkg_grep(args, unknown_args):
     if not all_paths:
         return 0  # no packages to search
 
+    # these args start every command invocation (grep arg1 arg2 ...)
+    all_prefix_args = grep.exe + args.grep_args + unknown_args
+    prefix_length = sum(len(arg) for arg in all_prefix_args) + len(all_prefix_args)
+
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    prefix_length = len(" ".join(args.grep_args + unknown_args))
     groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)
 
     # You can force GNU grep to show filenames on every line with -H, but not POSIX grep.
