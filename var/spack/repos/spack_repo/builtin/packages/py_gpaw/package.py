@@ -44,7 +44,6 @@ class PyGpaw(PythonPackage):
     depends_on("lapack")
 
     # Version-specific required dependencies
-
     with when("@25.1.0:"):
         depends_on("libxc")
         depends_on("python@3.9:", type=("build", "run"))
@@ -148,8 +147,7 @@ class PyGpaw(PythonPackage):
             include_dirs.append(spec["scalapack"].prefix.include)
             # Are these necessary?
             scalapack_macros = repr(
-                [("GPAW_NO_UNDERSCORE_CBLACS", "1"), 
-                 ("GPAW_NO_UNDERSCORE_CSCALAPACK", "1")]
+                [("GPAW_NO_UNDERSCORE_CBLACS", "1"), ("GPAW_NO_UNDERSCORE_CSCALAPACK", "1")]
             )
             bools += "scalapack = True\n"
 
@@ -190,7 +188,8 @@ class PyGpaw(PythonPackage):
                 f.write(f"compiler='{spec["mpi"].mpicc}'\n")
                 f.write(f"mpicompiler = '{spec["mpi"].mpicc}'\n")
                 # These may not be needed for versions @23.6.0:
-                # We can add logic to only apply them for older versions, but they don't cause problems even when not needed.
+                # We can add logic to only apply them for older versions,
+                # but they don't cause problems even when not needed.
                 f.write(f"mpi_include_dirs = {mpi_include_dirs}\n")
                 f.write(f"mpi_library_dirs = {mpi_library_dirs}\n")
             else:
