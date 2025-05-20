@@ -33,6 +33,7 @@ class PyGpaw(PythonPackage):
     variant("fftw", default=True, description="Build with FFTW support")
     variant("libvdwxc", default=True, description="Build with libvdwxc support")
     variant("elpa", default=True, description="Build with ELPA support")
+    variant("openmp", default=True, description="Build with OpenMP support")
 
     # Build dependencies
     depends_on("c", type="build")
@@ -156,7 +157,11 @@ class PyGpaw(PythonPackage):
             libs += spec["elpa"].libs
             include_dirs.append(spec["elpa"].prefix.include)
             bools += "elpa = True\n"
-            runtime_library_dirs += [spec["elpa"].libs.directories]
+            runtime_library_dirs += spec["elpa"].libs.directories
+
+        if "+openmp" in spec:
+            openmp_compile_args = ['-fopenmp']
+            openmp_link_args = ['-fopenmp']
 
         lib_dirs = list(libs.directories)
         libs = list(libs.names)
@@ -184,4 +189,7 @@ class PyGpaw(PythonPackage):
             if "+scalapack" in spec:
                 f.write(f"define_macros += {scalapack_macros}\n")
             if "+elpa" in spec:
-                f.write(f"runtime_library_dirs = {repr(runtime_library_dirs)}")
+                f.write(f"runtime_library_dirs = {repr(runtime_library_dirs)}\n")
+            if "+openmp" in spec:
+                f.write(f"extra_compile_args += {openmp_compile_args}\n")
+                f.write(f"extra_link_args += {openmp_link_args}\n")
