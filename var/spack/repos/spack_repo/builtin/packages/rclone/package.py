@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.go import GoPackage
+
 from spack.package import *
 
 
@@ -16,6 +18,7 @@ class Rclone(GoPackage):
 
     license("MIT")
 
+    version("1.69.2", sha256="2b3fe529ad1c534db429438bad852108ff25b1df9c98a09777866b12d85b95e3")
     version("1.69.1", sha256="02ea0fa75c0895b14153a7faf7b1a1273224c4782e6deeb60a366a48786e0722")
     version("1.69.0", sha256="45e6a329af4f98e0c71233511ab8543e454eaa22adeeb73179bfdb22456a2123")
     version("1.68.2", sha256="2a16f040e824d4ba4ec9c1c395d891af7aa7bf08fd5251b8e28d017157cee925")
@@ -42,12 +45,13 @@ class Rclone(GoPackage):
     version("1.55.1", sha256="25da7fc5c9269b3897f27b0d946919df595c6dda1b127085fda0fe32aa59d29d")
     version("1.55.0", sha256="75accdaedad3b82edc185dc8824a19a59c30dc6392de7074b6cd98d1dc2c9040")
 
-    depends_on("go@1.14:", type="build")
-    depends_on("go@1.17:", type="build", when="@1.58:")
-    depends_on("go@1.18:", type="build", when="@1.62:")
-    depends_on("go@1.19:", type="build", when="@1.63:")
-    depends_on("go@1.20:", type="build", when="@1.66:")
+    depends_on("go@1.23:", type="build", when="@1.69.2:")
     depends_on("go@1.21:", type="build", when="@1.68:")
+    depends_on("go@1.20:", type="build", when="@1.66:")
+    depends_on("go@1.19:", type="build", when="@1.63:")
+    depends_on("go@1.18:", type="build", when="@1.62:")
+    depends_on("go@1.17:", type="build", when="@1.58:")
+    depends_on("go@1.14:", type="build")
 
     @run_after("install")
     def install_completions(self):

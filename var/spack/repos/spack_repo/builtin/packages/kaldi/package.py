@@ -6,6 +6,8 @@ import os
 from fnmatch import fnmatch
 from os.path import join
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from llnl.util.symlink import readlink
 
 from spack.package import *

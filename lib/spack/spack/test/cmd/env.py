@@ -886,12 +886,12 @@ def test_env_activate_broken_view(
     with spack.repo.use_repositories(mock_custom_repository):
         wrong_repo = env("activate", "--sh", "test")
         assert "Warning: could not load runtime environment" in wrong_repo
-        assert "Unknown namespace: builtin.mock" in wrong_repo
+        assert "Unknown namespace: builtin_mock" in wrong_repo
 
     # test replacing repo fixes it
     normal_repo = env("activate", "--sh", "test")
     assert "Warning: could not load runtime environment" not in normal_repo
-    assert "Unknown namespace: builtin.mock" not in normal_repo
+    assert "Unknown namespace: builtin_mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -916,7 +916,7 @@ def test_env_repo():
 
     pkg_cls = e.repo.get_pkg_class("mpileaks")
     assert pkg_cls.name == "mpileaks"
-    assert pkg_cls.namespace == "builtin.mock"
+    assert pkg_cls.namespace == "builtin_mock"
 
 
 def test_user_removed_spec(environment_from_manifest):

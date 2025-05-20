@@ -4,6 +4,8 @@
 
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 import archspec
 
 from spack.package import *

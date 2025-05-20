@@ -5,6 +5,8 @@
 # Important feature: a version of salome-medcoupling depand on
 # a specific version of salome-med package
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 

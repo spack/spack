@@ -28,7 +28,7 @@ def update_packages_config(conf_str):
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "requirements.test"
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "requirements_test"
     with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
         yield mock_repo_path
 
@@ -766,21 +766,21 @@ def test_skip_requirement_when_default_requirement_condition_cannot_be_met(
 
 def test_requires_directive(mock_packages, config):
     # This package requires either clang or gcc
-    s = spack.concretize.concretize_one("requires_clang_or_gcc")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc")
     assert s.satisfies("%gcc")
-    s = spack.concretize.concretize_one("requires_clang_or_gcc %gcc")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc %gcc")
     assert s.satisfies("%gcc")
-    s = spack.concretize.concretize_one("requires_clang_or_gcc %clang")
+    s = spack.concretize.concretize_one("requires-clang-or-gcc %clang")
     # Test both the real package (llvm) and its alias (clang)
     assert s.satisfies("%llvm") and s.satisfies("%clang")
 
     # This package can only be compiled with clang
-    s = spack.concretize.concretize_one("requires_clang")
+    s = spack.concretize.concretize_one("requires-clang")
     assert s.satisfies("%llvm")
-    s = spack.concretize.concretize_one("requires_clang %clang")
+    s = spack.concretize.concretize_one("requires-clang %clang")
     assert s.satisfies("%llvm")
     with pytest.raises(spack.error.SpackError, match="can only be compiled with Clang"):
-        spack.concretize.concretize_one("requires_clang %gcc")
+        spack.concretize.concretize_one("requires-clang %gcc")
 
 
 @pytest.mark.parametrize(
