@@ -425,8 +425,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
         sha256="f0a64e6347e67ec84286994f1ac5e77dba7fa6992c5f083e70a4e2765a86c0c6",
         when="@1.5:2.2 +rocm",
     )
-    # Fixes build failure from pytorch version 2.3 to 2.5.1 with rocm
-    # Fixes 'FindOpenMP.cmake'
     # to detect openmp settings used by Fujitsu compiler.
     patch("detect_omp_of_fujitsu_compiler.patch", when="%fj")
 
