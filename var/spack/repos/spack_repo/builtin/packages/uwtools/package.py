@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.build_systems.python import PythonPackage, PythonPipBuilder
 from spack.package import *
 
 
@@ -50,4 +50,4 @@ class Uwtools(PythonPackage):
 
     def install(self, spec, prefix):
         with working_dir(self.build_directory):
-            pip(*PythonPipBuilder.std_args(self), f"--prefix={self.prefix}", ".")
+            pip(*PythonPipBuilder.std_args(self), "--no-deps", f"--prefix={self.prefix}", ".")
