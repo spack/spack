@@ -68,35 +68,35 @@ class PyGpaw(PythonPackage):
 
     with when("@21.1.0"):
         depends_on("libxc@3:4.3.4")
-        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("python@3.6:3.11", type=("build", "run"))
         depends_on("py-ase@3.21.0:", type=("build", "run"))
         depends_on("py-numpy@:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.2.0:", type=("build", "run"))
 
     with when("@20.10.0"):
         depends_on("libxc@3:4.3.4")
-        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("python@3.6:3.11", type=("build", "run"))
         depends_on("py-ase@3.20.1:", type=("build", "run"))
         depends_on("py-numpy@:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.2.0:", type=("build", "run"))
 
     with when("@20.1.0"):
         depends_on("libxc@3:4.3.4")
-        depends_on("python@3.6:", type=("build", "run"))
+        depends_on("python@3.6:3.11", type=("build", "run"))
         depends_on("py-ase@3.19.0:", type=("build", "run"))
         depends_on("py-numpy@:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.2.0:", type=("build", "run"))
 
     with when("@19.8.1"):
         depends_on("libxc@3:4.3.4")
-        depends_on("python@3.5:", type=("build", "run"))
+        depends_on("python@3.5:3.11", type=("build", "run"))
         depends_on("py-ase@3.18.0:", type=("build", "run"))
         depends_on("py-numpy@:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.2.0:", type=("build", "run"))
 
     with when("@:1.3.0"):
         depends_on("libxc@3:4.3.4")
-        depends_on("python@2.6:", type=("build", "run"))
+        depends_on("python@2.6:2.9", type=("build", "run"))
         depends_on("py-ase@3.13.0:", type=("build", "run"))
         depends_on("py-numpy@:1.26.4", type=("build", "run"))
         depends_on("py-scipy@1.2.0:", type=("build", "run"))
