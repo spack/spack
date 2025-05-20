@@ -11,12 +11,14 @@ class Neovim(CMakePackage):
     """Neovim: Vim-fork focused on extensibility and usability"""
 
     homepage = "https://neovim.io"
-    git = "https://github.com/neovim/neovim.git"
     url = "https://github.com/neovim/neovim/archive/v0.4.3.tar.gz"
+    git = "https://github.com/neovim/neovim.git"
 
     maintainers("albestro", "trws")
 
     license("Apache-2.0 AND Vim")
+
+    sanity_check_is_file = ["bin/nvim"]
 
     version("master", branch="master")
     version("stable", tag="stable")
@@ -91,78 +93,81 @@ class Neovim(CMakePackage):
         description="use lua rather than luajit as lua language provider",
     )
 
-    depends_on("c", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cmake@3.0:", type="build")
+    depends_on("pkgconfig", type="build")
 
-    # depend on virtual, lua-luajit-openresty preferred
+    depends_on("gettext")
+    depends_on("gperf", type="link")
+    depends_on("iconv", type="link")
+    depends_on("jemalloc", type="link", when="platform=linux")
+    depends_on("libtermkey", type="link")
+    depends_on("libluv", type="link")
+    depends_on("libuv", type="link")
+    depends_on("libvterm", type="link")
     depends_on("lua-lang")
+    depends_on("lua-lpeg")
+    depends_on("lua-mpack")
     depends_on("luajit", when="~no_luajit")
     depends_on("lua-lang@5.1", when="+no_luajit")
+    depends_on("msgpack-c", type="link")
+    depends_on("unibilium", type="link")
 
-    # dependencies to allow regular lua to work
     depends_on("lua-ffi", when="^[virtuals=lua-lang] lua", type=("link", "run"))
     depends_on("lua-bitlib", when="^[virtuals=lua-lang] lua", type=("link", "run"))
 
-    # base dependencies
-    depends_on("cmake@3.0:", type="build")
-    depends_on("pkgconfig", type="build")
-    depends_on("gettext")
-    depends_on("gperf", type="link")
-    depends_on("jemalloc", type="link", when="platform=linux")
-    depends_on("lua-lpeg")
-    depends_on("lua-mpack")
-    depends_on("iconv", type="link")
-    depends_on("libtermkey", type="link", when="@:0.9")
-    depends_on("libuv", type="link")
-    depends_on("libluv", type="link", when="@:0.9")
-    depends_on("libvterm", type="link", when="@:0.10")
-    depends_on("msgpack-c", type="link", when="@:0.10")
-    depends_on("unibilium", type="link")
-    depends_on("unibilium@:1.2.0", type="link", when="@0.2.0")
-
-    # versions
+    # version-specific dependencies
     with when("@0.4:"):
         depends_on("libuv@1.28:", type="link")
         depends_on("libluv@1.30.0:", type="link")
         depends_on("libtermkey@0.18:", type="link")
         depends_on("libvterm@0.1:", type="link")
-        depends_on("unibilium@2.0:", type="link")
         depends_on("msgpack-c@1.0.0:", type="link")
+        depends_on("unibilium@2.0:", type="link")
+
     with when("@0.5:"):
         depends_on("libuv@1.42:", type="link")
         depends_on("tree-sitter")
+
     with when("@0.6:"):
         depends_on("cmake@3.10:", type="build")
         depends_on("gperf@3.1:", type="link")
-        conflicts("^libiconv@:1.14")
         depends_on("libtermkey@0.22:", type="link")
         depends_on("libvterm@0.1.4:", type="link")
         depends_on("msgpack-c@3.0.0:", type="link")
+        conflicts("^libiconv@:1.14")
+
     with when("@0.7:"):
         depends_on("gettext@0.20.1:")
         depends_on("libluv@1.43.0:", type="link")
         depends_on("libuv@1.44.1:", type="link")
         depends_on("tree-sitter@0.20.6:")
+
     with when("@0.8:"):
         depends_on("libvterm@0.3:", type="link")
+
     with when("@0.9:"):
         depends_on("tree-sitter@0.20.8:")
+
     with when("@0.10:"):
         depends_on("cmake@3.13:", type="build")
         depends_on("libvterm@0.3.3:")
         depends_on("tree-sitter@0.20.9:")
+
     with when("@0.11:"):
         depends_on("cmake@3.16:", type="build")
         depends_on("utf8proc", type="link")
         depends_on("tree-sitter@0.25:", type="link")
 
+        # This conflict should be temporary and removed in a follow up PR
+        # to address issues in laujit
         # https://github.com/neovim/neovim/issues/33506#issuecomment-2812141484
         conflicts("platform=darwin target=aarch64:")
+
     with when("@master"):
         pass
 
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
-    # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)
-    # https://github.com/neovim/neovim/issues/16217#issuecomment-958590493
     conflicts("libvterm@0.2:", when="@:0.7")
 
     @when("^lua")
