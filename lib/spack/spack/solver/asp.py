@@ -2644,16 +2644,26 @@ class SpackSolverSetup:
                     concrete_build_deps=concrete_build_deps,
                     context=context,
                 )
-                if dspec.depflag == dt.BUILD:
-                    edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
-                    if body is False:
-                        for clause in dependency_clauses:
-                            clause.name = "build_requirement"
-                            edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
-                    else:
-                        edge_clauses.extend(dependency_clauses)
-                else:
+                ###
+                # Dependency expressed with "^"
+                ###
+                if not dspec.depflag == dt.BUILD:
                     edge_clauses.extend(dependency_clauses)
+                    continue
+
+                ###
+                # Direct dependencies expressed with "%"
+                ###
+                edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
+                # Body of a rule
+                if body is True:
+                    edge_clauses.extend(dependency_clauses)
+                    continue
+
+                # Head of a rule
+                for clause in dependency_clauses:
+                    clause.name = "build_requirement"
+                    edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
 
         clauses.extend(edge_clauses)
         return clauses
