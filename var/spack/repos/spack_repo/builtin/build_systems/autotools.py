@@ -7,7 +7,6 @@ import subprocess
 from typing import Callable, List, Optional, Set, Tuple, Union
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 
 import spack.build_environment
 import spack.builder
@@ -34,6 +33,7 @@ from spack.package import (
     register_builder,
     run_after,
     run_before,
+    tty,
     when,
     working_dir,
 )

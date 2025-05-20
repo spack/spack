@@ -1,8 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from llnl.util.filesystem import working_dir
-
 from spack.package import (
     PackageBase,
     Prefix,
@@ -11,6 +9,7 @@ from spack.package import (
     depends_on,
     register_builder,
     run_after,
+    working_dir,
 )
 
 from ._checks import BuilderWithDefaults, execute_build_time_tests

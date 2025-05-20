@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from llnl.util.filesystem import find
-
 from spack.package import (
     Builder,
     EnvironmentModifications,
@@ -15,6 +13,7 @@ from spack.package import (
     build_system,
     depends_on,
     extends,
+    find,
     register_builder,
     when,
 )
