@@ -29,9 +29,10 @@ class PyPathspec(PythonPackage):
     version("0.5.5", sha256="72c495d1bbe76674219e307f6d1c6062f2e1b0b483a5e4886435127d0df3d0d3")
     version("0.3.4", sha256="7605ca5c26f554766afe1d177164a2275a85bb803b76eba3428f422972f66728")
 
-    depends_on("python@3.7:", when="@0.10:", type=("build", "run"))
+    depends_on("python@3.8:", when="@0.12:", type=("build", "run"))
+    depends_on("python@3.7:", when="@0.10:0.11", type=("build", "run"))
     depends_on("python@2.7:2.8,3.5:", type=("build", "run"))
     depends_on("py-flit-core@3.2:3", when="@0.11:", type="build")
-    depends_on("py-setuptools@40.8:", when="@0.10", type="build")
+    depends_on("py-setuptools@40.8:", when="@0.10:", type="build")
     depends_on("py-setuptools@39.2:", when="@0.9", type="build")
     depends_on("py-setuptools", when="@:0.10", type="build")
