@@ -35,6 +35,8 @@ class PyNvidiaMlPy(PythonPackage):
     )
     version("11.450.51", sha256="5aa6dd23a140b1ef2314eee5ca154a45397b03e68fd9ebc4f72005979f511c73")
 
+    depends_on("py-setuptools", type="build")
+
     # pip silently replaces distutils with setuptools
 
     def url_for_version(self, version):
@@ -44,5 +46,3 @@ class PyNvidiaMlPy(PythonPackage):
         else:
             sep = "-"
         return url.format(sep, version)
-
-    depends_on("py-setuptools", type="build")
