@@ -25,6 +25,7 @@ class R(AutotoolsPackage):
 
     license("GPL-2.0-or-later")
 
+    version("4.5.0", sha256="3b33ea113e0d1ddc9793874d5949cec2c7386f66e4abfb1cef9aec22846c3ce1")
     version("4.4.3", sha256="0d93d224442dea253c2b086f088db6d0d3cfd9b592cd5496e8cb2143e90fc9e8")
     version("4.4.2", sha256="1578cd603e8d866b58743e49d8bf99c569e81079b6a60cf33cdf7bdffeb817ec")
     version("4.4.1", sha256="b4cb675deaaeb7299d3b265d218cde43f192951ce5b89b7bb1a5148a36b2d94d")
@@ -98,6 +99,7 @@ class R(AutotoolsPackage):
     depends_on("which", type=("build", "run"))
     depends_on("zlib-api")
     depends_on("zlib@1.2.5:", when="^[virtuals=zlib-api] zlib")
+    depends_on("zstd", when="@4.5:")
     depends_on("texinfo", type="build")
     depends_on("gettext")
 

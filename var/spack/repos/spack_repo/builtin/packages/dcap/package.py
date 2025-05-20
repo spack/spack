@@ -26,6 +26,7 @@ class Dcap(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
+    depends_on("krb5")
     depends_on("openssl")
     depends_on("libxcrypt")
     depends_on("zlib-api")
