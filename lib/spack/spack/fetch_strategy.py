@@ -916,7 +916,7 @@ class GitFetchStrategy(VCSFetchStrategy):
         if self.git_sparse_paths:
             self._sparse_clone_src()
         else:
-            self._new_clone_src()
+            self._clone_src()
         self.submodule_operations()
 
     def bare_clone(self, dest: str) -> None:
@@ -951,22 +951,29 @@ class GitFetchStrategy(VCSFetchStrategy):
         git = self.git
         debug = spack.config.get("config:debug")
 
-        clone_args = ["clone"]
+        init_args = ["init", "src"]
+        remote_args = ["remote", "add", "origin", self.url]
+        fetch_args = ["fetch"]
         checkout_args = ["checkout"]
 
         if not debug:
-            clone_args.append("--quiet")
-            checkout_args.append("--quiet")
+            for args in [init_args, fetch_args, checkout_args]:
+                args.append("--quiet")
 
         if not self.get_full_repo:
-            clone_args.extend(["--no-checkout", "--filter=tree:0"])
+            fetch_args.extend(["--depth", "1"])
+            # fitler not always recognized by server
+            # clone_args.extend(["--no-checkout", "--filter=tree:0"])
 
-        git_ref = self.branch or self.tag or self.commit
-
-        checkout_args.append(git_ref)
-        clone_args.append(self.url)
+        fetch_args.append("origin")
+        git_ref = self.commit or self.tag or self.branch
+        if git_ref:
+            fetch_args.append(git_ref)
+        checkout_args.append("REF_HEAD")
         with temp_cwd():
-            git(*clone_args)
+            git(*init_args)
+            git("-C", "src", *remote_args)
+            git("-C", "src", *fetch_args)
             repo_name = get_single_file(".")
             if self.stage:
                 self.stage.srcdir = repo_name
