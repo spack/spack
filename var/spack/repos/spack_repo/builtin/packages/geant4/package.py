@@ -5,16 +5,10 @@
 from spack_repo.builtin.build_systems.cmake import CMakePackage
 
 from spack.package import *
-from spack.variant import ConditionalVariantValues
 
 
 def _std_when(values):
-    for v in values:
-        if isinstance(v, ConditionalVariantValues):
-            for c in v:
-                yield (c.value, c.when)
-        else:
-            yield (v, "")
+    return [(c.value, c.when) for v in values for c in v]
 
 
 class Geant4(CMakePackage):
