@@ -26,7 +26,8 @@ class PyCodebasin(PythonPackage):
 
     depends_on("python@3.12", type=("build", "run"))
 
-    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@64:", type="build")
+    depends_on("py-setuptools-scm@8:", type="build")
 
     with default_args(type=("build", "run")):
         depends_on("py-numpy@2.2.4")
