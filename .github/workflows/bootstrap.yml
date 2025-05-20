@@ -14,6 +14,7 @@ concurrency:
 
 jobs:
   distros-clingo-sources:
+    if: github.repository == 'spack/spack'
     runs-on: ubuntu-latest
     container: ${{ matrix.image }}
     strategy:
@@ -50,6 +51,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   clingo-sources:
+    if: github.repository == 'spack/spack'
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -76,6 +78,7 @@ jobs:
           tree $HOME/.spack/bootstrap/store/
 
   gnupg-sources:
+    if: github.repository == 'spack/spack'
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -103,6 +106,7 @@ jobs:
           tree ~/.spack/bootstrap/store/
 
   from-binaries:
+    if: github.repository == 'spack/spack'
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
@@ -164,6 +168,7 @@ jobs:
 
 
   windows:
+    if: github.repository == 'spack/spack'
     runs-on: "windows-latest"
     steps:
       - name: Checkout
