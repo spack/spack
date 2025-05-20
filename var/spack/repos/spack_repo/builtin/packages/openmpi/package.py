@@ -625,6 +625,8 @@ with '-Wl,-commons,use_dylibs' and without
 
     depends_on("perl", type="build")
     depends_on("pkgconfig", type="build")
+    # Based on https://docs.open-mpi.org/en/v5.0.x/developers/prerequisites.html#flex
+    depends_on("flex@2.5.4:", type="build", when="@main")
 
     depends_on("hwloc@2:", when="@4: ~internal-hwloc")
     # ompi@:3.0.0 doesn't support newer hwloc releases:
