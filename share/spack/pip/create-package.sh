@@ -12,13 +12,13 @@ set -e
 mkdir spack-package
 pushd spack-package
 SPACK_REPO_ROOT="$(git rev-parse --show-toplevel)"
-git clone "${SPACK_REPO_ROOT}" spack #--branch v1.0.0-alpha.3
+git clone "${SPACK_REPO_ROOT}" spack
 SPACK_PKG_SRC="${PWD}"
 popd
 
-# Python 3.9 is the minimum version due to a cryptography dependency.
+# Python 3.7 is the minimum version due to a cryptography dependency.
 if ! [[ -e build-tools-venv ]]; then
-    python3.9 -m venv build-tools-venv
+    python3 -m venv build-tools-venv
 fi
 source build-tools-venv/bin/activate
 
