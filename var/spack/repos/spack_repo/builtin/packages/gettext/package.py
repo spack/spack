@@ -35,7 +35,7 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     version("0.19.7", sha256="378fa86a091cec3acdece3c961bb8d8c0689906287809a8daa79dc0c6398d934")
 
     # Recommended variants
-    variant("curses", default=True, description="Use libncurses")
+    variant("curses", default=False, description="Use libncurses")
     variant("libxml2", default=True, description="Use libxml2")
     variant("git", default=True, description="Enable git support")
     variant("tar", default=True, description="Enable tar support")
@@ -43,12 +43,14 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     variant("xz", default=True, description="Enable xz support")
     variant("shared", default=True, description="Build shared libraries")
     variant("pic", default=True, description="Enable position-independent code (PIC)")
+    variant("cxx", default=True, description="Build C++ sources.")
+    variant("year2038", default=True, description="Support timestamps after 2038.")
 
     # Optional variants
     variant("libunistring", default=False, description="Use libunistring")
 
     depends_on("c", type="build")
-    depends_on("cxx", type="build")
+    depends_on("cxx", when="+cxx", type="build")
 
     depends_on("iconv")
     # Recommended dependencies
@@ -60,6 +62,14 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('gzip',     when='+gzip')
     depends_on("bzip2", when="+bzip2")
     depends_on("xz", when="+xz", type=("build", "link", "run"))
+
+    # These are invoked during the build process as well as by the autopoint script.
+    with default_args(type=("build", "run", "test")):
+        depends_on("diffutils")
+        depends_on("grep")
+        depends_on("awk")
+        depends_on("git", when="+git")
+        depends_on("gzip")
 
     # Optional dependencies
     # depends_on('glib')  # circular dependency?
@@ -143,6 +153,12 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
 
         if not spec.satisfies("+xz"):
             config_args.append("--without-xz")
+
+        if not spec.satisfies("+cxx"):
+            config_args.append("--disable-c++")
+
+        if spec.satisfies("+year2038"):
+            config_args.append("--enable-year2038")
 
         if spec.satisfies("+libunistring"):
             config_args.append(

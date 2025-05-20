@@ -37,20 +37,48 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("c", type="build")  # generated
 
-    depends_on("readline")
+    variant("readline", default=False, description="Build with readline support.")
+    variant("nls", default=True, description="Build with message translation.")
+
+    depends_on("readline", when="+readline")
+    with when("+nls"):
+        depends_on("gettext")
+        depends_on("libiconv")
 
     patch("macOS.patch", when="@1.21 platform=darwin")
-    patch("gdbm.patch", when="@:1.18 %gcc@10:")
-    patch("gdbm.patch", when="@:1.18 %clang@11:")
-    patch("gdbm.patch", when="@:1.18 %cce@11:")
-    patch("gdbm.patch", when="@:1.18 %aocc@2:")
-    patch("gdbm.patch", when="@:1.18 %oneapi")
-    patch("gdbm.patch", when="@:1.18 %arm@21:")
+
+    with when("@:1.18"):
+        patch("gdbm.patch", when="%gcc@10:")
+        patch("gdbm.patch", when="%clang@11:")
+        patch("gdbm.patch", when="%cce@11:")
+        patch("gdbm.patch", when="%aocc@2:")
+        patch("gdbm.patch", when="%oneapi")
+        patch("gdbm.patch", when="%arm@21:")
 
     def configure_args(self):
+        opts = []
+
         # GDBM uses some non-standard GNU extensions,
         # enabled with -D_GNU_SOURCE.  See:
         #   https://patchwork.ozlabs.org/patch/771300/
         #   https://stackoverflow.com/questions/5582211
         #   https://www.gnu.org/software/automake/manual/html_node/Flag-Variables-Ordering.html
-        return ["--enable-libgdbm-compat", "CPPFLAGS=-D_GNU_SOURCE"]
+        opts.extend(["--enable-libgdbm-compat", "CPPFLAGS=-D_GNU_SOURCE"])
+
+        if "~readline" in self.spec:
+            opts.append("--without-readline")
+
+        if "+nls" in self.spec:
+            libiconv_pfx = self.spec["libiconv"].prefix
+            libintl_pfx = self.spec["gettext"].prefix
+            opts.extend(
+                [f"--with-libiconv-prefix={libiconv_pfx}", f"--with-libintl-prefix={libintl_pfx}"]
+            )
+        else:
+            opts.append("--disable-nls")
+
+        # Up to 1.24, the new c23 keyword 'bool' was used in an invalid way for a keyword.
+        if self.spec.satisfies("@:1.24"):
+            opts.append("CFLAGS=-std=c18")
+
+        return opts

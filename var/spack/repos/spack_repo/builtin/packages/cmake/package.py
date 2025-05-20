@@ -103,11 +103,7 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant(
-        "ncurses",
-        default=sys.platform != "win32",
-        description="Enables the build of the ncurses gui",
-    )
+    variant("ncurses", default=False, description="Enables the build of the ncurses gui")
     variant("qtgui", default=False, description="Enables the build of the Qt GUI")
 
     # Revert the change that introduced a regression when parsing mpi link
