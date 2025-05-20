@@ -143,8 +143,8 @@ class PyGpaw(PythonPackage):
             bools += "scalapack = True\n"
 
         if "+fftw" in spec:
-            libs += spec["fftw"].libs
-            include_dirs.append(spec["fftw"].prefix.include)
+            libs += spec["fftw-api"].libs
+            include_dirs.append(spec["fftw-api"].prefix.include)
             bools += "fftw = True\n"
 
         if "+libvdwxc" in spec:
