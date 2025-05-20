@@ -57,11 +57,16 @@ class Additivefoam(Package):
             openfoam.install(join_path(indir, f), join_path(outdir, f))
 
     def patch(self):
+        """Patches build by adding Allwmake from the asset directory based on
+        the spec version.
+
+        For all versions after 1.0.0 there is an Allwmake script in
+        the AdditiveFOAM repository that can be called by the spack assets_main/Allwmake
+        script, whereas the assets_1.0.0/Allwmake script contains the
+        build instructions."""
         spec = self.spec
-        asset_dir = ""
-        if any([ver in spec.versions for ver in [Version("main"), Version("1.1.0")]]):
-            asset_dir = "assets_main"
-        elif Version("1.0.0") in spec.versions:
+        asset_dir = "assets_main"
+        if Version("1.0.0") in spec.versions:
             asset_dir = "assets_1.0.0"
         self.add_extra_files(self.common, asset_dir, self.assets)
 
