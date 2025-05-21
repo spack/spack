@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -79,6 +81,7 @@ class SstCore(AutotoolsPackage):
     variant("profile", default=False, description="Enable performance profiling of core features")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
 
     depends_on("python@:3.11", type=("build", "run", "link"))
     depends_on("mpi", when="+pdes_mpi")

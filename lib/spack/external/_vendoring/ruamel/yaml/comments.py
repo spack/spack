@@ -10,10 +10,10 @@ import sys
 import copy
 
 
-from ruamel.yaml.compat import ordereddict
-from ruamel.yaml.compat import MutableSliceableSequence, _F, nprintf  # NOQA
-from ruamel.yaml.scalarstring import ScalarString
-from ruamel.yaml.anchor import Anchor
+from _vendoring.ruamel.yaml.compat import ordereddict
+from _vendoring.ruamel.yaml.compat import MutableSliceableSequence, _F, nprintf  # NOQA
+from _vendoring.ruamel.yaml.scalarstring import ScalarString
+from _vendoring.ruamel.yaml.anchor import Anchor
 
 from collections.abc import MutableSet, Sized, Set, Mapping
 
@@ -375,8 +375,8 @@ class CommentedBase:
         """
         expects comment (before/after) to be without `#` and possible have multiple lines
         """
-        from ruamel.yaml.error import CommentMark
-        from ruamel.yaml.tokens import CommentToken
+        from _vendoring.ruamel.yaml.error import CommentMark
+        from _vendoring.ruamel.yaml.tokens import CommentToken
 
         def comment_token(s, mark):
             # type: (Any, Any) -> Any

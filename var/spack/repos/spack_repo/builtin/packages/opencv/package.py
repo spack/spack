@@ -4,6 +4,9 @@
 
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 
 
@@ -237,6 +240,9 @@ class Opencv(CMakePackage, CudaPackage):
     with when("+java_bindings_generator"):
         depends_on("java")
         depends_on("ant")
+
+    with when("+ffmpeg"):
+        depends_on("pkgconfig", type="build")
 
     with when("+objc"):
         conflicts("~imgproc")

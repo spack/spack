@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -68,7 +70,7 @@ class Libtree(MakefilePackage, CMakePackage):
     depends_on("elfio@:3.9", when="@2.0.0:2", type="build")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         tests_enabled = "ON" if self.pkg.run_tests else "OFF"
         if self.spec.satisfies("@2.0:"):
@@ -79,7 +81,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return [self.define(tests_define, tests_enabled)]
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     @property
     def install_targets(self):
         return ["install", "PREFIX=" + self.prefix]

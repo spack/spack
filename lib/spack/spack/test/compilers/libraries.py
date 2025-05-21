@@ -28,11 +28,14 @@ def call_compiler(exe, *args, **kwargs):
 @pytest.fixture()
 def mock_gcc(config):
     compilers = spack.compilers.config.all_compilers_from(configuration=config)
+    assert compilers, "No compilers available"
+
     compilers.sort(key=lambda x: (x.name == "gcc", x.version))
     # Deepcopy is used to avoid more boilerplate when changing the "extra_attributes"
     return copy.deepcopy(compilers[-1])
 
 
+@pytest.mark.usefixtures("mock_packages")
 class TestCompilerPropertyDetector:
     @pytest.mark.parametrize(
         "language,flagname",

@@ -5,6 +5,9 @@
 import re
 import sys
 
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.sourceware import SourcewarePackage
+
 from spack.package import *
 
 

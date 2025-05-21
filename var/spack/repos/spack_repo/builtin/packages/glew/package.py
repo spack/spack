@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -28,6 +30,9 @@ class Glew(CMakePackage):
     # glu is already forcibly disabled in the CMakeLists.txt.  This prevents
     # it from showing up in the .pc file
     patch("remove-pkgconfig-glu-dep.patch")
+    # Define APIENTRY in osmesa build if not defined, see
+    # https://github.com/nigels-com/glew/pull/407
+    patch("mesa-24.0.0-osmesa.patch", when="^mesa@24.0.0:")
 
     def cmake_args(self):
         spec = self.spec

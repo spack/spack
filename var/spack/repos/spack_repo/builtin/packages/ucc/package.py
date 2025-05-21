@@ -1,6 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -14,6 +18,7 @@ class Ucc(AutotoolsPackage, CudaPackage, ROCmPackage):
 
     maintainers("zzzoom")
 
+    version("1.4.4", sha256="e098e427c7b72b5434ae1e0da2258ab3bc271142c136b0bf4cf40ef9948b70d0")
     version("1.3.0", sha256="b56379abe5f1c125bfa83be305d78d81a64aa271b7b5fff0ac17b86725ff3acf")
     version("1.2.0", sha256="c1552797600835c0cf401b82dc89c4d27d5717f4fb805d41daca8e19f65e509d")
 

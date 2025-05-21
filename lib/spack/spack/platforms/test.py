@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import spack.operating_systems
 
@@ -28,7 +28,7 @@ class Test(Platform):
     def _init_targets(self):
         targets = ("aarch64", "m1") if platform.machine() == "arm64" else ("x86_64", "core2")
         for t in targets:
-            self.add_target(t, archspec.cpu.TARGETS[t])
+            self.add_target(t, _vendoring.archspec.cpu.TARGETS[t])
 
     @classmethod
     def detect(cls):

@@ -5,7 +5,7 @@
 import collections
 import warnings
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.tty.colify as colify
 import llnl.util.tty.color as color
@@ -92,11 +92,11 @@ def display_targets(targets):
 def arch(parser, args):
     if args.generic_target:
         # TODO: add deprecation warning in 0.24
-        print(archspec.cpu.host().generic)
+        print(_vendoring.archspec.cpu.host().generic)
         return
 
     if args.known_targets:
-        display_targets(archspec.cpu.TARGETS)
+        display_targets(_vendoring.archspec.cpu.TARGETS)
         return
 
     if args.frontend:

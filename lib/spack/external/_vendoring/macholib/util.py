@@ -4,7 +4,7 @@ import stat
 import struct
 import sys
 
-from macholib import mach_o
+from _vendoring.macholib import mach_o
 
 MAGIC = [
     struct.pack("!L", getattr(mach_o, "MH_" + _))

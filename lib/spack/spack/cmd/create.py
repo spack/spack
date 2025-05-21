@@ -52,6 +52,7 @@ package_template = '''\
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
+{package_class_import}
 from spack.package import *
 
 
@@ -85,6 +86,7 @@ class BundlePackageTemplate:
     """
 
     base_class_name = "BundlePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.bundle import BundlePackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -114,6 +116,7 @@ class BundlePackageTemplate:
                     name=self.name,
                     class_name=self.class_name,
                     base_class_name=self.base_class_name,
+                    package_class_import=self.package_class_import,
                     url_def=self.url_def,
                     versions=self.versions,
                     dependencies="\n".join(all_deps),
@@ -126,6 +129,7 @@ class PackageTemplate(BundlePackageTemplate):
     """Provides the default values to be used for the package file template"""
 
     base_class_name = "Package"
+    package_class_import = "from spack_repo.builtin.build_systems.generic import Package"
 
     body_def = """\
     def install(self, spec, prefix):
@@ -146,6 +150,9 @@ class AutotoolsPackageTemplate(PackageTemplate):
     that *do* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     body_def = """\
     def configure_args(self):
@@ -160,6 +167,9 @@ class AutoreconfPackageTemplate(PackageTemplate):
     that *do not* come with a ``configure`` script"""
 
     base_class_name = "AutotoolsPackage"
+    package_class_import = (
+        "from spack_repo.builtin.build_systems.autotools import AutotoolsPackage"
+    )
 
     dependencies = """\
     depends_on("autoconf", type="build")
@@ -186,6 +196,7 @@ class CargoPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for cargo-based packages"""
 
     base_class_name = "CargoPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.cargo import CargoPackage"
 
     body_def = ""
 
@@ -194,6 +205,7 @@ class CMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for CMake-based packages"""
 
     base_class_name = "CMakePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.cmake import CMakePackage"
 
     body_def = """\
     def cmake_args(self):
@@ -208,6 +220,7 @@ class GoPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Go-module-based packages"""
 
     base_class_name = "GoPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.go import GoPackage"
 
     body_def = ""
 
@@ -216,6 +229,7 @@ class LuaPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for LuaRocks-based packages"""
 
     base_class_name = "LuaPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.lua import LuaPackage"
 
     body_def = """\
     def luarocks_args(self):
@@ -237,6 +251,7 @@ class MesonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for meson-based packages"""
 
     base_class_name = "MesonPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.meson import MesonPackage"
 
     body_def = """\
     def meson_args(self):
@@ -249,6 +264,7 @@ class QMakePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for QMake-based packages"""
 
     base_class_name = "QMakePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.qmake import QMakePackage"
 
     body_def = """\
     def qmake_args(self):
@@ -261,6 +277,7 @@ class MavenPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Maven-based packages"""
 
     base_class_name = "MavenPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.maven import MavenPackage"
 
     body_def = """\
     def build(self, spec, prefix):
@@ -272,6 +289,7 @@ class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
     base_class_name = "SConsPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.scons import SConsPackage"
 
     body_def = """\
     def build_args(self, spec, prefix):
@@ -285,6 +303,7 @@ class WafPackageTemplate(PackageTemplate):
     """Provides appropriate override for Waf-based packages"""
 
     base_class_name = "WafPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.waf import WafPackage"
 
     body_def = """\
     # FIXME: Override configure_args(), build_args(),
@@ -308,6 +327,7 @@ class RacketPackageTemplate(PackageTemplate):
     """Provides approriate overrides for Racket extensions"""
 
     base_class_name = "RacketPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.racket import RacketPackage"
 
     url_line = """\
     # FIXME: set the proper location from which to fetch your package
@@ -345,6 +365,7 @@ class PythonPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for python extensions"""
 
     base_class_name = "PythonPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.python import PythonPackage"
 
     dependencies = """\
     # FIXME: Only add the python/pip/wheel dependencies if you need specific versions
@@ -432,6 +453,7 @@ class RPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for R extensions"""
 
     base_class_name = "RPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.r import RPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required.
@@ -472,6 +494,7 @@ class PerlmakePackageTemplate(PackageTemplate):
     that come with a Makefile.PL"""
 
     base_class_name = "PerlPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.perl import PerlPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required:
@@ -509,6 +532,7 @@ class OctavePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for octave packages"""
 
     base_class_name = "OctavePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.octave import OctavePackage"
 
     dependencies = """\
     extends("octave")
@@ -531,6 +555,7 @@ class RubyPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Ruby packages"""
 
     base_class_name = "RubyPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.ruby import RubyPackage"
 
     dependencies = """\
     # FIXME: Add dependencies if required. Only add the ruby dependency
@@ -559,6 +584,7 @@ class MakefilePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Makefile packages"""
 
     base_class_name = "MakefilePackage"
+    package_class_import = "from spack_repo.builtin.build_systems.makefile import MakefilePackage"
 
     body_def = """\
     def edit(self, spec, prefix):
@@ -573,6 +599,7 @@ class IntelPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for licensed Intel software"""
 
     base_class_name = "IntelOneApiPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage"
 
     body_def = """\
     # FIXME: Override `setup_environment` if necessary."""
@@ -582,6 +609,7 @@ class SIPPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SIP packages."""
 
     base_class_name = "SIPPackage"
+    package_class_import = "from spack_repo.builtin.build_systems.sip import SIPPackage"
 
     body_def = """\
     def configure_args(self, spec, prefix):
