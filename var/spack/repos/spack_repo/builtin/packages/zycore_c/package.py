@@ -9,7 +9,7 @@ from spack.package import *
 
 
 class ZycoreC(CMakePackage):
-    """Library providing platform independent types, macros and a fallback for environments without LibC"""
+    """Platform independent types, macros and a fallback for environments without LibC"""
 
     homepage = "https://github.com/zyantific/zycore-c"
     url = "https://github.com/zyantific/zycore-c/archive/refs/tags/v0.0.0.tar.gz"
