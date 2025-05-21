@@ -287,6 +287,9 @@ class URLBuildcacheEntry:
     def get_buildcache_component_include_pattern(
         cls, buildcache_component: Optional[BuildcacheComponent] = None
     ) -> str:
+        """Given a buildcache component, return the glob pattern that can be used
+        to match it in a directory listing.  If None is provided, return a catch-all
+        pattern that will match all buildcache components."""
         if buildcache_component is None:
             return "*.manifest.json"
         elif buildcache_component == BuildcacheComponent.SPEC:
@@ -1131,7 +1134,9 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Opt
     """Use spack.util.web module to get a list of all the specs at the remote url.
 
     Args:
-        cache_prefix (str): Base url of mirror (location of spec files)
+        url: Base url of mirror (location of spec files)
+        tmpspecsdir: path to temporary directory to use for writing files
+        component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         The list of complete spec file urls and a function that can read each one from its
@@ -1175,6 +1180,7 @@ def get_entries_from_cache(
     Args:
         url: Base url of mirror (location of spec files)
         tmpspecsdir: Temporary location for writing files
+        component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
         A tuple where the first item is a list of absolute file paths or
