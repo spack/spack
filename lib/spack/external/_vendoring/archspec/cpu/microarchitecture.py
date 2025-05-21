@@ -6,12 +6,11 @@
 import functools
 import platform
 import re
+import sys
 import warnings
+from typing import IO, List, Set, Tuple
 
-import _vendoring.archspec
-import _vendoring.archspec.cpu.alias
-import _vendoring.archspec.cpu.schema
-
+from . import schema
 from .alias import FEATURE_ALIASES
 from .schema import LazyDictionary
 
@@ -67,7 +66,7 @@ class Microarchitecture:
         cpu_part (str): cpu part of the architecture, if relevant.
     """
 
-    # pylint: disable=too-many-arguments,too-many-instance-attributes
+    # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-instance-attributes
     #: Aliases for micro-architecture's features
     feature_aliases = FEATURE_ALIASES
 
@@ -150,16 +149,24 @@ class Microarchitecture:
         return (self == other) or (self > other)
 
     def __repr__(self):
-        cls_name = self.__class__.__name__
-        fmt = (
-            cls_name + "({0.name!r}, {0.parents!r}, {0.vendor!r}, "
-            "{0.features!r}, {0.compilers!r}, generation={0.generation!r}, "
-            "cpu_part={0.cpu_part!r})"
-        )
-        return fmt.format(self)
+        return f"{self.__class__.__name__}({self.name!r})"
 
     def __str__(self):
         return self.name
+
+    def tree(self, fp: IO[str] = sys.stdout, indent: int = 4) -> None:
+        """Format the partial order of ancestors of this microarchitecture as a tree."""
+        seen: Set[str] = set()
+        stack: List[Tuple[int, Microarchitecture]] = [(0, self)]
+        while stack:
+            level, current = stack.pop()
+            print(f"{'':>{level}}{current.name}", file=fp)
+
+            if current.name in seen:
+                continue
+
+            for parent in reversed(current.parents):
+                stack.append((level + indent, parent))
 
     def __contains__(self, feature):
         # Feature must be of a string type, so be defensive about that
@@ -384,7 +391,7 @@ def _known_microarchitectures():
         )
 
     known_targets = {}
-    data = _vendoring.archspec.cpu.schema.TARGETS_JSON["microarchitectures"]
+    data = schema.TARGETS_JSON["microarchitectures"]
     for name in data:
         if name in known_targets:
             # name was already brought in as ancestor to a target

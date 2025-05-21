@@ -9,8 +9,8 @@ archspec command line interface
 import argparse
 import typing
 
-import _vendoring.archspec
-import _vendoring.archspec.cpu
+from . import __version__ as archspec_version
+from .cpu import host
 
 
 def _make_parser() -> argparse.ArgumentParser:
@@ -24,7 +24,7 @@ def _make_parser() -> argparse.ArgumentParser:
         "-V",
         help="Show the version and exit.",
         action="version",
-        version=f"archspec, version {_vendoring.archspec.__version__}",
+        version=f"archspec, version {archspec_version}",
     )
     parser.add_argument("--help", "-h", help="Show the help and exit.", action="help")
 
@@ -45,9 +45,9 @@ def _make_parser() -> argparse.ArgumentParser:
 
 
 def cpu() -> int:
-    """Run the `_vendoring.archspec.cpu` subcommand."""
+    """Run the `archspec cpu` subcommand."""
     try:
-        print(_vendoring.archspec.cpu.host())
+        print(host())
     except FileNotFoundError as exc:
         print(exc)
         return 1
