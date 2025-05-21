@@ -27,6 +27,7 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     variant("test", default=False, description="Add dependencies needed for testing")
 
     depends_on("cxx", type="build")
+    depends_on("c", type="build")
 
     depends_on("petsc~hypre~metis~fortran")
     depends_on("petsc+debug", when="+debug")
