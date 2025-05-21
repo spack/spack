@@ -56,7 +56,5 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
         return entries
 
     def cmake_args(self):
-        args = []
-        if "+slepc" in self.spec:
-            args.append("-DWITH_SLEPC=ON")
+        args = [self.define_from_variant("WITH_SLEPC", "slepc")]
         return args
