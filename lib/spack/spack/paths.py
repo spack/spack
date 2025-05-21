@@ -10,6 +10,7 @@ dependencies.
 """
 import os
 from pathlib import PurePath
+import hashlib
 
 import llnl.util.filesystem
 
@@ -85,9 +86,20 @@ gpg_path = os.path.join(opt_path, "spack", "gpg")
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
 
+    # support multiple spack instances: pick a subdirectory based on spack root
+    h = hashlib.new('sha256')
+    h.update(spack_root.encode())
+    subdir = h.hexdigest()[:8]
 
+    return os.path.join( 
+             os.path.expanduser(
+                 os.getenv( "SPACK_USER_CACHE_PATH") or
+                 "~%s.spack" % os.sep
+             ),
+             subdir
+        )
+    
 user_cache_path = str(PurePath(_get_user_cache_path()))
 
 #: junit, cdash, etc. reports about builds
