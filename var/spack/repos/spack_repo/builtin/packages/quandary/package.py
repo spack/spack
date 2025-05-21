@@ -33,8 +33,7 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc+debug", when="+debug")
     depends_on("slepc", when="+slepc")
 
-    depends_on("blt", type="build")
-    conflicts("^blt@:0.3.6", when="+rocm")
+    depends_on("blt@0.6.0:", type="build")
 
     with when("+rocm"):
         for arch_ in ROCmPackage.amdgpu_targets:
