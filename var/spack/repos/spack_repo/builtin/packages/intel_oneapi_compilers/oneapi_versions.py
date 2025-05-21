@@ -1,0 +1,295 @@
+# Copyright Spack Project Developers. See COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import platform
+from spack.package import *
+
+class oneAPIVersions:
+    versions: List["oneAPIVersion"] = []
+
+    @staticmethod
+    def generate_versions():
+        for v in filter(lambda x: x.platform == platform.system().lower(), oneAPIVersions.versions):
+            version(v.version, expand=False, url=v.cxx.url, sha256=v.cxx.sha)
+            if v.fortran:
+                resource(
+                    name="fortran-installer",
+                    placement="fortran-installer",
+                    when=f"@{v.version}",
+                    expand=False,
+                    url=v.fortran.url,
+                    sha256=v.fortran.sha
+                )
+            if v.nvidia:
+                resource(
+                    name="nvidia-plugin-installer",
+                    placement="nvidia-plugin-installer",
+                    when=f"@{v.version}",
+                    expand=False,
+                    url=v.nvidia.url,
+                    sha256=v.nvidia.sha
+                )
+            if v.amd:
+                resource(
+                    name="amd-plugin-installer",
+                    placement="amd-plugin-installer",
+                    when=f"@{v.version}",
+                    expand=False,
+                    url=v.amd.url,
+                    sha256=v.amd.sha
+                )
+
+
+class oneAPIInstaller:
+    def __init__(self, *, url:str, sha:str):
+        self.url = url
+        self.sha = sha
+
+
+class oneAPIVersion:
+    def __init__(self, *, 
+                 version: str, 
+                 platform:str, 
+                 cxx:oneAPIInstaller, 
+                 fortran:Optional[oneAPIInstaller]=None, 
+                 nvidia:Optional[oneAPIInstaller]=None, 
+                 amd:Optional[oneAPIInstaller]=None):
+        self.version = version
+        assert platform.lower() in ("windows", "linux"), "OneAPI is only compatible with Windows or Linux"
+        self.platform = platform
+        self.cxx = cxx
+        self.fortran = fortran
+        self.nvidia = nvidia
+        self.amd = amd
+        oneAPIVersions.versions.append(self)
+        
+
+oneAPIVersion(version="2025.1.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/c4d2aef3-3123-475e-800c-7d66fd8da2a5/intel-dpcpp-cpp-compiler-2025.1.1.9_offline.sh",
+                                  sha="63ea61f54a5ea9d30059ea499697e04953915ef317c0e8fc457077b690c726df"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0e4735b3-8721-422b-b204-00eefe413bfd/intel-fortran-compiler-2025.1.1.10_offline.sh",
+                                      sha="c59060a5b959fb0faeb1cde349689086da41d491adb41fd6c97177fcf59bf957")
+            )
+
+
+oneAPIVersion(version="2025.1.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh", 
+                                 sha="53489afcc9534e30ad807e94b158abfccf6a7eb3658f59655122d92fbad8fa72"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/577ebc28-d0f6-492b-9a43-b04354ce99da/intel-fortran-compiler-2025.1.0.601_offline.sh",
+                                     sha="27016329dede8369679f22b4e9f67936837ce7972a1ef4f5c76ee87d7c963c81")
+            )
+
+oneAPIVersion(version="2025.0.4",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/84c039b6-2b7d-4544-a745-3fcf8afd643f/intel-dpcpp-cpp-compiler-2025.0.4.20_offline.sh", 
+                                 sha="0537c6e462fe74063cb0b9209a0fd5c0ca3a29b4520d43d382ae27fb3f98b375"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ad42ee3b-7a2f-41cb-b902-689f651920da/intel-fortran-compiler-2025.0.4.21_offline.sh",
+                                     sha="ad453f1dd68111e7cf7053d6f86fa26d982bd9ab61982cbb6dbe5195fb6feedb"),
+            )
+
+oneAPIVersion(version="2025.0.3",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/1cac4f39-2032-4aa9-86d7-e4f3e40e4277/intel-dpcpp-cpp-compiler-2025.0.3.9_offline.sh", 
+                                 sha="0ca834002b9091dc9988da6798a2eb36ebc5933d8d523ed0fa78a55744c88823"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fafa2df1-4bb1-43f7-87c6-3c82f1bdc712/intel-fortran-compiler-2025.0.3.9_offline.sh",
+                                     sha="1ad813cf6495ded730646d6c4fd065dcc840875fdea28fcc6bac2cafb8d22c8d"),
+            )
+
+oneAPIVersion(version="2025.0.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/4fd7c6b0-853f-458a-a8ec-421ab50a80a6/intel-dpcpp-cpp-compiler-2025.0.1.46_offline.sh", 
+                                 sha="1595397566b59a5c8f81e2c235b6bedd2405dc70309b5bf00ed75827d0f12449"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/7ba31291-8a27-426f-88d5-8c2d65316655/intel-fortran-compiler-2025.0.1.41_offline.sh",
+                                     sha="aa54f019ad8db79f716f880c72784dc117d64e525e4c3b62717bd9d18a6c9060"),
+                )
+
+oneAPIVersion(version="2025.0.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ac92f2bb-4818-4e53-a432-f8b34d502f23/intel-dpcpp-cpp-compiler-2025.0.0.740_offline.sh", 
+                                 sha="04fadf63789acee731895e631db63f65a98b8279db3d0f48bdf0d81e6103bdd8"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/69f79888-2d6c-4b20-999e-e99d72af68d4/intel-fortran-compiler-2025.0.0.723_offline.sh",
+                                     sha="2be6d607ce84f35921228595b118fbc516d28587cbc4e6dcf6b7219e5cd1a9a9"),
+              nvidia=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.0.0&filters[]=12.0&filters[]=linux",
+                                     sha="264a43d2e07c08eb31d6483fb1c289a6b148709e48e9a250efc1b1e9a527feb6"),
+              amd=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2025.0.0&filters[]=6.1.0&filters[]=linux",
+                                  sha="2c5a147e82f0e995b9c0457b53967cc066d5741d675cb64cb9eba8e3c791a064")
+            )
+
+oneAPIVersion(version="2024.2.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/74587994-3c83-48fd-b963-b707521a63f4/l_dpcpp-cpp-compiler_p_2024.2.1.79_offline.sh", 
+                                 sha="af0243f80640afa94c7f9c8151da91d7ab17f448f542fa76d785230dec712048"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5e7b0f1c-6f25-4cc8-94d7-3a527e596739/l_fortran-compiler_p_2024.2.1.80_offline.sh",
+                                     sha="6f6dab82a88082a7a39f6feb699343c521f58c6481a1bb87edba7e2550995b6d"),
+              nvidia=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.1&filters[]=12.0&filters[]=linux",
+                                     sha="2c377027c650291ccd8267cbf75bd3d00c7b11998cc59d5668a02a0cbc2c015f"),
+              amd=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.1&filters[]=6.1.0&filters[]=linux",
+                                  sha="fbeb64f959f907cbf3469f4e154b2af6d8ff46fe4fc667c811e04f3872a13823")
+            )
+
+oneAPIVersion(version="2024.2.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/6780ac84-6256-4b59-a647-330eb65f32b6/l_dpcpp-cpp-compiler_p_2024.2.0.495_offline.sh", 
+                                 sha="9463aa979314d2acc51472d414ffcee032e9869ca85ac6ff4c71d39500e5173d"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/801143de-6c01-4181-9911-57e00fe40181/l_fortran-compiler_p_2024.2.0.426_offline.sh",
+                                     sha="fd19a302662b2f86f76fc115ef53a69f16488080278dba4c573cc705f3a52ffa"),
+              nvidia=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2024.2.0&filters[]=12.0&filters[]=linux",
+                                     sha="0622df0054364b01e91e7ed72a33cb3281e281db5b0e86579f516b1cc5336b0f"),
+              amd=oneAPIInstaller(url="https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=amd&version=2024.2.0&filters[]=6.1.0&filters[]=linux",
+                                  sha="d1e9d30fa92f3ef606f054d8cbd7c338b3e46f6a9f8472736e29e8ccd9e50688")
+            )
+
+oneAPIVersion(version="2024.1.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/2e562b6e-5d0f-4001-8121-350a828332fb/l_dpcpp-cpp-compiler_p_2024.1.0.468_offline.sh", 
+                                 sha="534ecc6e4b690c9011d7765cbe178f520aa8f49c0eb4ea80ea1415e48e5d7cf7"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/fd9342bd-7d50-442c-a3e4-f41974e14396/l_fortran-compiler_p_2024.1.0.465_offline.sh",
+                                     sha="30a02bad9a96a543c60f3bfa4238dfe07c2d26d76fc22ba9aa9b7c603e11f1b9"),
+                          )
+
+oneAPIVersion(version="2024.0.2",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/bb99984f-370f-413d-bbec-38928d2458f2/l_dpcpp-cpp-compiler_p_2024.0.2.29_offline.sh", 
+                                 sha="0ec22d69f4207fea4b7488d1c9e62adbc14fb6daa1574d6edcadc912da007b3c"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/41df6814-ec4b-4698-a14d-421ee2b02aa7/l_fortran-compiler_p_2024.0.2.28_offline.sh",
+                                     sha="396ac4fbcb3799d5c1a866a60cf81f85f7cab8c6f35289f61c5cda63c7101b5e"),
+                          )
+
+oneAPIVersion(version="2024.0.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/c68c8f0a-47f5-4f26-8e8e-fa2627271279/l_dpcpp-cpp-compiler_p_2024.0.1.29_offline.sh", 
+                                 sha="22497c46bfb916c82677489775c113141510423799b7eca35f35dffeb2a14104"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/4eedf77e-e097-40de-b62d-5fb70efecb59/l_fortran-compiler_p_2024.0.1.31_offline.sh",
+                                     sha="9d49ecc1862c60eb0627bfdd80d63a47118095af0ff5adeeda10ec36aaffc82c"),
+                          )
+
+oneAPIVersion(version="2024.0.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5c8e686a-16a7-4866-b585-9cf09e97ef36/l_dpcpp-cpp-compiler_p_2024.0.0.49524_offline.sh", 
+                                 sha="d10bad2009c98c631fbb834aae62012548daeefc806265ea567316cd9180a684"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
+                                     sha="57faf854b8388547ee4ef2db387a9f6f3b4d0cebd67b765cf5e844a0a970d1f9"),
+                          )
+
+oneAPIVersion(version="2023.2.4",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b00a4b0e-bd21-41fa-ab34-19e8e2a77c5a/l_dpcpp-cpp-compiler_p_2023.2.4.24_offline.sh", 
+                                 sha="f143a764adba04a41e49ec405856ad781e5c3754812e90a7ffe06d08cd07f684"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/5bfaa204-689d-4bf1-9656-e37e35ea3fc2/l_fortran-compiler_p_2023.2.4.31_offline.sh",
+                                     sha="2f327d67cd207399b327df5b7c912baae800811d0180485ef5431f106686c94b"),
+                          )
+
+oneAPIVersion(version="2023.2.3",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/d85fbeee-44ec-480a-ba2f-13831bac75f7/l_dpcpp-cpp-compiler_p_2023.2.3.12_offline.sh", 
+                                 sha="b80119a3e54306b85198e907589b00b11c072f107ac39c1686a1996f76466b26"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/0ceccee5-353c-4fd2-a0cc-0aecb7492f87/l_fortran-compiler_p_2023.2.3.13_offline.sh",
+                                     sha="ef8d95b7165d42da8576bf89a100bd21be7253d0aec039ff76c9213fa2aa9c62"),
+                          )
+
+oneAPIVersion(version="2023.2.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/ebf5d9aa-17a7-46a4-b5df-ace004227c0e/l_dpcpp-cpp-compiler_p_2023.2.1.8_offline.sh", 
+                                 sha="f5656b2f5bb5d904639e6ef1f90a2d2e760d2906e82ebc0dd387709738ca714b"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/0d65c8d4-f245-4756-80c4-6712b43cf835/l_fortran-compiler_p_2023.2.1.8_offline.sh",
+                                     sha="d4e36abc014c184698fec318a127f15a696b5333b3b0282aba1968b351207185"),
+                          )
+
+oneAPIVersion(version="2023.2.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/748687b0-5a22-467c-86c6-c312fa0206b2/l_dpcpp-cpp-compiler_p_2023.2.0.49256_offline.sh", 
+                                 sha="21497b2dd2bc874794c2321561af313082725f61e3101e05a050f98b7351e08f"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/237236c4-434b-4576-96ac-020ceeb22619/l_fortran-compiler_p_2023.2.0.49254_offline.sh",
+                                     sha="37c0ad6f0013512d98e385f8708ca29b23c45fddc9ec76069f1d93663668d511"),
+                          )
+
+oneAPIVersion(version="2023.1.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/89283df8-c667-47b0-b7e1-c4573e37bd3e/l_dpcpp-cpp-compiler_p_2023.1.0.46347_offline.sh", 
+                                 sha="3ac1c1179501a2646cbb052b05426554194573b4f8e2344d7699eed03fbcfa1d"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/150e0430-63df-48a0-8469-ecebff0a1858/l_fortran-compiler_p_2023.1.0.46348_offline.sh",
+                                     sha="7639af4b6c928e9e3ba92297a054f78a55f4f4d0db9db0d144cc6653004e4f24"),
+            )
+
+oneAPIVersion(version="2023.0.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19123/l_dpcpp-cpp-compiler_p_2023.0.0.25393_offline.sh", 
+                                 sha="473eb019282c2735d65c6058f6890e60b79a5698ae18d2c1e4489fed8dd18a02"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19105/l_fortran-compiler_p_2023.0.0.25394_offline.sh",
+                                     sha="fd7525bf90646c8e43721e138f29c9c6f99e96dfe5648c13633f30ec64ac8b1b"),
+            )
+
+oneAPIVersion(version="2022.2.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/19049/l_dpcpp-cpp-compiler_p_2022.2.1.16991_offline.sh", 
+                                 sha="3f0f02f9812a0cdf01922d2df9348910c6a4cb4f9dfe50fc7477a59bbb1f7173"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18998/l_fortran-compiler_p_2022.2.1.16992_offline.sh",
+                                     sha="64f1d1efbcdc3ac2182bec18313ca23f800d94f69758db83a1394490d9d4b042"),
+            )
+
+oneAPIVersion(version="2022.2.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18849/l_dpcpp-cpp-compiler_p_2022.2.0.8772_offline.sh", 
+                                 sha="8ca97f7ea8abf7876df6e10ce2789ea8cbc310c100ad7bf0b5ffccc4f3c7f2c9"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18909/l_fortran-compiler_p_2022.2.0.8773_offline.sh",
+                                     sha="4054e4bf5146d55638d21612396a19ea623d22cbb8ac63c0a7150773541e0311"),
+                          )
+
+oneAPIVersion(version="2022.1.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18717/l_dpcpp-cpp-compiler_p_2022.1.0.137_offline.sh", 
+                                 sha="1027819581ba820470f351abfc2b2658ff2684ed8da9ed0e722a45774a2541d6"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18703/l_fortran-compiler_p_2022.1.0.134_offline.sh",
+                                     sha="583082abe54a657eb933ea4ba3e988eef892985316be13f3e23e18a3c9515020"),
+                          )
+
+oneAPIVersion(version="2022.0.2",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18478/l_dpcpp-cpp-compiler_p_2022.0.2.84_offline.sh", 
+                                 sha="ade5bbd203e7226ca096d7bf758dce07857252ec54e83908cac3849e6897b8f3"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18481/l_fortran-compiler_p_2022.0.2.83_offline.sh",
+                                     sha="78532b4118fc3d7afd44e679fc8e7aed1e84efec0d892908d9368e0c7c6b190c"),
+                          )
+
+oneAPIVersion(version="2022.0.1",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18435/l_dpcpp-cpp-compiler_p_2022.0.1.71_offline.sh", 
+                                 sha="c7cddc64c3040eece2dcaf48926ba197bb27e5a46588b1d7b3beddcdc379926a"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18436/l_fortran-compiler_p_2022.0.1.70_offline.sh",
+                                     sha="2cb28a04f93554bfeffd6cad8bd0e7082735f33d73430655dea86df8933f50d1"),
+                          )
+
+oneAPIVersion(version="2021.4.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18209/l_dpcpp-cpp-compiler_p_2021.4.0.3201_offline.sh", 
+                                 sha="9206bff1c2fdeb1ca0d5f79def90dcf3e6c7d5711b9b5adecd96a2ba06503828"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/18210/l_fortran-compiler_p_2021.4.0.3224_offline.sh",
+                                     sha="de2fcf40e296c2e882e1ddf2c45bb8d25aecfbeff2f75fcd7494068d621eb7e0"),
+                          )
+
+oneAPIVersion(version="2021.3.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17928/l_dpcpp-cpp-compiler_p_2021.3.0.3168_offline.sh", 
+                                 sha="f848d81b7cabc76c2841c9757abb2290921efd7b82491d830605f5785600e7a1"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17959/l_fortran-compiler_p_2021.3.0.3168_offline.sh",
+                                     sha="c4553f7e707be8e8e196f625e4e7fbc8eff5474f64ab85fc7146b5ed53ebc87c"),
+                          )
+
+oneAPIVersion(version="2021.2.0",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17749/l_dpcpp-cpp-compiler_p_2021.2.0.118_offline.sh", 
+                                 sha="5d01cbff1a574c3775510cd97ffddd27fdf56d06a6b0c89a826fb23da4336d59"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17756/l_fortran-compiler_p_2021.2.0.136_offline.sh",
+                                     sha="a62e04a80f6d2f05e67cd5acb03fa58857ee22c6bd581ec0651c0ccd5bdec5a1"),
+                          )
+
+oneAPIVersion(version="2021.1.2",
+              platform="linux",
+              cxx=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17513/l_dpcpp-cpp-compiler_p_2021.1.2.63_offline.sh", 
+                                 sha="68d6cb638091990e578e358131c859f3bbbbfbf975c581fd0b4b4d36476d6f0a"),
+              fortran=oneAPIInstaller(url="https://registrationcenter-download.intel.com/akdlm/IRC_NAS/17508/l_fortran-compiler_p_2021.1.2.62_offline.sh",
+                                     sha="29345145268d08a59fa7eb6e58c7522768466dd98f6d9754540d1a0803596829"),
+                          )
