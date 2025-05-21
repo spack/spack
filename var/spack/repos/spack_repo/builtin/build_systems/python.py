@@ -10,18 +10,9 @@ import shutil
 import stat
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
-import _vendoring.archspec.cpu
-
 import llnl.util.filesystem as fs
 from llnl.util.lang import ClassProperty, classproperty, match_predicate
 
-import spack.config
-import spack.deptypes as dt
-import spack.detection
-import spack.platforms
-import spack.repo
-import spack.spec
-import spack.store
 from spack.package import (
     HeaderList,
     LibraryList,

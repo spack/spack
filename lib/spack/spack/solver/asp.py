@@ -4187,7 +4187,9 @@ class SpecBuilder:
         return specs
 
 
-def _update_external_dependencies(dependent_package, extendee_spec: Optional[spack.spec.Spec] = None) -> None:
+def _update_external_dependencies(
+    dependent_package, extendee_spec: Optional[spack.spec.Spec] = None
+) -> None:
     """
     Ensure all external python packages have a python dependency
 
@@ -4227,7 +4229,9 @@ def _update_external_dependencies(dependent_package, extendee_spec: Optional[spa
 
                 python.external_path = dependent_package.spec.external_path
                 python._mark_concrete()
-        dependent_package.spec.add_dependency_edge(python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=())
+        dependent_package.spec.add_dependency_edge(
+            python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=()
+        )
 
 
 def get_external_python_for_prefix(python_package):
@@ -4243,7 +4247,9 @@ def get_external_python_for_prefix(python_package):
         spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
     """
     python_externals_installed = [
-        s for s in spack.store.STORE.db.query("python") if s.prefix == python_package.spec.external_path
+        s
+        for s in spack.store.STORE.db.query("python")
+        if s.prefix == python_package.spec.external_path
     ]
     if python_externals_installed:
         return python_externals_installed[0]
@@ -4269,7 +4275,9 @@ def get_external_python_for_prefix(python_package):
     if python_externals_detected:
         return python_externals_detected[0]
 
-    raise StopIteration("No external python could be detected for %s to depend on" % python_package.spec)
+    raise StopIteration(
+        "No external python could be detected for %s to depend on" % python_package.spec
+    )
 
 
 def _inject_patches_variant(root: spack.spec.Spec) -> None:
