@@ -4205,7 +4205,7 @@ def _update_external_dependencies(
         elif "python" in dependent_package.spec.root:
             python = dependent_package.spec.root["python"]
         else:
-            python = dependent_package.get_external_python_for_prefix()
+            python = get_external_python_for_prefix(dependent_package)
             if not python.concrete:
                 repo = spack.repo.PATH.repo_for_pkg(python)
                 python.namespace = repo.namespace
