@@ -4,6 +4,8 @@
 
 import os
 
+from spack_repo.builtin.build_systems.scons import SConsPackage
+
 from spack.package import *
 
 from ..boost.package import Boost

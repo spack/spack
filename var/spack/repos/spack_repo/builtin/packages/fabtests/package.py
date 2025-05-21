@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -42,7 +44,7 @@ class Fabtests(AutotoolsPackage):
 
     depends_on("c", type="build")  # generated
 
-    versions = [
+    for v in (
         "1.21.0",
         "1.20.2",
         "1.20.1",
@@ -66,10 +68,8 @@ class Fabtests(AutotoolsPackage):
         "1.5.3",
         "1.5.0",
         "1.4.2",
-    ]
-
-    for v in versions:
-        depends_on("libfabric@{0}".format(v), when="@{0}".format(v))
+    ):
+        depends_on(f"libfabric@{v}", when=f"@{v}")
 
     def url_for_version(self, version):
         if version >= Version("1.8.1"):

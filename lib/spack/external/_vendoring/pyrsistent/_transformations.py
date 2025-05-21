@@ -117,7 +117,7 @@ else:
 
 
 def _update_structure(structure, kvs, path, command):
-    from pyrsistent._pmap import pmap
+    from _vendoring.pyrsistent._pmap import pmap
     e = structure.evolver()
     if not path and command is discard:
         # Do this in reverse to avoid index problems with vectors. See #92.

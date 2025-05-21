@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -102,7 +104,7 @@ class Adios(AutotoolsPackage):
 
     # Fix a bug in configure.ac that causes automake issues on RHEL 7.7
     patch(
-        "https://github.com/ornladios/ADIOS/pull/207.patch?full_index=1",
+        "https://github.com/ornladios/ADIOS/commit/17aee8aeed64612cd8cfa0b949147091a5525bbe.patch?full_index=1",
         when="@1.12.0: +mpi",
         sha256="aea47e56013b57c2d5d36e23e0ae6010541c3333a84003784437768c2e350b05",
     )

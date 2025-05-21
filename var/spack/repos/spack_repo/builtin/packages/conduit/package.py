@@ -8,6 +8,8 @@ import shutil
 import socket
 from os import environ as env
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -119,9 +121,9 @@ class Conduit(CMakePackage):
     # package dependencies
     ###########################################################################
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     #######################
     # BLT
@@ -184,8 +186,10 @@ class Conduit(CMakePackage):
     #######################
     # Parmetis
     #######################
-    depends_on("parmetis", when="+parmetis")
-    depends_on("metis", when="+parmetis")
+    depends_on("parmetis+shared", when="+parmetis+shared")
+    depends_on("parmetis~shared", when="+parmetis~shared")
+    depends_on("metis+shared", when="+parmetis+shared")
+    depends_on("metis~shared", when="+parmetis~shared")
 
     #######################
     # MPI
@@ -214,9 +218,9 @@ class Conduit(CMakePackage):
     # Add missing include for numeric_limits
     # https://github.com/LLNL/conduit/pull/773
     patch(
-        "https://github.com/LLNL/conduit/pull/773.patch?full_index=1",
+        "https://github.com/LLNL/conduit/commit/eb7dfce2229aac3b9644d422a44948509034e3c6.patch?full_index=1",
         when="@:0.7.2",
-        sha256="784d74942a63acf698c31b39848b46b4b755bf06faa6aa6fb81be61783ec0c30",
+        sha256="379a1b68928d9078e7302efe694f43c51c8f2c26db4a58ab3fd753746b96b284",
     )
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

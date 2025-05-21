@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -40,6 +42,7 @@ class Musica(CMakePackage):
     depends_on("cxx", type="build")
     depends_on("fortran", type="build")
     depends_on("mpi", when="+mpi")
+    depends_on("netcdf-fortran", when="+tuvx")
 
     def cmake_args(self):
         args = [

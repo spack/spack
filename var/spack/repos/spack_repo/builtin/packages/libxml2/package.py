@@ -3,9 +3,13 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems import autotools, cmake, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+
 import llnl.util.filesystem as fs
 
-from spack.build_systems import autotools, cmake, nmake
 from spack.package import *
 
 

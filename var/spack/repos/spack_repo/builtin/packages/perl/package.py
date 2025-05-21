@@ -7,6 +7,8 @@ import re
 import sys
 from contextlib import contextmanager
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from llnl.util.filesystem import windows_sfn
 from llnl.util.lang import match_predicate
 from llnl.util.symlink import symlink

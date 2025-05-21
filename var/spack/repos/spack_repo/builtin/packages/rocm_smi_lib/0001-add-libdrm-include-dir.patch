@@ -1,0 +1,31 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 289cca0..d05a779 100755
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -41,6 +41,8 @@ set(SHARE_INSTALL_PREFIX
+ # provide git to utilities
+ find_program (GIT NAMES git)
+ 
++pkg_check_modules(DRM REQUIRED libdrm)
++pkg_check_modules(AMDGPU_DRM REQUIRED libdrm_amdgpu)
+ 
+ ## Setup the package version based on git tags.
+ set(PKG_VERSION_GIT_TAG_PREFIX "rsmi_pkg_ver")
+diff --git a/rocm_smi/CMakeLists.txt b/rocm_smi/CMakeLists.txt
+index 257309b..a3d7357 100755
+--- a/rocm_smi/CMakeLists.txt
++++ b/rocm_smi/CMakeLists.txt
+@@ -98,6 +98,13 @@ if(FILE_REORG_BACKWARD_COMPATIBILITY)
+                            "$<INSTALL_INTERFACE:${ROCM_SMI}/include>")
+ endif()
+ 
++
++target_include_directories(${ROCM_SMI_TARGET}
++	                   INTERFACE
++			   ${DRM_INCLUDE_DIRS}
++			   ${AMDGPU_DRM_INCLUDE_DIRS}
++)
++
+ ## Set the VERSION and SOVERSION values
+ set_property(TARGET ${ROCM_SMI_TARGET} PROPERTY
+              SOVERSION "${VERSION_MAJOR}")

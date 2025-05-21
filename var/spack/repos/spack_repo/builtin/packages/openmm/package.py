@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 
 
@@ -47,8 +50,8 @@ class Openmm(CMakePackage, CudaPackage):
     # `openmm@7.5.1+cuda`, which is the version currently required by
     # `py-alphafold`.
     patch(
-        "https://github.com/openmm/openmm/pull/3154.patch?full_index=1",
-        sha256="90bc01b34cf998e90220669b3ed55cd3c42000ad364234033aac631ed754e9bd",
+        "https://github.com/openmm/openmm/commit/71bc7c8c70ffbccd82891dec7fd4f4deb99af64d.patch?full_index=1",
+        sha256="9562e03eb8d43ba4d8f0f7b2a3326cc464985fc148804cf9e4340fd7a87bb8e7",
         when="@7.5.1+cuda",
     )
 

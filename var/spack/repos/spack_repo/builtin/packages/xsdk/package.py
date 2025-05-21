@@ -6,6 +6,10 @@
 import sys
 from copy import deepcopy
 
+from spack_repo.builtin.build_systems.bundle import BundlePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 

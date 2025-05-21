@@ -4,6 +4,8 @@
 
 import re
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -64,6 +66,7 @@ class Krb5(AutotoolsPackage):
     depends_on("openssl@:1", when="@:1.19")
     depends_on("openssl")
     depends_on("gettext")
+    depends_on("libedit")
     depends_on("perl", type="build")
     depends_on("findutils", type="build")
     depends_on("pkgconfig", type="build")

@@ -148,8 +148,8 @@ this can expose you to attacks.  Use at your own risk.
 ``ssl_certs``
 --------------------
 
-Path to custom certificats for SSL verification. The value can be a
-filesytem path, or an environment variable that expands to an absolute file path.
+Path to custom certificates for SSL verification. The value can be a
+filesystem path, or an environment variable that expands to an absolute file path.
 The default value is set to the environment variable ``SSL_CERT_FILE``
 to use the same syntax used by many other applications that automatically
 detect custom certificates.

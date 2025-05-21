@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -157,10 +159,10 @@ class Su2(MesonPackage):
             )
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
-        env.set("su2_run", self.prefix.bin)
-        env.set("su2_home", self.prefix)
-        env.prepend_path("path", self.prefix.bin)
-        env.prepend_path("pythonpath", self.prefix.bin)
+        env.set("SU2_RUN", self.prefix.bin)
+        env.set("SU2_HOME", self.prefix)
+        env.prepend_path("PATH", self.prefix.bin)
+        env.prepend_path("PYTHONPATH", self.prefix.bin)
         if "+mpp" in self.spec:
-            env.set("mpp_data_directory", join_path(self.prefix, "mpp-data"))
-            env.prepend_path("ld_library_path", self.prefix.lib)
+            env.set("MPP_DATA_DIRECTORY", join_path(self.prefix, "mpp-data"))
+            env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)

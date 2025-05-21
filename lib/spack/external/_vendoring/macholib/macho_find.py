@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 
-from macholib._cmdline import main as _main
+from _vendoring.macholib._cmdline import main as _main
 
 
 def print_file(fp, path):
@@ -10,7 +10,7 @@ def print_file(fp, path):
 
 def main():
     print(
-        "WARNING: 'macho_find' is deprecated, " "use 'python -mmacholib dump' instead"
+        "WARNING: 'macho_find' is deprecated, " "use 'python -m_vendoring.macholib dump' instead"
     )
     _main(print_file)
 

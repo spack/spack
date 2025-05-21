@@ -1,10 +1,10 @@
 # coding: utf-8
 
-from ruamel.yaml.error import YAMLError
-from ruamel.yaml.compat import nprint, DBG_NODE, dbg, nprintf  # NOQA
-from ruamel.yaml.util import RegExp
+from _vendoring.ruamel.yaml.error import YAMLError
+from _vendoring.ruamel.yaml.compat import nprint, DBG_NODE, dbg, nprintf  # NOQA
+from _vendoring.ruamel.yaml.util import RegExp
 
-from ruamel.yaml.events import (
+from _vendoring.ruamel.yaml.events import (
     StreamStartEvent,
     StreamEndEvent,
     MappingStartEvent,
@@ -16,11 +16,11 @@ from ruamel.yaml.events import (
     DocumentStartEvent,
     DocumentEndEvent,
 )
-from ruamel.yaml.nodes import MappingNode, ScalarNode, SequenceNode
+from _vendoring.ruamel.yaml.nodes import MappingNode, ScalarNode, SequenceNode
 
 if False:  # MYPY
     from typing import Any, Dict, Union, Text, Optional  # NOQA
-    from ruamel.yaml.compat import VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import VersionType  # NOQA
 
 __all__ = ['Serializer', 'SerializerError']
 

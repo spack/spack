@@ -6,6 +6,8 @@ import platform
 import subprocess
 from typing import Tuple
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -21,6 +23,7 @@ class PyNumpy(PythonPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main")
+    version("2.2.6", sha256="e29554e2bef54a90aa5cc07da6ce955accb83f21ab5de01a62c8478897b264fd")
     version("2.2.5", sha256="a9c0d994680cd991b1cb772e8b297340085466a6fe964bc9d4e80f5e2f43c291")
     version("2.2.4", sha256="9ba03692a45d3eef66559efe1d1096c4b9b75c0986b5dff5530c378fb8331d4f")
     version("2.2.3", sha256="dbdc15f0c81611925f382dfa97b3bd0bc2c1ce19d4fe50482cb0ddc12ba30020")
@@ -186,8 +189,8 @@ class PyNumpy(PythonPackage):
 
     # https://github.com/spack/spack/issues/49983
     patch(
-        "https://github.com/numpy/numpy/pull/28713.patch?full_index=1",
-        sha256="e80ed84d31a03ecdebcaa4acd9f725298633b8f2c254beb30e0d44c039921783",
+        "https://github.com/numpy/numpy/commit/7771624a4a4c662f936e07bbf74dd7d553225f23.patch?full_index=1",
+        sha256="1c9cb080017e21e25ca92b70ce10ccf8ef6fcfd30dc936d832611db2f20da4c6",
         when="@2.0:2.2",
     )
 
@@ -202,14 +205,14 @@ class PyNumpy(PythonPackage):
 
     # Backport bug fix for f2py's define for threading when building with Mingw
     patch(
-        "https://github.com/numpy/numpy/pull/20881.patch?full_index=1",
+        "https://github.com/numpy/numpy/commit/932202d24c399f46161caa7464446b55e27fa947.patch?full_index=1",
         sha256="802970a9034d40a8a8f49a03f489d5361d5eabf69249621e6757651448910f1a",
         when="@1.20.3:1.22.1",
     )
     # Patch to update compiler flags.
     # See https://github.com/spack/spack/issues/30373
     patch(
-        "https://github.com/numpy/numpy/pull/21448.patch?full_index=1",
+        "https://github.com/numpy/numpy/commit/fdb5393dc518d57de411db1c364ec36a7192a5a4.patch?full_index=1",
         sha256="e9508c3b3a1e1a24669014a0c1b9f3b009a149ea3886cf711eaef2a32b247fdb",
         when="@1.22.0:1.22.3",
     )

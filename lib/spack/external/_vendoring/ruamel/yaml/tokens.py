@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from ruamel.yaml.compat import _F, nprintf  # NOQA
+from _vendoring.ruamel.yaml.compat import _F, nprintf  # NOQA
 
 if False:  # MYPY
     from typing import Text, Any, Dict, Optional, List  # NOQA

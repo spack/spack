@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -79,7 +81,7 @@ class BlastPlus(AutotoolsPackage):
     depends_on("lzo", when="+lzo")
     depends_on("pcre", when="+pcre")
 
-    depends_on("python", when="+python")
+    depends_on("python@:3.11", when="+python")
     depends_on("perl", when="+perl")
 
     depends_on("lmdb", when="@2.7.1:")
