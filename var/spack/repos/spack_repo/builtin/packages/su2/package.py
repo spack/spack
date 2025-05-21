@@ -139,7 +139,11 @@ class Su2(MesonPackage):
             args.append("-Dmkl_root=" + self.spec["intel-oneapi-mkl"].prefix)
 
         if "+mpi" in self.spec:
-            args.append("-Dwith-mpi=auto")
+            if self.spec["mpi"].name == "intel-oneapi-mpi":
+                args.append("-Dcustom-mpi=true")
+                args.append("-Dextra-deps=impi")
+            else:
+                args.append("-Dwith-mpi=auto")
         else:
             args.append("-Dwith-mpi=disabled")
 
