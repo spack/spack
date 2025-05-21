@@ -20,12 +20,11 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 
+import _vendoring.archspec.cpu
+import _vendoring.archspec.cpu.microarchitecture
+import _vendoring.archspec.cpu.schema
 import py
 import pytest
-
-import archspec.cpu
-import archspec.cpu.microarchitecture
-import archspec.cpu.schema
 
 import llnl.util.lang
 import llnl.util.lock
@@ -372,12 +371,12 @@ def clean_test_environment():
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
-    return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+    return _vendoring.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
 
 
 @pytest.fixture(scope="function")
 def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(archspec.cpu, "host", _host)
+    monkeypatch.setattr(_vendoring.archspec.cpu, "host", _host)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -728,14 +727,14 @@ def mock_uarch_json(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def mock_uarch_configuration(mock_uarch_json):
-    """Create mock dictionaries for the archspec.cpu."""
+    """Create mock dictionaries for the _vendoring.archspec.cpu."""
 
     def load_json():
         with open(mock_uarch_json, encoding="utf-8") as f:
             return json.load(f)
 
     targets_json = load_json()
-    targets = archspec.cpu.microarchitecture._known_microarchitectures()
+    targets = _vendoring.archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -744,8 +743,8 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
-    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+    monkeypatch.setattr(_vendoring.archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(_vendoring.archspec.cpu.microarchitecture, "TARGETS", targets)
 
 
 @pytest.fixture(scope="session")
@@ -773,7 +772,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     config_template = test_config / "config.yaml"
     config.write(config_template.read_text().format(install_tree_root, locks))
 
-    target = str(archspec.cpu.host().family)
+    target = str(_vendoring.archspec.cpu.host().family)
     compilers = tmpdir.join("site", "packages.yaml")
     compilers_template = test_config / "packages.yaml"
     compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
@@ -2117,7 +2116,7 @@ def compiler_factory():
 @pytest.fixture()
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
-    return str(archspec.cpu.host().family)
+    return str(_vendoring.archspec.cpu.host().family)
 
 
 def _true(x):

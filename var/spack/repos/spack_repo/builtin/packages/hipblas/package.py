@@ -8,7 +8,6 @@ from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
-import spack.variant
 from spack.package import *
 
 
@@ -57,7 +56,7 @@ class Hipblas(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        values=disjoint_sets(("auto",), amdgpu_targets)
         .with_default("auto")
         .with_error(
             "the values 'auto' and 'none' are mutually exclusive with any of the other values"

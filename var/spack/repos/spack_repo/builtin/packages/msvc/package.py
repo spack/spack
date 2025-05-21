@@ -9,8 +9,6 @@ from spack_repo.builtin.build_systems import compiler
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
 from spack_repo.builtin.build_systems.generic import Package
 
-import archspec.cpu
-
 import spack.platforms
 from spack.package import *
 
@@ -150,7 +148,7 @@ class Msvc(Package, CompilerPackage):
         # get current platform architecture and format for vcvars argument
         arch = spack.platforms.real_host().default.lower()
         arch = arch.replace("-", "_")
-        if str(archspec.cpu.host().family) == "x86_64":
+        if self.spec.satisfies("target=x86_64:"):
             arch = "amd64"
 
         msvc_version = Version(re.search(Msvc.compiler_version_regex, self.cc).group(1))

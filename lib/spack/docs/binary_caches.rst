@@ -89,7 +89,7 @@ You can see that the mirror is added with ``spack mirror list`` as follows:
     spack-public       https://spack-llnl-mirror.s3-us-west-2.amazonaws.com/
 
 
-At this point, you've create a buildcache, but spack hasn't indexed it, so if
+At this point, you've created a buildcache, but Spack hasn't indexed it, so if
 you run ``spack buildcache list`` you won't see any results. You need to index
 this new build cache as follows:
 
@@ -318,7 +318,7 @@ other system dependencies. However, they are still compatible with tools like
 ``skopeo``, ``podman``, and ``docker`` for pulling and pushing.
 
 .. note::
-    The docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
+    The Docker ``overlayfs2`` storage driver is limited to 128 layers, above which a
     ``max depth exceeded`` error may be produced when pulling the image. There
     are `alternative drivers <https://docs.docker.com/storage/storagedriver/>`_.
 

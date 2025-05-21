@@ -65,7 +65,7 @@ class Mgis(CMakePackage):
     depends_on("fortran", type="build")  # generated
 
     depends_on("tfel@5.0.1", when="@3.0.1")
-    depends_on("tfel@5.0.0", when="@3.0.0")
+    depends_on("tfel@5.0.0", when="@3.0")
     depends_on("tfel@4.2.3", when="@2.2.1")
     depends_on("tfel@4.2.0", when="@2.2.0")
     depends_on("tfel@4.1.0", when="@2.1")

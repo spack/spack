@@ -201,7 +201,19 @@ def repo_migrate(args: Any) -> int:
         repo_v2 = None
         exit_code = 0
 
-    if exit_code == 0 and isinstance(repo_v2, spack.repo.Repo):
+    if not args.fix:
+        tty.error(
+            f"No changes were made to the repository {repo.root} with namespace "
+            f"'{repo.namespace}'. Run with --fix to apply the above changes."
+        )
+
+    elif exit_code == 1:
+        tty.error(
+            f"Repository '{repo.namespace}' could not be migrated to the latest Package API. "
+            "Please check the error messages above."
+        )
+
+    elif isinstance(repo_v2, spack.repo.Repo):
         tty.info(
             f"Repository '{repo_v2.namespace}' was successfully migrated from "
             f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
@@ -212,14 +224,8 @@ def repo_migrate(args: Any) -> int:
             f"    spack repo add {shlex.quote(repo_v2.root)}"
         )
 
-    elif exit_code == 0:
+    else:
         tty.info(f"Repository '{repo.namespace}' was successfully migrated")
-
-    elif not args.fix and exit_code == 1:
-        tty.error(
-            f"No changes were made to the repository {repo.root} with namespace "
-            f"'{repo.namespace}'. Run with --fix to apply the above changes."
-        )
 
     return exit_code
 

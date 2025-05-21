@@ -17,6 +17,7 @@ class Gopls(GoPackage):
 
     license("BSD-3-Clause", checked_by="alecbcs")
 
+    version("0.18.1", sha256="e49fae5dd964432a0ea1661868e858acd2aa66aaf7e1c1d646fb8506f15c8e52")
     version("0.17.1", sha256="5794ebd3302ef4fd08de284834b22810dbb17b7e08efeeaa9b96d5c94eb90d6d")
     version("0.16.2", sha256="be68b3159fcb8cde9ebb8b468f67f03531c58be2de33edbac69e5599f2d4a2c1")
 

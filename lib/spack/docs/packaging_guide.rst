@@ -179,7 +179,7 @@ Spack can be found at :ref:`package_class_structure`.
 
    .. code-block:: python
 
-      class Foo(CmakePackage):
+      class Foo(CMakePackage):
           def cmake_args(self):
               ...
 
@@ -1212,7 +1212,7 @@ class-level tarball URL and VCS. For example:
        version("master",  branch="master")
        version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
        version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
-       version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
+       version("12.8.1",  md5="9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
@@ -1343,7 +1343,7 @@ Submodules
 
      version("1.0.1", tag="v1.0.1", submodules=True)
 
-  If a package has needs more fine-grained control over submodules, define
+  If a package needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
   its only argument.  The function should return a list of submodules to be fetched.
 
@@ -2308,30 +2308,18 @@ looks like this:
 
        parallel = False
 
-Similarly, you can disable parallel builds only for specific make
-commands, as ``libdwarf`` does:
+You can also disable parallel builds only for specific make
+invocation:
 
 .. code-block:: python
-   :emphasize-lines: 9, 12
+   :emphasize-lines: 5
    :linenos:
 
    class Libelf(Package):
        ...
 
        def install(self, spec, prefix):
-           configure("--prefix=" + prefix,
-                     "--enable-shared",
-                     "--disable-dependency-tracking",
-                     "--disable-debug")
-           make()
-
-           # The mkdir commands in libelf's install can fail in parallel
            make("install", parallel=False)
-
-The first make will run in parallel here, but the second will not.  If
-you set ``parallel`` to ``False`` at the package level, then each call
-to ``make()`` will be sequential by default, but packagers can call
-``make(parallel=True)`` to override it.
 
 Note that the ``--jobs`` option works out of the box for all standard
 build systems. If you are using a non-standard build system instead, you
@@ -2507,7 +2495,7 @@ necessary when there are breaking changes in the dependency that the
 package cannot handle. In Spack we often add forward compatibility
 bounds only at the time a new, breaking version of a dependency is
 released. As with backward compatibility, it is typical to see a list
-of forward compatibility bounds in a package file as seperate lines:
+of forward compatibility bounds in a package file as separate lines:
 
 .. code-block:: python
 
@@ -3383,7 +3371,7 @@ the above attribute implementations:
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so"
    ])
 
-   # baz library directories in the baz subdirectory of the foo porefix
+   # baz library directories in the baz subdirectory of the foo prefix
    >>> spec["baz"].libs.directories
    [
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
@@ -5740,7 +5728,7 @@ running each executable, ``foo`` and ``bar``, as independent test parts.
 .. note::
 
    The method name ``copy_test_files`` here is for illustration purposes.
-   You are free to use a name that is more suited to your package.
+   You are free to use a name that is better suited to your package.
 
    The key to copying files for stand-alone testing at build time is use
    of the ``run_after`` directive, which ensures the associated files are
@@ -7249,7 +7237,7 @@ which are not, there is the `checked_by` parameter in the license directive:
 
    license("<license>", when="<when>", checked_by="<github username>")
 
-When you have validated a github license, either when doing so explicitly or
+When you have validated a package license, either when doing so explicitly or
 as part of packaging a new package, please set the `checked_by` parameter
 to your Github username to signal that the license has been manually
 verified.

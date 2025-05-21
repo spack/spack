@@ -19,6 +19,12 @@ class RdmaCore(CMakePackage):
 
     license("GPL-2.0-only OR BSD-2-Clause")
 
+    version("57.0", sha256="5f94c463c931e4a9273f366ca7cb446b54d8bd4732288ade04679886be06862d")
+    version("56.1", sha256="63ce7f2baa7242c2dbc76375dac957c420187dd27f8c5e148efc07971ee522a8")
+    version("55.1", sha256="4257c3210f5f4753682294d1920e797abdeb91e783ed8e86085de1f946eb0e43")
+    version("54.2", sha256="5f8a12a41b2e895f270fe55cd2748cdf4f1c9c3fedb8827bbe264b9a80a4946f")
+    version("53.3", sha256="68ead3ec957884f7d371c7f456d18a464812669a58e9beb0df2d0d7376d5bf4f")
+    version("52.3", sha256="5c3cd2a0230b329d813b7be49eef15b67647f93fae15dff169dbf10730db8505")
     version("52.0", sha256="1f0ce5f2462c982b20d21156707076278807a7adf4d10e9142f3be4bec1b2b83")
     version("51.0", sha256="0a4a55b1351356c2750f26ec9010e8c7370402a13c95799cb8b447cf0134dd61")
     version("50.0", sha256="405b9dd551120da9d1b8944c5ad24ab1f478fb13caedf5bf0d47053a6d6e20cc")
@@ -71,7 +77,7 @@ class RdmaCore(CMakePackage):
     version("17.1", sha256="b47444b7c05d3906deb8771eec3e634984dd83f5e620d5e37d3a83f74f0cc1ba")
     version("13", sha256="e5230fd7cda610753ad1252b40a28b1e9cf836423a10d8c2525b081527760d97")
 
-    patch("libdrm.patch", when="@34:")
+    patch("libdrm.patch", when="@34:52")
 
     variant(
         "static",

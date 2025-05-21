@@ -7,16 +7,15 @@ from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 from spack.package import *
-from spack.variant import ConditionalVariantValues
 
 
 def _std_when(values):
     for v in values:
-        if isinstance(v, ConditionalVariantValues):
-            for c in v:
-                yield (c.value, c.when)
-        else:
-            yield (v, "")
+        if isinstance(v, str):
+            yield v, ""
+            continue
+        for c in v:
+            yield c.value, c.when
 
 
 class Vecgeom(CMakePackage, CudaPackage):

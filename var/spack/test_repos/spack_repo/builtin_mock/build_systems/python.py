@@ -10,7 +10,7 @@ import shutil
 import stat
 from typing import Dict, Iterable, List, Mapping, Optional, Tuple
 
-import archspec
+import _vendoring.archspec
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -240,7 +240,7 @@ class PythonExtension(spack.package_base.PackageBase):
             ):
                 python("-c", f"import {module}")
 
-    def update_external_dependencies(self, extendee_spec=None):
+    def _update_external_dependencies(self, extendee_spec=None):
         """
         Ensure all external python packages have a python dependency
 
@@ -276,7 +276,7 @@ class PythonExtension(spack.package_base.PackageBase):
                         if not python.architecture.os:
                             python.architecture.os = platform.default_operating_system()
                         if not python.architecture.target:
-                            python.architecture.target = archspec.cpu.host().family.name
+                            python.architecture.target = _vendoring.archspec.cpu.host().family.name
 
                     python.external_path = self.spec.external_path
                     python._mark_concrete()

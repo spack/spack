@@ -75,7 +75,6 @@ section-order = [
   "future",
   "standard-library",
   "third-party",
-  "archspec",
   "llnl",
   "spack",
   "first-party",
@@ -84,7 +83,6 @@ section-order = [
 
 [tool.ruff.lint.isort.sections]
 spack = ["spack"]
-archspec = ["archspec"]
 llnl = ["llnl"]
 
 [tool.ruff.lint.per-file-ignores]
@@ -104,13 +102,11 @@ sections = [
   "FUTURE",
   "STDLIB",
   "THIRDPARTY",
-  "ARCHSPEC",
   "LLNL",
   "FIRSTPARTY",
   "LOCALFOLDER",
 ]
 known_first_party = "spack"
-known_archspec = "archspec"
 known_llnl = "llnl"
 known_third_party = ["ruamel", "six"]
 src_paths = "lib"
@@ -264,6 +260,9 @@ substitute = [
   { match = "from attr", replace = "from _vendoring.attr" },
   { match = "import jsonschema", replace = "import _vendoring.jsonschema" },
   { match = "from jsonschema", replace = "from _vendoring.jsonschema" },
+  { match = "archspec.cpu", replace = "_vendoring.archspec.cpu" },
+  { match = "archspec.__version__", replace = "_vendoring.archspec.__version__" },
+  { match = "import archspec", replace = "import _vendoring.archspec" },
 ]
 drop = [
   # contains unnecessary scripts
@@ -285,11 +284,21 @@ drop = [
   "pvectorc.*.so",
   # Trim jsonschema tests
   "jsonschema/tests",
+  "archspec/json/tests",
+  "archspec/vendor/cpuid/.gitignore",
+  "pyrsistent/__init__.pyi",
 ]
 
 [tool.vendoring.typing-stubs]
-six = ["six.__init__", "six.moves.__init__", "six.moves.configparser"]
+_pyrsistent_version = []
+altgraph = []
+archspec = []
 distro = []
+jsonschema = []
+macholib = []
+pyrsistent = []
+ruamel = []
+six = []
 
 [tool.vendoring.license.directories]
 setuptools = "pkg_resources"

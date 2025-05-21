@@ -19,6 +19,7 @@ class Kubectl(GoPackage):
 
     license("Apache-2.0")
 
+    version("1.33.1", sha256="f89203e326de4c827a23ef9aa430d8a3133f62cfa1f5a894e8c85784f01bf055")
     version("1.32.3", sha256="b1ed5abe78a626804aadc49ecb8ade6fd33b27ab8c23d43cd59dc86f6462ac09")
     version("1.31.7", sha256="92005ebd010a8d4fe3a532444c4645840e0af486062611a4d9c8d862414c3f56")
     version("1.30.11", sha256="f30e4082b6a554d4a2bfedd8b2308a5e6012287e15bec94f72987f717bab4133")
@@ -40,13 +41,12 @@ class Kubectl(GoPackage):
             "1.27.0", sha256="536025dba2714ee5e940bb0a6b1df9ca97c244fa5b00236e012776a69121c323"
         )
 
-    with default_args(type="build"):
-        depends_on("bash")
-
-        depends_on("go@1.23:", when="@1.32:")
-        depends_on("go@1.22:", when="@1.30:")
-        depends_on("go@1.21:", when="@1.29:")
-        depends_on("go@1.20:", when="@1.27:")
+    depends_on("bash", type="build")
+    depends_on("go@1.24:", type="build", when="@1.33:")
+    depends_on("go@1.23:", type="build", when="@1.32:")
+    depends_on("go@1.22:", type="build", when="@1.30:")
+    depends_on("go@1.21:", type="build", when="@1.29:")
+    depends_on("go@1.20:", type="build", when="@1.27:")
 
     build_directory = "cmd/kubectl"
 
