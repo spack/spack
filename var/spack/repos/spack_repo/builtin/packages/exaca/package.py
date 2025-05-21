@@ -39,6 +39,7 @@ class Exaca(CMakePackage, CudaPackage, ROCmPackage):
 
     variant("shared", default=True, description="Build shared libraries")
     variant("testing", default=False, description="Build unit tests")
+    variant("finch", default=False, description="Build with Finch heat transfer support")
 
     depends_on("cxx", type="build")  # generated
 
@@ -50,6 +51,8 @@ class Exaca(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("kokkos@4.0:", when="@1.3:")
     depends_on("mpi")
     depends_on("nlohmann-json", when="@1.2:")
+
+    depends_on("finch", when="@2.0: +finch")
 
     for _backend in _kokkos_backends:
         # Handled separately below
@@ -80,5 +83,8 @@ class Exaca(CMakePackage, CudaPackage, ROCmPackage):
         # keeps the spack wrapper
         if self.spec.satisfies("+rocm"):
             env["SPACK_CXX"] = self.spec["hip"].hipcc
+
+        if self.spec.satisfies("@2.0:"):
+            options += [self.define_from_variant("ExaCA_REQUIRE_FINCH", "finch")]
 
         return options
