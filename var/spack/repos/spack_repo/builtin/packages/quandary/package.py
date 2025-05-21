@@ -28,16 +28,12 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("^blt@:0.3.6", when="+rocm")
 
     with when("+rocm"):
-        depends_on("petsc+rocm")
         for arch_ in ROCmPackage.amdgpu_targets:
-            depends_on(
-                "petsc amdgpu_target={0}".format(arch_), when="amdgpu_target={0}".format(arch_)
-            )
+            depends_on(f"petsc+rocm amdgpu_target={arch_}", when=f"amdgpu_target={arch_}")
 
     with when("+cuda"):
-        depends_on("petsc+cuda")
         for sm_ in CudaPackage.cuda_arch_values:
-            depends_on("petsc cuda_arch={0}".format(sm_), when="cuda_arch={0}".format(sm_))
+            depends_on(f"petsc+cuda cuda_arch={sm_}", when=f"cuda_arch={sm_}")
 
     variant("slepc", default=False, description="Build with Slepc library")
     variant("debug", default=False, description="Debug mode")
