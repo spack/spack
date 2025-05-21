@@ -3889,10 +3889,10 @@ class SpecBuilder:
             compiler_str = external_spec_deps[0]
             self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
 
-        # If this is an extension, update the dependencies to include the extendee
+        # Packages that are external - but normally depend on python -
+        # get an edge inserted to python as a post-concretization step
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
-
         if extendee_spec and extendee_spec.name == "python":
             candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
             _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
