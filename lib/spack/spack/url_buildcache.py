@@ -20,7 +20,6 @@ import _vendoring.jsonschema
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
-from spack.util.executable import which
 import spack.config as config
 import spack.database
 import spack.error
@@ -35,6 +34,7 @@ import spack.util.web as web_util
 from spack.schema.url_buildcache_manifest import schema as buildcache_manifest_schema
 from spack.util.archive import ChecksumWriter
 from spack.util.crypto import hash_fun_for_algo
+from spack.util.executable import which
 
 #: The build cache layout version that this version of Spack creates.
 #: Version 3: Introduces content-addressable tarballs
@@ -1130,7 +1130,9 @@ def _entries_from_cache_aws_cli(
     return file_list, read_fn
 
 
-def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None):
+def _entries_from_cache_fallback(
+    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
+):
     """Use spack.util.web module to get a list of all the specs at the remote url.
 
     Args:
@@ -1170,9 +1172,7 @@ def _entries_from_cache_fallback(url: str, tmpspecsdir: str, component_type: Opt
 
 
 def get_entries_from_cache(
-    url: str,
-    tmpspecsdir: str,
-    component_type: Optional[BuildcacheComponent] = None,
+    url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
 ):
     """Get a list of all the spec files in the mirror and a function to
     read them.

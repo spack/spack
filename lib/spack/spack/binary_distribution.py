@@ -95,9 +95,9 @@ from .url_buildcache import (
     MirrorForSpec,
     MirrorURLAndVersion,
     URLBuildcacheEntry,
+    get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
-    get_entries_from_cache,
 )
 
 
