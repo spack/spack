@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 from os.path import basename, isdir
+import sys
 
 from llnl.util.link_tree import LinkTree
 
@@ -51,7 +52,7 @@ class IntelOneApiPackage(Package):
     ]:
         conflicts(c, msg="This package in only available for x86_64 and Linux/Windows")
 
-    # env mods are not an option on Windows AFAICT
+    # env mods are mandatory on Windows, no variant option
     for plat in ["linux", "freebsd"]:
         # Add variant to toggle environment modifications from vars.sh
         variant("envmods", default=True, description="Toggles environment modifications", when=f"platform={plat}")
@@ -133,9 +134,27 @@ class IntelOneApiPackage(Package):
                 "--install-dir",
                 self.prefix,
             )
-
             if spack.util.path.get_user() == "root":
                 shutil.rmtree("/var/intel/installercache", ignore_errors=True)
+
+        elif sys.platform == "win32":
+            # Installer can be executed directly
+            # as it's a standalone executable
+            installer = Executable(installer_path)
+            installer_args = [
+                "--extract-folder",
+                self.stage.source_path,
+                "--remove-extracted-files",
+                "yes",
+                "-a",
+                "-s",
+                "--eula",
+                "accept",
+                "--install-dir",
+                self.prefix
+            ]
+            installer(*installer_args)
+            
 
         # Some installers have a bug and do not return an error code when failing
         install_dir = self.component_prefix
@@ -151,13 +170,17 @@ class IntelOneApiPackage(Package):
 
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
-        # Only if environment modifications are desired (default is +envmods)
-        if "+envmods" in self.spec:
-            env.extend(
-                EnvironmentModifications.from_sourcing_file(
-                    self.component_prefix.env.join("vars.sh"), *self.env_script_args
+        if sys.platform == "win32":
+            # env mods can't be conditional on Windows
+            pass
+        else:
+            # Only if environment modifications are desired (default is +envmods)
+            if "+envmods" in self.spec:
+                env.extend(
+                    EnvironmentModifications.from_sourcing_file(
+                        self.component_prefix.env.join("vars.sh"), *self.env_script_args
+                    )
                 )
-            )
 
     def symlink_dir(self, src, dest):
         # Taken from: https://github.com/spack/spack/pull/31285/files
