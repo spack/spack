@@ -2555,7 +2555,9 @@ class SpackSolverSetup:
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
 
         edges = spec.edges_from_dependents()
-        virtuals = sorted({x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])})
+        virtuals = sorted(
+            {x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])}
+        )
         if not body and not spec.concrete:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
@@ -2608,9 +2610,7 @@ class SpackSolverSetup:
                     # skip build dependencies of already-installed specs
                     if concrete_build_deps or dtype != dt.BUILD:
                         edge_clauses.append(
-                            fn.attr(
-                                "depends_on", spec.name, dep.name, dt.flag_to_string(dtype)
-                            )
+                            fn.attr("depends_on", spec.name, dep.name, dt.flag_to_string(dtype))
                         )
                         for virtual_name in dspec.virtuals:
                             edge_clauses.append(
@@ -2624,9 +2624,7 @@ class SpackSolverSetup:
                     edge_clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
                 elif not concrete_build_deps and dspec.depflag:
                     edge_clauses.append(
-                        fn.attr(
-                            "concrete_build_dependency", spec.name, dep.name, dep.dag_hash()
-                        )
+                        fn.attr("concrete_build_dependency", spec.name, dep.name, dep.dag_hash())
                     )
                     for virtual_name in dspec.virtuals:
                         edge_clauses.append(
