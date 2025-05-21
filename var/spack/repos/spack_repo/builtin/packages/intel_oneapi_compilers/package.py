@@ -368,16 +368,19 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        # Intel compilers on Windows do not have a proper version argument
-        # Errors out and prints version info with no args
-        match = re.search(
-            cls.compiler_version_regex,
-            spack.build_systems.compiler.compiler_output(
-                exe, version_argument=None, ignore_errors=1
-            ),
-        )
-        if match:
-            return match.group(1)
+        if not IS_WINDOWS:
+            return super().determine_version(exe)
+        else:
+            # Intel compilers on Windows do not have a proper version argument
+            # Errors out and prints version info with no args
+            match = re.search(
+                cls.compiler_version_regex,
+                spack.build_systems.compiler.compiler_output(
+                    exe, version_argument=None, ignore_errors=(1,)
+                ),
+            )
+            if match:
+                return match.group(1)
 
     @classmethod
     def determine_variants(cls, exes, version_str):
