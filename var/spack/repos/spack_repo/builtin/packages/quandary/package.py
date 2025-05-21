@@ -22,7 +22,7 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main", preferred=True)
     version("learning", branch="learning")
 
-    variant("slepc", default=False, description="Build with Slepc library")
+    variant("slepc", default=False, description="Build with SLEPc library")
     variant("debug", default=False, description="Debug mode")
     variant("test", default=False, description="Add dependencies needed for testing")
 
