@@ -18,6 +18,10 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     version("main", branch="main", preferred=True)
     version("learning", branch="learning")
 
+    variant("slepc", default=False, description="Build with Slepc library")
+    variant("debug", default=False, description="Debug mode")
+    variant("test", default=False, description="Add dependencies needed for testing")
+
     depends_on("cxx", type="build")
 
     depends_on("petsc~hypre~metis~fortran")
@@ -34,11 +38,6 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     with when("+cuda"):
         for sm_ in CudaPackage.cuda_arch_values:
             depends_on(f"petsc+cuda cuda_arch={sm_}", when=f"cuda_arch={sm_}")
-
-    variant("slepc", default=False, description="Build with Slepc library")
-    variant("debug", default=False, description="Debug mode")
-
-    variant("test", default=False, description="Add dependencies needed for testing")
 
     with when("+test"):
         depends_on("python", type="run")
