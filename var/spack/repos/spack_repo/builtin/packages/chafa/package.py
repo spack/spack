@@ -13,13 +13,14 @@ class Chafa(AutotoolsPackage):
     suitable for display in a terminal."""
 
     homepage = "https://hpjansson.org/chafa/"
-    url = "https://hpjansson.org/chafa/releases/chafa-1.16.0.tar.xz"
+    url = "https://hpjansson.org/chafa/releases/chafa-1.16.1.tar.xz"
     git = "https://github.com/hpjansson/chafa.git"
 
     license("LGPL-3.0-or-later", checked_by="Buldram")
     maintainers("Buldram")
 
     version("master", branch="master")
+    version("1.16.1", sha256="4a25debb71530baf0a748b15cfee6b8da6b513f696d9484987eaf410ecce1129")
     version("1.16.0", sha256="bf863e57b6200b696bde1742aa95d7feb8cd23b9df1e91e91859b2b1e54fd290")
     version("1.14.5", sha256="7b5b384d5fb76a641d00af0626ed2115fb255ea371d9bef11f8500286a7b09e5")
     version("1.14.4", sha256="d0708a63f05b79269dae862a42671e38aece47fbd4fc852904bca51a65954454")
@@ -82,7 +83,7 @@ class Chafa(AutotoolsPackage):
         install(
             "tools/completions/zsh-completion.zsh", zsh_completion_path(self.prefix) / "_chafa"
         )
-        if self.spec.satisfies("@master"):
+        if self.spec.satisfies("@1.16.1:"):
             mkdirp(fish_completion_path(self.prefix))
             install(
                 "tools/completions/fish-completion.fish",
