@@ -92,9 +92,10 @@ def _get_user_cache_path():
     h.update(spack_root.encode())
     subdir = h.hexdigest()[:8]
 
-    return os.path.join(
-        os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep), subdir
-    )
+    return os.path.expanduser(
+           os.getenv("SPACK_USER_CACHE_PATH") or
+           os.path.join("~%s.spack" % os.sep, subdir)
+        )
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
