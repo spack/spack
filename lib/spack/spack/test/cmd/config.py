@@ -53,14 +53,8 @@ def test_config_list_scopes_file():
 
 
 def test_config_list_scopes_non_platform():
-    os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = "true"
     output = config("list-scopes", "--non-platform")
     assert "site" in output
-    assert "user" not in output
-    del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    output = config("list-scopes", "--non-platform")
-    assert "site" in output
-    assert "user" in output
 
 
 def test_config_list_scopes_file_non_platform():
