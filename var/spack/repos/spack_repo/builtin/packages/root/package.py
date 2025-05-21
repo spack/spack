@@ -36,6 +36,13 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
     version("develop", branch="master")
 
+    # Pre-release versions
+    version(
+        "6.36.00-rc1",
+        sha256="5a407620fe0164cbf6c9f26b1ae882a17c10151472d7268fbad176027564b1c0",
+        preferred=False,
+    )
+
     # Production version
     version("6.34.08", sha256="806045b156de03fe8f5661a670eab877f2e4d2da6c234dc3e31e98e2d7d96fe8")
     version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
@@ -241,16 +248,20 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False, description="Enable support for MySQL databases")
+    variant(
+        "mysql", when="@:6.36", default=False, description="Enable support for MySQL databases"
+    )
     variant("opengl", default=True, description="Enable OpenGL support")
     variant(
         "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
     )
-    variant("postgres", default=False, description="Enable postgres support")
+    variant("postgres", when="@:6.36", default=False, description="Enable postgres support")
     variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
-    variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
+    variant("qt4", when="@:6.17", default=False, description="Enable Qt4 graphics backend")
+    variant("qt5", when="@6.12:6.34", default=False, description="Enable Qt5 web-based display")
+    variant("qt6", when="@6.26:", default=False, description="Enable Qt6 web-based display")
     variant("r", default=False, description="Enable R ROOT bindings")
     variant("rpath", default=True, description="Enable RPATH")
     variant("roofit", default=True, description="Build the libRooFit advanced fitting package")
@@ -261,7 +272,13 @@ class Root(CMakePackage):
     variant("ssl", default=False, description="Enable SSL encryption support")
     variant("table", when="@:6.17", default=False, description="Build libTable contrib library")
     variant("tbb", default=True, description="TBB multi-threading support")
-    variant("threads", default=True, description="Enable using thread library")
+    variant(
+        "tiff",
+        when="@6.36.00",
+        default=True,
+        description="Support TIFF in image processing (requires libtiff)",
+    )
+    variant("threads", when="@:6.19.01", default=True, description="Enable using thread library")
     variant("tmva", default=False, description="Build TMVA multi variate analysis library")
     variant(
         "tmva-cpu",
@@ -321,7 +338,7 @@ class Root(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17", "20"),
+        values=("11", "14", "17", "20", "23"),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -376,8 +393,19 @@ class Root(CMakePackage):
     depends_on("glu", when="+opengl")
     depends_on("libglx", when="+opengl+x")
 
-    # Qt4
-    depends_on("qt@:4", when="+qt4")
+    # Qt
+    with when("+qt4"):
+        conflicts("+qt5", msg="+qt? options are mutually exclusive")
+        conflicts("+qt6", msg="+qt? options are mutually exclusive")
+        depends_on("qt@4.0.0:4")
+    with when("+qt5"):
+        conflicts("+qt4", msg="+qt? options are mutually exclusive")
+        conflicts("+qt6", msg="+qt? options are mutually exclusive")
+        depends_on("qt@5.0.0:5")
+    with when("+qt6"):
+        conflicts("+qt4", msg="+qt? options are mutually exclusive")
+        conflicts("+qt5", msg="+qt? options are mutually exclusive")
+        depends_on("qt-base +accessibility +gui")
 
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
@@ -406,11 +434,11 @@ class Root(CMakePackage):
     depends_on("graphviz", when="+graphviz")
     depends_on("gsl", when="+gsl")
     depends_on("jemalloc", when="+jemalloc")
-    depends_on("mysql-client", when="+mysql")
+    depends_on("mysql-client", when="+mysql @:6.36")
     depends_on("openssl", when="+ssl")
     depends_on("openssl", when="+davix")  # Also with davix
     depends_on("oracle-instant-client@19.10.0.0.0", when="+oracle @:6.24.01")
-    depends_on("postgresql", when="+postgres")
+    depends_on("postgresql", when="+postgres @:6.36")
     depends_on("pythia6+root", when="+pythia6")
     depends_on("pythia8", when="+pythia8")
     depends_on("r", when="+r", type=("build", "run"))
@@ -485,6 +513,9 @@ class Root(CMakePackage):
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
+    conflicts(
+        "cxxstd=23", when="@:6.36.00", msg="C++23 support requires root version at least 6.36.00"
+    )
 
     conflicts("%gcc@:10", when="cxxstd=20")
 
@@ -553,6 +584,8 @@ class Root(CMakePackage):
             v.append("cxxstd=17")
         elif "cxx20" in f:
             v.append("cxxstd=20")
+        elif "cxx23" in f:
+            v.append("cxxstd=23")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
@@ -589,16 +622,22 @@ class Root(CMakePackage):
             _add_variant(v, f, "memstat", "+memstat")
         _add_variant(v, f, ("minuit", "minuit2"), "+minuit")
         _add_variant(v, f, "mlp", "+mlp")
-        _add_variant(v, f, "mysql", "+mysql")
+        if Version(version_str) <= Version("6.36"):
+            _add_variant(v, f, "mysql", "+mysql")
         if Version(version_str) <= Version("6.30"):
             _add_variant(v, f, "oracle", "+oracle")
-        _add_variant(v, f, "pgsql", "+postgres")
+        if Version(version_str) <= Version("6.36"):
+            _add_variant(v, f, "pgsql", "+postgres")
         if Version(version_str) <= Version("6.30"):
             _add_variant(v, f, "pythia6", "+pythia6")
         _add_variant(v, f, "pythia8", "+pythia8")
         _add_variant(v, f, "pyroot", "+python")
         if Version(version_str) <= Version("6.17"):
             _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
+        if Version(version_str) >= Version("6.12") and Version(version_str) <= Version("6.34"):
+            _add_variant(v, f, "qt5web", "+qt5")
+        if Version(version_str) >= Version("6.26"):
+            _add_variant(v, f, "qt6web", "+qt6")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
         # webui feature renamed to webgui in 6.18
@@ -613,7 +652,8 @@ class Root(CMakePackage):
         _add_variant(v, f, "ssl", "+ssl")
         if Version(version_str) <= Version("6.17"):
             _add_variant(v, f, "table", "+table")
-        _add_variant(v, f, "thread", "+threads")
+        if Version(version_str) <= Version("6.19.01"):
+            _add_variant(v, f, "thread", "+threads")
         _add_variant(v, f, "tmva", "+tmva")
         _add_variant(v, f, "tmva-cpu", "+tmva-cpu")
         _add_variant(v, f, "tmva-gpu", "+tmva-gpu")
@@ -640,24 +680,28 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("explicitlink", True),
             define("fail-on-missing", True),
             define_from_variant("fortran"),
             define_from_variant("gminimal"),
             define("gnuinstall", True),
             define("libcxx", False),
-            define("pch", True),
             define("roottest", False),
             define_from_variant("rpath"),
             define("runtime_cxxmodules", False),
             define("shared", True),
             define("soversion", True),
             define("testing", self.run_tests),
-            define_from_variant("thread", "threads"),
             # The following option makes sure that Cling will call the compiler
             # it was compiled with at run time; see #17488, #18078 and #23886
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
+
+        if self.spec.satisfies("@:6.19.01"):
+            options += [
+                define("explicitlink", True),
+                define("pch", True),
+                define_from_variant("thread", "threads"),
+            ]
 
         if self.spec.satisfies("@:6.28"):
             options.append(define("cxxmodules", False))
@@ -701,6 +745,13 @@ class Root(CMakePackage):
                 )
             )
 
+        if self.spec.satisfies("@6.36.00:"):
+            options += [
+                define("builtin_gif", False),
+                define("builtin_jpeg", False),
+                define("builtin_png", False),
+            ]
+
         # Features
         options += [
             define("afdsmrgd", False),
@@ -708,12 +759,10 @@ class Root(CMakePackage):
             define("alien", False),
             define_from_variant("arrow"),
             define("asimage", True),
-            define("astiff", True),
             define("bonjour", False),
             define("castor", False),
             define("ccache", False),
             define("chirp", False),
-            define("cling", True),
             define_from_variant("cocoa", "aqua"),
             define("dataframe", True),
             define_from_variant("davix"),
@@ -744,11 +793,8 @@ class Root(CMakePackage):
             define_from_variant("minuit"),
             define_from_variant("mlp"),
             define("monalisa", False),
-            define_from_variant("mysql"),
-            define("odbc", False),
             define_from_variant("opengl"),
             define_from_variant("oracle"),
-            define_from_variant("pgsql", "postgres"),
             define_from_variant("pythia6"),
             define_from_variant("pythia8"),
             define_from_variant("qt", "qt4"),  # See conflicts
@@ -798,6 +844,9 @@ class Root(CMakePackage):
         if self.spec.satisfies("@6.17.02:"):
             options.append(define_from_variant("tmva-pymva"))
 
+        if self.spec.satisfies("@:6.19.01"):
+            options += [define("astiff", True), define("cling", True)]
+
         if self.spec.satisfies("@6.20.02:"):
             options.append(define_from_variant("cudnn"))
             options.append(define_from_variant("pyroot", "python"))
@@ -811,9 +860,21 @@ class Root(CMakePackage):
             options.append(define_from_variant("minuit2", "minuit"))
 
         if self.spec.satisfies("@6.34:"):
-            options.append(define_from_variant("tmva-cudnn", "tmva-cudnn"))
-            options.append(define_from_variant("tmva-cudnn", "cudnn"))
-            options.append(define_from_variant("tpython"))
+            options += [
+                define_from_variant("tmva-cudnn", "tmva-cudnn"),
+                define_from_variant("tmva-cudnn", "cudnn"),
+                define_from_variant("tpython"),
+            ]
+
+        if self.spec.satisfies("@:6.36"):
+            options += [
+                define_from_variant("mysql"),
+                define_from_variant("pgsql", "postgres"),
+                define("odbc", False),
+            ]
+
+        if self.spec.satisfies("@6.36.00:"):
+            options.append(define_from_variant("asimage_tiff", "tiff"))
 
         # #################### Compiler options ####################
 
