@@ -12,6 +12,8 @@ import sys
 from shutil import copy
 from typing import Dict, List
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from llnl.util.lang import dedupe
 
 from spack.build_environment import dso_suffix, stat_suffix
@@ -747,7 +749,7 @@ class Python(Package):
 
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
-        :meth:`~spack.build_systems.autotools.AutotoolsPackage.configure_args`
+        :meth:`~spack_repo.builtin.build_systems.autotools.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
         with working_dir(self.stage.source_path, create=True):

@@ -5,6 +5,9 @@
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 

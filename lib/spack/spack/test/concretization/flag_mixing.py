@@ -46,7 +46,7 @@ import spack.util.spack_yaml as syaml
 
 @pytest.fixture
 def test_repo(mutable_config, monkeypatch, mock_stage):
-    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "flags.test"
+    repo_dir = pathlib.Path(spack.paths.test_repos_path) / "spack_repo" / "flags_test"
     with spack.repo.use_repositories(str(repo_dir)) as mock_repo_path:
         yield mock_repo_path
 

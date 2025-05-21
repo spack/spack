@@ -9,3 +9,4 @@ macholib==1.16.2
   altgraph==0.17.3
 ruamel.yaml==0.17.21
 typing_extensions==4.1.1
+archspec @ git+https://github.com/archspec/archspec.git@38ce485258ffc4fc6dd6688f8dc90cb269478c47

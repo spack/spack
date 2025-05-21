@@ -7,6 +7,8 @@ import os
 import re
 import shutil
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 

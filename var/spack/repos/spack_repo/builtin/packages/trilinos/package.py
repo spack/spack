@@ -7,6 +7,10 @@ import pathlib
 import re
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *

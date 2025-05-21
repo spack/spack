@@ -25,7 +25,7 @@ import traceback
 import warnings
 from typing import List, Tuple
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -734,7 +734,7 @@ def _compatible_sys_types():
     """
     host_platform = spack.platforms.host()
     host_os = str(host_platform.default_operating_system())
-    host_target = archspec.cpu.host()
+    host_target = _vendoring.archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors
 
     compatible_archs = [
@@ -794,7 +794,7 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if "modules" in info:
-        generic_arch = archspec.cpu.host().family
+        generic_arch = _vendoring.archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
         specs = spack.store.STORE.db.query(module_spec)
         if specs:

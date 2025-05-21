@@ -4,8 +4,10 @@
 import os
 import sys
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -105,7 +107,7 @@ class SetupEnvironment:
             env.append_flags("CFLAGS", "--diag_suppress 550")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
+class MakefileBuilder(makefile.MakefileBuilder, SetupEnvironment):
     @property
     def compile_options(self):
         options = []
@@ -216,7 +218,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnviron
         os.system("%s %s" % (test_bin("mesh2dual"), graph))
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+class CMakeBuilder(cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         options = [
             self.define_from_variant("SHARED", "shared"),

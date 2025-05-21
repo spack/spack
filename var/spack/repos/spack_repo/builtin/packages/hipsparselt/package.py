@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.variant
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -38,7 +40,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        values=disjoint_sets(("auto",), amdgpu_targets)
         .with_default("auto")
         .with_error(
             "the values 'auto' and 'none' are mutually exclusive with any of the other values"

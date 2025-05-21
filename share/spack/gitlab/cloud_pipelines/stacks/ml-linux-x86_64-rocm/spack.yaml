@@ -19,6 +19,8 @@ spack:
       - +rocm
       - amdgpu_target=gfx90a
       - ~flash_attention
+    miopen-hip:
+      require: ~ck
 
   specs:
     # Horovod

@@ -6,6 +6,8 @@ import os
 import platform
 import sys
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.operating_systems.linux_distro import kernel_version
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *

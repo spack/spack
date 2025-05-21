@@ -1,16 +1,21 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import io
 import os
 import pathlib
 
 import pytest
 
+from llnl.util.filesystem import working_dir
+
 import spack.config
 import spack.environment as ev
 import spack.main
 import spack.repo
+import spack.repo_migrate
 from spack.main import SpackCommand
+from spack.util.executable import Executable
 
 repo = spack.main.SpackCommand("repo")
 env = SpackCommand("env")
@@ -71,63 +76,99 @@ spack:
             assert current_dir in repos_specs
 
 
+OLD_7ZIP = b"""\
+# some comment
+
+from spack.package import *
+
+class _7zip(Package):
+    pass
+"""
+
+NEW_7ZIP = b"""\
+# some comment
+
+from spack_repo.builtin.build_systems.generic import Package
+from spack.package import *
+
+class _7zip(Package):
+    pass
+"""
+
+OLD_NUMPY = b"""\
+# some comment
+
+from spack.package import *
+
+class PyNumpy(CMakePackage):
+    generator("ninja")
+"""
+
+NEW_NUMPY = b"""\
+# some comment
+
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack.package import *
+
+class PyNumpy(CMakePackage):
+    generator("ninja")
+"""
+
+
 def test_repo_migrate(tmp_path: pathlib.Path, config):
-    path, _ = spack.repo.create_repo(str(tmp_path), "mockrepo", package_api=(2, 0))
-    pkgs_path = spack.repo.from_path(path).packages_path
+    old_root, _ = spack.repo.create_repo(str(tmp_path), "org.repo", package_api=(1, 0))
+    pkgs_path = pathlib.Path(spack.repo.from_path(old_root).packages_path)
+    new_root = pathlib.Path(old_root) / "spack_repo" / "org" / "repo"
 
-    pkg1 = pathlib.Path(os.path.join(pkgs_path, "foo", "package.py"))
-    pkg2 = pathlib.Path(os.path.join(pkgs_path, "bar", "package.py"))
+    pkg_7zip_old = pkgs_path / "7zip" / "package.py"
+    pkg_numpy_old = pkgs_path / "py-numpy" / "package.py"
+    pkg_py_7zip_new = new_root / "packages" / "_7zip" / "package.py"
+    pkg_py_numpy_new = new_root / "packages" / "py_numpy" / "package.py"
 
-    pkg1.parent.mkdir(parents=True)
-    pkg2.parent.mkdir(parents=True)
+    pkg_7zip_old.parent.mkdir(parents=True)
+    pkg_numpy_old.parent.mkdir(parents=True)
 
-    pkg1.write_text(
-        """\
-# some comment
+    pkg_7zip_old.write_bytes(OLD_7ZIP)
+    pkg_numpy_old.write_bytes(OLD_NUMPY)
 
-from spack.package import *
+    repo("migrate", "--fix", old_root)
 
-class Foo(Package):
-    pass
-""",
-        encoding="utf-8",
-    )
-    pkg2.write_text(
-        """\
-# some comment
+    # old files are not touched since they are moved
+    assert pkg_7zip_old.read_bytes() == OLD_7ZIP
+    assert pkg_numpy_old.read_bytes() == OLD_NUMPY
 
-from spack.package import *
+    # new files are created and have updated contents
+    assert pkg_py_7zip_new.read_bytes() == NEW_7ZIP
+    assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
 
-class Bar(CMakePackage):
-    generator("ninja")
-""",
-        encoding="utf-8",
-    )
 
-    repo("migrate", path)
+@pytest.mark.not_on_windows("Known failure on windows")
+def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
+    root, _ = spack.repo.create_repo(str(tmp_path), "foo", package_api=(2, 0))
+    r = pathlib.Path(root)
+    pkg_7zip = r / "packages" / "_7zip" / "package.py"
+    pkg_py_numpy_new = r / "packages" / "py_numpy" / "package.py"
+    pkg_broken = r / "packages" / "broken" / "package.py"
 
-    assert (
-        pkg1.read_text(encoding="utf-8")
-        == """\
-# some comment
+    pkg_7zip.parent.mkdir(parents=True)
+    pkg_py_numpy_new.parent.mkdir(parents=True)
+    pkg_broken.parent.mkdir(parents=True)
+    pkg_7zip.write_bytes(OLD_7ZIP)
+    pkg_py_numpy_new.write_bytes(OLD_NUMPY)
+    pkg_broken.write_bytes(b"syntax(error")
 
-from spack.build_systems.generic import Package
-from spack.package import *
+    stderr = io.StringIO()
 
-class Foo(Package):
-    pass
-"""
-    )
+    with open(tmp_path / "imports.patch", "w", encoding="utf-8") as stdout:
+        spack.repo_migrate.migrate_v2_imports(
+            str(r / "packages"), str(r), fix=False, out=stdout, err=stderr
+        )
 
-    assert (
-        pkg2.read_text(encoding="utf-8")
-        == """\
-# some comment
+    assert f"Skipping {pkg_broken}" in stderr.getvalue()
 
-from spack.build_systems.cmake import CMakePackage, generator
-from spack.package import *
+    # apply the patch and verify the changes
+    with working_dir(str(r)):
+        git("apply", str(tmp_path / "imports.patch"))
 
-class Bar(CMakePackage):
-    generator("ninja")
-"""
-    )
+    assert pkg_7zip.read_bytes() == NEW_7ZIP
+    assert pkg_py_numpy_new.read_bytes() == NEW_NUMPY
