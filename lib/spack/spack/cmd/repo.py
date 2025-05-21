@@ -72,8 +72,18 @@ def setup_parser(subparser):
     migrate_parser.add_argument(
         "namespace_or_path", help="path to a Spack package repository directory"
     )
-    migrate_parser.add_argument(
-        "--fix", action="store_true", help="automatically fix the imports in the package files"
+    patch_or_fix = migrate_parser.add_mutually_exclusive_group(required=True)
+    patch_or_fix.add_argument(
+        "--dry-run",
+        action="store",
+        metavar="PATCH_FILE",
+        dest="patch",
+        help="do not modify the repository, but write a patch file",
+    )
+    patch_or_fix.add_argument(
+        "--fix",
+        action="store_true",
+        help="automatically migrate the repository to the latest Package API",
     )
 
 
@@ -191,17 +201,26 @@ def repo_migrate(args: Any) -> int:
     if repo is None:
         tty.die(f"No such repository: {args.namespace_or_path}")
 
+    if args.patch:
+        patch_file = open(args.patch, "wb")
+        fix = False
+    else:
+        patch_file = None
+        fix = True
+
     if (1, 0) <= repo.package_api < (2, 0):
-        success, repo_v2 = migrate_v1_to_v2(repo, fix=args.fix)
+        success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
         exit_code = 0 if success else 1
     elif (2, 0) <= repo.package_api < (3, 0):
         repo_v2 = None
-        exit_code = 0 if migrate_v2_imports(repo.packages_path, repo.root, fix=args.fix) else 1
+        exit_code = (
+            0 if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file) else 1
+        )
     else:
         repo_v2 = None
         exit_code = 0
 
-    if not args.fix:
+    if not fix:
         tty.error(
             f"No changes were made to the repository {repo.root} with namespace "
             f"'{repo.namespace}'. Run with --fix to apply the above changes."
@@ -226,6 +245,9 @@ def repo_migrate(args: Any) -> int:
 
     else:
         tty.info(f"Repository '{repo.namespace}' was successfully migrated")
+
+    if patch_file is not None:
+        patch_file.close()
 
     return exit_code
 
