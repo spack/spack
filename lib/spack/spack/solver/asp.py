@@ -304,7 +304,7 @@ def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[A
     for x in facts:
         current_name = x.args[1]
         if current_name in build_deps:
-            x.name = "build_requirement"
+            x.name = "node_requirement"
             result.append(fn.attr("direct_dependency", build_deps[current_name], x))
             continue
 
@@ -1183,7 +1183,7 @@ class PyclingoDriver:
         if sys.platform == "win32":
             tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
             spack.bootstrap.core.ensure_winsdk_external_or_raise()
-        control_files = ["concretize.lp", "heuristic.lp", "display.lp"]
+        control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
         if using_libc_compatibility():
@@ -2684,7 +2684,7 @@ class SpackSolverSetup:
 
                 # Head of a rule
                 for clause in dependency_clauses:
-                    clause.name = "build_requirement"
+                    clause.name = "node_requirement"
                     edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
 
         clauses.extend(edge_clauses)

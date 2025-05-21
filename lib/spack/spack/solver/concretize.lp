@@ -559,7 +559,7 @@ error(100, "Cannot satisfy the request on {0} to have the following hash {1}", B
 % External nodes
 :- attr("direct_dependency", ParentNode, build_requirement("node", BuildDependency)),
    external(ParentNode),
-   not attr("external_build_requirement", ParentNode, build_requirement("node", BuildDependency)).
+   not attr("external_build_requirement", ParentNode, node_requirement("node", BuildDependency)).
 
 candidate_external_version(Constraint, BuildDependency, Version)
   :- attr("direct_dependency", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
@@ -569,7 +569,7 @@ candidate_external_version(Constraint, BuildDependency, Version)
 error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, LiteralConstraint, ExternalConstraint)
   :- attr("direct_dependency", ParentNode, build_requirement("node_version_satisfies", BuildDependency, LiteralConstraint)),
      external(ParentNode),
-     attr("external_build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, ExternalConstraint)),
+     attr("external_build_requirement", ParentNode, node_requirement("node_version_satisfies", BuildDependency, ExternalConstraint)),
      not 1 { pkg_fact(BuildDependency, version_satisfies(ExternalConstraint, Version)) : candidate_external_version(LiteralConstraint, BuildDependency, Version) }.
 
 
@@ -968,13 +968,13 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
 
 % Account for compiler annotation on externals
 :- not attr("root", ExternalNode),
-   attr("external_build_requirement", ExternalNode, build_requirement("node", Compiler)),
+   attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
    not node_compiler(_, node(_, Compiler)).
 
 1 { attr("node_version_satisfies", node(X, Compiler), Constraint) : node_compiler(_, node(X, Compiler)) }
   :- not attr("root", ExternalNode),
-     attr("external_build_requirement", ExternalNode, build_requirement("node", Compiler)),
-     attr("external_build_requirement", ExternalNode, build_requirement("node_version_satisfies", Compiler, Constraint)).
+     attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+     attr("external_build_requirement", ExternalNode, node_requirement("node_version_satisfies", Compiler, Constraint)).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
