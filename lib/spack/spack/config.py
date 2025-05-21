@@ -13,8 +13,7 @@ configuration system behaves.  The scopes are:
   #. ``site``
   #. ``user``
 
-And corresponding :ref:`per-platform scopes <platform-scopes>`. Important
-functions in this module are:
+Important functions in this module are:
 
 * :func:`~spack.config.Configuration.get_config`
 * :func:`~spack.config.Configuration.update_config`
@@ -817,19 +816,6 @@ def override(
         assert scope is overrides
 
 
-def _add_platform_scope(
-    cfg: Configuration, name: str, path: str, priority: ConfigScopePriority, writable: bool = True
-) -> None:
-    """Add a platform-specific subdirectory for the current platform."""
-    import spack.platforms  # circular dependency
-
-    platform = spack.platforms.host().name
-    scope = DirectoryConfigScope(
-        f"{name}/{platform}", os.path.join(path, platform), writable=writable
-    )
-    cfg.push_scope(scope, priority=priority)
-
-
 #: Class for the relevance of an optional path conditioned on a limited
 #: python code that evaluates to a boolean and or explicit specification
 #: as optional.
@@ -965,9 +951,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # add each scope and its platform-specific directory
     for name, path in configuration_paths:
         cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
-        # Each scope can have per-platform overrides in subdirectories
-        _add_platform_scope(cfg, name, path, priority=ConfigScopePriority.CONFIG_FILES)
-
         # yield the config incrementally so that each config level's init code can get
         # data from the one below. This can be tricky, but it enables us to have a
         # single unified config system.

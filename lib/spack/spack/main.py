@@ -882,9 +882,6 @@ def add_command_line_scopes(
                     spack.config.DirectoryConfigScope(name, path, writable=False),
                     priority=ConfigScopePriority.CUSTOM,
                 )
-                spack.config._add_platform_scope(
-                    cfg, name, path, priority=ConfigScopePriority.CUSTOM, writable=False
-                )
                 continue
             else:
                 raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
