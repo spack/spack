@@ -19,6 +19,7 @@ class Rocshmem(CMakePackage):
 
     version("6.4.0", sha256="fbc8b6a7159901fdeda0d6cc8b97f20740c6cce59ba4a28c2050658cc1eecb81")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     for ver in ["6.4.0"]:
