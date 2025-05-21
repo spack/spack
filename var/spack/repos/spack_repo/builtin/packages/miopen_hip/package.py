@@ -5,10 +5,9 @@
 import re
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 class MiopenHip(CMakePackage):

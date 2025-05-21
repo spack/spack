@@ -5,10 +5,9 @@ import os
 
 from spack_repo.builtin.build_systems.generic import Package
 from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
+from spack_repo.builtin.packages.gcc_runtime.package import get_elf_libraries
 
 from spack.package import *
-
-from ..gcc_runtime.package import get_elf_libraries
 
 
 @IntelOneApiPackage.update_description

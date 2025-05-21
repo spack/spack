@@ -5,10 +5,9 @@
 import os
 
 from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.openfoam.package import add_extra_files
 
 from spack.package import *
-
-from ..openfoam.package import add_extra_files
 
 
 class OfPrecice(Package):

@@ -44,10 +44,9 @@ import os
 import re
 
 from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [

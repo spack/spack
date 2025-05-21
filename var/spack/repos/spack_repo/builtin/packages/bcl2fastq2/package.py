@@ -6,10 +6,9 @@ import glob
 import os
 
 from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 # This application uses cmake to build, but they wrap it with a

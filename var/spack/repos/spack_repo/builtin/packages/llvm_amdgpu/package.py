@@ -7,10 +7,9 @@ import shutil
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.packages.llvm.package import LlvmDetection
 
 from spack.package import *
-
-from ..llvm.package import LlvmDetection
 
 
 class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):

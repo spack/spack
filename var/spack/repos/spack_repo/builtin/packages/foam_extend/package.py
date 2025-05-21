@@ -33,10 +33,14 @@ import os
 import re
 
 from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.openfoam.package import (
+    OpenfoamArch,
+    add_extra_files,
+    rewrite_environ_files,
+    write_environ,
+)
 
 from spack.package import *
-
-from ..openfoam.package import OpenfoamArch, add_extra_files, rewrite_environ_files, write_environ
 
 
 class FoamExtend(Package):

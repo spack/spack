@@ -12,10 +12,9 @@ from spack_repo.builtin.build_systems.cached_cmake import (
 )
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.blt.package import llnl_link_helpers
 
 from spack.package import *
-
-from ..blt.package import llnl_link_helpers
 
 
 class Care(CachedCMakePackage, CudaPackage, ROCmPackage):

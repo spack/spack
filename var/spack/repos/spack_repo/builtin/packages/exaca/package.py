@@ -5,10 +5,9 @@
 from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.kokkos.package import Kokkos
 
 from spack.package import *
-
-from ..kokkos.package import Kokkos
 
 
 class Exaca(CMakePackage, CudaPackage, ROCmPackage):

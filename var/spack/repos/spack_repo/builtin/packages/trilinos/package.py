@@ -10,12 +10,11 @@ import sys
 from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.kokkos.package import Kokkos
 
 from spack.build_environment import dso_suffix
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
-
-from ..kokkos.package import Kokkos
 
 # Trilinos is complicated to build, as an inspiration a couple of links to
 # other repositories which build it:

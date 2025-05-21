@@ -8,10 +8,9 @@ import sys
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):
