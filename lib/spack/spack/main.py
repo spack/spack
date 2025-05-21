@@ -1090,12 +1090,13 @@ def _handle_solver_bug(
             stream=out,
         )
     if wrong_output:
-        msg = (
-            "internal solver error: the following specs were concretized, but do not satisfy the "
-            "input:\n    - "
-            + "\n    - ".join(str(s) for s, _ in wrong_output)
-            + "\n    Please report a bug at https://github.com/spack/spack/issues"
-        )
+        msg = "internal solver error: the following specs were concretized, but do not satisfy "
+        msg += "the input:\n"
+        for in_spec, out_spec in wrong_output:
+            msg += f"    - input: {in_spec}\n"
+            msg += f"      output: {out_spec.long_spec}\n"
+        msg += "\n    Please report a bug at https://github.com/spack/spack/issues"
+
         # try to write the input/output specs to a temporary directory for bug reports
         try:
             tmpdir = tempfile.mkdtemp(prefix="spack-asp-", dir=root)

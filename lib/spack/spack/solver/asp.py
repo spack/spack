@@ -572,7 +572,7 @@ class Result:
         for input_spec, candidate in unsolved_specs:
             msg += f"\n\tInput spec: {str(input_spec)}"
             if candidate:
-                msg += f"\n\tCandidate spec: {str(candidate)}"
+                msg += f"\n\tCandidate spec: {candidate.long_spec}"
             else:
                 msg += "\n\t(No candidate specs from solver)"
         return msg
