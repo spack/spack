@@ -39,10 +39,9 @@ class Msvc(Package, CompilerPackage):
             "detected on a system where they are externally installed"
         )
 
-    compiler_languages = ["c", "cxx", "fortran"]
+    compiler_languages = ["c", "cxx"]
     c_names = ["cl"]
     cxx_names = ["cl"]
-    fortran_names = ["ifx", "ifort"]
 
     compiler_version_argument = ""
     compiler_version_regex = r"([1-9][0-9]*\.[0-9]*\.[0-9]*)"
@@ -54,7 +53,7 @@ class Msvc(Package, CompilerPackage):
     # compiler wrappers
     compiler_wrapper_link_paths = {"c": "", "cxx": "", "fortran": ""}
 
-    provides("c", "cxx", "fortran")
+    provides("c", "cxx")
     requires("platform=windows", msg="MSVC is only supported on Windows")
 
     @classmethod
