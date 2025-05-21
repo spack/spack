@@ -3895,7 +3895,7 @@ class SpecBuilder:
 
         if extendee_spec and extendee_spec.name == "python":
             extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            _update_external_dependencies(package, extendee_spec=self._specs.get(extendee_node))
+            _attach_python_to_external(package, extendee_spec=self._specs.get(extendee_node))
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
@@ -4187,7 +4187,7 @@ class SpecBuilder:
         return specs
 
 
-def _update_external_dependencies(
+def _attach_python_to_external(
     dependent_package, extendee_spec: Optional[spack.spec.Spec] = None
 ) -> None:
     """
