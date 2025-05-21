@@ -93,7 +93,7 @@ def _get_user_cache_path():
     subdir = h.hexdigest()[:8]
 
     return os.path.join(
-        os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep), subdir,
+        os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep), subdir
     )
 
 
