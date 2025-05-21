@@ -1877,7 +1877,7 @@ class SpackSolverSetup:
 
         return cond_id
 
-    def condition_clauses(
+    def _condition_clauses(
         self,
         required_spec: spack.spec.Spec,
         imposed_spec: Optional[spack.spec.Spec] = None,
@@ -1886,22 +1886,7 @@ class SpackSolverSetup:
         imposed_name: Optional[str] = None,
         msg: Optional[str] = None,
         context: Optional[ConditionContext] = None,
-    ):
-        """Generate facts for a dependency or virtual provider condition.
-
-        Arguments:
-            required_spec: the constraints that triggers this condition
-            imposed_spec: the constraints that are imposed when this condition is triggered
-            required_name: name for ``required_spec``
-                (required if required_spec is anonymous, ignored if not)
-            imposed_name: name for ``imposed_spec``
-                (required if imposed_spec is anonymous, ignored if not)
-            msg: description of the condition
-            context: if provided, indicates how to modify the clause-sets for the required/imposed
-                specs based on the type of constraint they are generated for (e.g. `depends_on`)
-        Returns:
-            int: id of the condition created by this function
-        """
+    ) -> Tuple[List[AspFunction], int]:
         clauses = []
         required_name = required_spec.name or required_name
         if not required_name:
@@ -1953,7 +1938,7 @@ class SpackSolverSetup:
         imposed_name: Optional[str] = None,
         msg: Optional[str] = None,
         context: Optional[ConditionContext] = None,
-    ):
+    ) -> int:
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
@@ -1969,7 +1954,7 @@ class SpackSolverSetup:
         Returns:
             int: id of the condition created by this function
         """
-        clauses, condition_id = self.condition_clauses(
+        clauses, condition_id = self._condition_clauses(
             required_spec=required_spec,
             imposed_spec=imposed_spec,
             required_name=required_name,
