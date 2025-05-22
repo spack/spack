@@ -12,12 +12,22 @@ import warnings
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
 from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
 
-from .packages.intel_oneapi_compilers.oneapi_versions import oneAPIVersions
+from spack_repo.builtin.packages.intel_oneapi_compilers.oneapi_versions import oneAPIVersions
 
 from spack.build_environment import dso_suffix
 from spack.package import *
 
 IS_WINDOWS = sys.platform == "win32"
+
+
+class UnixDebugFlags:
+    DEBUG = "-debug"
+    G = "-g"
+    G0 = "-g0"
+    G1 = "-g1"
+    G2 = "-g2"
+    G3 = "-g3"
+
 
 class WindowsDebugFlags:
     DEBUG = "/debug"
@@ -55,6 +65,7 @@ class DebugFlagsMeta(type):
         else:
             getattr(UnixDebugFlags, attr.upper())
 
+
 class OptFlagsMeta(type):
     def __getattribute__(cls, attr):
         if IS_WINDOWS:
@@ -62,14 +73,31 @@ class OptFlagsMeta(type):
         else:
             getattr(UnixOptFlags, attr)
 
+
 class DebugFlags(metaclass=DebugFlagsMeta):
     """Class abstracting platform specific debug flags"""
+    DEBUG: str
+    G: str
+    G0: str
+    G1: str
+    G2: str
+    G3: str
+
 
 class OptFlags(metaclass=OptFlagsMeta):
     """Class abstracting platform specific optimization flags"""
+    O: str
+    O0: str
+    O1: str
+    O2: str
+    O3: str
+    OFast: str
+    OS: str
+
 
 class CompilerWrapperLinks:
     pass
+
 
 @IntelOneApiPackage.update_description
 class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
