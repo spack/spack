@@ -1580,9 +1580,16 @@ def create(configuration: spack.config.Configuration) -> RepoPath:
     return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
 
+def create_and_enable(configuration: spack.config.Configuration) -> RepoPath:
+    """Same as create, but calls enable() on the created repository."""
+    repo_path = create(configuration)
+    repo_path.enable()
+    return repo_path
+
+
 #: Global package repository instance.
 PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create(configuration=spack.config.CONFIG)
+    lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
