@@ -4205,7 +4205,7 @@ def _attach_python_to_external(
         elif "python" in dependent_package.spec.root:
             python = dependent_package.spec.root["python"]
         else:
-            python = get_external_python_for_prefix(dependent_package)
+            python = _get_external_python_for_prefix(dependent_package)
             if not python.concrete:
                 repo = spack.repo.PATH.repo_for_pkg(python)
                 python.namespace = repo.namespace
@@ -4234,7 +4234,7 @@ def _attach_python_to_external(
         )
 
 
-def get_external_python_for_prefix(python_package):
+def _get_external_python_for_prefix(python_package):
     """
     For an external package that extends python, find the most likely spec for the python
     it depends on.
