@@ -1,0 +1,12 @@
+diff -ruN spack-src/util/chplenv/chpl_gpu.py spack-src-patched/util/chplenv/chpl_gpu.py
+--- spack-src/util/chplenv/chpl_gpu.py	2025-03-14 02:17:49.000000000 +0000
++++ spack-src-patched/util/chplenv/chpl_gpu.py	2025-05-22 21:15:46.502271498 +0000
+@@ -541,7 +541,7 @@
+     MIN_REQ_VERSION = "5.0"
+     MAX_REQ_VERSION = "5.5"
+     MIN_ROCM6_REQ_VERSION = "6"
+-    MAX_ROCM6_REQ_VERSION = "6.3"
++    MAX_ROCM6_REQ_VERSION = "6.4"
+ 
+     rocm_version = get_sdk_version()
+ 

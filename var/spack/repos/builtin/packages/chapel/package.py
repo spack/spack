@@ -71,6 +71,7 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
+    patch("chapel-rocm-allow-v6-3.patch", when="@2.4 +rocm")
     patch("fix_spack_cc_wrapper_in_cray_prgenv.patch", when="@2.0.0:")
     patch("fix_chpl_shared_lib_path.patch", when="@2.1.1:2.2 +python-bindings")  # PR 26388
     patch("fix_chpl_shared_lib_path_2.3.patch", when="@2.2.1:2.3 +python-bindings")  # PR 26388
@@ -468,11 +469,18 @@ class Chapel(AutotoolsPackage, CudaPackage, ROCmPackage):
     with when("@2:2.1 +rocm"):
         depends_on("hsa-rocr-dev@4:5.4")
         depends_on("hip@4:5.4")
-    with when("@2.2: +rocm"):
+    with when("@2.2:2.3 +rocm"):
         depends_on("hsa-rocr-dev@4:5.4,6.0:6.2")
         depends_on("hip@4:5.4,6.0:6.2")
-    depends_on("llvm-amdgpu@4:5.4", when="+rocm llvm=spack")
-    requires("llvm=bundled", when="+rocm ^hip@6.0:6.2", msg="ROCm 6 support requires llvm=bundled")
+    with when("@2.4: +rocm"):
+        depends_on("hsa-rocr-dev@4:5.4,6.0:6.3")
+        depends_on("hip@4:5.4,6.0:6.3")
+
+    depends_on("llvm-amdgpu@4:5.4", when="@:2.3 +rocm llvm=spack")
+    depends_on("llvm-amdgpu@4:6.3", when="@2.4: +rocm llvm=spack")
+
+    requires("llvm=bundled", when="@:2.3 +rocm ^hip@6.0:6.2", msg="ROCm 6 support requires llvm=bundled")
+    requires("llvm=bundled", when="@2.4: +rocm ^hip@6.0:6.3", msg="ROCm 6 support requires llvm=bundled")
 
     conflicts(
         "comm_substrate=unset",
