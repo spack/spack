@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack_repo.builtin.packages.frontistr.package import FrontistrBase
 
-from ..frontistr.package import FrontistrBase
+from spack.package import *
 
 
 class FujitsuFrontistr(FrontistrBase):

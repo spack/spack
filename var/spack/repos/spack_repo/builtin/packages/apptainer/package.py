@@ -6,9 +6,9 @@
 from glob import glob
 from os.path import basename
 
-from spack.package import *
+from spack_repo.builtin.packages.singularityce.package import SingularityBase
 
-from ..singularityce.package import SingularityBase
+from spack.package import *
 
 
 # Apptainer is the new name of Singularity, piggy-back on the original package

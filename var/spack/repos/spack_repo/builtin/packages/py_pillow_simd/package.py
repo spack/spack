@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.packages.py_pillow.package import PyPillowBase
 
-from ..py_pillow.package import PyPillowBase
+from spack.package import *
 
 
 class PyPillowSimd(PyPillowBase):

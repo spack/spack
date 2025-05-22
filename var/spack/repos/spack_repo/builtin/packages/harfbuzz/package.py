@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 IS_WINDOWS = sys.platform == "win32"
@@ -147,7 +149,7 @@ class SetupEnvironment:
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
+class MesonBuilder(meson.MesonBuilder, SetupEnvironment):
     def meson_args(self):
         graphite2 = "enabled" if self.pkg.spec.satisfies("+graphite2") else "disabled"
         coretext = "enabled" if self.pkg.spec.satisfies("+coretext") else "disabled"
@@ -163,7 +165,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder, SetupEnvironment):
         return config_args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
+class AutotoolsBuilder(autotools.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
 

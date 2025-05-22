@@ -74,9 +74,8 @@ from typing import (
     overload,
 )
 
+import _vendoring.archspec.cpu
 from _vendoring.typing_extensions import Literal
-
-import archspec.cpu
 
 import llnl.path
 import llnl.string
@@ -217,10 +216,12 @@ def ensure_modern_format_string(fmt: str) -> None:
         )
 
 
-def _make_microarchitecture(name: str) -> archspec.cpu.Microarchitecture:
-    if isinstance(name, archspec.cpu.Microarchitecture):
+def _make_microarchitecture(name: str) -> _vendoring.archspec.cpu.Microarchitecture:
+    if isinstance(name, _vendoring.archspec.cpu.Microarchitecture):
         return name
-    return archspec.cpu.TARGETS.get(name, archspec.cpu.generic_microarchitecture(name))
+    return _vendoring.archspec.cpu.TARGETS.get(
+        name, _vendoring.archspec.cpu.generic_microarchitecture(name)
+    )
 
 
 @lang.lazy_lexicographic_ordering
@@ -364,7 +365,7 @@ class ArchSpec:
         # will assumed to be the host machine's platform.
 
         def target_or_none(t):
-            if isinstance(t, archspec.cpu.Microarchitecture):
+            if isinstance(t, _vendoring.archspec.cpu.Microarchitecture):
                 return t
             if t and t != "None":
                 return _make_microarchitecture(t)

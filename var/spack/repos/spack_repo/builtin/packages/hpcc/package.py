@@ -6,6 +6,8 @@ import os
 import platform
 import re
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.build_environment import optimization_flags
 from spack.package import *
 

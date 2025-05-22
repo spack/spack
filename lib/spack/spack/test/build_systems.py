@@ -5,15 +5,13 @@
 import glob
 import os
 
+import _vendoring.archspec.cpu
 import py.path
 import pytest
 
-import archspec.cpu
-
 import llnl.util.filesystem as fs
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
+import spack
 import spack.builder
 import spack.concretize
 import spack.environment
@@ -27,6 +25,8 @@ from spack.spec import Spec
 from spack.util.executable import which
 
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
+
+pytestmark = pytest.mark.skip(reason="build_systems module is moved out of spack")
 
 
 @pytest.fixture()
@@ -216,7 +216,8 @@ class TestAutotoolsPackage:
 
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+        str(_vendoring.archspec.cpu.host().family) != "x86_64",
+        reason="test data is specific for x86_64",
     )
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """

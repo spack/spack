@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.build_systems.cargo
+from spack_repo.builtin.build_systems import cargo
+from spack_repo.builtin.build_systems.cargo import CargoPackage
+
 from spack.package import *
 
 
@@ -24,7 +26,7 @@ class Jujutsu(CargoPackage):
     depends_on("openssl")
 
 
-class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
+class CargoBuilder(cargo.CargoBuilder):
     @property
     def build_directory(self):
         """Return the directory containing the main Cargo.toml."""

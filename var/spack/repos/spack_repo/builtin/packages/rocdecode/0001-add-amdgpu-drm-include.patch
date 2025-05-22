@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 817b0fc..c5815c7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -134,6 +134,8 @@ if(HIP_FOUND AND Libva_FOUND)
+ 
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++17")
+   target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY_LIST})
++  
++  target_include_directories(${PROJECT_NAME} PRIVATE ${AMDGPU_DRM_INCLUDE_DIRS})
+ 
+   set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)

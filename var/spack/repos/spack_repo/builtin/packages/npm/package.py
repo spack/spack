@@ -6,6 +6,8 @@ import os
 import re
 import shutil
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 

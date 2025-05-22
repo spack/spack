@@ -25,7 +25,7 @@ import traceback
 import warnings
 from typing import List, Tuple
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -734,7 +734,7 @@ def _compatible_sys_types():
     """
     host_platform = spack.platforms.host()
     host_os = str(host_platform.default_operating_system())
-    host_target = archspec.cpu.host()
+    host_target = _vendoring.archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors
 
     compatible_archs = [
@@ -794,7 +794,7 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if "modules" in info:
-        generic_arch = archspec.cpu.host().family
+        generic_arch = _vendoring.archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
         specs = spack.store.STORE.db.query(module_spec)
         if specs:
@@ -1090,12 +1090,13 @@ def _handle_solver_bug(
             stream=out,
         )
     if wrong_output:
-        msg = (
-            "internal solver error: the following specs were concretized, but do not satisfy the "
-            "input:\n    - "
-            + "\n    - ".join(str(s) for s, _ in wrong_output)
-            + "\n    Please report a bug at https://github.com/spack/spack/issues"
-        )
+        msg = "internal solver error: the following specs were concretized, but do not satisfy "
+        msg += "the input:\n"
+        for in_spec, out_spec in wrong_output:
+            msg += f"    - input: {in_spec}\n"
+            msg += f"      output: {out_spec.long_spec}\n"
+        msg += "\n    Please report a bug at https://github.com/spack/spack/issues"
+
         # try to write the input/output specs to a temporary directory for bug reports
         try:
             tmpdir = tempfile.mkdtemp(prefix="spack-asp-", dir=root)

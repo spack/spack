@@ -4,6 +4,9 @@
 
 from os import symlink
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
+
 from spack.package import *
 
 

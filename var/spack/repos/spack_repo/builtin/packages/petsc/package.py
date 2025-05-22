@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 

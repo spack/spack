@@ -14,7 +14,7 @@ is an entire command dedicated to the management of every aspect of bootstrappin
 
 .. command-output:: spack bootstrap --help
 
-Spack is configured to bootstrap its dependencies lazily by default; i.e. the first time they are needed and
+Spack is configured to bootstrap its dependencies lazily by default; i.e., the first time they are needed and
 can't be found. You can readily check if any prerequisite for using Spack is missing by running:
 
 .. code-block:: console
@@ -36,8 +36,8 @@ can't be found. You can readily check if any prerequisite for using Spack is mis
 
 In the case of the output shown above Spack detected that both ``clingo`` and ``gnupg``
 are missing and it's giving detailed information on why they are needed and whether
-they can be bootstrapped. The return code of this command summarizes the results, if any
-dependencies are missing the return code is ``1``, otherwise ``0``. Running a command that
+they can be bootstrapped. The return code of this command summarizes the results; if any
+dependencies are missing, the return code is ``1``, otherwise ``0``. Running a command that
 concretizes a spec, like:
 
 .. code-block:: console

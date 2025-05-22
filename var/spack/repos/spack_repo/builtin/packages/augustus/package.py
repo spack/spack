@@ -4,9 +4,10 @@
 
 import glob
 
-from spack.package import *
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Augustus(MakefilePackage):

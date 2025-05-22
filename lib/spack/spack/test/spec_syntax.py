@@ -1290,7 +1290,7 @@ def test_parse_filename_missing_slash_as_spec(specfile_for, tmpdir, filename):
 
     # make sure that only happens when the spec ends in yaml
     with pytest.raises(spack.solver.asp.UnsatisfiableSpecError) as exc_info:
-        spack.concretize.concretize_one(SpecParser("builtin.mock.doesnotexist").next_spec())
+        spack.concretize.concretize_one(SpecParser("builtin_mock.doesnotexist").next_spec())
     assert not exc_info.value.long_message or (
         "Did you mean to specify a filename with" not in exc_info.value.long_message
     )

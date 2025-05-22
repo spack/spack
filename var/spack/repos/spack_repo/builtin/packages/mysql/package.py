@@ -5,9 +5,10 @@
 import os
 import tempfile
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Mysql(CMakePackage):

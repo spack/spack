@@ -28,7 +28,7 @@ jobs:
       run: |
         cd spack-packages
         git-filter-repo --quiet --source ../spack \
-                        --subdirectory-filter var/spack/repos \
+                        --path var/spack/repos/ --path-rename var/spack/repos/:python/ \
                         --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --refs develop
     - name: Push

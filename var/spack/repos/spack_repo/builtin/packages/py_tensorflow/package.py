@@ -6,8 +6,12 @@ import glob
 import sys
 import tempfile
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.build_environment import optimization_flags
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 rocm_dependencies = [
@@ -404,6 +408,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     with when("+rocm"):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@6.0:", when="@2.14:")
+            depends_on(f"{pkg_dep}@:6.3", when="@:2.18")
             depends_on(pkg_dep)
 
     # Check configure and configure.py to see when these variants are supported

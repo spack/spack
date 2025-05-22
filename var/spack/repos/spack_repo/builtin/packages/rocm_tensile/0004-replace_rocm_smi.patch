@@ -1,0 +1,24 @@
+diff --git a/Tensile/Source/client/CMakeLists.txt b/Tensile/Source/client/CMakeLists.txt
+index a9ac80a..087e0c5 100644
+--- a/Tensile/Source/client/CMakeLists.txt
++++ b/Tensile/Source/client/CMakeLists.txt
+@@ -58,8 +58,8 @@ set_target_properties(TensileClient
+ find_package(Boost COMPONENTS program_options REQUIRED)
+ 
+ if (NOT WIN32)
+-    find_package(ROCmSMI QUIET)
+-    if(NOT ROCmSMI_FOUND)
++    find_package(rocm_smi CONFIG QUIET)
++    if(NOT rocm_smi_FOUND)
+         set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${Tensile_DIR}" "${Tensile_DIR}/../Source/cmake" "${CMAKE_HOME_DIRECTORY}/cmake")
+         find_package(ROCmSMI REQUIRED)
+     endif()
+@@ -72,7 +72,7 @@ target_include_directories(TensileClient PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/inc
+ target_link_libraries(TensileClient PRIVATE TensileHost ${Boost_LIBRARIES})
+ 
+ if(NOT WIN32)
+-    target_link_libraries(TensileClient PRIVATE TensileHost rocm_smi)
++    target_link_libraries(TensileClient PRIVATE TensileHost ${ROCM_SMI_LIBRARY})
+ endif()
+ 
+ if(TENSILE_USE_OPENMP)

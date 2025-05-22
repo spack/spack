@@ -69,7 +69,7 @@ spack:
   - alpgen
   - ampt
   - apfel +lhapdf +python
-  - celeritas ~cuda +openmp ~rocm +vecgeom
+  - celeritas ~cuda +openmp ~rocm +vecgeom +covfie
   - cepgen
   - cernlib +shared
   - collier
@@ -130,12 +130,12 @@ spack:
 
   # CUDA
   #- acts +cuda +traccc cuda_arch=80
-  #- celeritas +cuda ~openmp +vecgeom cuda_arch=80
+  #- celeritas +cuda ~openmp +vecgeom cuda_arch=80 +covfie
   - root +cuda +cudnn +tmva-gpu
   - vecgeom +cuda cuda_arch=80
 
   # ROCm
-  - celeritas +rocm amdgpu_target=gfx90a ~openmp ~vecgeom  # only available with ORANGE
+  - celeritas +rocm amdgpu_target=gfx90a ~openmp ~vecgeom # only available with ORANGE
 
   ci:
     pipeline-gen:
