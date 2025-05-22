@@ -163,7 +163,7 @@ class MiopenHip(CMakePackage):
         "6.4.0",
     ]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver} +ck")
-    for ver in ["5.4.0", "5.4.3", "5.5.0", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in ["5.4.0", "5.4.3", "5.5.0", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"rocmlir@{ver}", when=f"@{ver}")
     for ver in [
         "6.0.0",
