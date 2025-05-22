@@ -188,12 +188,6 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     # Fails to build with freshly released CUDA (#48708).
     conflicts("^cuda@12.8:", when="@:0.4.31")
 
-    # external CUDA is not supported https://github.com/jax-ml/jax/issues/23689
-    conflicts("+cuda", when="@0.4.32:")
-
-    # aarch64 is not supported https://github.com/jax-ml/jax/issues/25598
-    conflicts("target=aarch64:", when="@0.4.32:")
-
     resource(
         name="xla",
         url="https://github.com/ROCm/xla/archive/07543ab117699a57c1267b453a62f89b1d5953fd.tar.gz",
