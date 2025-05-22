@@ -1039,6 +1039,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Packages may override this implementation for custom implementations
         """
         sha = None
+        self.do_fetch(mirror_only=True)
+
         # TODO get commit from mirror
         # for m in mirrors:
         #    if self.name in m:
@@ -1054,6 +1056,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             ref = tag or branch
             assert ref, "Missing git ref"
 
+            # --ref introduced in git@2.7
+            # ls-remote introduced in git@1.7
             git_args = ["ls-remote", url, "--ref", ref]
 
             try:
