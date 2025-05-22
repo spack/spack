@@ -52,19 +52,6 @@ def test_config_scopes_file():
     assert "_builtin" not in output
 
 
-def test_config_scopes_non_platform():
-    output = config("scopes", "--non-platform")
-    assert "site" in output
-
-
-def test_config_scopes_file_non_platform():
-    if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
-        del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    output = config("scopes", "--non-platform", "--file")
-    assert "site" in output
-    assert "_builtin" not in output
-
-
 def test_get_config_scope(mock_low_high_config):
     assert config("get", "compilers").strip() == "compilers: {}"
 

@@ -868,7 +868,7 @@ _spack_config_list() {
 }
 
 _spack_config_scopes() {
-    SPACK_COMPREPLY="-h --help -f --file --non-platform --included"
+    SPACK_COMPREPLY="-h --help -f --file --included"
 }
 
 _spack_config_add() {
