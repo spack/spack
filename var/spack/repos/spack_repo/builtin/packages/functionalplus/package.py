@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -18,4 +20,5 @@ class Functionalplus(CMakePackage):
     version("0.2.23", sha256="5c2d28d2ba7d0cdeab9e31bbf2e7f8a9d6f2ff6111a54bfc11d1b05422096f19")
     version("0.2.22", sha256="79378668dff6ffa8abc1abde2c2fe37dc6fe1ac040c55d5ee7886924fa6a1376")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
