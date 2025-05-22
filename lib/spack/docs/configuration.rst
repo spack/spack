@@ -324,7 +324,7 @@ options is supported with the ``::`` notation for keys (see
    configuration files listed in the scope's :ref:`include.yaml <include-yaml>`
    file.
 
-There are also special notations for string concatenation and precendense override:
+There are also special notations for string concatenation and precedence override:
 
 * ``+:`` will force *prepending* strings or lists. For lists, this is the default behavior.
 * ``-:`` works similarly, but for *appending* values.
