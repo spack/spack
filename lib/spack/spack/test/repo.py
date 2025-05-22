@@ -526,24 +526,24 @@ def test_is_package_module():
     assert not spack.repo.is_package_module("spack.something.else")
 
 
-def test_environment_activation_updates_repo_path(tmp_path):
+def test_environment_activation_updates_repo_path(tmp_path: pathlib.Path):
     """Test that the environment activation updates the repo path correctly."""
-    repo_root, _ = spack.repo.create_repo(str(tmp_path / "my_repo"), namespace="my_repo")
+    repo_root, _ = spack.repo.create_repo(str(tmp_path / "foo"), namespace="bar")
     (tmp_path / "spack.yaml").write_text(
-        f"""
+        """\
 spack:
     repos:
-    - {repo_root}
+    - $env/foo/spack_repo/bar
 """
     )
     env = spack.environment.Environment(tmp_path)
 
     with env:
-        assert any(str(repo_root) in r.root for r in spack.repo.PATH.repos)
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
 
-    assert not any(str(repo_root) in r.root for r in spack.repo.PATH.repos)
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
 
     with env:
-        assert any(str(repo_root) in r.root for r in spack.repo.PATH.repos)
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
 
-    assert not any(str(repo_root) in r.root for r in spack.repo.PATH.repos)
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)

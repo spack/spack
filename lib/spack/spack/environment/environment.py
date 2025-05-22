@@ -193,34 +193,38 @@ def activate(env, use_env_repo=False):
     """
     global _active_environment
 
-    # Fail early to avoid ending in an invalid state
-    if not isinstance(env, Environment):
-        raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+    try:
+        _active_environment = env
 
-    # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to config changes.
-    install_tree_before = spack.config.get("config:install_tree")
-    upstreams_before = spack.config.get("upstreams")
-    repos_before = spack.config.get("repos")
-    env.manifest.prepare_config_scope()
-    install_tree_after = spack.config.get("config:install_tree")
-    upstreams_after = spack.config.get("upstreams")
-    repos_after = spack.config.get("repos")
+        # Fail early to avoid ending in an invalid state
+        if not isinstance(env, Environment):
+            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
-    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
-        setattr(env, "store_token", spack.store.reinitialize())
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
+        # config changes.
+        install_tree_before = spack.config.get("config:install_tree")
+        upstreams_before = spack.config.get("upstreams")
+        repos_before = spack.config.get("repos")
+        env.manifest.prepare_config_scope()
+        install_tree_after = spack.config.get("config:install_tree")
+        upstreams_after = spack.config.get("upstreams")
+        repos_after = spack.config.get("repos")
 
-    if repos_before != repos_after:
-        setattr(env, "repo_token", spack.repo.PATH)
-        spack.repo.PATH.disable()
-        new_repo = spack.repo.create(spack.config.CONFIG)
-        if use_env_repo:
-            new_repo.put_first(env.repo)
-        spack.repo.enable_repo(new_repo)
+        if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
+            setattr(env, "store_token", spack.store.reinitialize())
 
-    tty.debug(f"Using environment '{env.name}'")
+        if repos_before != repos_after:
+            setattr(env, "repo_token", spack.repo.PATH)
+            spack.repo.PATH.disable()
+            new_repo = spack.repo.create(spack.config.CONFIG)
+            if use_env_repo:
+                new_repo.put_first(env.repo)
+            spack.repo.enable_repo(new_repo)
 
-    # Do this last, because setting up the config must succeed first.
-    _active_environment = env
+        tty.debug(f"Using environment '{env.name}'")
+    except Exception:
+        _active_environment = None
+        raise
 
 
 def deactivate():
