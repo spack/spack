@@ -312,6 +312,8 @@ def migrate_v2_imports(
         try:
             with open(pkg_path, "rb") as file:
                 tree = ast.parse(file.read())
+        except FileNotFoundError:
+            continue
         except (OSError, SyntaxError) as e:
             print(f"Skipping {pkg_path}: {e}", file=err)
             continue
