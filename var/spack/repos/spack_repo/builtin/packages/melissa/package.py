@@ -13,14 +13,14 @@ class Melissa(CMakePackage):
     """
 
     homepage = "https://gitlab.inria.fr/melissa/melissa"
-    url = "https://gitlab.inria.fr/melissa/melissa/-/archive/v1.0/melissa-v1.0.tar.bz2"
     git = "https://gitlab.inria.fr/melissa/melissa.git"
 
+    # FIXME: Replace with an official link
+    url = "https://gitlab.inria.fr/melissa/melissa/-/archive/ac-develop-stable/melissa-ac-develop-stable.tar.gz"
     # attention: Git**Hub**.com accounts
-    maintainers("christoph-conrads", "raffino")
+    maintainers("abhishekp1297", "viperML", "raffino")
 
-    version("master", branch="master", deprecated=True)
-    version("develop", branch="develop", deprecated=True)
+    version("develop", branch="develop", preferred=True)
     version(
         "0.7.1",
         sha256="c30584f15fecf6297712a88e4d28851bfd992f31209fd7bb8af2feebe73d539d",
@@ -32,23 +32,19 @@ class Melissa(CMakePackage):
         deprecated=True,
     )
 
-    variant("no_mpi_api", default=False, description="Enable the deprecated no-MPI API")
-    variant("shared", default=True, description="Build shared libraries")
-
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@3.7.2:", type="build")
-    depends_on("libzmq@4.1.5:")
-    depends_on("mpi")
+    depends_on("cmake@3.15:", type="build")
     depends_on("pkgconfig", type="build")
-    depends_on("python@3.5.3:", type=("build", "run"))
 
-    def cmake_args(self):
-        args = [
-            self.define("BUILD_TESTING", self.run_tests),
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("MELISSA_ENABLE_NO_MPI_API", "no_mpi_api"),
-        ]
+    depends_on("libzmq@4.2:4", type=("build", "run"))
+    depends_on("python@3.9:3.12", type=("build", "run"))
+    depends_on("mpi", type=("build", "run"))
 
-        return args
+    def setup_run_environment(self, env):
+        python = self.spec["python"]
+        python_version = python.version.up_to(2)
+        # This path points to the python client API scripts installed in $CMAKE_INSTALL_PREFIX/lib
+        melissa_api_site_packages = f"{self.prefix.lib}/python{python_version}/site-packages"
+        env.prepend_path("PYTHONPATH", melissa_api_site_packages)
