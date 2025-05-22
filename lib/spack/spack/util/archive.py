@@ -13,6 +13,8 @@ from typing import Callable, Dict, List, Tuple
 
 from llnl.util.symlink import readlink
 
+from spack.util.executable import ProcessError, which
+
 
 class ChecksumWriter(io.BufferedIOBase):
     """Checksum writer computes a checksum while writing to a file."""
@@ -238,3 +240,22 @@ def reproducible_tarfile_from_prefix(
                 add_file(tar, file_info, entry.path)
 
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
+
+
+def retrieve_commit_from_archive(archive_path, branch=None, tag=None):
+    assert os.path.isfile(archive_path)
+
+    tar = which("tar", required=True)
+    error_msg = f"Archive {archive_path} does not appear to contain git data"
+
+    if branch:
+        ref = f"refs/heads/{branch}/"
+    elif tag:
+        ref = f"refs/tags/{tag}/"
+    else:
+        _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
+    assert ref
+    try:
+        return tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
+    except ProcessError as e:
+        assert False, error_msg

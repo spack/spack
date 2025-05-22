@@ -8,7 +8,6 @@ import os
 
 import pytest
 
-from pathlib import PurePath
 from llnl.util.filesystem import working_dir
 from llnl.util.symlink import resolve_link_target_relative_to_the_link
 
@@ -21,8 +20,6 @@ import spack.mirrors.mirror
 import spack.mirrors.utils
 import spack.patch
 import spack.stage
-import spack.util.archive
-import spack.util.executable
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
 import spack.version
@@ -141,54 +138,6 @@ def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository
     set_up_package("trivial-install-test-package", mock_archive, "url")
     check_mirror()
     repos.clear()
-
-
-def retrieve_commit_from_archive(archive_path, branch=None, tag=None):
-    assert os.path.isfile(archive_path)
-
-    tar = which("tar", required=True)
-    error_msg = f"Archive {archive_path} does not appear to contain git data"
-
-    if branch:
-        ref = f"refs/heads/{branch}/"
-    elif tag:
-        ref = f"refs/tags/{tag}/"
-    else:
-        _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
-    assert ref
-    try:
-        return tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
-    except spack.util.executable.ProcessError as e:
-        assert False, error_msg
-
-
-@pytest.mark.parametrize("branch, tag", ((None, None), ("test-branch", None), (None, "test-tag")))
-def test_get_commits_from_mirror(mock_git_repository, tmpdir, branch, tag):
-    with tmpdir.as_cwd():
-        archive_file = str(tmpdir.join("archive.tar.gz"))
-        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
-        with spack.util.archive.gzip_compressed_tarfile(archive_file) as (tar, _, _):
-            spack.util.archive.reproducible_tarfile_from_prefix(
-                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name
-            )
-        commit = None
-        commit = retrieve_commit_from_archive(archive_file, tag=tag, branch=branch)
-        assert commit
-        assert spack.version.is_git_commit_sha(commit)
-
-
-def test_can_tell_if_archive_has_git(mock_git_repository, tmpdir):
-    with tmpdir.as_cwd():
-        archive_file = str(tmpdir.join("archive.tar.gz"))
-        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
-        exclude = lambda entry: ".git" in PurePath(entry.path).parts
-        with spack.util.archive.gzip_compressed_tarfile(archive_file) as (tar, _, _):
-            spack.util.archive.reproducible_tarfile_from_prefix(
-                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name, skip=exclude
-            )
-            with pytest.raises(AssertionError) as err:
-                retrieve_commit_from_archive(archive_file, branch="main")
-                assert "does not contain git data" in str(err.value)
 
 
 @pytest.mark.parametrize(

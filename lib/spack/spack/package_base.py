@@ -1039,18 +1039,17 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Packages may override this implementation for custom implementations
         """
         sha = None
-        self.do_fetch(mirror_only=True)
+        tag = self.version_or_package_attr("tag", self.spec.version, "")
+        branch = self.version_or_package_attr("branch", self.spec.version, "")
+        try:
+            self.do_fetch(mirror_only=True)
+        except spack.error.FetchError:
+            pass
+        sha = self.stage.extract_commit_sha(tag=tag, branch=branch)
 
-        # TODO get commit from mirror
-        # for m in mirrors:
-        #    if self.name in m:
-        #       loop over entries and look for names that match commits regex
-        #       select the newest one as the commit
         if not sha:
             version = self.spec.version
             url = self.version_or_package_attr("git", self.spec.version)
-            tag = self.version_or_package_attr("tag", self.spec.version, "")
-            branch = self.version_or_package_attr("branch", self.spec.version, "")
 
             assert not (tag and branch)
             ref = tag or branch
