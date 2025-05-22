@@ -81,6 +81,7 @@ OLD_7ZIP = b"""\
 # some comment
 
 from spack.package import *
+from .blt import linker_helpers
 
 class _7zip(Package):
     pass
@@ -91,6 +92,7 @@ NEW_7ZIP = b"""\
 
 from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
+from ..blt.package import linker_helpers
 
 class _7zip(Package):
     pass

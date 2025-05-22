@@ -500,6 +500,27 @@ def migrate_v2_imports(
                         )
                         continue
 
+                elif node.module is not None and node.level == 1 and "." not in node.module:
+                    # rewrite `from .blt import ...` -> `from ..blt.package import ...`
+                    pkg_module = _pkg_module_update(node.module)
+                    inline_updates.append(
+                        (
+                            node.lineno,
+                            node.col_offset,
+                            f".{node.module}",
+                            f"..{pkg_module}.package",
+                        )
+                    )
+
+                elif node.level > 0:  # dunno what this would mean, but print an error.
+                    success = False
+                    print(
+                        f"{pkg_path}:{node.lineno}: cannot rewrite relative import "
+                        f"`{'.'*node.level}{node.module}`",
+                        file=err,
+                    )
+                    continue
+
                 # Subtract the symbols that are imported so we don't repeatedly add imports.
                 for alias in node.names:
                     if alias.name in symbol_to_module:
