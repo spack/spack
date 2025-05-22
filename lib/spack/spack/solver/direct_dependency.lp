@@ -9,6 +9,13 @@
        not external(PackageNode),
        not concrete(PackageNode).
 
+1 {
+  concrete_build_requirement(PackageNode, DirectDependency)
+} 1 :- attr("direct_dependency", PackageNode, node_requirement("node", DirectDependency)),
+       concrete(PackageNode).
+
+% TODO: add a rule to allow only build requirements for externals
+
 %%%%
 % Build requirement
 %%%%
@@ -17,8 +24,3 @@
 attr("depends_on", node(X, Parent), node(Y, BuildDependency), "build") :-
  build_requirement(node(X, Parent), node(Y, BuildDependency)),
  build(node(X, Parent)).
-
-attr("direct_dependency", PackageNode, build_requirement(A1, A2)) :- attr("direct_dependency", PackageNode, node_requirement(A1, A2)).
-attr("direct_dependency", PackageNode, build_requirement(A1, A2, A3)) :- attr("direct_dependency", PackageNode, node_requirement(A1, A2, A3)).
-attr("direct_dependency", PackageNode, build_requirement(A1, A2, A3, A4)) :- attr("direct_dependency", PackageNode, node_requirement(A1, A2, A3, A4)).
-attr("direct_dependency", PackageNode, build_requirement(A1, A2, A3, A4, A5)) :- attr("direct_dependency", PackageNode, node_requirement(A1, A2, A3, A4, A5)).
