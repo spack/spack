@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import copy
 import filecmp
 import os
 
@@ -22,8 +21,6 @@ import spack.patch
 import spack.stage
 import spack.util.spack_json as sjson
 import spack.util.url as url_util
-import spack.version
-from spack.binary_distribution import create_tarball
 from spack.cmd.common.arguments import mirror_name_or_url
 from spack.spec import Spec
 from spack.util.executable import which

@@ -985,9 +985,6 @@ class GitFetchStrategy(VCSFetchStrategy):
             )
 
         with working_dir(dest):
-            checkout_args = ["checkout", self.commit]
-            if not debug:
-                checkout_args.insert(1, "--quiet")
             git(*checkout_args)
 
     def _clone_src(self) -> None:

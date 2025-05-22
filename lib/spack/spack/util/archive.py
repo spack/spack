@@ -248,14 +248,14 @@ def retrieve_commit_from_archive(archive_path, branch=None, tag=None):
     tar = which("tar", required=True)
     error_msg = f"Archive {archive_path} does not appear to contain git data"
 
-    if branch:
-        ref = f"refs/heads/{branch}/"
-    elif tag:
-        ref = f"refs/tags/{tag}/"
-    else:
-        _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
-    assert ref
     try:
+        if branch:
+            ref = f"refs/heads/{branch}/"
+        elif tag:
+            ref = f"refs/tags/{tag}/"
+        else:
+            _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
+        assert ref
         return tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
-    except ProcessError as e:
+    except ProcessError:
         assert False, error_msg

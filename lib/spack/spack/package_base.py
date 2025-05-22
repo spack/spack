@@ -1048,7 +1048,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         sha = self.stage.extract_commit_sha(tag=tag, branch=branch)
 
         if not sha:
-            version = self.spec.version
             url = self.version_or_package_attr("git", self.spec.version)
 
             assert not (tag and branch)

@@ -44,6 +44,7 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
+from spack.util.archive import retrieve_commit_from_archive
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
 from spack.util.git import git

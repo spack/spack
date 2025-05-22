@@ -12,6 +12,7 @@ from pathlib import Path, PurePath
 import pytest
 
 import spack.util.crypto
+import spack.version
 from spack.util.archive import (
     gzip_compressed_tarfile,
     reproducible_tarfile_from_prefix,
