@@ -28,6 +28,7 @@ class Rocwmma(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.4.0", sha256="d95d53f70b4a2adc565bf4490515626cb7109f1d2e8a9978626610d3f178cf42")
     version("6.3.3", sha256="5bfd2909cc9b4601bb83ddd79da6cfa4075afa6d6e9396d9bbe1df844163fbd2")
     version("6.3.2", sha256="f9dc5e837ac30efe4600775fb309e46ed8ef112a673435663d2ef7fdf28f8f12")
     version("6.3.1", sha256="9afd06c58b405dd86535ea1ca479fd6f9d717fa8665710bb64fc8027a26e6ac7")
@@ -70,6 +71,7 @@ class Rocwmma(CMakePackage):
         description="CMake build type",
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.16:", type="build", when="@5.2.0:")
@@ -100,6 +102,7 @@ class Rocwmma(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on("rocm-cmake@%s:" % ver, type="build", when="@" + ver)
         depends_on("llvm-amdgpu@" + ver, type="build", when="@" + ver)
@@ -124,13 +127,15 @@ class Rocwmma(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on("rocm-smi-lib@" + ver, when="@" + ver)
 
     for tgt in itertools.chain(["auto"], amdgpu_targets):
         depends_on("rocblas amdgpu_target={0}".format(tgt), when="amdgpu_target={0}".format(tgt))
 
-    patch("0001-add-rocm-smi-lib-path-for-building-tests.patch", when="@5.6:")
+    patch("0001-add-rocm-smi-lib-path-for-building-tests.patch", when="@5.6:6.3")
+    patch("0002-use-find-package-rocm-smi.patch", when="@6.4:")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)

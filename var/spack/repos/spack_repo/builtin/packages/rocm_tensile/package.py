@@ -21,6 +21,7 @@ class RocmTensile(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "haampie", "afzpatel")
+    version("6.4.0", sha256="cfe32aa31aa0dd79018d0cdd36e09df3a548159cb7b8e18d0ef6513d0febce90")
     version("6.3.3", sha256="5849fc3898e9cea05569c0ee102c13043c4df67079119572687bc42f274ae496")
     version("6.3.2", sha256="700e43a22d7e6309bf74624b18a42bb0132ef35716fccec897d3045a97759e6a")
     version("6.3.1", sha256="9882e8f949e1eb1d4b7dbd215370ecce643852dd2ce6e021d59cd49d32ba9dea")
@@ -65,6 +66,7 @@ class RocmTensile(CMakePackage):
     )
     variant("openmp", default=True, description="Enable OpenMP")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
@@ -95,6 +97,7 @@ class RocmTensile(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-cmake@{ver}", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -106,6 +109,7 @@ class RocmTensile(CMakePackage):
     root_cmakelists_dir = "Tensile/Source"
 
     patch("0003-require-openmp-extras-when-tensile-use-openmp.patch", when="@5.1.0:")
+    patch("0004-replace_rocm_smi.patch", when="@6.4")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)

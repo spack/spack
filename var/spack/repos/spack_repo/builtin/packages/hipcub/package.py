@@ -20,6 +20,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.4.0", sha256="2c044ed9bf53b9410ef6de4ca578384569b0a89cac4e8604dfdde390b2918481")
     version("6.3.3", sha256="4ce22aba007c6c8a8b2231adefa7785b1869e5fdd4af29b0371a499a523c2dc6")
     version("6.3.2", sha256="4a1443c2ea12c3aa05fb65703eb309ccf8b893f9e6cbebec4ccf5502ba54b940")
     version("6.3.1", sha256="e5d100c7b8f95fe6243ad9f22170c136aa34db4e588136bec54ede7cb2e7f12f")
@@ -91,6 +92,7 @@ class Hipcub(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocprim@{ver}", when=f"+rocm @{ver}")
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")

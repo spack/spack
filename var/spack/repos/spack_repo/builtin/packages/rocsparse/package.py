@@ -41,6 +41,7 @@ class Rocsparse(CMakePackage):
     conflicts("+asan", when="os=centos8")
 
     license("MIT")
+    version("6.4.0", sha256="a0fb423b80da72f072a6d80b9837c80c671b5fae719f57c0e83d7e4e27d3d187")
     version("6.3.3", sha256="e316d46b40e99976f4acaa097d6ebf5c2caf1ff2bd3c5b1de04c93c1dac90516")
     version("6.3.2", sha256="665a85517d50e5ef37b1f953ccb17108d6a5cb30db21c5364bd50a41d44c61f2")
     version("6.3.1", sha256="95c9dcc8421711f2f203a34c2830c5ac504e127922e0a83dbc68bccd5509c72f")
@@ -94,6 +95,7 @@ class Rocsparse(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocprim@{ver}", when=f"@{ver}")

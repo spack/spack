@@ -23,6 +23,7 @@ class RocmValidationSuite(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.4.0", sha256="1963aa0ec6f6b7e957a5521dbfba615c2047ef7f432048b4a14c979c90a6f995")
     version("6.3.3", sha256="3d1afc47f6bd491991f6deb80f84d00041497e7fd564fd0129622263b5b87cc1")
     version("6.3.2", sha256="c13d1efc21358901074f73c48f9cc8531cd5c6d28b7702d022f3efbbaf4b4286")
     version("6.3.1", sha256="5a5ec682729292d57838191e217a3475d662c5c25a7bd79c4996fdf4b5e36a5a")
@@ -47,6 +48,7 @@ class RocmValidationSuite(CMakePackage):
         version("5.3.3", sha256="9acbc8de9b2e18659f51bd49f6e92ab6c93742e2ed0046322025f017fc12497f")
         version("5.3.0", sha256="d6afb8a5f4eaf860fd510bcfe65e735cbf96d4b8817c758ea7aee84d4c994382")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     patch(
@@ -69,13 +71,15 @@ class RocmValidationSuite(CMakePackage):
     patch(
         "https://github.com/ROCm/ROCmValidationSuite/commit/bd63256d43d11ae09a2c203e05cb002c7a730c59.patch?full_index=1",
         sha256="bd63baeb4dea00ac4104ef7e9fab907bc04a1eccb93036478c005d0ac11034de",
-        when="@6.3.0:",
+        when="@6.3",
     )
+    patch("010-add-drm-include-path.patch", when="@6.4")
     depends_on("cmake@3.5:", type="build")
     depends_on("zlib-api", type="link")
     depends_on("yaml-cpp~shared")
     depends_on("googletest")
     depends_on("doxygen", type="build")
+    depends_on("libdrm", when="@6.4:")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         spec = self.spec
@@ -126,17 +130,18 @@ class RocmValidationSuite(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
-    for ver in ["6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"hiprand@{ver}", when=f"@{ver}")
         depends_on(f"rocrand@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
 
     def patch(self):

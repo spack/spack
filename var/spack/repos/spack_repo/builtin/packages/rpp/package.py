@@ -15,13 +15,13 @@ class Rpp(CMakePackage):
     performance computer vision library for AMD (CPU and GPU) with HIP
     and OPENCL back-ends"""
 
-    homepage = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp"
-    git = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp.git"
-    url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-6.1.2.tar.gz"
+    homepage = "https://github.com/ROCm/rpp"
+    git = "https://github.com/ROCm/rpp.git"
+    url = "https://github.com/ROCm/rpp/archive/refs/tags/rocm-6.4.0.tar.gz"
 
     def url_for_version(self, version):
         if version >= Version("5.7.0"):
-            url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/refs/tags/rocm-{0}.tar.gz"
+            url = "https://github.com/ROCm/rpp/archive/refs/tags/rocm-{0}.tar.gz"
         else:
             url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/rpp/archive/{0}.tar.gz"
         return url.format(version)
@@ -30,6 +30,7 @@ class Rpp(CMakePackage):
 
     maintainers("srekolam", "afzpatel")
     license("MIT")
+    version("6.4.0", sha256="e59e5aa6b140de062430cab03c9c2b88a3b444c53ae17c6b885898e16aefd39b")
     version("6.3.3", sha256="e6b586679a3705bf6b7bb3c5852541d329bd967e110999ac59dc052b49a92cbc")
     version("6.3.2", sha256="05f0e063c61f5039661a4d5a80113ebb7b9782d0958c29375a8e1e2e759b88bc")
     version("6.3.1", sha256="6e7da82bf7b6d642d605370329e4e719af10bb5c6af30079b5d0b60cdcb91a48")
@@ -76,7 +77,7 @@ class Rpp(CMakePackage):
 
     patch("0001-include-half-openmp-through-spack-package.patch", when="@:5.7")
     patch("0002-declare-handle-in-header.patch")
-    patch("0003-include-half-through-spack-package.patch", when="@6.0:")
+    patch("0003-include-half-through-spack-package.patch", when="@6.0:6.3")
 
     # adds half.hpp include directory and modifies how the libjpegturbo
     # library is linked for the rpp unit test
@@ -177,6 +178,7 @@ class Rpp(CMakePackage):
                 "6.3.1",
                 "6.3.2",
                 "6.3.3",
+                "6.4.0",
             ]:
                 depends_on("hip@" + ver, when="@" + ver)
         with when("@:1.2"):
@@ -193,7 +195,7 @@ class Rpp(CMakePackage):
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+asan"):
             env.set("CC", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
-            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang")
+            env.set("CXX", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang++")
             env.set("ASAN_OPTIONS", "detect_leaks=0")
             env.set("CFLAGS", "-fsanitize=address -shared-libasan")
             env.set("CXXFLAGS", "-fsanitize=address -shared-libasan")
@@ -215,4 +217,10 @@ class Rpp(CMakePackage):
                     "COMPILER_FOR_HIP", "{0}/bin/clang++".format(spec["llvm-amdgpu"].prefix)
                 )
             )
+            if self.spec.satisfies("@6.4:"):
+                args.append(
+                    self.define(
+                        "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                    )
+                )
         return args

@@ -21,6 +21,7 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version("master", branch="master")
+    version("1.3", sha256="7efdf049822f171f4da5e83a7101096c066679904e59e741f3c2833ccda5e363")
     version("1.2", sha256="bc97ba09ce908e55d4c5faa78d9739dde7daefd9337ae98351813b13708d0685")
     version("1.1", sha256="2cb5040761f3da4383e1f126da25d68e99ecd8398e0ff12e7475a3745a7030a6")
     version("1.0.1", sha256="915531a2bcf638011bb6cc19715bbc46d846ec8b985555a1afdcd6abc017e21b")
@@ -105,6 +106,7 @@ class Podio(CMakePackage):
     depends_on("root@6.14:", when="+datasource")
     depends_on("root@6.28.04: +root7", when="+rntuple")
     depends_on("root@6.28:", when="@0.17:")
+    depends_on("root@6.32: +root7", when="@1.3: +rntuple")
     for cxxstd in ("17", "20"):
         depends_on("root cxxstd={}".format(cxxstd), when="cxxstd={}".format(cxxstd))
 

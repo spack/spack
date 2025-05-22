@@ -24,6 +24,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     libraries = ["libhipsparse"]
 
     license("MIT")
+    version("6.4.0", sha256="aaab3e9a905f5c5f470634ed7a0929ef93e28d2c5fe4f6f89338b39a937f1825")
     version("6.3.3", sha256="61c26eb93e857c942a03ea4350a403e20191be465041e542ad7da00058e89ead")
     version("6.3.2", sha256="9fbc3468632fdc828d7bae386c2737eb371d78811f53da7348b417fb00d62808")
     version("6.3.1", sha256="d64bc48e0aa5ec2f48853272a9c554b37ec98cb0724135e45f21b1340df7bccb")
@@ -66,6 +67,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
     conflicts("~cuda ~rocm", msg="CUDA or ROCm support is required")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
@@ -98,6 +100,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"+rocm @{ver}")

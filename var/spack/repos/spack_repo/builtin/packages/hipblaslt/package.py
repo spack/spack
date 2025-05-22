@@ -19,6 +19,7 @@ class Hipblaslt(CMakePackage):
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.0", sha256="a4baa0c7336db9d46a0884c8ccfd0fb7e00a502b478aed9f588aa26fa8773353")
     version("6.3.3", sha256="f32d666b37bdbecbf924cc98653fa3d30a0de629039d4dad44d35a2082e39e5a")
     version("6.3.2", sha256="cc4875b1a5cf1708a7576c42aff6b4cb790cb7337f5dc2df33119a4aadcef027")
     version("6.3.1", sha256="9a18a2e44264a21cfe58ed102fd3e34b336f23d6c191ca2da726e8e0883ed663")
@@ -45,6 +46,8 @@ class Hipblaslt(CMakePackage):
     depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("cmake@3.25.2:", type="build", when="@6.2.0:")
+    depends_on("python@3.7:")
+    depends_on("python@3.8:", when="@6.4:")
 
     for ver in [
         "6.0.0",
@@ -59,6 +62,7 @@ class Hipblaslt(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -67,15 +71,19 @@ class Hipblaslt(CMakePackage):
     for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4"]:
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"hipblas-common@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
+
+    for ver in ["6.4.0"]:
+        depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
 
     depends_on("msgpack-c")
     depends_on("py-joblib", type=("build", "link"))
     depends_on("googletest@1.10.0:", type="test")
     depends_on("netlib-lapack@3.7.1:", type="test")
     depends_on("py-pyyaml", type="test")
+    depends_on("python-venv", when="@6.4:")
 
     # Sets the proper for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories
@@ -83,7 +91,9 @@ class Hipblaslt(CMakePackage):
     # Below patch sets the proper path for clang++ and clang-offload-blunder.
     # Also adds hipblas and msgpack include directories for 6.1.0 release.
     patch("0001-Set-LLVM_Path-Add-Hiblas-Include-to-CmakeLists-6.1.Patch", when="@6.1:6.2")
-    patch("0001-Set-LLVM-Path-6.3.Patch", when="@6.3:")
+    patch("0001-Set-LLVM-Path-6.3.Patch", when="@6.3")
+    patch("002-link-roctracer.patch", when="@6.4")
+    patch("003-use-rocm-smi-config.patch", when="@6.4")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
@@ -115,6 +125,13 @@ class Hipblaslt(CMakePackage):
                 "library/src/amd_detail/rocblaslt/src/kernels/compile_code_object.sh",
                 string=True,
             )
+        if self.spec.satisfies("@6.3:"):
+            filter_file(
+                "${rocm_path}/bin/amdclang++",
+                f'{self.spec["llvm-amdgpu"].prefix}/bin/amdclang++',
+                "tensilelite/Tensile/Ops/gen_assembly.sh",
+                string=True,
+            )
 
     def cmake_args(self):
         args = [
@@ -129,4 +146,6 @@ class Hipblaslt(CMakePackage):
             args.append(
                 self.define("ROCM_OPENMP_EXTRAS_DIR", self.spec["rocm-openmp-extras"].prefix)
             )
+        if self.spec.satisfies("@6.4:"):
+            args.append(self.define("Python_ROOT", self.spec["python"].prefix.bin))
         return args

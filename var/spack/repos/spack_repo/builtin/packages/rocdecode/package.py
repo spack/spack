@@ -20,6 +20,7 @@ class Rocdecode(CMakePackage):
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.0", sha256="d82c17687cc8ccac67fe2d401edd25c9825b38777b7a7b4100f84658838a1e50")
     version("6.3.3", sha256="e72f53674527b7a6c3cba3b7555fee32117f0875107fd9e632a2ec1d5ce03489")
     version("6.3.2", sha256="39ff3c21c81a73910dcfe6a147edaddecc21575a3077f0f99971c8d2f6d0e7d5")
     version("6.3.1", sha256="94da1a61167abaf3f983ae5d62bffb22bb8ba3eb1c9d9fc7c68ed9a066aa4e52")
@@ -41,6 +42,7 @@ class Rocdecode(CMakePackage):
     )
 
     depends_on("libva", type="build", when="@6.2:")
+    depends_on("libdrm", type="build", when="@6.4:")
 
     for ver in [
         "6.1.0",
@@ -53,8 +55,11 @@ class Rocdecode(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
+
+    patch("0001-add-amdgpu-drm-include.patch", when="@6.4")
 
     def patch(self):
         filter_file(
@@ -76,4 +81,14 @@ class Rocdecode(CMakePackage):
             args.append(self.define_from_variant("AMDGPU_TARGETS", "amdgpu_target"))
         if self.spec.satisfies("@6.3.0:"):
             args.append(self.define("LIBVA_INCLUDE_DIR", self.spec["libva"].prefix.include))
+        if self.spec.satisfies("@6.4.0:"):
+            args.append(
+                self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang")
+            )
+            args.append(
+                self.define(
+                    "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                )
+            )
+            args.append(self.define("AMDGPU_DRM_INCLUDE_DIRS", self.spec["libdrm"].prefix.include))
         return args

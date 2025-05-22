@@ -71,13 +71,18 @@ class Vtk(CMakePackage):
     variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
-    # patch to fix some missing stl includes
-    # which lead to build errors on newer compilers
 
+    # patches to fix some missing stl includes
+    # which lead to build errors on newer compilers
     patch(
         "https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff",
         when="@9:9.0",
         sha256="0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d",
+    )
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/1233ceec268d5366c66f5e79786ec784042b591.diff",
+        when="@9.1:9.2",
+        sha256="38380bd20443d94d8ce9f339b9b2fbdea03400aa9d6dbb7e3ef138a65f11c080",
     )
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:

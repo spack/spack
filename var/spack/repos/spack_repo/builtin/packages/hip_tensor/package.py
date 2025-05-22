@@ -19,6 +19,7 @@ class HipTensor(CMakePackage, ROCmPackage):
     maintainers("srekolam", "afzpatel")
 
     version("master", branch="master", deprecated=True)
+    version("6.4.0", sha256="cc2a738defa72cd2b39f4d358c7967dc93b490160b6eb74f893c4626ad334310")
     version("6.3.3", sha256="2f4e34c5a96004e24fcdf70f9157f1079ab177a78f6dbf96ea8290f668257c23")
     version("6.3.2", sha256="094db6d759eb32e9d15c36fce7f5b5d46ba81416953a8d9435b2fb9c161d8c83")
     version("6.3.1", sha256="142401331526e6da3fa172cce283f1c053056cb59cf431264443da76cee2f168")
@@ -36,6 +37,7 @@ class HipTensor(CMakePackage, ROCmPackage):
 
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     for ver in [
@@ -53,6 +55,7 @@ class HipTensor(CMakePackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
         "master",
     ]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver}")
@@ -69,6 +72,7 @@ class HipTensor(CMakePackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hipcc@{ver}", when=f"@{ver}")
 

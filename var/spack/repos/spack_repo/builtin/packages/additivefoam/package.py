@@ -15,9 +15,9 @@ from ..openfoam import package as openfoam
 class Additivefoam(Package):
     """AdditiveFOAM is a heat and mass transfer software for Additive Manufacturing (AM)"""
 
-    homepage = "https://github.com/ORNL/AdditiveFOAM"
+    homepage = "https://ornl.github.io/AdditiveFOAM/"
     git = "https://github.com/ORNL/AdditiveFOAM.git"
-    url = "https://github.com/ORNL/AdditiveFOAM/archive/1.0.0.tar.gz"
+    url = "https://github.com/ORNL/AdditiveFOAM/archive/1.1.0.tar.gz"
 
     maintainers("streeve", "colemanjs", "gknapp1")
 
@@ -26,16 +26,17 @@ class Additivefoam(Package):
     license("GPL-3.0-only")
 
     version("main", branch="main")
+    version("1.1.0", sha256="a13770bd66fe10224705fb3a2bfb557e63e0aea98c917b0084cf8b91eaa53ee2")
     version("1.0.0", sha256="abbdf1b0230cd2f26f526be76e973f508978611f404fe8ec4ecdd7d5df88724c")
 
     depends_on("cxx", type="build")  # generated
 
     depends_on("openfoam-org@10")
 
-    common = ["spack-derived-Allwmake"]
-    assets = [join_path("applications", "Allwmake"), "Allwmake"]
+    common = []
+    assets = ["Allwmake"]
 
-    build_script = "./spack-derived-Allwmake"
+    build_script = "./Allwmake"
 
     phases = ["configure", "build", "install"]
 
@@ -56,15 +57,49 @@ class Additivefoam(Package):
             openfoam.install(join_path(indir, f), join_path(outdir, f))
 
     def patch(self):
+        """Patches build by adding Allwmake from the asset directory based on
+        the spec version.
+
+        For all versions after 1.0.0 there is an Allwmake script in
+        the AdditiveFOAM repository that can be called by the spack assets_main/Allwmake
+        script, whereas the assets_1.0.0/Allwmake script contains the
+        build instructions."""
         spec = self.spec
-        asset_dir = ""
-        if Version("main") in spec.versions:
-            asset_dir = "assets_main"
-        elif Version("1.0.0") in spec.versions:
+        asset_dir = "assets_main"
+        if Version("1.0.0") in spec.versions:
             asset_dir = "assets_1.0.0"
         self.add_extra_files(self.common, asset_dir, self.assets)
 
+    def setup_build_environment(self, env):
+        """Set up the build environment variables."""
+
+        # Ensure that the directories exist
+        mkdirp(self.prefix.bin)
+        mkdirp(self.prefix.lib)
+
+        # Add to the environment
+        env.set("FOAM_USER_APPBIN", self.prefix.bin)
+        env.set("FOAM_USER_LIBBIN", self.prefix.lib)
+
+    def setup_run_environment(self, env):
+        """Set up the run environment variables."""
+
+        # Add to the environment
+        env.prepend_path("PATH", self.prefix.bin)
+        env.prepend_path("LD_LIBRARY_PATH", self.prefix.lib)
+
+    def activate(self, spec, prefix):
+        """Activate the package to modify the environment."""
+        self.setup_run_environment(self.spec.environment())
+
+    def deactivate(self, spec, prefix):
+        """Deactivate the package and clean up the environment."""
+        env = self.spec.environment()
+        env.pop("FOAM_USER_APPBIN", None)
+        env.pop("FOAM_USER_LIBBIN", None)
+
     def configure(self, spec, prefix):
+        """Configure the environment for building."""
         pass
 
     def build(self, spec, prefix):

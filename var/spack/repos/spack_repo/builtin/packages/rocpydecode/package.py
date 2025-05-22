@@ -15,6 +15,7 @@ class Rocpydecode(CMakePackage):
     url = "https://github.com/ROCm/rocPyDecode/archive/refs/tags/rocm-6.2.0.tar.gz"
 
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
+    version("6.4.0", sha256="c7fd47f98dc0ef005a0fda0dc73e71e1d5318901d038489ba69f51473b7aca6a")
     version("6.3.3", sha256="df45b4a64ed3e550229fd91bcf7896d1a8fe377dd1ff88d2e6a71897b981180d")
     version("6.3.2", sha256="c1b4dba9f8a28299279ad4e4aeb0c857c3a9772d016fcc0f164940f22faa6dee")
     version("6.3.1", sha256="77ed22ee23409b004676fb1a11b963324b878e786dae0a56fdef58375716c9eb")
@@ -27,7 +28,7 @@ class Rocpydecode(CMakePackage):
     depends_on("ffmpeg@4.4:6")
     depends_on("dlpack")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"rocdecode@{ver}", when=f"@{ver}")
 
     def patch(self):
@@ -55,7 +56,6 @@ class Rocpydecode(CMakePackage):
             self.define("rocDecode_PATH", self.spec["rocdecode"].prefix),
             self.define("FFMPEG_INCLUDE_DIR", self.spec["ffmpeg"].prefix.include),
             self.define("CMAKE_INSTALL_PREFIX_PYTHON", self.spec.prefix),
-            self.define("CMAKE_CXX_FLAGS", "-I{0}".format(self.spec["dlpack"].prefix.include)),
             self.define(
                 "CMAKE_CXX_FLAGS",
                 "-DUSE_AVCODEC_GREATER_THAN_58_134 -I{0}".format(
@@ -63,4 +63,13 @@ class Rocpydecode(CMakePackage):
                 ),
             ),
         ]
+        if self.spec.satisfies("@6.4.0:"):
+            args.append(
+                self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang")
+            )
+            args.append(
+                self.define(
+                    "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                )
+            )
         return args

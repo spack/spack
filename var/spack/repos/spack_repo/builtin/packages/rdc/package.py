@@ -28,6 +28,7 @@ class Rdc(CMakePackage):
         return url.format(version)
 
     license("MIT")
+    version("6.4.0", sha256="2ee3def1e90784923f2043220974d30fe9581ec0d54c93628911ed8292fc56c4")
     version("6.3.3", sha256="9be314ea8d7e7af58ac4a24f5720f54d51ba553d3e1751bc9cfc4bff98494fab")
     version("6.3.2", sha256="e0780b8ef46d7b9885eb06a0b9eb56924fdf090ade71a66360a0bee1d9d7295d")
     version("6.3.1", sha256="88a96f13c0010a7f9e63f7a5a5531ae1d57ef1a722bac232c8544cde6245e120")
@@ -52,6 +53,7 @@ class Rdc(CMakePackage):
         version("5.3.3", sha256="1bf1a02f305e3a629801e62584116a34eafbd1b26627837a2a8c10550fcf611b")
         version("5.3.0", sha256="ce9c85dad8e0c0b21e8e5938bf16f86a62dc5f6ded5f453c61acd43666634d6b")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.15:", type="build")
@@ -79,6 +81,25 @@ class Rdc(CMakePackage):
         "6.1.0",
         "6.1.1",
         "6.1.2",
+    ]:
+        depends_on(f"rocm-smi-lib@{ver}", type=("build", "link"), when=f"@{ver}")
+
+    for ver in [
+        "5.3.0",
+        "5.3.3",
+        "5.4.0",
+        "5.4.3",
+        "5.5.0",
+        "5.5.1",
+        "5.6.0",
+        "5.6.1",
+        "5.7.0",
+        "5.7.1",
+        "6.0.0",
+        "6.0.2",
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
         "6.2.0",
         "6.2.1",
         "6.2.4",
@@ -86,8 +107,8 @@ class Rdc(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
-        depends_on(f"rocm-smi-lib@{ver}", type=("build", "link"), when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
     for ver in [
@@ -109,10 +130,14 @@ class Rdc(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"amdsmi@{ver}", when=f"@{ver}")
+
+    for ver in ["6.4.0"]:
+        depends_on(f"rocm-validation-suite@{ver}", when=f"@{ver}")
 
     def patch(self):
         filter_file(r"\${ROCM_DIR}/rocm_smi", "${ROCM_SMI_DIR}", "CMakeLists.txt")

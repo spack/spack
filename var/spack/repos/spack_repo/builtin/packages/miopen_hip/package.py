@@ -23,6 +23,7 @@ class MiopenHip(CMakePackage):
     libraries = ["libMIOpen"]
 
     license("MIT")
+    version("6.4.0", sha256="5b101f9177d49654968a3f3c01c9eede561a8fe5178f2ae4d8e5acb16b0b17e6")
     version("6.3.3", sha256="755beaec2e97aa4fafcdb07e4becbcddcb0c3cef6af256a04716d46e90c2f520")
     version("6.3.2", sha256="7abda3b437e396a1611a6f63e73ab1656d45d5405194504136c0ccbb75b81fea")
     version("6.3.1", sha256="edb82a74086fb96f8d7ee9e50a180302f716332cd0dff96bf7244bdc6fab5895")
@@ -78,11 +79,15 @@ class MiopenHip(CMakePackage):
     patch("0002-add-include-dir-miopen-hip-6.0.0.patch", when="@6.0")
     patch("0001-link-with-roctracer-when-building-miopendriver-6.1.0.patch", when="@6.1")
     patch("0001-link-with-roctracer-when-building-miopendriver-6.2.0.patch", when="@6.2")
-    patch("0003-link-with-hipblas-roctracer-rocrand-6.3.0.patch", when="@6.3")
     patch(
         "https://github.com/ROCm/MIOpen/commit/f60aa1ff89f8fb596b4a6a4c70aa7d557803db87.patch?full_index=1",
         sha256="7f382c872d89f22da1ad499e85ffe9881cc7404c8465e42877a210a09382e2ea",
         when="@5.7",
+    )
+    patch(
+        "https://github.com/ROCm/MIOpen/commit/d1a25ad0f4fc90dffea7a5dbb9cc7a9983a004c2.patch?full_index=1",
+        sha256="3001a90202b572a5cd86a51905064903bcee74d8fa0d9649ee9732274c207801",
+        when="@6.3:",
     )
 
     for ver in [
@@ -108,6 +113,7 @@ class MiopenHip(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -153,6 +159,7 @@ class MiopenHip(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"composable-kernel@{ver}", when=f"@{ver} +ck")
     for ver in ["5.4.0", "5.4.3", "5.5.0"]:
@@ -170,11 +177,12 @@ class MiopenHip(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"rocrand@{ver}", when=f"@{ver}")
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
 

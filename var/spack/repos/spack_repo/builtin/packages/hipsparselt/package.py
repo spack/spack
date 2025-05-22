@@ -23,6 +23,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.0", sha256="3950f424c5623bdf764e23c263f3a63de62e3690f491251b88054e27560dc604")
     version("6.3.3", sha256="6b756e20fddb37b8c1237ef8e124452c9bdd46acad8a40699d10b609d0d2ebfc")
     version("6.3.2", sha256="a0b30b478eff822dd7fa1c116ad99dcdf14ece1c33aae04ac71b594efd4d9866")
     version("6.3.1", sha256="403d4c0ef47f89510452a20be6cce72962f21761081fc19a7e0e27e7f0c4ccfd")
@@ -50,6 +51,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     )
     variant("asan", default=False, description="Build with address-sanitizer enabled or disabled")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     for ver in [
@@ -65,13 +67,14 @@ class Hipsparselt(CMakePackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", when=f"@{ver}", type="test")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
     depends_on("cmake@3.5:", type="build")
@@ -92,6 +95,7 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.1.patch", when="@6.1")
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.2.patch", when="@6.2")
     patch("0001-update-llvm-path-add-hipsparse-include-dir-for-spack-6.3.patch", when="@6.3")
+    patch("0002-add-hipsparse-include.patch", when="@6.4")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.set("CXX", self.spec["hip"].hipcc)
@@ -106,7 +110,8 @@ class Hipsparselt(CMakePackage, ROCmPackage):
             "ROCM_AGENT_ENUMERATOR_PATH",
             f"{self.spec['rocminfo'].prefix}/bin/rocm_agent_enumerator",
         )
-        env.set("ROCM_SMI_PATH", f"{self.spec['rocm-smi-lib'].prefix}/bin/rocm-smi")
+        if self.spec.satisfies("@6.3:"):
+            env.set("ROCM_SMI_PATH", f"{self.spec['rocm-smi-lib'].prefix}/bin/rocm-smi")
 
     def cmake_args(self):
         args = [

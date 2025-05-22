@@ -19,6 +19,7 @@ class RocmBandwidthTest(CMakePackage):
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
     version("master", branch="master", deprecated=True)
+    version("6.4.0", sha256="0a4c8aa32e041f0344eda448927d677b4a65835dda9736a7f2ab72b8e7f14d1c")
     version("6.3.3", sha256="d33f656eb6ba7db78b41c4bcf6d830b511dc97c6d645760e6d05edd07fcaefba")
     version("6.3.2", sha256="3754831244d7c4f6314fc25b3e929adf9abe44c9cb60621dd8ae5d1aa930ae55")
     version("6.3.1", sha256="98002e4104929a62a308114ed82fba530880359a17f90ebd62a2ca49c2baac78")
@@ -43,6 +44,7 @@ class RocmBandwidthTest(CMakePackage):
         version("5.3.3", sha256="2bc079297e639d45d57c8017f6f47bc44d4ed34613ec76c80574bb703d79b498")
         version("5.3.0", sha256="a97365c04d79663db7c85027c63a12d56356abc0a351697f49c2d82bf9ef8999")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3:", type="build")
@@ -92,6 +94,7 @@ class RocmBandwidthTest(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
         "master",
     ]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -115,6 +118,7 @@ class RocmBandwidthTest(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
