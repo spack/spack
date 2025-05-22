@@ -32,6 +32,7 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     depends_on("petsc~hypre~metis~fortran")
     depends_on("petsc+debug", when="+debug")
     depends_on("slepc", when="+slepc")
+    depends_on("mpi", type=("build", "link", "run"))
 
     depends_on("blt@0.6.0:", type="build")
 
@@ -46,7 +47,6 @@ class Quandary(CachedCMakePackage, CudaPackage, ROCmPackage):
     with when("+test"):
         depends_on("python", type="run")
         depends_on("py-pip", type="run")
-        depends_on("mpi", type="run")
 
     build_targets = ["all"]
     install_targets = ["install"]
