@@ -267,11 +267,13 @@ class Bazel(Package):
         env.set("BAZEL_LINKOPTS", "")
         env.set("BAZEL_LINKLIBS", "-lstdc++")
 
-        # .WARNING: Option 'host_javabase' is deprecated
+        args = ["--color=no", "--verbose_failures", f"--jobs={make_jobs}"]
+
         # Use local java installation
-        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
-            self.spec["java"].prefix, make_jobs
-        )
+        if self.spec.satisfies("@6:"):
+            args.append("--tool_java_runtime_version=local_jdk")
+        else:
+            args.append("--host_javabase=@local_jdk//:jdk")
 
         resource_stages = self.stage[1:]
         for _resource in resource_stages:
@@ -279,11 +281,11 @@ class Bazel(Package):
                 resource_name = _resource.resource.name
                 if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
                     archive_path = _resource.source_path
-                    args += " --distdir={0}".format(archive_path)
+                    args.append(f"--distdir={archive_path}")
             except AttributeError:
                 continue
 
-        env.set("EXTRA_BAZEL_ARGS", args)
+        env.set("EXTRA_BAZEL_ARGS", " ".join(args))
 
     @run_before("install")
     def bootstrap(self):
