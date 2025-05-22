@@ -114,7 +114,7 @@ CONFIG_DEFAULTS = {
 
 #: metavar to use for commands that accept scopes
 #: this is shorter and more readable than listing all choices
-SCOPES_METAVAR = "{defaults,system,site,user,command_line}[/PLATFORM] or env:ENVIRONMENT"
+SCOPES_METAVAR = "{defaults,system,site,user,command_line} or env:ENVIRONMENT"
 
 #: Base name for the (internal) overrides scope.
 _OVERRIDES_BASE_NAME = "overrides-"
@@ -168,10 +168,6 @@ class ConfigScope:
     def _write_section(self, section: str) -> None:
         raise NotImplementedError
 
-    @property
-    def is_platform_dependent(self) -> bool:
-        return False
-
     def clear(self) -> None:
         """Empty cached config information."""
         self.sections = syaml.syaml_dict()
@@ -219,11 +215,6 @@ class DirectoryConfigScope(ConfigScope):
                 syaml.dump_config(data, stream=f, default_flow_style=False)
         except (syaml.SpackYAMLError, OSError) as e:
             raise ConfigFileError(f"cannot write to '{filename}'") from e
-
-    @property
-    def is_platform_dependent(self) -> bool:
-        """Returns true if the scope name is platform specific"""
-        return "/" in self.name
 
 
 class SingleFileScope(ConfigScope):
@@ -523,12 +514,6 @@ class Configuration:
     def highest_precedence_scope(self) -> ConfigScope:
         """Writable scope with the highest precedence."""
         return next(s for s in self.scopes.reversed_values() if s.writable)
-
-    def highest_precedence_non_platform_scope(self) -> ConfigScope:
-        """Writable non-platform scope with the highest precedence"""
-        return next(
-            s for s in self.scopes.reversed_values() if s.writable and not s.is_platform_dependent
-        )
 
     def matching_scopes(self, reg_expr) -> List[ConfigScope]:
         """
@@ -948,7 +933,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
-    # add each scope and its platform-specific directory
+    # add each scope
     for name, path in configuration_paths:
         cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
         # yield the config incrementally so that each config level's init code can get
@@ -1478,12 +1463,8 @@ def default_modify_scope(section: str = "config") -> str:
 
     Arguments:
         section (bool): Section for which to get the default scope.
-            If this is not 'compilers', a general (non-platform) scope is used.
     """
-    if section == "compilers":
-        return CONFIG.highest_precedence_scope().name
-    else:
-        return CONFIG.highest_precedence_non_platform_scope().name
+    return CONFIG.highest_precedence_scope().name
 
 
 def _update_in_memory(data: YamlConfigDict, section: str) -> bool:
