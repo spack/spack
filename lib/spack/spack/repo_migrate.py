@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import ast
+import difflib
 import os
 import re
 import shutil
@@ -31,7 +32,7 @@ def _same_contents(f: str, g: str) -> bool:
 
 
 def migrate_v1_to_v2(
-    repo: spack.repo.Repo, fix: bool, out: IO[str] = sys.stdout, err: IO[str] = sys.stderr
+    repo: spack.repo.Repo, *, patch_file: Optional[IO[bytes]], err: IO[str] = sys.stderr
 ) -> Tuple[bool, Optional[spack.repo.Repo]]:
     """To upgrade a repo from Package API v1 to v2 we need to:
     1. ensure ``spack_repo/<namespace>`` parent dirs to the ``repo.yaml`` file.
@@ -82,7 +83,8 @@ def migrate_v1_to_v2(
 
     errors = False
 
-    stack: List[Tuple[str, int]] = [(repo.root, 0)]
+    stack: List[Tuple[str, int]] = [(repo.packages_path, 0)]
+
     while stack:
         path, depth = stack.pop()
 
@@ -112,11 +114,7 @@ def migrate_v1_to_v2(
                     continue
 
                 # check if this is a package
-                if (
-                    depth == 1
-                    and rel_path.startswith(f"{subdirectory}{os.sep}")
-                    and os.path.exists(os.path.join(entry.path, "package.py"))
-                ):
+                if depth == 0 and os.path.exists(os.path.join(entry.path, "package.py")):
                     if "_" in entry.name:
                         print(
                             f"Invalid package name '{entry.name}': underscores are not allowed in "
@@ -143,8 +141,8 @@ def migrate_v1_to_v2(
 
     rename_regex = re.compile("^(" + "|".join(re.escape(k) for k in rename.keys()) + ")")
 
-    if fix:
-        os.makedirs(new_root, exist_ok=True)
+    if not patch_file:
+        os.makedirs(os.path.join(new_root, repo.subdirectory), exist_ok=True)
 
     def _relocate(rel_path: str) -> Tuple[str, str]:
         old = os.path.join(repo.root, rel_path)
@@ -155,18 +153,20 @@ def migrate_v1_to_v2(
         new = os.path.join(new_root, new_rel)
         return old, new
 
-    if not fix:
-        print("The following directories, files and symlinks will be created:\n", file=out)
+    if patch_file:
+        patch_file.write(b"The following directories, files and symlinks will be created:\n")
 
     for rel_path in dirs_to_create:
         _, new_path = _relocate(rel_path)
-        if fix:
+        if not patch_file:
             try:
                 os.mkdir(new_path)
             except FileExistsError:  # not an error if the directory already exists
                 continue
         else:
-            print(f"create directory {new_path}", file=out)
+            patch_file.write(b"create directory ")
+            patch_file.write(new_path.encode("utf-8"))
+            patch_file.write(b"\n")
 
     for rel_path in files_to_copy:
         old_path, new_path = _relocate(rel_path)
@@ -179,10 +179,14 @@ def migrate_v1_to_v2(
                 )
                 return False, None
             continue
-        if fix:
+        if not patch_file:
             shutil.copy2(old_path, new_path)
         else:
-            print(f"copy {old_path} -> {new_path}", file=out)
+            patch_file.write(b"copy ")
+            patch_file.write(old_path.encode("utf-8"))
+            patch_file.write(b" -> ")
+            patch_file.write(new_path.encode("utf-8"))
+            patch_file.write(b"\n")
 
     for rel_path, ino in symlink_to_ino.items():
         old_path, new_path = _relocate(rel_path)
@@ -203,28 +207,47 @@ def migrate_v1_to_v2(
                 return False, None
             continue
 
-        if fix:
+        if not patch_file:
             os.symlink(tgt, new_path)
         else:
-            print(f"create symlink {new_path} -> {tgt}", file=out)
+            patch_file.write(b"create symlink ")
+            patch_file.write(new_path.encode("utf-8"))
+            patch_file.write(b" -> ")
+            patch_file.write(tgt.encode("utf-8"))
+            patch_file.write(b"\n")
 
-    if fix:
+    if not patch_file:
         with open(os.path.join(new_root, "repo.yaml"), "w", encoding="utf-8") as f:
             spack.util.spack_yaml.dump(updated_config, f)
         updated_repo = spack.repo.from_path(new_root)
     else:
-        print(file=out)
+        patch_file.write(b"\n")
         updated_repo = repo  # compute the import diff on the v1 repo since v2 doesn't exist yet
 
     result = migrate_v2_imports(
-        updated_repo.packages_path, updated_repo.root, fix=fix, out=out, err=err
+        updated_repo.packages_path, updated_repo.root, patch_file=patch_file, err=err
     )
 
-    return result, (updated_repo if fix else None)
+    return result, (updated_repo if patch_file else None)
+
+
+def _pkg_module_update(pkg_module: str) -> str:
+    return re.sub(r"^num(\d)", r"_\1", pkg_module)  # num7zip -> _7zip.
+
+
+def _spack_pkg_to_spack_repo(modulename: str) -> str:
+    # rewrite spack.pkg.builtin.foo -> spack_repo.builtin.packages.foo.package
+    parts = modulename.split(".")
+    assert parts[:2] == ["spack", "pkg"]
+    parts[0:2] = ["spack_repo"]
+    parts.insert(2, "packages")
+    parts[3] = _pkg_module_update(parts[3])
+    parts.append("package")
+    return ".".join(parts)
 
 
 def migrate_v2_imports(
-    packages_dir: str, root: str, fix: bool, out: IO[str] = sys.stdout, err: IO[str] = sys.stderr
+    packages_dir: str, root: str, patch_file: Optional[IO[bytes]], err: IO[str] = sys.stderr
 ) -> bool:
     """In Package API v2.0, packages need to explicitly import package classes and a few other
     symbols from the build_systems module. This function automatically adds the missing imports
@@ -289,6 +312,8 @@ def migrate_v2_imports(
         try:
             with open(pkg_path, "rb") as file:
                 tree = ast.parse(file.read())
+        except FileNotFoundError:
+            continue
         except (OSError, SyntaxError) as e:
             print(f"Skipping {pkg_path}: {e}", file=err)
             continue
@@ -299,12 +324,46 @@ def migrate_v2_imports(
         #: Set of symbols of interest that are already defined through imports, assignments, or
         #: function definitions.
         defined_symbols: Set[str] = set()
-
         best_line: Optional[int] = None
-
         seen_import = False
+        module_replacements: Dict[str, str] = {}
+        parent: Dict[int, ast.AST] = {}
+
+        #: List of (line, col start, old, new) tuples of strings to be replaced inline.
+        inline_updates: List[Tuple[int, int, str, str]] = []
+
+        #: List of (line from, line to, new lines) tuples of line replacements
+        multiline_updates: List[Tuple[int, int, List[str]]] = []
+
+        try:
+            with open(pkg_path, "r", encoding="utf-8", newline="") as file:
+                original_lines = file.readlines()
+        except (OSError, UnicodeDecodeError) as e:
+            success = False
+            print(f"Skipping {pkg_path}: {e}", file=err)
+            continue
+
+        if len(original_lines) < 2:  # assume package.py files have at least 2 lines...
+            continue
+
+        if original_lines[0].endswith("\r\n"):
+            newline = "\r\n"
+        elif original_lines[0].endswith("\n"):
+            newline = "\n"
+        elif original_lines[0].endswith("\r"):
+            newline = "\r"
+        else:
+            success = False
+            print(f"{pkg_path}: unknown line ending, cannot fix", file=err)
+            continue
+
+        updated_lines = original_lines.copy()
 
         for node in ast.walk(tree):
+            for child in ast.iter_child_nodes(node):
+                if isinstance(child, ast.Attribute):
+                    parent[id(child)] = node
+
             # Get the last import statement from the first block of top-level imports
             if isinstance(node, ast.Module):
                 for child in ast.iter_child_nodes(node):
@@ -319,12 +378,16 @@ def migrate_v2_imports(
                         best_line = child.lineno  # add it right before spack.package
                         break
 
-                    # otherwise put it right after the last import statement
                     is_import = isinstance(child, (ast.Import, ast.ImportFrom))
 
                     if is_import:
                         if isinstance(child, (ast.stmt, ast.expr)):
-                            best_line = (child.end_lineno or child.lineno) + 1
+                            end_lineno = getattr(child, "end_lineno", None)
+                            if end_lineno is not None:
+                                # put it right after the last import statement
+                                best_line = end_lineno + 1
+                            else:  # old versions of python don't have end_lineno; put it before.
+                                best_line = child.lineno
 
                     if not seen_import and is_import:
                         seen_import = True
@@ -353,12 +416,112 @@ def migrate_v2_imports(
             elif isinstance(node, ast.Name) and node.id in symbol_to_module:
                 referenced_symbols.add(node.id)
 
-            # Register imported symbols to make this operation idempotent
+            # Find lines where spack.pkg is used.
+            elif (
+                isinstance(node, ast.Attribute)
+                and isinstance(node.value, ast.Name)
+                and node.value.id == "spack"
+                and node.attr == "pkg"
+            ):
+                # go as many attrs up until we reach a known module name to be replaced
+                known_module = "spack.pkg"
+                ancestor = node
+                while True:
+                    next_parent = parent.get(id(ancestor))
+                    if next_parent is None or not isinstance(next_parent, ast.Attribute):
+                        break
+                    ancestor = next_parent
+                    known_module = f"{known_module}.{ancestor.attr}"
+                    if known_module in module_replacements:
+                        break
+
+                inline_updates.append(
+                    (
+                        ancestor.lineno,
+                        ancestor.col_offset,
+                        known_module,
+                        module_replacements[known_module],
+                    )
+                )
+
             elif isinstance(node, ast.ImportFrom):
+                # Keep track of old style spack.pkg imports, to be replaced.
+                if node.module and node.module.startswith("spack.pkg.") and node.level == 0:
+
+                    depth = node.module.count(".")
+
+                    # not all python versions have end_lineno for ImportFrom
+                    end_lineno = getattr(node, "end_lineno", None)
+
+                    # simple case of find and replace
+                    # from spack.pkg.builtin.my_pkg import MyPkg
+                    # -> from spack_repo.builtin.packages.my_pkg.package import MyPkg
+                    if depth == 3:
+                        module_replacements[node.module] = _spack_pkg_to_spack_repo(node.module)
+                        inline_updates.append(
+                            (
+                                node.lineno,
+                                node.col_offset,
+                                node.module,
+                                module_replacements[node.module],
+                            )
+                        )
+
+                    # non-trivial possible multiline case
+                    # from spack.pkg.builtin import (boost, cmake as foo)
+                    # -> import spack_repo.builtin.packages.boost.package as boost
+                    # -> import spack_repo.builtin.packages.cmake.package as foo
+                    elif depth == 2:
+                        if end_lineno is None:
+                            success = False
+                            print(
+                                f"{pkg_path}:{node.lineno}: cannot rewrite {node.module} "
+                                "import statement, since this Python version does not "
+                                "provide end_lineno. Best to update to Python 3.8+",
+                                file=err,
+                            )
+                            continue
+
+                        _, _, namespace = node.module.rpartition(".")
+                        indent = original_lines[node.lineno - 1][: node.col_offset]
+                        new_lines = []
+                        for alias in node.names:
+                            pkg_module = _pkg_module_update(alias.name)
+                            new_lines.append(
+                                f"{indent}import spack_repo.{namespace}.packages."
+                                f"{pkg_module}.package as {alias.asname or pkg_module}"
+                                f"{newline}"
+                            )
+                        multiline_updates.append((node.lineno, end_lineno + 1, new_lines))
+
+                    else:
+                        success = False
+                        print(
+                            f"{pkg_path}:{node.lineno}: don't know how to rewrite `{node.module}`",
+                            file=err,
+                        )
+                        continue
+
+                elif node.module is not None and node.level == 1 and "." not in node.module:
+                    # rewrite `from .blt import ...` -> `from ..blt.package import ...`
+                    pkg_module = _pkg_module_update(node.module)
+                    inline_updates.append(
+                        (
+                            node.lineno,
+                            node.col_offset,
+                            f".{node.module}",
+                            f"..{pkg_module}.package",
+                        )
+                    )
+
+                # Subtract the symbols that are imported so we don't repeatedly add imports.
                 for alias in node.names:
                     if alias.name in symbol_to_module:
-                        defined_symbols.add(alias.name)
-                        if node.module == "spack.package":
+                        if alias.asname is None:
+                            defined_symbols.add(alias.name)
+
+                        # error when symbols are explicitly imported that are no longer available
+                        if node.module == "spack.package" and node.level == 0:
                             success = False
                             print(
                                 f"{pkg_path}:{node.lineno}: `{alias.name}` is imported from "
@@ -369,59 +532,87 @@ def migrate_v2_imports(
                     if alias.asname and alias.asname in symbol_to_module:
                         defined_symbols.add(alias.asname)
 
+            elif isinstance(node, ast.Import):
+                # normal imports are easy find and replace since they are single lines.
+                for alias in node.names:
+                    if alias.asname and alias.asname in symbol_to_module:
+                        defined_symbols.add(alias.name)
+                    elif alias.asname is None and alias.name.startswith("spack.pkg."):
+                        module_replacements[alias.name] = _spack_pkg_to_spack_repo(alias.name)
+                        inline_updates.append(
+                            (
+                                node.lineno,
+                                node.col_offset,
+                                alias.name,
+                                module_replacements[alias.name],
+                            )
+                        )
+
         # Remove imported symbols from the referenced symbols
         referenced_symbols.difference_update(defined_symbols)
 
-        if not referenced_symbols:
+        # Sort from last to first so we can modify without messing up the line / col offsets
+        inline_updates.sort(reverse=True)
+
+        # Nothing to change here.
+        if not inline_updates and not referenced_symbols:
             continue
 
-        if best_line is None:
-            print(f"{pkg_path}: failed to update imports", file=err)
-            success = False
+        # First do module replacements of spack.pkg imports
+        for line, col, old, new in inline_updates:
+            updated_lines[line - 1] = updated_lines[line - 1][:col] + updated_lines[line - 1][
+                col:
+            ].replace(old, new, 1)
+
+        # Then insert new imports for symbols referenced in the package
+        if referenced_symbols:
+            if best_line is None:
+                print(f"{pkg_path}: failed to update imports", file=err)
+                success = False
+                continue
+
+            # Group missing symbols by their module
+            missing_imports_by_module: Dict[str, list] = {}
+            for symbol in referenced_symbols:
+                module = symbol_to_module[symbol]
+                if module not in missing_imports_by_module:
+                    missing_imports_by_module[module] = []
+                missing_imports_by_module[module].append(symbol)
+
+            new_lines = [
+                f"from {module} import {', '.join(sorted(symbols))}{newline}"
+                for module, symbols in sorted(missing_imports_by_module.items())
+            ]
+
+            if not seen_import:
+                new_lines.extend((newline, newline))
+
+            multiline_updates.append((best_line, best_line, new_lines))
+
+        multiline_updates.sort(reverse=True)
+        for start, end, new_lines in multiline_updates:
+            updated_lines[start - 1 : end - 1] = new_lines
+
+        if patch_file:
+            rel_pkg_path = os.path.relpath(pkg_path, start=root).replace(os.sep, "/")
+            diff = difflib.unified_diff(
+                original_lines,
+                updated_lines,
+                n=3,
+                fromfile=f"a/{rel_pkg_path}",
+                tofile=f"b/{rel_pkg_path}",
+                lineterm="\n",
+            )
+            for _line in diff:
+                patch_file.write(_line.encode("utf-8"))
             continue
-
-        # Add the missing imports right after the last import statement
-        with open(pkg_path, "r", encoding="utf-8", newline="") as file:
-            lines = file.readlines()
-
-        # Group missing symbols by their module
-        missing_imports_by_module: Dict[str, list] = {}
-        for symbol in referenced_symbols:
-            module = symbol_to_module[symbol]
-            if module not in missing_imports_by_module:
-                missing_imports_by_module[module] = []
-            missing_imports_by_module[module].append(symbol)
-
-        new_lines = [
-            f"from {module} import {', '.join(sorted(symbols))}\n"
-            for module, symbols in sorted(missing_imports_by_module.items())
-        ]
-
-        if not seen_import:
-            new_lines.extend(("\n", "\n"))
-
-        if not fix:  # only print the diff
-            success = False  # packages need to be fixed, but we didn't do it
-            diff_start, diff_end = max(1, best_line - 3), min(best_line + 2, len(lines))
-            num_changed = diff_end - diff_start + 1
-            num_added = num_changed + len(new_lines)
-            rel_pkg_path = os.path.relpath(pkg_path, start=root)
-            out.write(f"--- a/{rel_pkg_path}\n+++ b/{rel_pkg_path}\n")
-            out.write(f"@@ -{diff_start},{num_changed} +{diff_start},{num_added} @@\n")
-            for line in lines[diff_start - 1 : best_line - 1]:
-                out.write(f" {line}")
-            for line in new_lines:
-                out.write(f"+{line}")
-            for line in lines[best_line - 1 : diff_end]:
-                out.write(f" {line}")
-            continue
-
-        lines[best_line - 1 : best_line - 1] = new_lines
 
         tmp_file = pkg_path + ".tmp"
 
-        with open(tmp_file, "w", encoding="utf-8", newline="") as file:
-            file.writelines(lines)
+        # binary mode to avoid newline conversion issues; utf-8 was already required upon read.
+        with open(tmp_file, "wb") as file:
+            for _line in updated_lines:
+                file.write(_line.encode("utf-8"))
 
         os.replace(tmp_file, pkg_path)
 
