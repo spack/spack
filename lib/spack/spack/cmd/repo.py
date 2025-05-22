@@ -208,17 +208,24 @@ def repo_migrate(args: Any) -> int:
         patch_file = None
         fix = True
 
-    if (1, 0) <= repo.package_api < (2, 0):
-        success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
-        exit_code = 0 if success else 1
-    elif (2, 0) <= repo.package_api < (3, 0):
-        repo_v2 = None
-        exit_code = (
-            0 if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file) else 1
-        )
-    else:
-        repo_v2 = None
-        exit_code = 0
+    try:
+        if (1, 0) <= repo.package_api < (2, 0):
+            success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
+            exit_code = 0 if success else 1
+        elif (2, 0) <= repo.package_api < (3, 0):
+            repo_v2 = None
+            exit_code = (
+                0
+                if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file)
+                else 1
+            )
+        else:
+            repo_v2 = None
+            exit_code = 0
+    finally:
+        if patch_file is not None:
+            patch_file.flush()
+            patch_file.close()
 
     if not fix:
         tty.error(
@@ -245,9 +252,6 @@ def repo_migrate(args: Any) -> int:
 
     else:
         tty.info(f"Repository '{repo.namespace}' was successfully migrated")
-
-    if patch_file is not None:
-        patch_file.close()
 
     return exit_code
 
