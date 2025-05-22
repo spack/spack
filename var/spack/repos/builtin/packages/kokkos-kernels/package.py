@@ -22,6 +22,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.6.01", sha256="95b9357f37ab3b9c3913c00741acb2501831c28ea8664de67818ae79c69c5908")
     version("4.5.01", sha256="c111a6561f23a85af9850d1df1e9015f37a586f1da0be4b6fb1e98001d75e074")
     version("4.5.00", sha256="94726a64e349adf6cd276e9fdc1b2bf7ff81efec833e479a5d3024b83f165a59")
     version("4.4.01", sha256="4a32bc8330e0113856bdf181df94cc4f9902e3cebb5dc7cea5948f30df03bfa1")
