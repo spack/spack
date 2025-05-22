@@ -24,11 +24,19 @@ class Pdi(CMakePackage):
 
     maintainers("jbigot")
 
+    # only the latest version is supported upstream
+    # we also offer the last 2 patch versions of the current minor
+    # and the last patch version of the previous 2 minors
+    # all the rest is marked as deprecated
     version("develop", branch="main", no_cache=True)
     version("1.9.1", sha256="5bb6257efb32674db69e2d89a8947015a2f1e284dbe8dcfdc601f6412640b551")
     version("1.9.0", sha256="04fee7851c4f2a156daddf7eb2c3c3b0132d80d3f0e448cdeebda0b7c4595639")
     version("1.8.3", sha256="df7200289a2a368ec874140039b417abdfe681b57fb1b9f4c52f924952226020")
-    version("1.8.2", sha256="bb4d1654c97f7ff379067adbff339f8b4117c0cf9432f41f1a5cb20a747cac1a")
+    version(
+        "1.8.2",
+        sha256="bb4d1654c97f7ff379067adbff339f8b4117c0cf9432f41f1a5cb20a747cac1a",
+        deprecated=True,
+    )
     version(
         "1.8.1",
         sha256="43f0c0b2bda5515ecf99da7be1600af2c1f669d6c73e3f309275b14940c7e35c",
@@ -73,7 +81,6 @@ class Pdi(CMakePackage):
         # filter_shebang("vendor/zpp-1.0.16/bin/zpp.in") because the template is
         # not yet instantiated and PYTHON_EXECUTABLE is not yet large enough to
         # trigger the replacement via filter_shebang.
-
         filter_file(
             r"#!@PYTHON_EXECUTABLE@ -B",
             sbang_shebang_line() + "\n#!@PYTHON_EXECUTABLE@ -B",
