@@ -5,6 +5,8 @@
 import glob
 import os
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 # OmpSs-2 is a complex package to build as it has multiple parts that need to be built separately

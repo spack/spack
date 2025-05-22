@@ -2,6 +2,7 @@ spack:
   view: false
   packages:
     all:
+      target: ["x86_64_v3"]
       require:
       - target=x86_64_v3
       - ~cuda
@@ -18,6 +19,8 @@ spack:
       - +rocm
       - amdgpu_target=gfx90a
       - ~flash_attention
+    miopen-hip:
+      require: ~ck
 
   specs:
     # Horovod

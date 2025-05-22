@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -39,3 +41,4 @@ class CyrusSasl(AutotoolsPackage):
     depends_on("groff", type="build")
     depends_on("openssl", type="link")
     depends_on("libxcrypt", type="link")
+    depends_on("krb5", type="link")

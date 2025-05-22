@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -20,6 +24,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     license("BSD-3-Clause")
 
     version("main", branch="main", submodules=True)
+    version(
+        "3.4.2", tag="v3.4.2", commit="ed475a0533dfacf1fdff0b707518ccf99040d9f9", submodules=True
+    )
+    version(
+        "3.4.1", tag="v3.4.1", commit="effe63ca9061e6d2bd5c5e84b690d29c0869f029", submodules=True
+    )
     version(
         "3.4.0", tag="v3.4.0", commit="38d1b9fd0b70aab4a01fd507f039750c2508bd1c", submodules=True
     )
@@ -230,9 +240,12 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build", when="+openfast")
     depends_on("mpi", when="+mpi")
     depends_on("hdf5~mpi", when="+hdf5~mpi")
     depends_on("hdf5+mpi", when="+hdf5+mpi")
+    # New versions of HDF5 have CMake problems finding ZLIB::ZLIB target
+    depends_on("hdf5@:1.14.4-3", when="+hdf5")
     depends_on("h5z-zfp", when="+hdf5")
     depends_on("zfp", when="+hdf5")
     depends_on("hypre~int64@2.29.0:", when="@0.9.0:+hypre")
@@ -245,7 +258,7 @@ class AmrWind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("ascent+mpi", when="+ascent+mpi")
     depends_on("netcdf-c", when="+netcdf")
     depends_on("py-netcdf4", when="+netcdf")
-    depends_on("py-numpy", when="+netcdf")
+    depends_on("py-numpy@2:", when="+netcdf")
     depends_on("py-matplotlib", when="+masa")
     depends_on("py-pandas", when="+masa")
     depends_on("openfast+cxx", when="+openfast")

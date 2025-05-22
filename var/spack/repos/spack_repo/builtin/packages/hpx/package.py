@@ -5,9 +5,12 @@
 
 import sys
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Hpx(CMakePackage, CudaPackage, ROCmPackage):
@@ -66,7 +69,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
         values=lambda x: isinstance(x, str) and (x.isdigit() or x == "auto"),
     )
 
-    instrumentation_values = ("apex", "google_perftools", "papi", "valgrind", "thread_debug")
+    instrumentation_values = ("google_perftools", "papi", "valgrind", "thread_debug")
     variant(
         "instrumentation",
         values=any_combination_of(*instrumentation_values),
@@ -93,10 +96,11 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     variant("examples", default=False, description="Build examples")
     variant("async_mpi", default=False, description="Enable MPI Futures.")
     variant("async_cuda", default=False, description="Enable CUDA Futures.")
+    variant("apex", default=False, description="Enable APEX support")
 
     # Build dependencies
     depends_on("cxx", type="build")
-
+    depends_on("apex", when="+apex")
     depends_on("python", type=("build", "test", "run"))
     depends_on("git", type="build")
     depends_on("cmake", type="build")
@@ -122,7 +126,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on("cuda", when="+async_cuda")
 
-    depends_on("otf2", when="instrumentation=apex")
     depends_on("gperftools", when="instrumentation=google_perftools")
     depends_on("papi", when="instrumentation=papi")
     depends_on("valgrind", when="instrumentation=valgrind")
@@ -155,6 +158,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
 
     # Restrictions for 1.5.x
     conflicts("cxxstd=11", when="@1.5:")
+    depends_on("apex@2.3:", when="@1.5")
 
     # Restrictions for 1.2.X
     with when("@:1.2.1"):
@@ -211,8 +215,6 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
     conflicts("~generic_coroutines", when="target=aarch64:", msg=_msg_generic_coroutines_target)
     conflicts("~generic_coroutines", when="target=arm:", msg=_msg_generic_coroutines_target)
 
-    # Patches APEX
-    patch("git_external.patch", when="@1.3.0 instrumentation=apex")
     patch("mimalloc_no_version_requirement.patch", when="@:1.8.0 malloc=mimalloc")
 
     def url_for_version(self, version):
@@ -242,6 +244,7 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant("HPX_WITH_EXAMPLES", "examples"),
             self.define_from_variant("HPX_WITH_ASYNC_MPI", "async_mpi"),
             self.define_from_variant("HPX_WITH_ASYNC_CUDA", "async_cuda"),
+            self.define_from_variant("HPX_WITH_APEX", "apex"),
             self.define("HPX_WITH_TESTS", self.run_tests),
             self.define("HPX_WITH_NETWORKING", "networking=none" not in spec),
             self.define("HPX_WITH_PARCELPORT_TCP", spec.satisfies("networking=tcp")),
@@ -277,15 +280,5 @@ class Hpx(CMakePackage, CudaPackage, ROCmPackage):
                 self.define("HPX_WITH_THREAD_DEBUG_INFO", True),
                 self.define("HPX_WITH_LOGGING", True),
             ]
-
-        if spec.satisfies("instrumentation=apex"):
-            args += [
-                self.define("APEX_WITH_OTF2", True),
-                self.define("OTF2_ROOT", spec["otf2"].prefix),
-            ]
-
-            # it seems like there was a bug in the default version of APEX in 1.5.x
-            if spec.satisfies("@1.5"):
-                args += [self.define("HPX_WITH_APEX_TAG", "v2.3.0")]
 
         return args

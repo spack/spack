@@ -11,7 +11,7 @@ Container Images
 Spack :ref:`environments` can easily be turned into container images. This page
 outlines two ways in which this can be done:
 
-1. By installing the environment on the host system, and copying the installations
+1. By installing the environment on the host system and copying the installations
    into the container image. This approach does not require any tools like Docker
    or Singularity to be installed.
 2. By generating a Docker or Singularity recipe that can be used to build the
@@ -56,8 +56,8 @@ environment roots and its runtime dependencies.
 
 .. note::
 
-  When using registries like GHCR and Docker Hub, the ``--oci-password`` flag is not
-  the password for your account, but a personal access token you need to generate separately.
+  When using registries like GHCR and Docker Hub, the ``--oci-password`` flag specifies not
+  the password for your account, but rather a personal access token you need to generate separately.
 
 The specified ``--base-image`` should have a libc that is compatible with the host system.
 For example if your host system is Ubuntu 20.04, you can use ``ubuntu:20.04``, ``ubuntu:22.04``

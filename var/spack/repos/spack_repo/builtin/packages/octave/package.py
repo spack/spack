@@ -7,6 +7,9 @@ import shutil
 import sys
 import tempfile
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 import spack.util.environment
 from spack.package import *
 

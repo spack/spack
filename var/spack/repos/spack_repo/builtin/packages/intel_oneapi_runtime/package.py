@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.oneapi import IntelOneApiPackage
+from spack_repo.builtin.packages.gcc_runtime.package import get_elf_libraries
 
-from ..gcc_runtime.package import get_elf_libraries
+from spack.package import *
 
 
 @IntelOneApiPackage.update_description

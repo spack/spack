@@ -697,6 +697,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a save-sp
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a sync -d 'sync binaries (and associated metadata) from one mirror to another'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a update-index -d 'update a buildcache index'
 complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a rebuild-index -d 'update a buildcache index'
+complete -c spack -n '__fish_spack_using_command_pos 0 buildcache' -f -a migrate -d 'perform in-place binary mirror migration (2 to 3)'
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command buildcache' -s h -l help -d 'show this help message and exit'
 
@@ -860,6 +861,18 @@ complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h 
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -f -a keys
 complete -c spack -n '__fish_spack_using_command buildcache rebuild-index' -s k -l keys -d 'if provided, key index will be updated as well as package index'
+
+# spack buildcache migrate
+set -g __fish_spack_optspecs_spack_buildcache_migrate h/help u/unsigned d/delete-existing y/yes-to-all
+
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s u -l unsigned -f -a unsigned
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s u -l unsigned -d 'Ignore signatures and do not resign, default is False'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s d -l delete-existing -f -a delete_existing
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s d -l delete-existing -d 'Delete the previous layout, the default is to keep it.'
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -f -a yes_to_all
+complete -c spack -n '__fish_spack_using_command buildcache migrate' -s y -l yes-to-all -d 'assume "yes" is the answer to every confirmation request'
 
 # spack cd
 set -g __fish_spack_optspecs_spack_cd h/help m/module-dir r/spack-root i/install-dir p/package-dir P/packages s/stage-dir S/stages c/source-dir b/build-dir e/env= first
@@ -2736,6 +2749,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a list -d 'show
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a add -d 'add a package source to Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo' -s h -l help -d 'show this help message and exit'
 
@@ -2777,6 +2791,16 @@ complete -c spack -n '__fish_spack_using_command repo rm' -s h -l help -f -a hel
 complete -c spack -n '__fish_spack_using_command repo rm' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -f -a '_builtin defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo rm' -l scope -r -d 'configuration scope to modify'
+
+# spack repo migrate
+set -g __fish_spack_optspecs_spack_repo_migrate h/help dry-run fix
+complete -c spack -n '__fish_spack_using_command_pos 0 repo migrate' $__fish_spack_force_files -a '(__fish_spack_repos)'
+complete -c spack -n '__fish_spack_using_command repo migrate' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command repo migrate' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo migrate' -l dry-run -f -a dry_run
+complete -c spack -n '__fish_spack_using_command repo migrate' -l dry-run -d 'do not modify the repository, but dump a patch file'
+complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -f -a fix
+complete -c spack -n '__fish_spack_using_command repo migrate' -l fix -d 'automatically migrate the repository to the latest Package API'
 
 # spack resource
 set -g __fish_spack_optspecs_spack_resource h/help
@@ -2922,7 +2946,7 @@ complete -c spack -n '__fish_spack_using_command style' -s t -l tool -r -d 'spec
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -f -a skip
 complete -c spack -n '__fish_spack_using_command style' -s s -l skip -r -d 'specify tools to skip (choose from import, isort, black, flake8, mypy)'
 complete -c spack -n '__fish_spack_using_command style' -l spec-strings -f -a spec_strings
-complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: this flag will be removed in Spack v1.0.'
+complete -c spack -n '__fish_spack_using_command style' -l spec-strings -d 'upgrade spec strings in Python, JSON and YAML files for compatibility with Spack v1.0 and v0.x. Example: spack style --spec-strings $(git ls-files). Note: must be used only on specs from spack v0.X.'
 
 # spack tags
 set -g __fish_spack_optspecs_spack_tags h/help i/installed a/all

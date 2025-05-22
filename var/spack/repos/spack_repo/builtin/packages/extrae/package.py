@@ -4,9 +4,10 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 # typical working line with extrae 3.0.1
 # ./configure

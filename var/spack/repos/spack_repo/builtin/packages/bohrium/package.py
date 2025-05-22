@@ -4,10 +4,12 @@
 
 import os
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.packages.boost.package import Boost
+
 from spack.package import *
 from spack.package_test import compare_output
-
-from ..boost.package import Boost
 
 
 class Bohrium(CMakePackage, CudaPackage):
@@ -253,7 +255,7 @@ class Bohrium(CMakePackage, CudaPackage):
         ]
 
         # Compile C++ test program
-        file_cxxadd = join_path(os.path.dirname(self.module.__file__), "cxxadd.cpp")
+        file_cxxadd = join_path(os.path.dirname(__file__), "cxxadd.cpp")
         cxx("-o", "test_cxxadd", file_cxxadd, *cxx_flags)
         test_cxxadd = Executable("./test_cxxadd")
 
@@ -267,6 +269,6 @@ class Bohrium(CMakePackage, CudaPackage):
 
             # Python test (if +python)
             if spec.satisfies("+python"):
-                file_pyadd = join_path(os.path.dirname(self.module.__file__), "pyadd.py")
+                file_pyadd = join_path(os.path.dirname(__file__), "pyadd.test")
                 py_output = python(file_pyadd, output=str, env=test_env)
                 compare_output(py_output, "Success!\n")

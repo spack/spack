@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+
 from spack.package import *
 
 
@@ -25,6 +27,7 @@ class Dd4hep(CMakePackage):
     license("LGPL-3.0-or-later")
 
     version("master", branch="master")
+    version("1.32", sha256="8bde4eab9af9841e040447282ea7df3a16e4bcec587c3a1e32f41987da9b1b4d")
     version("1.31", sha256="9c06a1b4462fc1b51161404889c74b37350162d0b0ac2154db27e3f102670bd1")
     version("1.30", sha256="02de46151e945eff58cffd84b4b86d35051f4436608199c3efb4d2e1183889fe")
     version("1.29", sha256="435d25a7ef093d8bf660f288b5a89b98556b4c1c293c55b93bf641fb4cba77e9")
@@ -54,9 +57,9 @@ class Dd4hep(CMakePackage):
     patch("cmake_language.patch", when="@:1.17")
     # Fix missing SimCaloHits when using the LCIO format
     patch(
-        "https://patch-diff.githubusercontent.com/raw/AIDASoft/DD4hep/pull/1019.patch?full_index=1",
+        "https://github.com/AIDASoft/DD4hep/commit/2c77055fb05744a4d367123c634bcb42291df030.patch?full_index=1",
         when="@1.19:1.23",
-        sha256="6466719c82de830ce728db57004fb7db03983587a63b804f6dc95c6b92b3fc76",
+        sha256="7bac1e08d2f83edb467da7f950b841021ecc649cc4cf21fd9043bd6d757c4e05",
     )
 
     # variants for subpackages

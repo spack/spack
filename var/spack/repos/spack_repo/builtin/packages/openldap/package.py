@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -49,6 +51,7 @@ class Openldap(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
+    depends_on("uuid")
     depends_on("icu4c", when="+icu")
 
     with when("~client_only"):

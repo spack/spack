@@ -4,18 +4,18 @@ if False:  # MYPY
     from typing import Dict, Any  # NOQA
 
 _package_data = dict(
-    full_package_name='ruamel.yaml',
+    full_package_name='_vendoring.ruamel.yaml',
     version_info=(0, 17, 21),
     __version__='0.17.21',
     version_timestamp='2022-02-12 09:49:22',
     author='Anthon van der Neut',
     author_email='a.van.der.neut@ruamel.eu',
-    description='ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order',  # NOQA
+    description='_vendoring.ruamel.yaml is a YAML parser/emitter that supports roundtrip preservation of comments, seq/map flow style, and map key order',  # NOQA
     entry_points=None,
     since=2014,
     extras_require={
-        ':platform_python_implementation=="CPython" and python_version<"3.11"': ['ruamel.yaml.clib>=0.2.6'],  # NOQA
-        'jinja2': ['ruamel.yaml.jinja2>=0.2'],
+        ':platform_python_implementation=="CPython" and python_version<"3.11"': ['_vendoring.ruamel.yaml.clib>=0.2.6'],  # NOQA
+        '_vendoring.jinja2': ['_vendoring.ruamel.yaml._vendoring.jinja2>=0.2'],
         'docs': ['ryd'],
     },
     classifiers=[
@@ -54,4 +54,4 @@ try:
 except (ImportError, ValueError):  # for Jython
     __with_libyaml__ = False
 
-from ruamel.yaml.main import *  # NOQA
+from _vendoring.ruamel.yaml.main import *  # NOQA

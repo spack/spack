@@ -1,4 +1,5 @@
 #!/bin/sh
 cd ${0%/*} || exit 1    # Run from this directory
 
-applications/Allwmake $targetType $*
+wmake $targetType applications/solvers/additiveFoam/movingHeatSource
+wmake $targetType applications/solvers/additiveFoam

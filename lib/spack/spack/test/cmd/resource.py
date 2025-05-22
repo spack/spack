@@ -48,11 +48,13 @@ def test_resource_list(mock_packages, capfd):
     assert "path:" in out
 
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
-    assert "applies to: builtin.mock.libelf" in out
-    assert "patched by: builtin.mock.patch-a-dependency" in out
+    assert "applies to: builtin_mock.libelf" in out
+    assert "patched by: builtin_mock.patch-a-dependency" in out
 
 
 def test_resource_list_only_hashes(mock_packages, capfd):
@@ -74,10 +76,12 @@ def test_resource_show(mock_packages, capfd):
 
     assert out.startswith(test_hash)
     assert (
-        os.path.join("repos", "builtin.mock", "packages", "patch-a-dependency", "libelf.patch")
+        os.path.join(
+            "spack_repo", "builtin_mock", "packages", "patch_a_dependency", "libelf.patch"
+        )
         in out
     )
-    assert "applies to: builtin.mock.libelf" in out
-    assert "patched by: builtin.mock.patch-a-dependency" in out
+    assert "applies to: builtin_mock.libelf" in out
+    assert "patched by: builtin_mock.patch-a-dependency" in out
 
     assert len(out.strip().split("\n")) == 4

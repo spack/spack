@@ -609,7 +609,7 @@ class TestSpecSemantics:
 
     def test_satisfied_namespace(self):
         spec = spack.concretize.concretize_one("zlib")
-        assert spec.satisfies("namespace=builtin.mock")
+        assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
     @pytest.mark.parametrize(
@@ -1837,7 +1837,7 @@ def test_abstract_contains_semantic(lhs, rhs, expected, mock_packages):
         (Spec, "mpileaks ^callpath %gcc@5", "mpileaks ^callpath %gcc@5.4", (True, False, True)),
     ],
 )
-def test_intersects_and_satisfies(factory, lhs_str, rhs_str, results):
+def test_intersects_and_satisfies(mock_packages, factory, lhs_str, rhs_str, results):
     lhs = factory(lhs_str)
     rhs = factory(rhs_str)
 

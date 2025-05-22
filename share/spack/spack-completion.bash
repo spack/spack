@@ -563,7 +563,7 @@ _spack_buildcache() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index"
+        SPACK_COMPREPLY="push create install list keys check download save-specfile sync update-index rebuild-index migrate"
     fi
 }
 
@@ -646,6 +646,15 @@ _spack_buildcache_rebuild_index() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help -k --keys"
+    else
+        _mirrors
+    fi
+}
+
+_spack_buildcache_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -u --unsigned -d --delete-existing -y --yes-to-all"
     else
         _mirrors
     fi
@@ -1775,7 +1784,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add remove rm"
+        SPACK_COMPREPLY="create list add remove rm migrate"
     fi
 }
 
@@ -1814,6 +1823,15 @@ _spack_repo_rm() {
     if $list_options
     then
         SPACK_COMPREPLY="-h --help --scope"
+    else
+        _repos
+    fi
+}
+
+_spack_repo_migrate() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --dry-run --fix"
     else
         _repos
     fi

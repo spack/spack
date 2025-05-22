@@ -66,7 +66,7 @@ on these ideas for each distinct build system that Spack supports:
    build_systems/rocmpackage
    build_systems/sourceforgepackage
 
-For reference, the :py:mod:`Build System API docs <spack.build_systems>`
+For reference, the :py:mod:`Build System API docs <spack_repo.builtin.build_systems>`
 provide a list of build systems and methods/attributes that can be
 overridden. If you are curious about the implementation of a particular
 build system, you can view the source code by running:
@@ -90,7 +90,7 @@ packages. You can quickly find examples by running:
 You can then view these packages with ``spack edit``.
 
 This guide is intended to supplement the
-:py:mod:`Build System API docs <spack.build_systems>` with examples of
+:py:mod:`Build System API docs <spack_repo.builtin.build_systems>` with examples of
 how to override commonly used methods. It also provides rules of thumb
 and suggestions for package developers who are unfamiliar with a
 particular build system.

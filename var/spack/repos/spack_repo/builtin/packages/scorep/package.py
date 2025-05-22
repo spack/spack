@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -14,7 +16,7 @@ class Scorep(AutotoolsPackage):
     homepage = "https://www.vi-hps.org/projects/score-p"
     url = "https://perftools.pages.jsc.fz-juelich.de/cicd/scorep/tags/scorep-7.1/scorep-7.1.tar.gz"
     maintainers("wrwilliams")
-
+    version("9.0", sha256="5d0a5db4cc6f31c30ae03c7e6f6245e83667b0ff38a7041ffe8b2e8e581e0997")
     version("8.4", sha256="7bbde9a0721d27cc6205baf13c1626833bcfbabb1f33b325a2d67976290f7f8a")
     version("8.3", sha256="76c914e6319221c059234597a3bc53da788ed679179ac99c147284dcefb1574a")
     # version 8.2 was immediately superseded before it hit Spack
@@ -86,29 +88,51 @@ class Scorep(AutotoolsPackage):
         sha256="d20b3046ba6a89ad9c106bcf372bceb1bd9ab780d4c7dd9e7373f0099b92d933",
     )
 
+    # Variants
     variant("mpi", default=True, description="Enable MPI support")
     variant("papi", default=True, description="Enable PAPI")
-    variant("pdt", default=False, description="Enable PDT")
+    variant("pdt", default=False, description="Enable PDT", when="@:8.4")
     variant("shmem", default=False, description="Enable shmem tracing")
     variant("unwind", default=False, description="Enable sampling via libunwind and lib wrapping")
     variant("cuda", default=False, description="Enable CUDA support")
     variant("hip", default=False, description="Enable ROCm/HIP support", when="@8.0:")
     variant("gcc-plugin", default=True, description="Enable gcc-plugin", when="%gcc")
+    variant(
+        "llvm-plugin", default=True, description="Enable LLVM compiler plugin", when="@9.0: ^llvm"
+    )
+    variant(
+        "binutils",
+        default=True,
+        description="Enable debug info lookup via binutils",
+        when="^binutils",
+    )
+    # Putting this in as preparation. F08 support exists in 9.0 but configure does not respect
+    # --enable-mpi-f08 and will not until 9.1.
+    variant("mpi_f08", default=True, description="Enable MPI F08 support", when="@9.1: +mpi")
     # Dependencies for SCORE-P are quite tight. See the homepage for more
     # information. Starting with scorep 4.0 / cube 4.4, Score-P only depends on
     # two components of cube -- cubew and cubelib.
 
+    # Language dependencies
+    # TODO: we could allow a +fortran variant here.
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    # SCOREP 9
+    depends_on("gotcha@1.0.8:", type="link", when="@9:")
+    depends_on("otf2@3.1:", when="@9:")
+    depends_on("cubew@4.9:", when="@9:")
+    depends_on("cubelib@4.9:", when="@9:")
+    depends_on("opari2@2.0.9", when="@9:")
+
     # SCOREP 8
     depends_on("binutils", type="link", when="@8:")
     depends_on("otf2@3:", when="@8:")
-    depends_on("cubew@4.8.2:", when="@8.3:")
-    depends_on("cubelib@4.8.2:", when="@8.3:")
-    depends_on("cubew@4.8:", when="@8:8.2")
-    depends_on("cubelib@4.8:", when="@8:8.2")
+    depends_on("cubew@4.8.2:4.8", when="@8.3:")
+    depends_on("cubelib@4.8.2:4.8", when="@8.3:")
+    depends_on("cubew@4.8", when="@8:8.2")
+    depends_on("cubelib@4.8", when="@8:8.2")
     # fall through to Score-P 7's OPARI2, no new release
     # SCOREP 7
     depends_on("otf2@2.3:2.3.99", when="@7.0:7")
@@ -138,6 +162,7 @@ class Scorep(AutotoolsPackage):
     depends_on("opari2@1.1.4", when="@1.3")
     depends_on("cube@4.2.3", when="@1.3")
 
+    # Conditional dependencies for variants
     depends_on("mpi@2.2:", when="@7.0:+mpi")
     depends_on("mpi", when="+mpi")
     depends_on("papi", when="+papi")
@@ -149,6 +174,7 @@ class Scorep(AutotoolsPackage):
     depends_on("hip@4.2:", when="+hip")
     depends_on("rocprofiler-dev", when="+hip")
     depends_on("rocm-smi-lib", when="+hip")
+
     # Score-P requires a case-sensitive file system, and therefore
     # does not work on macOS
     # https://github.com/spack/spack/issues/1609
@@ -156,14 +182,16 @@ class Scorep(AutotoolsPackage):
     # Score-P first has support for ROCm 6.x as of v8.4
     conflicts("hip@6.0:", when="@1.0:8.3+hip")
 
+    # Utility function: extract the first directory in `root` where
+    # we find `libname`. Used to handle CUDA irregular layouts.
     def find_libpath(self, libname, root):
         libs = find_libraries(libname, root, shared=True, recursive=True)
         if len(libs.directories) == 0:
             return None
         return libs.directories[0]
 
-    # handle any mapping of Spack compiler names to Score-P args
-    # this should continue to exist for backward compatibility
+    # Handle any mapping of Spack compiler names to Score-P args
+    # This should continue to exist for backward compatibility
     def clean_compiler(self, compiler):
         renames = {"cce": "cray", "rocmcc": "amdclang"}
         if compiler in renames:
@@ -172,7 +200,6 @@ class Scorep(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-
         config_args = [
             "--with-otf2=%s" % spec["otf2"].prefix.bin,
             "--with-opari2=%s" % spec["opari2"].prefix.bin,
@@ -180,8 +207,7 @@ class Scorep(AutotoolsPackage):
         ]
 
         cname = self.clean_compiler(spec.compiler.name)
-
-        config_args.append("--with-nocross-compiler-suite={0}".format(cname))
+        config_args.extend(["--with-nocross-compiler-suite={0}".format(cname)])
 
         if self.version >= Version("4.0"):
             config_args.append("--with-cubew=%s" % spec["cubew"].prefix.bin)
@@ -196,14 +222,21 @@ class Scorep(AutotoolsPackage):
         if "+pdt" in spec:
             config_args.append("--with-pdt=%s" % spec["pdt"].prefix.bin)
 
-        if "+unwind" in spec:
-            config_args.append("--with-libunwind=%s" % spec["libunwind"].prefix)
+        config_args.extend(
+            self.with_or_without("libunwind", activation_value="prefix", variant="unwind")
+        )
         if "+cuda" in spec:
             config_args.append("--with-libcudart=%s" % spec["cuda"].prefix)
             cuda_driver_path = self.find_libpath("libcuda", spec["cuda"].prefix)
             config_args.append("--with-libcuda-lib=%s" % cuda_driver_path)
-        if "+hip" in spec:
-            config_args.append("--with-rocm=%s" % spec["hip"].prefix)
+        config_args.extend(
+            self.with_or_without(
+                "rocm", activation_value=lambda _: self.spec["hip"].prefix, variant="hip"
+            )
+        )
+        config_args.extend(self.enable_or_disable("llvm-plugin"))
+        config_args.extend(self.enable_or_disable("gcc-plugin"))
+        config_args.extend(self.enable_or_disable("mpi_f08"))
 
         if "~shmem" in spec:
             config_args.append("--without-shmem")
@@ -225,7 +258,7 @@ class Scorep(AutotoolsPackage):
             "^[virtuals=mpi] hpcx-mpi"
         ):
             config_args.append("--with-mpi=openmpi")
-        elif "~mpi" in spec:
+        elif spec.satisfies("~mpi"):
             config_args.append("--without-mpi")
         # Let any +mpi that gets here autodetect, which is default
         # Valid values are bullxmpi|cray|hp|ibmpoe|intel|intel2|intel3|intelpoe|lam|mpibull2
@@ -235,8 +268,13 @@ class Scorep(AutotoolsPackage):
         # (see end of function)
         # but add similar spec.satisfies clauses for any that you need.
         # -- wrwilliams 12/2024
-        if spec.satisfies("^binutils"):
-            config_args.append("--with-libbfd=%s" % spec["binutils"].prefix)
+        config_args.extend(
+            self.with_or_without(
+                "libbfd",
+                activation_value=lambda _: self.spec["binutils"].prefix,
+                variant="binutils",
+            )
+        )
 
         # when you build with gcc, you usually want to use the gcc-plugin!
         # see, e.g., GNU Compiler Plug-In in https://scorepci.pages.jsc.fz-juelich.de/scorep-pipelines/docs/scorep-5.0/html/installationfile.html
@@ -252,7 +290,7 @@ class Scorep(AutotoolsPackage):
             ]
         )
 
-        if "+mpi" in spec:
+        if spec.satisfies("+mpi"):
             config_args.extend(
                 [
                     "MPICC={0}".format(spec["mpi"].mpicc),

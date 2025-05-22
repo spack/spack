@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.python import PythonPackage
+from spack_repo.builtin.packages.py_fluidsim_core.package import PyFluidsimCore
 
-from ..py_fluidsim_core.package import PyFluidsimCore
+from spack.package import *
 
 
 class PyFluidsim(PythonPackage):
