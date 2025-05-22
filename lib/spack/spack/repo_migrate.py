@@ -512,15 +512,6 @@ def migrate_v2_imports(
                         )
                     )
 
-                elif node.level > 0:  # dunno what this would mean, but print an error.
-                    success = False
-                    print(
-                        f"{pkg_path}:{node.lineno}: cannot rewrite relative import "
-                        f"`{'.'*node.level}{node.module}`",
-                        file=err,
-                    )
-                    continue
-
                 # Subtract the symbols that are imported so we don't repeatedly add imports.
                 for alias in node.names:
                     if alias.name in symbol_to_module:
