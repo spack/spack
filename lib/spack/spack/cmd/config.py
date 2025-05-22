@@ -68,18 +68,18 @@ def setup_parser(subparser):
 
     sp.add_parser("list", help="list configuration sections")
 
-    list_scopes_parser = sp.add_parser("list-scopes", help="list defined scopes")
-    list_scopes_parser.add_argument(
+    scopes_parser = sp.add_parser("scopes", help="list defined scopes")
+    scopes_parser.add_argument(
         "-f",
         "--file",
         action="store_true",
         default=False,
         help="list only writable scopes with an associated file",
     )
-    list_scopes_parser.add_argument(
+    scopes_parser.add_argument(
         "--non-platform", action="store_true", default=False, help="list only non-platform scopes"
     )
-    list_scopes_parser.add_argument(
+    scopes_parser.add_argument(
         "--included",
         action="store_true",
         default=False,
@@ -233,7 +233,7 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def config_list_scopes(args):
+def config_scopes(args):
     if args.included and (args.file or args.non_platform):
         tty.warn("`--included' overrides `--file' and `--non-platform'")
     scopes = (
@@ -613,7 +613,7 @@ def config(parser, args):
         "blame": config_blame,
         "edit": config_edit,
         "list": config_list,
-        "list-scopes": config_list_scopes,
+        "scopes": config_scopes,
         "add": config_add,
         "rm": config_remove,
         "remove": config_remove,

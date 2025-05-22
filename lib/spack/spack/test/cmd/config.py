@@ -40,27 +40,27 @@ def config_yaml_v015(mutable_config):
     return functools.partial(_create_config, data=old_data, section="config")
 
 
-def test_config_list_scopes():
-    output = config("list-scopes")
+def test_config_scopes():
+    output = config("scopes")
     assert "command_line" in output
     assert "_builtin" in output
 
 
-def test_config_list_scopes_file():
-    output = config("list-scopes", "--file")
+def test_config_scopes_file():
+    output = config("scopes", "--file")
     assert "site" in output
     assert "_builtin" not in output
 
 
-def test_config_list_scopes_non_platform():
-    output = config("list-scopes", "--non-platform")
+def test_config_scopes_non_platform():
+    output = config("scopes", "--non-platform")
     assert "site" in output
 
 
-def test_config_list_scopes_file_non_platform():
+def test_config_scopes_file_non_platform():
     if "SPACK_DISABLE_LOCAL_CONFIG" in os.environ:
         del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
-    output = config("list-scopes", "--non-platform", "--file")
+    output = config("scopes", "--non-platform", "--file")
     assert "site" in output
     assert "_builtin" not in output
 

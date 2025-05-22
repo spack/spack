@@ -832,7 +832,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list list-scopes add change prefer-upstream remove rm update revert"
+        SPACK_COMPREPLY="get blame edit list scopes add change prefer-upstream remove rm update revert"
     fi
 }
 
@@ -867,7 +867,7 @@ _spack_config_list() {
     SPACK_COMPREPLY="-h --help"
 }
 
-_spack_config_list_scopes() {
+_spack_config_scopes() {
     SPACK_COMPREPLY="-h --help -f --file --non-platform --included"
 }
 

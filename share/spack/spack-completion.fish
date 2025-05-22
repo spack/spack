@@ -1197,7 +1197,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a get -d 'pri
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a blame -d 'print configuration annotated with source file:line'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a edit -d 'edit configuration file'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a list -d 'list configuration sections'
-complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a list-scopes -d 'list defined scopes'
+complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a scopes -d 'list defined scopes'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a add -d 'add configuration parameters'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a change -d 'swap variants etc. on specs in config'
 complete -c spack -n '__fish_spack_using_command_pos 0 config' -f -a prefer-upstream -d 'set package preferences from upstream'
@@ -1235,16 +1235,16 @@ set -g __fish_spack_optspecs_spack_config_list h/help
 complete -c spack -n '__fish_spack_using_command config list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 'show this help message and exit'
 
-# spack config list-scopes
-set -g __fish_spack_optspecs_spack_config_list_scopes h/help f/file non-platform included
-complete -c spack -n '__fish_spack_using_command config list-scopes' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command config list-scopes' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command config list-scopes' -s f -l file -f -a file
-complete -c spack -n '__fish_spack_using_command config list-scopes' -s f -l file -d 'list only writable scopes with an associated file'
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l non-platform -f -a non_platform
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l non-platform -d 'list only non-platform scopes'
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l included -f -a included
-complete -c spack -n '__fish_spack_using_command config list-scopes' -l included -d 'list only included scopes (overrides --file and --non-platform)'
+# spack config scopes
+set -g __fish_spack_optspecs_spack_config_scopes h/help f/file non-platform included
+complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command config scopes' -s f -l file -f -a file
+complete -c spack -n '__fish_spack_using_command config scopes' -s f -l file -d 'list only writable scopes with an associated file'
+complete -c spack -n '__fish_spack_using_command config scopes' -l non-platform -f -a non_platform
+complete -c spack -n '__fish_spack_using_command config scopes' -l non-platform -d 'list only non-platform scopes'
+complete -c spack -n '__fish_spack_using_command config scopes' -l included -f -a included
+complete -c spack -n '__fish_spack_using_command config scopes' -l included -d 'list only included scopes (overrides --file and --non-platform)'
 
 # spack config add
 set -g __fish_spack_optspecs_spack_config_add h/help f/file=
