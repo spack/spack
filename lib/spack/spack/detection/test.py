@@ -85,11 +85,11 @@ class Runner:
             self.tmpdir.cleanup()
 
     def _create_executable_scripts(self, mock_executables: MockExecutables) -> List[pathlib.Path]:
-        import jinja2
+        import _vendoring.jinja2
 
         relative_paths = mock_executables.executables
         script = mock_executables.script
-        script_template = jinja2.Template("#!/bin/bash\n{{ script }}\n")
+        script_template = _vendoring.jinja2.Template("#!/bin/bash\n{{ script }}\n")
         result = []
         for mock_exe_path in relative_paths:
             rel_path = pathlib.Path(mock_exe_path)

@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -51,12 +53,12 @@ class Bubblewrap(AutotoolsPackage, MesonPackage):
     depends_on("libcap", type="link")
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         return ["-Dman=disabled", "-Dselinux=disabled"]
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         return [
             "--disable-sudo",

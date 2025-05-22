@@ -4,6 +4,9 @@
 import os
 import os.path
 
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 import spack.platforms
 from spack.package import *
 

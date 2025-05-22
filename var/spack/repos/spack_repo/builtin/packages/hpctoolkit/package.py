@@ -6,8 +6,10 @@ import configparser
 import os
 import tempfile
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -297,7 +299,7 @@ class Hpctoolkit(AutotoolsPackage, MesonPackage):
         hpcprof("-S", struct, "-o", db, meas)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
 
@@ -405,7 +407,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             make("check")
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         spec = self.spec
 

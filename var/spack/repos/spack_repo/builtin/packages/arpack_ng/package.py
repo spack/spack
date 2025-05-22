@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.autotools
-import spack.build_systems.cmake
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -101,7 +103,7 @@ class ArpackNg(CMakePackage, AutotoolsPackage):
         return find_libraries(libraries, root=self.prefix, shared=True, recursive=True)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
         lapack_libs = spec["lapack"].libs.joined(";")
@@ -131,7 +133,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return options
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
         options = (

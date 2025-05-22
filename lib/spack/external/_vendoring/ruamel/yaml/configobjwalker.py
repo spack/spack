@@ -2,7 +2,7 @@
 
 import warnings
 
-from ruamel.yaml.util import configobj_walker as new_configobj_walker
+from _vendoring.ruamel.yaml.util import configobj_walker as new_configobj_walker
 
 if False:  # MYPY
     from typing import Any  # NOQA
@@ -10,5 +10,5 @@ if False:  # MYPY
 
 def configobj_walker(cfg):
     # type: (Any) -> Any
-    warnings.warn('configobj_walker has moved to ruamel.yaml.util, please update your code')
+    warnings.warn('configobj_walker has moved to _vendoring.ruamel.yaml.util, please update your code')
     return new_configobj_walker(cfg)

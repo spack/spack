@@ -28,7 +28,7 @@ def setup_parser(subparser):
         "--build-system",
         dest="path",
         action="store_const",
-        const=spack.paths.build_systems_path,
+        const=os.path.join(spack.repo.PATH.repos[0].root, "build_systems"),
         help="edit the build system with the supplied name",
     )
     excl_args.add_argument(

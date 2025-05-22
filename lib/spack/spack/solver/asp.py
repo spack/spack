@@ -34,7 +34,7 @@ from typing import (
     Union,
 )
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -128,8 +128,6 @@ class Provenance(enum.IntEnum):
     SPEC = enum.auto()
     # A dev spec literal
     DEV_SPEC = enum.auto()
-    # An external spec declaration
-    EXTERNAL = enum.auto()
     # The 'packages' section of the configuration
     PACKAGES_YAML = enum.auto()
     # A package requirement
@@ -138,6 +136,8 @@ class Provenance(enum.IntEnum):
     PACKAGE_PY = enum.auto()
     # An installed spec
     INSTALLED = enum.auto()
+    # An external spec declaration
+    EXTERNAL = enum.auto()
     # lower provenance for installed git refs so concretizer prefers StandardVersion installs
     INSTALLED_GIT_VERSION = enum.auto()
     # A runtime injected from another package (e.g. a compiler)
@@ -1617,7 +1617,7 @@ class SpackSolverSetup:
         target = spec.architecture.target
 
         # Check if the target is a concrete target
-        if str(target) in archspec.cpu.TARGETS:
+        if str(target) in _vendoring.archspec.cpu.TARGETS:
             return [single_target_fn(spec.name, target)]
 
         self.target_constraints.add(target)
@@ -2512,7 +2512,22 @@ class SpackSolverSetup:
                     if self.pkg_class(spec.name).has_variant(vname):
                         clauses.append(f.variant_value(spec.name, vname, value))
                 else:
-                    clauses.append(f.variant_value(spec.name, vname, value))
+                    variant_clause = f.variant_value(spec.name, vname, value)
+                    if (
+                        variant.concrete
+                        and variant.type == vt.VariantType.MULTI
+                        and not spec.concrete
+                    ):
+                        if body is False:
+                            variant_clause.args = (
+                                f"concrete_{variant_clause.args[0]}",
+                                *variant_clause.args[1:],
+                            )
+                        else:
+                            clauses.append(
+                                fn.attr("concrete_variant_request", spec.name, vname, value)
+                            )
+                    clauses.append(variant_clause)
 
         # compiler flags
         source = context.source if context else "none"
@@ -2541,7 +2556,7 @@ class SpackSolverSetup:
 
         edges = spec.edges_from_dependents()
         virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
-        if not body:
+        if not body and not spec.concrete:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))
@@ -2738,7 +2753,7 @@ class SpackSolverSetup:
                         compiler_name, compiler_version.dotted_numeric_string
                     )
                 supported.append(target)
-            except archspec.cpu.UnsupportedMicroarchitecture:
+            except _vendoring.archspec.cpu.UnsupportedMicroarchitecture:
                 continue
             except ValueError:
                 continue
@@ -2803,7 +2818,7 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = archspec.cpu.TARGETS.get(spec.target.name)
+            target = _vendoring.archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 self.target_ranges(spec, None)
                 continue
@@ -2815,7 +2830,7 @@ class SpackSolverSetup:
                         candidate_targets.append(ancestor)
 
         platform = spack.platforms.host()
-        uarch = archspec.cpu.TARGETS.get(platform.default)
+        uarch = _vendoring.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
@@ -2923,7 +2938,7 @@ class SpackSolverSetup:
                 return [single_constraint]
 
             t_min, _, t_max = single_constraint.partition(":")
-            for test_target in archspec.cpu.TARGETS.values():
+            for test_target in _vendoring.archspec.cpu.TARGETS.values():
                 # Check lower bound
                 if t_min and not t_min <= test_target:
                     continue
@@ -3879,7 +3894,7 @@ class SpecBuilder:
 
         if extendee_spec:
             extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package.update_external_dependencies(self._specs.get(extendee_node, None))
+            package._update_external_dependencies(self._specs.get(extendee_node))
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]

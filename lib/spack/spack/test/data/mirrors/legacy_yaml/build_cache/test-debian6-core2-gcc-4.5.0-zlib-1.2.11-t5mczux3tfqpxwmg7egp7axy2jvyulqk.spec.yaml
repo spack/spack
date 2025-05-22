@@ -18,7 +18,7 @@ spec:
     compiler:
       name: gcc
       version: 4.5.0
-    namespace: builtin.mock
+    namespace: builtin_mock
     parameters:
       optimize: true
       pic: true

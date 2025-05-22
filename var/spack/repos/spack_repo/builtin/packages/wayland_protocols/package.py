@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -63,6 +66,6 @@ class WaylandProtocols(MesonPackage, AutotoolsPackage):
     depends_on("wayland")
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         return ["-Dtests={}".format("true" if self.pkg.run_tests else "false")]

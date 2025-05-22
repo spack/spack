@@ -1,0 +1,52 @@
+diff --git a/Directory.Build.props b/Directory.Build.props
+index a5e937a..d24da7b 100644
+--- a/Directory.Build.props
++++ b/Directory.Build.props
+@@ -56,7 +56,7 @@
+     properties before or after it depending on what you're injecting.  The "global" build.props will also import
+     files located in the $(CBTLocalPath) folder at certain points.
+   -->
+-  <Import Project="$(EnlistmentRoot)\.build\CBT\build.props" />
++  <!-- <Import Project="$(EnlistmentRoot)\.build\CBT\build.props" /> -->
+   
+   <!--
+     The NuProjPath property allows .nuproj projects to build without having NuProj installed.
+@@ -76,9 +76,9 @@
+   <PropertyGroup>
+     <OutputPath>$(StagingOutputRootPath)$(MSBuildProjectName)\</OutputPath>
+     <OutIncludePath>$(StagingOutputRootPath)include</OutIncludePath>
+-    <VCToolsVersion>14.15.26726</VCToolsVersion>
+-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+-    <PlatformToolset>v141</PlatformToolset>
++    <!-- <VCToolsVersion>14.15.26726</VCToolsVersion> -->
++    <!-- <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion> -->
++    <!-- <PlatformToolset>v141</PlatformToolset> -->
+     <CharacterSet>Unicode</CharacterSet>
+     <OutDir>$(OutputPath)</OutDir>
+     <ResolveNugetpackages>false</ResolveNugetpackages>
+@@ -97,11 +97,12 @@
+ 
+   <ItemDefinitionGroup>
+     <ClCompile>
+-      <WarningLevel>Level3</WarningLevel>
++      <!-- <WarningLevel>Level3</WarningLevel> -->
+       <SDLCheck>true</SDLCheck>
+       <ConformanceMode>true</ConformanceMode>
+       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+       <DisableSpecificWarnings>26439</DisableSpecificWarnings>
++      <DisableSpecificWarnings>5205</DisableSpecificWarnings>
+     </ClCompile>
+     <Link>
+       <AdditionalDependencies>;%(AdditionalDependencies)</AdditionalDependencies>
+diff --git a/dirs.proj b/dirs.proj
+index 5a19bbf..e6c815c 100644
+--- a/dirs.proj
++++ b/dirs.proj
+@@ -4,5 +4,5 @@
+   <ItemGroup>
+     <ProjectFile Include="$(MSBuildThisFileDirectory)src\dirs.proj" />
+   </ItemGroup>
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
++  <!-- <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " /> -->
+   </Project>
+\ No newline at end of file

@@ -2,6 +2,7 @@ spack:
   view: false
   packages:
     all:
+      target: ["x86_64_v3"]
       require:
       - target=x86_64_v3
       - ~rocm
@@ -9,7 +10,9 @@ spack:
       - cuda_arch=80
     llvm:
       # https://github.com/spack/spack/issues/27999
-      require: ~cuda
+      require: 
+      - ~cuda
+      - target=x86_64_v3
     mpi:
       require: openmpi
     py-torch:

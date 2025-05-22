@@ -6,6 +6,14 @@ import os
 import socket
 import sys
 
+from spack_repo.builtin.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+)
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -137,6 +145,8 @@ class Caliper(CachedCMakePackage, CudaPackage, ROCmPackage):
     conflicts("+libdw", "@:2.4")
     conflicts("+rocm", "@:2.7")
     conflicts("+rocm+cuda")
+    # Legacy nvtx is only supported until cuda@12.8, newer cuda only provides nvtx3.
+    conflicts("^cuda@12.9:", "@:2.12.1")
 
     patch("for_aarch64.patch", when="@:2.11 target=aarch64:")
     patch(

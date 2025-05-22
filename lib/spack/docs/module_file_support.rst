@@ -8,7 +8,7 @@
 Modules (modules.yaml)
 ======================
 
-The use of module systems to manage user environment in a controlled way
+The use of module systems to manage user environments in a controlled way
 is a common practice at HPC centers that is sometimes embraced also by
 individual programmers on their development machines. To support this
 common practice Spack integrates with `Environment Modules
@@ -490,7 +490,7 @@ that are already in the Lmod hierarchy.
 
 
 .. note::
-   Tcl and Lua modules also allow for explicit conflicts between modulefiles.
+   Tcl and Lua modules also allow for explicit conflicts between module files.
 
    .. code-block:: yaml
 
@@ -513,7 +513,7 @@ that are already in the Lmod hierarchy.
    :meth:`~spack.spec.Spec.format` method.
 
    For Lmod and Environment Modules versions prior 4.2, it is important to
-   express the conflict on both modulefiles conflicting with each other.
+   express the conflict on both module files conflicting with each other.
 
 
 .. note::
@@ -550,7 +550,7 @@ that are already in the Lmod hierarchy.
 
 .. warning::
   Consistency of Core packages
-   The user is responsible for maintining consistency among core packages, as ``core_specs``
+   The user is responsible for maintaining consistency among core packages, as ``core_specs``
    bypasses the hierarchy that allows Lmod to safely switch between coherent software stacks.
 
 .. warning::
