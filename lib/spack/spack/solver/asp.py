@@ -4202,8 +4202,6 @@ def _attach_python_to_external(
     if "python" not in dependent_package.spec:
         if extendee_spec:
             python = extendee_spec
-        elif "python" in dependent_package.spec.root:
-            python = dependent_package.spec.root["python"]
         else:
             python = _get_external_python_for_prefix(dependent_package)
             if not python.concrete:
