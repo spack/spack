@@ -41,10 +41,14 @@ class Greenx(CMakePackage):
 
     depends_on("gmp", when="+gmp")
 
-    # fix a missing dependency in the greenXConfig.cmake file. A linking error will occur
-    # when clang is used.
+    # fix a missing dependency in the greenXConfig.cmake file.
+    # A linking error will show up when clang is used.
     # fix fortran modules installation paths
-    patch("cmake.patch", when="@2.1:")
+    patch(
+        "https://github.com/nomad-coe/greenX/commit/96c4b61656c13b5aceb2906ad5efb93a745dc6ae.patch?full_index=1",
+        sha256="6d591e223be462137a1563cfcf99ab721c896a79eb139baf32c49995d2a2be7c",
+        when="@:2.3",
+    )
 
     def cmake_args(self):
         args = [
