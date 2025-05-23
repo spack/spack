@@ -14,9 +14,11 @@ class LuaLuajitOpenresty(LuaImplPackage):
 
     homepage = "https://openresty.org/en/luajit.html"
     url = "https://github.com/openresty/luajit2/archive/refs/tags/v2.1-20230410.tar.gz"
+    git = "https://github.com/openresty/luajit2"
 
     license("MIT")
 
+    version("2.1-20250515", commit="eec7a8016c3381b949b5d84583800d05897fa960")
     version(
         "2.1-20240626", sha256="1e53822a1105df216b9657ccb0293a152ac5afd875abc848453bfa353ca8181b"
     )
@@ -39,6 +41,13 @@ class LuaLuajitOpenresty(LuaImplPackage):
     provides("luajit", "lua-lang", when="+lualinks")
     provides("lua-lang@5.1", when="+lualinks")
     lua_version_override = "5.1"
+
+    # https://github.com/neovim/neovim/issues/33506#issuecomment-2812141484
+    requires(
+        "@2.1-20250515:",
+        when="target=aarch64: platform=darwin",
+        msg="macOS / aarch64 require fixes from 2.1-20250515",
+    )
 
     @run_after("install")
     def install_links(self):
