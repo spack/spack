@@ -4286,7 +4286,7 @@ def _get_external_python_for_prefix(python_package):
         return python_externals_configured[0]
 
     python_externals_detection = spack.detection.by_path(
-        ["python"], path_hints=[python_package.spec.external_path]
+        ["python"], path_hints=[python_package.spec.external_path], max_workers=1
     )
 
     python_externals_detected = [
@@ -4294,8 +4294,11 @@ def _get_external_python_for_prefix(python_package):
         for spec in python_externals_detection.get("python", [])
         if spec.external_path == python_package.spec.external_path
     ]
+    python_externals_detected = [
+        spack.spec.parse_with_version_concrete(str(x)) for x in python_externals_detected
+    ]
     if python_externals_detected:
-        return python_externals_detected[0]
+        return list(sorted(python_externals_detected, key=lambda x: x.version))[-1]
 
     raise StopIteration(
         "No external python could be detected for %s to depend on" % python_package.spec
