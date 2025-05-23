@@ -22,6 +22,7 @@ level = "short"
 class ComputeBuildSystemPathAction(argparse.Action):
     """Compute the path to the build system directory. This is done lazily so that we use the
     correct spack.repo.PATH when the command is run."""
+
     def __call__(self, parser, namespace, values, option_string=None):
         setattr(namespace, self.dest, os.path.join(spack.repo.PATH.repos[0].root, "build_systems"))
 
