@@ -188,6 +188,10 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     # Fails to build with freshly released CUDA (#48708).
     conflicts("^cuda@12.8:", when="@:0.4.31")
 
+    # Same as https://github.com/tensorflow/tensorflow/issues/70199
+    # (-mavx512fp16 exists in gcc@12:)
+    conflicts("%gcc@:11", when="@0.6:")
+
     resource(
         name="xla",
         url="https://github.com/ROCm/xla/archive/07543ab117699a57c1267b453a62f89b1d5953fd.tar.gz",
