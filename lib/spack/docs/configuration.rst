@@ -291,7 +291,7 @@ then, on macOS (``darwin``), configuration settings for files under the
 
    You can get the name to use for ``<platform>`` by running ``spack arch
    --platform``.
-   
+
 Platform-specific configuration files can similarly be set up for the
 ``system``, ``site``, and ``user`` scopes by creating an ``include.yaml``
 similar to the one above for ``defaults`` -- under the appropriate
@@ -320,9 +320,9 @@ options is supported with the ``::`` notation for keys (see
 
 .. note::
 
-   Scope-specific settings take precedence over those provided in the
-   configuration files listed in the scope's :ref:`include.yaml <include-yaml>`
-   file.
+   Settings in a scope take precedence over those provided in any included
+   configuration files (i.e., files listed in :ref:`include.yaml <include-yaml>` or
+   an ``include:`` section in ``spack.yaml``).
 
 There are also special notations for string concatenation and precedence override:
 
