@@ -298,24 +298,6 @@ def remove_facts(
     return _remove
 
 
-def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-    build_deps = {x.args[2]: x.args[1] for x in facts if x.args[0] == "depends_on"}
-    result = []
-    for x in facts:
-        current_name = x.args[1]
-        if current_name in build_deps:
-            x.name = "node_requirement"
-            result.append(fn.attr("direct_dependency", build_deps[current_name], x))
-            continue
-
-        if x.args[0] == "depends_on":
-            continue
-
-        result.append(x)
-
-    return result
-
-
 def all_libcs() -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
@@ -1457,6 +1439,7 @@ class SourceContext:
         # (which means it isn't important to keep track of the source
         # in that case).
         self.source = "none" if source is None else source
+        self.wrap_node_requirement: Optional[bool] = None
 
 
 class ConditionIdContext(SourceContext):
@@ -1491,17 +1474,24 @@ class ConditionContext(SourceContext):
         # transformation applied to facts from the imposed spec. Defaults
         # to removing "node" and "virtual_node" facts.
         self.transform_imposed = None
+        # Whether to wrap direct dependency facts as node requirements,
+        # imposed by the parent. If None, the default is used, which is:
+        # - wrap head of rules
+        # - do not wrap body of rules
+        self.wrap_node_requirement: Optional[bool] = None
 
     def requirement_context(self) -> ConditionIdContext:
         ctxt = ConditionIdContext()
         ctxt.source = self.source
         ctxt.transform = self.transform_required
+        ctxt.wrap_node_requirement = self.wrap_node_requirement
         return ctxt
 
     def impose_context(self) -> ConditionIdContext:
         ctxt = ConditionIdContext()
         ctxt.source = self.source
         ctxt.transform = self.transform_imposed
+        ctxt.wrap_node_requirement = self.wrap_node_requirement
         return ctxt
 
 
@@ -2221,8 +2211,9 @@ class SpackSolverSetup:
                     context.source = ConstraintOrigin.append_type_suffix(
                         pkg_name, ConstraintOrigin.REQUIRE
                     )
+                    context.wrap_node_requirement = True
                     if not virtual:
-                        context.transform_required = remove_build_deps
+                        context.transform_required = remove_facts("depends_on")
                         context.transform_imposed = remove_facts(
                             "node", "virtual_node", "depends_on"
                         )
@@ -2676,13 +2667,20 @@ class SpackSolverSetup:
                 ###
                 # Direct dependencies expressed with "%"
                 ###
-                edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
-                # Body of a rule
-                if body is True:
+                for dependency_type in dt.flag_to_tuple(dspec.depflag):
+                    edge_clauses.append(
+                        fn.attr("depends_on", spec.name, dep.name, dependency_type)
+                    )
+
+                # By default, wrap head of rules, unless the context says otherwise
+                wrap_node_requirement = body is False
+                if context and context.wrap_node_requirement is not None:
+                    wrap_node_requirement = context.wrap_node_requirement
+
+                if not wrap_node_requirement:
                     edge_clauses.extend(dependency_clauses)
                     continue
 
-                # Head of a rule
                 for clause in dependency_clauses:
                     clause.name = "node_requirement"
                     edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
