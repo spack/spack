@@ -439,26 +439,19 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
             return False
         return (other is not None) and lazy_lt(self._cmp_iter, other._cmp_iter)
 
-    def ne(self, other):
-        fast_eq = _cmp_fast_eq(self, other)
-        if fast_eq is not None:
-            return not fast_eq
-        return (other is None) or not lazy_eq(self._cmp_iter, other._cmp_iter)
-
     def gt(self, other):
         if _cmp_fast_eq(self, other) is True:
             return False
         return (other is None) or lazy_lt(other._cmp_iter, self._cmp_iter)
 
+    def ne(self, other):
+        return not (self == other)
+
     def le(self, other):
-        if _cmp_fast_eq(self, other) is True:
-            return True
-        return (other is not None) and not lazy_lt(other._cmp_iter, self._cmp_iter)
+        return not (self > other)
 
     def ge(self, other):
-        if _cmp_fast_eq(self, other) is True:
-            return True
-        return (other is None) or not lazy_lt(self._cmp_iter, other._cmp_iter)
+        return not (self < other)
 
     def h(self):
         return hash(tuplify(self._cmp_iter))
@@ -469,10 +462,10 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
         setattr(cls, name, func)
 
     add_func_to_class("__eq__", eq)
-    add_func_to_class("__ne__", ne)
     add_func_to_class("__lt__", lt)
-    add_func_to_class("__le__", le)
     add_func_to_class("__gt__", gt)
+    add_func_to_class("__ne__", ne)
+    add_func_to_class("__le__", le)
     add_func_to_class("__ge__", ge)
     if set_hash:
         add_func_to_class("__hash__", h)
