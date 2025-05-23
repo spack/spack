@@ -154,9 +154,6 @@ class Neovim(CMakePackage):
         depends_on("cmake@3.16:", type="build")
         depends_on("utf8proc", type="link")
         depends_on("tree-sitter@0.25:", type="link")
-
-        # https://github.com/neovim/neovim/issues/33506#issuecomment-2812141484
-        conflicts("platform=darwin target=aarch64:")
     with when("@master"):
         pass
 
