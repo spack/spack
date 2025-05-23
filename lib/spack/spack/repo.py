@@ -628,44 +628,61 @@ class RepoIndex:
 
 
 class RepoPath:
-    """A RepoPath is a list of repos that function as one.
+    """A RepoPath is a list of Repo instances that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
     results of the Repos in its list instead of on a single package
     repository.
-
-    Args:
-        repos: list Repo objects or paths to put in this RepoPath
-        cache: file cache associated with this repository
-        overrides: dict mapping package name to class attribute overrides for that package
     """
 
-    def __init__(
-        self,
-        *repos: Union[str, "Repo"],
-        cache: Optional[spack.util.file_cache.FileCache],
-        overrides: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    def __init__(self, *repos: "Repo") -> None:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
         self._patch_index: Optional[spack.patch.PatchCache] = None
         self._tag_index: Optional[spack.tag.TagIndex] = None
 
-        # Add each repo to this path.
         for repo in repos:
+            self.put_last(repo)
+
+    @staticmethod
+    def from_paths(
+        *path: str,
+        cache: spack.util.file_cache.FileCache,
+        overrides: Optional[Dict[str, Any]] = None,
+    ) -> "RepoPath":
+        repos: List[Repo] = []
+
+        for p in path:
             try:
-                if isinstance(repo, str):
-                    assert cache is not None, "cache must hold a value, when repo is a string"
-                    repo = Repo(repo, cache=cache, overrides=overrides)
-                self.put_last(repo)
+                repos.append(Repo(p, cache=cache, overrides=overrides))
             except RepoError as e:
                 tty.warn(
-                    f"Failed to initialize repository: '{repo}'.",
+                    f"Failed to initialize repository: '{p}'.",
                     e.message,
                     "To remove the bad repository, run this command:",
-                    f"    spack repo rm {repo}",
+                    f"    spack repo rm {p}",
                 )
+
+        return RepoPath(*repos)
+
+    @staticmethod
+    def from_config(config: spack.config.Configuration) -> "RepoPath":
+        """Create a RepoPath from a configuration object."""
+        repo_dirs = config.get("repos")
+        if not repo_dirs:
+            raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
+
+        overrides = {}
+        for pkg_name, data in config.get("packages").items():
+            if pkg_name == "all":
+                continue
+            value = data.get("package_attributes", {})
+            if not value:
+                continue
+            overrides[pkg_name] = value
+
+        return RepoPath.from_paths(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
     def enable(self) -> None:
         """Set the relevant search paths for package module loading"""
@@ -676,7 +693,8 @@ class RepoPath:
 
     def disable(self) -> None:
         """Disable the search paths for package module loading"""
-        del REPOS_FINDER.repo_path
+        if hasattr(REPOS_FINDER, "repo_path"):
+            del REPOS_FINDER.repo_path
         for p in self.python_paths():
             if p in sys.path:
                 sys.path.remove(p)
@@ -915,7 +933,7 @@ class RepoPath:
 
     @staticmethod
     def unmarshal(repos):
-        return RepoPath(*repos, cache=None)
+        return RepoPath(*repos)
 
     def __reduce__(self):
         return RepoPath.unmarshal, self.marshal()
@@ -1541,7 +1559,7 @@ def create_repo(
 
 
 def from_path(path: str) -> Repo:
-    """Returns a repository from the path passed as input. Injects the global misc cache."""
+    """Constructs a Repo using global misc cache."""
     return Repo(path, cache=spack.caches.MISC_CACHE)
 
 
@@ -1558,31 +1576,9 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def create(configuration: spack.config.Configuration) -> RepoPath:
-    """Create a RepoPath from a configuration object.
-
-    Args:
-        configuration (spack.config.Configuration): configuration object
-    """
-    repo_dirs = configuration.get("repos")
-    if not repo_dirs:
-        raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
-
-    overrides = {}
-    for pkg_name, data in configuration.get("packages").items():
-        if pkg_name == "all":
-            continue
-        value = data.get("package_attributes", {})
-        if not value:
-            continue
-        overrides[pkg_name] = value
-
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
-
-
-def create_and_enable(configuration: spack.config.Configuration) -> RepoPath:
-    """Same as create, but calls enable() on the created repository."""
-    repo_path = create(configuration)
+def create_and_enable(config: spack.config.Configuration) -> RepoPath:
+    """Immediately call enable() on the created RepoPath instance."""
+    repo_path = RepoPath.from_config(config)
     repo_path.enable()
     return repo_path
 
@@ -1622,7 +1618,7 @@ def use_repositories(
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    old_repo, new_repo = PATH, create(configuration=spack.config.CONFIG)
+    old_repo, new_repo = PATH, RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:

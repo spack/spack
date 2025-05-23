@@ -635,7 +635,7 @@ def _use_test_platform(test_platform):
 # Test-specific fixtures
 #
 @pytest.fixture(scope="session")
-def mock_repo_path():
+def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
@@ -652,20 +652,20 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
+def mock_packages(mock_packages_repo, mock_pkg_install, request):
     """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
-    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+    with spack.repo.use_repositories(mock_packages_repo) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path, request):
+def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 @pytest.fixture()
@@ -948,7 +948,7 @@ def _store_dir_and_cache(tmpdir_factory):
 def mock_store(
     tmpdir_factory,
     mock_wsdk_externals,
-    mock_repo_path,
+    mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache,
 ):
@@ -970,7 +970,7 @@ def mock_store(
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
+                with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     store_path.chmod(mode=0o755, rec=1)
                     _populate(store.db)

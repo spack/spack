@@ -112,7 +112,7 @@ class GlobalStateMarshaler:
 
     def restore(self):
         spack.config.CONFIG = self.config
-        spack.repo.enable_repo(spack.repo.create(self.config))
+        spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
         self.test_patches.restore()

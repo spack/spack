@@ -561,7 +561,7 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
-    spack.repo.enable_repo(spack.repo.create(spack.config.CONFIG))
+    spack.repo.enable_repo(spack.repo.RepoPath.from_config(spack.config.CONFIG))
 
     # On Windows10 console handling for ASCI/VT100 sequences is not
     # on by default. Turn on before we try to write to console

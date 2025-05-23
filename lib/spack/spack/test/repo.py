@@ -185,17 +185,17 @@ def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, r
     repo_paths, namespaces = _repo_paths(repos)
 
     repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
-    repo_path = spack.repo.RepoPath(*repo_paths, cache=repo_cache)
+    repo_path = spack.repo.RepoPath.from_paths(*repo_paths, cache=repo_cache)
     assert len(repo_path.repos) == len(namespaces)
     assert [x.namespace for x in repo_path.repos] == namespaces
 
 
 @pytest.mark.parametrize("method_name", ["dirname_for_package_name", "filename_for_package_name"])
-def test_path_computation_with_names(method_name, mock_repo_path):
+def test_path_computation_with_names(method_name, mock_packages_repo):
     """Tests that repositories can compute the correct paths when using both fully qualified
     names and unqualified names.
     """
-    repo_path = spack.repo.RepoPath(mock_repo_path, cache=None)
+    repo_path = spack.repo.RepoPath(mock_packages_repo)
     method = getattr(repo_path, method_name)
     unqualified = method("mpileaks")
     qualified = method("builtin_mock.mpileaks")
@@ -228,9 +228,9 @@ class TestRepo:
     @pytest.mark.parametrize(
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
     )
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_is_virtual(self, repo_cls, name, expected, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("constructor", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
+    def test_is_virtual(self, constructor, name, expected, mock_test_cache):
+        repo = constructor(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
 
@@ -275,15 +275,15 @@ class TestRepo:
         "extended,expected",
         [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
     )
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_extensions(self, repo_cls, extended, expected, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
+    def test_extensions(self, create_repo, extended, expected, mock_test_cache):
+        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         provider_names = {x.name for x in repo.extensions_for(extended)}
         assert provider_names.issuperset(expected)
 
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_all_package_names(self, repo_cls, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
+    def test_all_package_names(self, create_repo, mock_test_cache):
+        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         all_names = repo.all_package_names(include_virtuals=True)
         real_names = repo.all_package_names(include_virtuals=False)
         assert set(all_names).issuperset(real_names)
@@ -291,9 +291,9 @@ class TestRepo:
             assert repo.is_virtual(name)
             assert repo.is_virtual_safe(name)
 
-    @pytest.mark.parametrize("repo_cls", [spack.repo.Repo, spack.repo.RepoPath])
-    def test_packages_with_tags(self, repo_cls, mock_test_cache):
-        repo = repo_cls(spack.paths.mock_packages_path, cache=mock_test_cache)
+    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
+    def test_packages_with_tags(self, create_repo, mock_test_cache):
+        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         r1 = repo.packages_with_tags("tag1")
         r2 = repo.packages_with_tags("tag1", "tag2")
         assert "mpich" in r1 and "mpich" in r2
@@ -304,12 +304,16 @@ class TestRepo:
 @pytest.mark.usefixtures("nullify_globals")
 class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
-        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.RepoPath.from_paths(
+            spack.paths.mock_packages_path, cache=mock_test_cache
+        )
         assert len(repo.repos) == 1
         assert repo.by_namespace["builtin_mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
-        repo = spack.repo.RepoPath(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo = spack.repo.RepoPath.from_paths(
+            spack.paths.mock_packages_path, cache=mock_test_cache
+        )
         # builtin_mock is there
         assert repo.get_repo("builtin_mock") is repo.repos[0]
         # foo is not there, raise
