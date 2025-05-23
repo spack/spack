@@ -322,21 +322,27 @@ group_args = [
 
 
 @pytest.mark.parametrize(
-    ["max_group_size", "max_group_length", "lengths", "error"],
+    ["max_group_size", "prefix_length", "max_group_length", "lengths", "error"],
     [
-        (3, 1, None, ValueError),
-        (3, 13, None, ValueError),
-        (3, 25, [2, 1, 1, 1, 1, 1, 1, 1, 1], None),
-        (3, 26, [2, 1, 1, 2, 1, 1, 2], None),
-        (3, 40, [3, 3, 2, 2], None),
-        (3, 43, [3, 3, 3, 1], None),
-        (4, 54, [4, 3, 3], None),
-        (4, 56, [4, 4, 2], None),
+        (3, 0, 1, None, ValueError),  # element too long
+        (3, 0, 13, None, ValueError),  # element too long
+        (3, 12, 25, None, ValueError),  # prefix and words too long
+        (3, 0, 25, [2, 1, 1, 1, 1, 1, 1, 1, 1], None),
+        (3, 0, 26, [2, 1, 1, 2, 1, 1, 2], None),
+        (3, 0, 40, [3, 3, 2, 2], None),
+        (3, 0, 43, [3, 3, 3, 1], None),
+        (4, 0, 54, [4, 3, 3], None),
+        (4, 0, 56, [4, 4, 2], None),
     ],
 )
-def test_group_arguments(mock_packages, max_group_size, max_group_length, lengths, error):
+def test_group_arguments(
+    mock_packages, max_group_size, prefix_length, max_group_length, lengths, error
+):
     generator = spack.cmd.group_arguments(
-        group_args, max_group_size=max_group_size, max_group_length=max_group_length
+        group_args,
+        max_group_size=max_group_size,
+        prefix_length=prefix_length,
+        max_group_length=max_group_length,
     )
 
     # just check that error cases raise
