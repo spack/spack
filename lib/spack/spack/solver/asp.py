@@ -3918,13 +3918,7 @@ class SpecBuilder:
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
         if extendee_spec and extendee_spec.name == "python":
-            extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            orig_key = self._specs.get(extendee_node)
-
             candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
-
-            print(f"{package}: {orig_key} / {candidate_python_to_attach}")
-
             _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
 
     def depends_on(self, parent_node, dependency_node, type):
