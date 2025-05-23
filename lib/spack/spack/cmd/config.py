@@ -70,17 +70,14 @@ def setup_parser(subparser):
 
     scopes_parser = sp.add_parser("scopes", help="list defined scopes")
     scopes_parser.add_argument(
-        "-f",
-        "--file",
+        "-p",
+        "--path",
         action="store_true",
         default=False,
-        help="list only writable scopes with an associated file",
+        help="list only writable scopes with an associated path",
     )
     scopes_parser.add_argument(
-        "--included",
-        action="store_true",
-        default=False,
-        help="list only included scopes (overrides --file)",
+        "--included", action="store_true", default=False, help="list only included scopes"
     )
 
     add_parser = sp.add_parser("add", help="add configuration parameters")
@@ -231,16 +228,18 @@ def config_list(args):
 
 
 def config_scopes(args):
-    if args.included and args.file:
-        tty.warn("`--included' overrides `--file'")
     scopes = (
         spack.config.scopes().reversed_values()
-        if (args.included or not args.file)
+        if (args.included or not args.path)
         else spack.config.writable_scopes()
     )
     if args.included:
         scopes = (i for s in scopes for i in s.included_scopes)
-    print(" ".join([s.name for s in scopes]))
+    info = (
+        f"{s.name} ({s.path})" if s.name.startswith("include:") else f"{s.name}" for s in scopes
+    )
+
+    print(" ".join(info))
 
 
 def config_add(args):

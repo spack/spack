@@ -46,8 +46,26 @@ def test_config_scopes():
     assert "_builtin" in output
 
 
-def test_config_scopes_file():
-    output = config("scopes", "--file")
+def test_config_scopes_path():
+    output = config("scopes", "--path")
+    assert "site" in output
+    assert "_builtin" not in output
+
+
+def test_config_scopes_include():
+    output = config("scopes", "--include")
+    assert "site" in output
+    assert "_builtin" not in output
+
+
+def test_config_scopes_include_path():
+    output = config("scopes", "--include", "--path")
+    assert "site" in output
+    assert "_builtin" not in output
+
+
+def test_config_scopes_path_section():
+    output = config("scopes", "--include", "--path", "config")
     assert "site" in output
     assert "_builtin" not in output
 
