@@ -44,6 +44,7 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
     variant("mpi", default=True, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
     variant("64bitids", default=False, description="enable 64 bits ids")
+    variant("vtktypes", default=False, description="Build with VTK Types")
     variant("testlib", default=False, description="build test library")
     variant("fpic", default=False, description="build fpic support")
     variant("examples", default=False, description="Install builtin examples")
@@ -144,6 +145,7 @@ class Viskores(CMakePackage, CudaPackage, ROCmPackage):
                 self.define_from_variant("Viskores_ENABLE_TESTING_LIBRARY", "testlib"),
                 self.define_from_variant("Viskores_INSTALL_EXAMPLES", "examples"),
                 self.define_from_variant("Viskores_USE_64BIT_IDS", "64bitids"),
+                self.define_from_variant("Viskores_USE_DEFAULT_TYPES_FOR_VTK", "vtktypes"),
                 self.define_from_variant("Viskores_USE_DOUBLE_PRECISION", "doubleprecision"),
                 self.define(
                     "Viskores_USE_DEFAULT_TYPES_FOR_ASCENT", "~64bitids +doubleprecision" in spec
