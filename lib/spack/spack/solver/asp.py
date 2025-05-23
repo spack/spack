@@ -3917,7 +3917,11 @@ class SpecBuilder:
         # get an edge inserted to python as a post-concretization step
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
-        if extendee_spec and extendee_spec.name == "python":
+        if (
+            extendee_spec
+            and extendee_spec.name == "python"
+            and not ("compiler" in getattr(package, "tags", []))
+        ):
             candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
             _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
 
