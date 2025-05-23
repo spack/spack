@@ -611,7 +611,9 @@ class Configuration:
 
         scope._write_section(section)
 
-    def get_config(self, section: str, scope: Optional[str] = None) -> YamlConfigDict:
+    def get_config(
+        self, section: str, scope: Optional[str] = None, _merged_scope: Optional[str] = None
+    ) -> YamlConfigDict:
         """Get configuration settings for a section.
 
         If ``scope`` is ``None`` or not provided, return the merged contents
@@ -636,16 +638,24 @@ class Configuration:
            }
 
         """
-        return self._get_config_memoized(section, scope)
+        return self._get_config_memoized(section, scope=scope, _merged_scope=_merged_scope)
 
     @lang.memoized
-    def _get_config_memoized(self, section: str, scope: Optional[str]) -> YamlConfigDict:
+    def _get_config_memoized(
+        self, section: str, scope: Optional[str], _merged_scope: Optional[str]
+    ) -> YamlConfigDict:
         _validate_section_name(section)
 
-        if scope is None:
-            scopes = list(self.scopes.values())
-        else:
+        if scope is not None and _merged_scope is not None:
+            raise ValueError("Cannot specify both scope and _merged_scope")
+        elif scope is not None:
             scopes = [self._validate_scope(scope)]
+        elif _merged_scope is not None:
+            scope_stack = list(self.scopes.values())
+            merge_idx = next(i for i, s in enumerate(scope_stack) if s.name == _merged_scope)
+            scopes = scope_stack[: merge_idx + 1]
+        else:
+            scopes = list(self.scopes.values())
 
         merged_section: Dict[str, Any] = syaml.syaml_dict()
         updated_scopes = []
