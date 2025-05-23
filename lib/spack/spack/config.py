@@ -122,9 +122,6 @@ _OVERRIDES_BASE_NAME = "overrides-"
 #: Type used for raw YAML configuration
 YamlConfigDict = Dict[str, Any]
 
-#: prefix for name of included configuration scopes
-INCLUDE_SCOPE_PREFIX = "include"
-
 #: safeguard for recursive includes -- maximum include depth
 MAX_RECURSIVE_INCLUDES = 100
 
@@ -153,7 +150,7 @@ class ConfigScope:
             if includes:
                 include_paths = [included_path(data) for data in includes["include"]]
                 for path in include_paths:
-                    included_scope = include_path_scope(path)
+                    included_scope = include_path_scope(path, self.name)
                     if included_scope:
                         self._included_scopes.append(included_scope)
 
@@ -840,11 +837,12 @@ def included_path(entry: Union[str, dict]) -> IncludePath:
     return IncludePath(path=path, sha256=sha256, when=when, optional=optional)
 
 
-def include_path_scope(include: IncludePath) -> Optional[ConfigScope]:
+def include_path_scope(include: IncludePath, parent_name: str) -> Optional[ConfigScope]:
     """Instantiate an appropriate configuration scope for the given path.
 
     Args:
         include: optional include path
+        parent_name: name of including scope
 
     Returns: configuration scope
 
@@ -863,13 +861,13 @@ def include_path_scope(include: IncludePath) -> Optional[ConfigScope]:
 
         if os.path.isdir(config_path):
             # directories are treated as regular ConfigScopes
-            config_name = f"{INCLUDE_SCOPE_PREFIX}:{os.path.basename(config_path)}"
+            config_name = f"{parent_name}:{os.path.basename(config_path)}"
             tty.debug(f"Creating DirectoryConfigScope {config_name} for '{config_path}'")
             return DirectoryConfigScope(config_name, config_path)
 
         if os.path.exists(config_path):
             # files are assumed to be SingleFileScopes
-            config_name = f"{INCLUDE_SCOPE_PREFIX}:{config_path}"
+            config_name = f"{parent_name}:{config_path}"
             tty.debug(f"Creating SingleFileScope {config_name} for '{config_path}'")
             return SingleFileScope(config_name, config_path, spack.schema.merged.schema)
 
