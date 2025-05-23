@@ -1030,7 +1030,7 @@ class ErrorHandler:
         """
         seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
-        local = "required because %s " % conditions[cause[0]]
+        local = f"required because {conditions[cause[0]]} "
 
         return [indent + local] + [
             c
@@ -1084,7 +1084,7 @@ class ErrorHandler:
         # Spec(...) with the string representation of the spec mentioned
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
         for spec_str in specs_to_construct:
-            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+            msg = msg.replace(f"Spec({spec_str})", str(spack.spec.Spec(spec_str)))
 
         for cause in set(causes):
             for c in self.get_cause_tree(cause):
@@ -1625,7 +1625,7 @@ class SpackSolverSetup:
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
-            when_spec_msg = "conflict constraint %s" % str(when_spec)
+            when_spec_msg = f"conflict constraint {str(when_spec)}"
             when_spec_id = self.condition(when_spec, required_name=pkg.name, msg=when_spec_msg)
 
             for conflict_spec, conflict_msg in conflict_specs:
@@ -2944,7 +2944,7 @@ class SpackSolverSetup:
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:
-                raise TypeError("expected version type, found: %s" % type(v))
+                raise TypeError(f"expected version type, found: {type(v)}")
 
         # define a set of synthetic possible versions for virtuals, so
         # that `version_satisfies(Package, Constraint, Version)` has the
@@ -3217,7 +3217,7 @@ class SpackSolverSetup:
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
-            self.gen.h2("Package rules: %s" % pkg)
+            self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
 
@@ -3228,7 +3228,7 @@ class SpackSolverSetup:
         self.gen.h1("Develop specs")
         # Inject dev_path from environment
         for ds in dev_specs:
-            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
+            self.condition(spack.spec.Spec(ds.name), ds, msg=f"{ds.name} is a develop spec")
             self.trigger_rules()
             self.effect_rules()
 
@@ -3291,9 +3291,10 @@ class SpackSolverSetup:
             # FIXME (compiler as nodes): think of using isinstance(compiler_cls, WrappedCompiler)
             # Add a dependency on the compiler wrapper
             for language in ("c", "cxx", "fortran"):
+                compiler_str = f"{compiler.name}@{compiler.versions}"
                 recorder("*").depends_on(
                     "compiler-wrapper",
-                    when=f"%[virtuals={language}] {compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build virtuals={language}] {compiler_str}",
                     type="build",
                     description=f"Add the compiler wrapper when using {compiler} for {language}",
                 )
@@ -3313,13 +3314,13 @@ class SpackSolverSetup:
             if current_libc:
                 recorder("*").depends_on(
                     "libc",
-                    when=f"%{compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build] {compiler_str}",
                     type="link",
                     description=f"Add libc when using {compiler}",
                 )
                 recorder("*").depends_on(
                     f"{current_libc.name}@={current_libc.version}",
-                    when=f"%{compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build] {compiler_str}",
                     type="link",
                     description=f"Libc is {current_libc} when using {compiler}",
                 )
@@ -3329,7 +3330,7 @@ class SpackSolverSetup:
 
     def literal_specs(self, specs):
         for spec in sorted(specs):
-            self.gen.h2("Spec: %s" % str(spec))
+            self.gen.h2(f"Spec: {str(spec)}")
             condition_id = next(self._id_counter)
             trigger_id = next(self._id_counter)
 
@@ -3755,7 +3756,7 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"% {spec}")
+        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
         body_str, node_variable = self.rule_body_from(when_spec)
 
         node_placeholder = "XXX"
@@ -4038,7 +4039,7 @@ class SpecBuilder:
                     extend_flag_list(ordered_flags, cmd_flags)
 
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
-                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_flags))
+                msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
                 assert set(compiler_flags) == set(ordered_flags), msg
 
                 spec.compiler_flags.update({flag_type: ordered_flags})
@@ -4097,7 +4098,7 @@ class SpecBuilder:
 
             # print out unknown actions so we can display them for debugging
             if not action:
-                msg = 'UNKNOWN SYMBOL: attr("%s", %s)' % (name, ", ".join(str(a) for a in args))
+                msg = f'UNKNOWN SYMBOL: attr("{name}", {", ".join(str(a) for a in args)})'
                 tty.debug(msg)
                 continue
 
