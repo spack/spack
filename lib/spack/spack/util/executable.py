@@ -31,7 +31,7 @@ class Executable:
         self.exe = [file_path]
         self.default_env: Dict[str, str] = {}
         self.default_envmod = EnvironmentModifications()
-        self.returncode = 0
+        self.returncode = 1  # 1 until proven successful
         self.ignore_quotes = False
 
     def add_default_arg(self, *args: str) -> None:

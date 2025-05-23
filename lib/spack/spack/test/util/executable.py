@@ -112,6 +112,36 @@ def test_which(tmpdir, monkeypatch):
         assert exe.path == path
 
 
+def make_script_exe(tmpdir, name, contents):
+    script = tmpdir / f"{name}.sh"
+    with script.open("w", encoding="utf-8") as f:
+        f.write("#!/bin/sh\n")
+        f.write(contents)
+        f.write("\n")
+    fs.set_executable(str(script))
+    return ex.Executable(str(script))
+
+
+def test_exe_fail(tmpdir):
+    fail = make_script_exe(tmpdir, "fail", "exit 107")
+    with pytest.raises(ex.ProcessError):
+        fail()
+    assert fail.returncode == 107
+
+
+def test_exe_success(tmpdir):
+    succeed = make_script_exe(tmpdir, "fail", "exit 0")
+    succeed()
+    assert succeed.returncode == 0
+
+
+def test_exe_timeout(tmpdir):
+    timeout = make_script_exe(tmpdir, "timeout", "sleep 100")
+    with pytest.raises(ex.ProcessError):
+        timeout(timeout=1)
+    assert timeout.returncode == 1
+
+
 def test_construct_from_pathlib(mock_executable):
     """Tests that we can construct an executable from a pathlib.Path object"""
     expected = "Hello world!"
