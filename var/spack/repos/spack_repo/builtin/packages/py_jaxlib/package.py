@@ -246,12 +246,15 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
             if spec.satisfies("@:0.4.35"):
                 args.append("--enable_cuda")
             if spec.satisfies("@0.4.32:"):
-                args.extend(
-                    [
-                        f"--bazel_options=--repo_env=LOCAL_CUDA_PATH={spec['cuda'].prefix}",
-                        f"--bazel_options=--repo_env=LOCAL_CUDNN_PATH={spec['cudnn'].prefix}",
-                    ]
-                )
+                pass
+                # CUDA file hierarchy does not match what XLA expects, use vendored CUDA for now
+                # https://github.com/jax-ml/jax/issues/23689
+                # args.extend(
+                #     [
+                #         f"--bazel_options=--repo_env=LOCAL_CUDA_PATH={spec['cuda'].prefix}",
+                #         f"--bazel_options=--repo_env=LOCAL_CUDNN_PATH={spec['cudnn'].prefix}",
+                #     ]
+                # )
             else:
                 args.extend(
                     [f"--cuda_path={spec['cuda'].prefix}", f"--cudnn_path={spec['cudnn'].prefix}"]
