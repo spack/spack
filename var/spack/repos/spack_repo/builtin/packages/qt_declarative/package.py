@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack.package import *
+from spack_repo.builtin.packages.qt_base.package import QtBase, QtPackage
 
-from ..qt_base.package import QtBase, QtPackage
+from spack.package import *
 
 
 class QtDeclarative(QtPackage):

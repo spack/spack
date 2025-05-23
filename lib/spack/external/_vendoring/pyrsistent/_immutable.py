@@ -94,7 +94,7 @@ class {class_name}(namedtuple('ImmutableBase', [{quoted_members}]{verbose_string
         print(template)
 
     from collections import namedtuple
-    namespace = dict(namedtuple=namedtuple, __name__='pyrsistent_immutable')
+    namespace = dict(namedtuple=namedtuple, __name__='_vendoring.pyrsistent_immutable')
     try:
         exec(template, namespace)
     except SyntaxError as e:

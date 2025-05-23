@@ -3,11 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import shlex
 import sys
-from typing import List
+import tempfile
+from typing import Any, List, Optional
 
 import llnl.util.tty as tty
 
+import spack
 import spack.config
 import spack.repo
 import spack.util.path
@@ -63,6 +66,23 @@ def setup_parser(subparser):
         action=arguments.ConfigScope,
         default=lambda: spack.config.default_modify_scope(),
         help="configuration scope to modify",
+    )
+
+    # Migrate
+    migrate_parser = sp.add_parser("migrate", help=repo_migrate.__doc__)
+    migrate_parser.add_argument(
+        "namespace_or_path", help="path to a Spack package repository directory"
+    )
+    patch_or_fix = migrate_parser.add_mutually_exclusive_group(required=True)
+    patch_or_fix.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="do not modify the repository, but dump a patch file",
+    )
+    patch_or_fix.add_argument(
+        "--fix",
+        action="store_true",
+        help="automatically migrate the repository to the latest Package API",
     )
 
 
@@ -155,12 +175,97 @@ def repo_list(args):
         print(f"{repo.namespace:<{max_ns_len + 4}}{repo.package_api_str:<8}{repo.root}")
 
 
+def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
+    try:
+        return spack.repo.from_path(name_or_path)
+    except spack.repo.RepoError:
+        pass
+
+    for repo in spack.config.get("repos"):
+        try:
+            r = spack.repo.from_path(repo)
+        except spack.repo.RepoError:
+            continue
+        if r.namespace == name_or_path:
+            return r
+    return None
+
+
+def repo_migrate(args: Any) -> int:
+    """migrate a package repository to the latest Package API"""
+    from spack.repo_migrate import migrate_v1_to_v2, migrate_v2_imports
+
+    repo = _get_repo(args.namespace_or_path)
+
+    if repo is None:
+        tty.die(f"No such repository: {args.namespace_or_path}")
+
+    if args.dry_run:
+        fd, patch_file_path = tempfile.mkstemp(
+            suffix=".patch", prefix="repo-migrate-", dir=os.getcwd()
+        )
+        patch_file = os.fdopen(fd, "bw")
+        tty.msg(f"Patch file will be written to {patch_file_path}")
+    else:
+        patch_file_path = None
+        patch_file = None
+
+    try:
+        if (1, 0) <= repo.package_api < (2, 0):
+            success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
+            exit_code = 0 if success else 1
+        elif (2, 0) <= repo.package_api < (3, 0):
+            repo_v2 = None
+            exit_code = (
+                0
+                if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file)
+                else 1
+            )
+        else:
+            repo_v2 = None
+            exit_code = 0
+    finally:
+        if patch_file is not None:
+            patch_file.flush()
+            patch_file.close()
+
+    if patch_file_path:
+        tty.warn(
+            f"No changes were made to the '{repo.namespace}' repository with. Review "
+            f"the changes written to {patch_file_path}. Run \n\n"
+            f"    spack repo migrate --fix {args.namespace_or_path}\n\n"
+            "to upgrade the repo."
+        )
+
+    elif exit_code == 1:
+        tty.error(
+            f"Repository '{repo.namespace}' could not be migrated to the latest Package API. "
+            "Please check the error messages above."
+        )
+
+    elif isinstance(repo_v2, spack.repo.Repo):
+        tty.info(
+            f"Repository '{repo_v2.namespace}' was successfully migrated from "
+            f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
+        )
+        tty.warn(
+            "Remove the old repository from Spack's configuration and add the new one using:\n"
+            f"    spack repo remove {shlex.quote(repo.root)}\n"
+            f"    spack repo add {shlex.quote(repo_v2.root)}"
+        )
+
+    else:
+        tty.info(f"Repository '{repo.namespace}' was successfully migrated")
+
+    return exit_code
+
+
 def repo(parser, args):
-    action = {
+    return {
         "create": repo_create,
         "list": repo_list,
         "add": repo_add,
         "remove": repo_remove,
         "rm": repo_remove,
-    }
-    action[args.repo_command](args)
+        "migrate": repo_migrate,
+    }[args.repo_command](args)

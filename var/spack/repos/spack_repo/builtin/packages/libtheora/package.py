@@ -6,8 +6,9 @@ import glob
 import os
 import sys
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.msbuild import MSBuildBuilder
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.msbuild import MSBuildBuilder, MSBuildPackage
+
 from spack.package import *
 
 

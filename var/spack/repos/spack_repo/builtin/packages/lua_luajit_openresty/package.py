@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.packages.lua.package import LuaImplPackage
 
-from ..lua.package import LuaImplPackage
+from spack.package import *
 
 
 class LuaLuajitOpenresty(LuaImplPackage):

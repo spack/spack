@@ -7,6 +7,8 @@ import os
 # Import re module to use regular expression
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 

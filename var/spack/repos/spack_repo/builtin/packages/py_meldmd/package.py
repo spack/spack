@@ -4,7 +4,10 @@
 
 import os
 
-from spack.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+
 from spack.package import *
 
 

@@ -2,9 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.kokkos.package import Kokkos
 
-from ..kokkos.package import Kokkos
+from spack.package import *
 
 
 class Exaca(CMakePackage, CudaPackage, ROCmPackage):
@@ -12,7 +15,7 @@ class Exaca(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/LLNL/ExaCA"
     git = "https://github.com/LLNL/ExaCA.git"
-    url = "https://github.com/LLNL/ExaCA/archive/2.0.0.tar.gz"
+    url = "https://github.com/LLNL/ExaCA/archive/2.0.1.tar.gz"
 
     maintainers("streeve", "MattRolchigo")
 
@@ -21,6 +24,7 @@ class Exaca(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master")
+    version("2.0.1", sha256="aa094511ee8d8fe4e420814a1b7c61b05e8f45bd0ccd17b8089b7f82b2fa601b")
     version("2.0.0", sha256="a33cc65a6e79bed37a644f5bfc9dd5fe356239f78c5b82830c6354acc43e016b")
     version("1.3.0", sha256="637215d3c64e8007b55d68bea6003b51671029d9045af847534e0e59c4271a94")
     version("1.2.0", sha256="5038d63de96c6142ddea956998e1f4ebffbc4a5723caa4da0e73eb185e6623e4")

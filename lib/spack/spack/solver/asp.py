@@ -34,7 +34,7 @@ from typing import (
     Union,
 )
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -572,7 +572,7 @@ class Result:
         for input_spec, candidate in unsolved_specs:
             msg += f"\n\tInput spec: {str(input_spec)}"
             if candidate:
-                msg += f"\n\tCandidate spec: {str(candidate)}"
+                msg += f"\n\tCandidate spec: {candidate.long_spec}"
             else:
                 msg += "\n\t(No candidate specs from solver)"
         return msg
@@ -1617,7 +1617,7 @@ class SpackSolverSetup:
         target = spec.architecture.target
 
         # Check if the target is a concrete target
-        if str(target) in archspec.cpu.TARGETS:
+        if str(target) in _vendoring.archspec.cpu.TARGETS:
             return [single_target_fn(spec.name, target)]
 
         self.target_constraints.add(target)
@@ -1877,7 +1877,7 @@ class SpackSolverSetup:
 
         return cond_id
 
-    def condition(
+    def _condition_clauses(
         self,
         required_spec: spack.spec.Spec,
         imposed_spec: Optional[spack.spec.Spec] = None,
@@ -1886,22 +1886,8 @@ class SpackSolverSetup:
         imposed_name: Optional[str] = None,
         msg: Optional[str] = None,
         context: Optional[ConditionContext] = None,
-    ):
-        """Generate facts for a dependency or virtual provider condition.
-
-        Arguments:
-            required_spec: the constraints that triggers this condition
-            imposed_spec: the constraints that are imposed when this condition is triggered
-            required_name: name for ``required_spec``
-                (required if required_spec is anonymous, ignored if not)
-            imposed_name: name for ``imposed_spec``
-                (required if imposed_spec is anonymous, ignored if not)
-            msg: description of the condition
-            context: if provided, indicates how to modify the clause-sets for the required/imposed
-                specs based on the type of constraint they are generated for (e.g. `depends_on`)
-        Returns:
-            int: id of the condition created by this function
-        """
+    ) -> Tuple[List[AspFunction], int]:
+        clauses = []
         required_name = required_spec.name or required_name
         if not required_name:
             raise ValueError(f"Must provide a name for anonymous condition: '{required_spec}'")
@@ -1925,23 +1911,61 @@ class SpackSolverSetup:
             trigger_id = self._get_condition_id(
                 required_spec, cache=self._trigger_cache, body=True, context=requirement_context
             )
-            self.gen.fact(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
-            self.gen.fact(fn.condition_reason(condition_id, msg))
-            self.gen.fact(
+            clauses.append(fn.pkg_fact(required_spec.name, fn.condition(condition_id)))
+            clauses.append(fn.condition_reason(condition_id, msg))
+            clauses.append(
                 fn.pkg_fact(required_spec.name, fn.condition_trigger(condition_id, trigger_id))
             )
             if not imposed_spec:
-                return condition_id
+                return clauses, condition_id
 
             impose_context = context.impose_context()
             effect_id = self._get_condition_id(
                 imposed_spec, cache=self._effect_cache, body=False, context=impose_context
             )
-            self.gen.fact(
+            clauses.append(
                 fn.pkg_fact(required_spec.name, fn.condition_effect(condition_id, effect_id))
             )
 
-            return condition_id
+            return clauses, condition_id
+
+    def condition(
+        self,
+        required_spec: spack.spec.Spec,
+        imposed_spec: Optional[spack.spec.Spec] = None,
+        *,
+        required_name: Optional[str] = None,
+        imposed_name: Optional[str] = None,
+        msg: Optional[str] = None,
+        context: Optional[ConditionContext] = None,
+    ) -> int:
+        """Generate facts for a dependency or virtual provider condition.
+
+        Arguments:
+            required_spec: the constraints that triggers this condition
+            imposed_spec: the constraints that are imposed when this condition is triggered
+            required_name: name for ``required_spec``
+                (required if required_spec is anonymous, ignored if not)
+            imposed_name: name for ``imposed_spec``
+                (required if imposed_spec is anonymous, ignored if not)
+            msg: description of the condition
+            context: if provided, indicates how to modify the clause-sets for the required/imposed
+                specs based on the type of constraint they are generated for (e.g. `depends_on`)
+        Returns:
+            int: id of the condition created by this function
+        """
+        clauses, condition_id = self._condition_clauses(
+            required_spec=required_spec,
+            imposed_spec=imposed_spec,
+            required_name=required_name,
+            imposed_name=imposed_name,
+            msg=msg,
+            context=context,
+        )
+        for clause in clauses:
+            self.gen.fact(clause)
+
+        return condition_id
 
     def impose(self, condition_id, imposed_spec, node=True, body=False):
         imposed_constraints = self.spec_clauses(imposed_spec, body=body)
@@ -2556,7 +2580,7 @@ class SpackSolverSetup:
 
         edges = spec.edges_from_dependents()
         virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
-        if not body:
+        if not body and not spec.concrete:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
                 clauses.append(fn.attr("virtual_node", virtual))
@@ -2753,7 +2777,7 @@ class SpackSolverSetup:
                         compiler_name, compiler_version.dotted_numeric_string
                     )
                 supported.append(target)
-            except archspec.cpu.UnsupportedMicroarchitecture:
+            except _vendoring.archspec.cpu.UnsupportedMicroarchitecture:
                 continue
             except ValueError:
                 continue
@@ -2818,7 +2842,7 @@ class SpackSolverSetup:
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            target = archspec.cpu.TARGETS.get(spec.target.name)
+            target = _vendoring.archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 self.target_ranges(spec, None)
                 continue
@@ -2830,7 +2854,7 @@ class SpackSolverSetup:
                         candidate_targets.append(ancestor)
 
         platform = spack.platforms.host()
-        uarch = archspec.cpu.TARGETS.get(platform.default)
+        uarch = _vendoring.archspec.cpu.TARGETS.get(platform.default)
         best_targets = {uarch.family.name}
         for compiler in self.possible_compilers:
             supported = self._supported_targets(compiler.name, compiler.version, candidate_targets)
@@ -2938,7 +2962,7 @@ class SpackSolverSetup:
                 return [single_constraint]
 
             t_min, _, t_max = single_constraint.partition(":")
-            for test_target in archspec.cpu.TARGETS.values():
+            for test_target in _vendoring.archspec.cpu.TARGETS.values():
                 # Check lower bound
                 if t_min and not t_min <= test_target:
                     continue
@@ -3894,7 +3918,7 @@ class SpecBuilder:
 
         if extendee_spec:
             extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package.update_external_dependencies(self._specs.get(extendee_node, None))
+            package._update_external_dependencies(self._specs.get(extendee_node))
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]

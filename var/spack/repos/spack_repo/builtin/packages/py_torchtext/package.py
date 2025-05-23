@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -108,3 +110,10 @@ class PyTorchtext(PythonPackage):
                 "tools/setup_helpers/extension.py",
                 string=True,
             )
+
+    def flag_handler(self, name, flags):
+        # https://github.com/pytorch/text/issues/2274
+        # https://github.com/google/sentencepiece/issues/1028
+        if name == "cxxflags":
+            flags.append("-Wno-enum-constexpr-conversion")
+        return (flags, None, None)

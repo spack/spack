@@ -55,7 +55,9 @@ _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
 
 def is_package_module(fullname: str) -> bool:
     """Check if the given module is a package module."""
-    return fullname.startswith(PKG_MODULE_PREFIX_V1) or fullname.startswith(PKG_MODULE_PREFIX_V2)
+    return fullname.startswith(PKG_MODULE_PREFIX_V1) or (
+        fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package")
+    )
 
 
 def namespace_from_fullname(fullname: str) -> str:
@@ -75,6 +77,25 @@ def namespace_from_fullname(fullname: str) -> str:
     elif fullname.startswith(PKG_MODULE_PREFIX_V2) and fullname.endswith(".package"):
         return ".".join(fullname.split(".")[1:-3])
     return fullname
+
+
+class _PrependFileLoader(importlib.machinery.SourceFileLoader):
+    def __init__(self, fullname: str, repo: "Repo", package_name: str) -> None:
+        self.repo = repo
+        self.package_name = package_name
+        path = repo.filename_for_package_name(package_name)
+        self.fullname = fullname
+        self.prepend = b"from spack_repo.builtin.build_systems._package_api_v1 import *\n"
+        super().__init__(self.fullname, path)
+
+    def path_stats(self, path):
+        stats = dict(super().path_stats(path))
+        stats["size"] += len(self.prepend)
+        return stats
+
+    def get_data(self, path):
+        data = super().get_data(path)
+        return self.prepend + data if path == self.path else data
 
 
 class SpackNamespaceLoader:
@@ -123,8 +144,7 @@ class ReposFinder:
                 # With 2 nested conditionals we can call "repo.real_name" only once
                 package_name = repo.real_name(module_name)
                 if package_name:
-                    module_path = repo.filename_for_package_name(package_name)
-                    return importlib.machinery.SourceFileLoader(fullname, module_path)
+                    return _PrependFileLoader(fullname, repo, package_name)
 
             # We are importing a full namespace like 'spack.pkg.builtin'
             if fullname == repo.full_namespace:
@@ -153,7 +173,7 @@ NOT_PROVIDED = object()
 def builtin_repo() -> "Repo":
     """Get the test repo if it is active, otherwise the builtin repo."""
     try:
-        return PATH.get_repo("builtin.mock")
+        return PATH.get_repo("builtin_mock")
     except UnknownNamespaceError:
         return PATH.get_repo("builtin")
 
@@ -665,7 +685,7 @@ class RepoPath:
         """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
         return self
 
-    def put_first(self, repo: "Repo") -> None:
+    def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
         if isinstance(repo, RepoPath):
             for r in reversed(repo.repos):
@@ -1560,9 +1580,16 @@ def create(configuration: spack.config.Configuration) -> RepoPath:
     return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
 
+def create_and_enable(configuration: spack.config.Configuration) -> RepoPath:
+    """Same as create, but calls enable() on the created repository."""
+    repo_path = create(configuration)
+    repo_path.enable()
+    return repo_path
+
+
 #: Global package repository instance.
 PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create(configuration=spack.config.CONFIG)
+    lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path

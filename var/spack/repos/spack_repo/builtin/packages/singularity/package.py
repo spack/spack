@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.packages.singularityce.package import SingularityBase
 
-from ..singularityce.package import SingularityBase
+from spack.package import *
 
 
 class Singularity(SingularityBase):

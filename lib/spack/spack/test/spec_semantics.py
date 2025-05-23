@@ -609,7 +609,7 @@ class TestSpecSemantics:
 
     def test_satisfied_namespace(self):
         spec = spack.concretize.concretize_one("zlib")
-        assert spec.satisfies("namespace=builtin.mock")
+        assert spec.satisfies("namespace=builtin_mock")
         assert not spec.satisfies("namespace=builtin")
 
     @pytest.mark.parametrize(

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+
 from spack.package import *
 
 
@@ -55,6 +57,7 @@ class Fairmq(CMakePackage):
         depends_on("git")
 
     depends_on("boost@1.66: +container+program_options+filesystem+date_time+regex")
+    conflicts("^boost@1.88:")
     depends_on("fairlogger@1.6: +pretty")
     depends_on("libzmq@4.1.4:")
 

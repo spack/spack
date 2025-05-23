@@ -4,8 +4,10 @@
 
 import sys
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -82,7 +84,7 @@ class Pixman(AutotoolsPackage, MesonPackage):
         )
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         args = ["-Dlibpng=enabled", "-Dgtk=disabled", "-Db_staticpic=true"]
 
@@ -106,7 +108,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = ["--enable-libpng", "--disable-gtk", "--with-pic"]
 

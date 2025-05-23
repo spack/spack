@@ -69,7 +69,7 @@ An example for ``CMake`` is, for instance:
 
 The predefined steps for each build system are called "phases".
 In general, the name and order in which the phases will be executed can be
-obtained by either reading the API docs at :py:mod:`~.spack.build_systems`, or
+obtained by either reading the API docs at :py:mod:`~.spack_repo.builtin.build_systems`, or
 using the ``spack info`` command:
 
 .. code-block:: console
@@ -158,7 +158,7 @@ builder class explicitly. Using the same example as above, this reads:
            url_fmt = "https://github.com/uclouvain/openjpeg/archive/version.{0}.tar.gz"
            return url_fmt.format(version)
 
-   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+   class CMakeBuilder(spack_repo.builtin.build_systems.cmake.CMakeBuilder):
        def cmake_args(self):
            args = [
                self.define_from_variant("BUILD_CODEC", "codec"),
@@ -179,7 +179,7 @@ Spack can be found at :ref:`package_class_structure`.
 
    .. code-block:: python
 
-      class Foo(CmakePackage):
+      class Foo(CMakePackage):
           def cmake_args(self):
               ...
 
@@ -256,7 +256,7 @@ for details):
    #
    # See the Spack documentation for more information on packaging.
    # ----------------------------------------------------------------------------
-   import spack.build_systems.autotools
+   import spack_repo.builtin.build_systems.autotools
    from spack.package import *
 
 
@@ -1212,7 +1212,7 @@ class-level tarball URL and VCS. For example:
        version("master",  branch="master")
        version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
        version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
-       version("12.8.1",  "9f37f683ee2b427b5540db8a20ed6b15")
+       version("12.8.1",  md5="9f37f683ee2b427b5540db8a20ed6b15")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
@@ -1343,7 +1343,7 @@ Submodules
 
      version("1.0.1", tag="v1.0.1", submodules=True)
 
-  If a package has needs more fine-grained control over submodules, define
+  If a package needs more fine-grained control over submodules, define
   ``submodules`` to be a callable function that takes the package instance as
   its only argument.  The function should return a list of submodules to be fetched.
 
@@ -2253,22 +2253,15 @@ RPATHs in Spack are handled in one of three ways:
    set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
    so most build systems (autotools and many gmake systems) pick them
    up and use them.
-#. CMake also respects Spack's compiler wrappers, but many CMake
-   builds have logic to overwrite RPATHs when binaries are
-   installed. Spack provides the ``std_cmake_args`` variable, which
-   includes parameters necessary for CMake build use the right
-   installation RPATH.  It can be used like this when ``cmake`` is
-   invoked:
-
-   .. code-block:: python
-
-      class MyPackage(Package):
-          ...
-          def install(self, spec, prefix):
-              cmake("..", *std_cmake_args)
-              make()
-              make("install")
-
+#. CMake has its own RPATH handling, and distinguishes between build and
+   install RPATHs. By default, during the build it registers RPATHs to
+   all libraries it links to, so that just-built executables can be run
+   during the build itself. Upon installation, these RPATHs are cleared,
+   unless the user defines the install RPATHs. When inheriting from
+   ``CMakePackage``, Spack handles this automatically, and sets
+   ``CMAKE_INSTALL_RPATH_USE_LINK_PATH`` and ``CMAKE_INSTALL_RPATH``,
+   so that libraries of dependencies and the package's own libraries
+   can be found at runtime.
 #. If you need to modify the build to add your own RPATHs, you can
    use the ``self.rpath`` property of your package, which will
    return a list of all the RPATHs that Spack will use when it
@@ -2315,30 +2308,18 @@ looks like this:
 
        parallel = False
 
-Similarly, you can disable parallel builds only for specific make
-commands, as ``libdwarf`` does:
+You can also disable parallel builds only for specific make
+invocation:
 
 .. code-block:: python
-   :emphasize-lines: 9, 12
+   :emphasize-lines: 5
    :linenos:
 
    class Libelf(Package):
        ...
 
        def install(self, spec, prefix):
-           configure("--prefix=" + prefix,
-                     "--enable-shared",
-                     "--disable-dependency-tracking",
-                     "--disable-debug")
-           make()
-
-           # The mkdir commands in libelf's install can fail in parallel
            make("install", parallel=False)
-
-The first make will run in parallel here, but the second will not.  If
-you set ``parallel`` to ``False`` at the package level, then each call
-to ``make()`` will be sequential by default, but packagers can call
-``make(parallel=True)`` to override it.
 
 Note that the ``--jobs`` option works out of the box for all standard
 build systems. If you are using a non-standard build system instead, you
@@ -2514,7 +2495,7 @@ necessary when there are breaking changes in the dependency that the
 package cannot handle. In Spack we often add forward compatibility
 bounds only at the time a new, breaking version of a dependency is
 released. As with backward compatibility, it is typical to see a list
-of forward compatibility bounds in a package file as seperate lines:
+of forward compatibility bounds in a package file as separate lines:
 
 .. code-block:: python
 
@@ -3390,7 +3371,7 @@ the above attribute implementations:
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib/libFooBaz.so"
    ])
 
-   # baz library directories in the baz subdirectory of the foo porefix
+   # baz library directories in the baz subdirectory of the foo prefix
    >>> spec["baz"].libs.directories
    [
        "/opt/spack/linux-fedora35-haswell/gcc-11.3.1/foo-1.0-ca3rczp5omy7dfzoqw4p7oc2yh3u7lt6/baz/lib"
@@ -3704,60 +3685,57 @@ the build system. The build systems currently supported by Spack are:
 +----------------------------------------------------------+----------------------------------+
 |     **API docs**                                         |           **Description**        |
 +==========================================================+==================================+
-| :class:`~spack.build_systems.generic`                    | Generic build system without any |
+| :class:`~spack_repo.builtin.build_systems.generic`       | Generic build system without any |
 |                                                          | base implementation              |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.makefile`                   | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.makefile`      | Specialized build system for     |
 |                                                          | software built invoking          |
 |                                                          | hand-written Makefiles           |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.autotools`                  | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.autotools`     | Specialized build system for     |
 |                                                          | software built using             |
 |                                                          | GNU Autotools                    |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.cmake`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.cmake`         | Specialized build system for     |
 |                                                          | software built using CMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.maven`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.maven`         | Specialized build system for     |
 |                                                          | software built using Maven       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.meson`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.meson`         | Specialized build system for     |
 |                                                          | software built using Meson       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.nmake`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.nmake`         | Specialized build system for     |
 |                                                          | software built using NMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.qmake`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.qmake`         | Specialized build system for     |
 |                                                          | software built using QMake       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.scons`                      | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.scons`         | Specialized build system for     |
 |                                                          | software built using SCons       |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.waf`                        | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.waf`           | Specialized build system for     |
 |                                                          | software built using Waf         |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.r`                          | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.r`             | Specialized build system for     |
 |                                                          | R extensions                     |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.octave`                     | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.octave`        | Specialized build system for     |
 |                                                          | Octave packages                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.python`                     | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.python`        | Specialized build system for     |
 |                                                          | Python extensions                |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.perl`                       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.perl`          | Specialized build system for     |
 |                                                          | Perl extensions                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.ruby`                       | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.ruby`          | Specialized build system for     |
 |                                                          | Ruby extensions                  |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.intel`                      | Specialized build system for     |
-|                                                          | licensed Intel software          |
-+----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.oneapi`                     | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.oneapi`        | Specialized build system for     |
 |                                                          | Intel oneAPI software            |
 +----------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.aspell_dict`                | Specialized build system for     |
+| :class:`~spack_repo.builtin.build_systems.aspell_dict`   | Specialized build system for     |
 |                                                          | Aspell dictionaries              |
 +----------------------------------------------------------+----------------------------------+
 
@@ -3769,7 +3747,7 @@ the build system. The build systems currently supported by Spack are:
         rare cases where manual intervention is needed we need to stress that a
         package base class depends on the *build system* being used, not the language of the package.
         For example, a Python extension installed with CMake would ``extends("python")`` and
-        subclass from :class:`~spack.build_systems.cmake.CMakePackage`.
+        subclass from :class:`~spack_repo.builtin.build_systems.cmake.CMakePackage`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Overriding builder methods
@@ -3777,7 +3755,7 @@ Overriding builder methods
 
 Build-system "phases" have default implementations that fit most of the common cases:
 
-.. literalinclude:: _spack_root/lib/spack/spack/build_systems/autotools.py
+.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/build_systems/autotools.py
     :pyobject: AutotoolsBuilder.configure
     :linenos:
 
@@ -3791,7 +3769,7 @@ configure arguments:
 
 Each specific build system has a list of attributes and methods that can be overridden to
 fine-tune the installation of a package without overriding an entire phase. To
-have more information on them the place to go is the API docs of the :py:mod:`~.spack.build_systems`
+have more information on them the place to go is the API docs of the :py:mod:`~.spack_repo.builtin.build_systems`
 module.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3833,7 +3811,7 @@ If the ``package.py`` has build instructions in a separate
 
 .. code-block:: python
 
-   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+   class CMakeBuilder(spack_repo.builtin.build_systems.cmake.CMakeBuilder):
        def install(self, pkg, spec, prefix):
            ...
 
@@ -3846,31 +3824,32 @@ Mixin base classes
 Besides build systems, there are other cases where common metadata and behavior can be extracted
 and reused by many packages. For instance, packages that depend on ``Cuda`` or ``Rocm``, share
 common dependencies and constraints. To factor these attributes into a single place, Spack provides
-a few mixin classes in the ``spack.build_systems`` module:
+a few mixin classes in the ``spack_repo.builtin.build_systems`` module:
 
-+---------------------------------------------------------------+----------------------------------+
-|     **API docs**                                              |           **Description**        |
-+===============================================================+==================================+
-| :class:`~spack.build_systems.cuda.CudaPackage`                | A helper class for packages that |
-|                                                               | use CUDA                         |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
-|                                                               | use ROCm                         |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.python.PythonExtension`          | A helper class for Python        |
-|                                                               | extensions                       |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
-|                                                               | from sourceforge.org             |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
-|                                                               | from sourceware.org              |
-+---------------------------------------------------------------+----------------------------------+
-| :class:`~spack.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
-|                                                               | packages                         |
-+---------------------------------------------------------------+----------------------------------+
++----------------------------------------------------------------------------+----------------------------------+
+|     **API docs**                                                           |           **Description**        |
++============================================================================+==================================+
+| :class:`~spack_repo.builtin.build_systems.cuda.CudaPackage`                | A helper class for packages that |
+|                                                                            | use CUDA                         |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
+|                                                                            | use ROCm                         |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
+|                                                                            |                                  |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.python.PythonExtension`          | A helper class for Python        |
+|                                                                            | extensions                       |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
+|                                                                            | from sourceforge.org             |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
+|                                                                            | from sourceware.org              |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
+|                                                                            | packages                         |
++----------------------------------------------------------------------------+----------------------------------+
 
 These classes should be used by adding them to the inheritance tree of the package that needs them,
 for instance:
@@ -3914,13 +3893,13 @@ Additional build instructions are split into separate builder classes:
 
 .. code-block:: python
 
-   class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+   class CMakeBuilder(spack_repo.builtin.build_systems.cmake.CMakeBuilder):
        def cmake_args(self):
            return [
                self.define_from_variant("MY_FEATURE", "my_feature")
            ]
 
-   class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+   class AutotoolsBuilder(spack_repo.builtin.build_systems.autotools.AutotoolsBuilder):
        def configure_args(self):
            return self.with_or_without("my-feature", variant="my_feature")
 
@@ -5749,7 +5728,7 @@ running each executable, ``foo`` and ``bar``, as independent test parts.
 .. note::
 
    The method name ``copy_test_files`` here is for illustration purposes.
-   You are free to use a name that is more suited to your package.
+   You are free to use a name that is better suited to your package.
 
    The key to copying files for stand-alone testing at build time is use
    of the ``run_after`` directive, which ensures the associated files are
@@ -7258,7 +7237,7 @@ which are not, there is the `checked_by` parameter in the license directive:
 
    license("<license>", when="<when>", checked_by="<github username>")
 
-When you have validated a github license, either when doing so explicitly or
+When you have validated a package license, either when doing so explicitly or
 as part of packaging a new package, please set the `checked_by` parameter
 to your Github username to signal that the license has been manually
 verified.

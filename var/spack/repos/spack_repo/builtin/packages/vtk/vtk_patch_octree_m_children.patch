@@ -1,0 +1,11 @@
+--- a/Utilities/octree/octree/octree_node.txx
++++ b/Utilities/octree/octree/octree_node.txx
+@@ -207,7 +207,7 @@
+   {
+     throw std::domain_error("Attempt to access children of an octree leaf node.");
+   }
+-  return this->_M_chilren[child];
++  return this->m_children[child];
+ }
+
+ /**\brief Return a reference to a child node.
