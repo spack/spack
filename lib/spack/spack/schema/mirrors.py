@@ -104,6 +104,7 @@ schema = {
 
 
 def update(data):
+    data = data["mirrors"]
     errors = []
 
     def check_access_pair(name, section):

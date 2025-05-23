@@ -20,10 +20,6 @@ properties: Dict[str, Any] = {
 }
 
 
-def update(data):
-    return False
-
-
 #: Full schema with metadata
 schema = {
     "$schema": "http://json-schema.org/draft-07/schema#",
