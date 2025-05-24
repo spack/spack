@@ -305,7 +305,7 @@ def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[A
         current_name = x.args[1]
         if current_name in build_deps:
             x.name = "build_requirement"
-            result.append(fn.attr("build_requirement", build_deps[current_name], x))
+            result.append(fn.attr("direct_dependency", build_deps[current_name], x))
             continue
 
         if x.args[0] == "depends_on":
@@ -2346,7 +2346,7 @@ class SpackSolverSetup:
                     for asp_fn in requirements:
                         if asp_fn.args[0] == "depends_on":
                             continue
-                        elif asp_fn.args[0] == "build_requirement":
+                        elif asp_fn.args[0] == "direct_dependency":
                             asp_fn.args = "external_build_requirement", *asp_fn.args[1:]
                         if asp_fn.args[1] != input_spec.name:
                             continue
@@ -2570,7 +2570,7 @@ class SpackSolverSetup:
                         )
                     )
 
-        # dependencies
+        # Hash for concrete specs
         if spec.concrete:
             # older specs do not have package hashes, so we have to do this carefully
             package_hash = getattr(spec, "_package_hash", None)
@@ -2579,7 +2579,9 @@ class SpackSolverSetup:
             clauses.append(fn.attr("hash", spec.name, spec.dag_hash()))
 
         edges = spec.edges_from_dependents()
-        virtuals = [x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])]
+        virtuals = sorted(
+            {x for x in itertools.chain.from_iterable([edge.virtuals for edge in edges])}
+        )
         if not body and not spec.concrete:
             for virtual in virtuals:
                 clauses.append(fn.attr("provider_set", spec.name, virtual))
@@ -2594,89 +2596,98 @@ class SpackSolverSetup:
             for libc in self.libcs:
                 clauses.append(fn.attr("compatible_libc", spec.name, libc.name, libc.version))
 
-        # add all clauses from dependencies
-        if transitive:
-            # TODO: Eventually distinguish 2 deps on the same pkg (build and link)
-            for dspec in spec.edges_to_dependencies():
-                dep = dspec.spec
+        if not transitive:
+            return clauses
 
-                if spec.concrete:
-                    # GCC runtime is solved again by clingo, even on concrete specs, to give
-                    # the possibility to reuse specs built against a different runtime.
-                    if dep.name == "gcc-runtime":
-                        clauses.append(
-                            fn.attr("compatible_runtime", spec.name, dep.name, f"{dep.version}:")
-                        )
-                        constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
-                        self.spec_versions(constraint_spec)
-                        continue
+        # Dependencies
+        edge_clauses = []
+        for dspec in spec.edges_to_dependencies():
+            dep = dspec.spec
 
-                    # libc is also solved again by clingo, but in this case the compatibility
-                    # is not encoded in the parent node - so we need to emit explicit facts
-                    if "libc" in dspec.virtuals:
-                        clauses.append(fn.attr("needs_libc", spec.name))
-                        for libc in self.libcs:
-                            if libc_is_compatible(libc, dep):
-                                clauses.append(
-                                    fn.attr("compatible_libc", spec.name, libc.name, libc.version)
-                                )
-                        continue
+            if spec.concrete:
+                # GCC runtime is solved again by clingo, even on concrete specs, to give
+                # the possibility to reuse specs built against a different runtime.
+                if dep.name == "gcc-runtime":
+                    edge_clauses.append(
+                        fn.attr("compatible_runtime", spec.name, dep.name, f"{dep.version}:")
+                    )
+                    constraint_spec = spack.spec.Spec(f"{dep.name}@{dep.version}")
+                    self.spec_versions(constraint_spec)
+                    continue
 
-                    # We know dependencies are real for concrete specs. For abstract
-                    # specs they just mean the dep is somehow in the DAG.
-                    for dtype in dt.ALL_FLAGS:
-                        if not dspec.depflag & dtype:
-                            continue
-                        # skip build dependencies of already-installed specs
-                        if concrete_build_deps or dtype != dt.BUILD:
-                            clauses.append(
-                                fn.attr(
-                                    "depends_on", spec.name, dep.name, dt.flag_to_string(dtype)
-                                )
+                # libc is also solved again by clingo, but in this case the compatibility
+                # is not encoded in the parent node - so we need to emit explicit facts
+                if "libc" in dspec.virtuals:
+                    edge_clauses.append(fn.attr("needs_libc", spec.name))
+                    for libc in self.libcs:
+                        if libc_is_compatible(libc, dep):
+                            edge_clauses.append(
+                                fn.attr("compatible_libc", spec.name, libc.name, libc.version)
                             )
-                            for virtual_name in dspec.virtuals:
-                                clauses.append(
-                                    fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
-                                )
-                                clauses.append(fn.attr("virtual_node", virtual_name))
+                    continue
 
-                    # imposing hash constraints for all but pure build deps of
-                    # already-installed concrete specs.
-                    if concrete_build_deps or dspec.depflag != dt.BUILD:
-                        clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
-                    elif not concrete_build_deps and dspec.depflag:
-                        clauses.append(
-                            fn.attr(
-                                "concrete_build_dependency", spec.name, dep.name, dep.dag_hash()
-                            )
+                # We know dependencies are real for concrete specs. For abstract
+                # specs they just mean the dep is somehow in the DAG.
+                for dtype in dt.ALL_FLAGS:
+                    if not dspec.depflag & dtype:
+                        continue
+                    # skip build dependencies of already-installed specs
+                    if concrete_build_deps or dtype != dt.BUILD:
+                        edge_clauses.append(
+                            fn.attr("depends_on", spec.name, dep.name, dt.flag_to_string(dtype))
                         )
                         for virtual_name in dspec.virtuals:
-                            clauses.append(
-                                fn.attr("virtual_on_build_edge", spec.name, dep.name, virtual_name)
+                            edge_clauses.append(
+                                fn.attr("virtual_on_edge", spec.name, dep.name, virtual_name)
                             )
+                            edge_clauses.append(fn.attr("virtual_node", virtual_name))
 
-                # if the spec is abstract, descend into dependencies.
-                # if it's concrete, then the hashes above take care of dependency
-                # constraints, but expand the hashes if asked for.
-                if not spec.concrete or expand_hashes:
-                    dependency_clauses = self._spec_clauses(
-                        dep,
-                        body=body,
-                        expand_hashes=expand_hashes,
-                        concrete_build_deps=concrete_build_deps,
-                        context=context,
+                # imposing hash constraints for all but pure build deps of
+                # already-installed concrete specs.
+                if concrete_build_deps or dspec.depflag != dt.BUILD:
+                    edge_clauses.append(fn.attr("hash", dep.name, dep.dag_hash()))
+                elif not concrete_build_deps and dspec.depflag:
+                    edge_clauses.append(
+                        fn.attr("concrete_build_dependency", spec.name, dep.name, dep.dag_hash())
                     )
-                    if dspec.depflag == dt.BUILD:
-                        clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
-                        if body is False:
-                            for clause in dependency_clauses:
-                                clause.name = "build_requirement"
-                                clauses.append(fn.attr("build_requirement", spec.name, clause))
-                        else:
-                            clauses.extend(dependency_clauses)
-                    else:
-                        clauses.extend(dependency_clauses)
+                    for virtual_name in dspec.virtuals:
+                        edge_clauses.append(
+                            fn.attr("virtual_on_build_edge", spec.name, dep.name, virtual_name)
+                        )
 
+            # if the spec is abstract, descend into dependencies.
+            # if it's concrete, then the hashes above take care of dependency
+            # constraints, but expand the hashes if asked for.
+            if not spec.concrete or expand_hashes:
+                dependency_clauses = self._spec_clauses(
+                    dep,
+                    body=body,
+                    expand_hashes=expand_hashes,
+                    concrete_build_deps=concrete_build_deps,
+                    context=context,
+                )
+                ###
+                # Dependency expressed with "^"
+                ###
+                if not dspec.depflag == dt.BUILD:
+                    edge_clauses.extend(dependency_clauses)
+                    continue
+
+                ###
+                # Direct dependencies expressed with "%"
+                ###
+                edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
+                # Body of a rule
+                if body is True:
+                    edge_clauses.extend(dependency_clauses)
+                    continue
+
+                # Head of a rule
+                for clause in dependency_clauses:
+                    clause.name = "build_requirement"
+                    edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
+
+        clauses.extend(edge_clauses)
         return clauses
 
     def define_package_versions_and_validate_preferences(
