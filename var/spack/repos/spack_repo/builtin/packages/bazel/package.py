@@ -157,6 +157,12 @@ class Bazel(Package):
     depends_on("python+pythoncmd", type=("build", "run"))
     depends_on("zip", when="platform=linux", type=("build", "run"))
 
+    patch(
+        "https://github.com/bazelbuild/bazel/commit/05b1f061c9256ec0eb6fb71716ed93feb0c31b59.patch?full_index=1",
+        sha256="e695708d20fbb84d94e1d2a896330de6222f9f20bb34ef65cdfe634d3454f06c",
+        when="@7.0",
+    )
+
     # Pass Spack environment variables to the build
     patch("bazelruleclassprovider-0.25.patch")
 
