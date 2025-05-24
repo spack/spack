@@ -190,7 +190,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
 
     # Same as https://github.com/tensorflow/tensorflow/issues/70199
     # (-mavx512fp16 exists in gcc@12:)
-    conflicts("%gcc@:11", when="@0.5.3:")
+    conflicts("%gcc@:11", when="@0.5.2:")
 
     resource(
         name="xla",
