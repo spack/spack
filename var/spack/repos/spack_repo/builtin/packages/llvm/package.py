@@ -344,7 +344,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     )
     variant(
         "openmp",
-        values=("project", conditional("runtime", when="+clang @12:")),
+        values=("project", "none", conditional("runtime", when="+clang @12:")),
         default="runtime",
         description="Build OpenMP either as a runtime (with just-build Clang) "
         "or as a project (with the compiler in use)",
@@ -425,13 +425,15 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     depends_on("z3@4.7.1:", when="+z3")
 
     # openmp dependencies
-    depends_on("perl-data-dumper", type=("build"))
-    depends_on("hwloc")
-    depends_on("hwloc@2.0.1:", when="@13")
-    with when("@:15"):
-        depends_on("elf", when="+cuda")
-        depends_on("elf", when="+libomptarget")
-    depends_on("libffi", when="+libomptarget")
+    for ompspec in ("runtime", "project"):
+        with when("openmp={0}".format(ompspec)):
+            depends_on("perl-data-dumper", type=("build"))
+            depends_on("hwloc")
+            depends_on("hwloc@2.0.1:", when="@13")
+            with when("@:15"):
+                depends_on("elf", when="+cuda")
+                depends_on("elf", when="+libomptarget")
+            depends_on("libffi", when="+libomptarget")
 
     # llvm-config --system-libs libraries.
     depends_on("zlib-api")
@@ -980,10 +982,12 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             define("LLVM_ENABLE_RTTI", True),
             define("LLVM_ENABLE_LIBXML2", False),
             define("CLANG_DEFAULT_OPENMP_RUNTIME", "libomp"),
-            define("LIBOMP_USE_HWLOC", True),
-            define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix),
             from_variant("LLVM_ENABLE_ZSTD", "zstd"),
         ]
+
+        if spec.satisfies("openmp=runtime") or spec.satisfies("openmp=project"):
+            cmake_args.append(define("LIBOMP_USE_HWLOC", True))
+            cmake_args.append(define("LIBOMP_HWLOC_INSTALL_DIR", spec["hwloc"].prefix))
 
         # Flang does not support exceptions from core llvm.
         # LLVM_ENABLE_EH=True when building flang will soon
