@@ -788,9 +788,9 @@ to your ``spack.yaml``.
 Users will either need ``nvidia-docker`` or, e.g., Singularity to *execute*
 device kernels.
 
-"""""""""""""""""""""""""
+"""""""""""""""""""""""""""
 Docker on Windows and macOS
-"""""""""""""""""""""""""
+"""""""""""""""""""""""""""
 
 On macOS and Windows, Docker runs on a hypervisor that is not allocated much
 memory by default, and some Spack packages may fail to build due to lack of
