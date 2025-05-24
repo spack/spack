@@ -8,7 +8,7 @@
 Configuration Files
 ===================
 
-Spack has many configuration files.  Here is a quick list of them, in
+Spack has many configuration files. Here is a quick list of them, in
 case you want to skip directly to specific docs:
 
 * :ref:`packages.yaml <compiler-config>`
@@ -28,8 +28,8 @@ manifest file (``spack.yaml``) describing an :ref:`environment
 YAML Format
 -----------
 
-Spack configuration files are written in YAML.  We chose YAML because
-it's human readable, but also versatile in that it supports dictionaries,
+Spack configuration files are written in YAML. We chose YAML because
+it's human-readable but also versatile in that it supports dictionaries,
 lists, and nested sections. For more details on the format, see `yaml.org
 <http://yaml.org>`_ and `libyaml <http://pyyaml.org/wiki/LibYAML>`_.
 Here is an example ``config.yaml`` file:
@@ -59,7 +59,7 @@ Configuration Scopes
 --------------------
 
 Spack pulls configuration data from files in several directories. There
-are six configuration scopes. From lowest to highest:
+are multiple configuration scopes. From lowest to highest precedence:
 
 #. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
    the "factory" settings. Users should generally not modify the settings
@@ -67,20 +67,20 @@ are six configuration scopes. From lowest to highest:
    defaults here will change from version to version of Spack.
 
 #. **system**: Stored in ``/etc/spack/``. These are settings for this
-   machine, or for all machines on which this file system is
-   mounted. The site scope can be used for settings idiosyncratic to a
+   machine or for all machines on which this file system is
+   mounted. The system scope can be used for settings idiosyncratic to a
    particular machine, such as the locations of compilers or external
    packages. These settings are presumably controlled by someone with
    root access on the machine. They override the defaults scope.
 
 #. **site**: Stored in ``$(prefix)/etc/spack/``. Settings here affect
    only *this instance* of Spack, and they override the defaults and system
-   scopes.  The site scope can can be used for per-project settings (one
+   scopes. The site scope can be used for per-project settings (one
    Spack instance per project) or for site-wide settings on a multi-user
    machine (e.g., for a common Spack instance).
 
-#. **plugin**: Read from a Python project's entry points. Settings here affect
-   all instances of Spack running with the same Python installation.  This scope takes higher precedence than site, system, and default scopes.
+#. **plugin**: Read from a Python package's entry points. Settings here affect
+   all instances of Spack running with the same Python installation. This scope takes higher precedence than site, system, and default scopes.
 
 #. **user**: Stored in the home directory: ``~/.spack/``. These settings
    affect all instances of Spack and take higher precedence than site,
@@ -94,21 +94,21 @@ are six configuration scopes. From lowest to highest:
    additional configuration from the environment file. See
    :ref:`environment-configuration` for further details on these
    scopes. Environment scopes can be referenced from the command line
-   as ``env:name`` (to reference environment ``foo``, use
+   as ``env:name`` (e.g., to reference environment ``foo``, use
    ``env:foo``).
 
 #. **command line**: Build settings specified on the command line take
    precedence over all other scopes.
 
 Each configuration directory may contain several configuration files,
-such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``.  When
+such as ``config.yaml``, ``packages.yaml``, or ``mirrors.yaml``. When
 configurations conflict, settings from higher-precedence scopes override
 lower-precedence settings.
 
 Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``,
 etc.) take a ``--scope=<name>`` parameter that you can use to control
-which scope is modified.  By default, they modify the highest-precedence
-scope.
+which scope is modified. By default, they modify the highest-precedence
+available scope that is not read-only (like `defaults`).
 
 .. _custom-scopes:
 
@@ -128,9 +128,9 @@ For example, the following adds two configuration scopes, named
    $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
 
 Custom scopes come *after* the ``spack`` command and *before* the
-subcommand, and they specify a single path to a directory full of
+subcommand, and they specify a single path to a directory containing
 configuration files. You can add the same configuration files to that
-directory that you can add to any other scope (``config.yaml``,
+directory that you can add to any other scope (e.g., ``config.yaml``,
 ``packages.yaml``, etc.).
 
 If multiple scopes are provided:
@@ -143,8 +143,8 @@ Example: scopes for release and development
 """""""""""""""""""""""""""""""""""""""""""
 
 Suppose that you need to support simultaneous building of release and
-development versions of ``mypackage``, where ``mypackage`` -> ``A`` -> ``B``.
-You could create The following files:
+development versions of ``mypackage``, where ``mypackage`` depends on ``A``, which in turn depends on ``B``.
+You could create the following files:
 
 .. code-block:: yaml
    :caption: ~/myscopes/release/packages.yaml
@@ -169,7 +169,7 @@ You could create The following files:
            version: [develop]
 
 You can switch between ``release`` and ``develop`` configurations using
-configuration arguments.  You would type ``spack -C ~/myscopes/release``
+configuration arguments. You would type ``spack -C ~/myscopes/release``
 when you want to build the designated release versions of ``mypackage``,
 ``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when
 you want to build all of these packages at the ``develop`` version.
@@ -179,8 +179,8 @@ Example: swapping MPI providers
 """""""""""""""""""""""""""""""
 
 Suppose that you need to build two software packages, ``packagea`` and
-``packageb``. ``packagea`` is Python 2-based and ``packageb`` is Python
-3-based. ``packagea`` only builds with OpenMPI and ``packageb`` only builds
+``packageb``. ``packagea`` is Python 2-based, and ``packageb`` is Python
+3-based. ``packagea`` only builds with OpenMPI, and ``packageb`` only builds
 with MPICH. You can create different configuration scopes for use with
 ``packagea`` and ``packageb``:
 
@@ -214,7 +214,7 @@ Plugin scopes
 .. note::
    Python version >= 3.8 is required to enable plugin configuration.
 
-Spack can be made aware of configuration scopes that are installed as part of a python package.  To do so, register a function that returns the scope's path to the ``"spack.config"`` entry point.  Consider the Python package ``my_package`` that includes Spack configurations:
+Spack can be made aware of configuration scopes that are installed as part of a Python package. To do so, register a function that returns the scope's path to the ``"spack.config"`` entry point. Consider the Python package ``my_package`` that includes Spack configurations:
 
 .. code-block:: console
 
@@ -226,14 +226,14 @@ Spack can be made aware of configuration scopes that are installed as part of a 
   │   │   │   └── config.yaml
   └── pyproject.toml
 
-adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_package``'s ``spack/`` configurations visible to Spack when ``my_package`` is installed:
+Adding the following to ``my_package``'s ``pyproject.toml`` will make ``my_package``'s ``spack/`` configurations visible to Spack when ``my_package`` is installed:
 
 .. code-block:: toml
 
    [project.entry_points."spack.config"]
    my_package = "my_package:get_config_path"
 
-The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` might look like
+The function ``my_package.get_config_path`` (matching the entry point definition) in ``my_package/__init__.py`` might look like:
 
 .. code-block:: python
 
@@ -251,15 +251,15 @@ Platform-specific Scopes
 ------------------------
 
 For each scope above (excluding environment scopes), there can also be
-platform-specific settings.  For example, on most platforms, GCC is
-the preferred compiler.  However, on macOS (darwin), Clang often works
-for more packages, and is set as the default compiler. This
+platform-specific settings. For example, on most platforms, GCC is
+the preferred compiler. However, on macOS (Darwin), Clang often works
+for more packages and is set as the default compiler. This
 configuration is set in
 ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``. It will take
-precedence over settings in the ``defaults`` scope, but can still be
+precedence over settings in the ``defaults`` scope but can still be
 overridden by settings in ``system``, ``system/darwin``, ``site``,
 ``site/darwin``, ``user``, ``user/darwin``, ``custom``, or
-``custom/darwin``. So, the full scope precedence is:
+``custom/darwin``. So, the full scope precedence, including platform-specific ones, is:
 
 #. ``defaults``
 #. ``defaults/<platform>``
@@ -272,8 +272,8 @@ overridden by settings in ``system``, ``system/darwin``, ``site``,
 #. ``custom``
 #. ``custom/<platform>``
 
-You can get the name to use for ``<platform>`` by running ``spack arch
---platform``. The system config scope has a ``<platform>`` section for
+You can get the name to use for ``<platform>`` by running ``spack arch --platform``.
+The system configuration scope has a ``<platform>`` section for
 sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 
 
@@ -283,26 +283,27 @@ sites at which ``/etc`` is mounted on multiple heterogeneous machines.
 Scope Precedence
 ----------------
 
-When spack queries for configuration parameters, it searches in
+When Spack queries for configuration parameters, it searches in
 higher-precedence scopes first. So, settings in a higher-precedence file
-can override those with the same key in a lower-precedence one. For
-list-valued settings, Spack *prepends* higher-precedence settings to
-lower-precedence settings. Completely ignoring lower-precedence configuration
+can override those with the same key in a lower-precedence one.
+For list-valued settings, Spack merges lists by *prepending* items from higher-precedence configurations
+to items from lower-precedence configurations by default.
+Completely ignoring lower-precedence configuration
 options is supported with the ``::`` notation for keys (see
 :ref:`config-overrides` below).
 
-There are also special notations for string concatenation and precendense override:
+There are also special notations for string concatenation and precedence override:
 
 * ``+:`` will force *prepending* strings or lists. For lists, this is the default behavior.
 * ``-:`` works similarly, but for *appending* values.
 
-:ref:`config-prepend-append`
+See :ref:`config-prepend-append` for more details.
 
 ^^^^^^^^^^^
 Simple keys
 ^^^^^^^^^^^
 
-Let's look at an example of overriding a single key in a Spack file. If
+Let's look at an example of overriding a single key in a Spack configuration file. If
 your configurations look like this:
 
 .. code-block:: yaml
@@ -552,8 +553,8 @@ will not expand it.
 Environment Modifications
 -------------------------
 
-Spack allows to prescribe custom environment modifications in a few places
-within its configuration files. Every time these modifications are allowed
+Spack allows users to prescribe custom environment modifications in a few places
+within its configuration files. Every time these modifications are allowed,
 they are specified as a dictionary, like in the following example:
 
 .. code-block:: yaml
@@ -568,10 +569,10 @@ they are specified as a dictionary, like in the following example:
        PATH: '/new/bin/dir'
 
 The possible actions that are permitted are ``set``, ``unset``, ``append_path``,
-``prepend_path`` and finally ``remove_path``. They all require a dictionary
-of variable names mapped to the values used for the modification.
-The only exception is ``unset`` that requires just a list of variable names.
-No particular order is ensured on the execution of each of these modifications.
+``prepend_path``, and finally ``remove_path``. They all require a dictionary
+of variable names mapped to the values used for the modification,
+with the exception of ``unset``, which requires just a list of variable names.
+No particular order is ensured for the execution of each of these modifications.
 
 ----------------------------
 Seeing Spack's Configuration
@@ -635,9 +636,9 @@ see how your scope will affect Spack's configuration:
 ^^^^^^^^^^^^^^^^^^^^^^
 
 ``spack config blame`` functions much like ``spack config get``, but it
-shows exactly which configuration file each preference came from. If you
-do not know why Spack is behaving a certain way, this can help you track
-down the problem:
+shows exactly which configuration file each setting came from. If you
+do not know why Spack is behaving a certain way, this command can help you track
+down the source of the configuration:
 
 .. code-block:: console
 
@@ -662,9 +663,9 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
-built in and are not overridden by a configuration file. The
+built-in and are not overridden by a configuration file. The
 ``verify_ssl`` setting comes from the ``--insecure`` option on the
-command line. ``dirty`` and ``install_tree`` come from the custom
+command line. The ``dirty`` and ``install_tree`` settings come from the custom
 scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
 options come from the default configuration files that ship with Spack.
 
@@ -690,8 +691,8 @@ configuration locations:
   ``user`` scope (``~/.spack`` by default).
 * ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the
   ``system`` scope (``/etc/spack`` by default).
-* ``SPACK_DISABLE_LOCAL_CONFIG``: set this environment variable to completely disable
-  **both** the system and user configuration directories. Spack will only consider its
+* ``SPACK_DISABLE_LOCAL_CONFIG``: Set this environment variable to completely disable
+  **both** the system and user configuration directories. Spack will then only consider its
   own defaults and ``site`` configuration locations.
 
 And one that allows you to move the default cache location:

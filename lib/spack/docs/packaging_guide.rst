@@ -4858,8 +4858,8 @@ there instead, e.g.:
 
 .. code-block:: python
 
-   configure("—prefix=%s" % prefix,
-             "—with-cc=%s" % spec["mpi"].mpicc)
+   configure("--prefix=%s" % prefix,
+             "--with-cc=%s" % spec["mpi"].mpicc)
 
 Now, you may think that doing this will lose the includes, library paths,
 and RPATHs that Spack's compiler wrapper get you, but we've actually set
