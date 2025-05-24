@@ -294,13 +294,6 @@ class Executable:
 
             raise ProcessError("%s: %s" % (self.exe[0], e.strerror), message)
 
-        except subprocess.CalledProcessError as e:
-            self.returncode = e.returncode
-            if fail_on_error:
-                raise ProcessError(
-                    str(e),
-                    f"\nExit status {e.returncode} when invoking command: {cmd_line_string}",
-                )
         except subprocess.TimeoutExpired as te:
             proc.kill()
             out, err = proc.communicate()
