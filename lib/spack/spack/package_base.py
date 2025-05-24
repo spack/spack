@@ -60,7 +60,7 @@ from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion
+from spack.version import GitVersion, StandardVersion, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -1039,33 +1039,39 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Packages may override this implementation for custom implementations
         """
         sha = None
-        tag = self.version_or_package_attr("tag", self.spec.version, "")
-        branch = self.version_or_package_attr("branch", self.spec.version, "")
+        if is_git_version(str(self.spec.version)):
+            ref = self.spec.version.ref 
+        else:
+            tag = self.version_or_package_attr("tag", self.spec.version, "")
+            branch = self.version_or_package_attr("branch", self.spec.version, "")
+            assert not (tag and branch)
+            ref = tag or branch
         try:
             self.do_fetch(mirror_only=True)
         except spack.error.FetchError:
             pass
-        sha = self.stage.extract_commit_sha(tag=tag, branch=branch)
+
+        sha = self.stage.extract_commit_sha(ref)
 
         if not sha:
             url = self.version_or_package_attr("git", self.spec.version)
 
-            assert not (tag and branch)
-            ref = tag or branch
             assert ref, "Missing git ref"
 
             # --ref introduced in git@2.7
             # ls-remote introduced in git@1.7
             git_args = ["ls-remote", url, "--ref", ref]
 
+            # TODO(psakiev) we probably want a better way to intercept this for unit tests
             try:
-                query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull)
+                query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull, extra_env={"GIT_TERMINAL_PROMPT": "0"})
             except spack.util.executable.ProcessError:
                 return
 
             sha, _ = query.strip().split()
 
-        self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+        if sha:
+            self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and

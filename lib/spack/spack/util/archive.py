@@ -10,6 +10,7 @@ import tarfile
 from contextlib import closing, contextmanager
 from gzip import GzipFile
 from typing import Callable, Dict, List, Tuple
+from llnl.util import tty
 
 from llnl.util.symlink import readlink
 
@@ -242,20 +243,25 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def retrieve_commit_from_archive(archive_path, branch=None, tag=None):
+def retrieve_commit_from_archive(archive_path, ref=None):
     assert os.path.isfile(archive_path)
 
     tar = which("tar", required=True)
     error_msg = f"Archive {archive_path} does not appear to contain git data"
-
-    try:
-        if branch:
-            ref = f"refs/heads/{branch}/"
-        elif tag:
-            ref = f"refs/tags/{tag}/"
-        else:
+    if not ref:
+        try:
             _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
-        assert ref
-        return tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
-    except ProcessError:
-        assert False, error_msg
+        except ProcessError:
+            assert False, error_msg
+    assert ref
+
+    commit = None
+    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/"]:
+        try:
+            _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
+            commit = tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
+        except ProcessError:
+            pass
+    if not commit:
+        tty.warn(error_msg)
+    return commit

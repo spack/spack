@@ -4257,6 +4257,10 @@ def _specs_with_commits(spec):
     if not spec.package.needs_commit(spec.version):
         return
 
+    if isinstance(spec.version, spack.version.GitVersion):
+        if "commit" not in spec.variants and spec.version.commit_sha:
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
+
     if "commit" not in spec.variants:
         spec.package.resolve_binary_provenance()
 
@@ -4275,12 +4279,6 @@ def _specs_with_commits(spec):
     )
     assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
-    if isinstance(spec.version, spack.version.GitVersion):
-        if not spec.version.commit_sha:
-            # TODO(psakiev) this will be a failure when commit look up is automated
-            return
-        if "commit" not in spec.variants:
-            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
 
 def _attach_python_to_external(
