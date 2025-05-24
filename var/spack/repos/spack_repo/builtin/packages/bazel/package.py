@@ -152,6 +152,7 @@ class Bazel(Package):
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
     depends_on("bash", type="build")
     depends_on("zip", when="platform=linux", type=("build", "run"))
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
     depends_on("java@21", when="@7.2:", type=("build", "run"))
     depends_on("java@11", when="@5.3:7.1", type=("build", "run"))
