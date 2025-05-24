@@ -150,12 +150,14 @@ class Bazel(Package):
     )
 
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
+    depends_on("bash", type="build")
+    depends_on("zip", when="platform=linux", type=("build", "run"))
+    depends_on("cxx", type="build")
     depends_on("java@21", when="@7.2:", type=("build", "run"))
     depends_on("java@11", when="@5.3:7.1", type=("build", "run"))
     depends_on("java@8,11", when="@3.3:5.2", type=("build", "run"))
     depends_on("java@8", when="@0.6:3.2", type=("build", "run"))
     depends_on("python+pythoncmd", type=("build", "run"))
-    depends_on("zip", when="platform=linux", type=("build", "run"))
 
     patch(
         "https://github.com/bazelbuild/bazel/commit/05b1f061c9256ec0eb6fb71716ed93feb0c31b59.patch?full_index=1",
