@@ -143,7 +143,7 @@ To actually concretize the environment, run:
 
    $ spack -e myenv concretize
 
-This will tell you which if any packages are already installed, and alert you
+This will tell you which packages, if any, are already installed, and alert you
 to any conflicting specs.
 
 To actually install these packages and symlink them to your ``view:``
@@ -216,13 +216,13 @@ Running ``spack mark -i --all`` tells Spack to mark all of the existing
 packages within an environment as "implicitly" installed. This tells
 Spack's garbage collection system that these packages should be cleaned up.
 
-Don't worry however, this will not remove your entire environment.
-Running ``spack install`` will reexamine your spack environment after
+Don't worry, however, this will not remove your entire environment.
+Running ``spack install`` will re-examine your spack environment after
 a fresh concretization and will re-mark any packages that should remain
 installed as "explicitly" installed.
 
-**Note:** if you use multiple spack environments you should re-run ``spack install``
-in each of your environments prior to running ``spack gc`` to prevent spack
+**Note:** if you use multiple Spack environments you should re-run ``spack install``
+in each of your environments prior to running ``spack gc`` to prevent Spack
 from uninstalling any shared packages that are no longer required by the
 environment you just upgraded.
 
