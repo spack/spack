@@ -46,7 +46,7 @@ important to understand.
 
 **build backend**
    Libraries used to define how to build a wheel. Examples
-   include `setuptools <https://setuptools.pypa.io/>`_,
+   include `setuptools <https://setuptools.pypa.io/>`__,
    `flit <https://flit.pypa.io/>`_,
    `poetry <https://python-poetry.org/>`_,
    `hatchling <https://hatch.pypa.io/latest/>`_,
