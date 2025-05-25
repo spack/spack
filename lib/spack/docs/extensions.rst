@@ -10,12 +10,12 @@ Custom Extensions
 
 *Spack extensions* allow you to extend Spack capabilities by deploying your
 own custom commands or logic in an arbitrary location on your filesystem.
-This might be extremely useful e.g. to develop and maintain a command whose purpose is
+This might be extremely useful e.g., to develop and maintain a command whose purpose is
 too specific to be considered for reintegration into the mainline or to
 evolve a command through its early stages before starting a discussion to merge
 it upstream.
 
-From Spack's point of view an extension is any path in your filesystem which
+From Spack's point of view an extension is any path in your filesystem that
 respects the following naming and layout for files:
 
 .. code-block:: console
@@ -58,7 +58,7 @@ paths to ``config.yaml``. In the case of our example this means ensuring that:
      extensions:
      - /tmp/spack-scripting
 
-is part of your configuration file. Once this is setup any command that the extension provides
+is part of your configuration file. Once this is set up, any command that the extension provides
 will be available from the command line:
 
 .. code-block:: console
@@ -118,7 +118,7 @@ Registering Extensions via Entry Points
 .. note::
    Python version >= 3.8 is required to register extensions via entry points.
 
-Spack can be made aware of extensions that are installed as part of a python package.  To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.  Consider the Python package ``my_package`` that includes a Spack extension:
+Spack can be made aware of extensions that are installed as part of a Python package.  To do so, register a function that returns the extension path, or paths, to the ``"spack.extensions"`` entry point.  Consider the Python package ``my_package`` that includes a Spack extension:
 
 .. code-block:: console
 
@@ -133,7 +133,7 @@ adding the following to ``my_package``'s ``pyproject.toml`` will make the ``spac
 
 .. code-block:: toml
 
-   [project.entry_points."spack.extenions"]
+   [project.entry_points."spack.extensions"]
    my_package = "my_package:get_extension_path"
 
 The function ``my_package.get_extension_path`` in ``my_package/__init__.py`` might look like
