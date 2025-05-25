@@ -48,7 +48,7 @@ Important files
 
 A CMake-based package can be identified by the presence of a
 ``CMakeLists.txt`` file. This file defines the build flags that can be
-passed to the cmake invocation, as well as linking instructions. If
+passed to the CMake invocation, as well as linking instructions. If
 you are familiar with CMake, it can prove very useful for determining
 dependencies and dependency version requirements.
 
@@ -146,7 +146,7 @@ and without the :meth:`~spack_repo.builtin.build_systems.cmake.CMakeBuilder.defi
 
 Spack supports CMake defines from conditional variants too. Whenever the condition on
 the variant is not met, ``define_from_variant()`` will simply return an empty string,
-and CMake simply ignores the empty command line argument. For example the following
+and CMake simply ignores the empty command line argument. For example, the following
 
 .. code-block:: python
 
@@ -168,7 +168,7 @@ The following default arguments are controlled by Spack:
 ``CMAKE_INSTALL_PREFIX``
 ------------------------
 
-Is set to the the package's install directory.
+Is set to the package's install directory.
 
 
 ``CMAKE_PREFIX_PATH``

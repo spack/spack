@@ -108,7 +108,7 @@ function instead of ``configure``:
    def install(self, spec, prefix):
        make("install")
 
-Again, there is a ``boostrap_args`` function that determines the
+Again, there is a ``bootstrap_args`` function that determines the
 correct bootstrap flags to use.
 
 ^^^^^^^^^^^^^^^^^^^^

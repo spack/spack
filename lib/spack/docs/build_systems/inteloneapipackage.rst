@@ -17,7 +17,7 @@ oneAPI packages in Spack
 ========================
 
 Spack can install and use the Intel oneAPI products. You may either
-use spack to install the oneAPI tools or use the `Intel
+use Spack to install the oneAPI tools or use the `Intel
 installers`_. After installation, you may use the tools directly, or
 use Spack to build packages with the tools.
 
@@ -41,7 +41,7 @@ Building a Package With icx
 ---------------------------
 
 In this example, we build patchelf with ``icc`` and ``icx``. The
-compilers are installed with spack.
+compilers are installed with Spack.
 
 Install the oneAPI compilers::
 
@@ -56,7 +56,7 @@ To build the ``patchelf`` Spack package with ``icx``, do::
 Using oneAPI Spack environment
 -------------------------------
 
-In this example, we build lammps with ``icx`` using Spack environment for oneAPI packages created by Intel. The
+In this example, we build LAMMPS with ``icx`` using Spack environment for oneAPI packages created by Intel. The
 compilers are installed with Spack like in example above.
 
 Install the oneAPI compilers::
@@ -69,7 +69,7 @@ Clone `spack-configs <https://github.com/spack/spack-configs>`_ repo and activat
   spack env activate spack-configs/INTEL/CPU
   spack concretize -f
 
-`Intel oneAPI CPU environment <https://github.com/spack/spack-configs/blob/main/INTEL/CPU/spack.yaml>`_  contains applications tested and validated by Intel, this list is constantly extended. And currently it supports:
+`Intel oneAPI CPU environment <https://github.com/spack/spack-configs/blob/main/INTEL/CPU/spack.yaml>`_  contains applications tested and validated by Intel. This list is constantly extended. Currently, it supports:
 
 - `Devito <https://www.devitoproject.org/>`_
 - `GROMACS <https://www.gromacs.org/>`_
@@ -81,11 +81,11 @@ Clone `spack-configs <https://github.com/spack/spack-configs>`_ repo and activat
 - `STREAM <https://www.cs.virginia.edu/stream/>`_
 - `WRF <https://github.com/wrf-model/WRF>`_
 
-To build lammps with oneAPI compiler from this environment just run::
+To build LAMMPS with oneAPI compiler from this environment just run::
 
   spack install lammps
 
-Compiled binaries can be find using::
+Compiled binaries can be found using::
 
   spack cd -i lammps
 
@@ -147,7 +147,7 @@ Using oneAPI Tools Installed by Spack
 Spack can be a convenient way to install and configure compilers and
 libraries, even if you do not intend to build a Spack package. If you
 want to build a Makefile project using Spack-installed oneAPI compilers,
-then use spack to configure your environment::
+then use Spack to configure your environment::
 
   spack load intel-oneapi-compilers
 
@@ -159,7 +159,7 @@ You can also use Spack-installed libraries. For example::
 
   spack load intel-oneapi-mkl
 
-Will update your environment CPATH, LIBRARY_PATH, and other
+This updates your environment CPATH, LIBRARY_PATH, and other
 environment variables for building an application with oneMKL.
 
 

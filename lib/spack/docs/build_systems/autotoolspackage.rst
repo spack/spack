@@ -181,7 +181,7 @@ files with newer ones, without having to add the heavy dependency on
 Automatic helper script replacement is currently enabled by default on
 ``ppc64le`` and ``aarch64``, as these are the known cases where old scripts fail.
 On these targets, ``AutotoolsPackage`` adds a build dependency on ``gnuconfig``,
-which is a very light-weight package with newer versions of the helper files.
+which is a very lightweight package with newer versions of the helper files.
 Spack then tries to run all the helper scripts it can find in the release, and
 replaces them on failure with the helper scripts from ``gnuconfig``.
 
@@ -266,7 +266,7 @@ some or all of the following sections:
 * **Some influential environment variables**
 
 For the most part, you can ignore all but the last 3 sections.
-The "Optional Features" sections lists flags that enable/disable
+The "Optional Features" section lists flags that enable/disable
 features you may be interested in. The "Optional Packages" section
 often lists dependencies and the flags needed to locate them. The
 "environment variables" section lists environment variables that the
@@ -391,9 +391,9 @@ generate the following configuration options:
 
    --with-slurm --with-sge
 
-``enable_or_disable`` is actually functionally equivalent with
+``enable_or_disable`` is actually functionally equivalent to
 ``with_or_without``, and accepts the same arguments and variant types;
-but idiomatic autotools packages often follow these naming
+but idiomatic Autotools packages often follow these naming
 conventions.
 
 """"""""""""""""
@@ -420,7 +420,7 @@ generated, using the ``activation_value`` argument to
 
 ``activation_value`` accepts a callable that generates the configure
 parameter value given the variant value; but the special value
-``prefix`` tells Spack to automatically use the dependenency's
+``prefix`` tells Spack to automatically use the dependency's
 installation prefix, which is the most common use for such
 parameters. In this example, specifying the variant
 ``fabrics=libfabric`` will generate the following configuration
@@ -475,7 +475,7 @@ Activation overrides
 
 Finally, the behavior of either ``with_or_without`` or
 ``enable_or_disable`` can be overridden for specific variant
-values. This is most useful for multi-values variants where some of
+values. This is most useful for multi-value variants where some of
 the variant values require atypical behavior.
 
 .. code-block:: python
@@ -525,7 +525,7 @@ This can be done using the ``build_directory`` variable:
    build_directory = "spack-build"
 
 By default, Spack will build the package in the same directory that
-contains the ``configure`` script
+contains the ``configure`` script.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build and install targets

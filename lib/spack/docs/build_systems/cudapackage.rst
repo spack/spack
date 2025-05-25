@@ -27,7 +27,7 @@ This package provides the following variants:
 
 * **cuda_arch**
 
-  This variant supports the optional specification of one or multiple architectures.
+  This variant supports the optional specification of one or more architectures.
   Valid values are maintained in the ``cuda_arch_values`` property and
   are the numeric character equivalent of the compute capability version
   (e.g., '10' for version 1.0). Each provided value affects associated
@@ -37,7 +37,7 @@ This package provides the following variants:
   (e.g. ``compute_10``) and binary code for the _real_ architecture (e.g. ``sm_10``).
 
   GPUs and their compute capability versions are listed at
-  https://developer.nvidia.com/cuda-gpus .
+  https://developer.nvidia.com/cuda-gpus.
 
 ^^^^^^^^^
 Conflicts
@@ -59,7 +59,7 @@ to terminate such build attempts with a suitable message:
 Similarly, if your software does not support all versions of the property,
 you could add ``conflicts`` to your package for those versions.  For example,
 suppose your software does not work with CUDA compute capability versions
-prior to SM 5.0 (``50``).  You can add the following code to display a
+prior to SM 5.0 (``50``). You can add the following code to display a
 custom message should a user attempt such a build:
 
 .. code-block:: python
@@ -107,14 +107,14 @@ class of your package.  For example, you can add it to your
             args = []
             ...
             if spec.satisfies("+cuda"):
-                # Set up the cuda macros needed by the build
+                # Set up the CUDA macros needed by the build
                 args.append("-DWITH_CUDA=ON")
                 cuda_arch_list = spec.variants["cuda_arch"].value
                 cuda_arch = cuda_arch_list[0]
                 if cuda_arch != "none":
                     args.append(f"-DCUDA_FLAGS=-arch=sm_{cuda_arch}")
             else:
-                # Ensure build with cuda is disabled
+                # Ensure build with CUDA is disabled
                 args.append("-DWITH_CUDA=OFF")
             ...
             return args
