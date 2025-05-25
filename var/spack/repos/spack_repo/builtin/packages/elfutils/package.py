@@ -101,10 +101,10 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
 
     provides("elf@1")
 
-    # libarchive with iconv doesn't configure (still broken as of libarchive@3.7.1)
+    # libarchive@:3.7 with iconv doesn't configure
     # see https://github.com/spack/spack/issues/36710
-    # and https://github.com/libarchive/libarchive/issues/1819
-    conflicts("^libarchive +iconv", when="+debuginfod")
+    # fix: https://github.com/libarchive/libarchive/pull/2611
+    conflicts("^libarchive@:3.7 +iconv", when="+debuginfod")
 
     # https://sourceware.org/bugzilla/show_bug.cgi?id=24964
     conflicts("%apple-clang")
