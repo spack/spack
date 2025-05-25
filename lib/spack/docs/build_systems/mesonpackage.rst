@@ -80,7 +80,7 @@ Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 At the bare minimum, packages that use the Meson build system need
-``meson`` and ```ninja``` dependencies. Since this is always the case,
+``meson`` and ``ninja`` dependencies. Since this is always the case,
 the ``MesonPackage`` base class already contains:
 
 .. code-block:: python
