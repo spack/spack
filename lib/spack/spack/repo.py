@@ -669,7 +669,7 @@ class RepoPath:
     @staticmethod
     def from_config(config: spack.config.Configuration) -> "RepoPath":
         """Create a RepoPath from a configuration object."""
-        repo_dirs = config.get("repos")
+        repo_dirs = config.get("repos").values()
         if not repo_dirs:
             raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
 
@@ -1612,7 +1612,7 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    paths = [getattr(x, "root", x) for x in paths_and_repos]
+    paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
     spack.config.CONFIG.push_scope(

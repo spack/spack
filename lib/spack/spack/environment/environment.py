@@ -438,7 +438,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
-        for i, entry in enumerate(repos_specs):
+        for name, entry in list(repos_specs.items()):
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -448,7 +448,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
 
-            repos_specs[i] = expanded_path
+            repos_specs[name] = expanded_path
 
         spack.config.set("repos", repos_specs, scope=env.scope_name)
 
