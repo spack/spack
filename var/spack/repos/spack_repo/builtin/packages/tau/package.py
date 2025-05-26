@@ -400,7 +400,6 @@ class Tau(Package):
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
             options.append("-rocprofv2")
 
-
         if "+rocprofiler-sdk" in spec:
             options.append("-rocprofsdk=%s" % spec["rocprofiler-sdk"].prefix)
             options.append("-elfutils=%s" % spec["elfutils"].prefix)
