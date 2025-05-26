@@ -15,6 +15,7 @@ from typing import Type
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
+import spack.cmd
 import spack.deptypes as dt
 import spack.package_base
 import spack.repo
@@ -315,6 +316,7 @@ def html(pkg_names, out):
         out.write("</div>\n")
 
 
+@spack.cmd.paged
 def list(parser, args):
     # retrieve the formatter to use from args
     formatter = formatters[args.format]
