@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -24,8 +25,8 @@ class PyDaskAwkward(PythonPackage):
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("python@3.9:", type=("build", "run"), when="@2025.3.0:")
 
-    depends_on("py-hatchlingi@1.8.0:", type="build")
-    depends_on("hatch-vcs", type="build")
+    depends_on("py-hatchling@1.8.0:", type="build")
+    depends_on("py-hatch-vcs", type="build")
 
     depends_on("py-awkward@2.5.1:", type=("build", "run"))
     depends_on("py-dask@2023.04:2025.3", type=("build", "run"))
