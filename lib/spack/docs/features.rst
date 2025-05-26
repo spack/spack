@@ -50,9 +50,9 @@ platform, all on the command line.
    # Cross-compile for a different micro-architecture with target=
    $ spack install mpileaks@1.1.2 target=icelake
 
-Users can specify as many or few options as they care about. Spack
+Users can specify as many or as few options as they care about. Spack
 will fill in the unspecified values with sensible defaults. The two listed
-syntaxes for variants are identical when the value is boolean.
+syntaxes for variants are identical when the value is a boolean.
 
 ----------------------
 Customize dependencies
@@ -88,7 +88,7 @@ manipulate ``LD_LIBRARY_PATH`` at runtime.
 Creating packages is easy
 -------------------------
 
-To create a new packages, all Spack needs is a URL for the source
+To create a new package, all Spack needs is a URL for the source
 archive.  The ``spack create`` command will create a boilerplate
 package file, and the package authors can fill in specific build steps
 in pure Python.
@@ -99,7 +99,7 @@ For example, this command:
 
    $ spack create https://ftp.osuosl.org/pub/blfs/conglomeration/libelf/libelf-0.8.13.tar.gz
 
-creates a simple python file:
+creates a simple Python file:
 
 .. code-block:: python
 
@@ -128,7 +128,7 @@ creates a simple python file:
            args = []
            return args
 
-It doesn't take much python coding to get from there to a working
+It doesn't take much Python coding to get from there to a working
 package:
 
 .. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/libelf/package.py

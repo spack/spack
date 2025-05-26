@@ -1831,7 +1831,7 @@ _spack_repo_rm() {
 _spack_repo_migrate() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --fix"
+        SPACK_COMPREPLY="-h --help --dry-run --fix"
     else
         _repos
     fi

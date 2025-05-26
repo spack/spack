@@ -962,7 +962,6 @@ def _sort_by_dep_types(dspec: DependencySpec):
     return dspec.depflag
 
 
-@lang.lazy_lexicographic_ordering
 class _EdgeMap(collections.abc.Mapping):
     """Represent a collection of edges (DependencySpec objects) in the DAG.
 
@@ -999,21 +998,6 @@ class _EdgeMap(collections.abc.Mapping):
 
     def __str__(self) -> str:
         return f"{{deps: {', '.join(str(d) for d in sorted(self.values()))}}}"
-
-    def _cmp_iter(self):
-        for item in sorted(itertools.chain.from_iterable(self.edges.values())):
-            yield item
-
-    def copy(self):
-        """Copies this object and returns a clone"""
-        clone = type(self)()
-        clone.store_by_child = self.store_by_child
-
-        # Copy everything from this dict into it.
-        for dspec in itertools.chain.from_iterable(self.values()):
-            clone.add(dspec.copy())
-
-        return clone
 
     def select(
         self,
@@ -3786,26 +3770,152 @@ class Spec:
         """Equality with another spec, not including dependencies."""
         return (other is not None) and lang.lazy_eq(self._cmp_node, other._cmp_node)
 
-    def _cmp_iter(self):
-        """Lazily yield components of self for comparison."""
-
-        for item in self._cmp_node():
-            yield item
-
+    def _cmp_fast_eq(self, other) -> Optional[bool]:
+        """Short-circuit compare with other for equality, for lazy_lexicographic_ordering."""
         # If there is ever a breaking change to hash computation, whether accidental or purposeful,
         # two specs can be identical modulo DAG hash, depending on what time they were concretized
         # From the perspective of many operation in Spack (database, build cache, etc) a different
         # DAG hash means a different spec. Here we ensure that two otherwise identical specs, one
         # serialized before the hash change and one after, are considered different.
-        yield self.dag_hash() if self.concrete else None
+        if self is other:
+            return True
 
-        def deps():
-            for dep in sorted(itertools.chain.from_iterable(self._dependencies.values())):
-                yield dep.spec.name
-                yield dep.depflag
-                yield hash(dep.spec)
+        if self.concrete and other and other.concrete:
+            return self.dag_hash() == other.dag_hash()
 
-        yield deps
+        return None
+
+    def _cmp_iter(self):
+        """Lazily yield components of self for comparison."""
+
+        # Spec comparison in Spack needs to be fast, so there are several cases here for
+        # performance. The main places we care about this are:
+        #
+        #   * Abstract specs: there are lots of abstract specs in package.py files,
+        #     which are put into metadata dictionaries and sorted during concretization
+        #     setup. We want comparing abstract specs to be fast.
+        #
+        #   * Concrete specs: concrete specs are bigger and have lots of nodes and
+        #     edges. Because of the graph complexity, we need a full, linear time
+        #     traversal to compare them -- that's pretty much is unavoidable. But they
+        #     also have precoputed cryptographic hashes (dag_hash()), which we can use
+        #     to do fast equality comparison. See _cmp_fast_eq() above for the
+        #     short-circuit logic for hashes.
+        #
+        # A full traversal involves constructing data structurs, visitor objects, etc.,
+        # and it can be expensive if we have to do it to compare a bunch of tiny
+        # abstract specs. Therefore, there are 3 cases below, which avoid calling
+        # `spack.traverse.traverse_edges()` unless necessary.
+        #
+        # WARNING: the cases below need to be consistent, so don't mess with this code
+        # unless you really know what you're doing. Be sure to keep all three consistent.
+        #
+        # All cases lazily yield:
+        #
+        #   1. A generator over nodes
+        #   2. A generator over canonical edges
+        #
+        # Canonical edges have consistent ids defined by breadth-first traversal order. That is,
+        # the root is always 0, dependencies of the root are 1, 2, 3, etc., and so on.
+        #
+        # The three cases are:
+        #
+        #   1. Spec has no dependencies
+        #      * We can avoid any traversal logic and just yield this node's _cmp_node generator.
+        #
+        #   2. Spec has dependencies, but dependencies have no dependencies.
+        #      * We need to sort edges, but we don't need to track visited nodes, which
+        #        can save us the cost of setting up all the tracking data structures
+        #        `spack.traverse` uses.
+        #
+        #   3. Spec has dependencies that have dependencies.
+        #      * In this case, the spec is *probably* concrete. Equality comparisons
+        #        will be short-circuited by dag_hash(), but other comparisons will need
+        #        to lazily enumerate components of the spec. The traversal logic is
+        #        unavoidable.
+        #
+        # TODO: consider reworking `spack.traverse` to construct fewer data structures
+        # and objects, as this would make all traversals faster and could eliminate the
+        # need for the complexity here. It was not clear at the time of writing that how
+        # much optimization was possible in `spack.traverse`.
+
+        sorted_l1_edges = None
+        edge_list = None
+        node_ids = None
+
+        def nodes():
+            nonlocal sorted_l1_edges
+            nonlocal edge_list
+            nonlocal node_ids
+
+            # Level 0: root node
+            yield self._cmp_node  # always yield the root (this node)
+            if not self._dependencies:  # done if there are no dependencies
+                return
+
+            # Level 1: direct dependencies
+            # we can yield these in sorted order without tracking visited nodes
+            deps_have_deps = False
+            sorted_l1_edges = self.edges_to_dependencies(depflag=dt.ALL)
+            if len(sorted_l1_edges) > 1:
+                sorted_l1_edges = spack.traverse.sort_edges(sorted_l1_edges)
+
+            for edge in sorted_l1_edges:
+                yield edge.spec._cmp_node
+                if edge.spec._dependencies:
+                    deps_have_deps = True
+
+            if not deps_have_deps:  # done if level 1 specs have no dependencies
+                return
+
+            # Level 2: dependencies of direct dependencies
+            # now it's general; we need full traverse() to track visited nodes
+            l1_specs = [edge.spec for edge in sorted_l1_edges]
+
+            # the node_ids dict generates consistent ids based on BFS traversal order
+            # these are used to identify edges later
+            node_ids = collections.defaultdict(lambda: len(node_ids))
+            node_ids[id(self)]  # self is 0
+            for spec in l1_specs:
+                node_ids[id(spec)]  # l1 starts at 1
+
+            edge_list = []
+            for edge in spack.traverse.traverse_edges(
+                l1_specs, order="breadth", cover="edges", root=False, visited=set([0])
+            ):
+                # yield each node only once, and generate a consistent id for it the
+                # first time it's encountered.
+                if id(edge.spec) not in node_ids:
+                    yield edge.spec._cmp_node
+                    node_ids[id(edge.spec)]
+
+                if edge.parent is None:  # skip fake edge to root
+                    continue
+
+                edge_list.append(
+                    (
+                        node_ids[id(edge.parent)],
+                        node_ids[id(edge.spec)],
+                        edge.depflag,
+                        edge.virtuals,
+                    )
+                )
+
+        def edges():
+            # no edges in single-node graph
+            if not self._dependencies:
+                return
+
+            # level 1 edges all start with zero
+            for i, edge in enumerate(sorted_l1_edges, start=1):
+                yield (0, i, edge.depflag, edge.virtuals)
+
+            # yield remaining edges in the order they were encountered during traversal
+            if edge_list:
+                yield from edge_list
+
+        yield nodes
+        yield edges
 
     @property
     def namespace_if_anonymous(self):

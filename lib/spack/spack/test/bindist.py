@@ -105,7 +105,7 @@ def config_directory(tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmp_path, config_directory, mock_repo_path, install_mockery):
+def default_config(tmp_path, config_directory, mock_packages_repo, install_mockery):
     # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
@@ -140,7 +140,7 @@ def default_config(tmp_path, config_directory, mock_repo_path, install_mockery):
         timeout = spack.config.get("config:connect_timeout")
         if not timeout:
             spack.config.set("config:connect_timeout", 10, scope="user")
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(mock_packages_repo):
             yield spack.config.CONFIG
 
 

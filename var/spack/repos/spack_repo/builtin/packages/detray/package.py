@@ -21,6 +21,7 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.95.0", sha256="86cc981eb0105143b971acea3544b9a668326e1027f317d77cf76918f766e7c4")
     version("0.94.0", sha256="a04e8193757846df50d0fbec858744dd66629a98be8ffc6faa04c2ab51770492")
     version("0.93.0", sha256="7d56771d213649de836905efbb21b5be59cc966b00417b0b1fa85bfe12ac92da")
     version("0.92.0", sha256="512669c1ea51936b0fe871fb5a33450b54161e811e48cc51445dc83fe3338c42")
@@ -79,6 +80,7 @@ class Detray(CMakePackage):
     variant("vc", default=True, description="Enable the Vc math plugin")
 
     depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.21:", type="build", when="@0.95:")
     depends_on("vecmem@1.6.0:")
     depends_on("vecmem@1.8.0:", when="@0.76:")
     depends_on("covfie@0.10.0:")

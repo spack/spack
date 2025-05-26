@@ -22,12 +22,12 @@ The first approach is easiest if you already have an installed environment,
 the second approach gives more control over the container image.
 
 ---------------------------
-From existing installations
+From Existing Installations
 ---------------------------
 
 If you already have a Spack environment installed on your system, you can
-share the binaries as an OCI compatible container image. To get started you
-just have to configure and OCI registry and run ``spack buildcache push``.
+share the binaries as an OCI-compatible container image. To get started, you
+just have to configure an OCI registry and run ``spack buildcache push``.
 
 .. code-block:: console
   
@@ -57,10 +57,10 @@ environment roots and its runtime dependencies.
 .. note::
 
   When using registries like GHCR and Docker Hub, the ``--oci-password`` flag specifies not
-  the password for your account, but rather a personal access token you need to generate separately.
+  the password for your account but rather a personal access token that you need to generate separately.
 
 The specified ``--base-image`` should have a libc that is compatible with the host system.
-For example if your host system is Ubuntu 20.04, you can use ``ubuntu:20.04``, ``ubuntu:22.04``
+For example, if your host system is Ubuntu 20.04, you can use ``ubuntu:20.04``, ``ubuntu:22.04``,
 or newer: the libc in the container image must be at least the version of the host system,
 assuming ABI compatibility. It is also perfectly fine to use a completely different
 Linux distribution as long as the libc is compatible.
@@ -73,7 +73,7 @@ take the build cache into account when concretizing.
 .. note::
 
   When generating container images in CI, the approach above is recommended when CI jobs
-  already run in a sandboxed environment. You can simply use ``spack`` directly
+  already run in a sandboxed environment. You can simply use Spack directly
   in the CI job and push the resulting image to a registry. Subsequent CI jobs should
   run faster because Spack can install from the same registry instead of rebuilding from
   sources.
@@ -86,7 +86,7 @@ Apart from copying existing installations into container images, Spack can also
 generate recipes for container images. This is useful if you want to run Spack
 itself in a sandboxed environment instead of on the host system.
 
-Since recipes need a little bit more boilerplate than
+Since recipes need a little more boilerplate than:
 
 .. code-block:: docker
 
@@ -162,8 +162,8 @@ other techniques to minimize the size of the final image:
 
    ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
 
-The image itself can then be built and run in the usual way, with any of the
-tools suitable for the task. For instance, if we decided to use ``docker``:
+The image itself can then be built and run in the usual way with any of the
+tools suitable for the task. For instance, if we decided to use Docker:
 
 .. code-block:: bash
 
@@ -173,7 +173,7 @@ tools suitable for the task. For instance, if we decided to use ``docker``:
    $ docker run -it myimage
 
 The various components involved in the generation of the recipe and their
-configuration are discussed in details in the sections below.
+configuration are discussed in detail in the sections below.
 
 .. _container_spack_images:
 
@@ -204,7 +204,7 @@ The OS that are currently supported are summarized in the table below:
    * - Ubuntu 24.04
      - ``ubuntu:24.04``
      - ``spack/ubuntu-noble``
-   * - CentOS Stream9
+   * - CentOS Stream 9
      - ``quay.io/centos/centos:stream9``
      - ``spack/centos-stream9``
    * - openSUSE Leap
@@ -241,19 +241,19 @@ All the images are tagged with the corresponding release of Spack:
 with the exception of the ``latest`` tag that points to the HEAD
 of the ``develop`` branch. These images are available for anyone
 to use and take care of all the repetitive tasks that are necessary
-to setup Spack within a container. The container recipes generated
+to set up Spack within a container. The container recipes generated
 by Spack use them as default base images for their ``build`` stage,
-even though handles to use custom base images provided by users are
+even though options to use custom base images provided by users are
 available to accommodate complex use cases.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Configuring the Container Recipe
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Any Spack Environment can be used for the automatic generation of container
+Any Spack environment can be used for the automatic generation of container
 recipes. Sensible defaults are provided for things like the base image or the
 version of Spack used in the image.
-If a finer tuning is needed it can be obtained by adding the relevant metadata
+If finer tuning is needed, it can be obtained by adding the relevant metadata
 under the ``container`` attribute of environments:
 
 .. code-block:: yaml
@@ -325,7 +325,7 @@ following ``spack.yaml``:
          os: centos:7
          spack: 0.15.4
 
-uses ``spack/centos7:0.15.4``  and ``centos:7`` for the stages where the
+uses ``spack/centos7:0.15.4`` and ``centos:7`` for the stages where the
 software is respectively built and installed:
 
 .. code-block:: docker
@@ -357,8 +357,8 @@ software is respectively built and installed:
    ENTRYPOINT ["/bin/bash", "--rcfile", "/etc/profile", "-l"]
 
 This is the simplest available method of selecting base images, and we advise
-to use it whenever possible. There are cases though where using Spack official
-images is not enough to fit production needs. In these situations users can
+its use whenever possible. There are cases, though, where using Spack official
+images is not enough to fit production needs. In these situations, users can
 extend the recipe to start with the bootstrapping of Spack at a certain pinned
 version or manually select which base image to start from in the recipe,
 as we'll see next.
@@ -367,8 +367,8 @@ as we'll see next.
 Use a Bootstrap Stage for Spack
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In some cases users may want to pin the commit sha that is used for Spack, to ensure later
-reproducibility, or start from a fork of the official Spack repository to try a bugfix or
+In some cases, users may want to pin the commit SHA that is used for Spack to ensure later
+reproducibility or start from a fork of the official Spack repository to try a bugfix or
 a feature in the early stage of development. This is possible by being just a little more
 verbose when specifying information about Spack in the ``spack.yaml`` file:
 
@@ -379,17 +379,17 @@ verbose when specifying information about Spack in the ``spack.yaml`` file:
      spack:
        # URL of the Spack repository to be used in the container image
        url: <to-use-a-fork>
-       # Either a commit sha, a branch name or a tag
+       # Either a commit SHA, a branch name, or a tag
        ref: <sha/tag/branch>
-       # If true turn a branch name or a tag into the corresponding commit
-       # sha at the time of recipe generation
+       # If true, turn a branch name or a tag into the corresponding commit
+       # SHA at the time of recipe generation
        resolve_sha: <true/false>
 
 ``url`` specifies the URL from which to clone Spack and defaults to https://github.com/spack/spack.
-The ``ref`` attribute can be either a commit sha, a branch name or a tag. The default value in
+The ``ref`` attribute can be either a commit SHA, a branch name, or a tag. The default value in
 this case is to use the ``develop`` branch, but it may change in the future to point to the latest stable
-release. Finally ``resolve_sha`` transform branch names or tags into the corresponding commit
-shas at the time of recipe generation, to allow for a greater reproducibility of the results
+release. Finally, ``resolve_sha`` transforms branch names or tags into the corresponding commit
+SHAs at the time of recipe generation to allow for greater reproducibility of the results
 at a later time.
 
 The list of operating systems that can be used to bootstrap Spack can be
@@ -399,8 +399,8 @@ obtained with:
 
 .. note::
 
-   The ``resolve_sha`` option uses ``git rev-parse`` under the hood and thus it requires
-   to checkout the corresponding Spack repository in a temporary folder before generating
+   The ``resolve_sha`` option uses ``git rev-parse`` under the hood and thus requires
+   checking out the corresponding Spack repository in a temporary folder before generating
    the recipe. Recipe generation may take longer when this option is set to true because
    of this additional step.
 
@@ -409,11 +409,11 @@ obtained with:
 Use Custom Images Provided by Users
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Consider, as an example, building a production grade image for a CUDA
+Consider, as an example, building a production-grade image for a CUDA
 application. The best strategy would probably be to build on top of
 images provided by the vendor and regard CUDA as an external package.
 
-Spack doesn't currently provide an official image with CUDA configured
+Spack does not currently provide an official image with CUDA configured
 this way, but users can build it on their own and then configure the
 environment to explicitly pull it. This requires users to:
 
@@ -495,21 +495,21 @@ produces, for instance, the following ``Dockerfile``:
 where the base images for both stages are completely custom.
 
 This second mode of selection for base images is more flexible than just
-choosing an operating system and a Spack version, but is also more demanding.
-Users may need to generate by themselves their base images and it's also their
+choosing an operating system and a Spack version but is also more demanding.
+Users may need to generate their base images themselves, and it's also their
 responsibility to ensure that:
 
 1. Spack is available in the ``build`` stage and set up correctly to install the required software
 2. The artifacts produced in the ``build`` stage can be executed in the ``final`` stage
 
-Therefore we don't recommend its use in cases that can be otherwise
+Therefore, we do not recommend its use in cases that can be otherwise
 covered by the simplified mode shown first.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Singularity Definition Files
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In addition to producing recipes in ``Dockerfile`` format Spack can produce
+In addition to producing recipes in ``Dockerfile`` format, Spack can produce
 Singularity Definition Files by just changing the value of the ``format``
 attribute:
 
@@ -532,13 +532,13 @@ image from the recipes generated by Spack is ``3.5.3``.
 Extending the Jinja2 Templates
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Dockerfile and the Singularity definition file that Spack can generate are based on
-a few Jinja2 templates that are rendered according to the environment being containerized.
+The ``Dockerfile`` and the Singularity definition file that Spack can generate are based on
+a few Jinja2 templates that are rendered according to the Spack environment being containerized.
 Even though Spack allows a great deal of customization by just setting appropriate values for
 the configuration options, sometimes that is not enough.
 
 In those cases, a user can directly extend the template that Spack uses to render the image
-to e.g. set additional environment variables or perform specific operations either before or
+to, e.g., set additional environment variables or perform specific operations either before or
 after a given stage of the build. Let's consider as an example the following structure:
 
 .. code-block:: console
@@ -553,8 +553,8 @@ after a given stage of the build. Let's consider as an example the following str
        └── container
            └── CustomDockerfile
 
-containing both the custom template extension and the environment manifest file. To use a custom
-template, the environment must register the directory containing it, and declare its use under the
+containing both the custom template extension and the Spack environment manifest file. To use a custom
+template, the Spack environment must register the directory containing it and declare its use under the
 ``container`` configuration:
 
 .. code-block:: yaml
@@ -595,8 +595,8 @@ The Dockerfile is generated by running:
 
    $ spack -e /opt/environment containerize
 
-Note that the environment must be active for spack to read the template.
-The recipe that gets generated contains the two extra instruction that we added in our template extension:
+Note that the Spack environment must be active for Spack to read the template.
+The recipe that gets generated contains the two extra instructions that we added in our template extension:
 
 .. code-block:: Dockerfile
    :emphasize-lines: 4,43
@@ -687,7 +687,7 @@ to customize the generation of container recipes:
      - No
    * - ``images:spack:ref``
      - Reference for the checkout of Spack
-     - Either a commit sha, a branch name or a tag
+     - Either a commit SHA, a branch name, or a tag
      - No
    * - ``images:spack:resolve_sha``
      - Resolve branches and tags in ``spack.yaml`` to commits in the generated recipe
@@ -698,7 +698,7 @@ to customize the generation of container recipes:
      - Any valid container image
      - Yes, if using custom selection of base images
    * - ``images:final``
-     - Image to be used in the ``build`` stage
+     - Image to be used in the ``final`` stage (runtime)
      - Any valid container image
      - Yes, if using custom selection of base images
    * - ``strip``
@@ -757,22 +757,22 @@ Best Practices
 """
 MPI
 """
-Due to the dependency on Fortran for OpenMPI, which is the spack default
+Due to the dependency on Fortran for OpenMPI, which is the Spack default
 implementation, consider adding ``gfortran`` to the ``apt-get install`` list.
 
 Recent versions of OpenMPI will require you to pass ``--allow-run-as-root``
 to your ``mpirun`` calls if started as root user inside Docker.
 
-For execution on HPC clusters, it can be helpful to import the docker
+For execution on HPC clusters, it can be helpful to import the Docker
 image into Singularity in order to start a program with an *external*
 MPI. Otherwise, also add ``openssh-server`` to the ``apt-get install`` list.
 
 """"
 CUDA
 """"
-Starting from CUDA 9.0, Nvidia provides minimal CUDA images based on
+Starting from CUDA 9.0, NVIDIA provides minimal CUDA images based on
 Ubuntu. Please see `their instructions <https://hub.docker.com/r/nvidia/cuda/>`_.
-Avoid double-installing CUDA by adding, e.g.
+Avoid double-installing CUDA by adding, e.g.:
 
 .. code-block:: yaml
 
@@ -785,18 +785,18 @@ Avoid double-installing CUDA by adding, e.g.
 
 to your ``spack.yaml``.
 
-Users will either need ``nvidia-docker`` or e.g. Singularity to *execute*
+Users will either need ``nvidia-docker`` or, e.g., Singularity to *execute*
 device kernels.
 
-"""""""""""""""""""""""""
-Docker on Windows and OSX
-"""""""""""""""""""""""""
+"""""""""""""""""""""""""""
+Docker on Windows and macOS
+"""""""""""""""""""""""""""
 
-On Mac OS and Windows, docker runs on a hypervisor that is not allocated much
-memory by default, and some spack packages may fail to build due to lack of
-memory. To work around this issue, consider configuring your docker installation
+On macOS and Windows, Docker runs on a hypervisor that is not allocated much
+memory by default, and some Spack packages may fail to build due to lack of
+memory. To work around this issue, consider configuring your Docker installation
 to use more of your host memory. In some cases, you can also ease the memory
-pressure on parallel builds by limiting the parallelism in your config.yaml.
+pressure on parallel builds by limiting the parallelism in your ``config.yaml``.
 
 .. code-block:: yaml
 

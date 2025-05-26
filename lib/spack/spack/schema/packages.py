@@ -211,6 +211,7 @@ schema = {
 
 
 def update(data):
+    data = data["packages"]
     changed = False
     for key in data:
         version = data[key].get("version")

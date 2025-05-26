@@ -5,6 +5,7 @@
 import os
 import shlex
 import sys
+import tempfile
 from typing import Any, List, Optional
 
 import llnl.util.tty as tty
@@ -72,8 +73,16 @@ def setup_parser(subparser):
     migrate_parser.add_argument(
         "namespace_or_path", help="path to a Spack package repository directory"
     )
-    migrate_parser.add_argument(
-        "--fix", action="store_true", help="automatically fix the imports in the package files"
+    patch_or_fix = migrate_parser.add_mutually_exclusive_group(required=True)
+    patch_or_fix.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="do not modify the repository, but dump a patch file",
+    )
+    patch_or_fix.add_argument(
+        "--fix",
+        action="store_true",
+        help="automatically migrate the repository to the latest Package API",
     )
 
 
@@ -191,20 +200,41 @@ def repo_migrate(args: Any) -> int:
     if repo is None:
         tty.die(f"No such repository: {args.namespace_or_path}")
 
-    if (1, 0) <= repo.package_api < (2, 0):
-        success, repo_v2 = migrate_v1_to_v2(repo, fix=args.fix)
-        exit_code = 0 if success else 1
-    elif (2, 0) <= repo.package_api < (3, 0):
-        repo_v2 = None
-        exit_code = 0 if migrate_v2_imports(repo.packages_path, repo.root, fix=args.fix) else 1
+    if args.dry_run:
+        fd, patch_file_path = tempfile.mkstemp(
+            suffix=".patch", prefix="repo-migrate-", dir=os.getcwd()
+        )
+        patch_file = os.fdopen(fd, "bw")
+        tty.msg(f"Patch file will be written to {patch_file_path}")
     else:
-        repo_v2 = None
-        exit_code = 0
+        patch_file_path = None
+        patch_file = None
 
-    if not args.fix:
-        tty.error(
-            f"No changes were made to the repository {repo.root} with namespace "
-            f"'{repo.namespace}'. Run with --fix to apply the above changes."
+    try:
+        if (1, 0) <= repo.package_api < (2, 0):
+            success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
+            exit_code = 0 if success else 1
+        elif (2, 0) <= repo.package_api < (3, 0):
+            repo_v2 = None
+            exit_code = (
+                0
+                if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file)
+                else 1
+            )
+        else:
+            repo_v2 = None
+            exit_code = 0
+    finally:
+        if patch_file is not None:
+            patch_file.flush()
+            patch_file.close()
+
+    if patch_file_path:
+        tty.warn(
+            f"No changes were made to the '{repo.namespace}' repository with. Review "
+            f"the changes written to {patch_file_path}. Run \n\n"
+            f"    spack repo migrate --fix {args.namespace_or_path}\n\n"
+            "to upgrade the repo."
         )
 
     elif exit_code == 1:
