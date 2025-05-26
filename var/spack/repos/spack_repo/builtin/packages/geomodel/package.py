@@ -19,6 +19,8 @@ class Geomodel(CMakePackage):
 
     license("Apache-2.0", checked_by="wdconinc")
 
+    version("6.11.1", sha256="f7b47ff4ed264e1bfb013e6cdb724e7532109f1d58ab5774656e6ff871afb362")
+    version("6.11.0", sha256="fc9fdd7d64b623586089949d9790182dcd93ebb35a05198c91eac8adbbbfd778")
     version("6.10.0", sha256="968a0f7c8108b14f22041ca0c6ae8a3293175131c6f61055527ecdefe8c7839a")
     version("6.9.0", sha256="ea34dad8a0cd392e06794b8a1b7407dd6ad617fefd19fb4cccdf36b154749793")
     version("6.8.0", sha256="4dfd5a932955ee2618a880bb210aed9ce7087cfadd31f23f92e5ff009c8384eb")
@@ -65,6 +67,9 @@ class Geomodel(CMakePackage):
         description="Use the specified C++ standard when building",
     )
 
+    # GeoModel 6.11 drops support for C++17.
+    conflicts("cxxstd=20", when="@6.11:")
+
     conflicts("+fullsimlight", when="+fsl", msg="FSL triggers the build of the FullSimLight")
 
     depends_on("c", type="build")
@@ -93,6 +98,9 @@ class Geomodel(CMakePackage):
         depends_on("coin3d")
         depends_on("soqt")
         depends_on("gl")
+        depends_on("opengl", when="@6.11:")
+
+    depends_on("googletest", when="@6.11:")
 
     def cmake_args(self):
         args = [
