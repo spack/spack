@@ -662,6 +662,8 @@ class Hip(CMakePackage):
                         f"-I{self.spec['xproto'].prefix.include}",
                     )
                 )
+            if self.spec.satisfies("@6.4.0:"):
+                args.append(self.define("clang", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang"))
 
         if self.spec.satisfies("+cuda"):
             args.append(self.define("HIP_PLATFORM", "nvidia"))
@@ -683,6 +685,4 @@ class Hip(CMakePackage):
             args.append(self.define("HIPCC_BIN_DIR", self.stage.source_path + "/hipcc/bin"))
         if self.spec.satisfies("@6.0:"):
             args.append(self.define("HIPCC_BIN_DIR", self.spec["hipcc"].prefix.bin))
-        if self.spec.satisfies("@6.4.0:"):
-            args.append(self.define("clang", f"{self.spec['llvm-amdgpu'].prefix}/bin/clang"))
         return args

@@ -124,7 +124,8 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
         )
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        env.set("CXX", self.spec["hip"].hipcc)
+        if self.spec.satisfies("+rocm"):
+            env.set("CXX", self.spec["hip"].hipcc)
         if self.spec.satisfies("+asan"):
             self.asan_on(env)
 

@@ -159,7 +159,6 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
             self.define("BUILD_FORTRAN_BINDINGS", "OFF"),
             self.define("BUILD_CLIENTS_TESTS", self.run_tests),
             self.define("SUITE_SPARSE_PATH", self.spec["suite-sparse"].prefix),
-            self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix),
         ]
 
         args.append(self.define_from_variant("USE_CUDA", "cuda"))
@@ -170,6 +169,8 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
                 args.append(
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
                 )
+        else:
+            self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix)
 
         if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))

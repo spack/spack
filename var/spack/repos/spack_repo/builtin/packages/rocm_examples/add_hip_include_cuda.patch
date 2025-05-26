@@ -1,0 +1,13 @@
+diff --git a/Libraries/CMakeLists.txt b/Libraries/CMakeLists.txt
+index 67a86ce..a9d5e3e 100644
+--- a/Libraries/CMakeLists.txt
++++ b/Libraries/CMakeLists.txt
+@@ -26,6 +26,8 @@ include(CTest)
+ 
+ file(RELATIVE_PATH folder_bin ${CMAKE_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${folder_bin})
++find_package(HIP MODULE REQUIRED)
++include_directories("${HIP_ROOT_DIR}/include")
+ 
+ # CMake configuration files for CUDA versions of HIP libraries are not yet
+ # included under the HIP SDK for Windows.
