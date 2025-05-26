@@ -4280,7 +4280,6 @@ def _specs_with_commits(spec):
     assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
 
-
 def _attach_python_to_external(
     dependent_package, extendee_spec: Optional[spack.spec.Spec] = None
 ) -> None:

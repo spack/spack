@@ -1040,7 +1040,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         sha = None
         if is_git_version(str(self.spec.version)):
-            ref = self.spec.version.ref 
+            ref = self.spec.version.ref
         else:
             tag = self.version_or_package_attr("tag", self.spec.version, "")
             branch = self.version_or_package_attr("branch", self.spec.version, "")
@@ -1064,7 +1064,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
             # TODO(psakiev) we probably want a better way to intercept this for unit tests
             try:
-                query = spack.util.git.git(required=True)(*git_args, output=str, error=os.devnull, extra_env={"GIT_TERMINAL_PROMPT": "0"})
+                query = spack.util.git.git(required=True)(
+                    *git_args, output=str, error=os.devnull, extra_env={"GIT_TERMINAL_PROMPT": "0"}
+                )
             except spack.util.executable.ProcessError:
                 return
 

@@ -810,9 +810,7 @@ class StageComposite(pattern.Composite):
         for item in self:
             item.keep = value
 
-    def extract_commit_sha(
-        self, ref: Optional[str] = None
-    ) -> Optional[str]:
+    def extract_commit_sha(self, ref: Optional[str] = None) -> Optional[str]:
         """Retrieve git commit from the stage if it exists"""
         commit = None
         if self.expanded:
