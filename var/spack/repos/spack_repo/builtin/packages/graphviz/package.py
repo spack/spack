@@ -162,7 +162,6 @@ class Graphviz(AutotoolsPackage):
     @property
     def libs(self):
         libraries = ["libgvc", "libcdt", "libcgraph", "libgvpr", "libpathplan", "libxdot"]
-
         return find_libraries(libraries, root=self.prefix, recursive=True)
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
