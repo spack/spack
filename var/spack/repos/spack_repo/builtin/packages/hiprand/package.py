@@ -147,6 +147,8 @@ class Hiprand(CMakePackage, CudaPackage, ROCmPackage):
             args.append(self.define("BUILD_WITH_LIB", "CUDA"))
             # FindHIP.cmake is used for +cuda
             args.append(self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip))
+            arch_str = ";".join(self.spec.variants["cuda_arch"].value)
+            args.append(self.define("NVGPU_TARGETS", arch_str))
         else:
             args.append(self.define("BUILD_WITH_LIB", "ROCM"))
 
