@@ -1063,12 +1063,13 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             git_args = ["ls-remote", url, "--ref", ref]
 
             # TODO(psakiev) we probably want a better way to intercept this for unit tests
-            try:
-                query = spack.util.git.git(required=True)(
-                    *git_args, output=str, error=os.devnull, extra_env={"GIT_TERMINAL_PROMPT": "0"}
-                )
-            except spack.util.executable.ProcessError:
-                return
+            query = spack.util.git.git(required=True)(
+                *git_args,
+                output=str,
+                error=os.devnull,
+                extra_env={"GIT_TERMINAL_PROMPT": "0"},
+                fail_on_error=False,
+            )
 
             sha, _ = query.strip().split()
 

@@ -814,7 +814,6 @@ class StageComposite(pattern.Composite):
         """Retrieve git commit from the stage if it exists"""
         commit = None
         if self.expanded:
-            ref = branch or commit
             commit = git(required=True)(
                 "-C",
                 self.source_path,
@@ -824,12 +823,10 @@ class StageComposite(pattern.Composite):
                 error=str,
                 fail_on_error=False,
             ).strip()
-        if self.archive_file:
+        elif self.archive_file:
             commit = retrieve_commit_from_archive(self.archive_file, ref)
         if not commit and (self.expanded or self.archive_file):
-            tty.warn(
-                "Stage that querying commit is missing git data. Consider reconstructing mirrors"
-            )
+            tty.warn(f"{self.archive_file} is missing git data. Consider reconstructing mirrors.")
         return commit
 
 
