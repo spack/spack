@@ -170,7 +170,7 @@ class Hipsolver(CMakePackage, CudaPackage, ROCmPackage):
                     self.define("CMAKE_MODULE_PATH", self.spec["hip"].prefix.lib.cmake.hip)
                 )
         else:
-            self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix)
+            args.append(self.define("ROCBLAS_PATH", self.spec["rocblas"].prefix))
 
         if self.spec.satisfies("@5.2.0:6.3.1"):
             args.append(self.define("BUILD_FILE_REORG_BACKWARD_COMPATIBILITY", True))

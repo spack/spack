@@ -98,6 +98,7 @@ class RocmExamples(CMakePackage):
             args.append(self.define("ROCM_ROOT", self.spec["hip"].prefix))
             args.append(self.define("HIP_ROOT_DIR", self.spec["hip"].prefix))
             args.append(self.define("CUDA_DRIVER_LIB", f"{self.spec['cuda'].prefix}/targets/x86_64-linux/lib/stubs/libcuda.so"))
+            #TODO: enable reduction for +cuda
             args.append(self.define("REDUCTION_BUILD_EXAMPLES", False))
             args.append(self.define("REDUCTION_BUILD_TESTING", False))
             args.append(self.define("REDUCTION_BUILD_BENCHMARKS", False))
