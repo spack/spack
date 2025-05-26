@@ -2120,7 +2120,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, dt.BUILD, ()), (0, 2, dt.BUILD, ()), (0, 3, dt.BUILD, ())),
+                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
             ),
         ],
         # dependencies with dependencies
@@ -2139,10 +2139,10 @@ EMPTY_FLG = Spec().compiler_flags
                 (
                     (0, 1, 0, ()),
                     (0, 2, 0, ()),
-                    (1, 3, dt.BUILD, ()),
-                    (1, 4, dt.BUILD, ()),
-                    (2, 5, dt.BUILD, ()),
-                    (2, 6, dt.BUILD, ()),
+                    (1, 3, 0, ()),
+                    (1, 4, 0, ()),
+                    (2, 5, 0, ()),
+                    (2, 6, 0, ()),
                 ),
             ),
         ],
