@@ -29,7 +29,7 @@ class RocmExamples(CMakePackage):
     version("6.2.1", sha256="2e426572aa5f5b44c7893ea256945c8733b79db39cca84754380f40c8b44a563")
     version("6.2.0", sha256="6fb1f954ed32b5c4085c7f071058d278c2e1e8b7b71118ee5e85cf9bbc024df0")
 
-    variant("rocm", default=True, description="Build with CUDA")
+    variant("rocm", default=True, description="Build with ROCm")
     variant("cuda", default=False, description="Build with CUDA")
 
     conflicts("+cuda +rocm", msg="CUDA and ROCm support are mutually exclusive")
