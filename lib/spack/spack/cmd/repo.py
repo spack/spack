@@ -7,15 +7,18 @@ import os
 import shlex
 import sys
 import tempfile
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import llnl.util.tty as tty
+from llnl.util.tty import color
 
 import spack
 import spack.config
 import spack.repo
+import spack.util.executable
 import spack.util.path
 from spack.cmd.common import arguments
+from spack.error import SpackError
 
 description = "manage package source repositories"
 section = "config"
@@ -49,7 +52,28 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Add
     add_parser = sp.add_parser("add", help=repo_add.__doc__)
-    add_parser.add_argument("path", help="path to a Spack package repository directory")
+    add_parser.add_argument(
+        "path_or_repo", help="path or git repository of a Spack package repository"
+    )
+    # optional positional argument for destination name in case of git repository
+    add_parser.add_argument(
+        "destination",
+        nargs="?",
+        default=None,
+        help="destination to clone git repository into (defaults to cache directory)",
+    )
+    add_parser.add_argument(
+        "--name",
+        action="store",
+        help="config name for the package repository, defaults to the namespace of the repository",
+    )
+    add_parser.add_argument(
+        "--path",
+        help="relative path to the Spack package repository inside a git repository. Can be "
+        "repeated to add multiple package repositories in case of a monorepo",
+        action="append",
+        default=[],
+    )
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -94,97 +118,162 @@ def repo_create(args):
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
 
-def _find_by(repos: Dict[str, str], key: str, path: str) -> Optional[str]:
-    """Find a repository by its namespace or path. This works also if the repo is malformed."""
-    if key in repos:
-        return key
+def _add_repo(
+    path_or_repo: str,
+    name: Optional[str],
+    scope: Optional[str],
+    paths: List[str],
+    destination: Optional[str],
+    config: Optional[spack.config.Configuration] = None,
+) -> str:
+    config = config or spack.config.CONFIG
 
-    for name, repo_path in repos.items():
-        if path and spack.util.path.canonicalize_path(repo_path) == path:
-            return name
-        try:
-            if spack.repo.from_path(repo_path).namespace == key:
-                return name
-        except spack.repo.RepoError:
-            continue
+    existing: Dict[str, Any] = config.get("repos", default={}, scope=scope)
 
-    return None
+    if name and name in existing:
+        raise SpackError(f"A repository with the name '{name}' already exists.")
+
+    # Interpret as a git URL when it contains a colon at index 2 or more, not preceded by a
+    # forward slash. That allows C:/ windows paths, while following git's convention to distinguish
+    # between local paths on the one hand and URLs and SCP like syntax on the other.
+    entry: Union[str, Dict[str, Any]]
+    colon_idx = path_or_repo.find(":")
+
+    if colon_idx > 1 and "/" not in path_or_repo[:colon_idx]:  # git URL
+        entry = {"git": path_or_repo}
+        if len(paths) >= 1:
+            entry["paths"] = paths
+        if destination:
+            entry["destination"] = destination
+    else:  # local path
+        if destination:
+            raise SpackError("The 'destination' argument is only valid for git repositories")
+        elif paths:
+            raise SpackError("The --paths flag is only valid for git repositories")
+        entry = spack.util.path.canonicalize_path(path_or_repo)
+
+    descriptor = spack.repo.parse_config_descriptor(
+        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
+    )
+    descriptor.initialize(git=spack.util.executable.which("git"))
+
+    packages_repos = descriptor.construct()
+
+    usable_repos: Dict[str, spack.repo.Repo] = {}
+
+    for _path, _repo_or_err in packages_repos.items():
+        if isinstance(_repo_or_err, Exception):
+            tty.warn(f"Skipping package repository '{_path}' due to: {_repo_or_err}")
+        else:
+            usable_repos[_path] = _repo_or_err
+
+    if not usable_repos:
+        raise SpackError(f"No package repository could be constructed from {path_or_repo}")
+
+    # For the config key, default to --name, then to the namespace if there's only one repo.
+    # Otherwise, the name is unclear and we require the user to specify it.
+    if name:
+        key = name
+    elif len(usable_repos) == 1:
+        key = next(iter(usable_repos.values())).namespace
+    else:
+        raise SpackError("Multiple package repositories found, please specify a name with --name.")
+
+    if key in existing:
+        raise SpackError(f"A repository with the name '{key}' already exists.")
+
+    existing[key] = entry
+    config.set("repos", existing, scope)
+    return key
 
 
 def repo_add(args):
-    """add a package source to Spack's configuration"""
-    path = args.path
-
-    try:
-        repo = spack.repo.from_path(path)
-    except spack.repo.RepoError as e:
-        tty.die(f"Cannot add repository: {e}")
-
-    canon_path = spack.util.path.canonicalize_path(path)
-
-    repos: Dict[str, str] = spack.config.get("repos", default={}, scope=args.scope)
-
-    existing_key = _find_by(repos, key=repo.namespace, path=canon_path)
-
-    if existing_key:
-        tty.die(f"Repository is already registered with Spack: {path}")
-
-    repos[repo.namespace] = canon_path
-    spack.config.set("repos", repos, args.scope)
-    tty.msg(f"Added repo with namespace '{repo.namespace}'.")
+    """add package repositories to Spack's configuration"""
+    name = _add_repo(
+        path_or_repo=args.path_or_repo,
+        name=args.name,
+        scope=args.scope,
+        paths=args.path,
+        destination=args.destination,
+    )
+    tty.msg(f"Added repo to config with name '{name}'.")
 
 
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
-    repos: Dict[str, str] = spack.config.get("repos", scope=args.scope)
     namespace_or_path = args.namespace_or_path
+    repos: Dict[str, str] = spack.config.get("repos", scope=args.scope)
 
-    # If the argument is a key or value, remove that repository from config.
-    canon_path = spack.util.path.canonicalize_path(namespace_or_path)
-    existing_key = _find_by(repos, key=namespace_or_path, path=canon_path)
+    if namespace_or_path in repos:
+        # delete by name (from config)
+        key = namespace_or_path
+    else:
+        # delete by namespace or path (requires constructing the repo)
+        canon_path = spack.util.path.canonicalize_path(namespace_or_path)
+        descriptors = spack.repo.RepoDescriptors.from_config(
+            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=args.scope
+        )
+        for name, descriptor in descriptors.items():
+            descriptor.initialize(fetch=False)
 
-    if existing_key is None:
-        tty.die(f"No repository with path or namespace: {namespace_or_path}")
+            # For now you cannot delete monorepos with multipe package repositories from config,
+            # hence "all" and not "any". We can improve this later if needed.
+            if all(
+                r.namespace == namespace_or_path or r.root == canon_path
+                for r in descriptor.construct().values()
+                if isinstance(r, spack.repo.Repo)
+            ):
+                key = name
+                break
+        else:
+            tty.die(f"No repository with path or namespace: {namespace_or_path}")
 
-    del repos[existing_key]
+    del repos[key]
     spack.config.set("repos", repos, args.scope)
     tty.msg(f"Removed repository '{namespace_or_path}'.")
 
 
 def repo_list(args):
     """show registered repositories and their namespaces"""
-    roots: Iterable[str] = spack.config.get("repos", scope=args.scope).values()
-    repos: List[spack.repo.Repo] = []
-    for r in roots:
-        try:
-            repos.append(spack.repo.from_path(r))
-        except spack.repo.RepoError:
-            continue
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
+    )
 
-    if sys.stdout.isatty():
-        tty.msg(f"{len(repos)} package repositor" + ("y." if len(repos) == 1 else "ies."))
-
-    if not repos:
+    if not sys.stdout.isatty():
+        for name in descriptors:
+            print(name)
         return
 
-    max_ns_len = max(len(r.namespace) for r in repos)
-    for repo in repos:
-        print(f"{repo.namespace:<{max_ns_len + 4}}{repo.package_api_str:<8}{repo.root}")
+    for name, descriptor in descriptors.items():
+        descriptor.initialize(fetch=False)
+        repos_for_descriptor = descriptor.construct()
+        for path, maybe_repo in repos_for_descriptor.items():
+            if isinstance(maybe_repo, spack.repo.Repo):
+                color.cprint(
+                    f"@g{{[+]}} {maybe_repo.namespace} {maybe_repo.package_api_str} "
+                    f"{maybe_repo.root}"
+                )
+            else:  # exception
+                color.cprint(f"@r{{[-]}} {name} {path}: {maybe_repo}")
 
 
 def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
+    """Get a repo by path or namespace"""
     try:
         return spack.repo.from_path(name_or_path)
     except spack.repo.RepoError:
         pass
 
-    for path in spack.config.get("repos").values():
-        try:
-            r = spack.repo.from_path(path)
-        except spack.repo.RepoError:
-            continue
-        if r.namespace == name_or_path:
-            return r
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        spack.repo.package_repository_lock(), spack.config.CONFIG
+    )
+
+    repo_path, _ = descriptors.construct(fetch=False)
+
+    for repo in repo_path.repos:
+        if repo.namespace == name_or_path:
+            return repo
+
     return None
 
 

@@ -5,16 +5,19 @@ import io
 import os
 import pathlib
 import sys
+from typing import Dict, Optional, Union
 
 import pytest
 
 from llnl.util.filesystem import working_dir
 
+import spack.cmd.repo
 import spack.config
 import spack.environment as ev
 import spack.main
 import spack.repo
 import spack.repo_migrate
+from spack.error import SpackError
 from spack.main import SpackCommand
 from spack.util.executable import Executable
 
@@ -245,3 +248,415 @@ def test_migrate_diff(git: Executable, tmp_path: pathlib.Path):
             f"{pkg_nontrivial_import}:2: cannot rewrite spack.pkg.builtin import statement"
             in err_output
         )
+
+
+class MockRepo(spack.repo.Repo):
+    def __init__(self, namespace: str):
+        self.namespace = namespace
+
+
+class MockDescriptor(spack.repo.RepoDescriptor):
+    def __init__(self, to_construct: Dict[str, Union[spack.repo.Repo, Exception]]):
+        self.to_construct = to_construct
+        self.initialized = False
+
+    def initialize(self, git):
+        self.initialized = True
+
+    def construct(self):
+        assert self.initialized, "MockDescriptor must be initialized before construction"
+        return self.to_construct
+
+
+def make_repo_config(repo_config: Optional[dict] = None) -> spack.config.Configuration:
+    """Create a Configuration instance with writable scope and optional repo configuration."""
+    scope = spack.config.InternalConfigScope("test", {"repos": repo_config or {}})
+    scope.writable = True
+    config = spack.config.Configuration()
+    config.push_scope(scope)
+    return config
+
+
+def test_add_repo_name_already_exists(tmp_path: pathlib.Path):
+    """Test _add_repo raises error when name already exists in config."""
+    # Set up existing config with the same name
+    config = make_repo_config({"test_name": "/some/path"})
+
+    # Should raise error when name already exists
+    with pytest.raises(SpackError, match="A repository with the name 'test_name' already exists"):
+        spack.cmd.repo._add_repo(
+            str(tmp_path), name="test_name", scope=None, paths=[], destination=None, config=config
+        )
+
+
+def test_add_repo_destination_with_local_path(tmp_path: pathlib.Path):
+    """Test _add_repo raises error when args are added that do not apply to local paths."""
+    # Should raise error when destination is provided with local path
+    with pytest.raises(
+        SpackError, match="The 'destination' argument is only valid for git repositories"
+    ):
+        spack.cmd.repo._add_repo(
+            str(tmp_path),
+            name="test_name",
+            scope=None,
+            paths=[],
+            destination="/some/destination",
+            config=make_repo_config(),
+        )
+    with pytest.raises(SpackError, match="The --paths flag is only valid for git repositories"):
+        spack.cmd.repo._add_repo(
+            str(tmp_path),
+            name="test_name",
+            scope=None,
+            paths=["path1", "path2"],
+            destination=None,
+            config=make_repo_config(),
+        )
+
+
+def test_add_repo_computed_key_already_exists(tmp_path: pathlib.Path, monkeypatch):
+    """Test _add_repo raises error when computed key already exists in config."""
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({str(tmp_path): MockRepo("test_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    # Should raise error when computed key already exists
+    with pytest.raises(SpackError, match="A repository with the name 'test_repo' already exists"):
+        spack.cmd.repo._add_repo(
+            str(tmp_path),
+            name=None,  # Will use namespace as key
+            scope=None,
+            paths=[],
+            destination=None,
+            config=make_repo_config({"test_repo": "/some/path"}),
+        )
+
+
+def test_add_repo_git_url_with_paths(monkeypatch):
+    """Test _add_repo correctly handles git URL with multiple paths."""
+    config = make_repo_config({"test_repo": "/some/path"})
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify the entry has the expected git structure
+        assert "git" in entry
+        assert entry["git"] == "https://example.com/repo.git"
+        assert entry["paths"] == ["path1", "path2"]
+        return MockDescriptor({"/some/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    # Should succeed with git URL and multiple paths
+    key = spack.cmd.repo._add_repo(
+        "https://example.com/repo.git",
+        name="git_test",
+        scope=None,
+        paths=["path1", "path2"],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "git_test"
+    repos = config.get("repos", scope=None)
+    assert "git_test" in repos
+    assert repos["git_test"]["git"] == "https://example.com/repo.git"
+    assert repos["git_test"]["paths"] == ["path1", "path2"]
+
+
+def test_add_repo_git_url_with_destination(monkeypatch):
+    """Test _add_repo correctly handles git URL with destination."""
+    config = make_repo_config({"test_repo": "/some/path"})
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify the entry has the expected git structure
+        assert "git" in entry
+        assert entry["git"] == "https://example.com/repo.git"
+        assert entry["destination"] == "/custom/destination"
+        return MockDescriptor({"/some/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    # Should succeed with git URL and destination
+    key = spack.cmd.repo._add_repo(
+        "https://example.com/repo.git",
+        name="git_test",
+        scope=None,
+        paths=[],
+        destination="/custom/destination",
+        config=config,
+    )
+
+    assert key == "git_test"
+    repos = config.get("repos", scope=None)
+    assert "git_test" in repos
+    assert repos["git_test"]["git"] == "https://example.com/repo.git"
+    assert repos["git_test"]["destination"] == "/custom/destination"
+
+
+def test_add_repo_ssh_git_url_detection(monkeypatch):
+    """Test _add_repo correctly detects SSH git URLs."""
+    config = make_repo_config({"test_repo": "/some/path"})
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify the entry has the expected git structure
+        assert "git" in entry
+        assert entry["git"] == "git@github.com:user/repo.git"
+        return MockDescriptor({"/some/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    # Should detect SSH URL as git URL (colon not preceded by forward slash)
+    key = spack.cmd.repo._add_repo(
+        "git@github.com:user/repo.git",
+        name="ssh_git_test",
+        scope=None,
+        paths=[],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "ssh_git_test"
+    repos = config.get("repos", scope=None)
+    assert "ssh_git_test" in repos
+    assert repos["ssh_git_test"]["git"] == "git@github.com:user/repo.git"
+
+
+def test_add_repo_no_usable_repositories_error(monkeypatch):
+    """Test that _add_repo raises SpackError when no usable repositories can be constructed."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor(
+            {"/path1": Exception("Invalid repo"), "/path2": Exception("Another error")}
+        )
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    with pytest.raises(
+        SpackError, match="No package repository could be constructed from /invalid/path"
+    ):
+        spack.cmd.repo._add_repo(
+            "/invalid/path",
+            name="test_repo",
+            scope=None,
+            paths=[],
+            destination=None,
+            config=config,
+        )
+
+
+def test_add_repo_multiple_repos_no_name_error(monkeypatch):
+    """Test that _add_repo raises SpackError when multiple repositories found without
+    specifying --name."""
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({"/path1": MockRepo("repo1"), "/path2": MockRepo("repo2")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    with pytest.raises(
+        SpackError, match="Multiple package repositories found, please specify a name"
+    ):
+        spack.cmd.repo._add_repo(
+            "/path/with/multiple/repos",
+            name=None,  # No name specified
+            scope=None,
+            paths=[],
+            destination=None,
+            config=make_repo_config(),
+        )
+
+
+def test_add_repo_git_url_basic_success(monkeypatch):
+    """Test successful addition of a git repository."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify git entry structure
+        assert isinstance(entry, dict)
+        assert entry["git"] == "https://github.com/example/repo.git"
+        return MockDescriptor({"/git/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        "https://github.com/example/repo.git",
+        name="test_git_repo",
+        scope=None,
+        paths=[],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "test_git_repo"
+    repos_config = config.get("repos", scope=None)
+    assert "test_git_repo" in repos_config
+    assert "git" in repos_config["test_git_repo"]
+
+
+def test_add_repo_git_url_with_custom_destination(monkeypatch):
+    """Test successful addition of a git repository with destination."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify git entry structure with destination
+        assert isinstance(entry, dict)
+        assert "git" in entry
+        assert "destination" in entry
+        assert entry["destination"] == "/custom/destination"
+        return MockDescriptor({"/git/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        "git@github.com:example/repo.git",
+        name="test_git_repo",
+        scope=None,
+        paths=[],
+        destination="/custom/destination",
+        config=config,
+    )
+
+    assert key == "test_git_repo"
+
+
+def test_add_repo_git_url_with_single_repo_path_new(monkeypatch):
+    """Test successful addition of a git repository with repo_path."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify git entry structure with repo_path
+        assert isinstance(entry, dict)
+        assert "git" in entry
+        assert "paths" in entry
+        assert entry["paths"] == ["subdirectory/repo"]
+        return MockDescriptor({"/git/path": MockRepo("git_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        "https://github.com/example/repo.git",
+        name="test_git_repo",
+        scope=None,
+        paths=["subdirectory/repo"],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "test_git_repo"
+
+
+def test_add_repo_local_path_success(monkeypatch, tmp_path):
+    """Test successful addition of a local repository."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        # Verify local path entry
+        assert isinstance(entry, str)
+        return MockDescriptor({str(tmp_path): MockRepo("test_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        str(tmp_path),
+        name="test_local_repo",
+        scope=None,
+        paths=[],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "test_local_repo"
+    # Verify the local path was added
+    repos_config = config.get("repos")
+    assert "test_local_repo" in repos_config
+    assert repos_config["test_local_repo"] == str(tmp_path)
+
+
+def test_add_repo_auto_name_from_namespace(monkeypatch, tmp_path):
+    """Test successful addition of a repository with auto-generated name from namespace."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({str(tmp_path): MockRepo("auto_name_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        str(tmp_path),
+        name=None,  # No name specified, should use namespace
+        scope=None,
+        paths=[],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "auto_name_repo"
+    # Verify the repo was added with the namespace as key
+    repos_config = config.get("repos", scope=None)
+    assert "auto_name_repo" in repos_config
+    assert repos_config["auto_name_repo"] == str(tmp_path)
+
+
+def test_add_repo_partial_repo_construction_warning(monkeypatch, tmp_path, capsys):
+    """Test that _add_repo issues warnings for repos that can't be constructed but
+    succeeds if at least one can be."""
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor(
+            {
+                "/good/path": MockRepo("good_repo"),
+                "/bad/path": Exception("Failed to construct repo"),
+            }
+        )
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    key = spack.cmd.repo._add_repo(
+        "/mixed/path",
+        name="test_mixed_repo",
+        scope=None,
+        paths=[],
+        destination=None,
+        config=make_repo_config(),
+    )
+
+    assert key == "test_mixed_repo"
+
+    # Check that a warning was issued for the failed repo
+    captured = capsys.readouterr()
+    assert "Skipping package repository" in captured.err
+
+
+@pytest.mark.parametrize(
+    "test_url,expected_type",
+    [
+        ("ssh://git@github.com/user/repo.git", "git"),  # ssh URL
+        ("git://github.com/user/repo.git", "git"),  # git protocol
+        ("user@host:repo.git", "git"),  # SSH short form
+        ("file:///local/path", "git"),  # file URL
+        ("/local/path", "local"),  # local path
+        ("./relative/path", "local"),  # relative path
+        ("C:\\Windows\\Path", "local"),  # Windows path
+    ],
+)
+def test_add_repo_git_url_detection_edge_cases(monkeypatch, test_url, expected_type):
+    """Test edge cases for git URL detection."""
+    config = make_repo_config()
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({"/path": MockRepo("test_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    spack.cmd.repo._add_repo(
+        test_url, name=None, scope=None, paths=[], destination=None, config=config
+    )
+
+    entry = config.get("repos").get("test_repo")
+
+    if expected_type == "git":
+        assert entry == {"git": test_url}
+    else:
+        assert isinstance(entry, str)
