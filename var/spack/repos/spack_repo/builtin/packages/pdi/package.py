@@ -25,6 +25,8 @@ class Pdi(CMakePackage):
     maintainers("jbigot")
 
     version("develop", branch="main", no_cache=True)
+    version("1.9.1", sha256="5bb6257efb32674db69e2d89a8947015a2f1e284dbe8dcfdc601f6412640b551")
+    version("1.9.0", sha256="04fee7851c4f2a156daddf7eb2c3c3b0132d80d3f0e448cdeebda0b7c4595639")
     version("1.8.3", sha256="df7200289a2a368ec874140039b417abdfe681b57fb1b9f4c52f924952226020")
     version("1.8.2", sha256="bb4d1654c97f7ff379067adbff339f8b4117c0cf9432f41f1a5cb20a747cac1a")
     version(
