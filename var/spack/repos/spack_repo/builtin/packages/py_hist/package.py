@@ -13,8 +13,11 @@ class PyHist(PythonPackage):
     homepage = "https://github.com/scikit-hep/hist"
     pypi = "hist/hist-2.5.2.tar.gz"
 
+    maintainers("wdconinc")
+
     license("BSD-3-Clause")
 
+    version("2.8.1", sha256="7da7c900e2ef6d425793da1a9adac424ebc013a8eabf29b24301f70898218d9d")
     version("2.8.0", sha256="0a3e602dd1d2721bd7f2229f456709dde323f6f74952f13ba4e5986c3275f77b")
     version("2.7.3", sha256="f9f9b56809b190bb546698789cc0d7d040934fc5141d2763c6e49d65e81dbc0b")
     version("2.7.2", sha256="26b1ab810d8b10222db5d161d4acaf64aaa04fe6baaed2966d41c1dac5601d06")
@@ -59,7 +62,7 @@ class PyHist(PythonPackage):
             depends_on("py-iminuit@2:", type=("build", "run"), when="@2.6.2:2.6.3 ^python@:3.10")
 
     with when("+dask"):
-        depends_on("py-dask@2022: +dataframe", type=("build", "run"), when="^python@3.8:")
+        depends_on("py-dask@2022:2024 +dataframe", type=("build", "run"), when="^python@3.8:")
         depends_on("py-dask-histogram@2023.1:", type=("build", "run"), when="^python@3.8:")
 
     with when("+fit"):
