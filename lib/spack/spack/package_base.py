@@ -1038,7 +1038,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Base implementation will look up git commits when appropriate.
         Packages may override this implementation for custom implementations
         """
+        if "commit" in self.spec.variants:
+            return
+
         sha = None
+
         if is_git_version(str(self.spec.version)):
             ref = self.spec.version.ref
         else:
@@ -1046,12 +1050,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             branch = self.version_or_package_attr("branch", self.spec.version, "")
             assert not (tag and branch)
             ref = tag or branch
-        try:
-            self.do_fetch(mirror_only=True)
-        except spack.error.FetchError:
-            pass
-
-        sha = self.stage.extract_commit_sha(ref)
 
         if not sha:
             url = self.version_or_package_attr("git", self.spec.version)
@@ -1071,7 +1069,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 fail_on_error=False,
             )
 
-            sha, _ = query.strip().split()
+            if query:
+                sha, _ = query.strip().split()
+
+        # TODO(psakiev) we typically check mirrors first, but for commit resolution
+        if not sha:
+            try:
+                self.do_fetch(mirror_only=True)
+            except spack.error.FetchError:
+                pass
+            sha = self.stage.extract_commit_sha(ref)
 
         if sha:
             self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)

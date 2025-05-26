@@ -812,6 +812,8 @@ class StageComposite(pattern.Composite):
 
     def extract_commit_sha(self, ref: Optional[str] = None) -> Optional[str]:
         """Retrieve git commit from the stage if it exists"""
+        if not (self.expanded or self.archive_file):
+            return None
         commit = None
         if self.expanded:
             commit = git(required=True)(
@@ -823,9 +825,9 @@ class StageComposite(pattern.Composite):
                 error=str,
                 fail_on_error=False,
             ).strip()
-        elif self.archive_file:
+        if not commit and self.archive_file:
             commit = retrieve_commit_from_archive(self.archive_file, ref)
-        if not commit and (self.expanded or self.archive_file):
+        if not commit:
             tty.warn(f"{self.archive_file} is missing git data. Consider reconstructing mirrors.")
         return commit
 

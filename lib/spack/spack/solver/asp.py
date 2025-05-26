@@ -4261,8 +4261,7 @@ def _specs_with_commits(spec):
         if "commit" not in spec.variants and spec.version.commit_sha:
             spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
-    if "commit" not in spec.variants:
-        spec.package.resolve_binary_provenance()
+    spec.package.resolve_binary_provenance()
 
     if "commit" not in spec.variants:
         # what if users want to test concretization, but aren't configured for an airgapped system?

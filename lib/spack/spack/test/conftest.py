@@ -103,6 +103,16 @@ def git():
     return spack.util.git.git(required=True)
 
 
+@pytest.fixture()
+def dead_git(monkeypatch):
+    """Fixture to capture/kill all git requests"""
+
+    def lambda_git(*args, **kwargs):
+        return lambda *args, **kwargs: None
+
+    monkeypatch.setattr(spack.util.git, "git", lambda_git)
+
+
 #
 # Return list of shas for latest two git commits in local spack repo
 #
@@ -2237,3 +2247,16 @@ def _noop(*args, **kwargs):
 def no_compilers_init(monkeypatch):
     """Disables automatic compiler initialization"""
     monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture(autouse=True)
+def skip_provenance_check(monkeypatch, request):
+    """Skip binary provenance check for git versions
+
+    Binary provenance checks require querying git repositories and mirrors.
+    The infrastructure for this is complex and a heavy lift for simple things like spec syntax
+    checks. This fixture defaults to skipping this check, but can be overridden with the
+    @pytest.mark.require_provenance decorator
+    """
+    if "require_provenance" not in request.keywords:
+        monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
