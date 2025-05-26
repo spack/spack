@@ -242,12 +242,12 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False, description="Enable support for MySQL databases")
+    variant("mysql", when="@:6.36", default=False, description="Enable support for MySQL databases")
     variant("opengl", default=True, description="Enable OpenGL support")
     variant(
         "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
     )
-    variant("postgres", default=False, description="Enable postgres support")
+    variant("postgres", when="@:6.36", default=False, description="Enable postgres support")
     variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
@@ -322,7 +322,7 @@ class Root(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17", "20"),
+        values=("11", "14", "17", "20", "23"),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -349,6 +349,7 @@ class Root(CMakePackage):
     depends_on("jpeg")
     depends_on("libice")
     depends_on("libpng")
+    depends_on("libtiff", when="@6.36:")
     depends_on("lz4", when="@6.13.02:")  # See cmake_args, below.
     depends_on("ncurses")
     depends_on("nlohmann-json", when="@6.24:")
@@ -461,6 +462,10 @@ class Root(CMakePackage):
     # GCC 15 support was added in 6.34.04
     conflicts("%gcc@15:", when="@:6.34.02")
 
+    # GCC mold linker support was added in 6.36.00
+    conflicts("%gcc +mold", when="@:6.35")
+    depends_on("mold@2.32:", when="^mold")
+
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
 
@@ -485,6 +490,9 @@ class Root(CMakePackage):
     conflicts("cxxstd=14", when="@6.30.00:", msg="This version of root requires at least C++17")
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
+    )
+    conflicts(
+        "cxxstd=23", when="@:6.35", msg="C++23 support requires root version at least 6.36.00"
     )
 
     conflicts("%gcc@:10", when="cxxstd=20")
@@ -554,6 +562,8 @@ class Root(CMakePackage):
             v.append("cxxstd=17")
         elif "cxx20" in f:
             v.append("cxxstd=20")
+        elif "cxx23" in f:
+            v.append("cxxstd=23")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
@@ -675,15 +685,18 @@ class Root(CMakePackage):
             define("builtin_fftw3", False),
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
+            define("builtin_gif", False),
             define("builtin_gl2ps", False),
             define("builtin_glew", False),
             define("builtin_gsl", False),
+            define("builtin_jpeg", False),
             define("builtin_llvm", True),
             define("builtin_lz4", self.spec.satisfies("@6.12.02:6.12")),
             define("builtin_lzma", False),
             define("builtin_nlohmannjson", False),
             define("builtin_openssl", False),
             define("builtin_pcre", False),
+            define("builtin_png", False),
             define("builtin_tbb", False),
             define("builtin_unuran", False),
             define("builtin_vc", False),
@@ -709,6 +722,7 @@ class Root(CMakePackage):
             define("alien", False),
             define_from_variant("arrow"),
             define("asimage", True),
+            define("asimage_tiff", True),
             define("astiff", True),
             define("bonjour", False),
             define("castor", False),
