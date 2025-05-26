@@ -240,7 +240,7 @@ class Root(CMakePackage):
     variant(
         "mlp",
         default=False,
-        description="Enable support for TMultilayerPerceptron " "classes' federation",
+        description="Enable support for TMultilayerPerceptron classes' federation",
     )
     variant(
         "mysql", when="@:6.36", default=False, description="Enable support for MySQL databases"
