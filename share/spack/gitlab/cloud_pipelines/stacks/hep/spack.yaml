@@ -106,8 +106,10 @@ spack:
   #- professor
   - py-awkward
   - py-boost-histogram
+  - py-dask-awkward +io
+  - py-dask-histogram
   - py-hepunits
-  - py-hist
+  - py-hist +dask +fit +plot
   - py-histbook
   - py-histoprint
   - py-iminuit
