@@ -939,54 +939,6 @@ class GitFetchStrategy(VCSFetchStrategy):
         clone_args.extend([self.url, dest])
         git(*clone_args)
 
-    def _new_clone_src(self) -> None:
-        """
-        Optimize assuming fetching will always know the commit
-
-        Impl based on https://github.blog/open-source/git/get-up-to-speed-with-partial-clone-and-shallow-clone/
-        """
-        dest = self.stage.source_path
-        tty.debug(f"Cloning git repository: {self._repo_info()}")
-
-        git = self.git
-        debug = spack.config.get("config:debug")
-
-        init_args = ["init", "src"]
-        remote_args = ["remote", "add", "origin", self.url]
-        fetch_args = ["fetch"]
-        checkout_args = ["checkout"]
-
-        if not debug:
-            for args in [init_args, fetch_args, checkout_args]:
-                args.append("--quiet")
-
-        if not self.get_full_repo:
-            fetch_args.extend(["--depth", "1"])
-            # fitler not always recognized by server
-            # clone_args.extend(["--no-checkout", "--filter=tree:0"])
-
-        fetch_args.append("origin")
-        git_ref = self.commit or self.tag or self.branch
-        if git_ref:
-            fetch_args.append(git_ref)
-        checkout_args.append("REF_HEAD")
-        with temp_cwd():
-            git(*init_args)
-            git("-C", "src", *remote_args)
-            git("-C", "src", *fetch_args)
-            repo_name = get_single_file(".")
-            if self.stage:
-                self.stage.srcdir = repo_name
-            shutil.copytree(repo_name, dest, symlinks=True)
-            shutil.rmtree(
-                repo_name,
-                ignore_errors=False,
-                onerror=fs.readonly_file_handler(ignore_errors=True),
-            )
-
-        with working_dir(dest):
-            git(*checkout_args)
-
     def _clone_src(self) -> None:
         """Clone a repository to a path using git."""
         # Default to spack source path
