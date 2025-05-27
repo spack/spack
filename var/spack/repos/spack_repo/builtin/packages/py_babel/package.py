@@ -18,6 +18,7 @@ class PyBabel(PythonPackage):
 
     license("BSD-3-Clause")
 
+    version("2.17.0", sha256="0c54cffb19f690cdcc52a3b50bcbf71e07a808d1c80d549f2459b9d2cf0afb9d")
     version("2.15.0", sha256="8daf0e265d05768bc6c7a314cf1321e9a123afc328cc635c18622a2f30a04413")
     version("2.12.1", sha256="cc2d99999cd01d44420ae725a21c9e3711b3aadc7976d6147f622d8581963455")
     version("2.10.3", sha256="7614553711ee97490f732126dc077f8d0ae084ebc6a96e23db1482afabdb2c51")

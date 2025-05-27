@@ -16,6 +16,7 @@ class PyCharsetNormalizer(PythonPackage):
 
     license("MIT")
 
+    version("3.4.2", sha256="5baececa9ecba31eff645232d59845c07aa030f0c81ee70184a90d35099a0e63")
     version("3.3.0", sha256="63563193aec44bce707e0c5ca64ff69fa72ed7cf34ce6e11d5127555756fd2f6")
     version("3.1.0", sha256="34e0a2f9c370eb95597aae63bf85eb5e96826d81e3dcf88b8886012906f509b5")
     version("2.1.1", sha256="5a3d016c7c547f69d6f81fb0db9449ce888b418b5b9952cc5e6e66843e9dd845")
