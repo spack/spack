@@ -10,6 +10,13 @@ import spack.spec
 
 @pytest.mark.parametrize("holds,mpi", [(True, "zmpi"), (True, "mpich"), (False, "mpich")])
 def test_conditional_deps(holds, mpi, config, mock_packages):
+    """Test concretizing conditional dependencies.
+
+    Tests two cases of the condition being true (2 different implementations)
+    Tests one case for the condition being false
+
+    Testing two cases for condition true ensures that the choice of provider is not coincidental
+    """
     sigil = "+" if holds else "~"
     request = f"hdf5{sigil}mpi ^[when='^mpi' virtuals=mpi]{mpi}"
     concrete = spack.concretize.concretize_one(request)
@@ -21,28 +28,11 @@ def test_conditional_deps(holds, mpi, config, mock_packages):
 @pytest.mark.parametrize("c", [True, False])
 @pytest.mark.parametrize("cxx", [True, False])
 @pytest.mark.parametrize("fortran", [True, False])
-def test_conditional_compilers(c, cxx, fortran, mutable_config, mock_packages):
-    # Configure two gcc compilers that could be concretized to
-    # We will confirm concretization matches the less preferred one
-    extra_attributes_block = {
-        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
-    }
-    spack.config.CONFIG.set(
-        "packages:gcc:externals::",
-        [
-            {
-                "spec": "gcc@12.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-            {
-                "spec": "gcc@10.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-        ],
-    )
+def test_conditional_compilers(c, cxx, fortran, mutable_config, mock_packages, config_two_gccs):
+    """Test concretizing with conditional compilers
 
+    Tests every combination of +~c, +~cxx, and +~fortran
+    """
     # Abstract spec parametrized to depend/not on c/cxx/fortran
     # and with conditional dependencies for each on the less preferred gcc
     abstract = spack.spec.Spec("conditional-languages")

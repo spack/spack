@@ -1315,7 +1315,9 @@ def test_requirements_on_compilers_and_reuse(
         ("conditional-languages~c~cxx~fortran", True),
     ],
 )
-def test_requirements_conditional_deps(abstract, req_is_noop, mutable_config, mock_packages):
+def test_requirements_conditional_deps(
+    abstract, req_is_noop, mutable_config, mock_packages, config_two_gccs
+):
     required_spec = (
         "%[when='^c' virtuals=c]gcc@10.3.1 "
         "%[when='^cxx' virtuals=cxx]gcc@10.3.1 "
@@ -1323,27 +1325,6 @@ def test_requirements_conditional_deps(abstract, req_is_noop, mutable_config, mo
         "^[when='^mpi' virtuals=mpi]zmpi"
     )
     abstract = spack.spec.Spec(abstract)
-
-    # Configure two gcc compilers that could be concretized to
-    # We will confirm concretization matches the less preferred one
-    extra_attributes_block = {
-        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
-    }
-    spack.config.CONFIG.set(
-        "packages:gcc:externals::",
-        [
-            {
-                "spec": "gcc@12.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-            {
-                "spec": "gcc@10.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-        ],
-    )
 
     no_requirements = spack.concretize.concretize_one(abstract)
     spack.config.CONFIG.set(f"packages:{abstract.name}", {"require": required_spec})
