@@ -3520,7 +3520,7 @@ class Spec:
         lhs_nodes = list(self.traverse(root=False)) + sorted(mock_nodes_from_old_specfiles)
         for rhs in other.traverse(root=False):
             # Possible lhs nodes to match this rhs node
-            lhss = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
+            lhs_matches = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
 
             # Check whether the node needs matching (not a conditional that isn't satisfied)
             if not any(self.satisfies(e.when) for e in rhs.edges_from_dependents()):
@@ -3529,7 +3529,7 @@ class Spec:
                 continue
 
             # If there is no matching lhs for this rhs node
-            if not lhss:
+            if not lhs_matches:
                 return False
 
         return True
