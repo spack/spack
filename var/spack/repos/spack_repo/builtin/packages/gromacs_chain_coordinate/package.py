@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.packages.gromacs.package import CMakeBuilder as GromacsCMakeBuilder
+from spack_repo.builtin.packages.gromacs.package import Gromacs
 
-from ..gromacs.package import CMakeBuilder as GromacsCMakeBuilder
-from ..gromacs.package import Gromacs
+from spack.package import *
 
 
 class GromacsChainCoordinate(Gromacs):

@@ -1,8 +1,8 @@
-from pyrsistent._checked_types import CheckedType, _restore_pickle, InvariantException, store_invariants
-from pyrsistent._field_common import (
+from _vendoring.pyrsistent._checked_types import CheckedType, _restore_pickle, InvariantException, store_invariants
+from _vendoring.pyrsistent._field_common import (
     set_fields, check_type, is_field_ignore_extra_complaint, PFIELD_NO_INITIAL, serialize, check_global_invariants
 )
-from pyrsistent._pmap import PMap, pmap
+from _vendoring.pyrsistent._pmap import PMap, pmap
 
 
 class _PRecordMeta(type):
@@ -28,7 +28,7 @@ class PRecord(PMap, CheckedType, metaclass=_PRecordMeta):
     from PRecord. Because it is a PMap it has full support for all Mapping methods such as iteration and element
     access using subscript notation.
 
-    More documentation and examples of PRecord usage is available at https://github.com/tobgu/pyrsistent
+    More documentation and examples of PRecord usage is available at https://github.com/tobgu/_vendoring.pyrsistent
     """
     def __new__(cls, **kwargs):
         # Hack total! If these two special attributes exist that means we can create

@@ -6,7 +6,7 @@ import typing as t
 from .nodes import Node
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
 
     class VisitCallable(te.Protocol):
         def __call__(self, node: Node, *args: t.Any, **kwargs: t.Any) -> t.Any:

@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
+
 from spack.package import *
 
 
@@ -54,20 +57,20 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
 
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
-    patches = {
-        "4.0.2": "3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0",
-        "4.0.1": "5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739",
-        "3.1.6": "7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008",
-        "3.1.5": "1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04",
-        "3.1.4": "113705d5333ef0d0ad3eb136a85404ba6bd1cc524dece5ce902c536aa2e29903",
-        "3.1.3": "4152a780b3cc6e9643283e59093b43460196d0fea9302d8c93b2496f6679f4e4",
-        "3.1.2": "1b9fdb515efb09a506a01e1eb307b1464455f5ca63d6c193db3a3da371ab3220",
-    }
-
-    for ver, checksum in patches.items():
-        patch(
-            "https://www.mpfr.org/mpfr-{0}/allpatches".format(ver), when="@" + ver, sha256=checksum
-        )
+    for ver, checksum in (
+        ("4.2.1", "3ec29a67cfa75c35e90d32cafa552956018c79526b4aa412f3beff21dacfb41e"),
+        ("4.2.0", "a9099cee74188d5f522b7b3fca0097196c6dd38126f8f042d233010cbf92e8d0"),
+        ("4.1.1", "80a3c2709be21acaac12a9cc99888d63a00fa77fb75576f205fe8ba1984ff44a"),
+        ("4.1.0", "75af77904037442fcd3061a4fee2394194716c542e96989dcfac2445c842daf1"),
+        ("4.0.2", "3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0"),
+        ("4.0.1", "5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739"),
+        ("3.1.6", "7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008"),
+        ("3.1.5", "1ae14fb3a54ae8e0faed20801970255b279eee9e5ac624891ab5d29727f0bc04"),
+        ("3.1.4", "113705d5333ef0d0ad3eb136a85404ba6bd1cc524dece5ce902c536aa2e29903"),
+        ("3.1.3", "4152a780b3cc6e9643283e59093b43460196d0fea9302d8c93b2496f6679f4e4"),
+        ("3.1.2", "1b9fdb515efb09a506a01e1eb307b1464455f5ca63d6c193db3a3da371ab3220"),
+    ):
+        patch(f"https://www.mpfr.org/mpfr-{ver}/allpatches", when=f"@{ver}", sha256=checksum)
 
     def flag_handler(self, name, flags):
         # Work around macOS Catalina / Xcode 11 code generation bug

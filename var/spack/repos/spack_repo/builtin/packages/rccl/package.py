@@ -4,6 +4,9 @@
 
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -20,6 +23,12 @@ class Rccl(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["librccl"]
+    version(
+        "6.4.0",
+        tag="rocm-6.4.0",
+        commit="7b86f83d8468a577ed59d9b2a34a8d7639d36072",
+        submodules=True,
+    )
     version(
         "6.3.3",
         tag="rocm-6.3.3",
@@ -77,6 +86,7 @@ class Rccl(CMakePackage):
     patch("0003-Fix-numactl-rocm-smi-path-issue.patch", when="@5.2.3:5.6")
     patch("0004-Set-rocm-core-path-for-version-file.patch", when="@6.0:6.2")
     patch("0004-Set-rocm-core-path-for-version-file-6.3.patch", when="@6.3")
+    patch("0004-Set-rocm-core-path-for-version-file-6.4.patch", when="@6.4")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -108,6 +118,7 @@ class Rccl(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -133,8 +144,13 @@ class Rccl(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
+
+    for ver in ["6.4.0"]:
+        depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
+        depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
 
     depends_on("googletest@1.11.0:", type="test", when="@5.3:")
 

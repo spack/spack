@@ -5,7 +5,7 @@ from __future__ import with_statement
 
 import sys
 
-from macholib.mach_o import (
+from _vendoring.macholib.mach_o import (
     MH_CIGAM_64,
     MH_MAGIC_64,
     dylib_module,

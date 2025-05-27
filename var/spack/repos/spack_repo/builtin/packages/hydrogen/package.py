@@ -4,6 +4,15 @@
 
 import os
 
+from spack_repo.builtin.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+    cmake_cache_string,
+)
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 # This limits the versions of lots of things pretty severely.

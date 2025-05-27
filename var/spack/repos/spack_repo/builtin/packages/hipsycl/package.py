@@ -4,9 +4,9 @@
 
 import json
 import os
-from os import path
 
-from llnl.util import filesystem
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
 
 from spack.package import *
 
@@ -109,18 +109,16 @@ class Hipsycl(CMakePackage, ROCmPackage):
         ]
         # LLVM directory containing all installed CMake files
         # (e.g.: configs consumed by client projects)
-        llvm_cmake_dirs = filesystem.find(spec["llvm"].prefix, "LLVMExports.cmake")
+        llvm_cmake_dirs = find(spec["llvm"].prefix, "LLVMExports.cmake")
         if len(llvm_cmake_dirs) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide "
                 "a unique directory containing CMake client "
                 "files, found: {0}".format(llvm_cmake_dirs)
             )
-        args.append("-DLLVM_DIR:String={0}".format(path.dirname(llvm_cmake_dirs[0])))
+        args.append("-DLLVM_DIR:String={0}".format(os.path.dirname(llvm_cmake_dirs[0])))
         # clang internal headers directory
-        llvm_clang_include_dirs = filesystem.find(
-            spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h"
-        )
+        llvm_clang_include_dirs = find(spec["llvm"].prefix, "__clang_cuda_runtime_wrapper.h")
         if len(llvm_clang_include_dirs) != 1:
             raise InstallError(
                 "concretized llvm dependency must provide a "
@@ -128,11 +126,11 @@ class Hipsycl(CMakePackage, ROCmPackage):
                 "headers, found: {0}".format(llvm_clang_include_dirs)
             )
         args.append(
-            "-DCLANG_INCLUDE_PATH:String={0}".format(path.dirname(llvm_clang_include_dirs[0]))
+            "-DCLANG_INCLUDE_PATH:String={0}".format(os.path.dirname(llvm_clang_include_dirs[0]))
         )
         # target clang++ executable
-        llvm_clang_bin = path.join(spec["llvm"].prefix.bin, "clang++")
-        if not filesystem.is_exe(llvm_clang_bin):
+        llvm_clang_bin = os.path.join(spec["llvm"].prefix.bin, "clang++")
+        if not is_exe(llvm_clang_bin):
             raise InstallError(
                 "concretized llvm dependency must provide a "
                 "valid clang++ executable, found invalid: "
@@ -152,7 +150,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
     @run_after("install")
     def filter_config_file(self):
         def edit_config(filename, editor):
-            config_file_paths = filesystem.find(self.prefix, filename)
+            config_file_paths = find(self.prefix, filename)
             if len(config_file_paths) != 1:
                 raise InstallError(
                     "installed hipSYCL must provide a unique compiler driver"
@@ -186,7 +184,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
             #    ptx backend
             rpaths = set()
             if self.spec.satisfies("~rocm"):
-                so_paths = filesystem.find_libraries(
+                so_paths = find_libraries(
                     "libc++", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
                 if len(so_paths) != 1:
@@ -195,8 +193,8 @@ class Hipsycl(CMakePackage, ROCmPackage):
                         "unique directory containing libc++.so, "
                         "found: {0}".format(so_paths)
                     )
-                rpaths.add(path.dirname(so_paths[0]))
-                so_paths = filesystem.find_libraries(
+                rpaths.add(os.path.dirname(so_paths[0]))
+                so_paths = find_libraries(
                     "libc++abi", self.spec["llvm"].prefix, shared=True, recursive=True
                 )
                 if len(so_paths) != 1:
@@ -205,7 +203,7 @@ class Hipsycl(CMakePackage, ROCmPackage):
                         "unique directory containing libc++abi, "
                         "found: {0}".format(so_paths)
                     )
-                rpaths.add(path.dirname(so_paths[0]))
+                rpaths.add(os.path.dirname(so_paths[0]))
 
                 def adjust_cuda_config(config):
                     config["default-cuda-link-line"] += " " + " ".join(

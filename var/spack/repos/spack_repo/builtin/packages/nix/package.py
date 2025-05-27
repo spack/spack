@@ -6,9 +6,10 @@ import os
 import stat
 import tempfile
 
-from spack.package import *
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Nix(AutotoolsPackage):

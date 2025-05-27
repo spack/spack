@@ -6,10 +6,10 @@ See https://github.com/Julian/jsonschema/pull/232.
 """
 from twisted.python.filepath import FilePath
 from pyperf import Runner
-from pyrsistent import m
+from _vendoring.pyrsistent import m
 
-from jsonschema.tests._suite import Version
-import jsonschema
+from _vendoring.jsonschema.tests._suite import Version
+import _vendoring.jsonschema
 
 
 issue232 = Version(

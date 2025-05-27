@@ -5,9 +5,14 @@ import copy
 import os
 import sys
 
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.util.environment
 from spack.build_environment import dso_suffix
-from spack.build_systems import cmake, makefile
 from spack.package import *
 
 GPU_MAP = {

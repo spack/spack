@@ -2,9 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.package import *
+from spack_repo.builtin.packages.netlib_scalapack.package import ScalapackBase
 
-from ..netlib_scalapack.package import ScalapackBase
+from spack.package import *
 
 
 class Amdscalapack(ScalapackBase):

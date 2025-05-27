@@ -414,7 +414,7 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
 
 
 @pytest.mark.regression("29947")
-def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages):
+def test_affected_specs_on_first_concretization(mutable_mock_env_path):
     e = ev.create("first_concretization")
     e.add("mpileaks~shared")
     e.add("mpileaks+shared")
@@ -444,7 +444,7 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
         ci.process_command("help", [], str(repro_dir))
 
 
-def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
+def test_ci_create_buildcache(tmpdir, working_env, config, monkeypatch):
     """Test that create_buildcache returns a list of objects with the correct
     keys and types."""
     monkeypatch.setattr(ci, "push_to_build_cache", lambda a, b, c: True)
@@ -483,7 +483,7 @@ def test_ci_run_standalone_tests_missing_requirements(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd
 ):
     log_file = tmp_path / "junit.xml"
     args = {
@@ -501,7 +501,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd
 ):
     """Test run_standalone_tests with cdash and related options."""
     log_file = tmp_path / "junit.xml"
@@ -537,7 +537,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     assert "No such file or directory" in err
 
 
-def test_ci_skipped_report(tmpdir, mock_packages, config):
+def test_ci_skipped_report(tmpdir, config):
     """Test explicit skipping of report as well as CI's 'package' arg."""
     pkg = "trivial-smoke-test"
     spec = spack.concretize.concretize_one(pkg)

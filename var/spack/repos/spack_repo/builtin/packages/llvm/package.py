@@ -5,12 +5,14 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator, get_cmake_prefix_path
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from llnl.util.lang import classproperty
 
-from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.operating_systems.mac_os import macos_sdk_path
 from spack.package import *
-from spack.package_base import PackageBase
 
 
 class LlvmDetection(PackageBase):
@@ -55,6 +57,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     version("main", branch="main")
 
     # Latest stable
+    version("20.1.5", sha256="205c436f93a7e185cf9d63ae57e645f23561a4d1bf854f2c5bd78995a43a5c05")
     version("20.1.4", sha256="65e3a582c4c684fa707a56ff643427bce3633eceaceae3295d81c0e830f44b89")
     version("20.1.3", sha256="b40c0d185b98c2ee3c0cb2f14cde65a06008b33dfb471cc7ad868f8ca3f7f897")
     version("20.1.2", sha256="9ee597456405ddf4809bcf66a4765137a68a85361347ca2a4bb13d9176e932ab")
@@ -1212,6 +1215,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
                 [
                     define("LLVM_ENABLE_RUNTIMES", runtimes),
                     define("RUNTIMES_CMAKE_ARGS", runtime_cmake_args),
+                    define("LIBCXXABI_USE_LLVM_UNWINDER", not spec.satisfies("libunwind=none")),
                 ]
             )
 

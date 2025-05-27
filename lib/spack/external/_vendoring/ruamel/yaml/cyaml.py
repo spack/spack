@@ -1,14 +1,14 @@
 # coding: utf-8
 
-from _ruamel_yaml import CParser, CEmitter  # type: ignore
+from __vendoring.ruamel.yaml import CParser, CEmitter  # type: ignore
 
-from ruamel.yaml.constructor import Constructor, BaseConstructor, SafeConstructor
-from ruamel.yaml.representer import Representer, SafeRepresenter, BaseRepresenter
-from ruamel.yaml.resolver import Resolver, BaseResolver
+from _vendoring.ruamel.yaml.constructor import Constructor, BaseConstructor, SafeConstructor
+from _vendoring.ruamel.yaml.representer import Representer, SafeRepresenter, BaseRepresenter
+from _vendoring.ruamel.yaml.resolver import Resolver, BaseResolver
 
 if False:  # MYPY
     from typing import Any, Union, Optional  # NOQA
-    from ruamel.yaml.compat import StreamTextType, StreamType, VersionType  # NOQA
+    from _vendoring.ruamel.yaml.compat import StreamTextType, StreamType, VersionType  # NOQA
 
 __all__ = ['CBaseLoader', 'CSafeLoader', 'CLoader', 'CBaseDumper', 'CSafeDumper', 'CDumper']
 

@@ -331,7 +331,8 @@ def env_activate(args):
         env = create_temp_env_directory()
         env_path = os.path.abspath(env)
         short_name = os.path.basename(env_path)
-        ev.create_in_dir(env).write(regenerate=False)
+        view = not args.without_view
+        ev.create_in_dir(env, with_view=view).write(regenerate=False)
         _tty_info(f"Created and activated temporary environment in {env_path}")
 
     # Managed environment

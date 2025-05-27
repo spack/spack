@@ -9,8 +9,3 @@ mirrors:
     push: ${PR_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}/${SPACK_CI_STACK_NAME}
     source: False
     binary: True
-  buildcache-shared:
-    fetch: ${PR_MIRROR_FETCH_DOMAIN}/shared_pr_mirror/${SPACK_CI_STACK_NAME}
-    push: ${PR_MIRROR_PUSH_DOMAIN}/shared_pr_mirror/${SPACK_CI_STACK_NAME}
-    source: False
-    binary: True

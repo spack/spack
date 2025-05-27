@@ -241,14 +241,14 @@ def test_external_root(external_style_root, capfd):
     assert "%s Imports are incorrectly sorted" % str(py_file) in output
 
     # mypy error
-    assert 'lib/spack/spack/dummy.py:9: error: Name "Package" is not defined' in output
+    assert 'lib/spack/spack/dummy.py:47: error: Name "version" is not defined' in output
 
     # black error
     assert "--- lib/spack/spack/dummy.py" in output
     assert "+++ lib/spack/spack/dummy.py" in output
 
     # flake8 error
-    assert "lib/spack/spack/dummy.py:6: [F401] 'os' imported but unused" in output
+    assert "lib/spack/spack/dummy.py:8: [F401] 'os' imported but unused" in output
 
 
 @pytest.mark.skipif(not FLAKE8, reason="flake8 is not installed.")
@@ -311,8 +311,10 @@ import spack.config  # do not drop this import because of this comment
 import spack.repo
 import spack.repo_utils
 
+from spack_repo.builtin_mock.build_systems import autotools
+
 # this comment about spack.error should not be removed
-class Example(spack.build_systems.autotools.AutotoolsPackage):
+class Example(autotools.AutotoolsPackage):
     """this is a docstring referencing unused spack.error.SpackError, which is fine"""
     pass
 
@@ -339,7 +341,6 @@ def foo(config: "spack.error.SpackError"):
     assert "issues.py: redundant import: spack.repo" in output
     assert "issues.py: redundant import: spack.config" not in output  # comment prevents removal
     assert "issues.py: missing import: spack" in output  # used by spack.__version__
-    assert "issues.py: missing import: spack.build_systems.autotools" in output
     assert "issues.py: missing import: spack.util.executable" in output
     assert "issues.py: missing import: spack.error" not in output  # not directly used
     assert exit_code == 1
@@ -359,7 +360,6 @@ def foo(config: "spack.error.SpackError"):
     assert exit_code == 1
     assert "issues.py: redundant import: spack.cmd" in output
     assert "issues.py: missing import: spack" in output
-    assert "issues.py: missing import: spack.build_systems.autotools" in output
     assert "issues.py: missing import: spack.util.executable" in output
 
     # after fix a second fix is idempotent
@@ -380,7 +380,6 @@ def foo(config: "spack.error.SpackError"):
     new_contents = file.read_text()
     assert "import spack.cmd" not in new_contents
     assert "import spack\n" in new_contents
-    assert "import spack.build_systems.autotools\n" in new_contents
     assert "import spack.util.executable\n" in new_contents
 
 

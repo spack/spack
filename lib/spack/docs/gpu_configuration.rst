@@ -7,7 +7,7 @@ Using External GPU Support
 ==========================
 
 Many packages come with a ``+cuda`` or ``+rocm`` variant. With no added
-configuration Spack will download and install the needed components.
+configuration, Spack will download and install the needed components.
 It may be preferable to use existing system support: the following sections
 help with using a system installation of GPU libraries.
 
@@ -131,5 +131,5 @@ However, if we prefer to utilize the system GLX tailored to our graphics card, w
       - prefix: /usr/
         spec: opengl@4.6
 
-Note that prefix has to be the root of both the libraries and the headers, using is /usr not the path the the lib.
-To know which spec for opengl is available use ``cd /usr/include/GL && grep -Ri gl_version``.
+Note that the prefix has to be the root of both the libraries and the headers (e.g., ``/usr``), not the path to the ``lib`` directory.
+To know which spec for OpenGL is available, use ``cd /usr/include/GL && grep -Ri gl_version``.

@@ -3,6 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -86,8 +89,8 @@ class PyTorchNvidiaApex(PythonPackage, CudaPackage):
     )
 
     patch(
-        "https://github.com/NVIDIA/apex/pull/1855.patch?full_index=1",
-        sha256="8481b1234a9ce1e8bef4e57a259d8528107761e1843777489e815ec3727397fd",
+        "https://github.com/NVIDIA/apex/commit/e552ad997605dd883825106776eba230a6820345.patch?full_index=1",
+        sha256="cd024471dce5cb7cb84607595055375d97f84f81c76f1f469cf4c9eb11a9063e",
         when="@:24.10",
     )
 

@@ -1,0 +1,84 @@
+diff --git a/Directory.Build.props b/Directory.Build.props
+index 3177de8..6b5ec9c 100644
+--- a/Directory.Build.props
++++ b/Directory.Build.props
+@@ -56,7 +56,6 @@
+     properties before or after it depending on what you're injecting.  The "global" build.props will also import
+     files located in the $(CBTLocalPath) folder at certain points.
+   -->
+-  <Import Project="$(EnlistmentRoot)\.build\CBT\build.props" />
+   
+   <!--
+     The NuProjPath property allows .nuproj projects to build without having NuProj installed.
+@@ -114,9 +113,6 @@
+ 
+   <PropertyGroup>
+     <OutputPath>$(StagingOutputRootPath)$(MSBuildProjectName)\</OutputPath>
+-    <VCToolsVersion>14.15.26726</VCToolsVersion>
+-    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
+-    <PlatformToolset>v141</PlatformToolset>
+     <OutDir>$(OutputPath)</OutDir>
+     <O>$(Platform)\$(Configuration)</O>
+     <O Condition="'$(Platform)' == 'x86'">$(Configuration)</O>
+diff --git a/dirs.proj b/dirs.proj
+index ba6a006..2631d04 100644
+--- a/dirs.proj
++++ b/dirs.proj
+@@ -4,6 +4,5 @@
+   <ItemGroup>
+     <ProjectFile Include="$(MSBuildThisFileDirectory)src\dirs.proj" />
+   </ItemGroup>
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ 
+ </Project>
+\ No newline at end of file
+diff --git a/src/dirs.proj b/src/dirs.proj
+index b53afb1..e0eeca2 100644
+--- a/src/dirs.proj
++++ b/src/dirs.proj
+@@ -8,5 +8,4 @@
+     <ProjectFile Include="$(MSBuildThisFileDirectory)launchSvc\msmpiLaunchSvcMc.vcxproj"/>
+     <ProjectFile Include="$(MSBuildThisFileDirectory)mpi\dirs.proj"/>
+   </ItemGroup>
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ </Project>
+diff --git a/src/mpi/dirs.proj b/src/mpi/dirs.proj
+index d8e9358..a8c329a 100644
+--- a/src/mpi/dirs.proj
++++ b/src/mpi/dirs.proj
+@@ -12,5 +12,4 @@
+     <ProjectFile Include="$(MSBuildThisFileDirectory)stub\mpistub.vcxproj" />
+   </ItemGroup>
+ 
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ </Project>
+diff --git a/src/mpi/msmpi/dirs.proj b/src/mpi/msmpi/dirs.proj
+index 9959160..548bc5b 100644
+--- a/src/mpi/msmpi/dirs.proj
++++ b/src/mpi/msmpi/dirs.proj
+@@ -14,5 +14,4 @@
+     <ProjectFile Include="$(MSBuildThisFileDirectory)util\mpiutil.vcxproj" />
+   </ItemGroup>
+ 
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ </Project>
+diff --git a/src/mpi/msmpi/fortran/dirs.proj b/src/mpi/msmpi/fortran/dirs.proj
+index d92d7fd..35370b6 100644
+--- a/src/mpi/msmpi/fortran/dirs.proj
++++ b/src/mpi/msmpi/fortran/dirs.proj
+@@ -11,5 +11,4 @@
+     <ProjectFile Include="$(MSBuildThisFileDirectory)msmpifms\msmpifms.vcxproj" />
+   </ItemGroup>
+ 
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ </Project>
+diff --git a/src/mpi/pmilib/dirs.proj b/src/mpi/pmilib/dirs.proj
+index a9c9a8a..3fe9821 100644
+--- a/src/mpi/pmilib/dirs.proj
++++ b/src/mpi/pmilib/dirs.proj
+@@ -8,5 +8,4 @@
+     <ProjectFile Include="$(MSBuildThisFileDirectory)lib\pmilib.vcxproj" />
+   </ItemGroup>
+ 
+-  <Import Project="$(TraversalTargets)" Condition=" '$(CBTModulesRestored)' == 'true' " />
+ </Project>

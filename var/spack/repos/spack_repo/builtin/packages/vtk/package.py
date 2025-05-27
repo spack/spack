@@ -6,9 +6,10 @@
 import glob
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Vtk(CMakePackage):
@@ -69,13 +70,18 @@ class Vtk(CMakePackage):
     variant("examples", default=False, description="Enable building & installing the VTK examples")
 
     patch("gcc.patch", when="@6.1.0")
-    # patch to fix some missing stl includes
-    # which lead to build errors on newer compilers
 
+    # patches to fix some missing stl includes
+    # which lead to build errors on newer compilers
     patch(
         "https://gitlab.kitware.com/vtk/vtk/-/commit/e066c3f4fbbfe7470c6207db0fc3f3952db633c.diff",
         when="@9:9.0",
         sha256="0546696bd02f3a99fccb9b7c49533377bf8179df16d901cefe5abf251173716d",
+    )
+    patch(
+        "https://gitlab.kitware.com/vtk/vtk/-/commit/1233ceec268d5366c66f5e79786ec784042b591.diff",
+        when="@9.1:9.2",
+        sha256="38380bd20443d94d8ce9f339b9b2fbdea03400aa9d6dbb7e3ef138a65f11c080",
     )
 
     # Patch for paraview 5.10: +hdf5 ^hdf5@1.13.2:
@@ -253,6 +259,17 @@ class Vtk(CMakePackage):
         sha256="174930dde06828ead84c68b1a192202766f6297a60f0c54eef6cab2605a466ef",
         when="@9.4:",
     )
+
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    #  incorrect member accesses fixed in 9.4
+    # https://gitlab.kitware.com/vtk/vtk/-/commit/98af50ca33
+    patch("vtk_patch_octree_m_children.patch", when="@9.2:9.3")
+
+    # clang 19+ no long providers std::char_traits<> for char8_t
+    # impacts any clang derivative compiler. But can be patched
+    # regardless of compiler
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    patch("vtk_clang19_size_t.patch", when="@9.2:9.4.2")
 
     # Needed to build VTK with external SEACAS >= 2022-10-14
     @when("@9.4:")

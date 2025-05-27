@@ -8,8 +8,8 @@ import platform
 import sys
 from itertools import chain
 
-from macholib.dylib import dylib_info
-from macholib.framework import framework_info
+from _vendoring.macholib.dylib import dylib_info
+from _vendoring.macholib.framework import framework_info
 
 __all__ = ["dyld_find", "framework_find", "framework_info", "dylib_info"]
 

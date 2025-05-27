@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -19,6 +23,7 @@ class TiledMm(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="master")
 
+    version("2.3.2", sha256="1f91ca02f6ee8e400835fa90630618baf86a7b425b4bbbb4151068f72658b858")
     version("2.3.1", sha256="68914a483e62f796b790ea428210b1d5ef5943d6289e53d1aa62f56a20fbccc8")
     version("2.3", sha256="504c6201f5a9be9741c55036bf8e2656ae3f4bc19996295b264ee5e303c9253c")
     version("2.2", sha256="6d0b49c9588ece744166822fd44a7bc5bec3dc666b836de8bf4bf1a7bb675aac")
