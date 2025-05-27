@@ -348,6 +348,7 @@ class Root(CMakePackage):
         depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
 
     depends_on("freetype")
+    depends_on("giflib", when="@6.36:")
     depends_on("jpeg")
     depends_on("libice")
     depends_on("libpng")
