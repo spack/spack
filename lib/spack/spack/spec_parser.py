@@ -63,7 +63,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterable, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -200,16 +200,6 @@ class TokenContext:
     def expect(self, *kinds: SpecTokens):
         return self.next_token and self.next_token.kind in kinds
 
-    def push(self, token_stream: Iterator[Token]):
-        # New tokens need to go before next_token, which comes before the rest of the stream
-        next_token_iterator: Iterable[Token] = (
-            iter((self.next_token,)) if self.next_token else iter(())
-        )
-        self.token_stream = itertools.chain(token_stream, next_token_iterator, self.token_stream)
-        self.current_token = None
-        self.next_token = None
-        self.advance()
-
 
 class SpecTokenizationError(spack.error.SpecSyntaxError):
     """Syntax error in a spec string"""
@@ -322,11 +312,10 @@ class SpecParser:
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 # String replacement for toolchains
                 # Look ahead to match upcoming value to list of toolchains
-                if self.ctx.next_token.value in toolchains:
+                if self.ctx.current_token.value == "%" and self.ctx.next_token.value in toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
-                    # accepting the token advances it to be the current token
-                    # Push associated tokens back to the TokenContext
-                    self.ctx.push(parseable_tokens(toolchains[self.ctx.current_token.value]))
+                    toolchain = parse_one_or_raise(toolchains[self.ctx.current_token.value])
+                    current_spec.constrain(toolchain)
                     continue
 
                 is_direct = self.ctx.current_token.value[0] == "%"
