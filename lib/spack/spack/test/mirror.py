@@ -81,6 +81,9 @@ def populate_mirror():
             mirror_layout = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
             expected_path = os.path.join(mirror_root, mirror_layout.path)
             assert os.path.exists(expected_path)
+            # TODO not sure how to force the stage to recognize the archive file
+            # with spec.package.stage as stage:
+                # stage.expected_archive_file = expected_path
 
     return specs
 
@@ -143,7 +146,16 @@ def test_hg_mirror(mock_hg_repository, mock_mirror):
 def test_commit_from_mirror(git, mock_git_repository, mock_mirror):
     set_up_package("git-test", mock_git_repository, "git", "branch")
     specs = populate_mirror()
-    assert "commit" in specs[0].variants
+    assert len(specs) == 1
+    spec = specs[0]
+    pkg = spec.package 
+    with spack.config.override("config:checksum", False):
+        with pkg.stage:
+            pkg.do_fetch(mirror_only=True)
+    assert pkg.expected_archive_files
+    assert pkg.stage.archive_file
+    pkg.resolve_binary_provenance()
+    assert "commit" in spec.variants
     repos.clear()
 
 

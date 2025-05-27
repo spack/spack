@@ -1032,6 +1032,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return False
 
+
+
     def resolve_binary_provenance(self) -> None:
         """
         Method to ensure concrete spec has binary provenance.
@@ -1072,7 +1074,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             if query:
                 sha, _ = query.strip().split()
 
-        # TODO(psakiev) we typically check mirrors first, but for commit resolution
+        # we typically check mirrors first, but for commit resolution we query the network
+        # and fall back to mirrors assuming people want the most up-to-date commits
         if not sha:
             try:
                 self.do_fetch(mirror_only=True)
