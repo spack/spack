@@ -466,7 +466,7 @@ class Root(CMakePackage):
 
     # GCC mold linker support was added in 6.36.00
     conflicts("%gcc +mold", when="@:6.35")
-    depends_on("mold@2.32:", when="^mold")
+    conflicts("^mold@:2.31", when="%gcc +mold")
 
     # See https://github.com/root-project/root/issues/9297
     conflicts("target=ppc64le:", when="@:6.24")
