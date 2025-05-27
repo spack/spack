@@ -153,6 +153,10 @@ class Esmf(MakefilePackage, PythonExtension):
     # https://github.com/spack/spack/issues/35957
     patch("esmf_cpp_info.patch")
 
+    # Patch for yaml-cpp (https://github.com/esmf-org/esmf/pull/404)
+    # Needed for GCC 15, patch only works from 8.5 on, will be fixed in 8.9
+    patch("yaml_cpp.patch", when="@8.5:8.8 %gcc@15:")
+
     @when("+python")
     def patch(self):
         # The pyproject.toml file uses a dynamically generated version from git

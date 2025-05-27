@@ -1,0 +1,8 @@
+diff --git before/src/prologue/yaml-cpp/src/emitterutils.cpp after/src/prologue/yaml-cpp/src/emitterutils.cpp
+index c6ad5e5d93..bac0458658 100644
+--- before/src/prologue/yaml-cpp/src/emitterutils.cpp
++++ after/src/prologue/yaml-cpp/src/emitterutils.cpp
+@@ -1,4 +1,5 @@
+ #include <algorithm>
++#include <cstdint>
+ #include <iomanip>
