@@ -16,7 +16,8 @@ class PyLibclang(PythonPackage):
     url = "https://github.com/sighingnow/libclang/archive/refs/tags/llvm-11.1.0.tar.gz"
 
     license("Apache-2.0")
-
+    
+    version("18.1.1", sha256="829f1afbf6a704da2130f541279e58d719eb9b67713a0641eb723a2970de1b66")
     version("16.0.0", sha256="a3eae57519209ed6fca4e76425f3159e54a08cbb2918d92a7a35640d4c28ec07")
     version("15.0.6.1", sha256="f8ac6e30868e9eb92bb1001920230381565f9a3cf415411d3b67bb2339640d81")
     version("14.0.6", sha256="3666679d9f23270a230a4d4dae49bc48fc2515c272ff5855b2618e23daa50100")
