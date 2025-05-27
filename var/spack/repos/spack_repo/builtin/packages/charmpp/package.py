@@ -376,6 +376,8 @@ class Charmpp(Package):
         # been implemented in v8.0.0
         if self.spec.satisfies("@8.0.0: %aocc"):
             options.append("--disable-fortran")
+        if self.spec.satisfies("@8.0.0: %oneapi"):
+            options.append("--disable-fortran")
 
         # Call "make" via the build script
         # Note: This builds Charm++ in the "tmp" subdirectory of the
