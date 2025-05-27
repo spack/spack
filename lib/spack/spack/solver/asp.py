@@ -3920,7 +3920,10 @@ class SpecBuilder:
         if (
             extendee_spec
             and extendee_spec.name == "python"
-            and not ("compiler" in getattr(package, "tags", []))
+            # More-general criteria like "depends on Python" pulls in things
+            # we don't want to apply this logic to (in particular LLVM, which
+            # is now a common external because that's how we detect Clang)
+            and any([c.__name__ == "PythonPackage" for c in package.__class__.__mro__])
         ):
             candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
             _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
