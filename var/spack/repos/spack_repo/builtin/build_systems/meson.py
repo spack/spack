@@ -287,7 +287,7 @@ def define_from_variant(pkg: PackageBase, meson_var: str, variant: Optional[str]
     of ``meson_var``.
 
     This utility function is similar to
-    :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without`.
+    :meth:`~spack_repo.builtin.build_systems.cmake.define_from_variant`.
 
     Examples:
 
