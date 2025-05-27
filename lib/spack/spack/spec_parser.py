@@ -561,7 +561,7 @@ class EdgeAttributeParser:
 
         # Turn "when" into a spec
         if "when" in attributes:
-            attributes["when"] = spack.spec.Spec(attributes["when"][0])
+            attributes["when"] = parse_one_or_raise(attributes["when"][0])
 
         return attributes
 
