@@ -202,7 +202,9 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                         "intel": "-O2 -ip " + archopt,
                         "clang": m64 + "-O3 -ffast-math -fopenmp " + archopt,
                         "aocc": m64 + "-O3 -ffp-contract=fast -ffast-math " + archopt,
-                        "intel-oneapi-compilers": m64 + "-O3 -ffp-contract=fast -ffast-math" + archopt,
+                        "intel-oneapi-compilers": m64
+                        + "-O3 -ffp-contract=fast -ffast-math"
+                        + archopt,
                     }
 
                 if self.spec.satisfies("+avxtiles"):
@@ -222,9 +224,13 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                             "NAMD_ARCH = {0}".format(self.arch),
                             "CHARMARCH = {0}".format(self.spec["charmpp"].charmarch),
                             "CXX = {0.cxx} {0.cxx11_flag}".format(self.compiler),
-                            "CXXOPTS = {0} {1}".format(optim_opts, " ".join(spec.compiler_flags["cxxflags"])),
+                            "CXXOPTS = {0} {1}".format(
+                                optim_opts, " ".join(spec.compiler_flags["cxxflags"])
+                            ),
                             "CC = {0}".format(self.compiler.cc),
-                            "COPTS = {0} {1}".format(optim_opts, " ".join(spec.compiler_flags["cflags"])),
+                            "COPTS = {0} {1}".format(
+                                optim_opts, " ".join(spec.compiler_flags["cflags"])
+                            ),
                             "",
                         ]
                     )
