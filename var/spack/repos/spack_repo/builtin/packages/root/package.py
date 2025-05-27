@@ -36,14 +36,10 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
     version("develop", branch="master")
 
-    # Pre-release versions
-    version(
-        "6.36.00-rc1",
-        sha256="5a407620fe0164cbf6c9f26b1ae882a17c10151472d7268fbad176027564b1c0",
-        preferred=False,
-    )
-
     # Production version
+    version("6.36.00", sha256="94afc8def92842679a130a27521be66e2abdaa37620888e61d828a43fc4b01a2")
+
+    # Old versions
     version("6.34.08", sha256="806045b156de03fe8f5661a670eab877f2e4d2da6c234dc3e31e98e2d7d96fe8")
     version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
     version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
@@ -67,6 +63,7 @@ class Root(CMakePackage):
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
+    version("6.26.16", sha256="5defb828d382649dc689440550f8241476a4071e0f0c6029697163baddb29e7b")
     version("6.26.14", sha256="81045a35a1958906c3eadecd9b01127a6087dadc19385af8e92ae5c84f06ce35")
     version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
     version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
@@ -89,8 +86,6 @@ class Root(CMakePackage):
     version("6.20.02", sha256="0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6")
     version("6.20.00", sha256="68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0")
     version("6.18.04", sha256="315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4")
-
-    # Old versions
     version("6.18.02", sha256="50ffffdbf2585a536c77a03f54aa631926138275ffeee02e5a16dde87e978c1d")
     version("6.18.00", sha256="e6698d6cfe585f186490b667163db65e7d1b92a2447658d77fa831096383ea71")
     version("6.16.00", sha256="2a45055c6091adaa72b977c512f84da8ef92723c30837c7e2643eecc9c5ce4d8")
