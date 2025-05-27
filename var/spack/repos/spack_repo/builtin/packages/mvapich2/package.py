@@ -6,10 +6,11 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.packages.mpich.package import MpichEnvironmentModifications
+
 import spack.compilers.config
 from spack.package import *
-
-from ..mpich.package import MpichEnvironmentModifications
 
 
 class Mvapich2(MpichEnvironmentModifications, AutotoolsPackage):

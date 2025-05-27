@@ -5,11 +5,13 @@ import glob
 import os
 import sys
 
-import archspec.cpu
+from spack_repo.builtin.build_systems import compiler
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.build_systems.gnu import GNUMirrorPackage
 
 from llnl.util.symlink import readlink
 
-import spack.build_systems.compiler
 import spack.platforms
 import spack.repo
 import spack.util.libc
@@ -45,7 +47,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
     # Previous stable series releases
 
     # Final releases of previous versions
-    version("14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9")
+    version("14.3.0", sha256="e0dc77297625631ac8e50fa92fffefe899a4eb702592da5c32ef04e2293aca3a")
     version("13.3.0", sha256="0845e9621c9543a13f484e94584a49ffc0129970e9914624235fc1d061a0c083")
     version("12.4.0", sha256="704f652604ccbccb14bdabf3478c9511c89788b12cb3bbffded37341916a9175")
     version("11.5.0", sha256="a6e21868ead545cf87f0c01f84276e4b5281d672098591c1c896241f09363478")
@@ -63,6 +65,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
     # Deprecated older non-final releases
     with default_args(deprecated=True):
+        version(
+            "14.2.0", sha256="a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9"
+        )
         version(
             "14.1.0", sha256="e283c654987afe3de9d8080bc0bd79534b5ca0d681a73a11ff2b5d3767426840"
         )
@@ -652,9 +657,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
             not_apple_clang = []
             for exe in exes_in_prefix:
                 try:
-                    output = spack.build_systems.compiler.compiler_output(
-                        exe, version_argument="--version"
-                    )
+                    output = compiler.compiler_output(exe, version_argument="--version")
                 except Exception:
                     output = ""
                 if "clang version" in output:
@@ -670,7 +673,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
 
         languages = set()
         translation = {"cxx": "c++"}
-        for lang, compiler in compilers.items():
+        for lang, _ in compilers.items():
             languages.add(translation.get(lang, lang))
         variant_str = "languages:={0}".format(",".join(languages))
         return variant_str, {"compilers": compilers}
@@ -771,7 +774,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage, CompilerPackage):
         for uarch in microarchitectures:
             try:
                 return uarch.optimization_flags("gcc", str(spec.version))
-            except archspec.cpu.UnsupportedMicroarchitecture:
+            except ValueError:
                 pass
         # no arch specific flags in common, unlikely to happen.
         return ""

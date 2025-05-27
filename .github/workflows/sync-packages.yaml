@@ -27,7 +27,11 @@ jobs:
     - name: Sync spack/spack-packages with spack/spack
       run: |
         cd spack-packages
-        git-filter-repo --quiet --source ../spack --subdirectory-filter var/spack/repos --refs develop
+        git-filter-repo --quiet --source ../spack \
+                        --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
+                        --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
+                        --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \
+                        --refs develop
     - name: Push
       run: |
         cd spack-packages

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -24,6 +26,7 @@ class Dcap(AutotoolsPackage):
     depends_on("libtool", type="build")
     depends_on("m4", type="build")
 
+    depends_on("krb5")
     depends_on("openssl")
     depends_on("libxcrypt")
     depends_on("zlib-api")

@@ -4,6 +4,8 @@
 
 import re
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 from spack.util.environment import is_system_path
 

@@ -20,12 +20,11 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 
+import _vendoring.archspec.cpu
+import _vendoring.archspec.cpu.microarchitecture
+import _vendoring.archspec.cpu.schema
 import py
 import pytest
-
-import archspec.cpu
-import archspec.cpu.microarchitecture
-import archspec.cpu.schema
 
 import llnl.util.lang
 import llnl.util.lock
@@ -372,12 +371,12 @@ def clean_test_environment():
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
-    return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+    return _vendoring.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
 
 
 @pytest.fixture(scope="function")
 def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(archspec.cpu, "host", _host)
+    monkeypatch.setattr(_vendoring.archspec.cpu, "host", _host)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -636,7 +635,7 @@ def _use_test_platform(test_platform):
 # Test-specific fixtures
 #
 @pytest.fixture(scope="session")
-def mock_repo_path():
+def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
@@ -653,20 +652,20 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
-    """Use the 'builtin.mock' repository instead of 'builtin'"""
+def mock_packages(mock_packages_repo, mock_pkg_install, request):
+    """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
-    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+    with spack.repo.use_repositories(mock_packages_repo) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path, request):
+def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 @pytest.fixture()
@@ -728,14 +727,14 @@ def mock_uarch_json(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def mock_uarch_configuration(mock_uarch_json):
-    """Create mock dictionaries for the archspec.cpu."""
+    """Create mock dictionaries for the _vendoring.archspec.cpu."""
 
     def load_json():
         with open(mock_uarch_json, encoding="utf-8") as f:
             return json.load(f)
 
     targets_json = load_json()
-    targets = archspec.cpu.microarchitecture._known_microarchitectures()
+    targets = _vendoring.archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -744,8 +743,8 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
-    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+    monkeypatch.setattr(_vendoring.archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(_vendoring.archspec.cpu.microarchitecture, "TARGETS", targets)
 
 
 @pytest.fixture(scope="session")
@@ -773,7 +772,7 @@ def configuration_dir(tmpdir_factory, linux_os):
     config_template = test_config / "config.yaml"
     config.write(config_template.read_text().format(install_tree_root, locks))
 
-    target = str(archspec.cpu.host().family)
+    target = str(_vendoring.archspec.cpu.host().family)
     compilers = tmpdir.join("site", "packages.yaml")
     compilers_template = test_config / "packages.yaml"
     compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
@@ -887,6 +886,7 @@ def no_packages_yaml(mutable_config):
         compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 
@@ -948,7 +948,7 @@ def _store_dir_and_cache(tmpdir_factory):
 def mock_store(
     tmpdir_factory,
     mock_wsdk_externals,
-    mock_repo_path,
+    mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache,
 ):
@@ -970,7 +970,7 @@ def mock_store(
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
+                with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     store_path.chmod(mode=0o755, rec=1)
                     _populate(store.db)
@@ -1433,7 +1433,7 @@ def mock_git_repository(git, tmpdir_factory):
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
-    associated builtin.mock package 'git-test'. c3 is a commit in the
+    associated builtin_mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
     suburls = []
@@ -2072,6 +2072,11 @@ def pytest_runtest_setup(item):
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
 
+    # Skip tests marked "requires_builtin" if builtin repo is required
+    requires_builtin_marker = item.get_closest_marker(name="requires_builtin")
+    if requires_builtin_marker and not os.path.exists(spack.paths.packages_path):
+        pytest.skip(*requires_builtin_marker.args)
+
 
 def _sequential_executor(*args, **kwargs):
     return spack.util.parallel.SequentialExecutor()
@@ -2094,35 +2099,6 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
-_repo_name_id = 0
-
-
-def create_test_repo(tmpdir, pkg_name_content_tuples):
-    global _repo_name_id
-
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
-repo:
-  namespace: testrepo{str(_repo_name_id)}
-"""
-        )
-
-    _repo_name_id += 1
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in pkg_name_content_tuples:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w", encoding="utf-8") as f:
-            f.write(pkg_str)
-
-    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
-    return spack.repo.Repo(repo_path, cache=repo_cache)
-
-
 @pytest.fixture()
 def compiler_factory():
     """Factory for a compiler dict, taking a spec and an OS as arguments."""
@@ -2140,7 +2116,7 @@ def compiler_factory():
 @pytest.fixture()
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
-    return str(archspec.cpu.host().family)
+    return str(_vendoring.archspec.cpu.host().family)
 
 
 def _true(x):

@@ -332,18 +332,8 @@ def run_isort(isort_cmd, file_list, args):
 
             rewrite_and_print_output(output, args, pat, replacement)
 
-    packages_isort_args = (
-        "--rm",
-        "spack.pkgkit",
-        "--rm",
-        "spack.package_defs",
-        "-a",
-        "from spack.package import *",
-    )
-    packages_isort_args = packages_isort_args + isort_args
-
     # packages
-    process_files(filter(is_package, file_list), packages_isort_args)
+    process_files(filter(is_package, file_list), isort_args)
     # non-packages
     process_files(filter(lambda f: not is_package(f), file_list), isort_args)
 
