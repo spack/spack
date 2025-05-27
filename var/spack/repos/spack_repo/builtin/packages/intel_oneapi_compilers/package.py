@@ -58,45 +58,12 @@ class WindowsOptFlags:
     OS = "/Os"
 
 
-class DebugFlagsMeta(type):
-    def __getattribute__(cls, attr):
-        if IS_WINDOWS:
-            getattr(WindowsDebugFlags, attr.upper())
-        else:
-            getattr(UnixDebugFlags, attr.upper())
-
-
-class OptFlagsMeta(type):
-    def __getattribute__(cls, attr):
-        if IS_WINDOWS:
-            getattr(WindowsOptFlags, attr)
-        else:
-            getattr(UnixOptFlags, attr)
-
-
-class DebugFlags(metaclass=DebugFlagsMeta):
-    """Class abstracting platform specific debug flags"""
-    DEBUG: str
-    G: str
-    G0: str
-    G1: str
-    G2: str
-    G3: str
-
-
-class OptFlags(metaclass=OptFlagsMeta):
-    """Class abstracting platform specific optimization flags"""
-    O: str
-    O0: str
-    O1: str
-    O2: str
-    O3: str
-    OFast: str
-    OS: str
-
-
-class CompilerWrapperLinks:
-    pass
+if IS_WINDOWS:
+    DebugFlags = WindowsDebugFlags
+    OptFlags = WindowsOptFlags
+else:
+    DebugFlags = UnixDebugFlags
+    OptFlags = UnixOptFlags
 
 
 @IntelOneApiPackage.update_description
@@ -118,7 +85,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
     )
 
     debug_flags = [DebugFlags.DEBUG, DebugFlags.G, DebugFlags.G0, DebugFlags.G1, DebugFlags.G2, DebugFlags.G3]
-    opt_flags = [OptFlags.O, OptFlags.O0, OptFlags.O1, OptFlags.O2, OptFlags.O3, OptFlags.OFast, OptFlags.OS]
+    opt_flags = [OptFlags.O, OptFlags.O0, OptFlags.O1, OptFlags.O2, OptFlags.O3, OptFlags.OFAST, OptFlags.OS]
 
     openmp_flag = "-fiopenmp"
 
@@ -176,7 +143,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         depends_on("gcc languages=c,c++", type="run")
 
     with when("platform=windows"):
-        depends_on("msvc languages=c,c++", type="run")
+        depends_on("msvc", type="run")
 
     @property
     def v2_layout_versions(self):
