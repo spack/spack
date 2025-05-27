@@ -18,7 +18,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     git = "https://github.com/ROCm/llvm-project.git"
     url = "https://github.com/ROCm/llvm-project/archive/rocm-6.2.4.tar.gz"
     tags = ["rocm", "compiler"]
-    executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
+    executables = [r"amdclang", r"amdclang\+\+", r"clang.*", "llvm-.*"]
 
     compiler_wrapper_link_paths = {"c": "rocmcc/amdclang", "cxx": "rocmcc/amdclang++"}
 
