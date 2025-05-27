@@ -99,12 +99,12 @@ archspec = ["archspec"]
 llnl = ["llnl"]
 
 [tool.ruff.lint.per-file-ignores]
-"var/spack/repos/*/package.py" = ["F403", "F405", "F811", "F821"]
+"var/spack/*/package.py" = ["F403", "F405", "F811", "F821"]
 "*-ci-package.py" = ["F403", "F405", "F821"]
 
 [tool.black]
 line-length = 99
-include = '(lib/spack|var/spack/repos)/.*\.pyi?$|bin/spack$'
+include = '(lib/spack|var/spack/repos|var/spack/test_repos)/.*\.pyi?$|bin/spack$'
 extend-exclude = 'lib/spack/external'
 skip_magic_trailing_comma = true
 
@@ -126,8 +126,16 @@ src_paths = "lib"
 honor_noqa = true
 
 [tool.mypy]
-files = ['lib/spack/llnl/**/*.py', 'lib/spack/spack/**/*.py', './var/spack/repos/builtin/packages/*/package.py']
-mypy_path = ['bin', 'lib/spack', 'lib/spack/external', 'var/spack/repos/builtin']
+files = [
+  "lib/spack/llnl/**/*.py",
+  "lib/spack/spack/**/*.py",
+  "var/spack/repos/spack_repo/builtin/packages/*/package.py"
+]
+mypy_path = [
+  "lib/spack",
+  "lib/spack/external",
+  "var/spack/repos",
+]
 allow_redefinition = true
 
 # This and a generated import file allows supporting packages
@@ -144,7 +152,7 @@ ignore_missing_imports = true
   ignore_missing_imports = false
 
   [[tool.mypy.overrides]]
-  module = 'packages.*'
+  module = 'spack_repo.*'
   ignore_errors = false
   ignore_missing_imports = false
   # we can't do this here, not a module scope option, in spack style instead
@@ -197,7 +205,7 @@ ignore_missing_imports = true
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportWildcardImportFromLibrary = false
-include = ['lib/spack', 'var/spack/repos']
+include = ['lib/spack', 'var/spack/repos', 'var/spack/test_repos']
 ignore = ['lib/spack/external']
 extraPaths = ['lib/spack', 'lib/spack/external']
 

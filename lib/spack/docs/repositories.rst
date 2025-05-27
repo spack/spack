@@ -9,7 +9,7 @@ Package Repositories (repos.yaml)
 =================================
 
 Spack comes with thousands of built-in package recipes in
-``var/spack/repos/builtin/``.  This is a **package repository** -- a
+``var/spack/repos/spack_repo/builtin/``.  This is a **package repository** -- a
 directory that Spack searches when it needs to find a package by name.
 You may need to maintain packages for restricted, proprietary or
 experimental software separately from the built-in repository. Spack
@@ -69,7 +69,7 @@ The default ``etc/spack/defaults/repos.yaml`` file looks like this:
 .. code-block:: yaml
 
   repos:
-  - $spack/var/spack/repos/builtin
+  - $spack/var/spack/repos/spack_repo/builtin
 
 The file starts with ``repos:`` and contains a single ordered list of
 paths to repositories. Each path is on a separate line starting with
@@ -78,16 +78,16 @@ paths to repositories. Each path is on a separate line starting with
 .. code-block:: yaml
 
   repos:
-  - /opt/local-repo
-  - $spack/var/spack/repos/builtin
+  - /opt/repos/spack_repo/local_repo
+  - $spack/var/spack/repos/spack_repo/builtin
 
 When Spack interprets a spec, e.g., ``mpich`` in ``spack install mpich``,
 it searches these repositories in order (first to last) to resolve each
 package name.  In this example, Spack will look for the following
 packages and use the first valid file:
 
-1. ``/opt/local-repo/packages/mpich/package.py``
-2. ``$spack/var/spack/repos/builtin/packages/mpich/package.py``
+1. ``/opt/repos/spack_repo/local_repo/packages/mpich/package.py``
+2. ``$spack/var/spack/repos/spack_repo/builtin/packages/mpich/package.py``
 
 .. note::
 
@@ -101,14 +101,15 @@ Namespaces
 
 Every repository in Spack has an associated **namespace** defined in its
 top-level ``repo.yaml`` file.  If you look at
-``var/spack/repos/builtin/repo.yaml`` in the built-in repository, you'll
+``var/spack/repos/spack_repo/builtin/repo.yaml`` in the built-in repository, you'll
 see that its namespace is ``builtin``:
 
 .. code-block:: console
 
-  $ cat var/spack/repos/builtin/repo.yaml
+  $ cat var/spack/repos/spack_repo/builtin/repo.yaml
   repo:
     namespace: builtin
+    api: v2.0
 
 Spack records the repository namespace of each installed package.  For
 example, if you install the ``mpich`` package from the ``builtin`` repo,
@@ -217,15 +218,15 @@ Suppose you have three repositories: the builtin Spack repo
 repo containing your own prototype packages (``proto``).  Suppose they
 contain packages as follows:
 
-  +--------------+------------------------------------+-----------------------------+
-  | Namespace    | Path to repo                       | Packages                    |
-  +==============+====================================+=============================+
-  | ``proto``    | ``~/proto``                        | ``mpich``                   |
-  +--------------+------------------------------------+-----------------------------+
-  | ``llnl``     | ``/usr/local/llnl``                | ``hdf5``                    |
-  +--------------+------------------------------------+-----------------------------+
-  | ``builtin``  | ``$spack/var/spack/repos/builtin`` | ``mpich``, ``hdf5``, others |
-  +--------------+------------------------------------+-----------------------------+
+  +--------------+-----------------------------------------------+-----------------------------+
+  | Namespace    | Path to repo                                  | Packages                    |
+  +==============+===============================================+=============================+
+  | ``proto``    | ``~/my_spack_repos/spack_repo/proto``         | ``mpich``                   |
+  +--------------+-----------------------------------------------+-----------------------------+
+  | ``llnl``     | ``/usr/local/repos/spack_repo/llnl``          | ``hdf5``                    |
+  +--------------+-----------------------------------------------+-----------------------------+
+  | ``builtin``  | ``$spack/var/spack/repos/spack_repo/builtin`` | ``mpich``, ``hdf5``, others |
+  +--------------+-----------------------------------------------+-----------------------------+
 
 Suppose that ``hdf5`` depends on ``mpich``.  You can override the
 built-in ``hdf5`` by adding the ``llnl`` repo to ``repos.yaml``:
@@ -233,8 +234,8 @@ built-in ``hdf5`` by adding the ``llnl`` repo to ``repos.yaml``:
 .. code-block:: yaml
 
    repos:
-   - /usr/local/llnl
-   - $spack/var/spack/repos/builtin
+   - /usr/local/repos/spack_repo/llnl
+   - $spack/var/spack/repos/spack_repo/builtin
 
 ``spack install hdf5`` will install ``llnl.hdf5 ^builtin.mpich``.
 
@@ -243,9 +244,9 @@ If, instead, ``repos.yaml`` looks like this:
 .. code-block:: yaml
 
    repos:
-   - ~/proto
-   - /usr/local/llnl
-   - $spack/var/spack/repos/builtin
+   - ~/my_spack_repos/spack_repo/proto
+   - /usr/local/repos/spack_repo/llnl
+   - $spack/var/spack/repos/spack_repo/builtin
 
 ``spack install hdf5`` will install ``llnl.hdf5 ^proto.mpich``.
 
@@ -326,8 +327,8 @@ files, use ``spack repo list``.
 
   $ spack repo list
   ==> 2 package repositories.
-  myrepo     ~/myrepo
-  builtin    ~/spack/var/spack/repos/builtin
+  myrepo     v2.0    ~/my_spack_repos/spack_repo/myrepo
+  builtin    v2.0    ~/spack/var/spack/repos/spack_repo/builtin
 
 Each repository is listed with its associated namespace.  To get the raw,
 merged YAML from all configuration files, use ``spack config get repos``:
@@ -335,9 +336,9 @@ merged YAML from all configuration files, use ``spack config get repos``:
 .. code-block:: console
 
    $ spack config get repos
-   repos:srepos:
-   - ~/myrepo
-   - $spack/var/spack/repos/builtin
+   repos:
+   - ~/my_spack_repos/spack_repo/myrepo
+   - $spack/var/spack/repos/spack_repo/builtin
 
 Note that, unlike ``spack repo list``, this does not include the
 namespace, which is read from each repo's ``repo.yaml``.
@@ -351,66 +352,54 @@ yourself; you can use the ``spack repo create`` command.
 
 .. code-block:: console
 
-  $ spack repo create myrepo
+  $ spack repo create ~/my_spack_repos myrepo
   ==> Created repo with namespace 'myrepo'.
   ==> To register it with spack, run this command:
-    spack repo add ~/myrepo
+    spack repo add ~/my_spack_repos/spack_repo/myrepo
 
-  $ ls myrepo
+  $ ls ~/my_spack_repos/spack_repo/myrepo
   packages/  repo.yaml
 
-  $ cat myrepo/repo.yaml
+  $ cat ~/my_spack_repos/spack_repo/myrepo/repo.yaml
   repo:
     namespace: 'myrepo'
+    api: v2.0
 
-By default, the namespace of a new repo matches its directory's name.
-You can supply a custom namespace with a second argument, e.g.:
+Namespaces can also be nested, which can be useful if you have
+multiple package repositories for an organization. Spack will
+create the corresponding directory structure for you:
 
 .. code-block:: console
 
-  $ spack repo create myrepo llnl.comp
+  $ spack repo create ~/my_spack_repos llnl.comp
   ==> Created repo with namespace 'llnl.comp'.
   ==> To register it with spack, run this command:
-    spack repo add ~/myrepo
+    spack repo add ~/my_spack_repos/spack_repo/llnl/comp
 
-  $ cat myrepo/repo.yaml
+
+  $ cat ~/my_spack_repos/spack_repo/llnl/comp/repo.yaml
   repo:
     namespace: 'llnl.comp'
-
-You can also create repositories with custom structure with the ``-d/--subdirectory``
-argument, e.g.:
-
-.. code-block:: console
-
-  $ spack repo create -d applications myrepo apps
-  ==> Created repo with namespace 'apps'.
-  ==> To register it with Spack, run this command:
-    spack repo add ~/myrepo
-
-  $ ls myrepo
-  applications/  repo.yaml
-
-  $ cat myrepo/repo.yaml
-  repo:
-    namespace: apps
-    subdirectory: applications
+    api: v2.0
 
 ^^^^^^^^^^^^^^^^^^
 ``spack repo add``
 ^^^^^^^^^^^^^^^^^^
 
 Once your repository is created, you can register it with Spack with
-``spack repo add``:
+``spack repo add``. You nee to specify the path to the directory that
+contains the ``repo.yaml`` file.
 
 .. code-block:: console
 
-   $ spack repo add ./myrepo
+   $ spack repo add ~/my_spack_repos/spack_repo/llnl/comp
    ==> Added repo with namespace 'llnl.comp'.
 
    $ spack repo list
    ==> 2 package repositories.
-   llnl.comp    ~/myrepo
-   builtin      ~/spack/var/spack/repos/builtin
+  llnl.comp    v2.0    ~/my_spack_repos/spack_repo/llnl/comp
+  builtin      v2.0    ~/spack/var/spack/repos/spack_repo/builtin
+
 
 This simply adds the repo to your ``repos.yaml`` file.
 
@@ -432,46 +421,43 @@ By namespace:
 .. code-block:: console
 
   $ spack repo rm llnl.comp
-  ==> Removed repository ~/myrepo with namespace 'llnl.comp'.
+  ==> Removed repository ~/my_spack_repos/spack_repo/llnl/comp with namespace 'llnl.comp'.
 
   $ spack repo list
   ==> 1 package repository.
-  builtin    ~/spack/var/spack/repos/builtin
+  builtin    ~/spack/var/spack/repos/spack_repo/builtin
 
 By path:
 
 .. code-block:: console
 
-  $ spack repo rm ~/myrepo
-  ==> Removed repository ~/myrepo
+  $ spack repo rm ~/my_spack_repos/spack_repo/llnl/comp
+  ==> Removed repository ~/my_spack_repos/spack_repo/llnl/comp
 
   $ spack repo list
   ==> 1 package repository.
-  builtin    ~/spack/var/spack/repos/builtin
+  builtin    ~/spack/var/spack/repos/spack_repo/builtin
 
 --------------------------------
 Repo namespaces and Python
 --------------------------------
 
-You may have noticed that namespace notation for repositories is similar
-to the notation for namespaces in Python.  As it turns out, you *can*
-treat Spack repositories like Python packages; this is how they are
-implemented.
+Package repositories are implemented as Python packages. To be precise,
+they are `namespace packages
+<https://packaging.python.org/en/latest/guides/packaging-namespace-packages/>`_
+with ``spack_repo`` the top-level namespace, followed by the repository
+namespace as submodules. For example, the builtin repository corresponds
+to the Python module ``spack_repo.builtin.packages``.
 
-You could, for example, extend a ``builtin`` package in your own
+This structure allows you to extend a ``builtin`` package in your own
 repository:
 
 .. code-block:: python
 
-   from spack.pkg.builtin.mpich import Mpich
+   from spack_repo.builtin.packages.mpich.package import Mpich
 
    class MyPackage(Mpich):
        ...
 
-Spack repo namespaces are actually Python namespaces tacked on under
-``spack.pkg``.  The search semantics of ``repos.yaml`` are actually
-implemented using Python's built-in `sys.path
-<https://docs.python.org/2/library/sys.html#sys.path>`_ search.  The
-:py:mod:`spack.repo` module implements a custom `Python importer
-<https://docs.python.org/2/library/imp.html>`_.
-
+Spack populates ``sys.path`` at runtime with the path to the root of your
+package repository's ``spack_repo`` directory.

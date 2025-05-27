@@ -39,7 +39,7 @@ for "CRAN <package-name>" and you should quickly find what you want.
 If it isn't on CRAN, try Bioconductor, another common R repository.
 
 For the purposes of this tutorial, we will be walking through
-`r-caret <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-caret/package.py>`_
+`r-caret <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/r_caret/package.py>`_
 as an example. If you search for "CRAN caret", you will quickly find what
 you are looking for at https://cran.r-project.org/package=caret.
 https://cran.r-project.org is the main CRAN website. However, CRAN also
@@ -337,7 +337,7 @@ Non-R dependencies
 ^^^^^^^^^^^^^^^^^^
 
 Some packages depend on non-R libraries for linking. Check out the
-`r-stringi <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-stringi/package.py>`_
+`r-stringi <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/r_stringi/package.py>`_
 package for an example: https://cloud.r-project.org/package=stringi.
 If you search for the text "SystemRequirements", you will see:
 
@@ -352,7 +352,7 @@ Passing arguments to the installation
 
 Some R packages provide additional flags that can be passed to
 ``R CMD INSTALL``, often to locate non-R dependencies.
-`r-rmpi <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/r-rmpi/package.py>`_
+`r-rmpi <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/r_rmpi/package.py>`_
 is an example of this, and flags for linking to an MPI library. To pass
 these to the installation command, you can override ``configure_args``
 like so:

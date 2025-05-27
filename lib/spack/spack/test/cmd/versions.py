@@ -10,6 +10,9 @@ from spack.version import Version
 versions = SpackCommand("versions")
 
 
+pytestmark = [pytest.mark.usefixtures("mock_packages")]
+
+
 def test_safe_versions():
     """Only test the safe versions of a package."""
 
@@ -70,11 +73,11 @@ def test_no_unchecksummed_versions():
 def test_versions_no_url():
     """Test a package with versions but without a ``url`` attribute."""
 
-    versions("graphviz")
+    versions("attributes-foo-app")
 
 
 @pytest.mark.maybeslow
 def test_no_versions_no_url():
     """Test a package without versions or a ``url`` attribute."""
 
-    versions("opengl")
+    versions("no-url-or-version")

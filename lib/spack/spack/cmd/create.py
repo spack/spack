@@ -23,7 +23,7 @@ from spack.url import (
 from spack.util.editor import editor
 from spack.util.executable import which
 from spack.util.format import get_version_lines
-from spack.util.naming import mod_to_class, simplify_name, valid_fully_qualified_module_name
+from spack.util.naming import pkg_name_to_class_name, simplify_name
 
 description = "create a new package file"
 section = "packaging"
@@ -95,7 +95,7 @@ class BundlePackageTemplate:
 
     def __init__(self, name: str, versions, languages: List[str]):
         self.name = name
-        self.class_name = mod_to_class(name)
+        self.class_name = pkg_name_to_class_name(name)
         self.versions = versions
         self.languages = languages
 
@@ -874,7 +874,7 @@ def get_name(name, url):
 
     result = simplify_name(result)
 
-    if not valid_fully_qualified_module_name(result):
+    if not re.match(r"^[a-z0-9-]+$", result):
         tty.die("Package name can only contain a-z, 0-9, and '-'")
 
     return result

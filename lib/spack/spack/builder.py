@@ -59,7 +59,7 @@ class _PhaseAdapter:
 def get_builder_class(pkg, name: str) -> Optional[Type["Builder"]]:
     """Return the builder class if a package module defines it."""
     cls = getattr(pkg.module, name, None)
-    if cls and cls.__module__.startswith(spack.repo.ROOT_PYTHON_NAMESPACE):
+    if cls and spack.repo.is_package_module(cls.__module__):
         return cls
     return None
 
@@ -121,6 +121,7 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
                 new_cls_name,
                 bases,
                 {
+                    "__module__": package_cls.__module__,
                     "run_tests": property(lambda x: x.wrapped_package_object.run_tests),
                     "test_requires_compiler": property(
                         lambda x: x.wrapped_package_object.test_requires_compiler
@@ -129,7 +130,6 @@ def _create(pkg: spack.package_base.PackageBase) -> "Builder":
                     "tester": property(lambda x: x.wrapped_package_object.tester),
                 },
             )
-            new_cls.__module__ = package_cls.__module__
             self.__class__ = new_cls
             self.__dict__.update(wrapped_pkg_object.__dict__)
 

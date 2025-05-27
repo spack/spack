@@ -10,11 +10,13 @@ import os
 import re
 import sys
 from html import escape
+from typing import Type
 
 import llnl.util.tty as tty
 from llnl.util.tty.colify import colify
 
 import spack.deptypes as dt
+import spack.package_base
 import spack.repo
 from spack.cmd.common import arguments
 from spack.version import VersionList
@@ -139,10 +141,10 @@ def name_only(pkgs, out):
         tty.msg("%d packages" % len(pkgs))
 
 
-def github_url(pkg):
+def github_url(pkg: Type[spack.package_base.PackageBase]) -> str:
     """Link to a package file on github."""
-    url = "https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/{0}/package.py"
-    return url.format(pkg.name)
+    mod_path = pkg.__module__.replace(".", "/")
+    return f"https://github.com/spack/spack/blob/develop/var/spack/{mod_path}.py"
 
 
 def rows_for_ncols(elts, ncols):

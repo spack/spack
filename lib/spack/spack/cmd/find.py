@@ -52,6 +52,12 @@ def setup_parser(subparser):
     )
 
     subparser.add_argument(
+        "--specfile-format",
+        action="store_true",
+        help="show the specfile format for installed deps ",
+    )
+
+    subparser.add_argument(
         "-d", "--deps", action="store_true", help="output dependencies along with found specs"
     )
 
@@ -280,6 +286,7 @@ def display_env(env, args, decorator, results):
             show_flags=True,
             decorator=root_decorator,
             variants=True,
+            specfile_format=args.specfile_format,
         )
 
     print()
@@ -301,6 +308,7 @@ def display_env(env, args, decorator, results):
             namespace=True,
             show_flags=True,
             variants=True,
+            specfile_format=args.specfile_format,
         )
         print()
 
@@ -390,7 +398,12 @@ def find(parser, args):
             if args.show_concretized:
                 display_results += concretized_but_not_installed
             cmd.display_specs(
-                display_results, args, decorator=decorator, all_headers=True, status_fn=status_fn
+                display_results,
+                args,
+                decorator=decorator,
+                all_headers=True,
+                status_fn=status_fn,
+                specfile_format=args.specfile_format,
             )
 
         # print number of installed packages last (as the list may be long)

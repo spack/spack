@@ -96,9 +96,9 @@ there are any other variables you need to set, you can do this in the
        env.set("BLASLIB", spec["blas"].libs.ld_flags)
 
 
-`cbench <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cbench/package.py>`_
+`cbench <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/cbench/package.py>`_
 is a good example of a simple package that does this, while
-`esmf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/esmf/package.py>`_
+`esmf <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/esmf/package.py>`_
 is a good example of a more complex package.
 
 """"""""""""""""""""""
@@ -129,7 +129,7 @@ If you do need access to the spec, you can create a property like so:
        ]
 
 
-`cloverleaf <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cloverleaf/package.py>`_
+`cloverleaf <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/cloverleaf/package.py>`_
 is a good example of a package that uses this strategy.
 
 """""""""""""
@@ -152,7 +152,7 @@ and a ``filter`` method to help with this. For example:
        makefile.filter(r"^\s*FC\s*=.*",  f"FC = {spack_fc}")
 
 
-`stream <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/stream/package.py>`_
+`stream <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/stream/package.py>`_
 is a good example of a package that involves editing a Makefile to set
 the appropriate variables.
 
@@ -192,7 +192,7 @@ well for storing variables:
                inc.write(f"{key} = {config[key]}\n")
 
 
-`elk <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/elk/package.py>`_
+`elk <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/elk/package.py>`_
 is a good example of a package that uses a dictionary to store
 configuration variables.
 
@@ -213,7 +213,7 @@ them in a list:
                inc.write(f"{var}\n")
 
 
-`hpl <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/hpl/package.py>`_
+`hpl <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/hpl/package.py>`_
 is a good example of a package that uses a list to store
 configuration variables.
 

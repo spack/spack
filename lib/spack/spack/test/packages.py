@@ -15,7 +15,7 @@ import spack.package_base
 import spack.repo
 from spack.paths import mock_packages_path
 from spack.spec import Spec
-from spack.util.naming import mod_to_class
+from spack.util.naming import pkg_name_to_class_name
 from spack.version import VersionChecksumError
 
 
@@ -47,11 +47,15 @@ class TestPackage:
         )
 
     def test_package_class_names(self):
-        assert "Mpich" == mod_to_class("mpich")
-        assert "PmgrCollective" == mod_to_class("pmgr_collective")
-        assert "PmgrCollective" == mod_to_class("pmgr-collective")
-        assert "Pmgrcollective" == mod_to_class("PmgrCollective")
-        assert "_3db" == mod_to_class("3db")
+        assert "Mpich" == pkg_name_to_class_name("mpich")
+        assert "PmgrCollective" == pkg_name_to_class_name("pmgr_collective")
+        assert "PmgrCollective" == pkg_name_to_class_name("pmgr-collective")
+        assert "Pmgrcollective" == pkg_name_to_class_name("PmgrCollective")
+        assert "_3db" == pkg_name_to_class_name("3db")
+        assert "_True" == pkg_name_to_class_name("true")  # reserved keyword
+        assert "_False" == pkg_name_to_class_name("false")  # reserved keyword
+        assert "_None" == pkg_name_to_class_name("none")  # reserved keyword
+        assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
@@ -333,3 +337,16 @@ def test_package_can_have_sparse_checkout_properties(mock_packages, mock_fetch, 
     assert isinstance(fetcher, spack.fetch_strategy.GitFetchStrategy)
     assert hasattr(fetcher, "git_sparse_paths")
     assert fetcher.git_sparse_paths == pkg_cls.git_sparse_paths
+
+
+def test_pkg_name_can_only_be_derived_when_package_module():
+    """When the module prefix is not spack_repo (or legacy spack.pkg) we cannot derive
+    a package name."""
+    ExamplePackage = type(
+        "ExamplePackage",
+        (spack.package_base.PackageBase,),
+        {"__module__": "not.a.spack.repo.packages.example_package.package"},
+    )
+
+    with pytest.raises(ValueError, match="Package ExamplePackage is not a known Spack package"):
+        ExamplePackage.name

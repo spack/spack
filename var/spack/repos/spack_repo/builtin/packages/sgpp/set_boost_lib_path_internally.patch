@@ -1,0 +1,33 @@
+diff --git a/SConstruct b/SConstruct
+index d7c85bd72..9d9fd494d 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -443,6 +443,10 @@ if env["RUN_PYTHON_TESTS"]:
+     Helper.printWarning("Python tests disabled because SG_PYTHON is disabled.")
+ 
+ if env["COMPILE_BOOST_TESTS"]:
++  # also add the Boost library path to the PATH
++  # so that the Boost test lib can be found when running the tests
++  env["ENV"]["LD_LIBRARY_PATH"] = os.pathsep.join([env["BOOST_LIBRARY_PATH"],
++                                        env["ENV"].get("LD_LIBRARY_PATH", "")])
+   builder = Builder(action="./$SOURCE --log_level=test_suite")
+   env.Append(BUILDERS={"BoostTest" : builder})
+ 
+diff --git a/datadriven/SConscript b/datadriven/SConscript
+index 031f641cd..6380cd43f 100755
+--- a/datadriven/SConscript
++++ b/datadriven/SConscript
+@@ -83,7 +83,11 @@ if env["USE_HPX"]:
+ module.runPythonTests()
+ module.buildBoostTests()
+ module.runBoostTests()
++# Build performance tests...
+ module.buildBoostTests("performanceTests", compileFlag=performanceTestFlag)
+-module.runBoostTests("performanceTests", compileFlag=performanceTestFlag,
+-                     runFlag=performanceTestRunFlag)
++# ... however, without OCL they are empty (via ifdefs) and boost would does
++# throw an error. Only run them when OCL is used
++if env["USE_OCL"]: 
++    module.runBoostTests("performanceTests", compileFlag=performanceTestFlag,
++                         runFlag=performanceTestRunFlag)
+ module.checkStyle()

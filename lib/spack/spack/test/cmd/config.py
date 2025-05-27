@@ -20,6 +20,8 @@ import spack.util.spack_yaml as syaml
 config = spack.main.SpackCommand("config")
 env = spack.main.SpackCommand("env")
 
+pytestmark = pytest.mark.usefixtures("mock_packages")
+
 
 def _create_config(scope=None, data={}, section="packages"):
     scope = scope or spack.config.default_modify_scope()

@@ -111,12 +111,12 @@ def split(output):
 pkg = spack.main.SpackCommand("pkg")
 
 
-def test_packages_path():
-    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin").packages_path
+def test_builtin_repo():
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin")
 
 
-def test_mock_packages_path(mock_packages):
-    assert spack.repo.packages_path() == spack.repo.PATH.get_repo("builtin.mock").packages_path
+def test_mock_builtin_repo(mock_packages):
+    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin.mock")
 
 
 def test_pkg_add(git, mock_pkg_git_repo):

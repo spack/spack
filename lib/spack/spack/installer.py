@@ -566,10 +566,11 @@ def dump_packages(spec: "spack.spec.Spec", path: str) -> None:
                 tty.warn(f"Warning: Couldn't copy in provenance for {node.name}")
 
         # Create a destination repository
-        dest_repo_root = os.path.join(path, node.namespace)
-        if not os.path.exists(dest_repo_root):
-            spack.repo.create_repo(dest_repo_root)
-        repo = spack.repo.from_path(dest_repo_root)
+        pkg_api = spack.repo.PATH.get_repo(node.namespace).package_api
+        repo_root = os.path.join(path, node.namespace) if pkg_api < (2, 0) else path
+        repo = spack.repo.create_or_construct(
+            repo_root, namespace=node.namespace, package_api=pkg_api
+        )
 
         # Get the location of the package in the dest repo.
         dest_pkg_dir = repo.dirname_for_package_name(node.name)
