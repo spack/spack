@@ -11,7 +11,7 @@ spack:
       require:
       - target=aarch64
     root:
-      require: +arrow ~daos +davix ~dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql +opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
+      require: +arrow ~daos +davix ~dcache +emacs +examples +fftw +fits +fortran +gdml +graphviz +gsl +http +math +minuit +mlp +mysql ~opengl +postgres +pythia8 +python +r +roofit +root7 +rpath ~shadow +spectrum +sqlite +ssl +tbb +threads +tmva +tmva-cpu +unuran +vc +vdt +veccore +webgui +x +xml +xrootd # cxxstd=20
       # note: root cxxstd=20 not concretizable within sherpa
 
   specs:
