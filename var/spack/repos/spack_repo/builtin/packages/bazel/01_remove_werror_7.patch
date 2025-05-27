@@ -1,0 +1,66 @@
+diff --color=auto --color=never -Naur a/MODULE.bazel b/MODULE.bazel
+--- a/MODULE.bazel	1980-01-01 00:00:00
++++ b/MODULE.bazel	2025-05-27 10:49:45
+@@ -57,6 +57,13 @@
+ bazel_dep(name = "c-ares", version = "1.15.0")
+ bazel_dep(name = "rules_go", version = "0.39.1")
+ bazel_dep(name = "upb", version = "0.0.0-20220923-a547704")
++single_version_override(
++    module_name = "upb",
++    patch_strip = 1,
++    patches = [
++        "//third_party/upb:01_remove_werror.patch",
++    ],
++)
+ 
+ # =========================================
+ # Java dependencies
+diff --color=auto --color=never -Naur a/third_party/BUILD b/third_party/BUILD
+--- a/third_party/BUILD	1980-01-01 00:00:00
++++ b/third_party/BUILD	2025-05-27 10:50:18
+@@ -33,6 +33,7 @@
+         "//third_party/py/frozendict:srcs",
+         "//third_party/py/mock:srcs",
+         "//third_party/py/six:srcs",
++        "//third_party/upb:srcs",
+         "//third_party/zlib:srcs",
+         "@googleapis//:srcs",
+         "@remoteapis//:srcs",
+diff --color=auto --color=never -Naur a/third_party/upb/01_remove_werror.patch b/third_party/upb/01_remove_werror.patch
+--- a/third_party/upb/01_remove_werror.patch	1970-01-01 01:00:00
++++ b/third_party/upb/01_remove_werror.patch	2025-05-27 10:50:45
+@@ -0,0 +1,19 @@
++diff --git a/bazel/upb_proto_library.bzl b/bazel/upb_proto_library.bzl
++--- a/bazel/build_defs.bzl
+++++ b/bazel/build_defs.bzl
++@@ -34,13 +34,13 @@
++ _DEFAULT_CPPOPTS.extend([
++     "-Wextra",
++     # "-Wshorten-64-to-32",  # not in GCC (and my Kokoro images doesn't have Clang)
++-    "-Werror",
+++    # "-Werror",
++     "-Wno-long-long",
++ ])
++ _DEFAULT_COPTS.extend([
++     "-std=c99",
++     "-pedantic",
++-    "-Werror=pedantic",
+++    # "-Werror=pedantic",
++     "-Wall",
++     "-Wstrict-prototypes",
++     # GCC (at least) emits spurious warnings for this that cannot be fixed
+diff --color=auto --color=never -Naur a/third_party/upb/BUILD b/third_party/upb/BUILD
+--- a/third_party/upb/BUILD	1970-01-01 01:00:00
++++ b/third_party/upb/BUILD	2025-05-27 10:51:08
+@@ -0,0 +1,11 @@
++licenses(["notice"])
++
++filegroup(
++    name = "srcs",
++    srcs = glob(["**"]),  # glob everything to satisfy the compile.sh srcs test
++    visibility = ["//third_party:__pkg__"],
++)
++
++exports_files([
++    "01_remove_werror.patch",
++])

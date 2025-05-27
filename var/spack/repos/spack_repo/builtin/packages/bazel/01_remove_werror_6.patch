@@ -1,0 +1,49 @@
+diff --color=auto --color=never -Naur a/MODULE.bazel b/MODULE.bazel
+--- a/MODULE.bazel	1980-01-01 00:00:00
++++ b/MODULE.bazel	2025-05-27 10:13:07
+@@ -42,3 +42,11 @@
+     patches = ["//third_party/protobuf:3.19.6.bzlmod.patch"],
+     patch_strip = 1,
+ )
++
++single_version_override(
++    module_name = "upb",
++    patch_strip = 1,
++    patches = [
++        "//third_party/upb:01_remove_werror.patch",
++    ],
++)
+diff --color=auto --color=never -Naur a/third_party/upb/01_remove_werror.patch b/third_party/upb/01_remove_werror.patch
+--- a/third_party/upb/01_remove_werror.patch	1970-01-01 01:00:00
++++ b/third_party/upb/01_remove_werror.patch	2025-05-27 10:11:09
+@@ -0,0 +1,19 @@
++diff --git a/bazel/upb_proto_library.bzl b/bazel/upb_proto_library.bzl
++--- a/bazel/build_defs.bzl
+++++ b/bazel/build_defs.bzl
++@@ -34,13 +34,13 @@
++ _DEFAULT_CPPOPTS.extend([
++     "-Wextra",
++     # "-Wshorten-64-to-32",  # not in GCC (and my Kokoro images doesn't have Clang)
++-    "-Werror",
+++    # "-Werror",
++     "-Wno-long-long",
++ ])
++ _DEFAULT_COPTS.extend([
++     "-std=c99",
++     "-pedantic",
++-    "-Werror=pedantic",
+++    # "-Werror=pedantic",
++     "-Wall",
++     "-Wstrict-prototypes",
++     # GCC (at least) emits spurious warnings for this that cannot be fixed
+diff --color=auto --color=never -Naur a/third_party/upb/BUILD b/third_party/upb/BUILD
+--- a/third_party/upb/BUILD	1980-01-01 00:00:00
++++ b/third_party/upb/BUILD	2025-05-27 10:12:01
+@@ -23,3 +23,7 @@
+ )
+ 
+ package(default_visibility = ["//visibility:public"])
++
++export_files([
++    "01_remove_werror.patch",
++])

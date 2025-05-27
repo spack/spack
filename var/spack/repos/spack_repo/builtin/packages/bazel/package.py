@@ -222,7 +222,14 @@ class Bazel(Package):
     conflicts("@4.0.0", when="%gcc@11:")
 
     # https://github.com/bazelbuild/bazel/pull/23667
-    conflicts("%apple-clang@16:", when="@:7.3")
+    patch(
+        "https://github.com/bazelbuild/bazel/commit/4a32d7b98423682be9c47f571afbfbb587605895.patch?full_index=1",
+        sha256="18152e63b1d07aca11c126656175ceab92d4937bade13477f93322efdaf0fca1",
+        when="@7.3",
+    )
+    patch("01_remove_werror_7.patch", when="@7.0:7.2")
+    patch("01_remove_werror_6.patch", when="@6")
+    conflicts("%apple-clang@16:", when="@:5")
 
     executables = ["^bazel$"]
 
