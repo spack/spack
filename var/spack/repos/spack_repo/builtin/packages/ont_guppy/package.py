@@ -4,6 +4,8 @@
 
 import platform
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 # If you need to add a new version, please be aware that:

@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-import spack.build_systems.autotools
-import spack.build_systems.nmake
+from spack_repo.builtin.build_systems import autotools, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+
 from spack.package import *
 
 
@@ -129,7 +131,7 @@ class SetupEnvironment:
         env.set("GEM_HOME", dependent_spec.prefix)
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvironment):
+class AutotoolsBuilder(autotools.AutotoolsBuilder, SetupEnvironment):
     def configure_args(self):
         args = []
         if "+openssl" in self.spec:
@@ -178,7 +180,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder, SetupEnvi
         )
 
 
-class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder, SetupEnvironment):
+class NMakeBuilder(nmake.NMakeBuilder, SetupEnvironment):
     def edit(self, pkg, spec, prefix):
         with working_dir(self.pkg.stage.source_path, create=True):
             Executable("win32\\configure.bat")("--prefix=%s" % self.prefix)

@@ -628,7 +628,7 @@ spack:
         )
 
     def update_config(data):
-        data["ccache"] = False
+        data["config"]["ccache"] = False
         return True
 
     monkeypatch.setattr(spack.schema.config, "update", update_config)

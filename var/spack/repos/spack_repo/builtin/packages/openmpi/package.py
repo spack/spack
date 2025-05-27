@@ -7,6 +7,9 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 import spack.compilers.config
 from spack.package import *
 

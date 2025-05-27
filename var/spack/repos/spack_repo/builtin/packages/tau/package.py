@@ -8,6 +8,8 @@ import os
 import platform
 import sys
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -159,7 +161,8 @@ class Tau(Package):
         depends_on("python@:3.10", when="@:2.32.1")
     depends_on("libunwind", when="+libunwind")
     depends_on("mpi", when="+mpi", type=("build", "run", "link"))
-    depends_on("cuda", when="+cuda")
+    # Legacy nvtx is only supported until cuda@12.8, newer cuda only provides nvtx3.
+    depends_on("cuda@:12.8", when="+cuda")
     depends_on("gasnet", when="+gasnet")
     depends_on("adios2", when="+adios2")
     depends_on("sqlite", when="+sqlite")
@@ -206,6 +209,8 @@ class Tau(Package):
 
     # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
     patch("tau-rocm-disable-llvm-plugin.patch", when="@2.33.2 +rocm")
+    # https://github.com/UO-OACISS/tau2/commit/523df968dd17ffad74f0d944ecbb958ba0e8c6e8
+    patch("tau-rocm-disable-rocprofiler-default.patch", when="@2.34 +rocm")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")

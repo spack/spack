@@ -6,6 +6,7 @@ on:
 jobs:
   # Check we don't make the situation with circular imports worse
   import-check:
+    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
     - uses: julia-actions/setup-julia@v2

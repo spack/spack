@@ -5,6 +5,9 @@
 import os
 import shutil
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 

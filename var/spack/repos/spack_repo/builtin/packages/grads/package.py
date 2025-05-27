@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -25,7 +27,7 @@ class Grads(AutotoolsPackage):
 
     variant("geotiff", default=True, description="Enable GeoTIFF support")
     variant("shapefile", default=True, description="Enable Shapefile support")
-    variant("grib2", default=True, description="Enable GRIB2 support")
+    variant("grib2", default=True, description="Enable GRIB2 support with the g2c library.")
     variant("dap", default=False, description="Enable DAP support")
 
     # TODO: This variant depends on the "simple X" library, which is no longer available
@@ -43,7 +45,7 @@ class Grads(AutotoolsPackage):
     depends_on("hdf5", when="+hdf5")
     depends_on("hdf", when="+hdf4")
     depends_on("netcdf-c", when="+netcdf")
-    depends_on("g2c", when="+grib2")
+    depends_on("g2c+pic", when="+grib2")
     depends_on("libgeotiff", when="+geotiff")
     depends_on("shapelib", when="+shapefile")
     depends_on("gadap", when="+dap")

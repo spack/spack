@@ -1,0 +1,21 @@
+spack-src/configure spack-src-patched/configurediff -ruN
+--- spack-src/configure 2024-11-05 17:07:38.000000000 -0800
++++ spack-src-patched/configure  2025-05-19 08:56:22.311253328 -0700
+@@ -3191,7 +3191,7 @@
+             #fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM ROCPROFILER"
+             fixmakeargs="$fixmakeargs rocmdir=$rocmdir ROCM"
+             rocm=yes
+-            rocprofiler=yes
++            #rocprofiler=yes
+             tauoptions="${tauoptions}-rocm"
+             pthread=yes
+             shift
+@@ -3207,7 +3207,7 @@
+               rocm=yes
+             fi
+             #fixmakeargs="$fixmakeargs ROCPROFILER"
+-            rocprofiler=yes
++            #rocprofiler=yes
+             tauoptions="${tauoptions}-rocm"
+             pthread=yes
+             shift

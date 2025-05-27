@@ -583,7 +583,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     like ``homepage`` and, for a code-based package, ``url``, or functions
     such as ``install()``.
     There are many custom ``Package`` subclasses in the
-    ``spack.build_systems`` package that make things even easier for
+    ``spack_repo.builtin.build_systems`` package that make things even easier for
     specific build systems.
 
     """
@@ -986,7 +986,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def update_external_dependencies(self, extendee_spec=None):
+    def _update_external_dependencies(
+        self, extendee_spec: Optional[spack.spec.Spec] = None
+    ) -> None:
         """
         Method to override in package classes to handle external dependencies
         """

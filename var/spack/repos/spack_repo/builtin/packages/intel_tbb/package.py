@@ -6,8 +6,10 @@ import glob
 import platform
 import sys
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -199,7 +201,7 @@ class SetupEnvironment:
         env.set("OS", platform.system())
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
+class CMakeBuilder(cmake.CMakeBuilder, SetupEnvironment):
     def cmake_args(self):
         spec = self.spec
         options = [
@@ -234,7 +236,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder, SetupEnvironment):
                 f.write("Libs: -L${libdir} -ltbb -latomic\n")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder, SetupEnvironment):
+class MakefileBuilder(makefile.MakefileBuilder, SetupEnvironment):
     def coerce_to_spack(self, tbb_build_subdir):
         for compiler in ["icc", "gcc", "clang"]:
             fs = glob.glob(join_path(tbb_build_subdir, "*.%s.inc" % compiler))

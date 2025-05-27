@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.cmake
-import spack.build_systems.generic
+from spack_repo.builtin.build_systems import cmake, generic
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -442,7 +444,7 @@ class QuantumEspresso(CMakePackage, Package):
     patch("gipaw-eccee44.patch", when="@7.2+gipaw build_system=cmake")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         spec = self.spec
 
@@ -495,7 +497,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return cmake_args
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         prefix_path = prefix.bin if "@:5.4.0" in spec else prefix
         options = ["-prefix={0}".format(prefix_path)]

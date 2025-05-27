@@ -6,12 +6,12 @@ import shutil
 import sys
 from typing import List
 
-import archspec.cpu
+import _vendoring.archspec.cpu
+from spack_repo.builtin.build_systems.generic import Package
 
 from llnl.util import lang
 
 import spack.compilers.libraries
-import spack.package_base
 from spack.package import *
 
 
@@ -182,12 +182,12 @@ class CompilerWrapper(Package):
             env.set(f"SPACK_{wrapper_var_name}_RPATH_ARG", compiler_pkg.rpath_arg)
 
             uarch = dependent_spec.architecture.target
-            version_number, _ = archspec.cpu.version_components(
+            version_number, _ = _vendoring.archspec.cpu.version_components(
                 compiler_pkg.spec.version.dotted_numeric_string
             )
             try:
                 isa_arg = uarch.optimization_flags(compiler_pkg.archspec_name(), version_number)
-            except (ValueError, archspec.cpu.UnsupportedMicroarchitecture):
+            except (ValueError, _vendoring.archspec.cpu.UnsupportedMicroarchitecture):
                 isa_arg = ""
 
             if isa_arg:
@@ -277,7 +277,7 @@ class CompilerWrapper(Package):
         return "--enable-new-dtags"
 
 
-def _implicit_rpaths(pkg: spack.package_base.PackageBase) -> List[str]:
+def _implicit_rpaths(pkg: PackageBase) -> List[str]:
     detector = spack.compilers.libraries.CompilerPropertyDetector(pkg.spec)
     paths = detector.implicit_rpaths()
     return paths

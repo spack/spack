@@ -24,7 +24,7 @@ The ``MakefileBuilder`` and ``MakefilePackage`` base classes come with 3 phases:
 #. ``install`` - install the project
 
 By default, ``edit`` does nothing, but you can override it to replace
-hard-coded Makefile variables. The ``build`` and ``install`` phases
+hardcoded Makefile variables. The ``build`` and ``install`` phases
 run:
 
 .. code-block:: console
@@ -235,7 +235,7 @@ user-defined variables and may vary from package to package.
 
 * **Compiler flags**
 
-  This includes variables for specific compilers, like ``CFLAGS``,
+  This includes variables for compiler flags, such as ``CFLAGS``,
   ``CXXFLAGS``, ``F77FLAGS``, ``F90FLAGS``, ``FCFLAGS``, and ``CPPFLAGS``.
   These variables are often hard-coded to contain flags specific to a
   certain compiler. If these flags don't work for every compiler,
@@ -253,7 +253,7 @@ user-defined variables and may vary from package to package.
 * **Platform flags**
 
   These flags control the type of architecture that the executable
-  is compiler for. Watch out for variables like ``PLAT`` or ``ARCH``.
+  is compiled for. Watch out for variables like ``PLAT`` or ``ARCH``.
 
 * **Dependencies**
 
