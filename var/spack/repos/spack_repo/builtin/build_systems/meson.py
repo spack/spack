@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
-from typing import List
+from typing import Any, List, Optional
 
 from spack.package import (
     PackageBase,
