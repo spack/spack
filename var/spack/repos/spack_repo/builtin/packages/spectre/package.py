@@ -160,6 +160,9 @@ class Spectre(CMakePackage):
             # CCE
             "CharacteristicExtract",
             "ReduceCceWorldtube",
+            # Evolution
+            "EvolveGhBinaryBlackHole",
+            "EvolveGhSingleBlackHole",
             # Elliptic / initial data
             "SolvePoisson1D",
             "SolvePoisson2D",
@@ -226,9 +229,9 @@ class Spectre(CMakePackage):
     conflicts("%apple-clang@:10")
 
     # Language dependencies
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     # Build dependencies
     depends_on("cmake@3.18:", when="@2023.02.09:", type="build")
@@ -245,7 +248,7 @@ class Spectre(CMakePackage):
     depends_on("hdf5")
     depends_on("jemalloc", when="memory_allocator=jemalloc")
     depends_on("libsharp~mpi~openmp")
-    depends_on("libxsmm@1.16.1:1")
+    depends_on("libxsmm")
     depends_on("blas")
     depends_on("lapack")
     depends_on("yaml-cpp@0.6:")
