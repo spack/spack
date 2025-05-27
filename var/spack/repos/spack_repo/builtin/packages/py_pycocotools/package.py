@@ -27,6 +27,7 @@ class PyPycocotools(PythonPackage):
     depends_on("py-setuptools@43:", when="@2.0.4:", type="build")
     depends_on("py-setuptools@18.0:", when="@:2.0.3", type=("build", "run"))
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
-    depends_on("py-numpy", type=("build", "link", "run"))
+    # https://github.com/cocodataset/cocoapi/pull/686
+    depends_on("py-numpy@:2.2", type=("build", "link", "run"))
 
     conflicts("^py-cython@3:", when="@:2.0.4")
