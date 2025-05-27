@@ -429,11 +429,11 @@ class Root(CMakePackage):
     depends_on("graphviz", when="+graphviz")
     depends_on("gsl", when="+gsl")
     depends_on("jemalloc", when="+jemalloc")
-    depends_on("mysql-client", when="+mysql @:6.36")
+    depends_on("mysql-client", when="+mysql")
     depends_on("openssl", when="+ssl")
     depends_on("openssl", when="+davix")  # Also with davix
     depends_on("oracle-instant-client@19.10.0.0.0", when="+oracle @:6.24.01")
-    depends_on("postgresql", when="+postgres @:6.36")
+    depends_on("postgresql", when="+postgres")
     depends_on("pythia6+root", when="+pythia6")
     depends_on("pythia8", when="+pythia8")
     depends_on("r", when="+r", type=("build", "run"))
@@ -868,7 +868,7 @@ class Root(CMakePackage):
                 define("odbc", False),
             ]
 
-        if self.spec.satisfies("@6.36.00:"):
+        if self.spec.satisfies("@6.36:"):
             options.append(define_from_variant("asimage_tiff", "tiff"))
 
         # #################### Compiler options ####################
