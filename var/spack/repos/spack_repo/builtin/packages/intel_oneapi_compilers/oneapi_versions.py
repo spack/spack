@@ -49,6 +49,8 @@ class oneAPIInstaller:
 
     @property
     def url(self):
+        if self._path.startswith("https"):
+            return self._path
         return self._url_base + self._path
 
 
@@ -69,6 +71,14 @@ class oneAPIVersion:
         self.amd = amd
         oneAPIVersions.versions.append(self)
         
+
+oneAPIVersion(version="2025.1.1",
+    platform="windows",
+    cxx=oneAPIInstaller(path="7f810440-2a66-4d34-b05f-8f4395667844/intel-dpcpp-cpp-compiler-2025.1.1.10_offline.exe",
+                        sha="7a8471a9e36e3595338427a91c426751cb4ca3a2cb49f8bb76e466df73534392"),
+    fortran=oneAPIInstaller(path="20fc9768-cb87-4aaa-adf8-6c83a5d8e8b4/intel-fortran-compiler-2025.1.1.11_offline.exe", 
+                            sha="5e3422654080b0ea799482c7baf08c75fd6a37b6246e972d41be72e6507986b9"),
+)
 
 oneAPIVersion(version="2025.1.1",
     platform="linux",
@@ -165,17 +175,17 @@ oneAPIVersion(version="2024.0.2",
 
 oneAPIVersion(version="2024.0.1",
               platform="linux",
-              cxx=oneAPIInstaller(path="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/c68c8f0a-47f5-4f26-8e8e-fa2627271279/l_dpcpp-cpp-compiler_p_2024.0.1.29_offline.sh", 
+              cxx=oneAPIInstaller(path="c68c8f0a-47f5-4f26-8e8e-fa2627271279/l_dpcpp-cpp-compiler_p_2024.0.1.29_offline.sh", 
                                  sha="22497c46bfb916c82677489775c113141510423799b7eca35f35dffeb2a14104"),
-              fortran=oneAPIInstaller(path="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/4eedf77e-e097-40de-b62d-5fb70efecb59/l_fortran-compiler_p_2024.0.1.31_offline.sh",
+              fortran=oneAPIInstaller(path="4eedf77e-e097-40de-b62d-5fb70efecb59/l_fortran-compiler_p_2024.0.1.31_offline.sh",
                                      sha="9d49ecc1862c60eb0627bfdd80d63a47118095af0ff5adeeda10ec36aaffc82c"),
                           )
 
 oneAPIVersion(version="2024.0.0",
               platform="linux",
-              cxx=oneAPIInstaller(path="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/5c8e686a-16a7-4866-b585-9cf09e97ef36/l_dpcpp-cpp-compiler_p_2024.0.0.49524_offline.sh", 
+              cxx=oneAPIInstaller(path="5c8e686a-16a7-4866-b585-9cf09e97ef36/l_dpcpp-cpp-compiler_p_2024.0.0.49524_offline.sh", 
                                  sha="d10bad2009c98c631fbb834aae62012548daeefc806265ea567316cd9180a684"),
-              fortran=oneAPIInstaller(path="https://registrationcenter-download.intel.com/akdlm//IRC_NAS/89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
+              fortran=oneAPIInstaller(path="89b0fcf9-5c00-448a-93a1-5ee4078e008e/l_fortran-compiler_p_2024.0.0.49493_offline.sh",
                                      sha="57faf854b8388547ee4ef2db387a9f6f3b4d0cebd67b765cf5e844a0a970d1f9"),
                           )
 
