@@ -9,7 +9,7 @@
 """
 from typing import Any, Dict
 
-import jsonschema
+import _vendoring.jsonschema
 
 #: Common properties for connection specification
 connection = {
@@ -104,6 +104,7 @@ schema = {
 
 
 def update(data):
+    data = data["mirrors"]
     errors = []
 
     def check_access_pair(name, section):
@@ -123,4 +124,4 @@ def update(data):
             check_access_pair(name, section.get("push"))
 
     if errors:
-        raise jsonschema.ValidationError("\n".join(errors))
+        raise _vendoring.jsonschema.ValidationError("\n".join(errors))

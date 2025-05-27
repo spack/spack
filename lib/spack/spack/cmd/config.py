@@ -369,7 +369,7 @@ def config_update(args):
     spack.config.CONFIG.get_config(args.section, scope=args.scope)
     updates: List[spack.config.ConfigScope] = [
         x
-        for x in spack.config.CONFIG.format_updates[args.section]
+        for x in spack.config.CONFIG.updated_scopes_by_section[args.section]
         if not isinstance(x, spack.config.InternalConfigScope) and x.writable
     ]
 
@@ -431,13 +431,17 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        data = scope.get_section(args.section).pop(args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
+        data = scope.get_section(args.section)
+        assert data is not None, f"Cannot find section {args.section} in {scope.name} scope"
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
-        spack.config.CONFIG.update_config(args.section, data, scope=scope.name, force=True)
+        spack.config.CONFIG.update_config(
+            args.section, data[args.section], scope=scope.name, force=True
+        )
         tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 

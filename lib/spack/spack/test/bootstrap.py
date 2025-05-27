@@ -10,6 +10,7 @@ import spack.bootstrap.core
 import spack.compilers.config
 import spack.config
 import spack.environment
+import spack.paths
 import spack.store
 import spack.util.path
 
@@ -131,7 +132,9 @@ def test_bootstrap_disables_modulefile_generation(mutable_config):
 
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
-def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
+def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml, monkeypatch):
+    monkeypatch.setattr(spack.paths, "packages_path", spack.paths.mock_packages_path)
+
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.compilers.config.all_compilers(init_config=False)
@@ -141,8 +144,10 @@ def test_bootstrap_search_for_compilers_with_no_environment(no_packages_yaml):
 @pytest.mark.regression("25992")
 @pytest.mark.requires_executables("gcc")
 def test_bootstrap_search_for_compilers_with_environment_active(
-    no_packages_yaml, active_mock_environment
+    no_packages_yaml, active_mock_environment, monkeypatch
 ):
+    monkeypatch.setattr(spack.paths, "packages_path", spack.paths.mock_packages_path)
+
     assert not spack.compilers.config.all_compilers(init_config=False)
     with spack.bootstrap.ensure_bootstrap_configuration():
         assert spack.compilers.config.all_compilers(init_config=False)

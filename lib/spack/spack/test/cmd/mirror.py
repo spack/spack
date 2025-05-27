@@ -6,6 +6,7 @@ import os
 
 import pytest
 
+import spack.binary_distribution as bindist
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
@@ -58,6 +59,26 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fe
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
+
+
+# Test for command line-specified spec in concretized environment
+def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
+    mirror_dir = str(tmp_path / "mirror-B")
+    env_name = "test"
+
+    env("create", env_name)
+    with ev.read(env_name):
+        add("simple-standalone-test@0.9")
+        concretize()
+        with spack.config.override("config:checksum", False):
+            mirror("create", "-d", mirror_dir, "simple-standalone-test")
+
+    e = ev.read(env_name)
+    assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
+    spec = e.concrete_roots()[0]
+    mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
+    expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+    assert mirror_res == expected
 
 
 @pytest.fixture
@@ -365,8 +386,10 @@ def test_mirror_destroy(
     install("--fake", "--no-cache", spec_name)
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
+    blobs_path = bindist.buildcache_relative_blobs_path()
+
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
@@ -376,7 +399,7 @@ def test_mirror_destroy(
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by url
     mirror("destroy", "--mirror-url", mirror_url)
@@ -398,8 +421,7 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all and specs
-            ({"specs": "hdf5", "file": None, "all": True}, "cannot specify specs on command line"),
+            # Passed more than one among -f --all
             (
                 {"specs": None, "file": "input.txt", "all": True},
                 "cannot specify specs with a file if",

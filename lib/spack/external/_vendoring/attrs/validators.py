@@ -1,3 +1,3 @@
 # SPDX-License-Identifier: MIT
 
-from attr.validators import *  # noqa
+from _vendoring.attr.validators import *  # noqa

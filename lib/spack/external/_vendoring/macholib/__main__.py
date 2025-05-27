@@ -3,8 +3,8 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 
-from macholib import macho_dump, macho_standalone
-from macholib.util import is_platform_file
+from _vendoring.macholib import macho_dump, macho_standalone
+from _vendoring.macholib.util import is_platform_file
 
 gCommand = None
 
@@ -43,10 +43,10 @@ def walk_tree(callback, paths):
 
 def print_usage(fp):
     print("Usage:", file=fp)
-    print("  python -mmacholib [help|--help]", file=fp)
-    print("  python -mmacholib dump FILE ...", file=fp)
-    print("  python -mmacholib find DIR ...", file=fp)
-    print("  python -mmacholib standalone DIR ...", file=fp)
+    print("  python -m_vendoring.macholib [help|--help]", file=fp)
+    print("  python -m_vendoring.macholib dump FILE ...", file=fp)
+    print("  python -m_vendoring.macholib find DIR ...", file=fp)
+    print("  python -m_vendoring.macholib standalone DIR ...", file=fp)
 
 
 def main():

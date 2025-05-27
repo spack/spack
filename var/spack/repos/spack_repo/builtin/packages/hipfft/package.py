@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import spack.variant
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -24,6 +27,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     license("MIT")
 
     version("master", branch="master", deprecated=True)
+    version("6.4.0", sha256="f16859ba3823f8b29f2aac120cef3395109babf93a0a5069c3b4c7c67ef35e96")
     version("6.3.3", sha256="c032d59a45b0eb4441539498bd4c22d8442fbc554cb08d6cb452a1d27be6c57c")
     version("6.3.2", sha256="5d9e662c7d67f4c814cad70476b57651df5ae6b65f371ca6dbb5aa51d9eeb6f5")
     version("6.3.1", sha256="b709df2d0115748ed004d0cddce829cb0f9ec3761eb855e61f0097cab04e4806")
@@ -53,7 +57,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
     variant(
         "amdgpu_target",
         description="AMD GPU architecture",
-        values=spack.variant.DisjointSetsOfValues(("auto",), ("none",), amdgpu_targets)
+        values=disjoint_sets(("auto",), amdgpu_targets)
         .with_default("auto")
         .with_error(
             "the values 'auto' and 'none' are mutually exclusive with any of the other values"
@@ -95,6 +99,7 @@ class Hipfft(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
         "master",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")

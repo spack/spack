@@ -6,8 +6,8 @@ from io import StringIO
 from itertools import chain
 from keyword import iskeyword as is_python_keyword
 
-from markupsafe import escape
-from markupsafe import Markup
+from _vendoring.markupsafe import escape
+from _vendoring.markupsafe import Markup
 
 from . import nodes
 from .exceptions import TemplateAssertionError
@@ -23,7 +23,7 @@ from .utils import concat
 from .visitor import NodeVisitor
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 F = t.TypeVar("F", bound=t.Callable[..., t.Any])
@@ -836,7 +836,7 @@ class CodeGenerator(NodeVisitor):
             exported_names = sorted(exported)
 
         self.writeline("from __future__ import generator_stop")  # Python < 3.7
-        self.writeline("from jinja2.runtime import " + ", ".join(exported_names))
+        self.writeline("from _vendoring.jinja2.runtime import " + ", ".join(exported_names))
 
         # if we want a deferred initialization we cannot move the
         # environment into a local name

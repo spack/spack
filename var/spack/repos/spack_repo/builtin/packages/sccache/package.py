@@ -5,8 +5,9 @@
 import os
 import re
 
-import spack.build_systems
-import spack.build_systems.cargo
+from spack_repo.builtin.build_systems import cargo
+from spack_repo.builtin.build_systems.cargo import CargoPackage
+
 from spack.package import *
 
 
@@ -55,7 +56,7 @@ class Sccache(CargoPackage):
             return "~dist-server"
 
 
-class CargoBuilder(spack.build_systems.cargo.CargoBuilder):
+class CargoBuilder(cargo.CargoBuilder):
 
     @property
     def build_args(self):

@@ -33,6 +33,7 @@ import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
 import spack.store
 import spack.util.git
 import spack.util.gpg as gpg_util
@@ -245,7 +246,9 @@ def create_already_built_pruner(
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join([loc["mirror_url"] for loc in spec_locations])
+        urls = ",".join(
+            [f"{loc.url_and_version.url}@v{loc.url_and_version.version}" for loc in spec_locations]
+        )
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -1242,33 +1245,31 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     """Given a url to write to and the details of the failed job, write an entry
     in the broken specs list.
     """
-    tmpdir = tempfile.mkdtemp()
-    file_path = os.path.join(tmpdir, "broken.txt")
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        file_path = os.path.join(tmpdir, "broken.txt")
 
-    broken_spec_details = {
-        "broken-spec": {
-            "job-name": pkg_name,
-            "job-stack": stack_name,
-            "job-url": job_url,
-            "pipeline-url": pipeline_url,
-            "concrete-spec-dict": spec_dict,
+        broken_spec_details = {
+            "broken-spec": {
+                "job-name": pkg_name,
+                "job-stack": stack_name,
+                "job-url": job_url,
+                "pipeline-url": pipeline_url,
+                "concrete-spec-dict": spec_dict,
+            }
         }
-    }
 
-    try:
-        with open(file_path, "w", encoding="utf-8") as fd:
-            syaml.dump(broken_spec_details, fd)
-        web_util.push_to_url(
-            file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-        )
-    except Exception as err:
-        # If there is an S3 error (e.g., access denied or connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = f"Error writing to broken specs list {url}: {err}"
-        tty.warn(msg)
-    finally:
-        shutil.rmtree(tmpdir)
+        try:
+            with open(file_path, "w", encoding="utf-8") as fd:
+                syaml.dump(broken_spec_details, fd)
+            web_util.push_to_url(
+                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
+            )
+        except Exception as err:
+            # If there is an S3 error (e.g., access denied or connection
+            # error), the first non boto-specific class in the exception
+            # hierarchy is Exception.  Just print a warning and return
+            msg = f"Error writing to broken specs list {url}: {err}"
+            tty.warn(msg)
 
 
 def read_broken_spec(broken_spec_url):

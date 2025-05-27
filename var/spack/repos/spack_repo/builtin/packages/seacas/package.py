@@ -4,6 +4,8 @@
 
 import sys
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.operating_systems.mac_os import macos_version
 from spack.package import *
 
@@ -34,6 +36,12 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version("master", branch="master")
+    version(
+        "2025-05-22", sha256="50e941ad2bfffa84d84465576cd118a14698b3f0cfcfc613dbb1aa3f2f4ebdda"
+    )
+    version(
+        "2025-05-05", sha256="9e9872cee4223482d74918b0f50cc3ec77791f79330915611a0e1d5691c15184"
+    )
     version(
         "2025-04-29", sha256="2a3a1533a1fbff8e8b78814a3a45f6fadfb3f05b5d9d10a4f0452c7bb4d1aa2f"
     )

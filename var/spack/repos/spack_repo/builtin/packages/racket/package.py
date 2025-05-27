@@ -1,7 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import makefile
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -36,7 +38,7 @@ class Racket(MakefilePackage):
         )
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     build_directory = "src"
 
     def toggle(self, spec, variant):

@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
+
 from spack.package import *
 
 
@@ -89,8 +90,8 @@ class Thrift(CMakePackage, AutotoolsPackage):
         depends_on("py-six@1.7.2:", type=("build", "run"))
 
     patch(
-        "https://github.com/apache/thrift/pull/2511.patch?full_index=1",
-        sha256="8523c97eccb31b084241b4061db830c4ef940042b37ba8ddfdcdd23d92325b89",
+        "https://github.com/apache/thrift/commit/69b66a51f2d86746b78300fdf43dd098d6eac7cb.patch?full_index=1",
+        sha256="e3c8d43963e3fd0835f1a7a0014bedc4a17480651e9d86ce602466fa1cabfee5",
         when="@0.16.0",
     )
 

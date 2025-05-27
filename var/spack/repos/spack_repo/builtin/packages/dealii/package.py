@@ -4,9 +4,11 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Dealii(CMakePackage, CudaPackage):

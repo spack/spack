@@ -81,7 +81,7 @@ packages:
             fortran: /path/bin/gfortran-10
   llvm:
     externals:
-      - spec: "llvm@15.0.0 +clang os={linux_os.name}{linux_os.version} target={target}"
+      - spec: "llvm@15.0.0 +clang~flang os={linux_os.name}{linux_os.version} target={target}"
         prefix: /path
         extra_attributes:
           compilers:

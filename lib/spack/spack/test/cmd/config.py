@@ -55,7 +55,7 @@ def test_get_config_scope_merged(mock_low_high_config):
         f.write(
             """\
 repos:
-- repo3
+  repo3: repo3
 """
         )
 
@@ -63,17 +63,17 @@ repos:
         f.write(
             """\
 repos:
-- repo1
-- repo2
+  repo1: repo1
+  repo2: repo2
 """
         )
 
     assert (
         config("get", "repos").strip()
         == """repos:
-- repo1
-- repo2
-- repo3"""
+  repo1: repo1
+  repo2: repo2
+  repo3: repo3"""
     )
 
 
@@ -628,7 +628,7 @@ spack:
         )
 
     def update_config(data):
-        data["ccache"] = False
+        data["config"]["ccache"] = False
         return True
 
     monkeypatch.setattr(spack.schema.config, "update", update_config)

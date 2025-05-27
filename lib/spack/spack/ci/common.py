@@ -31,12 +31,12 @@ import spack.schema
 import spack.spec
 import spack.util.compression as compression
 import spack.util.spack_yaml as syaml
-import spack.util.url as url_util
 import spack.util.web as web_util
 from spack import traverse
 from spack.reporters import CDash, CDashConfiguration
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
 from spack.reporters.cdash import build_stamp as cdash_build_stamp
+from spack.url_buildcache import get_url_buildcache_class
 
 IS_WINDOWS = sys.platform == "win32"
 SPACK_RESERVED_TAGS = ["public", "protected", "notary"]
@@ -179,33 +179,13 @@ def write_pipeline_manifest(specs, src_prefix, dest_prefix, output_file):
 
     for release_spec in specs:
         release_spec_dag_hash = release_spec.dag_hash()
-        # TODO: This assumes signed version of the spec
-        buildcache_copies[release_spec_dag_hash] = [
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_name(release_spec, ".spec.json.sig"),
-                ),
-            },
-            {
-                "src": url_util.join(
-                    src_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-                "dest": url_util.join(
-                    dest_prefix,
-                    bindist.build_cache_relative_path(),
-                    bindist.tarball_path_name(release_spec, ".spack"),
-                ),
-            },
-        ]
+        cache_class = get_url_buildcache_class(
+            layout_version=bindist.CURRENT_BUILD_CACHE_LAYOUT_VERSION
+        )
+        buildcache_copies[release_spec_dag_hash] = {
+            "src": cache_class.get_manifest_url(release_spec, src_prefix),
+            "dest": cache_class.get_manifest_url(release_spec, dest_prefix),
+        }
 
     target_dir = os.path.dirname(output_file)
 

@@ -2,8 +2,13 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
-from spack.variant import ConditionalVariantValues
+
+
+def _std_when(values):
+    return [(c.value, c.when) for v in values for c in v]
 
 
 class Geant4(CMakePackage):
@@ -173,15 +178,7 @@ class Geant4(CMakePackage):
     with when("+hdf5"):
         depends_on("hdf5 +threadsafe")
 
-    def std_when(values):
-        for v in values:
-            if isinstance(v, ConditionalVariantValues):
-                for c in v:
-                    yield (c.value, c.when)
-            else:
-                yield (v, "")
-
-    for _std, _when in std_when(_cxxstd_values):
+    for _std, _when in _std_when(_cxxstd_values):
         depends_on(f"clhep cxxstd={_std}", when=f"{_when} cxxstd={_std}")
         depends_on(f"vecgeom cxxstd={_std}", when=f"{_when} +vecgeom cxxstd={_std}")
 

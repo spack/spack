@@ -4,6 +4,8 @@
 
 import os
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -23,6 +25,8 @@ class Justbuild(Package):
     license("Apache-2.0")
 
     version("master", branch="master")
+    version("1.5.2", tag="v1.5.2", commit="bcf1d9a1ed766ee35808f23b48481cbc5168346f")
+    version("1.5.1", tag="v1.5.1", commit="bf25529bddd6dca549235ae1b3fecc34e3025e56")
     version("1.5.0", tag="v1.5.0", commit="21d9afbfb744596f0e7646c386870e78dbeab922")
     version("1.4.3", tag="v1.4.3", commit="dfbfdc230805a7c92baa7e49d82edc2816e00511")
     version("1.4.2", tag="v1.4.2", commit="7fd5d41bc219acf0d15da5dfc75d8dd4a6c53ba3")
@@ -49,14 +53,14 @@ class Justbuild(Package):
     sanity_check_is_file = [join_path("bin", "just"), join_path("bin", "just-mr")]
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        ar = which("ar")
+        ar = which("ar", required=True)
         if self.spec.version < Version("1.2.1"):
             family = ', "COMPILER_FAMILY":"unknown"'
         else:
             family = ', "TOOLCHAIN_CONFIG": {"FAMILY": "unknown"}'
         if self.spec.satisfies("%gcc@10:"):
-            gcc = which("gcc")
-            gpp = which("g++")
+            gcc = which("gcc", required=True)
+            gpp = which("g++", required=True)
             env.set(
                 "JUST_BUILD_CONF",
                 "  {"
@@ -69,9 +73,9 @@ class Justbuild(Package):
                 + "   }"
                 + "}",
             )
-        elif self.spec.satisfies("%clang@11:") or spec.satisfies("%apple-clang@11:"):
-            clang = which("clang")
-            clangpp = which("clang++")
+        elif self.spec.satisfies("%clang@11:") or self.spec.satisfies("%apple-clang@11:"):
+            clang = which("clang", required=True)
+            clangpp = which("clang++", required=True)
             env.set(
                 "JUST_BUILD_CONF",
                 "  {"
@@ -88,7 +92,7 @@ class Justbuild(Package):
             raise InstallError("please use gcc >= 10 or clang >= 11")
 
     def install(self, spec, prefix):
-        python = which("python3")
+        python = which("python3", required=True)
         python(os.path.join("bin", "bootstrap.py"), ".", prefix)
         mkdirp(prefix.bin)
         install(os.path.join(prefix, "out", "bin", "just"), prefix.bin)

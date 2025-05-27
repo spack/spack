@@ -4,6 +4,8 @@
 
 import os
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -48,7 +50,9 @@ class Madis(MakefilePackage):
             ldflags.append(pnetcdf.libs.ld_flags)
             libs.append(pnetcdf.libs.link_flags)
 
-        nfconfig = which(os.path.join(self.spec["netcdf-fortran"].prefix.bin, "nf-config"))
+        nfconfig = which(
+            os.path.join(self.spec["netcdf-fortran"].prefix.bin, "nf-config"), required=True
+        )
         ldflags.append(nfconfig("--flibs", output=str).strip())
         netcdf_f = self.spec["netcdf-fortran"]
         env.set("NETCDF_INC", netcdf_f.prefix.include)

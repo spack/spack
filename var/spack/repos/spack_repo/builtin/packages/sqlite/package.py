@@ -6,8 +6,10 @@ import re
 import sys
 from tempfile import NamedTemporaryFile
 
-import spack.build_systems.autotools
-import spack.build_systems.nmake
+from spack_repo.builtin.build_systems import autotools, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+
 import spack.platforms
 from spack.package import *
 
@@ -251,7 +253,7 @@ class Sqlite(AutotoolsPackage, NMakePackage):
         assert vers_str in out
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
 
@@ -293,7 +295,7 @@ class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
             install(libraryname, self.prefix.lib)
 
 
-class NMakeBuilder(spack.build_systems.nmake.NMakeBuilder):
+class NMakeBuilder(nmake.NMakeBuilder):
     @property
     def makefile_name(self):
         return "Makefile.msc"
