@@ -47,7 +47,6 @@ class Grid(AutotoolsPackage, CudaPackage, ROCmPackage):
     )
     variant("timers", default=True, description="System dependent high-resolution timers")
     variant("chroma", default=False, description="Chroma regression tests")
-    variant("cuda", default=False, description="Build with CUDA support")
     variant("gparity", default=True, description="Build with gparity support")
     variant(
         "fermion-reps", default=True, description="Build non-fundamental fermion representations"
