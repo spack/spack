@@ -260,6 +260,17 @@ class Vtk(CMakePackage):
         when="@9.4:",
     )
 
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    #  incorrect member accesses fixed in 9.4
+    # https://gitlab.kitware.com/vtk/vtk/-/commit/98af50ca33
+    patch("vtk_patch_octree_m_children.patch", when="@9.2:9.3")
+
+    # clang 19+ no long providers std::char_traits<> for char8_t
+    # impacts any clang derivative compiler. But can be patched
+    # regardless of compiler
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    patch("vtk_clang19_size_t.patch", when="@9.2:9.4.2")
+
     # Needed to build VTK with external SEACAS >= 2022-10-14
     @when("@9.4:")
     def patch(self):

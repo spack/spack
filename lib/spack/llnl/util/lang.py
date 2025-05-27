@@ -67,7 +67,7 @@ def index_by(objects, *funcs):
         }
 
     If any elements in funcs is a string, it is treated as the name
-    of an attribute, and acts like getattr(object, name).  So
+    of an attribute, and acts like ``getattr(object, name)``.  So
     shorthand for the above two indexes would be::
 
         index1 = index_by(list_of_specs, 'arch', 'compiler')
@@ -77,7 +77,8 @@ def index_by(objects, *funcs):
 
         index1 = index_by(list_of_specs, ('target', 'compiler'))
 
-    Keys in the resulting dict will look like ('gcc', 'skylake').
+    Keys in the resulting dict will look like ``('gcc', 'skylake')``.
+
     """
     if not funcs:
         return objects
@@ -315,7 +316,9 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     This is a lazy version of the tuple comparison used frequently to
     implement comparison in Python. Given some objects with fields, you
-    might use tuple keys to implement comparison, e.g.::
+    might use tuple keys to implement comparison, e.g.:
+
+    .. code-block:: python
 
         class Widget:
             def _cmp_key(self):
@@ -343,7 +346,9 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     Lazy lexicographic comparison maps the tuple comparison shown above
     to generator functions. Instead of comparing based on pre-constructed
     tuple keys, users of this decorator can compare using elements from a
-    generator. So, you'd write::
+    generator. So, you'd write:
+
+    .. code-block:: python
 
         @lazy_lexicographic_ordering
         class Widget:
@@ -366,6 +371,38 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     only has to worry about writing ``_cmp_iter``, and making sure the
     elements in it are also comparable.
 
+    In some cases, you may have a fast way to determine whether two
+    objects are equal, e.g. the ``is`` function or an already-computed
+    cryptographic hash. For this, you can implement your own
+    ``_cmp_fast_eq`` function:
+
+    .. code-block:: python
+
+        @lazy_lexicographic_ordering
+        class Widget:
+            def _cmp_iter(self):
+                yield a
+                yield b
+                def cd_fun():
+                    yield c
+                    yield d
+                yield cd_fun
+                yield e
+
+            def _cmp_fast_eq(self, other):
+                return self is other or None
+
+    ``_cmp_fast_eq`` should return:
+
+        * ``True`` if ``self`` is equal to ``other``,
+        * ``False`` if ``self`` is not equal to ``other``, and
+        * ``None`` if it's not known whether they are equal, and the full
+          comparison should be done.
+
+    ``lazy_lexicographic_ordering`` uses ``_cmp_fast_eq`` to short-circuit
+    the comparison if the answer can be determined quickly. If you do not
+    implement it, it defaults to ``self is other or None``.
+
     Some things to note:
 
       * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
@@ -386,36 +423,35 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
     if not hasattr(cls, "_cmp_iter"):
         raise TypeError(f"'{cls.__name__}' doesn't define _cmp_iter().")
 
+    # get an equal operation that allows us to short-circuit comparison
+    # if it's not provided, default to `is`
+    _cmp_fast_eq = getattr(cls, "_cmp_fast_eq", lambda x, y: x is y or None)
+
     # comparison operators are implemented in terms of lazy_eq and lazy_lt
     def eq(self, other):
-        if self is other:
-            return True
+        fast_eq = _cmp_fast_eq(self, other)
+        if fast_eq is not None:
+            return fast_eq
         return (other is not None) and lazy_eq(self._cmp_iter, other._cmp_iter)
 
     def lt(self, other):
-        if self is other:
+        if _cmp_fast_eq(self, other) is True:
             return False
         return (other is not None) and lazy_lt(self._cmp_iter, other._cmp_iter)
 
-    def ne(self, other):
-        if self is other:
-            return False
-        return (other is None) or not lazy_eq(self._cmp_iter, other._cmp_iter)
-
     def gt(self, other):
-        if self is other:
+        if _cmp_fast_eq(self, other) is True:
             return False
         return (other is None) or lazy_lt(other._cmp_iter, self._cmp_iter)
 
+    def ne(self, other):
+        return not (self == other)
+
     def le(self, other):
-        if self is other:
-            return True
-        return (other is not None) and not lazy_lt(other._cmp_iter, self._cmp_iter)
+        return not (self > other)
 
     def ge(self, other):
-        if self is other:
-            return True
-        return (other is None) or not lazy_lt(self._cmp_iter, other._cmp_iter)
+        return not (self < other)
 
     def h(self):
         return hash(tuplify(self._cmp_iter))
@@ -426,10 +462,10 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
         setattr(cls, name, func)
 
     add_func_to_class("__eq__", eq)
-    add_func_to_class("__ne__", ne)
     add_func_to_class("__lt__", lt)
-    add_func_to_class("__le__", le)
     add_func_to_class("__gt__", gt)
+    add_func_to_class("__ne__", ne)
+    add_func_to_class("__le__", le)
     add_func_to_class("__ge__", ge)
     if set_hash:
         add_func_to_class("__hash__", h)
