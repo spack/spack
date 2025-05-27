@@ -243,7 +243,7 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info_string(args, scope: List[spack.config.ConfigScope]):
+def _config_scope_info_string(args, scope):
     if args.show_paths and hasattr(scope, "path"):
         section_path = scope.get_section_filename(args.section) if args.section else None
         path = section_path if section_path and os.path.exists(section_path) else f"{scope.path}/"
