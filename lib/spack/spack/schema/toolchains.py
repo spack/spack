@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""Schema for repos.yaml configuration file.
+"""Schema for toolchains.yaml configuration file.
 
 .. literalinclude:: _spack_root/lib/spack/spack/schema/toolchains.py
-   :lines: 14-
+   :lines: 13-
 """
 from typing import Any, Dict
 
