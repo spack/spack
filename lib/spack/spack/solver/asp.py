@@ -3394,7 +3394,13 @@ class SpackSolverSetup:
 
         self.effect_rules()
 
-    def generate_conditional_dep_conditions(self, spec, condition_id):
+    def generate_conditional_dep_conditions(self, spec: spack.spec.Spec, condition_id: int):
+        """Generate a subcondition in the trigger for any conditional dependencies.
+
+        Dependencies are always modeled by a condition. For conditional dependencies,
+        the when-spec is added as a subcondition of the trigger to ensure the dependency
+        is only activated when the subcondition holds.
+        """
         for dspec in spec.traverse_edges():
             # Ignore unconditional deps
             if dspec.when == spack.spec.Spec():
@@ -3423,7 +3429,7 @@ class SpackSolverSetup:
                 dspec.spec,
                 required_name=dspec.parent.name,
                 context=context,
-                msg=f"Conditional dependency in literal ^[when={dspec.when}]{dspec.spec}",
+                msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
             )
             self.gen.fact(fn.subcondition(subcondition_id, condition_id))
 
