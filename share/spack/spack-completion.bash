@@ -868,7 +868,12 @@ _spack_config_list() {
 }
 
 _spack_config_scopes() {
-    SPACK_COMPREPLY="-h --help -f --file --included"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -i --included -p --path-scopes -s --show-paths"
+    else
+        _config_sections
+    fi
 }
 
 _spack_config_add() {
