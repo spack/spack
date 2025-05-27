@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack.package import *
 
 
@@ -38,7 +39,23 @@ class Meshlab(CMakePackage):
             self.define("MESHLAB_ALLOW_DOWNLOAD_SOURCE_NEXUS", False),
         ]
 
-        for bundle in "LIBIGL", "LEVMAR", "LIB3DS", "EMBREE", "NEXUS", "QHULL", "STRUCTURE_SYNTH", "TINYGLTF", "MUPARSER", "BOOST", "OPENCTM", "U3D", "LIBE57", "CGAL", "XERCES":
+        for bundle in (
+            "LIBIGL",
+            "LEVMAR",
+            "LIB3DS",
+            "EMBREE",
+            "NEXUS",
+            "QHULL",
+            "STRUCTURE_SYNTH",
+            "TINYGLTF",
+            "MUPARSER",
+            "BOOST",
+            "OPENCTM",
+            "U3D",
+            "LIBE57",
+            "CGAL",
+            "XERCES",
+        ):
             args.append(self.define(f"MESHLAB_ALLOW_DOWNLOAD_SOURCE_{bundle}", False))
 
         return args
