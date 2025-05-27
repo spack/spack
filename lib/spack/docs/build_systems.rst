@@ -9,7 +9,7 @@
 Build Systems
 =============
 
-Spack defines a number of classes which understand how to use common
+Spack defines a number of classes that understand how to use common
 `build systems  <https://en.wikipedia.org/wiki/List_of_build_automation_software>`_
 (Makefiles, CMake, etc.). Spack package definitions can inherit these
 classes in order to streamline their builds.

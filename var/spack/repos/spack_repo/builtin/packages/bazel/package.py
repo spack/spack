@@ -25,6 +25,7 @@ class Bazel(Package):
 
     license("Apache-2.0")
 
+    version("7.4.1", sha256="83386618bc489f4da36266ef2620ec64a526c686cf07041332caff7c953afaf5")
     version("7.0.2", sha256="dea2b90575d43ef3e41c402f64c2481844ecbf0b40f8548b75a204a4d504e035")
     version("7.0.1", sha256="596b13e071d27c43343ec8f5d263cb5312fafe7ef8702401f7ed492f182f4e6c")
     version("7.0.0", sha256="477e54f6374001f439a9471ba1de9d7824daf129db95510849ecc5e19ce88170")
@@ -149,7 +150,8 @@ class Bazel(Package):
     )
 
     # https://bazel.build/install/compile-source#bootstrap-unix-prereq
-    depends_on("java@11", when="@5.3:", type=("build", "run"))
+    depends_on("java@21", when="@7.2:", type=("build", "run"))
+    depends_on("java@11", when="@5.3:7.1", type=("build", "run"))
     depends_on("java@8,11", when="@3.3:5.2", type=("build", "run"))
     depends_on("java@8", when="@0.6:3.2", type=("build", "run"))
     depends_on("python+pythoncmd", type=("build", "run"))
@@ -166,7 +168,8 @@ class Bazel(Package):
     patch("compile-0.29.patch")
 
     # Disable dependency search
-    patch("cppcompileaction-7.0.0.patch", when="@7: +nodepfail")
+    patch("cppcompileaction-7.4.1.patch", when="@7.4: +nodepfail")
+    patch("cppcompileaction-7.0.0.patch", when="@7.0 +nodepfail")
     patch("cppcompileaction-0.3.2.patch", when="@:6 +nodepfail")
 
     # https://github.com/bazelbuild/bazel/issues/17956
@@ -264,11 +267,13 @@ class Bazel(Package):
         env.set("BAZEL_LINKOPTS", "")
         env.set("BAZEL_LINKLIBS", "-lstdc++")
 
-        # .WARNING: Option 'host_javabase' is deprecated
+        args = ["--color=no", "--verbose_failures", f"--jobs={make_jobs}"]
+
         # Use local java installation
-        args = "--color=no --define=ABSOLUTE_JAVABASE={0} --verbose_failures --jobs={1}".format(
-            self.spec["java"].prefix, make_jobs
-        )
+        if self.spec.satisfies("@6:"):
+            args.append("--tool_java_runtime_version=local_jdk")
+        else:
+            args.append("--host_javabase=@local_jdk//:jdk")
 
         resource_stages = self.stage[1:]
         for _resource in resource_stages:
@@ -276,11 +281,11 @@ class Bazel(Package):
                 resource_name = _resource.resource.name
                 if self.spec.satisfies(self.resource_dictionary[resource_name]["when"]):
                     archive_path = _resource.source_path
-                    args += " --distdir={0}".format(archive_path)
+                    args.append(f"--distdir={archive_path}")
             except AttributeError:
                 continue
 
-        env.set("EXTRA_BAZEL_ARGS", args)
+        env.set("EXTRA_BAZEL_ARGS", " ".join(args))
 
     @run_before("install")
     def bootstrap(self):

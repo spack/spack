@@ -30,25 +30,31 @@ text in the license header:
 External Packages
 -------------------
 
-Spack bundles most external dependencies in lib/spack/external. It also
-includes the sbang tool directly in bin/sbang. These packages are covered
-by various permissive licenses. A summary listing follows. See the
-license included with each package for full details.
+Spack bundles most external dependencies in `lib/spack/external/_vendoring/`.
+It also includes other vendored components like `ast.unparse` (in
+`lib/spack/spack/util/unparse/`) and `sbang` (in `lib/spack/spack/hooks/`
+and `bin/`). These packages are covered by various permissive
+licenses. A summary listing follows. See the license included with each
+package for full details.
 
 PackageName: altgraph
 PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
 PackageLicenseDeclared: MIT
 
-PackageName: argparse
-PackageHomePage: https://pypi.python.org/pypi/argparse
-PackageLicenseDeclared: Python-2.0
+PackageName: archspec
+PackageHomePage: https://github.com/archspec/archspec
+PackageLicenseDeclared: Apache-2.0 OR MIT
 
-PackageName: astunparse
-PackageHomePage: https://github.com/simonpercivall/astunparse
-PackageLicenseDeclared: Python-2.0
+PackageName: ast.unparse
+PackageHomePage: https://www.python.org/
+PackageLicenseDeclared: PSF-2.0
+
+PackageName: attr
+PackageHomePage: https://www.attrs.org/
+PackageLicenseDeclared: MIT
 
 PackageName: attrs
-PackageHomePage: https://github.com/python-attrs/attrs
+PackageHomePage: https://www.attrs.org/
 PackageLicenseDeclared: MIT
 
 PackageName: ctest_log_parser
@@ -58,10 +64,6 @@ PackageLicenseDeclared: BSD-3-Clause
 PackageName: distro
 PackageHomePage: https://pypi.python.org/pypi/distro
 PackageLicenseDeclared: Apache-2.0
-
-PackageName: functools32
-PackageHomePage: https://github.com/MiCHiLU/python-functools32
-PackageLicenseDeclared: Python-2.0
 
 PackageName: jinja2
 PackageHomePage: https://pypi.python.org/pypi/Jinja2
@@ -79,20 +81,8 @@ PackageName: markupsafe
 PackageHomePage: https://pypi.python.org/pypi/MarkupSafe
 PackageLicenseDeclared: BSD-3-Clause
 
-PackageName: orderddict
-Homepage: https://pypi.org/project/ordereddict/
-PackageLicenseDeclared: MIT
-
-PackageName: py
-PackageHomePage: https://pypi.python.org/pypi/py
-PackageLicenseDeclared: MIT
-
 PackageName: pyrsistent
 PackageHomePage: http://github.com/tobgu/pyrsistent
-PackageLicenseDeclared: MIT
-
-PackageName: pytest
-PackageHomePage: https://pypi.python.org/pypi/pytest
 PackageLicenseDeclared: MIT
 
 PackageName: ruamel.yaml
@@ -102,6 +92,10 @@ PackageLicenseDeclared: MIT
 PackageName: sbang
 PackageHomePage: https://github.com/spack/sbang
 PackageLicenseDeclared: Apache-2.0 OR MIT
+
+PackageName: six
+PackageHomePage: https://pypi.org/project/six/
+PackageLicenseDeclared: MIT
 
 PackageName: typing_extensions
 PackageHomePage: https://pypi.org/project/typing-extensions/

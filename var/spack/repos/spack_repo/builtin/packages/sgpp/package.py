@@ -6,10 +6,9 @@ import sys
 
 from spack_repo.builtin.build_systems.python import PythonPipBuilder
 from spack_repo.builtin.build_systems.scons import SConsPackage
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 class Sgpp(SConsPackage):

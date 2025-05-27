@@ -28,7 +28,7 @@ maintain a single file for many different builds of the same package.
 
 See the :doc:`features` for examples and highlights.
 
-Get spack from the `github repository
+Get Spack from the `GitHub repository
 <https://github.com/spack/spack>`_ and install your first
 package:
 
@@ -39,11 +39,11 @@ package:
    $ ./spack install libelf
 
 .. note::
-   ``-c feature.manyFiles=true`` improves git's performance on repositories with 1,000+ files.
+   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
 
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
-If you're new to spack and want to start using it, see :doc:`getting_started`,
+If you're new to Spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
 

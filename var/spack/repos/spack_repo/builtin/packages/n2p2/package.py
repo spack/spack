@@ -4,10 +4,9 @@
 import os
 
 from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 class N2p2(MakefilePackage):

@@ -260,9 +260,6 @@ substitute = [
   { match = "from attr", replace = "from _vendoring.attr" },
   { match = "import jsonschema", replace = "import _vendoring.jsonschema" },
   { match = "from jsonschema", replace = "from _vendoring.jsonschema" },
-  { match = "archspec.cpu", replace = "_vendoring.archspec.cpu" },
-  { match = "archspec.__version__", replace = "_vendoring.archspec.__version__" },
-  { match = "import archspec", replace = "import _vendoring.archspec" },
 ]
 drop = [
   # contains unnecessary scripts

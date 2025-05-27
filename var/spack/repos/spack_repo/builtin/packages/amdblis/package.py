@@ -4,9 +4,9 @@
 
 import os
 
-from spack.package import *
+from spack_repo.builtin.packages.blis.package import BlisBase
 
-from ..blis.package import BlisBase
+from spack.package import *
 
 
 class Amdblis(BlisBase):

@@ -30,8 +30,8 @@ from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
 
 
 @pytest.fixture(scope="module")
-def compiler_names(mock_repo_path):
-    return [spec.name for spec in mock_repo_path.providers_for("c")]
+def compiler_names(mock_packages_repo):
+    return [spec.name for spec in mock_packages_repo.providers_for("c")]
 
 
 @pytest.fixture()
