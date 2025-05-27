@@ -50,85 +50,106 @@ def set_up_package(name, repository, url_attr, git_type=None):
     assert len(s.package.versions) == 1
 
     v = next(iter(s.package.versions))
-    s.package.versions[v][url_attr] = repository.url
+    if git_type:
+        s.package.versions[v] = repository.checks[git_type].args
+    else:
+        s.package.versions[v][url_attr] = repository.url
 
 
-def check_mirror():
+@pytest.fixture()
+def mock_mirror():
     with spack.stage.Stage("spack-mirror-test") as stage:
         mirror_root = os.path.join(stage.path, "test-mirror")
         # register mirror with spack config
         mirrors = {"spack-mirror-test": url_util.path_to_file_url(mirror_root)}
         with spack.config.override("mirrors", mirrors):
-            with spack.config.override("config:checksum", False):
-                specs = [spack.concretize.concretize_one(x) for x in repos]
-                spack.mirrors.utils.create(mirror_root, specs)
-
-                # Stage directory exists
-                assert os.path.isdir(mirror_root)
-
-                for spec in specs:
-                    fetcher = spec.package.fetcher
-                    per_package_ref = os.path.join(
-                        spec.name, "-".join([spec.name, str(spec.version)])
-                    )
-                    mirror_layout = spack.mirrors.layout.default_mirror_layout(
-                        fetcher, per_package_ref
-                    )
-                    expected_path = os.path.join(mirror_root, mirror_layout.path)
-                    assert os.path.exists(expected_path)
-
-                # Now try to fetch each package.
-                for name, mock_repo in repos.items():
-                    spec = spack.concretize.concretize_one(name)
-                    pkg = spec.package
-
-                    with spack.config.override("config:checksum", False):
-                        with pkg.stage:
-                            pkg.do_stage(mirror_only=True)
-
-                            # Compare the original repo with the expanded archive
-                            original_path = mock_repo.path
-                            if "svn" in name:
-                                # have to check out the svn repo to compare.
-                                original_path = os.path.join(mock_repo.path, "checked_out")
-
-                                svn = which("svn", required=True)
-                                svn("checkout", mock_repo.url, original_path)
-
-                            dcmp = filecmp.dircmp(original_path, pkg.stage.source_path)
-
-                            # make sure there are no new files in the expanded
-                            # tarball
-                            assert not dcmp.right_only
-                            # and that all original files are present.
-                            assert all(left in exclude for left in dcmp.left_only)
+            yield mirror_root
 
 
-def test_url_mirror(mock_archive):
+def populate_mirror():
+    mirror_root = spack.config.get("mirrors:spack-mirror-test").strip("file:")
+    with spack.config.override("config:checksum", False):
+        specs = [spack.concretize.concretize_one(x) for x in repos]
+        spack.mirrors.utils.create(mirror_root, specs)
+
+        # Stage directory exists
+        assert os.path.isdir(mirror_root)
+
+        for spec in specs:
+            fetcher = spec.package.fetcher
+            per_package_ref = os.path.join(spec.name, "-".join([spec.name, str(spec.version)]))
+            mirror_layout = spack.mirrors.layout.default_mirror_layout(fetcher, per_package_ref)
+            expected_path = os.path.join(mirror_root, mirror_layout.path)
+            assert os.path.exists(expected_path)
+
+    return specs
+
+
+def check_mirror():
+    populate_mirror()
+    # Now try to fetch each package.
+    for name, mock_repo in repos.items():
+        spec = spack.concretize.concretize_one(name)
+        pkg = spec.package
+
+        with spack.config.override("config:checksum", False):
+            with pkg.stage:
+                pkg.do_stage(mirror_only=True)
+
+                # Compare the original repo with the expanded archive
+                original_path = mock_repo.path
+                if "svn" in name:
+                    # have to check out the svn repo to compare.
+                    original_path = os.path.join(mock_repo.path, "checked_out")
+
+                    svn = which("svn", required=True)
+                    svn("checkout", mock_repo.url, original_path)
+
+                dcmp = filecmp.dircmp(original_path, pkg.stage.source_path)
+
+                # make sure there are no new files in the expanded
+                # tarball
+                assert not dcmp.right_only
+                # and that all original files are present.
+                assert all(left in exclude for left in dcmp.left_only)
+
+
+def test_url_mirror(mock_archive, mock_mirror):
     set_up_package("trivial-install-test-package", mock_archive, "url")
     check_mirror()
     repos.clear()
 
 
-def test_git_mirror(git, mock_git_repository):
+def test_git_mirror(git, mock_git_repository, mock_mirror):
     set_up_package("git-test", mock_git_repository, "git")
     check_mirror()
     repos.clear()
 
 
-def test_svn_mirror(mock_svn_repository):
+def test_svn_mirror(mock_svn_repository, mock_mirror):
     set_up_package("svn-test", mock_svn_repository, "svn")
     check_mirror()
     repos.clear()
 
 
-def test_hg_mirror(mock_hg_repository):
+def test_hg_mirror(mock_hg_repository, mock_mirror):
     set_up_package("hg-test", mock_hg_repository, "hg")
     check_mirror()
     repos.clear()
 
 
-def test_all_mirror(mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive):
+@pytest.mark.nomockstage
+@pytest.mark.require_provenance
+def test_commit_from_mirror(git, mock_git_repository, mock_mirror):
+    set_up_package("git-test", mock_git_repository, "git", "branch")
+    specs = populate_mirror()
+    assert "commit" in specs[0].variants
+    repos.clear()
+
+
+def test_all_mirror(
+    mock_git_repository, mock_svn_repository, mock_hg_repository, mock_archive, mock_mirror
+):
     set_up_package("git-test", mock_git_repository, "git")
     set_up_package("svn-test", mock_svn_repository, "svn")
     set_up_package("hg-test", mock_hg_repository, "hg")

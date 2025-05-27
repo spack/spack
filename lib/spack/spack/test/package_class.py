@@ -351,22 +351,6 @@ def test_binary_provenance_find_commit_ls_remote(
 
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.require_provenance
-@pytest.mark.nomockstage
-@pytest.mark.skip("WIP")
-def test_binary_provenance_git_fails_mirror_resolves_commit(
-    dead_git, mock_git_version_info, mock_packages, config, monkeypatch, tmpdir
-):
-    """Fail all attempts to resolve git commits"""
-    repo_path, _, commits = mock_git_version_info
-    monkeypatch.setattr(
-        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
-    )
-    spec = spack.concretize.concretize_one("git-test-commit@main")
-    assert "commit" in spec.variants
-
-
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
-@pytest.mark.require_provenance
 def test_binary_provenance_cant_resolve_commit(
     mock_packages, monkeypatch, dead_git, config, capsys
 ):

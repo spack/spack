@@ -243,23 +243,30 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def retrieve_commit_from_archive(archive_path, ref=None):
+def retrieve_commit_from_archive(archive_path, ref):
     assert os.path.isfile(archive_path)
 
+    commit = None
+    ref_paths = [f"refs/heads/{ref}/", f"refs/tags/{ref}/"]
     tar = which("tar", required=True)
     error_msg = f"Archive {archive_path} does not appear to contain git data"
+
     if not ref:
         try:
-            _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
+            head_content = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).strip()
+            if head_content.startswith("ref: "):
+                ref_paths = [head_content.split()[1]]
+            else:
+                # assume it is commit, or set to None if head has some strange behavior
+                commit = head_content if head_content else None
+                return commit
         except ProcessError:
-            assert False, error_msg
-    assert ref
+            tty.warn(error_msg)
+            return None
 
-    commit = None
-    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/"]:
+    for ref_path in ref_paths:
         try:
-            _, ref = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).split()
-            commit = tar("-Oxzf", archive_path, f".git/{ref}", output=str, error=str).strip()
+            commit = tar("-Oxzf", archive_path, f".git/{ref_path}", output=str, error=str).strip()
         except ProcessError:
             pass
     if not commit:
