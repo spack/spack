@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import shlex
 import sys
@@ -21,7 +22,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
 
     # Create

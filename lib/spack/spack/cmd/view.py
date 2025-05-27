@@ -32,6 +32,7 @@ All operations on views are performed via proxy objects such as
 YamlFilesystemView.
 
 """
+import argparse
 import sys
 
 import llnl.util.tty as tty
@@ -74,8 +75,8 @@ def disambiguate_in_view(specs, view):
     return list(map(squash, map(spack.store.STORE.db.query, specs)))
 
 
-def setup_parser(sp):
-    setup_parser.parser = sp
+def setup_parser(sp: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", sp)
 
     sp.add_argument(
         "-v",
@@ -100,8 +101,6 @@ def setup_parser(sp):
     )
 
     ssp = sp.add_subparsers(metavar="ACTION", dest="action")
-
-    specs_opts = dict(metavar="spec", action="store", help="seed specs of the packages to view")
 
     # The action parameterizes the command but in keeping with Spack
     # patterns we make it a subcommand.
@@ -154,28 +153,38 @@ def setup_parser(sp):
             )
 
             # with all option, spec is an optional argument
-            so = specs_opts.copy()
-            so["nargs"] = "*"
-            so["default"] = []
-            grp.add_argument("specs", **so)
+            grp.add_argument(
+                "specs",
+                nargs="*",
+                default=[],
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
             grp.add_argument("-a", "--all", action="store_true", help="act on all specs in view")
 
         elif cmd == "statlink":
-            so = specs_opts.copy()
-            so["nargs"] = "*"
-            act.add_argument("specs", **so)
+            act.add_argument(
+                "specs",
+                nargs="*",
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
 
         else:
             # without all option, spec is required
-            so = specs_opts.copy()
-            so["nargs"] = "+"
-            act.add_argument("specs", **so)
+            act.add_argument(
+                "specs",
+                nargs="+",
+                metavar="spec",
+                action="store",
+                help="seed specs of the packages to view",
+            )
 
-    for cmd in ["symlink", "hardlink", "copy"]:
+    for cmd in ("symlink", "hardlink", "copy"):
         act = file_system_view_actions[cmd]
         act.add_argument("-i", "--ignore-conflicts", action="store_true")
-
-    return
 
 
 def view(parser, args):
