@@ -62,7 +62,7 @@ class Libgcrypt(AutotoolsPackage):
     patch("conditional_avx512.patch", when="@1.11.0")
 
     patch("o_flag_munging-1.10.patch", when="@1.10")
-    patch("o_flag_munging-1.11.patch", when="@1.11")
+    patch("o_flag_munging-1.11.patch", when="@1.11.0")
 
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
