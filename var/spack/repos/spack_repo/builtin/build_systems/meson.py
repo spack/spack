@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import collections.abc
 import os
 from typing import List
 
@@ -69,6 +68,13 @@ class MesonPackage(PackageBase):
         compiler flags to meson."""
         # Has to be dynamic attribute due to caching
         setattr(self, "meson_flag_args", [])
+
+    # Convenience methods
+    def define(self, meson_var: str, value: Any) -> str:
+        return define(meson_var, value)
+
+    def define_from_variant(self, meson_var: str, variant: Optional[str] = None) -> str:
+        return define_from_variant(self, meson_var, variant)
 
 
 @register_builder("meson")
@@ -173,101 +179,11 @@ class MesonBuilder(BuilderWithDefaults):
         ]
 
     @staticmethod
-    def define(meson_var, value):
-        """Return a meson command line argument that defines a variable.
+    def define(meson_var: str, value: Any) -> str:
+        return define(meson_var, value)
 
-        The resulting argument will convert boolean values to false/true
-        and lists/tuples to meson colon-separated string lists. All other
-        values will be interpreted as strings.
-
-        Examples:
-
-            .. code-block:: python
-
-                [define('prefer_static', True),
-                 define('cpp_std', 14),
-                 define('swr', ['avx', 'avx2'])]
-
-            will generate the following configuration options:
-
-            .. code-block:: console
-
-                ["-Dprefer_static=true",
-                 "-Dcpp_std=14",
-                 "-Dswr=avx,avx2]
-
-        """
-        # Create a list of pairs. Each pair includes a configuration
-        # option and whether or not that option is activated
-        if isinstance(value, bool):
-            value = "true" if value else "false"
-        else:
-            if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
-                value = ",".join(str(v) for v in value)
-            else:
-                value = str(value)
-
-        return "".join(["-D", meson_var, "=", value])
-
-    def define_from_variant(self, meson_var, variant=None):
-        """Return a meson command line argument from the given variant's value.
-
-        The optional ``variant`` argument defaults to the lower-case transform
-        of ``meson_var``.
-
-        This utility function is similar to
-        :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without`.
-
-        Examples:
-
-            Given a package with:
-
-            .. code-block:: python
-
-                variant('cxxstd', default='11', values=('11', '14'),
-                        multi=False, description='')
-                variant('static', default=True, description='')
-                variant('swr', values=any_combination_of('avx', 'avx2'),
-                        description='')
-
-            calling this function like:
-
-            .. code-block:: python
-
-                [self.define_from_variant('prefer_static', 'static'),
-                 self.define_from_variant('cpp_std', 'cxxstd'),
-                 self.define_from_variant('swr')]
-
-            will generate the following configuration options:
-
-            .. code-block:: console
-
-                ["-Dprefer_static=true",
-                 "-Dcpp_std=14",
-                 "-Dswr=avx,avx2]
-
-            for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
-
-        Note: if the provided variant is conditional, and the condition is not met,
-                this function returns an empty string. Meson does NOT discard empty
-                strings provided on the command line.
-        """
-
-        if variant is None:
-            variant = meson_var.lower()
-
-        if variant not in self.pkg.variants:
-            raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, self.pkg.name))
-
-        if variant not in self.pkg.spec.variants:
-            return ""
-
-        value = self.pkg.spec.variants[variant].value
-        if isinstance(value, (tuple, list)):
-            # Sort multi-valued variants for reproducibility
-            value = sorted(value)
-
-        return self.define(meson_var, value)
+    def define_from_variant(self, meson_var: str, variant: Optional[str] = None) -> str:
+        return define_from_variant(self.pkg, meson_var, variant)
 
     @property
     def build_dirname(self):
@@ -300,6 +216,8 @@ class MesonBuilder(BuilderWithDefaults):
         options.append(os.path.abspath(self.root_mesonlists_dir))
         options += self.std_meson_args
         options += self.meson_args()
+        # # remove empty option strings from the list
+        options[:] = [arg for arg in options if arg]
         with working_dir(self.build_directory, create=True):
             pkg.module.meson(*options)
 
@@ -322,3 +240,101 @@ class MesonBuilder(BuilderWithDefaults):
         with working_dir(self.build_directory):
             self.pkg._if_ninja_target_execute("test")
             self.pkg._if_ninja_target_execute("check")
+
+
+def define(meson_var: str, value: Any) -> str:
+    """Return a meson command line argument that defines a variable.
+
+    The resulting argument will convert boolean values to false/true
+    and lists/tuples to meson colon-separated string lists. All other
+    values will be interpreted as strings.
+
+    Examples:
+
+        .. code-block:: python
+
+            [define('prefer_static', True),
+             define('cpp_std', 14),
+             define('swr', ['avx', 'avx2'])]
+
+        will generate the following configuration options:
+
+        .. code-block:: console
+
+            ["-Dprefer_static=true",
+             "-Dcpp_std=14",
+             "-Dswr=avx,avx2]
+
+    """
+    # Create a list of pairs. Each pair includes a configuration
+    # option and whether or not that option is activated
+    if isinstance(value, bool):
+        value = "true" if value else "false"
+    else:
+        if isinstance(value, collections.abc.Sequence) and not isinstance(value, str):
+            value = ",".join(str(v) for v in value)
+        else:
+            value = str(value)
+
+    return "".join(["-D", meson_var, "=", value])
+
+
+def define_from_variant(pkg: PackageBase, meson_var: str, variant: Optional[str] = None) -> str:
+    """Return a meson command line argument from the given variant's value.
+
+    The optional ``variant`` argument defaults to the lower-case transform
+    of ``meson_var``.
+
+    This utility function is similar to
+    :meth:`~spack.build_systems.autotools.AutotoolsBuilder.with_or_without`.
+
+    Examples:
+
+        Given a package with:
+
+        .. code-block:: python
+
+            variant('cxxstd', default='11', values=('11', '14'),
+                    multi=False, description='')
+            variant('static', default=True, description='')
+            variant('swr', values=any_combination_of('avx', 'avx2'),
+                    description='')
+
+        calling this function like:
+
+        .. code-block:: python
+
+            [self.define_from_variant('prefer_static', 'static'),
+             self.define_from_variant('cpp_std', 'cxxstd'),
+             self.define_from_variant('swr')]
+
+        will generate the following configuration options:
+
+        .. code-block:: console
+
+            ["-Dprefer_static=true",
+             "-Dcpp_std=14",
+             "-Dswr=avx,avx2]
+
+        for ``<spec-name> cxxstd=14 +shared swr=avx,avx2``
+
+    Note: if the provided variant is conditional, and the condition is not met,
+            this function returns an empty string. Meson does NOT discard empty
+            strings provided on the command line.
+    """
+
+    if variant is None:
+        variant = meson_var.lower()
+
+    if not pkg.has_variant(variant):
+        raise KeyError('"{0}" is not a variant of "{1}"'.format(variant, pkg.name))
+
+    if variant not in pkg.spec.variants:
+        return ""
+
+    value = pkg.spec.variants[variant].value
+    if isinstance(value, (tuple, list)):
+        # Sort multi-valued variants for reproducibility
+        value = sorted(value)
+
+    return define(meson_var, value)
