@@ -814,7 +814,6 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
             ("clang++", "clang", "cxx"),
             ("clang", "clang", "c"),
             ("flang", "flang", "fortran"),
-            # TODO: gold?
             ("ld.lld", "lld", None),
             ("lldb", "lldb", None),
         ]
@@ -826,7 +825,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
         for exe_path in sorted(exes, key=len):
             name = os.path.basename(exe_path)
             for exe, var, lang in exe_variant_lang:
-                # XXX: should this be `name.startswith(exe)`?
+                # NOTE: since "amdclang++" is "clang", we use `in` rather than `startswith`
                 if exe in name:
                     compilers.setdefault(lang, exe_path)
                     variants.add(var)
