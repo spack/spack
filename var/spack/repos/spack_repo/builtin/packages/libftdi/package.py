@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
 
 
 class Libftdi(CMakePackage):
@@ -24,5 +25,5 @@ class Libftdi(CMakePackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    depends_on("libusb", type="build")
-    depends_on("libconfuse", type="build")
+    depends_on("libusb")
+    depends_on("libconfuse")
