@@ -269,7 +269,7 @@ class Root(CMakePackage):
     variant("tbb", default=True, description="TBB multi-threading support")
     variant(
         "tiff",
-        when="@6.36.00",
+        when="@6.36:",
         default=True,
         description="Support TIFF in image processing (requires libtiff)",
     )
@@ -357,6 +357,7 @@ class Root(CMakePackage):
         depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
 
     depends_on("freetype")
+    depends_on("giflib")
     depends_on("jpeg")
     depends_on("libice")
     depends_on("libpng")
@@ -429,6 +430,7 @@ class Root(CMakePackage):
     depends_on("graphviz", when="+graphviz")
     depends_on("gsl", when="+gsl")
     depends_on("jemalloc", when="+jemalloc")
+    depends_on("libtiff", when="+tiff")
     depends_on("mysql-client", when="+mysql")
     depends_on("openssl", when="+ssl")
     depends_on("openssl", when="+davix")  # Also with davix
@@ -509,7 +511,7 @@ class Root(CMakePackage):
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
     conflicts(
-        "cxxstd=23", when="@:6.36.00", msg="C++23 support requires root version at least 6.36.00"
+        "cxxstd=23", when="@:6.34", msg="C++23 support requires root version at least 6.36.00"
     )
 
     conflicts("%gcc@:10", when="cxxstd=20")
@@ -713,6 +715,7 @@ class Root(CMakePackage):
             define("builtin_fftw3", False),
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
+            define("builtin_gif", False),
             define("builtin_gl2ps", False),
             define("builtin_glew", False),
             define("builtin_gsl", False),
@@ -740,7 +743,7 @@ class Root(CMakePackage):
                 )
             )
 
-        if self.spec.satisfies("@6.36.00:"):
+        if self.spec.satisfies("@6.36:"):
             options += [
                 define("builtin_gif", False),
                 define("builtin_jpeg", False),
