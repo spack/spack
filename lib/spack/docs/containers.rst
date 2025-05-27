@@ -123,7 +123,7 @@ other techniques to minimize the size of the final image:
 .. code-block:: docker
 
    # Build stage with Spack pre-installed and ready to be used
-   FROM spack/ubuntu-bionic:latest as builder
+   FROM spack/ubuntu-noble:latest as builder
 
    # What we want to install and how we want to install it
    # is specified in a manifest file (spack.yaml)
