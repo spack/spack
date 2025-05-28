@@ -18,11 +18,17 @@ class Rccl(CMakePackage):
 
     homepage = "https://github.com/ROCm/rccl"
     git = "https://github.com/ROCm/rccl.git"
-    url = "https://github.com/ROCm/rccl/archive/rocm-6.2.4.tar.gz"
+    url = "https://github.com/ROCm/rccl/archive/rocm-6.4.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["librccl"]
+    version(
+        "6.4.1",
+        tag="rocm-6.4.1",
+        commit="e72b592201d626f16a03a7ba22502130a2846036",
+        submodules=True,
+    )
     version(
         "6.4.0",
         tag="rocm-6.4.0",
@@ -119,6 +125,7 @@ class Rccl(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -145,10 +152,11 @@ class Rccl(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
-    for ver in ["6.4.0"]:
+    for ver in ["6.4.0", "6.4.1"]:
         depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
         depends_on(f"rocprofiler-register@{ver}", when=f"@{ver}")
 

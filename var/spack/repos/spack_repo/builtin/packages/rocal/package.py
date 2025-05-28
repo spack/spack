@@ -12,11 +12,12 @@ class Rocal(CMakePackage):
     of storage formats and modify them through a processing graph programmable by the user."""
 
     homepage = "https://github.com/ROCm/rocAL"
-    url = "https://github.com/ROCm/rocAL/archive/refs/tags/rocm-6.2.0.tar.gz"
+    url = "https://github.com/ROCm/rocAL/archive/refs/tags/rocm-6.4.1.tar.gz"
 
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.1", sha256="9ed8949b7a0c588b6ab8b804e353819314659cedfecfdf91fffc1c73f33d3014")
     version("6.4.0", sha256="6239caa398c2779c1c7ecff3cebe7d206cd2fa591c1800f6f2ae16329876dd4a")
     version("6.3.3", sha256="aaccd951f176356561d8ab8210696d80a94553fd48ace72993a7cfac4b98d6cf")
     version("6.3.2", sha256="ceae8a86770c1f5d8cb56f4c38d6b354e16bda6b877cf93417d6a3e4e33354c6")
@@ -33,7 +34,7 @@ class Rocal(CMakePackage):
     depends_on("ffmpeg@4.4:")
     depends_on("abseil-cpp", when="@6.3:")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"mivisionx@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         depends_on(f"rpp@{ver}", when=f"@{ver}")

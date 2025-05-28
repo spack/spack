@@ -14,13 +14,14 @@ class RocmCore(CMakePackage):
     getROCmVersion function provides the ROCm version."""
 
     homepage = "https://github.com/ROCm/rocm-core"
-    url = "https://github.com/ROCm/rocm-core/archive/refs/tags/rocm-6.2.4.tar.gz"
+    url = "https://github.com/ROCm/rocm-core/archive/refs/tags/rocm-6.4.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     libraries = ["librocm-core"]
 
     license("MIT")
+    version("6.4.1", sha256="ac56938879a550ecd55ef5c00067203a0b3faf5a17a48d649728b1a3c65b040c")
     version("6.4.0", sha256="058739404c91105c1b34117803f6b48917a23191291ce67020e6b983b45450c1")
     version("6.3.3", sha256="d2a3900424dea1dcc0e303c288d2c07e1345c2d5348398449998e8007fe7fd44")
     version("6.3.2", sha256="3243f661e5e995341e81127a6096ac80169b8481826ebadc02e24020f1ff985d")
@@ -61,6 +62,7 @@ class RocmCore(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on("llvm-amdgpu", when=f"@{ver}+asan")
 

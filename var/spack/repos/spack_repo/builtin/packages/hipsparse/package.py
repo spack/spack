@@ -17,13 +17,14 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/ROCm/hipSPARSE"
     git = "https://github.com/ROCm/hipSPARSE.git"
-    url = "https://github.com/ROCm/hipSPARSE/archive/rocm-6.2.4.tar.gz"
+    url = "https://github.com/ROCm/hipSPARSE/archive/rocm-6.4.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "haampie", "afzpatel")
     libraries = ["libhipsparse"]
 
     license("MIT")
+    version("6.4.1", sha256="cae547776076066c0ee19a7f98516ac2e9a0cf3bb3b0809d7a4e474f9ee4cb90")
     version("6.4.0", sha256="aaab3e9a905f5c5f470634ed7a0929ef93e28d2c5fe4f6f89338b39a937f1825")
     version("6.3.3", sha256="61c26eb93e857c942a03ea4350a403e20191be465041e542ad7da00058e89ead")
     version("6.3.2", sha256="9fbc3468632fdc828d7bae386c2737eb371d78811f53da7348b417fb00d62808")
@@ -101,6 +102,7 @@ class Hipsparse(CMakePackage, CudaPackage, ROCmPackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"+rocm @{ver}")

@@ -14,7 +14,7 @@ class Mivisionx(CMakePackage):
 
     homepage = "https://github.com/ROCm/MIVisionX"
     git = "https://github.com/ROCm/MIVisionX.git"
-    url = "https://github.com/ROCm/MIVisionX/archive/rocm-6.4.0.tar.gz"
+    url = "https://github.com/ROCm/MIVisionX/archive/rocm-6.4.1.tar.gz"
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
     tags = ["rocm"]
@@ -23,10 +23,12 @@ class Mivisionx(CMakePackage):
         if version == Version("1.7"):
             return "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/1.7.tar.gz"
 
-        url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
+        url = "https://github.com/ROCm/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
     license("MIT")
+
+    version("6.4.1", sha256="9f1a1a33dc2770ac014e5ea019ebde6cadcca017840753b9cb8cf1598d2d83c8")
     version("6.4.0", sha256="de3902ad2402bf29e4f53617ec10d34188b0c67547fc290390ff0c8ac4ad505a")
     version("6.3.3", sha256="6ab255305b786c6152ffe12211f329d2bc56823bb2192a945b9aa5efe6731b82")
     version("6.3.2", sha256="2e7984e4ef2e6195aa9afa11030b8418aee885bec9befa220b9b53b5229b7fae")
@@ -246,6 +248,7 @@ class Mivisionx(CMakePackage):
             "6.3.2",
             "6.3.3",
             "6.4.0",
+            "6.4.1",
         ]:
             depends_on(f"miopen-hip@{ver}", when=f"@{ver}")
         for ver in [
@@ -271,6 +274,7 @@ class Mivisionx(CMakePackage):
             "6.3.2",
             "6.3.3",
             "6.4.0",
+            "6.4.1",
         ]:
             depends_on(f"migraphx@{ver}", when=f"@{ver}")
             depends_on(f"hip@{ver}", when=f"@{ver}")
@@ -295,6 +299,7 @@ class Mivisionx(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
         depends_on("python@3.5:", type="build")
@@ -315,6 +320,7 @@ class Mivisionx(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rpp@{ver}", when=f"@{ver}")
 

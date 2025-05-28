@@ -14,7 +14,7 @@ class RocmCmake(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocm-cmake"
     git = "https://github.com/ROCm/rocm-cmake.git"
-    url = "https://github.com/ROCm/rocm-cmake/archive/rocm-6.2.4.tar.gz"
+    url = "https://github.com/ROCm/rocm-cmake/archive/rocm-6.4.1.tar.gz"
     tags = ["rocm"]
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
@@ -22,6 +22,7 @@ class RocmCmake(CMakePackage):
     license("MIT")
 
     version("master", branch="master", deprecated=True)
+    version("6.4.1", sha256="d6dfa862009d593f4d334e0c6da9ac52b228e52bb3b38b53405975f28087ca2f")
     version("6.4.0", sha256="be8109c52e9309d1ae9553e067346ecdf1a25f653cc21974ddc542f31ce54615")
     version("6.3.3", sha256="4238cccc22226ba9487185fc2faa66b11c0cb8e7982240332e1b919cec8d909e")
     version("6.3.2", sha256="f5104c2289da99a70d8c4c1befbca4f8efa7c89711eaac7b6b63592cd4bd99a8")
@@ -71,6 +72,7 @@ class RocmCmake(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 

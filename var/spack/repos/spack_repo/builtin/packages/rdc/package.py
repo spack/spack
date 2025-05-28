@@ -28,6 +28,7 @@ class Rdc(CMakePackage):
         return url.format(version)
 
     license("MIT")
+    version("6.4.1", sha256="8b6d58c6ce30497a9d6b465057a8a39be9e9e4603b75a52b5004335f12310024")
     version("6.4.0", sha256="2ee3def1e90784923f2043220974d30fe9581ec0d54c93628911ed8292fc56c4")
     version("6.3.3", sha256="9be314ea8d7e7af58ac4a24f5720f54d51ba553d3e1751bc9cfc4bff98494fab")
     version("6.3.2", sha256="e0780b8ef46d7b9885eb06a0b9eb56924fdf090ade71a66360a0bee1d9d7295d")
@@ -84,31 +85,7 @@ class Rdc(CMakePackage):
     ]:
         depends_on(f"rocm-smi-lib@{ver}", type=("build", "link"), when=f"@{ver}")
 
-    for ver in [
-        "5.3.0",
-        "5.3.3",
-        "5.4.0",
-        "5.4.3",
-        "5.5.0",
-        "5.5.1",
-        "5.6.0",
-        "5.6.1",
-        "5.7.0",
-        "5.7.1",
-        "6.0.0",
-        "6.0.2",
-        "6.1.0",
-        "6.1.1",
-        "6.1.2",
-        "6.2.0",
-        "6.2.1",
-        "6.2.4",
-        "6.3.0",
-        "6.3.1",
-        "6.3.2",
-        "6.3.3",
-        "6.4.0",
-    ]:
+    for ver in [ "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
     for ver in [
@@ -131,12 +108,15 @@ class Rdc(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
+        depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"amdsmi@{ver}", when=f"@{ver}")
 
-    for ver in ["6.4.0"]:
+    for ver in ["6.4.0", "6.4.1"]:
         depends_on(f"rocm-validation-suite@{ver}", when=f"@{ver}")
 
     def patch(self):

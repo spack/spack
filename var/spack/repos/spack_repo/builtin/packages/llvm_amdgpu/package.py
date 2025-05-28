@@ -18,7 +18,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
 
     homepage = "https://github.com/ROCm/llvm-project"
     git = "https://github.com/ROCm/llvm-project.git"
-    url = "https://github.com/ROCm/llvm-project/archive/rocm-6.2.4.tar.gz"
+    url = "https://github.com/ROCm/llvm-project/archive/rocm-6.4.1.tar.gz"
     tags = ["rocm", "compiler"]
     executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
 
@@ -37,6 +37,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     license("Apache-2.0")
 
     version("master", branch="amd-stg-open", deprecated=True)
+    version("6.4.1", sha256="460ad28677092b9eb86ffdc49bcb4d01035e32b4f05161d85f90c9fa80239f50")
     version("6.4.0", sha256="dca1c145a23f05229d5d646241f9d1d3c5dbf1d745b338ae020eabe33beb965c")
     version("6.3.3", sha256="4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d")
     version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
@@ -180,6 +181,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
         when="@master +rocm-device-libs",
     )
     for d_version, d_shasum in [
+        ("6.4.1", "f72d100a46a2dd9f4c870cef156604777f1bdb1841df039d14bf37b19814b9da"),
         ("6.4.0", "ff740e8c8f2229c6dc47577363f707b1a44ea4254f8ad74f8f0a669998829535"),
         ("6.3.3", "aa2e30d3d68707d6df4840e954bb08cc13cd312cec1a98a64d97adbe07262f50"),
         ("6.3.2", "aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074"),

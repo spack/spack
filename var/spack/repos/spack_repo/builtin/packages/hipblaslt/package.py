@@ -13,12 +13,14 @@ class Hipblaslt(CMakePackage):
     and extends functionalities beyond a traditional BLAS library"""
 
     homepage = "https://github.com/ROCm/hipBLASLt"
-    url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.1.2.tar.gz"
+    url = "https://github.com/ROCm/hipBLASLt/archive/refs/tags/rocm-6.4.1.tar.gz"
     git = "https://github.com/ROCm/hipBLASLt.git"
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
+    tags = ["rocm"]
 
     license("MIT")
+    version("6.4.1", sha256="929f781f86df40143c3ab98df2d746170dedb6788e368335e24c84796285a8a4")
     version("6.4.0", sha256="a4baa0c7336db9d46a0884c8ccfd0fb7e00a502b478aed9f588aa26fa8773353")
     version("6.3.3", sha256="f32d666b37bdbecbf924cc98653fa3d30a0de629039d4dad44d35a2082e39e5a")
     version("6.3.2", sha256="cc4875b1a5cf1708a7576c42aff6b4cb790cb7337f5dc2df33119a4aadcef027")
@@ -63,6 +65,7 @@ class Hipblaslt(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
@@ -71,11 +74,11 @@ class Hipblaslt(CMakePackage):
     for ver in ["6.0.0", "6.0.2", "6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4"]:
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"hipblas-common@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
-    for ver in ["6.4.0"]:
+    for ver in ["6.4.0", "6.4.1"]:
         depends_on(f"roctracer-dev@{ver}", when=f"@{ver}")
 
     depends_on("msgpack-c")

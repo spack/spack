@@ -17,12 +17,13 @@ class Hipsparselt(CMakePackage, ROCmPackage):
     Currently, hipSPARSELt supports rocSPARSELt and cuSPARSELt v0.4 as backends."""
 
     homepage = "https://github.com/ROCm/hipsparselt"
-    url = "https://github.com/ROCm/hipSPARSELt/archive/refs/tags/rocm-6.1.2.tar.gz"
+    url = "https://github.com/ROCm/hipSPARSELt/archive/refs/tags/rocm-6.4.1.tar.gz"
     git = "https://github.com/ROCm/hipsparseLt.git"
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.1", sha256="74836c789e912e61532aacf275efb053ac6d0818b3da360e7b236e1b82b3152b")
     version("6.4.0", sha256="3950f424c5623bdf764e23c263f3a63de62e3690f491251b88054e27560dc604")
     version("6.3.3", sha256="6b756e20fddb37b8c1237ef8e124452c9bdd46acad8a40699d10b609d0d2ebfc")
     version("6.3.2", sha256="a0b30b478eff822dd7fa1c116ad99dcdf14ece1c33aae04ac71b594efd4d9866")
@@ -68,13 +69,14 @@ class Hipsparselt(CMakePackage, ROCmPackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocm-openmp-extras@{ver}", when=f"@{ver}", type="test")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
 
     depends_on("cmake@3.5:", type="build")
