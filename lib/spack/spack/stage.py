@@ -47,7 +47,6 @@ from spack import fetch_strategy as fs  # breaks a cycle
 from spack.util.archive import retrieve_commit_from_archive
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
-from spack.util.executable import ProcessError
 from spack.util.git import git
 from spack.version import StandardVersion, VersionList
 
@@ -819,20 +818,11 @@ class StageComposite(pattern.Composite):
         if not ref:
             ref = "HEAD"
         if self.expanded:
-            try:
-                commit = git(required=True)(
-                    "-C",
-                    self.source_path,
-                    "rev-parse",
-                    ref,
-                    output=str,
-                    error=str,
-                    # fail_on_error=False,
-                ).strip()
-            except ProcessError:
-                tty.warn(
-                    f"{self.source_path} can't extract git sha. Consider calling `spack clean --stage`"
-                )
+            query = git(required=True)(
+                "ls-remote", self.source_path, ref, output=str, error=str
+            ).strip()
+            if query:
+                commit = query.split()[0]
         if not commit and self.archive_file:
             commit = retrieve_commit_from_archive(self.archive_file, ref)
         if not commit:
