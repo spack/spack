@@ -18,10 +18,12 @@ class Libgcrypt(AutotoolsPackage):
     license("LGPL-2.1-or-later AND GPL-2.0-or-later")
 
     version("1.11.1", sha256="24e91c9123a46c54e8371f3a3a2502f1198f2893fbfbf59af95bc1c21499b00e")
-    version("1.11.0", sha256="09120c9867ce7f2081d6aaa1775386b98c2f2f246135761aae47d81f58685b9c")
     version("1.10.3", sha256="8b0870897ac5ac67ded568dcfadf45969cfa8a6beb0fd60af2a9eadc2a3272aa")
 
     with default_args(deprecated=True):
+        version(
+            "1.11.0", sha256="09120c9867ce7f2081d6aaa1775386b98c2f2f246135761aae47d81f58685b9c"
+        )
         version(
             "1.10.2", sha256="3b9c02a004b68c256add99701de00b383accccf37177e0d6c58289664cce0c03"
         )
@@ -62,7 +64,6 @@ class Libgcrypt(AutotoolsPackage):
     patch("conditional_avx512.patch", when="@1.11.0")
 
     patch("o_flag_munging-1.10.patch", when="@1.10")
-    patch("o_flag_munging-1.11.patch", when="@1.11.0")
 
     def check(self):
         # Without this hack, `make check` fails on macOS when SIP is enabled
