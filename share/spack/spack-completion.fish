@@ -1468,12 +1468,12 @@ complete -c spack -n '__fish_spack_using_command docs' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command docs' -s h -l help -d 'show this help message and exit'
 
 # spack edit
-set -g __fish_spack_optspecs_spack_edit h/help b/build-system= c/command d/docs t/test m/module r/repo= N/namespace=
+set -g __fish_spack_optspecs_spack_edit h/help b/build-system c/command d/docs t/test m/module r/repo= N/namespace=
 complete -c spack -n '__fish_spack_using_command_pos_remainder 0 edit' -f -a '(__fish_spack_packages)'
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command edit' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -r -f -a path
-complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -r -d 'edit the build system with the supplied name'
+complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -f -a path
+complete -c spack -n '__fish_spack_using_command edit' -s b -l build-system -d 'edit the build system with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -f -a path
 complete -c spack -n '__fish_spack_using_command edit' -s c -l command -d 'edit the command with the supplied name'
 complete -c spack -n '__fish_spack_using_command edit' -s d -l docs -f -a path
