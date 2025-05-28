@@ -246,7 +246,7 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
         target = spec.architecture.target
         if not target:
             target = spack.platforms.host().target("default_target")
-        target = target
+        target = target.family
 
         operating_system = spec.os
         if not operating_system:
