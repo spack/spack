@@ -90,7 +90,8 @@ def setup_parser(subparser):
     )
     scopes_parser.add_argument(
         "section",
-        help="tailor scope path information to the specified section\noptions: %(choices)s",
+        help="tailor scope path information to the specified section (implies -s|--show-paths)"
+        "\noptions: %(choices)s",
         metavar="section",
         nargs="?",
         choices=spack.config.SECTION_SCHEMAS,
@@ -244,7 +245,7 @@ def config_list(args):
 
 
 def _config_scope_info_string(args, scope):
-    if args.show_paths and hasattr(scope, "path"):
+    if (args.section or args.show_paths) and hasattr(scope, "path"):
         section_path = scope.get_section_filename(args.section) if args.section else None
         path = (
             section_path
@@ -258,9 +259,6 @@ def _config_scope_info_string(args, scope):
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
-
-    if args.section and not args.show_paths:
-        tty.warn(f"[section] ({args.section}) ignored without -s|--show-paths")
 
     scopes = (
         spack.config.scopes().reversed_values()
