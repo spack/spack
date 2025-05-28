@@ -85,6 +85,26 @@ spack_times_log = "install_times.json"
 NO_DEFAULT = object()
 
 
+def _git_ls_remote(url, ref):
+    # --ref introduced in git@2.7
+    # ls-remote introduced in git@1.7
+    git_args = ["ls-remote", url, "--ref", ref]
+
+    # TODO(psakiev) we probably want a better way to intercept this for unit tests
+    query = spack.util.git.git(required=True)(
+        *git_args,
+        output=str,
+        error=os.devnull,
+        extra_env={"GIT_TERMINAL_PROMPT": "0"},
+        fail_on_error=False,
+    )
+
+    if query:
+        sha, _ = query.strip().split()
+        return sha
+    return None
+
+
 class WindowsRPath:
     """Collection of functionality surrounding Windows RPATH specific features
 
@@ -1032,8 +1052,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         return False
 
-
-
     def resolve_binary_provenance(self) -> None:
         """
         Method to ensure concrete spec has binary provenance.
@@ -1057,22 +1075,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             url = self.version_or_package_attr("git", self.spec.version)
 
             assert ref, "Missing git ref"
-
-            # --ref introduced in git@2.7
-            # ls-remote introduced in git@1.7
-            git_args = ["ls-remote", url, "--ref", ref]
-
-            # TODO(psakiev) we probably want a better way to intercept this for unit tests
-            query = spack.util.git.git(required=True)(
-                *git_args,
-                output=str,
-                error=os.devnull,
-                extra_env={"GIT_TERMINAL_PROMPT": "0"},
-                fail_on_error=False,
-            )
-
-            if query:
-                sha, _ = query.strip().split()
+            sha = _git_ls_remote(url, ref)
 
         # we typically check mirrors first, but for commit resolution we query the network
         # and fall back to mirrors assuming people want the most up-to-date commits
