@@ -64,7 +64,11 @@ class Julia(MakefilePackage):
     variant(
         "cpu_target",
         default="auto",
-        description="Machine architecture(s) for which to (pre)compile system and package images",
+        description=(
+            "Machine architecture(s) for which to (pre)compile system and package "
+            + "images. Use pipe (|) instead of comma (,) as Spack does not support "
+            + "commas in variants"
+        ),
         sticky=True,
     )
 
@@ -382,7 +386,8 @@ class Julia(MakefilePackage):
         march = get_best_target(spec.target, spec.compiler.name, spec.compiler.version)
 
         # LLVM compatible name for the JIT
-        julia_cpu_target = spec.variants["cpu_target"].value
+        # Spack variants don't allow commas, so we use pipes and replace them to commas.
+        julia_cpu_target = spec.variants["cpu_target"].value.replace("|", ",")
         if julia_cpu_target == "auto":
             julia_cpu_target = get_best_target(spec.target, "clang", spec["llvm"].version)
 
