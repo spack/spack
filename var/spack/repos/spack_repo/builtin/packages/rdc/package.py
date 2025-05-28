@@ -85,7 +85,7 @@ class Rdc(CMakePackage):
     ]:
         depends_on(f"rocm-smi-lib@{ver}", type=("build", "link"), when=f"@{ver}")
 
-    for ver in [ "5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
+    for ver in ["5.3.0", "5.3.3", "5.4.0", "5.4.3"]:
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
 
     for ver in [
