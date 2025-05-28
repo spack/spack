@@ -247,11 +247,13 @@ def _git_prefix(archive_path):
     # This is an annoying method, but since we always have a prefix and can't gaurantee what
     # it is we need this.
     tar = which("tar", required=True)
-    paths = tar("-tf", archive_path, output=str, error=str).strip().split()
-    for p in paths:
-        if p.endswith(".git/"):
-            return p[:-5]
-    return None
+    paths = tar("-tf", archive_path, output=str, error=str, fail_on_error=False)
+    if paths:
+        paths = paths.strip().split()
+        for p in paths:
+            if p.endswith(".git/"):
+                return p[:-5]
+    return ''
 
 
 def retrieve_commit_from_archive(archive_path, ref):
