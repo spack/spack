@@ -1,16 +1,13 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack_repo.builtin.build_systems.generic import Package
 from spack.package import *
 
 
 class ConditionalLanguages(Package):
-    """Test package for conditional dependencies on languages."""
+    """Conditional depends on c/cxx/fortran with a variant for each"""
 
-    homepage = "https://www.example.com"
-    url = "conditional-languages"
+    homepage = "https://dev.null"
 
     version("1.0")
 
