@@ -905,6 +905,11 @@ def test_cli_spec_roundtrip(args, expected):
             ["foo %[when='%c' virtuals=c] gcc"],
         ),
         (
+            "foo%my_toolchain",
+            {"my_toolchain": "+bar cflags=baz %[when='%c' virtuals=c]gcc"},
+            ["foo cflags=baz +bar %[when='%c' virtuals=c] gcc"],
+        ),
+        (
             "foo%my_toolchain2",
             {"my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich"},
             ["foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich"],
