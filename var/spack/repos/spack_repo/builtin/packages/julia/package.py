@@ -61,6 +61,12 @@ class Julia(MakefilePackage):
 
     variant("precompile", default=True, description="Improve julia startup time")
     variant("openlibm", default=True, description="Use openlibm instead of libm")
+    variant(
+        "cpu_target",
+        default="auto",
+        description="Machine architecture(s) for which to (pre)compile system and package images",
+        sticky=True,
+    )
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -376,7 +382,9 @@ class Julia(MakefilePackage):
         march = get_best_target(spec.target, spec.compiler.name, spec.compiler.version)
 
         # LLVM compatible name for the JIT
-        julia_cpu_target = get_best_target(spec.target, "clang", spec["llvm"].version)
+        julia_cpu_target = spec.variants["cpu_target"].value
+        if julia_cpu_target == "auto":
+            julia_cpu_target = get_best_target(spec.target, "clang", spec["llvm"].version)
 
         libuv = "libuv-julia" if "^libuv-julia" in spec else "libuv"
 
