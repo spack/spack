@@ -672,7 +672,6 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
             env.set("ROCTRACER_PATH", self.spec["roctracer-dev"].prefix)
             env.set("ROCTRACER_INCLUDE_DIR", self.spec["roctracer-dev"].prefix.include.roctracer)
             if self.spec.satisfies("@2.5:"):
-                env.set("XNNPACK_USE_SYSTEM_LIBS", "ON")
                 env.set("TORCHINDUCTOR_CK_DIR", self.spec["composable-kernel"].prefix)
                 env.set("AOTRITON_INSTALLED_PREFIX", self.spec["aotriton"].prefix)
             if self.spec.satisfies("^hip@5.2.0:"):
