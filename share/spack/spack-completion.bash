@@ -799,11 +799,11 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_ls() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_info() {

@@ -1121,18 +1121,22 @@ complete -c spack -n '__fish_spack_using_command compiler rm' -l scope -r -f -a 
 complete -c spack -n '__fish_spack_using_command compiler rm' -l scope -r -d 'configuration scope to modify'
 
 # spack compiler list
-set -g __fish_spack_optspecs_spack_compiler_list h/help scope=
+set -g __fish_spack_optspecs_spack_compiler_list h/help scope= remote
 complete -c spack -n '__fish_spack_using_command compiler list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler list' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler list' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command compiler list' -l remote -f -a remote
+complete -c spack -n '__fish_spack_using_command compiler list' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack compiler ls
-set -g __fish_spack_optspecs_spack_compiler_ls h/help scope=
+set -g __fish_spack_optspecs_spack_compiler_ls h/help scope= remote
 complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command compiler ls' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command compiler ls' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command compiler ls' -l remote -f -a remote
+complete -c spack -n '__fish_spack_using_command compiler ls' -l remote -d 'list also compilers from registered buildcaches'
 
 # spack compiler info
 set -g __fish_spack_optspecs_spack_compiler_info h/help scope=
