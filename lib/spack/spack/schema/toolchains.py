@@ -10,7 +10,26 @@
 from typing import Any, Dict
 
 #: Properties for inclusion in other schemas
-properties: Dict[str, Any] = {"toolchains": {"type": "object", "default": {}}}
+properties: Dict[str, Any] = {
+    "toolchains": {
+        "type": "object",
+        "default": {},
+        "patternProperties": {
+            "\w*": {
+                "oneOf": [
+                    {"type": "string"},
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {"spec": {"type": "string"}, "when": {"type": "string"}},
+                        },
+                    },
+                ]
+            }
+        },
+    }
+}
 
 
 #: Full schema with metadata

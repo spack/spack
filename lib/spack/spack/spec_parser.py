@@ -62,7 +62,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -313,8 +313,7 @@ class SpecParser:
                 # Look ahead to match upcoming value to list of toolchains
                 if self.ctx.current_token.value == "%" and self.ctx.next_token.value in toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
-                    toolchain = parse_one_or_raise(toolchains[self.ctx.current_token.value])
-                    current_spec.constrain(toolchain)
+                    self._apply_toolchain(current_spec, toolchains[self.ctx.current_token.value])
                     continue
 
                 is_direct = self.ctx.current_token.value[0] == "%"
@@ -354,6 +353,23 @@ class SpecParser:
         if root_spec.concrete:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
+
+    def _apply_toolchain(self, spec: "spack.spec.Spec", toolchain_config: Dict[str, Any]):
+        # Single string entries constrain the spec
+        if isinstance(toolchain_config, str):
+            spec.constrain(parse_one_or_raise(toolchain_config))
+            return
+
+        # List entries we apply each list element
+        for entry in toolchain_config:
+            constraint = parse_one_or_raise(entry["spec"])
+            when = entry.get("when", "")
+
+            # Conditions are applied to every edge in the constraint
+            for edge in constraint.traverse_edges():
+                edge.when.constrain(when)
+
+            spec.constrain(constraint)
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
