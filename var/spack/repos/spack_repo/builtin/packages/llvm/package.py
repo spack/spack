@@ -808,26 +808,47 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     def determine_variants(cls, exes, version_str):
         # Do not need to reuse more general logic from CompilerPackage
         # because LLVM has kindly named compilers
-        variants, compilers = {"+clang"}, {}
-        lld_found, lldb_found = False, False
-        for exe in sorted(exes, key=len):
-            name = os.path.basename(exe)
-            if "clang++" in name:
-                compilers.setdefault("cxx", exe)
-            elif "clang" in name:
-                compilers.setdefault("c", exe)
-            elif "flang" in name and "fortran" not in compilers:
-                variants.add("+flang")
-                compilers.setdefault("fortran", exe)
-            elif "ld.lld" in name:
-                lld_found = True
-            elif "lldb" in name:
-                lldb_found = True
 
-        variants.add("+lld" if lld_found else "~lld")
-        variants.add("+lldb" if lldb_found else "~lldb")
+        # Map between exectuable name, variant name, and compiler language.
+        # The ordering of this list is the ordering of the returned variants.
+        exe_variant_lang = [
+            ("clang++", "clang", "cxx"),
+            ("clang", "clang", "c"),
+            ("flang", "flang", "fortran"),
+            ("ld.lld", "lld", None),
+            ("lldb", "lldb", None),
+        ]
 
-        return "".join(sorted(variants)), {"compilers": compilers}
+        variants = set()
+        compilers = {}
+
+        # Prefer shorter pathnames by sorting with len and using setdefault
+        for exe_path in sorted(exes, key=len):
+            name = os.path.basename(exe_path)
+            for exe, var, lang in exe_variant_lang:
+                # NOTE: since "amdclang++" is "clang", we use `in` rather than `startswith`
+                if exe in name:
+                    compilers.setdefault(lang, exe_path)
+                    variants.add(var)
+                    break
+
+        # Remove executables that aren't compilers
+        compilers.pop(None, None)
+
+        # Convert
+        added_variant = set()
+        variant_strings = []
+        for _, var, _ in exe_variant_lang:
+            # Prevent double-clang variant
+            if var in added_variant:
+                continue
+            added_variant.add(var)
+
+            # Add variant string
+            prefix = "+" if var in variants else "~"
+            variant_strings.append(prefix + var)
+
+        return "".join(variant_strings), {"compilers": compilers}
 
     @classmethod
     def validate_detected_spec(cls, spec, extra_attributes):

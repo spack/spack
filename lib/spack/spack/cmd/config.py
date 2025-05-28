@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import collections
 import os
 import shutil
@@ -26,7 +27,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # User can only choose one
     subparser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
@@ -99,7 +100,7 @@ def setup_parser(subparser):
     )
 
     # Make the add parser available later
-    setup_parser.add_parser = add_parser
+    setattr(setup_parser, "add_parser", add_parser)
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
     arguments.add_common_arguments(update, ["yes_to_all"])

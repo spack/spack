@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import llnl.util.lang as lang
@@ -21,7 +22,7 @@ section = "build"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.epilog = """\
 when an environment is active and no specs are provided, the environment root \
 specs are used instead

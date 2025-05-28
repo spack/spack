@@ -1662,10 +1662,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.spec.versions.concrete:
             try:
                 source_id = fs.for_package_version(self).source_id()
-            except (fs.ExtrapolationError, fs.InvalidArgsError):
+            except (fs.ExtrapolationError, fs.InvalidArgsError, spack.error.NoURLError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,
                 #     but none of them identifies an actual fetcher.
+                # NoURLError happens if the package is external-only with no url
                 source_id = None
 
             if not source_id:

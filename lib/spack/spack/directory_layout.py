@@ -284,7 +284,10 @@ class DirectoryLayout:
         Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
-        assert path.startswith(self.root)
+        assert path.startswith(
+            self.root
+        ), "Attempted to remove a directory outside Spack's install tree."
+        f"PATH: {path}, ROOT: {self.root}"
 
         if deprecated:
             if os.path.exists(path):
