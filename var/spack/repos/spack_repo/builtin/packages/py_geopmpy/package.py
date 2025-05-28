@@ -55,6 +55,6 @@ class PyGeopmpy(PythonPackage):
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
-        if self.version >= Version("3.2.0"): # Required for CFFI API mode builds
+        if self.version >= Version("3.2.0"):  # Required for CFFI API mode builds
             env.append_path("C_INCLUDE_PATH", self.spec["geopm-runtime"].prefix.include)
             env.append_path("LIBRARY_PATH", self.spec["geopm-runtime"].prefix.lib)

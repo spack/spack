@@ -24,7 +24,11 @@ class PyGeopmdpy(PythonPackage):
     version("develop", branch="dev", get_full_repo=True)
     version("3.2.0", sha256="b708233e1bfda66408c500f2ac0cbaf042140870bffdced12dd7cabbd18e0025")
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
-    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234", deprecated=True)
+    version(
+        "3.0.1",
+        sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234",
+        deprecated=True,
+    )
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -57,7 +61,7 @@ class PyGeopmdpy(PythonPackage):
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         if not self.spec.version.isdevelop():
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
-        if self.version >= Version("3.2.0"): # Required for CFFI API mode builds
+        if self.version >= Version("3.2.0"):  # Required for CFFI API mode builds
             env.append_path("C_INCLUDE_PATH", self.spec["geopm-service"].prefix.include)
             env.append_path("LIBRARY_PATH", self.spec["geopm-service"].prefix.lib)
 

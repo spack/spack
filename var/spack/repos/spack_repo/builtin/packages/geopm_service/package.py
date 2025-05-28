@@ -28,7 +28,11 @@ class GeopmService(AutotoolsPackage):
     version("develop", branch="dev", get_full_repo=True)
     version("3.2.0", sha256="b708233e1bfda66408c500f2ac0cbaf042140870bffdced12dd7cabbd18e0025")
     version("3.1.0", sha256="2d890cad906fd2008dc57f4e06537695d4a027e1dc1ed92feed4d81bb1a1449e")
-    version("3.0.1", sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234", deprecated=True)
+    version(
+        "3.0.1",
+        sha256="32ba1948de58815ee055470dcdea64593d1113a6cad70ce00ab0286c127f8234",
+        deprecated=True,
+    )
 
     variant("debug", default=False, description="Enable debug")
     variant("docs", default=True, when="@3.0.1", description="Create man pages with Sphinx")
@@ -146,8 +150,10 @@ class GeopmService(AutotoolsPackage):
             *self.enable_or_disable("grpc"),
         ]
         if self.version == Version("3.0.1"):
-            args.append("--with-bash-completion-dir=" +
-                        join_path(self.spec.prefix, "share", "bash-completion", "completions"))
+            args.append(
+                "--with-bash-completion-dir="
+                + join_path(self.spec.prefix, "share", "bash-completion", "completions")
+            )
 
         if self.spec.satisfies("+nvml"):
             args += [
