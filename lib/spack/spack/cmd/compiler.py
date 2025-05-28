@@ -185,7 +185,9 @@ def compiler_list(args):
     compilers = compilers_from_yaml + compilers_from_store
 
     if args.remote:
-        compilers.extend([x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)])
+        compilers.extend(
+            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
+        )
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
