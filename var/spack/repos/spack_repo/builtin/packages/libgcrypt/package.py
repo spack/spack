@@ -51,6 +51,10 @@ class Libgcrypt(AutotoolsPackage):
     conflicts("platform=darwin", when="@1.11.0")
 
     def flag_handler(self, name, flags):
+        # https://dev.gnupg.org/T7634
+        if name == "ldflags" and self.spec.satisfies("@1.11.1 platform=linux"):
+            flags.append("-lpthread")
+
         # We should not inject optimization flags through the wrapper, because
         # the jitter entropy code should never be compiled with optimization
         # flags, and the build system ensures that
