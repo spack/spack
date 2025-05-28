@@ -59,7 +59,7 @@ def test_config_scopes_include(with_path_scopes):
     if with_path_scopes:
         scopes_cmd.append("--path-scopes")
     output = config(*scopes_cmd)
-    assert all(":" in x for x in output.split())
+    assert not output or all(":" in x for x in output.split())
 
 
 scope_path_re = r"\(([^\)]+)\)"
@@ -70,7 +70,7 @@ def test_config_scopes_path_section():
     assert "_builtin" not in output
     assert "site" not in output
     paths = (x[1] for x in (re.fullmatch(scope_path_re, s) for s in output.split()) if x)
-    assert all("/" in x for x in paths)
+    assert all(os.sep in x for x in paths)
 
 
 def test_get_config_scope(mock_low_high_config):
