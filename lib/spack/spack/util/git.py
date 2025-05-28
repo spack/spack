@@ -40,3 +40,12 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
     stdout = git_exe("diff", "--name-only", from_ref, to_ref, output=str)
 
     return stdout.split()
+
+
+def get_commit_sha(path, ref):
+    sha = None
+    query = git(required=True)("ls-remote", path, ref, output=str, error=str)
+
+    if query:
+        sha = query.strip().split()[0]
+    return sha

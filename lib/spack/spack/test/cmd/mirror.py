@@ -13,7 +13,9 @@ import spack.config
 import spack.environment as ev
 import spack.error
 import spack.mirrors.utils
+import spack.package_base
 import spack.spec
+import spack.util.git
 import spack.util.url as url_util
 import spack.version
 from spack.main import SpackCommand, SpackCommandError
@@ -580,3 +582,27 @@ def test_mirror_add_set_autopush(mutable_config):
     mirror("set", "--autopush", "example")
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("remove", "example")
+
+
+@pytest.mark.not_on_windows("Not supported on Windows (yet)")
+@pytest.mark.require_provenance
+@pytest.mark.nomockstage
+def test_binary_provenance_url_fails_mirror_resolves_commit(
+    mock_git_version_info, mock_packages, monkeypatch, tmpdir, mutable_config
+):
+    """Extract git commit from a source mirror since other methods failed"""
+    repo_path, _, commits = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+    monkeypatch.setattr(spack.util.git, "get_commit_sha", lambda x, y: None, raising=False)
+    # annoyin behavior since the
+
+    # create a fake mirror
+    mirror_path = str(tmpdir.join("test-mirror"))
+    mirror("create", "-d", mirror_path, "git-test-commit@main")
+    mirror("add", "--type", "source", "test-mirror", mirror_path)
+
+    spec = spack.concretize.concretize_one("git-test-commit@main")
+    assert spec.package.stage.archive_file
+    assert "commit" in spec.variants

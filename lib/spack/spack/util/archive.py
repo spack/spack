@@ -243,7 +243,19 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
+def _git_prefix(archive_path):
+    # This is an annoying method, but since we always have a prefix and can't gaurantee what
+    # it is we need this.
+    tar = which("tar", required=True)
+    paths = tar("-tf", archive_path, output=str, error=str).strip().split()
+    for p in paths:
+        if p.endswith(".git/"):
+            return p[:-5]
+    return None
+
+
 def retrieve_commit_from_archive(archive_path, ref):
+    """extract git data from an archive with out expanding it"""
     assert os.path.isfile(archive_path)
 
     commit = None
@@ -251,9 +263,13 @@ def retrieve_commit_from_archive(archive_path, ref):
     tar = which("tar", required=True)
     error_msg = f"Archive {archive_path} does not appear to contain git data"
 
+    prefix = _git_prefix(archive_path)
+
     if not ref:
         try:
-            head_content = tar("-Oxzf", archive_path, ".git/HEAD", output=str, error=str).strip()
+            head_content = tar(
+                "-Oxzf", archive_path, f"{prefix}.git/HEAD", output=str, error=str
+            ).strip()
             if head_content.startswith("ref: "):
                 ref_paths = [head_content.split()[1]]
             else:
@@ -266,7 +282,9 @@ def retrieve_commit_from_archive(archive_path, ref):
 
     for ref_path in ref_paths:
         try:
-            commit = tar("-Oxzf", archive_path, f".git/{ref_path}", output=str, error=str).strip()
+            commit = tar(
+                "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
+            ).strip()
         except ProcessError:
             pass
     if not commit:

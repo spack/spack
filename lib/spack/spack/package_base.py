@@ -45,6 +45,7 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.url
+import spack.util.archive
 import spack.util.environment
 import spack.util.executable
 import spack.util.git
@@ -83,26 +84,6 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 spack_times_log = "install_times.json"
 
 NO_DEFAULT = object()
-
-
-def _git_ls_remote(url, ref):
-    # --ref introduced in git@2.7
-    # ls-remote introduced in git@1.7
-    git_args = ["ls-remote", url, "--ref", ref]
-
-    # TODO(psakiev) we probably want a better way to intercept this for unit tests
-    query = spack.util.git.git(required=True)(
-        *git_args,
-        output=str,
-        error=os.devnull,
-        extra_env={"GIT_TERMINAL_PROMPT": "0"},
-        fail_on_error=False,
-    )
-
-    if query:
-        sha, _ = query.strip().split()
-        return sha
-    return None
 
 
 class WindowsRPath:
@@ -1058,7 +1039,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Base implementation will look up git commits when appropriate.
         Packages may override this implementation for custom implementations
         """
-        if "commit" in self.spec.variants:
+
+        # early return cases, don't overwrite user intention
+        # commit pre-assigned or develop specs don't need commits changed
+        # since this would create un-necessary churn
+        if "commit" in self.spec.variants or self.spec.is_develop:
             return
 
         sha = None
@@ -1071,20 +1056,26 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             assert not (tag and branch)
             ref = tag or branch
 
+        assert ref, "Missing git ref"
+
         if not sha:
             url = self.version_or_package_attr("git", self.spec.version)
-
-            assert ref, "Missing git ref"
-            sha = _git_ls_remote(url, ref)
+            sha = spack.util.git.get_commit_sha(url, ref)
 
         # we typically check mirrors first, but for commit resolution we query the network
         # and fall back to mirrors assuming people want the most up-to-date commits
         if not sha:
-            try:
-                self.do_fetch(mirror_only=True)
-            except spack.error.FetchError:
-                pass
-            sha = self.stage.extract_commit_sha(ref)
+            if self.stage.expanded:
+                sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
+            if not sha:
+                try:
+                    self.do_fetch(mirror_only=True)
+                except spack.error.FetchError:
+                    pass
+                if self.stage.archive_file:
+                    sha = spack.util.archive.retrieve_commit_from_archive(
+                        self.stage.archive_file, ref
+                    )
 
         if sha:
             self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)

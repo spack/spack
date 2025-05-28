@@ -44,10 +44,8 @@ import spack.util.path as sup
 import spack.util.pattern as pattern
 import spack.util.url as url_util
 from spack import fetch_strategy as fs  # breaks a cycle
-from spack.util.archive import retrieve_commit_from_archive
 from spack.util.crypto import bit_length, prefix_bits
 from spack.util.editor import editor, executable
-from spack.util.git import git
 from spack.version import StandardVersion, VersionList
 
 # The well-known stage source subdirectory name.
@@ -809,25 +807,6 @@ class StageComposite(pattern.Composite):
     def keep(self, value):
         for item in self:
             item.keep = value
-
-    def extract_commit_sha(self, ref: Optional[str] = None) -> Optional[str]:
-        """Retrieve git commit from the stage if it exists"""
-        if not (self.expanded or self.archive_file):
-            return None
-        commit = None
-        if not ref:
-            ref = "HEAD"
-        if self.expanded:
-            query = git(required=True)(
-                "ls-remote", self.source_path, ref, output=str, error=str
-            ).strip()
-            if query:
-                commit = query.split()[0]
-        if not commit and self.archive_file:
-            commit = retrieve_commit_from_archive(self.archive_file, ref)
-        if not commit:
-            tty.warn(f"{self.archive_file} is missing git data. Consider reconstructing mirrors.")
-        return commit
 
 
 class DevelopStage(LockableStagingDir):
