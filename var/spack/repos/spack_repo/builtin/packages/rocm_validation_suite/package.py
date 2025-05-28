@@ -23,6 +23,8 @@ class RocmValidationSuite(CMakePackage):
     license("MIT")
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
+
+    version("6.4.1", sha256="2a0ce3e037e2eaee5a29bb796813f94faa9e080af29937583e5ddba7af3c3acb")
     version("6.4.0", sha256="1963aa0ec6f6b7e957a5521dbfba615c2047ef7f432048b4a14c979c90a6f995")
     version("6.3.3", sha256="3d1afc47f6bd491991f6deb80f84d00041497e7fd564fd0129622263b5b87cc1")
     version("6.3.2", sha256="c13d1efc21358901074f73c48f9cc8531cd5c6d28b7702d022f3efbbaf4b4286")
@@ -131,17 +133,18 @@ class RocmValidationSuite(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocminfo@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")
         depends_on(f"rocm-smi-lib@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
-    for ver in ["6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"hiprand@{ver}", when=f"@{ver}")
         depends_on(f"rocrand@{ver}", when=f"@{ver}")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"hipblaslt@{ver}", when=f"@{ver}")
 
     def patch(self):

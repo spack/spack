@@ -20,6 +20,8 @@ class Rocthrust(CMakePackage):
     tags = ["rocm"]
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "afzpatel")
+
+    version("6.4.1", sha256="1b50e504b81ddadc4cf086aa48e4dbff26e6e0051fc48bf3b0438308890114d6")
     version("6.4.0", sha256="b590b69cfecf30b66202e426ad1adcb577651d72ed9dd7425281b5668e6262fe")
     version("6.3.3", sha256="564f5b2621bc707c0dda0d09702642876fc4d1b8cd9a83d1324539b768653e8b")
     version("6.3.2", sha256="c3991bbd9f8b0e3ecbc18a7d014446608bfe2a3660a8d9e3dcc136d784883935")
@@ -87,6 +89,7 @@ class Rocthrust(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocprim@{ver}", when=f"@{ver}")

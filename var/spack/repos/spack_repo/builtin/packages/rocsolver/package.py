@@ -48,6 +48,8 @@ class Rocsolver(CMakePackage):
 
     version("develop", branch="develop", deprecated=True)
     version("master", branch="master", deprecated=True)
+
+    version("6.4.1", sha256="d27d3e0a59fbe1fb82172f545e38857643bb86fa1cd69ba51e9e292440a785c6")
     version("6.4.0", sha256="48930842ac441a6a5d7e25d6c5c6ac6b5fe26549a1add49a102b374e02f5b60e")
     version("6.3.3", sha256="0e8bb906513555d349b6a20cb17976402f5ea6702668efcdda595a2e2d516b46")
     version("6.3.2", sha256="834f532c54bdf0e4900e73ffb0544068071976175559c8bf3c50d7a3b7230a3a")
@@ -120,6 +122,7 @@ class Rocsolver(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocblas@{ver}", when=f"@{ver}")

@@ -15,6 +15,8 @@ class Rocpydecode(CMakePackage):
     url = "https://github.com/ROCm/rocPyDecode/archive/refs/tags/rocm-6.2.0.tar.gz"
 
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
+
+    version("6.4.1", sha256="2b74cb18d2f54664dbf1fa2063c7957e3c849fe6673e279d14aefe3712e187ff")
     version("6.4.0", sha256="c7fd47f98dc0ef005a0fda0dc73e71e1d5318901d038489ba69f51473b7aca6a")
     version("6.3.3", sha256="df45b4a64ed3e550229fd91bcf7896d1a8fe377dd1ff88d2e6a71897b981180d")
     version("6.3.2", sha256="c1b4dba9f8a28299279ad4e4aeb0c857c3a9772d016fcc0f164940f22faa6dee")
@@ -28,7 +30,7 @@ class Rocpydecode(CMakePackage):
     depends_on("ffmpeg@4.4:6")
     depends_on("dlpack")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"rocdecode@{ver}", when=f"@{ver}")
 
     def patch(self):

@@ -16,9 +16,11 @@ class Rocmlir(CMakePackage):
     homepage = "https://github.com/ROCm/rocMLIR"
     git = "https://github.com/ROCm/rocMLIR.git"
     url = "https://github.com/ROCm/rocMLIR/archive/refs/tags/rocm-6.2.1.tar.gz"
+    tags = ["rocm"]
 
     maintainers("srekolam", "afzpatel", "renjithravindrankannath")
 
+    version("6.4.1", sha256="15cb80da488f88274afff358e6706f54139d1003a9ddcc918afc58af4ebc5c6a")
     version("6.4.0", sha256="e377ad70fd5a5723427edf9464dde8e7892dabd1f783123d39a2fa2faf87079f")
     version("6.3.3", sha256="87242b811536132a02ce79fe430c70485f9b1477de22d8376e7e923a9c9ad98b")
     version("6.3.2", sha256="5911e880a66faecb08d242efa3e5eb6f8ce32cb21ea09dec36f4aef111c395fb")
@@ -86,6 +88,7 @@ class Rocmlir(CMakePackage):
         "6.3.2",
         "6.3.3",
         "6.4.0",
+        "6.4.1",
     ]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")

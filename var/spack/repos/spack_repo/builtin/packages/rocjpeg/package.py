@@ -14,12 +14,14 @@ class Rocjpeg(CMakePackage):
 
     homepage = "https://github.com/ROCm/rocJPEG"
     git = "https://github.com/ROCm/rocJPEG.git"
-    url = "https://github.com/ROCm/rocJPEG/archive/refs/tags/rocm-6.3.0.tar.gz"
+    url = "https://github.com/ROCm/rocJPEG/archive/refs/tags/rocm-6.4.1.tar.gz"
+    tags = ["rocm"]
 
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
 
+    version("6.4.1", sha256="23eed12646409d8f931f6bbdacf68df246c762877a3c0ef723568f89f0f5b40f")
     version("6.4.0", sha256="5488f5ab9c475566716d99ad32fb4c20686ac1bcc00c9242221abdbde2b94ffe")
     version("6.3.3", sha256="65081b20ab3df82337fdcaf3d4e614c75f946656a4ea7bc00ac0d1bbd81e3e83")
     version("6.3.2", sha256="4e1ec9604152e818afa85360f1e0ef9e98bfb8a97ca0989980063e2ece015c16")
@@ -28,7 +30,7 @@ class Rocjpeg(CMakePackage):
 
     depends_on("cxx", type="build")
 
-    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
+    for ver in ["6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0", "6.4.1"]:
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
 
