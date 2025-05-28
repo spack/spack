@@ -37,6 +37,7 @@ def setup_parser(subparser):
         "--build-system",
         dest="path",
         action=ComputeBuildSystemPathAction,
+        nargs=0,
         help="edit the build system with the supplied name",
     )
     excl_args.add_argument(
