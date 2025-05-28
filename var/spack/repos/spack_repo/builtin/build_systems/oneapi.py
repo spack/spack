@@ -140,15 +140,16 @@ class IntelOneApiPackage(Package):
         elif sys.platform == "win32":
             # Installer can be executed directly
             # as it's a standalone executable
-            installer_extraction_path = os.path.join(self.stage.source_path, f"installer-{os.path.basename(self.component_dir)}"),
+            installer_extraction_path = os.path.join(self.stage.source_path, f"installer-{os.path.basename(self.component_dir)}")
             installer = Executable(installer_path)
             installer_args = [
-                "--extract-folder",
-                "--remove-extracted-files",
-                installer_extraction_path,
-                "yes",
-                "-a",
                 "-s",
+                "--extract-folder",
+                installer_extraction_path,
+                "--remove-extracted-files",
+                "yes",
+                "--a",
+                "--s",
                 "--eula",
                 "accept",
                 "--install-dir",
