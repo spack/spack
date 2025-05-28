@@ -54,7 +54,7 @@ class Libabigail(AutotoolsPackage):
         base = "https://mirrors.kernel.org/sourceware/libabigail"
         url = f"{base}/libabigail-{version.dotted}.tar.{ext}"
         return url
-    
+
     def configure_args(self):
         spec = self.spec
         config_args = [f"CPPFLAGS=-I{spec['libxml2'].prefix}/include"]
