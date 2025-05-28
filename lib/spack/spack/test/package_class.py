@@ -334,7 +334,7 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 @pytest.mark.parametrize("version,ref_type", (("main", "branch"), ("1.0", "tag")))
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.require_provenance
-def test_binary_provenance_find_commit_ls_remote(
+def test_binary_provenance_find_commit_url(
     git, mock_git_version_info, mock_packages, config, monkeypatch, version, ref_type
 ):
     repo_path, _, commits = mock_git_version_info
@@ -352,7 +352,7 @@ def test_binary_provenance_find_commit_ls_remote(
 @pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.require_provenance
 @pytest.mark.nomockstage
-def test_binary_provenance_git_fails_mirror_resolves_commit(
+def test_binary_provenance_url_fails_mirror_resolves_commit(
     mock_git_version_info, mock_packages, config, monkeypatch, tmpdir
 ):
     """Fail all attempts to resolve git commits"""
