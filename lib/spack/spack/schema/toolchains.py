@@ -15,7 +15,7 @@ properties: Dict[str, Any] = {
         "type": "object",
         "default": {},
         "patternProperties": {
-            "\w*": {
+            r"\w*": {
                 "oneOf": [
                     {"type": "string"},
                     {

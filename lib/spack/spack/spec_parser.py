@@ -62,7 +62,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -354,7 +354,7 @@ class SpecParser:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", toolchain_config: Dict[str, Any]):
+    def _apply_toolchain(self, spec: "spack.spec.Spec", toolchain_config: Union[str, List]):
         # Single string entries constrain the spec
         if isinstance(toolchain_config, str):
             spec.constrain(parse_one_or_raise(toolchain_config))
