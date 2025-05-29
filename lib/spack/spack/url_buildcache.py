@@ -1188,9 +1188,6 @@ def get_entries_from_cache(
         and the second item is a function taking a url or file path and
         returning the spec read from that location.
     """
-    # Import here to avoid circular dependency
-    from spack.binary_distribution import ListMirrorSpecsError
-
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
         callbacks.append(_entries_from_cache_aws_cli)
@@ -1393,3 +1390,7 @@ class UnknownBuildcacheLayoutError(BuildcacheEntryError):
     """Raised when unrecognized buildcache layout version is encountered"""
 
     pass
+
+
+class ListMirrorSpecsError(spack.error.SpackError):
+    """Raised when unable to retrieve list of specs from the mirror"""

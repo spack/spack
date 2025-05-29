@@ -92,6 +92,7 @@ from .url_buildcache import (
     BuildcacheEntryError,
     BuildcacheManifest,
     InvalidMetadataFile,
+    ListMirrorSpecsError,
     MirrorForSpec,
     MirrorURLAndVersion,
     URLBuildcacheEntry,
@@ -2955,10 +2956,6 @@ class UnsignedPackageException(spack.error.SpackError):
     Raised if installation of unsigned package is attempted without
     the use of ``--no-check-signature``.
     """
-
-
-class ListMirrorSpecsError(spack.error.SpackError):
-    """Raised when unable to retrieve list of specs from the mirror"""
 
 
 class GenerateIndexError(spack.error.SpackError):
