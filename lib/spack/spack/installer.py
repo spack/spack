@@ -2585,10 +2585,10 @@ class BuildProcessInstaller:
         stage = self.pkg.stage
         stage.keep = self.keep_stage
 
-        if self.restage:
-            stage.destroy()
-
         with stage:
+            if self.restage:
+                stage.destroy()
+
             self.timer.start("stage")
 
             if not self.fake:
