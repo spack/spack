@@ -10,7 +10,7 @@ from spack.package import *
 class PyPycocotools(PythonPackage):
     """Official APIs for the MS-COCO dataset."""
 
-    homepage = "https://github.com/cocodataset/cocoapi"
+    homepage = "https://github.com/ppwwyyxx/cocoapi"
     pypi = "pycocotools/pycocotools-2.0.2.tar.gz"
 
     version("2.0.8", sha256="8f2bcedb786ba26c367a3680f9c4eb5b2ad9dccb2b34eaeb205e0a021e1dfb8d")
@@ -27,7 +27,7 @@ class PyPycocotools(PythonPackage):
     depends_on("py-setuptools@43:", when="@2.0.4:", type="build")
     depends_on("py-setuptools@18.0:", when="@:2.0.3", type=("build", "run"))
     depends_on("py-matplotlib@2.1.0:", type=("build", "run"))
-    # https://github.com/cocodataset/cocoapi/pull/686
+    # https://github.com/ppwwyyxx/cocoapi/pull/28
     depends_on("py-numpy@:2.2", type=("build", "link", "run"))
 
     conflicts("^py-cython@3:", when="@:2.0.4")
