@@ -272,7 +272,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     # Install-time footprint is dominated by ~8 k tutorial/example files.
     # Give packagers a switch to trim them away (‘spack install petsc ~examples’)
     # while preserving current behaviour by default.
-    variant("install-examples", default=True, description="Install test and tutorial example sources.")
+    variant("examples", default=True, description="Install test and tutorial example sources.")
 
     with when("+rocm"):
         # https://github.com/spack/spack/issues/37416
