@@ -114,7 +114,7 @@ class RocmSmiLib(CMakePackage):
     patch(
         "https://github.com/ROCm/rocm_smi_lib/commit/ce405476cabf66a884a351cb2e3253bd5c29e06b.patch?full_index=1",
         sha256="54094b5dbd05b79341e38e95f785dcbb0ba4a5aef4bad19e075ea77470164138",
-        when="@6.4",
+        when="@6.4.0",
     )
     patch("0001-add-libdrm-include-dir.patch", when="@6.4")
 
