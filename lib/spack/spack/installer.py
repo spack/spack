@@ -2406,7 +2406,7 @@ class PackageInstaller:
         return None
 
     def setup_jobserver(self) -> Tuple[str, int]:
-        """Setup FIFO implemnetation of make jobserver."""
+        """Setup FIFO implementation of make jobserver."""
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
             fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
