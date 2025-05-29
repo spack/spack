@@ -2413,23 +2413,23 @@ class PackageInstaller:
             fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
             fifo_path = os.path.join(fifo_directory, "jobserver")
 
-        # create the FIFO
-        os.mkfifo(fifo_path)
+            # create the FIFO
+            os.mkfifo(fifo_path)
 
-        # open the FIFO for reading/writing and initialize with job tokens, decided by -j
-        num_jobs = spack.config.determine_number_of_jobs(parallel=True)
-        js_tokens = b"+" * num_jobs
-        jobserver_fifo_fd = os.open(fifo_path, os.O_RDWR | os.O_NONBLOCK)
-        os.write(jobserver_fifo_fd, js_tokens)
+            # open the FIFO for reading/writing and initialize with job tokens, decided by -j
+            num_jobs = spack.config.determine_number_of_jobs(parallel=True)
+            js_tokens = b"+" * num_jobs
+            jobserver_fifo_fd = os.open(fifo_path, os.O_RDWR | os.O_NONBLOCK)
+            os.write(jobserver_fifo_fd, js_tokens)
 
-        # set MAKEFLAGS environment variable for make jobserver
-        os.environ["MAKEFLAGS"] = (
-            f"--jobserver-auth=fifo:{fifo_path} --jobserver-style=pipe -j {num_jobs}"
-        )
+            # set MAKEFLAGS environment variable for make jobserver
+            os.environ["MAKEFLAGS"] = (
+                f"--jobserver-auth=fifo:{fifo_path} --jobserver-style=pipe -j {num_jobs}"
+            )
 
-        return fifo_directory, jobserver_fifo_fd
+            return fifo_directory, jobserver_fifo_fd
 
-        # TODO: Implement Windows support.
+            # TODO: Implement Windows support.
 
     def install(self) -> None:
         """Install the requested package(s) and or associated dependencies."""
