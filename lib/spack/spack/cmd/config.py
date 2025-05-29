@@ -267,6 +267,8 @@ def config_scopes(args):
     )
     if args.included:
         scopes = (i for s in scopes for i in s.included_scopes)
+    if not scopes:
+        return
     info = list(_config_scope_info(args, s) for s in scopes)
     max_col1_width = max((len(x[0]) for x in info))
     for c1, c2 in info:
