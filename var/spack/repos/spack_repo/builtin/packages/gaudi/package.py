@@ -95,6 +95,7 @@ class Gaudi(CMakePackage, CudaPackage):
         sha256="6b377fd10828bf26367c26792a5465351f3f0b5f7f6073dbcae6fa9195d4a414",
         when="@38.1:39",
     )
+    conflicts("^root@6.36:", when="@:38.0")
 
     # These dependencies are needed for a minimal Gaudi build
     depends_on("cxx", type="build")
