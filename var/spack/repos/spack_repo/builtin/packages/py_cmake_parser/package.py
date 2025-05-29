@@ -16,7 +16,7 @@ class PyCmakeParser(PythonPackage):
 
     maintainers("cmelone")
 
-    license("Apache-2.0 OR FSFUL", checked_by="cmelone")
+    license("Apache-2.0", checked_by="cmelone")
 
     version("0.9.2", sha256="b7a313d3f41e58c09e0886f2c98f3fcee2b1897fe7f87449823a53e51ab23a3d")
     version("main", branch="main")
