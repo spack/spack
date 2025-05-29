@@ -87,6 +87,15 @@ class Gaudi(CMakePackage, CudaPackage):
     # add a few missing includes (c++20?)
     patch("includes.patch", when="@37:38")
 
+    # Remove vestigial ROOT component requirement (redundant with
+    # v34r1, conflicts with ROOT >=6.36). See
+    # https://gitlab.cern.ch/gaudi/Gaudi/-/commit/89f38fab9052093de98d06a2a6e5fda2c9574007
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/89f38fab9052093de98d06a2a6e5fda2c9574007.diff",
+        sha256="6b377fd10828bf26367c26792a5465351f3f0b5f7f6073dbcae6fa9195d4a414",
+        when="@34.1:39",
+    )
+
     # These dependencies are needed for a minimal Gaudi build
     depends_on("cxx", type="build")
     depends_on("aida")
