@@ -6,6 +6,8 @@ import collections
 import getpass
 import io
 import os
+import pathlib
+import sys
 import tempfile
 from datetime import date
 
@@ -34,6 +36,8 @@ import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 
 from ..enums import ConfigScopePriority
+
+IS_WINDOWS = sys.platform == "win32"
 
 # sample config data
 config_low = {
@@ -371,7 +375,8 @@ def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     ) == os.sep + os.path.join("foo", "bar", "baz", "$env")
 
     # Fake an active environment and $env is replaced properly
-    fake_env_path = os.sep + os.path.join("quux", "quuux")
+    root_drive = f"{pathlib.Path.cwd().drive}\\" if IS_WINDOWS else os.sep
+    fake_env_path = os.path.join(root_drive, "quux", "quuux")
     monkeypatch.setattr(ev, "active_environment", lambda: MockEnv(fake_env_path))
     assert spack_path.canonicalize_path("$env/foo/bar/baz") == os.path.join(
         fake_env_path, os.path.join("foo", "bar", "baz")
