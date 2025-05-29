@@ -253,7 +253,7 @@ def _git_prefix(archive_path):
         for p in paths:
             if p.endswith(".git/"):
                 return p[:-5]
-    return ''
+    return ""
 
 
 def retrieve_commit_from_archive(archive_path, ref):
