@@ -14,19 +14,17 @@ properties: Dict[str, Any] = {
     "toolchains": {
         "type": "object",
         "default": {},
-        "patternProperties": {
-            r"\w*": {
-                "oneOf": [
-                    {"type": "string"},
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {"spec": {"type": "string"}, "when": {"type": "string"}},
-                        },
+        "additionalProperties": {
+            "oneOf": [
+                {"type": "string"},
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {"spec": {"type": "string"}, "when": {"type": "string"}},
                     },
-                ]
-            }
+                },
+            ]
         },
     }
 }
