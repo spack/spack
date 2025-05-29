@@ -245,17 +245,16 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info_string(args, scope):
+def _config_scope_info(args, scope):
+    scope_path = None
     if (args.section or args.show_paths) and hasattr(scope, "path"):
         section_path = scope.get_section_filename(args.section) if args.section else None
-        path = (
+        scope_path = (
             section_path
             if section_path and os.path.exists(section_path)
             else f"{scope.path}{os.sep}"
         )
-        return f"{scope.name} ({path})"
-    else:
-        return scope.name
+    return (scope.name, scope_path)
 
 
 def config_scopes(args):
@@ -268,9 +267,10 @@ def config_scopes(args):
     )
     if args.included:
         scopes = (i for s in scopes for i in s.included_scopes)
-    info = (_config_scope_info_string(args, s) for s in scopes)
-
-    print(" ".join(info))
+    info = list(_config_scope_info(args, s) for s in scopes)
+    max_col1_width = max((len(x[0]) for x in info))
+    for c1, c2 in info:
+        print(f"{c1:{max_col1_width}}  {c2}" if c2 else c1)
 
 
 def config_add(args):
