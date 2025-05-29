@@ -615,7 +615,7 @@ with '-Wl,-commons,use_dylibs' and without
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
-    depends_on("fortran", type="build")
+    depends_on("fortran", type="build", when="+fortran")
 
     if sys.platform != "darwin":
         depends_on("numactl")
