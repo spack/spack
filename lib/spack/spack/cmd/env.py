@@ -9,7 +9,7 @@ import shutil
 import sys
 import tempfile
 from pathlib import Path
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import llnl.string as string
 import llnl.util.filesystem as fs
@@ -37,21 +37,21 @@ level = "short"
 
 
 #: List of subcommands of `spack env`
-subcommands = [
-    "activate",
-    "deactivate",
-    "create",
-    ["remove", "rm"],
-    ["rename", "mv"],
-    ["list", "ls"],
-    ["status", "st"],
-    "loads",
-    "view",
-    "update",
-    "revert",
-    "depfile",
-    "track",
-    "untrack",
+subcommands: List[Tuple[str, ...]] = [
+    ("activate",),
+    ("deactivate",),
+    ("create",),
+    ("remove", "rm"),
+    ("rename", "mv"),
+    ("list", "ls"),
+    ("status", "st"),
+    ("loads",),
+    ("view",),
+    ("update",),
+    ("revert",),
+    ("depfile",),
+    ("track",),
+    ("untrack",),
 ]
 
 
@@ -1066,24 +1066,20 @@ subcommand_functions = {}
 #
 # spack env
 #
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="env_command")
 
-    for name in subcommands:
-        if isinstance(name, (list, tuple)):
-            name, aliases = name[0], name[1:]
-        else:
-            aliases = []
+    _globals = globals()
+
+    for name_and_aliases in subcommands:
+        name, aliases = name_and_aliases[0], name_and_aliases[1:]
 
         # add commands to subcommands dict
-        function_name = "env_%s" % name
-        function = globals()[function_name]
-        for alias in [name] + aliases:
-            subcommand_functions[alias] = function
+        for alias in name_and_aliases:
+            subcommand_functions[alias] = _globals[f"env_{name}"]
 
         # make a subparser and run the command's setup function on it
-        setup_parser_cmd_name = "env_%s_setup_parser" % name
-        setup_parser_cmd = globals()[setup_parser_cmd_name]
+        setup_parser_cmd = _globals[f"env_{name}_setup_parser"]
 
         subsubparser = sp.add_parser(
             name,

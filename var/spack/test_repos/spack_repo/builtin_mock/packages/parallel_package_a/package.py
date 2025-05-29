@@ -12,8 +12,7 @@ from spack.package import *
 
 
 class ParallelPackageA(Package):
-    """This is a fake vtk-m package used to demonstrate virtual package providers
-    with dependencies."""
+    """Simple package with dependencies for testing parallel builds"""
 
     homepage = "http://www.example.com"
     has_code = False

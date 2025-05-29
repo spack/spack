@@ -36,12 +36,10 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
     version("develop", branch="master")
 
-    # Production version
-    version("6.34.08", sha256="806045b156de03fe8f5661a670eab877f2e4d2da6c234dc3e31e98e2d7d96fe8")
-    version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
-    version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
-    version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
-    version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
+    # Production release series
+    version("6.36.00", sha256="94afc8def92842679a130a27521be66e2abdaa37620888e61d828a43fc4b01a2")
+
+    # Supported LTS release series (note: more recent STS releases may be further down)
     version("6.32.12", sha256="2e41968aeb0406ee31c30af9c046143099b251846e0839cb04f4e960c7893e19")
     version("6.32.10", sha256="5a896804ec153685e8561adaa4e546b708139c484280aa6713a0a178f5b7f98b")
     version("6.32.08", sha256="29ad4945a72dff1a009c326a65b6fa5ee2478498823251d3cef86a2cbeb77b27")
@@ -49,6 +47,16 @@ class Root(CMakePackage):
     version("6.32.04", sha256="132f126aae7d30efbccd7dcd991b7ada1890ae57980ef300c16421f9d4d07ea8")
     version("6.32.02", sha256="3d0f76bf05857e1807ccfb2c9e014f525bcb625f94a2370b455f4b164961602d")
     version("6.32.00", sha256="12f203681a59041c474ce9523761e6f0e8861b3bee78df5f799a8db55189e5d2")
+
+    # Supported STS release series
+    # 6.34 (through 2025-06-30)
+    version("6.34.08", sha256="806045b156de03fe8f5661a670eab877f2e4d2da6c234dc3e31e98e2d7d96fe8")
+    version("6.34.06", sha256="a799d632dae5bb1ec87eae6ebc046a12268c6849f2a8837921c118fc51b6cff3")
+    version("6.34.04", sha256="e320c5373a8e87bb29b7280954ca8355ad8c4295cf49235606f0c8b200acb374")
+    version("6.34.02", sha256="166bec562e420e177aaf3133fa3fb09f82ecddabe8a2e1906345bad442513f94")
+    version("6.34.00", sha256="f3b00f3db953829c849029c39d7660a956468af247efd946e89072101796ab03")
+
+    # Older release series
     version("6.30.08", sha256="8bb8594867b9ded20a65e59f2cb6da965aa30851b8960f8cbf76293aec046b69")
     version("6.30.06", sha256="300db7ed1b678ed2fb9635ca675921a1945c7c2103da840033b493091f55700c")
     version("6.30.04", sha256="2b4180b698f39cc65d91084d833a884515b325bc5f673c8e39abe818b025d8cc")
@@ -60,45 +68,123 @@ class Root(CMakePackage):
     version("6.28.04", sha256="70f7f86a0cd5e3f2a0befdc59942dd50140d990ab264e8e56c7f17f6bfe9c965")
     version("6.28.02", sha256="6643c07710e68972b00227c68b20b1016fec16f3fba5f44a571fa1ce5bb42faa")
     version("6.28.00", sha256="afa1c5c06d0915411cb9492e474ea9ab12b09961a358e7e559013ed63b5d8084")
-    version("6.26.14", sha256="81045a35a1958906c3eadecd9b01127a6087dadc19385af8e92ae5c84f06ce35")
-    version("6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f")
-    version("6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e")
-    version("6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb")
-    version("6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e")
-    version("6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb")
-    version("6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31")
-    version("6.24.08", sha256="882c41fe36e94456fb10443d08ef9152375a90d1f910a10add1793d6e838bc44")
-    version("6.24.06", sha256="907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522")
-    version("6.24.04", sha256="4a416f3d7aa25dba46d05b641505eb074c5f07b3ec1d21911451046adaea3ee7")
-    version("6.24.02", sha256="0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c")
-    version("6.24.00", sha256="9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989")
-    version("6.22.08", sha256="6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f")
-    version("6.22.06", sha256="c4688784a7e946cd10b311040b6cf0b2f75125a7520e04d1af0b746505911b57")
-    version("6.22.02", sha256="89784afa9c9047e9da25afa72a724f32fa8aa646df267b7731e4527cc8a0c340")
-    version("6.22.00", sha256="efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed")
-    version("6.20.08", sha256="d02f224b4908c814a99648782b927c353d44db79dea2cadea86138c1afc23ae9")
-    version("6.20.06", sha256="9a734758a91598d8a58a3d64d7d606aeb17bdf6fd8214e33f5c4d9947d391951")
-    version("6.20.04", sha256="1f8c76ccdb550e64e6ddb092b4a7e9d0a10655ef80044828cba12d5e7c874472")
-    version("6.20.02", sha256="0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6")
-    version("6.20.00", sha256="68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0")
-    version("6.18.04", sha256="315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4")
 
-    # Old versions
-    version("6.18.02", sha256="50ffffdbf2585a536c77a03f54aa631926138275ffeee02e5a16dde87e978c1d")
-    version("6.18.00", sha256="e6698d6cfe585f186490b667163db65e7d1b92a2447658d77fa831096383ea71")
-    version("6.16.00", sha256="2a45055c6091adaa72b977c512f84da8ef92723c30837c7e2643eecc9c5ce4d8")
-    version("6.14.08", sha256="1b63b51cfb4dc20f1f5749faac6bbd1098eccab777f8b49911257d77186c73c4")
-    version("6.14.06", sha256="0fb943b61396f282b289e35c455a9ab60126229be1bd3f04a8f00b37c13ab432")
-    version("6.14.04", sha256="463ec20692332a422cfb5f38c78bedab1c40ab4d81be18e99b50cf9f53f596cf")
-    version("6.14.02", sha256="93816519523e87ac75924178d87112d1573eaa108fc65691aea9a9dd5bc05b3e")
-    version("6.14.00", sha256="7946430373489310c2791ff7a3520e393dc059db1371272bcd9d9cf0df347a0b")
-    version("6.12.06", sha256="aedcfd2257806e425b9f61b483e25ba600eb0ea606e21262eafaa9dc745aa794")
-    version("6.10.08", sha256="2cd276d2ac365403c66f08edd1be62fe932a0334f76349b24d8c737c0d6dad8a")
-    version("6.08.06", sha256="ea31b047ba6fc04b0b312667349eaf1498a254ccacd212144f15ffcb3f5c0592")
-    version("6.06.08", sha256="7cb836282014cce822ef589cad27811eb7a86d7fad45a871fa6b0e6319ec201a")
-    version("6.06.06", sha256="0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b")
-    version("6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b")
-    version("6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1")
+    # Deprecated releases
+    with default_args(deprecated=True):
+        version(
+            "6.26.16", sha256="5defb828d382649dc689440550f8241476a4071e0f0c6029697163baddb29e7b"
+        )
+        version(
+            "6.26.14", sha256="81045a35a1958906c3eadecd9b01127a6087dadc19385af8e92ae5c84f06ce35"
+        )
+        version(
+            "6.26.10", sha256="8e56bec397104017aa54f9eb554de7a1a134474fe0b3bb0f43a70fc4fabd625f"
+        )
+        version(
+            "6.26.08", sha256="4dda043e7918b40743ad0299ddd8d526b7078f0a3822fd06066df948af47940e"
+        )
+        version(
+            "6.26.06", sha256="b1f73c976a580a5c56c8c8a0152582a1dfc560b4dd80e1b7545237b65e6c89cb"
+        )
+        version(
+            "6.26.04", sha256="a271cf82782d6ed2c87ea5eef6681803f2e69e17b3036df9d863636e9358421e"
+        )
+        version(
+            "6.26.02", sha256="7ba96772271a726079506c5bf629c3ceb21bf0682567ed6145be30606d7cd9bb"
+        )
+        version(
+            "6.26.00", sha256="5fb9be71fdf0c0b5e5951f89c2f03fcb5e74291d043f6240fb86f5ca977d4b31"
+        )
+        version(
+            "6.24.08", sha256="882c41fe36e94456fb10443d08ef9152375a90d1f910a10add1793d6e838bc44"
+        )
+        version(
+            "6.24.06", sha256="907f69f4baca1e4f30eeb4979598ca7599b6aa803ca046e80e25b6bbaa0ef522"
+        )
+        version(
+            "6.24.04", sha256="4a416f3d7aa25dba46d05b641505eb074c5f07b3ec1d21911451046adaea3ee7"
+        )
+        version(
+            "6.24.02", sha256="0507e1095e279ccc7240f651d25966024325179fa85a1259b694b56723ad7c1c"
+        )
+        version(
+            "6.24.00", sha256="9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989"
+        )
+        version(
+            "6.22.08", sha256="6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f"
+        )
+        version(
+            "6.22.06", sha256="c4688784a7e946cd10b311040b6cf0b2f75125a7520e04d1af0b746505911b57"
+        )
+        version(
+            "6.22.02", sha256="89784afa9c9047e9da25afa72a724f32fa8aa646df267b7731e4527cc8a0c340"
+        )
+        version(
+            "6.22.00", sha256="efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed"
+        )
+        version(
+            "6.20.08", sha256="d02f224b4908c814a99648782b927c353d44db79dea2cadea86138c1afc23ae9"
+        )
+        version(
+            "6.20.06", sha256="9a734758a91598d8a58a3d64d7d606aeb17bdf6fd8214e33f5c4d9947d391951"
+        )
+        version(
+            "6.20.04", sha256="1f8c76ccdb550e64e6ddb092b4a7e9d0a10655ef80044828cba12d5e7c874472"
+        )
+        version(
+            "6.20.02", sha256="0997586bf097c0afbc6f08edbffcebf5eb6a4237262216114ba3f5c8087dcba6"
+        )
+        version(
+            "6.20.00", sha256="68421eb0434b38b66346fa8ea6053a0fdc9a6d254e4a72019f4e3633ae118bf0"
+        )
+        version(
+            "6.18.04", sha256="315a85fc8363f8eb1bffa0decbf126121258f79bd273513ed64795675485cfa4"
+        )
+        version(
+            "6.18.02", sha256="50ffffdbf2585a536c77a03f54aa631926138275ffeee02e5a16dde87e978c1d"
+        )
+        version(
+            "6.18.00", sha256="e6698d6cfe585f186490b667163db65e7d1b92a2447658d77fa831096383ea71"
+        )
+        version(
+            "6.16.00", sha256="2a45055c6091adaa72b977c512f84da8ef92723c30837c7e2643eecc9c5ce4d8"
+        )
+        version(
+            "6.14.08", sha256="1b63b51cfb4dc20f1f5749faac6bbd1098eccab777f8b49911257d77186c73c4"
+        )
+        version(
+            "6.14.06", sha256="0fb943b61396f282b289e35c455a9ab60126229be1bd3f04a8f00b37c13ab432"
+        )
+        version(
+            "6.14.04", sha256="463ec20692332a422cfb5f38c78bedab1c40ab4d81be18e99b50cf9f53f596cf"
+        )
+        version(
+            "6.14.02", sha256="93816519523e87ac75924178d87112d1573eaa108fc65691aea9a9dd5bc05b3e"
+        )
+        version(
+            "6.14.00", sha256="7946430373489310c2791ff7a3520e393dc059db1371272bcd9d9cf0df347a0b"
+        )
+        version(
+            "6.12.06", sha256="aedcfd2257806e425b9f61b483e25ba600eb0ea606e21262eafaa9dc745aa794"
+        )
+        version(
+            "6.10.08", sha256="2cd276d2ac365403c66f08edd1be62fe932a0334f76349b24d8c737c0d6dad8a"
+        )
+        version(
+            "6.08.06", sha256="ea31b047ba6fc04b0b312667349eaf1498a254ccacd212144f15ffcb3f5c0592"
+        )
+        version(
+            "6.06.08", sha256="7cb836282014cce822ef589cad27811eb7a86d7fad45a871fa6b0e6319ec201a"
+        )
+        version(
+            "6.06.06", sha256="0a7d702a130a260c72cb6ea754359eaee49a8c4531b31f23de0bfcafe3ce466b"
+        )
+        version(
+            "6.06.04", sha256="ab86dcc80cbd8e704099af0789e23f49469932ac4936d2291602301a7aa8795b"
+        )
+        version(
+            "6.06.02", sha256="18a4ce42ee19e1a810d5351f74ec9550e6e422b13b5c58e0c3db740cdbc569d1"
+        )
 
     # ###################### Patches ##########################
 
@@ -241,16 +327,20 @@ class Root(CMakePackage):
         default=False,
         description="Enable support for TMultilayerPerceptron " "classes' federation",
     )
-    variant("mysql", default=False, description="Enable support for MySQL databases")
+    variant(
+        "mysql", when="@:6.36", default=False, description="Enable support for MySQL databases"
+    )
     variant("opengl", default=True, description="Enable OpenGL support")
     variant(
         "oracle", when="@:6.30", default=False, description="Enable support for Oracle databases"
     )
-    variant("postgres", default=False, description="Enable postgres support")
+    variant("postgres", when="@:6.36", default=False, description="Enable postgres support")
     variant("pythia6", when="@:6.30", default=False, description="Enable pythia6 support")
     variant("pythia8", default=False, description="Enable pythia8 support")
     variant("python", default=True, description="Enable Python ROOT bindings")
-    variant("qt4", when="@:6.17", default=False, description="Enable Qt graphics backend")
+    variant("qt4", when="@:6.17", default=False, description="Enable Qt4 graphics backend")
+    variant("qt5", when="@6.12:6.34", default=False, description="Enable Qt5 web-based display")
+    variant("qt6", when="@6.26:", default=False, description="Enable Qt6 web-based display")
     variant("r", default=False, description="Enable R ROOT bindings")
     variant("rpath", default=True, description="Enable RPATH")
     variant("roofit", default=True, description="Build the libRooFit advanced fitting package")
@@ -261,7 +351,13 @@ class Root(CMakePackage):
     variant("ssl", default=False, description="Enable SSL encryption support")
     variant("table", when="@:6.17", default=False, description="Build libTable contrib library")
     variant("tbb", default=True, description="TBB multi-threading support")
-    variant("threads", default=True, description="Enable using thread library")
+    variant(
+        "tiff",
+        when="@6.36:",
+        default=True,
+        description="Support TIFF in image processing (requires libtiff)",
+    )
+    variant("threads", when="@:6.19.01", default=True, description="Enable using thread library")
     variant("tmva", default=False, description="Build TMVA multi variate analysis library")
     variant(
         "tmva-cpu",
@@ -321,7 +417,7 @@ class Root(CMakePackage):
     variant(
         "cxxstd",
         default="11",
-        values=("11", "14", "17", "20"),
+        values=("11", "14", "17", "20", "23"),
         multi=False,
         description="Use the specified C++ standard when building.",
     )
@@ -345,6 +441,7 @@ class Root(CMakePackage):
         depends_on("musl@1.1.20:", when="^[virtuals=libc] musl")
 
     depends_on("freetype")
+    depends_on("giflib")
     depends_on("jpeg")
     depends_on("libice")
     depends_on("libpng")
@@ -376,8 +473,19 @@ class Root(CMakePackage):
     depends_on("glu", when="+opengl")
     depends_on("libglx", when="+opengl+x")
 
-    # Qt4
-    depends_on("qt@:4", when="+qt4")
+    # Qt
+    with when("+qt4"):
+        conflicts("+qt5", msg="+qt? options are mutually exclusive")
+        conflicts("+qt6", msg="+qt? options are mutually exclusive")
+        depends_on("qt@4.0.0:4")
+    with when("+qt5"):
+        conflicts("+qt4", msg="+qt? options are mutually exclusive")
+        conflicts("+qt6", msg="+qt? options are mutually exclusive")
+        depends_on("qt@5.0.0:5")
+    with when("+qt6"):
+        conflicts("+qt4", msg="+qt? options are mutually exclusive")
+        conflicts("+qt5", msg="+qt? options are mutually exclusive")
+        depends_on("qt-base +accessibility +gui")
 
     # Python
     depends_on("python@2.7:", when="+python", type=("build", "run"))
@@ -406,6 +514,7 @@ class Root(CMakePackage):
     depends_on("graphviz", when="+graphviz")
     depends_on("gsl", when="+gsl")
     depends_on("jemalloc", when="+jemalloc")
+    depends_on("libtiff", when="+tiff")
     depends_on("mysql-client", when="+mysql")
     depends_on("openssl", when="+ssl")
     depends_on("openssl", when="+davix")  # Also with davix
@@ -485,6 +594,9 @@ class Root(CMakePackage):
     conflicts(
         "cxxstd=20", when="@:6.28.02", msg="C++20 support requires root version at least 6.28.04"
     )
+    conflicts(
+        "cxxstd=23", when="@:6.34", msg="C++23 support requires root version at least 6.36.00"
+    )
 
     conflicts("%gcc@:10", when="cxxstd=20")
 
@@ -553,6 +665,8 @@ class Root(CMakePackage):
             v.append("cxxstd=17")
         elif "cxx20" in f:
             v.append("cxxstd=20")
+        elif "cxx23" in f:
+            v.append("cxxstd=23")
 
         # helper function: check if featurename is in features, and if it is,
         # append variantname to variants. featurename may be a list/tuple, in
@@ -589,16 +703,22 @@ class Root(CMakePackage):
             _add_variant(v, f, "memstat", "+memstat")
         _add_variant(v, f, ("minuit", "minuit2"), "+minuit")
         _add_variant(v, f, "mlp", "+mlp")
-        _add_variant(v, f, "mysql", "+mysql")
+        if Version(version_str) <= Version("6.36"):
+            _add_variant(v, f, "mysql", "+mysql")
         if Version(version_str) <= Version("6.30"):
             _add_variant(v, f, "oracle", "+oracle")
-        _add_variant(v, f, "pgsql", "+postgres")
+        if Version(version_str) <= Version("6.36"):
+            _add_variant(v, f, "pgsql", "+postgres")
         if Version(version_str) <= Version("6.30"):
             _add_variant(v, f, "pythia6", "+pythia6")
         _add_variant(v, f, "pythia8", "+pythia8")
         _add_variant(v, f, "pyroot", "+python")
         if Version(version_str) <= Version("6.17"):
             _add_variant(v, f, ("qt", "qtgsi"), "+qt4")
+        if Version(version_str) >= Version("6.12") and Version(version_str) <= Version("6.34"):
+            _add_variant(v, f, "qt5web", "+qt5")
+        if Version(version_str) >= Version("6.26"):
+            _add_variant(v, f, "qt6web", "+qt6")
         _add_variant(v, f, "r", "+r")
         _add_variant(v, f, "roofit", "+roofit")
         # webui feature renamed to webgui in 6.18
@@ -613,7 +733,8 @@ class Root(CMakePackage):
         _add_variant(v, f, "ssl", "+ssl")
         if Version(version_str) <= Version("6.17"):
             _add_variant(v, f, "table", "+table")
-        _add_variant(v, f, "thread", "+threads")
+        if Version(version_str) <= Version("6.19.01"):
+            _add_variant(v, f, "thread", "+threads")
         _add_variant(v, f, "tmva", "+tmva")
         _add_variant(v, f, "tmva-cpu", "+tmva-cpu")
         _add_variant(v, f, "tmva-gpu", "+tmva-gpu")
@@ -640,24 +761,28 @@ class Root(CMakePackage):
 
         # Options controlling gross build / config behavior.
         options += [
-            define("explicitlink", True),
             define("fail-on-missing", True),
             define_from_variant("fortran"),
             define_from_variant("gminimal"),
             define("gnuinstall", True),
             define("libcxx", False),
-            define("pch", True),
             define("roottest", False),
             define_from_variant("rpath"),
             define("runtime_cxxmodules", False),
             define("shared", True),
             define("soversion", True),
             define("testing", self.run_tests),
-            define_from_variant("thread", "threads"),
             # The following option makes sure that Cling will call the compiler
             # it was compiled with at run time; see #17488, #18078 and #23886
             define("CLING_CXX_PATH", self.compiler.cxx),
         ]
+
+        if self.spec.satisfies("@:6.19.01"):
+            options += [
+                define("explicitlink", True),
+                define("pch", True),
+                define_from_variant("thread", "threads"),
+            ]
 
         if self.spec.satisfies("@:6.28"):
             options.append(define("cxxmodules", False))
@@ -674,6 +799,7 @@ class Root(CMakePackage):
             define("builtin_fftw3", False),
             define("builtin_freetype", False),
             define("builtin_ftgl", False),
+            define("builtin_gif", False),
             define("builtin_gl2ps", False),
             define("builtin_glew", False),
             define("builtin_gsl", False),
@@ -701,6 +827,13 @@ class Root(CMakePackage):
                 )
             )
 
+        if self.spec.satisfies("@6.36:"):
+            options += [
+                define("builtin_gif", False),
+                define("builtin_jpeg", False),
+                define("builtin_png", False),
+            ]
+
         # Features
         options += [
             define("afdsmrgd", False),
@@ -708,12 +841,10 @@ class Root(CMakePackage):
             define("alien", False),
             define_from_variant("arrow"),
             define("asimage", True),
-            define("astiff", True),
             define("bonjour", False),
             define("castor", False),
             define("ccache", False),
             define("chirp", False),
-            define("cling", True),
             define_from_variant("cocoa", "aqua"),
             define("dataframe", True),
             define_from_variant("davix"),
@@ -744,11 +875,8 @@ class Root(CMakePackage):
             define_from_variant("minuit"),
             define_from_variant("mlp"),
             define("monalisa", False),
-            define_from_variant("mysql"),
-            define("odbc", False),
             define_from_variant("opengl"),
             define_from_variant("oracle"),
-            define_from_variant("pgsql", "postgres"),
             define_from_variant("pythia6"),
             define_from_variant("pythia8"),
             define_from_variant("qt", "qt4"),  # See conflicts
@@ -798,6 +926,9 @@ class Root(CMakePackage):
         if self.spec.satisfies("@6.17.02:"):
             options.append(define_from_variant("tmva-pymva"))
 
+        if self.spec.satisfies("@:6.19.01"):
+            options += [define("astiff", True), define("cling", True)]
+
         if self.spec.satisfies("@6.20.02:"):
             options.append(define_from_variant("cudnn"))
             options.append(define_from_variant("pyroot", "python"))
@@ -811,9 +942,21 @@ class Root(CMakePackage):
             options.append(define_from_variant("minuit2", "minuit"))
 
         if self.spec.satisfies("@6.34:"):
-            options.append(define_from_variant("tmva-cudnn", "tmva-cudnn"))
-            options.append(define_from_variant("tmva-cudnn", "cudnn"))
-            options.append(define_from_variant("tpython"))
+            options += [
+                define_from_variant("tmva-cudnn", "tmva-cudnn"),
+                define_from_variant("tmva-cudnn", "cudnn"),
+                define_from_variant("tpython"),
+            ]
+
+        if self.spec.satisfies("@:6.36"):
+            options += [
+                define_from_variant("mysql"),
+                define_from_variant("pgsql", "postgres"),
+                define("odbc", False),
+            ]
+
+        if self.spec.satisfies("@6.36:"):
+            options.append(define_from_variant("asimage_tiff", "tiff"))
 
         # #################### Compiler options ####################
 

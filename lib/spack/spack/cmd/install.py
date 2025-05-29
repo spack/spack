@@ -66,7 +66,7 @@ def install_kwargs_from_args(args):
     }
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--only",
         default="package,dependencies",
