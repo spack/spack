@@ -19,7 +19,6 @@ import spack.version
 from spack.installer import PackageInstaller
 from spack.solver.asp import InternalConcretizerError, UnsatisfiableSpecError
 from spack.spec import Spec
-from spack.test.concretization.conditional_dependencies import config_two_gccs
 from spack.util.url import path_to_file_url
 
 

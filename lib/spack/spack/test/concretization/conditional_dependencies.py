@@ -7,29 +7,6 @@ import spack.concretize
 import spack.spec
 
 
-@pytest.fixture(scope="function")
-def config_two_gccs(mutable_config):
-    # Configure two gcc compilers that could be concretized to
-    extra_attributes_block = {
-        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
-    }
-    mutable_config.set(
-        "packages:gcc:externals::",
-        [
-            {
-                "spec": "gcc@12.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-            {
-                "spec": "gcc@10.3.1 languages=c,c++,fortran",
-                "prefix": "/path",
-                "extra_attributes": extra_attributes_block,
-            },
-        ],
-    )
-
-
 @pytest.mark.parametrize("holds,mpi", [(True, "zmpi"), (True, "mpich"), (False, "mpich")])
 def test_conditional_deps(holds, mpi, config, mock_packages):
     """Test concretizing conditional dependencies.
