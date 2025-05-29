@@ -270,7 +270,7 @@ def config_scopes(args):
     if not scopes:
         return
     info = list(_config_scope_info(args, s) for s in scopes)
-    max_col1_width = max((len(x[0]) for x in info))
+    max_col1_width = max(list(len(x[0]) for x in info))
     for c1, c2 in info:
         print(f"{c1:{max_col1_width}}  {c2}" if c2 else c1)
 
