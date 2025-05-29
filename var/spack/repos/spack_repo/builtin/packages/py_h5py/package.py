@@ -76,7 +76,7 @@ class PyH5py(PythonPackage):
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
     # https://github.com/h5py/h5py/pull/2556
-    depends_on("py-numpy@:2.2", when="@:3.12", type=("build", "run"))
+    depends_on("py-numpy@:2.2", when="@:3.12", type="build")
     # https://github.com/h5py/h5py/issues/2353
     depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
 
