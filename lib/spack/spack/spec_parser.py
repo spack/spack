@@ -278,21 +278,18 @@ class SpecParser:
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
                 edge_properties["direct"] = is_direct
+                edge_properties.setdefault("depflag", 0)
 
                 dependency, warnings = self._parse_node(root_spec)
 
                 if is_direct:
                     target_spec = current_spec
-                    edge_properties.setdefault("depflag", spack.deptypes.BUILD)
                     if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
                         dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
-
                 else:
                     current_spec = dependency
                     target_spec = root_spec
-                    edge_properties.setdefault("depflag", 0)
 
-                # print(f"[{current_spec}], {target_spec}->{dependency} {is_direct}")
                 parser_warnings.extend(warnings)
                 add_dependency(dependency, **edge_properties)
 
@@ -302,17 +299,15 @@ class SpecParser:
                 edge_properties = {}
                 edge_properties["direct"] = is_direct
                 edge_properties["virtuals"] = tuple()
+                edge_properties.setdefault("depflag", 0)
+
                 if is_direct:
                     target_spec = current_spec
-                    edge_properties.setdefault("depflag", spack.deptypes.BUILD)
                     if dependency.name in LEGACY_COMPILER_TO_BUILTIN:
                         dependency.name = LEGACY_COMPILER_TO_BUILTIN[dependency.name]
                 else:
                     current_spec = dependency
                     target_spec = root_spec
-                    edge_properties.setdefault("depflag", 0)
-
-                # print(f"[{current_spec}], {target_spec}->{dependency} {is_direct}")
 
                 parser_warnings.extend(warnings)
                 add_dependency(dependency, **edge_properties)

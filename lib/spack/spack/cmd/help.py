@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 from llnl.util.tty.color import colorize
@@ -81,7 +82,7 @@ spec expression syntax:
 guides = {"spec": spec_guide}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     help_cmd_group = subparser.add_mutually_exclusive_group()
     help_cmd_group.add_argument(
         "help_command", nargs="?", default=None, help="command to get help on"

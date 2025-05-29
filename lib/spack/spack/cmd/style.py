@@ -151,7 +151,7 @@ def changed_files(base="develop", untracked=True, all_files=False, root=None):
     return sorted(changed)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-b",
         "--base",

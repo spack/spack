@@ -119,6 +119,8 @@ def binary_compatibility(monkeypatch, request):
         "conflict",
         "conflict~foo%clang",
         "conflict-parent%gcc",
+        # Direct dependency with different deptypes
+        "mpileaks %[deptypes=link] mpich",
     ]
 )
 def spec(request):
@@ -3701,3 +3703,47 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
 
     assert s["c"].dag_hash() == installed_spec.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # Simple build requirement on gcc, as a provider for c
+        (
+            "mpileaks %gcc",
+            ["%[deptypes=build] gcc"],
+            ["%[deptypes=link] gcc", "%[deptypes=run] gcc"],
+        ),
+        # Require mpich as a direct dependency of mpileaks
+        (
+            "mpileaks %[deptypes=link] mpich",
+            ["%[deptypes=build,link] mpich", "^callpath%[deptypes=build,link] mpich"],
+            ["%[deptypes=run] mpich"],
+        ),
+        (
+            "mpileaks %[deptypes=link] mpich+debug",  # non-default variant
+            ["%[deptypes=build,link] mpich+debug"],
+            ["% mpich~debug"],
+        ),
+        # Require mpich as a direct dependency of two nodes, with compatible constraints
+        (
+            "mpileaks %mpich+debug ^callpath %mpich@3.0.3",  # non-default variant
+            [
+                "%[deptypes=build,link] mpich@3.0.3+debug",
+                "^callpath %[deptypes=build,link] mpich@3.0.3+debug",
+            ],
+            ["%mpich~debug"],
+        ),
+    ],
+)
+def test_specifying_direct_dependencies(
+    spec_str, expected, not_expected, default_mock_concretization
+):
+    """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
+    concrete_spec = default_mock_concretization(spec_str)
+
+    for c in expected:
+        assert concrete_spec.satisfies(c)
+
+    for c in not_expected:
+        assert not concrete_spec.satisfies(c)

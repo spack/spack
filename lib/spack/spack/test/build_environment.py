@@ -808,14 +808,22 @@ class _TestProcess:
     terminated = False
     runtime = 0
 
-    def __init__(self, *, target, args):
+    def __init__(self, *, target, args, pkg, read_pipe, timeout):
         self.alive = None
         self.exitcode = 0
         self._reset()
+        self.read_pipe = read_pipe
+        self.timeout = timeout
 
     def start(self):
         self.calls["start"] += 1
         self.alive = True
+
+    def poll(self):
+        return True
+
+    def complete(self):
+        return None
 
     def is_alive(self):
         self.calls["is_alive"] += 1
@@ -830,6 +838,8 @@ class _TestProcess:
         self.calls["terminate"] += 1
         self._set_terminated()
         self.alive = False
+        # Do not set exit code. A non-zero exit code will trigger an error
+        # instead of gracefully inspecting values for test
 
     @classmethod
     def _set_terminated(cls):
@@ -867,22 +877,20 @@ def mock_build_process(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "runtime,timeout,expected_result,expected_calls",
+    "runtime,timeout,expected_calls",
     [
         # execution time < timeout
-        (2, 5, 0, {"start": 1, "join": 1, "is_alive": 1}),
+        (2, 5, {"start": 1, "join": 1, "is_alive": 1}),
         # execution time > timeout
-        (5, 2, 1, {"start": 1, "join": 2, "is_alive": 1, "terminate": 1}),
+        (5, 2, {"start": 1, "join": 1, "is_alive": 1, "terminate": 1}),
     ],
 )
-def test_build_process_timeout(
-    mock_build_process, runtime, timeout, expected_result, expected_calls
-):
+def test_build_process_timeout(mock_build_process, runtime, timeout, expected_calls):
     """Tests that we make the correct function calls in different timeout scenarios."""
     mock_build_process(runtime=runtime)
-    result = spack.build_environment.start_build_process(
+    process = spack.build_environment.start_build_process(
         pkg=None, function=None, kwargs={}, timeout=timeout
     )
+    _ = spack.build_environment.complete_build_process(process)
 
-    assert result == expected_result
     assert _TestProcess.calls == expected_calls

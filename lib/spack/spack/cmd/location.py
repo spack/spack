@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 
 import llnl.util.tty as tty
@@ -19,8 +20,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
-    global directories
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     directories = subparser.add_mutually_exclusive_group()
 
     directories.add_argument(

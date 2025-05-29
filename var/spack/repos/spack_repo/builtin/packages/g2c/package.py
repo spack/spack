@@ -19,6 +19,7 @@ class G2c(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("2.1.0", sha256="74e3ef381f0339dc181bc3afaa54c98f76257508375ff664d243d76825006605")
     version("2.0.0", sha256="39c23bf1219c60101548c8525e3a879c84119558f768081779d404a8caf4cec9")
     version("1.9.0", sha256="5554276e18bdcddf387a08c2dd23f9da310c6598905df6a2a244516c22ded9aa")
     version("1.8.0", sha256="4ce9f5a7cb0950699fe08ebc5a463ab4d09ef550c050391a319308a2494f971f")
@@ -26,7 +27,7 @@ class G2c(CMakePackage):
     version("1.6.4", sha256="5129a772572a358296b05fbe846bd390c6a501254588c6a223623649aefacb9d")
     version("1.6.2", sha256="b5384b48e108293d7f764cdad458ac8ce436f26be330b02c69c2a75bb7eb9a2c")
 
-    variant("aec", default=True, description="Use AEC library")
+    variant("aec", default=True, description="Use AEC library", when="@1.8:")
     variant("png", default=True, description="Use PNG library")
     variant("jasper", default=True, description="Use Jasper library")
     variant("openjpeg", default=False, description="Use OpenJPEG library")
@@ -40,16 +41,16 @@ class G2c(CMakePackage):
         when="@1.7:",
     )
     variant(
-        "pthreads", default=False, description="Turn on thread-safety with pthreads", when="@2:"
+        "pthreads", default=False, description="Turn on thread-safety with pthreads", when="@1.8:"
     )
     variant(
-        "utils", default=True, description="Build and install some utility programs", when="@2:"
+        "utils", default=True, description="Build and install some utility programs", when="@1.8:"
     )
     variant(
         "build_v2_api",
         default=True,
         description="Build new g2c API, experimental until 2.0.0 release",
-        when="@2:",
+        when="@1.8:",
     )
 
     depends_on("c", type="build")
@@ -88,6 +89,9 @@ class G2c(CMakePackage):
         lib = find_libraries("libg2c", root=self.prefix, shared=shared, recursive=True)
         env.set("G2C_LIB", lib[0])
         env.set("G2C_INC", join_path(self.prefix, "include"))
+
+    def patch(self):
+        filter_file(r"^(\s+find_package\(PkgConfig REQUIRED\))", r"#\1", "CMakeLists.txt")
 
     def check(self):
         with working_dir(self.build_directory):
