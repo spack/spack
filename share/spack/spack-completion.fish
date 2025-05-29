@@ -1237,7 +1237,7 @@ complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 's
 
 # spack config scopes
 set -g __fish_spack_optspecs_spack_config_scopes h/help p/paths t/type=
-complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos upstreams view'
+complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos toolchains upstreams view'
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command config scopes' -s p -l paths -f -a paths
