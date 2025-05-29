@@ -10,7 +10,8 @@ from spack.package import *
 
 
 class PyTilelang(PythonPackage, CudaPackage, ROCmPackage):
-    """Domain-specific language designed to streamline the development of high-performance GPU/CPU/Accelerators kernels"""
+    """Domain-specific language designed to streamline
+    the development of high-performance GPU/CPU/Accelerators kernels"""
 
     license("MIT")
     homepage = "https://tilelang.com/"
