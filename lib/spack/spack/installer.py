@@ -2431,14 +2431,13 @@ class PackageInstaller:
 
         return fifo_directory, jobserver_fifo_fd
 
-            # TODO: Implement Windows support.
+        # TODO: Implement Windows support.
 
-    
     def cleanup_jobserver(self, fifo_directory, jobserver_fifo_fd) -> None:
         """Cleanup the FIFO file descriptors and directory"""
         if jobserver_fifo_fd is not None:
             os.close(jobserver_fifo_fd)
-        if fifo_directory is not None: 
+        if fifo_directory is not None:
             shutil.rmtree(fifo_directory)
 
     def install(self) -> None:
