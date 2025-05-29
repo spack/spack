@@ -2407,6 +2407,9 @@ class PackageInstaller:
 
     def setup_jobserver(self) -> Tuple[str, int]:
         """Setup FIFO implementation of make jobserver."""
+        fifo_directory = None
+        jobserver_fifo_fd = None
+
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
             fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
@@ -2426,9 +2429,17 @@ class PackageInstaller:
                 f"--jobserver-auth=fifo:{fifo_path} --jobserver-style=pipe -j {num_jobs}"
             )
 
-            return fifo_directory, jobserver_fifo_fd
+        return fifo_directory, jobserver_fifo_fd
 
             # TODO: Implement Windows support.
+
+    
+    def cleanup_jobserver(self, fifo_directory, jobserver_fifo_fd) -> None:
+        """Cleanup the FIFO file descriptors and directory"""
+        if jobserver_fifo_fd is not None:
+            os.close(jobserver_fifo_fd)
+        if fifo_directory is not None: 
+            shutil.rmtree(fifo_directory)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
@@ -2495,8 +2506,7 @@ class PackageInstaller:
                 raise
 
         # Close and cleanup the jobserver FIFO
-        os.close(jobserver_fifo_fd)
-        shutil.rmtree(fifo_directory)
+        self.cleanup_jobserver(fifo_directory, jobserver_fifo_fd)
 
         self._clear_removed_tasks()
         if self.build_pq:
