@@ -995,3 +995,67 @@ spack:
     mpich = mpileaks["mpich"]
     assert mpich.satisfies("%gcc") and not mpich.satisfies("%clang")
     assert len(mpich.dependencies(virtuals=("c", "cxx"))) == 1
+
+
+@pytest.mark.parametrize(
+    "spack_yaml,expected,not_expected",
+    [
+        # Define a toolchain in spack.yaml
+        (
+            """\
+spack:
+  specs:
+    - mpileaks %llvm-toolchain
+  toolchains:
+    llvm-toolchain:
+    - spec: "%[virtuals=c] llvm"
+      when: "%c"
+    - spec: "%[virtuals=cxx] llvm"
+      when: "%cxx"
+  concretizer:
+    unify: true
+""",
+            ["%[virtuals=c] llvm", "^[virtuals=mpi] mpich"],
+            ["%[virtuals=c] gcc"],
+        ),
+        # Use a toolchain in a default requirement
+        (
+            """\
+    spack:
+      specs:
+        - mpileaks
+      toolchains:
+        llvm-toolchain:
+        - spec: "%[virtuals=c] llvm"
+          when: "%c"
+        - spec: "%[virtuals=cxx] llvm"
+          when: "%cxx"
+        - spec: "^[virtuals=mpi] zmpi"
+          when: "^mpi"
+      packages:
+        all:
+          require:
+          - "%llvm-toolchain"
+      concretizer:
+        unify: true
+    """,
+            ["%[virtuals=c] llvm", "%[virtuals=mpi] zmpi", "^callpath %[virtuals=c] llvm"],
+            ["%[virtuals=c] gcc"],
+        ),
+    ],
+)
+def test_toolchain_definitions_are_allowed(
+    spack_yaml, expected, not_expected, tmp_path, mutable_config
+):
+    """Tests that we can use toolchain definitions in spack.yaml files."""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        mpileaks = e.concrete_roots()[0]
+
+    for c in expected:
+        assert mpileaks.satisfies(c)
+
+    for c in not_expected:
+        assert not mpileaks.satisfies(c)
