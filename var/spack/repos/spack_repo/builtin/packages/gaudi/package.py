@@ -93,7 +93,7 @@ class Gaudi(CMakePackage, CudaPackage):
     patch(
         "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/89f38fab9052093de98d06a2a6e5fda2c9574007.diff",
         sha256="6b377fd10828bf26367c26792a5465351f3f0b5f7f6073dbcae6fa9195d4a414",
-        when="@34.1:39",
+        when="@38.1:39",
     )
 
     # These dependencies are needed for a minimal Gaudi build
