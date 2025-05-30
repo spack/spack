@@ -17,6 +17,8 @@ class PyPahoMqtt(PythonPackage):
     publishing one off messages to an MQTT server very straightforward.
     """
 
+    maintainers("eap")
+
     homepage = "https://eclipse.dev/paho/"
     pypi = "paho-mqtt/paho_mqtt-2.1.0.tar.gz"
 
