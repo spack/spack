@@ -2411,7 +2411,6 @@ class PackageInstaller:
         jobserver_fifo_fd = None
 
         mflags = os.environ.get("MAKEFLAGS")
-        print("DEBUG: MAKEFLAGS =", mflags)
         if mflags and "--jobserver" in mflags:
             print("ARE WE GETTING HERE")
             # Jobserver already set up by Make (through env depfile)
