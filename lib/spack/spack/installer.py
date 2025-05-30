@@ -2405,11 +2405,11 @@ class PackageInstaller:
 
         return None
 
-    def setup_jobserver(self) -> Tuple[str, int]:
+    def setup_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
         jobserver_fifo_fd = None
-        
+
         mflags = os.environ.get("MAKEFLAGS")
         if mflags and "--jobserver" in mflags:
             # Jobserver already set up by Make (through env depfile)
