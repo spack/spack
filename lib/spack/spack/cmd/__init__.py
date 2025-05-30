@@ -737,9 +737,9 @@ def group_arguments(
         max_group_length = 32768  # default to the Windows limit
         if hasattr(os, "sysconf"):  # sysconf is only on unix
             try:
+                # returns -1 if an option isn't present (soem older POSIXes)
                 sysconf_max = os.sysconf("SC_ARG_MAX")
-                if sysconf_max != -1:  # returns -1 if an option isn't present
-                    max_group_length = sysconf_max
+                max_group_length = sysconf_max if sysconf_max != -1 else max_group_length
             except (ValueError, OSError):
                 pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
 
