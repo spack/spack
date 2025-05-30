@@ -1,2 +1,2 @@
 repos:
-  - $spack/var/spack/repos/spack_repo/builtin
+  builtin: $spack/var/spack/repos/spack_repo/builtin

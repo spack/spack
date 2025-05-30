@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import collections
 import os
 import shutil
@@ -26,7 +27,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # User can only choose one
     subparser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read/modify"
@@ -68,6 +69,35 @@ def setup_parser(subparser):
 
     sp.add_parser("list", help="list configuration sections")
 
+    scopes_parser = sp.add_parser(
+        "scopes", help="list defined scopes in descending order of precedence"
+    )
+    scopes_parser.add_argument(
+        "-i", "--included", action="store_true", default=False, help="list only included scopes"
+    )
+    scopes_parser.add_argument(
+        "-p",
+        "--path-scopes",
+        action="store_true",
+        default=False,
+        help="list only writable scopes with an associated path",
+    )
+    scopes_parser.add_argument(
+        "-s",
+        "--show-paths",
+        action="store_true",
+        default=False,
+        help="show associated paths for appropriate scopes",
+    )
+    scopes_parser.add_argument(
+        "section",
+        help="tailor scope path information to the specified section (implies -s|--show-paths)"
+        "\noptions: %(choices)s",
+        metavar="section",
+        nargs="?",
+        choices=spack.config.SECTION_SCHEMAS,
+    )
+
     add_parser = sp.add_parser("add", help="add configuration parameters")
     add_parser.add_argument(
         "path",
@@ -99,7 +129,7 @@ def setup_parser(subparser):
     )
 
     # Make the add parser available later
-    setup_parser.add_parser = add_parser
+    setattr(setup_parser, "add_parser", add_parser)
 
     update = sp.add_parser("update", help="update configuration files to the latest format")
     arguments.add_common_arguments(update, ["yes_to_all"])
@@ -213,6 +243,34 @@ def config_list(args):
     Used primarily for shell tab completion scripts.
     """
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
+
+
+def _config_scope_info_string(args, scope):
+    if (args.section or args.show_paths) and hasattr(scope, "path"):
+        section_path = scope.get_section_filename(args.section) if args.section else None
+        path = (
+            section_path
+            if section_path and os.path.exists(section_path)
+            else f"{scope.path}{os.sep}"
+        )
+        return f"{scope.name} ({path})"
+    else:
+        return scope.name
+
+
+def config_scopes(args):
+    """List configured scopes in descending order of precedence."""
+
+    scopes = (
+        spack.config.scopes().reversed_values()
+        if (args.included or not args.path_scopes)
+        else spack.config.writable_scopes()
+    )
+    if args.included:
+        scopes = (i for s in scopes for i in s.included_scopes)
+    info = (_config_scope_info_string(args, s) for s in scopes)
+
+    print(" ".join(info))
 
 
 def config_add(args):
@@ -369,7 +427,7 @@ def config_update(args):
     spack.config.CONFIG.get_config(args.section, scope=args.scope)
     updates: List[spack.config.ConfigScope] = [
         x
-        for x in spack.config.CONFIG.format_updates[args.section]
+        for x in spack.config.CONFIG.updated_scopes_by_section[args.section]
         if not isinstance(x, spack.config.InternalConfigScope) and x.writable
     ]
 
@@ -431,13 +489,17 @@ def config_update(args):
     # Get a function to update the format
     update_fn = spack.config.ensure_latest_format_fn(args.section)
     for scope in updates:
-        data = scope.get_section(args.section).pop(args.section)
+        cfg_file = spack.config.CONFIG.get_config_filename(scope.name, args.section)
+        data = scope.get_section(args.section)
+        assert data is not None, f"Cannot find section {args.section} in {scope.name} scope"
         update_fn(data)
 
         # Make a backup copy and rewrite the file
         bkp_file = cfg_file + ".bkp"
         shutil.copy(cfg_file, bkp_file)
-        spack.config.CONFIG.update_config(args.section, data, scope=scope.name, force=True)
+        spack.config.CONFIG.update_config(
+            args.section, data[args.section], scope=scope.name, force=True
+        )
         tty.msg(f'File "{cfg_file}" update [backup={bkp_file}]')
 
 
@@ -576,6 +638,7 @@ def config(parser, args):
         "blame": config_blame,
         "edit": config_edit,
         "list": config_list,
+        "scopes": config_scopes,
         "add": config_add,
         "rm": config_remove,
         "remove": config_remove,

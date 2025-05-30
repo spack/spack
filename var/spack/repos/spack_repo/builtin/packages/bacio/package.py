@@ -26,12 +26,16 @@ class Bacio(CMakePackage):
     depends_on("c", type="build")
     depends_on("fortran", type="build")
 
+    depends_on("pfunit", when="@:2.4", type="test")
+
     variant("pic", default=True, description="Build with position-independent-code")
     variant("shared", default=False, description="Build shared library", when="@2.6.0:")
 
     def cmake_args(self):
         args = [self.define_from_variant("CMAKE_POSITION_INDEPENDENT_CODE", "pic")]
         args.append(self.define_from_variant("BUILD_SHARED_LIBS", "shared"))
+        if self.run_tests and self.spec.satisfies("@:2.4"):
+            args.append(self.define("ENABLE_TESTS", True))
 
         return args
 

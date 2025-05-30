@@ -36,9 +36,10 @@ from llnl.util.tty.log import log_output
 import spack
 import spack.cmd
 import spack.config
+import spack.environment
 import spack.environment as ev
+import spack.environment.environment
 import spack.error
-import spack.modules
 import spack.paths
 import spack.platforms
 import spack.repo
@@ -560,7 +561,7 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
-    spack.repo.enable_repo(spack.repo.create(spack.config.CONFIG))
+    spack.repo.enable_repo(spack.repo.RepoPath.from_config(spack.config.CONFIG))
 
     # On Windows10 console handling for ASCI/VT100 sequences is not
     # on by default. Turn on before we try to write to console
@@ -881,9 +882,6 @@ def add_command_line_scopes(
                     spack.config.DirectoryConfigScope(name, path, writable=False),
                     priority=ConfigScopePriority.CUSTOM,
                 )
-                spack.config._add_platform_scope(
-                    cfg, name, path, priority=ConfigScopePriority.CUSTOM, writable=False
-                )
                 continue
             else:
                 raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
@@ -951,7 +949,10 @@ def _main(argv=None):
         try:
             env = spack.cmd.find_environment(args)
             if env:
-                ev.activate(env, args.use_env_repo)
+                # do not call activate here, cause it has a lot of expensive function calls to deal
+                # with mutation of spack.config.CONFIG -- but we are still building the config.
+                env.manifest.prepare_config_scope()
+                spack.environment.environment._active_environment = env
         except spack.config.ConfigFormatError as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.

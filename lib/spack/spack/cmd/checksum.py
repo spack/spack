@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import re
 import sys
 from typing import Dict, Optional, Tuple
@@ -31,7 +32,7 @@ section = "packaging"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--keep-stage",
         action="store_true",

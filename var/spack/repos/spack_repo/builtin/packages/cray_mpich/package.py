@@ -7,11 +7,10 @@ import os
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 from spack_repo.builtin.build_systems.generic import Package
 from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.mpich.package import MpichEnvironmentModifications
 
 from spack.package import *
 from spack.util.module_cmd import get_path_args_from_module_line, module
-
-from ..mpich.package import MpichEnvironmentModifications
 
 
 class CrayMpich(MpichEnvironmentModifications, Package, CudaPackage, ROCmPackage):

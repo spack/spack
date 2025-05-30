@@ -21,7 +21,6 @@ import contextlib
 import datetime
 import os
 import pathlib
-import socket
 import sys
 import time
 from json import JSONDecoder
@@ -53,7 +52,6 @@ except ImportError:
     pass
 
 import llnl.util.filesystem as fs
-import llnl.util.lang
 import llnl.util.tty as tty
 
 import spack.deptypes as dt
@@ -70,6 +68,7 @@ from spack.directory_layout import (
 )
 from spack.error import SpackError
 from spack.util.crypto import bit_length
+from spack.util.socket import _getfqdn
 
 from .enums import InstallRecordStatus
 
@@ -136,17 +135,6 @@ _INDEX_VERIFIER_FILE = "index_verifier"
 
 # Lockfile for the database
 _LOCK_FILE = "lock"
-
-
-@llnl.util.lang.memoized
-def _getfqdn():
-    """Memoized version of `getfqdn()`.
-
-    If we call `getfqdn()` too many times, DNS can be very slow. We only need to call it
-    one time per process, so we cache it here.
-
-    """
-    return socket.getfqdn()
 
 
 def reader(version: vn.StandardVersion) -> Type["spack.spec.SpecfileReaderBase"]:

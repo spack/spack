@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
-import collections.abc
 import contextlib
 import difflib
 import errno
@@ -24,7 +23,7 @@ import traceback
 import types
 import uuid
 import warnings
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Generator, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -334,7 +333,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(collections.abc.Mapping):
+class FastPackageChecker(Mapping[str, os.stat_result]):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -346,7 +345,7 @@ class FastPackageChecker(collections.abc.Mapping):
     #: Global cache, reused by every instance
     _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
 
-    def __init__(self, packages_path: str, package_api: Tuple[int, int]):
+    def __init__(self, packages_path: str, package_api: Tuple[int, int]) -> None:
         # The path of the repository managed by this instance
         self.packages_path = packages_path
         self.package_api = package_api
@@ -358,7 +357,7 @@ class FastPackageChecker(collections.abc.Mapping):
         #: Reference to the appropriate entry in the global cache
         self._packages_to_stats = self._paths_cache[packages_path]
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
@@ -409,19 +408,19 @@ class FastPackageChecker(collections.abc.Mapping):
 
         return cache
 
-    def last_mtime(self):
+    def last_mtime(self) -> float:
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
     def modified_since(self, since: float) -> List[str]:
         return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> os.stat_result:
         return self._packages_to_stats[item]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._packages_to_stats)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._packages_to_stats)
 
 
@@ -628,44 +627,61 @@ class RepoIndex:
 
 
 class RepoPath:
-    """A RepoPath is a list of repos that function as one.
+    """A RepoPath is a list of Repo instances that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
     results of the Repos in its list instead of on a single package
     repository.
-
-    Args:
-        repos: list Repo objects or paths to put in this RepoPath
-        cache: file cache associated with this repository
-        overrides: dict mapping package name to class attribute overrides for that package
     """
 
-    def __init__(
-        self,
-        *repos: Union[str, "Repo"],
-        cache: Optional[spack.util.file_cache.FileCache],
-        overrides: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    def __init__(self, *repos: "Repo") -> None:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
         self._patch_index: Optional[spack.patch.PatchCache] = None
         self._tag_index: Optional[spack.tag.TagIndex] = None
 
-        # Add each repo to this path.
         for repo in repos:
+            self.put_last(repo)
+
+    @staticmethod
+    def from_paths(
+        *path: str,
+        cache: spack.util.file_cache.FileCache,
+        overrides: Optional[Dict[str, Any]] = None,
+    ) -> "RepoPath":
+        repos: List[Repo] = []
+
+        for p in path:
             try:
-                if isinstance(repo, str):
-                    assert cache is not None, "cache must hold a value, when repo is a string"
-                    repo = Repo(repo, cache=cache, overrides=overrides)
-                self.put_last(repo)
+                repos.append(Repo(p, cache=cache, overrides=overrides))
             except RepoError as e:
                 tty.warn(
-                    f"Failed to initialize repository: '{repo}'.",
+                    f"Failed to initialize repository: '{p}'.",
                     e.message,
                     "To remove the bad repository, run this command:",
-                    f"    spack repo rm {repo}",
+                    f"    spack repo rm {p}",
                 )
+
+        return RepoPath(*repos)
+
+    @staticmethod
+    def from_config(config: spack.config.Configuration) -> "RepoPath":
+        """Create a RepoPath from a configuration object."""
+        repo_dirs = config.get("repos").values()
+        if not repo_dirs:
+            raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
+
+        overrides = {}
+        for pkg_name, data in config.get("packages").items():
+            if pkg_name == "all":
+                continue
+            value = data.get("package_attributes", {})
+            if not value:
+                continue
+            overrides[pkg_name] = value
+
+        return RepoPath.from_paths(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
 
     def enable(self) -> None:
         """Set the relevant search paths for package module loading"""
@@ -676,7 +692,8 @@ class RepoPath:
 
     def disable(self) -> None:
         """Disable the search paths for package module loading"""
-        del REPOS_FINDER.repo_path
+        if hasattr(REPOS_FINDER, "repo_path"):
+            del REPOS_FINDER.repo_path
         for p in self.python_paths():
             if p in sys.path:
                 sys.path.remove(p)
@@ -685,7 +702,7 @@ class RepoPath:
         """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
         return self
 
-    def put_first(self, repo: "Repo") -> None:
+    def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
         if isinstance(repo, RepoPath):
             for r in reversed(repo.repos):
@@ -915,7 +932,7 @@ class RepoPath:
 
     @staticmethod
     def unmarshal(repos):
-        return RepoPath(*repos, cache=None)
+        return RepoPath(*repos)
 
     def __reduce__(self):
         return RepoPath.unmarshal, self.marshal()
@@ -1541,7 +1558,7 @@ def create_repo(
 
 
 def from_path(path: str) -> Repo:
-    """Returns a repository from the path passed as input. Injects the global misc cache."""
+    """Constructs a Repo using global misc cache."""
     return Repo(path, cache=spack.caches.MISC_CACHE)
 
 
@@ -1558,31 +1575,16 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def create(configuration: spack.config.Configuration) -> RepoPath:
-    """Create a RepoPath from a configuration object.
-
-    Args:
-        configuration (spack.config.Configuration): configuration object
-    """
-    repo_dirs = configuration.get("repos")
-    if not repo_dirs:
-        raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
-
-    overrides = {}
-    for pkg_name, data in configuration.get("packages").items():
-        if pkg_name == "all":
-            continue
-        value = data.get("package_attributes", {})
-        if not value:
-            continue
-        overrides[pkg_name] = value
-
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
+def create_and_enable(config: spack.config.Configuration) -> RepoPath:
+    """Immediately call enable() on the created RepoPath instance."""
+    repo_path = RepoPath.from_config(config)
+    repo_path.enable()
+    return repo_path
 
 
 #: Global package repository instance.
 PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create(configuration=spack.config.CONFIG)
+    lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
@@ -1609,13 +1611,13 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    paths = [getattr(x, "root", x) for x in paths_and_repos]
+    paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    old_repo, new_repo = PATH, create(configuration=spack.config.CONFIG)
+    old_repo, new_repo = PATH, RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:

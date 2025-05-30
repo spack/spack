@@ -9,13 +9,13 @@ Environment Variable Settings (env_vars.yaml)
 =============================================
 
 Spack allows you to include shell environment variable modifications
-for a spack environment by including an ``env_vars.yaml``.  Environment
-varaibles can be modified by setting, unsetting, appending, and prepending
+for a Spack environment by including an ``env_vars.yaml`` file. Environment
+variables can be modified by setting, unsetting, appending, and prepending
 variables in the shell environment.
-The changes to the shell environment will take effect when the spack
+The changes to the shell environment will take effect when the Spack
 environment is activated.
 
-for example,
+For example:
 
 .. code-block:: yaml
 

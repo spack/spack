@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import llnl.util.lang as lang
@@ -26,7 +27,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["no_checksum"])
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="mirror_command")
