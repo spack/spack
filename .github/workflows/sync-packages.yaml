@@ -32,7 +32,7 @@ jobs:
                         --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
                         --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \
-                        --path lib/spack/spack/test --path-rename lib/spack/spack/test:repos/spack_repo/builtin/tests/ \
+                        --path lib/spack/spack/test/ --path-rename lib/spack/spack/test:repos/spack_repo/builtin/tests/ \
                         --path .github/workflows/unit_tests.yaml \
                         --path pytest.ini \
                         --path .github/workflows/audit.yaml \
