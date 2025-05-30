@@ -768,7 +768,7 @@ class Root(CMakePackage):
             define("libcxx", False),
             define("roottest", False),
             define_from_variant("rpath"),
-            define("runtime_cxxmodules", False),
+            define("runtime_cxxmodules", False if self.spec.satisfies("@:6.18") else True),
             define("shared", True),
             define("soversion", True),
             define("testing", self.run_tests),
