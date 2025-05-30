@@ -279,7 +279,7 @@ def config_scopes(args):
         s
         for s in spack.config.scopes().reversed_values()
         if (
-            "included" in args.type
+            "include" in args.type
             and s.name in included_scopes
             or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
         )
