@@ -17,15 +17,17 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: {name: ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07, entrypoint: ['']}
+        image: {name: ghcr.io/spack/pcluster-amazonlinux-2:pr-62, entrypoint: ['']}
         tags: [aarch64]
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
           - spack --version
           - spack arch
-          - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/binutils-2.37-2yxz3xsjfmesxujxtlrgcctxlyilynmp/bin:$PATH
+          - spack mirror add --signed boot /bootstrap-gcc-cache/
+          - spack buildcache keys --install --trust --force
           - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
+          - spack install --use-buildcache package:only gcc@12
     - signing-job:
         before_script:
             # Do not distribute Intel & ARM binaries
@@ -40,23 +42,12 @@ spack:
       missing_library_policy: ignore  # due to use of externals
 
   packages:
-    gcc:
-      externals:
-      - spec: gcc@=12.4.0
-        prefix: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/gcc-12.4.0-v6wxye6ijzrxnzxftcwnpu3psohsjl2b
-        extra_attributes:
-          compilers:
-            c: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/gcc-12.4.0-v6wxye6ijzrxnzxftcwnpu3psohsjl2b/bin/gcc
-            cxx: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/gcc-12.4.0-v6wxye6ijzrxnzxftcwnpu3psohsjl2b/bin/g++
-            fortran: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-aarch64/gcc-7.3.1/gcc-12.4.0-v6wxye6ijzrxnzxftcwnpu3psohsjl2b/bin/gfortran
     acfl:
       require:
-      - "%gcc"
       - "target=aarch64"
     gromacs:
       require:
       - gromacs@2024.3 ^armpl-gcc ^openmpi
-      - "%gcc"
       - target=neoverse_v1
     libfabric:
       buildable: true
@@ -99,7 +90,7 @@ spack:
       - target=neoverse_v1
     quantum-espresso:
       require:
-      - quantum-espresso@6.6 %gcc ^armpl-gcc
+      - quantum-espresso@6.6 ^armpl-gcc %gcc
       - target=neoverse_v1
     slurm:
       buildable: false
@@ -111,7 +102,6 @@ spack:
     all:
       target: ["neoverse_v1"]
       require:
-      - "%gcc"
       - "target=neoverse_v1"
       providers:
         blas: [armpl-gcc, openblas]

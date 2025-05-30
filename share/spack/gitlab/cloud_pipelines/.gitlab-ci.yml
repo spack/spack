@@ -728,7 +728,7 @@ hep-build:
 ########################################
 
 .aws-pcluster-generate:
-  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07", "entrypoint": [""] }
+  image: { "name": "ghcr.io/spack/pcluster-amazonlinux-2:pr-62", "entrypoint": [""] }
 
 # X86_64_V4 (one pipeline per target)
 .aws-pcluster-x86_64_v4:

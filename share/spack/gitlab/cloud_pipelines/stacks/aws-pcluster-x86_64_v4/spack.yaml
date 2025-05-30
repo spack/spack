@@ -22,14 +22,16 @@ spack:
   ci:
     pipeline-gen:
     - build-job:
-        image: {name: ghcr.io/spack/pcluster-amazonlinux-2:v2024-10-07, entrypoint: ['']}
+        image: {name: ghcr.io/spack/pcluster-amazonlinux-2:pr-62, entrypoint: ['']}
         before_script:
         - - . "./share/spack/setup-env.sh"
           - . /etc/profile.d/modules.sh
           - spack --version
           - spack arch
-          - export PATH=/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/binutils-2.37-qvccg7zpskturysmr4bzbsfrx34kvazo/bin:$PATH
+          - spack mirror add --signed boot /bootstrap-gcc-cache/
+          - spack buildcache keys --install --trust --force
           - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
+          - spack install --use-buildcache package:only gcc@12
     - signing-job:
         before_script:
             # Do not distribute Intel & ARM binaries
@@ -44,15 +46,6 @@ spack:
       missing_library_policy: ignore  # due to use of externals
 
   packages:
-    gcc:
-      externals:
-        - spec: gcc@=12.4.0
-          prefix: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/gcc-12.4.0-pttzchh7o54nhmycj4wgzw5mic6rk2nb
-          extra_attributes:
-            compilers:
-              c: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/gcc-12.4.0-pttzchh7o54nhmycj4wgzw5mic6rk2nb/bin/gcc
-              cxx: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/gcc-12.4.0-pttzchh7o54nhmycj4wgzw5mic6rk2nb/bin/g++
-              fortran: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/gcc-12.4.0-pttzchh7o54nhmycj4wgzw5mic6rk2nb/bin/gfortran
     intel-oneapi-compilers:
       externals:
         - spec: intel-oneapi-compilers@=2024.1.0
@@ -103,7 +96,7 @@ spack:
       - mpich pmi=pmi2 device=ch4 netmod=ofi +slurm
     openfoam:
       require:
-      - openfoam %gcc ^scotch@6.0.9
+      - openfoam ^scotch@6.0.9 %gcc
     openmpi:
       variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
       require:
