@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
 import pathlib
 import shutil
@@ -73,7 +74,7 @@ def _add_scope_option(parser):
     )
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(dest="subcommand")
 
     now = sp.add_parser("now", help="Spack ready, right now!")

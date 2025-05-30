@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
-import collections.abc
 import contextlib
 import difflib
 import errno
@@ -24,7 +23,7 @@ import traceback
 import types
 import uuid
 import warnings
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Dict, Generator, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -334,7 +333,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(collections.abc.Mapping):
+class FastPackageChecker(Mapping[str, os.stat_result]):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -346,7 +345,7 @@ class FastPackageChecker(collections.abc.Mapping):
     #: Global cache, reused by every instance
     _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
 
-    def __init__(self, packages_path: str, package_api: Tuple[int, int]):
+    def __init__(self, packages_path: str, package_api: Tuple[int, int]) -> None:
         # The path of the repository managed by this instance
         self.packages_path = packages_path
         self.package_api = package_api
@@ -358,7 +357,7 @@ class FastPackageChecker(collections.abc.Mapping):
         #: Reference to the appropriate entry in the global cache
         self._packages_to_stats = self._paths_cache[packages_path]
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
@@ -409,19 +408,19 @@ class FastPackageChecker(collections.abc.Mapping):
 
         return cache
 
-    def last_mtime(self):
+    def last_mtime(self) -> float:
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
     def modified_since(self, since: float) -> List[str]:
         return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> os.stat_result:
         return self._packages_to_stats[item]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._packages_to_stats)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._packages_to_stats)
 
 

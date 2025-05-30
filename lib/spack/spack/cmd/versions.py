@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import llnl.util.tty as tty
@@ -17,7 +18,7 @@ section = "packaging"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     output = subparser.add_mutually_exclusive_group()
     output.add_argument(
         "-s", "--safe", action="store_true", help="only list safe versions of the package"

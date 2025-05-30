@@ -298,24 +298,6 @@ def remove_facts(
     return _remove
 
 
-def remove_build_deps(spec: spack.spec.Spec, facts: List[AspFunction]) -> List[AspFunction]:
-    build_deps = {x.args[2]: x.args[1] for x in facts if x.args[0] == "depends_on"}
-    result = []
-    for x in facts:
-        current_name = x.args[1]
-        if current_name in build_deps:
-            x.name = "build_requirement"
-            result.append(fn.attr("direct_dependency", build_deps[current_name], x))
-            continue
-
-        if x.args[0] == "depends_on":
-            continue
-
-        result.append(x)
-
-    return result
-
-
 def all_libcs() -> Set[spack.spec.Spec]:
     """Return a set of all libc specs targeted by any configured compiler. If none, fall back to
     libc determined from the current Python process if dynamically linked."""
@@ -1030,7 +1012,7 @@ class ErrorHandler:
         """
         seen.add(cause)
         parents = [c for e, c in condition_causes if e == cause and c not in seen]
-        local = "required because %s " % conditions[cause[0]]
+        local = f"required because {conditions[cause[0]]} "
 
         return [indent + local] + [
             c
@@ -1084,7 +1066,7 @@ class ErrorHandler:
         # Spec(...) with the string representation of the spec mentioned
         specs_to_construct = re.findall(r"Spec\(([^)]*)\)", msg)
         for spec_str in specs_to_construct:
-            msg = msg.replace("Spec(%s)" % spec_str, str(spack.spec.Spec(spec_str)))
+            msg = msg.replace(f"Spec({spec_str})", str(spack.spec.Spec(spec_str)))
 
         for cause in set(causes):
             for c in self.get_cause_tree(cause):
@@ -1183,7 +1165,7 @@ class PyclingoDriver:
         if sys.platform == "win32":
             tty.debug("Ensuring basic dependencies {win-sdk, wgl} available")
             spack.bootstrap.core.ensure_winsdk_external_or_raise()
-        control_files = ["concretize.lp", "heuristic.lp", "display.lp"]
+        control_files = ["concretize.lp", "heuristic.lp", "display.lp", "direct_dependency.lp"]
         if not setup.concretize_everything:
             control_files.append("when_possible.lp")
         if using_libc_compatibility():
@@ -1457,6 +1439,7 @@ class SourceContext:
         # (which means it isn't important to keep track of the source
         # in that case).
         self.source = "none" if source is None else source
+        self.wrap_node_requirement: Optional[bool] = None
 
 
 class ConditionIdContext(SourceContext):
@@ -1491,17 +1474,24 @@ class ConditionContext(SourceContext):
         # transformation applied to facts from the imposed spec. Defaults
         # to removing "node" and "virtual_node" facts.
         self.transform_imposed = None
+        # Whether to wrap direct dependency facts as node requirements,
+        # imposed by the parent. If None, the default is used, which is:
+        # - wrap head of rules
+        # - do not wrap body of rules
+        self.wrap_node_requirement: Optional[bool] = None
 
     def requirement_context(self) -> ConditionIdContext:
         ctxt = ConditionIdContext()
         ctxt.source = self.source
         ctxt.transform = self.transform_required
+        ctxt.wrap_node_requirement = self.wrap_node_requirement
         return ctxt
 
     def impose_context(self) -> ConditionIdContext:
         ctxt = ConditionIdContext()
         ctxt.source = self.source
         ctxt.transform = self.transform_imposed
+        ctxt.wrap_node_requirement = self.wrap_node_requirement
         return ctxt
 
 
@@ -1625,7 +1615,7 @@ class SpackSolverSetup:
 
     def conflict_rules(self, pkg):
         for when_spec, conflict_specs in pkg.conflicts.items():
-            when_spec_msg = "conflict constraint %s" % str(when_spec)
+            when_spec_msg = f"conflict constraint {str(when_spec)}"
             when_spec_id = self.condition(when_spec, required_name=pkg.name, msg=when_spec_msg)
 
             for conflict_spec, conflict_msg in conflict_specs:
@@ -2221,8 +2211,9 @@ class SpackSolverSetup:
                     context.source = ConstraintOrigin.append_type_suffix(
                         pkg_name, ConstraintOrigin.REQUIRE
                     )
+                    context.wrap_node_requirement = True
                     if not virtual:
-                        context.transform_required = remove_build_deps
+                        context.transform_required = remove_facts("depends_on")
                         context.transform_imposed = remove_facts(
                             "node", "virtual_node", "depends_on"
                         )
@@ -2669,22 +2660,29 @@ class SpackSolverSetup:
                 ###
                 # Dependency expressed with "^"
                 ###
-                if not dspec.depflag == dt.BUILD:
+                if not dspec.direct:
                     edge_clauses.extend(dependency_clauses)
                     continue
 
                 ###
                 # Direct dependencies expressed with "%"
                 ###
-                edge_clauses.append(fn.attr("depends_on", spec.name, dep.name, "build"))
-                # Body of a rule
-                if body is True:
+                for dependency_type in dt.flag_to_tuple(dspec.depflag):
+                    edge_clauses.append(
+                        fn.attr("depends_on", spec.name, dep.name, dependency_type)
+                    )
+
+                # By default, wrap head of rules, unless the context says otherwise
+                wrap_node_requirement = body is False
+                if context and context.wrap_node_requirement is not None:
+                    wrap_node_requirement = context.wrap_node_requirement
+
+                if not wrap_node_requirement:
                     edge_clauses.extend(dependency_clauses)
                     continue
 
-                # Head of a rule
                 for clause in dependency_clauses:
-                    clause.name = "build_requirement"
+                    clause.name = "node_requirement"
                     edge_clauses.append(fn.attr("direct_dependency", spec.name, clause))
 
         clauses.extend(edge_clauses)
@@ -2944,7 +2942,7 @@ class SpackSolverSetup:
             elif isinstance(v, vn.VersionList):
                 return sum((versions_for(e) for e in v), [])
             else:
-                raise TypeError("expected version type, found: %s" % type(v))
+                raise TypeError(f"expected version type, found: {type(v)}")
 
         # define a set of synthetic possible versions for virtuals, so
         # that `version_satisfies(Package, Constraint, Version)` has the
@@ -3217,7 +3215,7 @@ class SpackSolverSetup:
 
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
-            self.gen.h2("Package rules: %s" % pkg)
+            self.gen.h2(f"Package rules: {pkg}")
             self.pkg_rules(pkg, tests=self.tests)
             self.preferred_variants(pkg)
 
@@ -3228,7 +3226,7 @@ class SpackSolverSetup:
         self.gen.h1("Develop specs")
         # Inject dev_path from environment
         for ds in dev_specs:
-            self.condition(spack.spec.Spec(ds.name), ds, msg="%s is a develop spec" % ds.name)
+            self.condition(spack.spec.Spec(ds.name), ds, msg=f"{ds.name} is a develop spec")
             self.trigger_rules()
             self.effect_rules()
 
@@ -3266,7 +3264,7 @@ class SpackSolverSetup:
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
                                 symbol = AspFunction(name)(arg.string)
                                 self.assumptions.append((parse_term(str(symbol)), True))
-                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
+                                self.gen.asp_problem.append(f"{symbol}.\n")
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
@@ -3291,9 +3289,10 @@ class SpackSolverSetup:
             # FIXME (compiler as nodes): think of using isinstance(compiler_cls, WrappedCompiler)
             # Add a dependency on the compiler wrapper
             for language in ("c", "cxx", "fortran"):
+                compiler_str = f"{compiler.name}@{compiler.versions}"
                 recorder("*").depends_on(
                     "compiler-wrapper",
-                    when=f"%[virtuals={language}] {compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build virtuals={language}] {compiler_str}",
                     type="build",
                     description=f"Add the compiler wrapper when using {compiler} for {language}",
                 )
@@ -3313,13 +3312,13 @@ class SpackSolverSetup:
             if current_libc:
                 recorder("*").depends_on(
                     "libc",
-                    when=f"%{compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build] {compiler_str}",
                     type="link",
                     description=f"Add libc when using {compiler}",
                 )
                 recorder("*").depends_on(
                     f"{current_libc.name}@={current_libc.version}",
-                    when=f"%{compiler.name}@{compiler.versions}",
+                    when=f"%[deptypes=build] {compiler_str}",
                     type="link",
                     description=f"Libc is {current_libc} when using {compiler}",
                 )
@@ -3329,7 +3328,7 @@ class SpackSolverSetup:
 
     def literal_specs(self, specs):
         for spec in sorted(specs):
-            self.gen.h2("Spec: %s" % str(spec))
+            self.gen.h2(f"Spec: {str(spec)}")
             condition_id = next(self._id_counter)
             trigger_id = next(self._id_counter)
 
@@ -3755,7 +3754,7 @@ class RuntimePropertyRecorder:
             self.reset()
             return
 
-        when_spec = spack.spec.Spec(f"^[deptypes=build] {spec}")
+        when_spec = spack.spec.Spec(f"%[deptypes=build] {spec}")
         body_str, node_variable = self.rule_body_from(when_spec)
 
         node_placeholder = "XXX"
@@ -4038,7 +4037,7 @@ class SpecBuilder:
                     extend_flag_list(ordered_flags, cmd_flags)
 
                 compiler_flags = spec.compiler_flags.get(flag_type, [])
-                msg = "%s does not equal %s" % (set(compiler_flags), set(ordered_flags))
+                msg = f"{set(compiler_flags)} does not equal {set(ordered_flags)}"
                 assert set(compiler_flags) == set(ordered_flags), msg
 
                 spec.compiler_flags.update({flag_type: ordered_flags})
@@ -4097,7 +4096,7 @@ class SpecBuilder:
 
             # print out unknown actions so we can display them for debugging
             if not action:
-                msg = 'UNKNOWN SYMBOL: attr("%s", %s)' % (name, ", ".join(str(a) for a in args))
+                msg = f'UNKNOWN SYMBOL: attr("{name}", {", ".join(str(a) for a in args)})'
                 tty.debug(msg)
                 continue
 

@@ -269,6 +269,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("hwloc", default=False, description="Activates support for hwloc")
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
+    # Install-time footprint is dominated by ~8 k tutorial/example files.
+    # Give packagers a switch to trim them away (‘spack install petsc ~examples’)
+    # while preserving current behaviour by default.
+    variant("examples", default=True, description="Install test and tutorial example sources")
 
     with when("+rocm"):
         # https://github.com/spack/spack/issues/37416
@@ -773,7 +777,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("install", parallel=False)
+        # PETSc provides a lighter target that omits docs/examples.
+        target = "install" if "+examples" in spec else "install-lib"
+        make(target, parallel=False)
 
         if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)
