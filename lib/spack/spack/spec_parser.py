@@ -91,7 +91,7 @@ NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 HASH = r"[a-zA-Z_0-9]+"
 
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
-VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
+VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
