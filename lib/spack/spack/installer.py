@@ -2409,6 +2409,11 @@ class PackageInstaller:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
         jobserver_fifo_fd = None
+        
+        mflags = os.environ.get("MAKEFLAGS")
+        if mflags and "--jobserver" in mflags:
+            # Jobserver already set up by Make (through env depfile)
+            return None, None
 
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
