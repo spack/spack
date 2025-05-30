@@ -11,8 +11,8 @@ class PyCharsetNormalizer(PythonPackage):
     """The Real First Universal Charset Detector. Open, modern and actively
     maintained alternative to Chardet."""
 
-    homepage = "https://github.com/ousret/charset_normalizer"
-    pypi = "charset-normalizer/charset-normalizer-2.0.7.tar.gz"
+    homepage = "https://github.com/jawah/charset_normalizer"
+    pypi = "charset_normalizer/charset_normalizer-2.0.7.tar.gz"
 
     license("MIT")
 
