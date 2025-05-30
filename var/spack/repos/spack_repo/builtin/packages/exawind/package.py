@@ -23,6 +23,9 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="main", submodules=True)
     version(
+        "2.0.0", tag="v2.0.0", commit="421ca84cc371755ad1bcefe8a509159b9a2f234c", submodules=True
+    )
+    version(
         "1.2.0", tag="v1.2.0", commit="4c49c7775c580b6bd2556e6c00fd13c08737d5eb", submodules=True
     )
     version(
@@ -77,6 +80,8 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi")
     depends_on("nalu-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
     depends_on("amr-wind+gpu-aware-mpi", when="+gpu-aware-mpi")
+    depends_on("nalu-wind@2.3:", when="@2:")
+    depends_on("amr-wind@3.5:", when="@2:")
     depends_on("nalu-wind@2.0.0:", when="@1.0.0:")
     depends_on("amr-wind@0.9.0:", when="@1.0.0:")
     depends_on("tioga@1.0.0:", when="@1.0.0:")
