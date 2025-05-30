@@ -260,7 +260,10 @@ def active_environment() -> Optional["Environment"]:
 def _root(name):
     """Non-validating version of root(), to be used internally."""
     path = os.path.join(env_root_path(), name)
-    return os.readlink(path) if islink(path) else path
+    try:
+        return os.readlink(path)
+    except OSError:
+        return path
 
 
 def root(name):
