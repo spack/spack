@@ -111,7 +111,7 @@ FILENAME = WINDOWS_FILENAME if sys.platform == "win32" else UNIX_FILENAME
 STRIP_QUOTES = re.compile(r"^(['\"])(.*)\1$")
 
 #: Values that match this (e.g., variants, flags) can be left unquoted in Spack output
-NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.-]+$")
+NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
 
 
 class SpecTokens(TokenBase):

@@ -87,6 +87,16 @@ class Gaudi(CMakePackage, CudaPackage):
     # add a few missing includes (c++20?)
     patch("includes.patch", when="@37:38")
 
+    # Remove vestigial ROOT component requirement (redundant with
+    # v34r1, conflicts with ROOT >=6.36). See
+    # https://gitlab.cern.ch/gaudi/Gaudi/-/commit/89f38fab9052093de98d06a2a6e5fda2c9574007
+    patch(
+        "https://gitlab.cern.ch/gaudi/Gaudi/-/commit/89f38fab9052093de98d06a2a6e5fda2c9574007.diff",
+        sha256="6b377fd10828bf26367c26792a5465351f3f0b5f7f6073dbcae6fa9195d4a414",
+        when="@38.1:39",
+    )
+    conflicts("^root@6.36:", when="@:38.0")
+
     # These dependencies are needed for a minimal Gaudi build
     depends_on("cxx", type="build")
     depends_on("aida")
@@ -122,7 +132,8 @@ class Gaudi(CMakePackage, CudaPackage):
     depends_on("py-six", type=("build", "run"))
     depends_on("py-pyyaml", type=("build", "run", "test"))
     depends_on("range-v3")
-    depends_on("root +python +root7 +ssl +tbb +threads")
+    depends_on("root +python +root7 +ssl +tbb")
+    requires("^root +threads", when="^root@:6.19.01")
     depends_on("zlib-api")
     depends_on("py-pytest-cov", when="@39:")
 

@@ -286,8 +286,7 @@ class DirectoryLayout:
         path = self.path_for_spec(spec)
         assert path.startswith(
             self.root
-        ), "Attempted to remove a directory outside Spack's install tree."
-        f"PATH: {path}, ROOT: {self.root}"
+        ), f"Attempted to remove dir outside Spack's install tree. PATH: {path}, ROOT: {self.root}"
 
         if deprecated:
             if os.path.exists(path):
