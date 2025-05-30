@@ -37,15 +37,13 @@ jobs:
                         --path pytest.ini \
                         --path .github/workflows/audit.yaml \
                         --path .github/workflows/ci.yaml \
-                        --path .github/workflows/prechecks.yaml \
+                        --path .github/workflows/prechecks.yml \
                         --path share/spack/qa/validate_last_exit.ps1 --path-rename share/spack/qa/validate_last_exit.ps1:.ci/validate_last_exit.ps1 \
                         --path share/spack/qa/windows_test_setup.ps1 --path-rename share/spack/qa/windows_test_setup.ps1:.ci/windows_test_setup.ps1 \
                         --path .github/CODE_OF_CONDUCT.md --path-rename .github/CODE_OF_CONDUCT.md:spack/.github/CODE_OF_CONDUCT.md \
                         --path .github/CONTRIBUTING.md --path-rename .github/CONTRIBUTING.md:spack/.github/CONTRIBUTING.md \
                         --path .github/pull_request_template.md \
-                        --path .github/ISSUE_TEMPLATE/build_error.yml \
-                        --path .github/ISSUE_TEMPLATE/config.yml \
-                        --path .github/ISSUE_TEMPLATE/test_error.yml \
+                        --path .github/ISSUE_TEMPLATE/ \
                         --refs develop
     - name: Push
       run: |
