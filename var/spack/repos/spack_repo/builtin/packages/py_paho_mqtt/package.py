@@ -18,7 +18,6 @@ class PyPahoMqtt(PythonPackage):
     """
 
     homepage = "https://eclipse.dev/paho/"
-    #pypi = "bcolz/bcolz-1.2.1.tar.gz"https://files.pythonhosted.org/packages/39/15/0a6214e76d4d32e7f663b109cf71fb22561c2be0f701d67f93950cd40542/paho_mqtt-2.1.0.tar.gz
     pypi = "paho-mqtt/paho_mqtt-2.1.0.tar.gz"
 
     version("2.1.0", sha256="12d6e7511d4137555a3f6ea167ae846af2c7357b10bc6fa4f7c3968fc1723834")
