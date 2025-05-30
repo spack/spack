@@ -18,6 +18,7 @@ class PyMypy(PythonPackage):
 
     license("MIT AND PSF-2.0", checked_by="tgamblin")
 
+    version("1.16.0", sha256="84b94283f817e2aa6350a14b4a8fb2a35a53c286f97c9d30f53b63620e7af8ab")
     version("1.15.0", sha256="404534629d51d3efea5c800ee7c42b72a6554d6c400e6a79eafe15d11341fd43")
     version("1.14.1", sha256="7ec88144fe9b510e8475ec2f5f251992690fcf89ccb4500b214b4226abcd32d6")
     version("1.13.0", sha256="0291a61b6fbf3e6673e3405cfcc0e7650bebc7939659fdca2702958038bd835e")
@@ -70,7 +71,7 @@ class PyMypy(PythonPackage):
     depends_on("py-types-psutil", when="@0.981:", type="build")
     depends_on("py-types-setuptools", when="@0.981:", type="build")
 
-    # setup.py
+    depends_on("python@3.9:", when="@1.15:", type=("build", "run"))
     depends_on("python@3.8:", when="@1.5:", type=("build", "run"))
     depends_on("python@3.7:", when="@0.981:", type=("build", "run"))
     depends_on("py-typing-extensions@4.6:", when="@1.11:", type=("build", "run"))
@@ -81,6 +82,7 @@ class PyMypy(PythonPackage):
     depends_on("py-mypy-extensions@0.4.3:", when="@0.930:1.0", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.3:0.4", when="@0.700:0.929", type=("build", "run"))
     depends_on("py-mypy-extensions@0.4.0:0.4", when="@:0.699", type=("build", "run"))
+    depends_on("py-pathspec@0.9:", when="@1.16:", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@0.950: ^python@:3.10", type=("build", "run"))
     depends_on("py-tomli@1.1:", when="@0.930:0.949", type=("build", "run"))
     depends_on("py-tomli@1.1:2", when="@0.920:0.929", type=("build", "run"))
