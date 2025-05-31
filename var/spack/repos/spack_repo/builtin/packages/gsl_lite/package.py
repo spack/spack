@@ -9,8 +9,7 @@ from spack.package import *
 
 
 class GslLite(CMakePackage):
-    """A single-file header-only version of ISO C++ Guidelines Support Library
-    (GSL) for C++98, C++11, and later"""
+    """ISO C++ Core Guidelines Library implementation for C++98, C++11 up"""
 
     homepage = "https://github.com/gsl-lite/gsl-lite"
     git = "https://github.com/gsl-lite/gsl-lite.git"
@@ -30,41 +29,3 @@ class GslLite(CMakePackage):
     version("0.34.0", sha256="a7d5b2672b78704ca03df9ef65bc274d8f8cacad3ca950365eef9e25b50324c5")
 
     depends_on("cxx", type="build")  # generated
-
-    variant("tests", default=False, description="Build and perform gsl-lite tests")
-    variant("cuda_tests", default=False, description="Build and perform gsl-lite CUDA tests")
-    variant("examples", default=False, description="Build gsl-lite examples")
-    variant(
-        "static_analysis_demos",
-        default=False,
-        description="Build and perform gsl-lite static analysis demos",
-    )
-    variant(
-        "cmake_export_package_registry",
-        default=False,
-        description="Export build directory to CMake user package registry",
-    )
-    variant(
-        "compat_header", default=False, description="Install MS-GSL compatibility header <gsl/gsl>"
-    )
-    variant(
-        "legacy_headers",
-        default=False,
-        description="Install legacy headers <gsl.h>, <gsl.hpp>, <gsl/gsl-lite.h>",
-    )
-
-    def cmake_args(self):
-        args = [
-            self.define_from_variant("GSL_LITE_OPT_BUILD_TESTS", "tests"),
-            self.define_from_variant("GSL_LITE_OPT_BUILD_CUDA_TESTS", "cuda_tests"),
-            self.define_from_variant("GSL_LITE_OPT_BUILD_EXAMPLES", "examples"),
-            self.define_from_variant(
-                "GSL_LITE_LOPT_BUILD_STATIC_ANALYSIS_DEMOS", "static_analysis_demos"
-            ),
-            self.define_from_variant(
-                "CMAKE_EXPORT_PACKAGE_REGISTRY", "cmake_export_package_registry"
-            ),
-            self.define_from_variant("GSL_LITE_OPT_INSTALL_COMPAT_HEADER", "compat_header"),
-            self.define_from_variant("GSL_LITE_OPT_INSTALL_LEGACY_HEADERS", "legacy_headers"),
-        ]
-        return args
