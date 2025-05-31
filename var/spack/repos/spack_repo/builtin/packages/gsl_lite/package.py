@@ -19,12 +19,12 @@ class GslLite(CMakePackage):
 
     license("MIT")
 
-    version("1.0.1", commit="56dab5ce071c4ca17d3e0dbbda9a94bd5a1cbca1")
-    version("0.43.0", commit="ce82d30be6f76a38d90605694f0c8fa201723baf")
-    version("0.42.0", commit="21751fb0473473e27ffb1f280543885ed65447a8")
+    version("1.0.1", sha256="063a0b4248a2afd8154b2b5fe9d64472868a166d3963682e823f81516194af79")
+    version("0.43.0", sha256="e48c3138648156d2b85905b1d280d661fad61524c5c0ca10d3857036ca3dd519")
+    version("0.42.0", sha256="54a1b6f9db72eab5d8dcaf06b36d32d4f5da3471d91dac71aba19fe15291a773")
     version("0.41.0", sha256="4682d8a60260321b92555760be3b9caab60e2a71f95eddbdfb91e557ee93302a")
-    version("0.40.0", commit="d6c8af99a1d95b3db36f26b4f22dc3bad89952de")
-    version("0.39.0", commit="d0903fa87ff579c30f608bc363582e6563570342")
+    version("0.40.0", sha256="65af4ec8a1050dac4f1ca4622881bb02a9c3978a9baec289fb56e25412d6cac7")
+    version("0.39.0", sha256="f80ec07d9f4946097a1e2554e19cee4b55b70b45d59e03a7d2b7f80d71e467e9")
     version("0.38.1", sha256="c2fa2315fff312f3897958903ed4d4e027f73fa44235459ecb467ad7b7d62b18")
     version("0.38.0", sha256="5d25fcd31ea66dac9e14da1cad501d95450ccfcb2768fffcd1a4170258fcbc81")
     version("0.37.0", sha256="a31d51b73742bb234acab8d2411223cf299e760ed713f0840ffed0dabe57ca38")
