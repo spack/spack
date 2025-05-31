@@ -21,6 +21,7 @@ class SimpleDftd3(MesonPackage):
     license("LGPL-3.0-or-later")
 
     version("main", branch="main")
+    version("1.0.0", sha256="208444998de839fecf671bd41109cb129cf674440c666755035a5a65acc669b4")
     version("0.7.0", sha256="5390b20102474a3c37240f38226f3a54a809b34bcb910317bdd109b8c2865f4e")
     version("0.6.0", sha256="c057361565f570cb128489c70131487f71b6891a40e5292dfe37041596810dfe")
     version("0.5.1", sha256="0411fdaebe438f652a970cb232ae3199c4cc840366ed05fda4c38e634632040d")
