@@ -19,6 +19,9 @@ class GslLite(CMakePackage):
 
     license("MIT")
 
+    version("1.0.1", commit="56dab5ce071c4ca17d3e0dbbda9a94bd5a1cbca1")
+    version("0.43.0", commit="ce82d30be6f76a38d90605694f0c8fa201723baf")
+    version("0.42.0", commit="21751fb0473473e27ffb1f280543885ed65447a8")
     version("0.41.0", sha256="4682d8a60260321b92555760be3b9caab60e2a71f95eddbdfb91e557ee93302a")
     version("0.40.0", commit="d6c8af99a1d95b3db36f26b4f22dc3bad89952de")
     version("0.39.0", commit="d0903fa87ff579c30f608bc363582e6563570342")
