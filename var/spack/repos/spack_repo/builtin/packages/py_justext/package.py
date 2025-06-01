@@ -17,4 +17,4 @@ class PyJustext(PythonPackage):
 
     depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("py-lxml@4.4.2", type=("build", "run"))
+    depends_on("py-lxml@4.4.2:", type=("build", "run"))
