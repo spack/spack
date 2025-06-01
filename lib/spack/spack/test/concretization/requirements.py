@@ -1094,22 +1094,22 @@ def test_conflict_packages_yaml(packages_yaml, spec_str, concretize_scope, mock_
     "spec_str,expected,not_expected",
     [
         (
-            "forward-multi-value+cuda cuda_arch=10^dependency-mv~cuda",
+            "forward-multi-value+cuda cuda_arch=10 ^dependency-mv~cuda",
             ["cuda_arch=10", "^dependency-mv~cuda"],
             ["cuda_arch=11", "^dependency-mv cuda_arch=10", "^dependency-mv cuda_arch=11"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=10^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=10 ^dependency-mv+cuda",
             ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
             ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=11^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=11 ^dependency-mv+cuda",
             ["cuda_arch=11", "^dependency-mv cuda_arch=11"],
             ["cuda_arch=10", "^dependency-mv cuda_arch=10"],
         ),
         (
-            "forward-multi-value+cuda cuda_arch=10,11^dependency-mv+cuda",
+            "forward-multi-value+cuda cuda_arch=10,11 ^dependency-mv+cuda",
             ["cuda_arch=10,11", "^dependency-mv cuda_arch=10,11"],
             [],
         ),
