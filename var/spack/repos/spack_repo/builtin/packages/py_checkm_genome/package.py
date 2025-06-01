@@ -12,11 +12,15 @@ class PyCheckmGenome(PythonPackage):
     cells, and metagenomes"""
 
     homepage = "https://ecogenomics.github.io/CheckM"
-    pypi = "checkm-genome/checkm-genome-1.0.11.tar.gz"
+    url = "https://github.com/Ecogenomics/CheckM/archive/refs/tags/v1.2.1.tar.gz"
 
-    license("GPL-3.0-or-later")
+    maintainers("caelanjmiller")
 
-    version("1.2.1", sha256="33907aa7bbf029f8345e33df80d5c89b7a719041f55ece4f7470cd061c8eff76")
+    license("GPL-3.0-or-later", checked_by="caelanjmiller")
+    
+    version("1.2.3", sha256="5f8340e71d3256ba8cf407d27bdc7914d1aa86b14b2d63d1e32cceb325e5aa82")
+    version("1.2.2", sha256="a748b94e93f8d5fecfd0d5b3f17fcb119b25d4b45217e047b2fd742b21e74c0e")
+    version("1.2.1", sha256="2c0b5685bb0fb49813fab16857fd4e0e8c8832b947bbe3a89cf8432659ca945a")
 
     # pip silently replaces distutils with setuptools
     depends_on("python@3:", type=("build", "run"))
