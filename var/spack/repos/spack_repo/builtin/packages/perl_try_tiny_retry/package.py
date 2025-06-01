@@ -16,7 +16,6 @@ class PerlTryTinyRetry(PerlPackage):
     maintainers("caelanjmiller")
 
     license("Apache-2.0", checked_by="caelanjmiller")
-    
     version("0.004", sha256="8af70c1bd46d749388738b7ea03c703cac898be939a5ff37117a01ed7eda8bbe")
     version("0.003", sha256="6367bf56aa129b7b240b330bd106941fc8c3c22b85fd77ca106aa2778b441e32")
     version("0.002", sha256="4f6dd3addcab7dd2726f450cecaaadb21b33da59bec5df58f07fd91a87d9c38a")
