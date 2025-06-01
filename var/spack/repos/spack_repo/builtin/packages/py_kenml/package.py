@@ -19,7 +19,7 @@ class PyKenml(CMakePackage, PythonPackage):
     variant("python", default=True, description="Build Python bindings")
     depends_on("python", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type="build", when="+python")
-    depends_on("wheel", type="build", when="+python")
+    depends_on("py-wheel", type="build", when="+python")
     depends_on("cmake@3.10:", type="build")
 
     variant("debug", default=False, description="Build with debug flags")

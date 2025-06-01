@@ -18,6 +18,6 @@ class PyCourlan(PythonPackage):
 
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    depends_on("babel@2.16:", type=("build", "run"))
-    depends_on("tld@0.13:", type=("build", "run"))
+    depends_on("py-babel@2.16:", type=("build", "run"))
+    depends_on("py-tld@0.13:", type=("build", "run"))
     depends_on("py-urllib3@1.26:2", type=("build", "run"))
