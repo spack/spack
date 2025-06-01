@@ -7,7 +7,7 @@ from spack_repo.builtin.build_systems.cmake import CMakePackage
 from spack.package import *
 
 
-class Kenml(CMakePackage):
+class Kenlm(CMakePackage):
     """Faster and Smaller Language Model Queries with KenML"""
 
     homepage = "https://kheafield.com/code/kenlm/"
