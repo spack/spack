@@ -15,10 +15,12 @@ class PyHttptools(PythonPackage):
 
     license("MIT")
 
+    version("0.6.4", sha256="4e93eee4add6493b59a5c514da98c939b244fce4a0d8879cd3f466562f4b7d5c")
     version("0.5.0", sha256="295874861c173f9101960bba332429bb77ed4dcd8cdf5cee9922eb00e4f6bc09")
     version("0.1.1", sha256="41b573cf33f64a8f8f3400d0a7faf48e1888582b6f6e02b82b9bd4f0bf7497ce")
 
     depends_on("c", type="build")  # generated
 
     depends_on("py-setuptools", type="build")
+    depends_on("py-cython@0.29.24:", when="@0.6.4:", type="build")
     depends_on("py-cython@0.29.24:0.29", type="build")

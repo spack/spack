@@ -20,10 +20,9 @@ class PyPyahocorasick(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Optional dependencies for testing
-    variant("testing", default=False, description="Enable testing dependencies")
-    depends_on("py-pytest", when="+testing", type=("build", "run"))
-    depends_on("py-twine", when="+testing", type=("build", "run"))
-    depends_on("py-wheel", when="+testing", type=("build", "run"))
+    depends_on("py-pytest", type="test")
+    depends_on("py-twine", type="test")
+    depends_on("py-wheel", type="test")
 
     def build_args(self, spec, prefix):
         args = []

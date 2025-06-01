@@ -17,6 +17,7 @@ class PyPytest(PythonPackage):
     license("MIT")
     maintainers("adamjstewart")
 
+    version("8.3.5", sha256="f4efe70cc14e511565ac476b57c279e12a855b11f48f212af1080ef2263d3845")
     version("8.2.1", sha256="5046e5b46d8e4cac199c373041f26be56fdb81eb4e67dc11d4e10811fc3408fd")
     version("8.0.0", sha256="249b1b0864530ba251b7438274c4d251c58d868edaaec8762893ad4a0d71c36c")
     version("7.4.4", sha256="2cf0005922c6ace4a3e2ec8b4080eb0d9753fdc93107415332f50ce9e7994280")
@@ -54,6 +55,7 @@ class PyPytest(PythonPackage):
         depends_on("py-setuptools-scm", when="@3.1:")
 
     with default_args(type=("build", "run")):
+        depends_on("python@3.9:", when="@8.3:")
         depends_on("python@3.8:", when="@8:")
         depends_on("python@3.7:", when="@7.1:")
         # see https://github.com/pytest-dev/pytest/releases/tag/8.2.1

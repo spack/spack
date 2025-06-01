@@ -57,5 +57,5 @@ class PyDatatrove(PythonPackage):
         depends_on("py-fasteners", type=("build", "run"))
         depends_on("py-regex", type=("build", "run"))
         depends_on("py-xxhash", type=("build", "run"))
-        depends_on("py-kenlm", type=("build", "run"))
+        depends_on("kenlm +python", type=("build", "run"))
         depends_on("py-pyahocorasick", type=("build", "run"))

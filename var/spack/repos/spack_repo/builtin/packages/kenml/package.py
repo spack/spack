@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage
-from spack_repo.builtin.build_systems.python import PythonPackage
 
 from spack.package import *
 
 
-class PyKenml(CMakePackage, PythonPackage):
+class Kenml(CMakePackage):
     """Faster and Smaller Language Model Queries with KenML"""
 
     homepage = "https://kheafield.com/code/kenlm/"
@@ -17,17 +16,19 @@ class PyKenml(CMakePackage, PythonPackage):
     version("master", branch="master")
 
     variant("python", default=True, description="Build Python bindings")
-    depends_on("python", type=("build", "run"), when="+python")
-    depends_on("py-setuptools", type="build", when="+python")
-    depends_on("py-wheel", type="build", when="+python")
-    depends_on("cmake@3.10:", type="build")
-
     variant("debug", default=False, description="Build with debug flags")
+
+    extends("python", when="+python")
+
+    depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
+
+    depends_on("cmake@3.10:", type="build")
 
     def cmake_args(self):
         args = [
             self.define("BUILD_SHARED_LIBS", True),
-            self.define("BUILD_PYTHON_STANDALONE", True),
+            self.define_from_variant("BUILD_PYTHON_STANDALONE", "python"),
             self.define("KENLM_MAX_ORDER", 6),
         ]
 
