@@ -897,7 +897,7 @@ def test_cli_spec_roundtrip(args, expected):
 
 
 @pytest.mark.parametrize(
-    "spec_str,toolchain,expected_roundtrip",
+    ["spec_str", "toolchain", "expected_roundtrip"],
     [
         (
             "foo%my_toolchain",

@@ -998,7 +998,7 @@ spack:
 
 
 @pytest.mark.parametrize(
-    "spack_yaml,expected,not_expected",
+    ["spack_yaml", "expected", "not_expected"],
     [
         # Define a toolchain in spack.yaml
         (
