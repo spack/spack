@@ -42,7 +42,7 @@ class Eigen(CMakePackage, ROCmPackage):
     version("3.2.5", sha256="8068bd528a2ff3885eb55225c27237cf5cda834355599f05c2c85345db8338b4")
 
     variant("nightly", description="run Nightly test", default=False)
-
+    variant("unsupported", default=True, description="Enable unsupported modules")
     # TODO: https://eigen.tuxfamily.org/dox/TopicUsingBlasLapack.html
 
     # Older eigen releases haven't been tested with ROCm
@@ -78,13 +78,17 @@ class Eigen(CMakePackage, ROCmPackage):
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
 
     depends_on("boost@1.53:", when="@master", type="test")
+
     # TODO: latex and doxygen needed to produce docs with make doc
     # TODO: Other dependencies might be needed to test this package
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
         env.prepend_path("CPATH", self.prefix.include.eigen3)
+        if self.spec.satisfies("+unsupported"):
+            env.prepend_path("CPATH", self.prefix.include.eigen3.unsupported)
 
     def cmake_args(self):
         args = [
@@ -122,4 +126,6 @@ class Eigen(CMakePackage, ROCmPackage):
     def headers(self):
         headers = find_all_headers(self.prefix.include)
         headers.directories = [self.prefix.include.eigen3]
+        if self.spec.satisfies("+unsupported"):
+            headers.directories.append(self.prefix.include.unsupported)
         return headers
