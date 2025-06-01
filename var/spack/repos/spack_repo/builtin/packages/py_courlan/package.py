@@ -13,7 +13,7 @@ class PyCourlan(PythonPackage):
 
     homepage = "https://github.com/adbar/courlan"
     pypi = "courlan/courlan-1.3.2.tar.gz"
-    
+
     version("1.3.2", sha256="0b66f4db3a9c39a6e22dd247c72cfaa57d68ea660e94bb2c84ec7db8712af190")
 
     depends_on("python@3.8:", type=("build", "run"))

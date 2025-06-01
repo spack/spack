@@ -17,7 +17,7 @@ class PyKenml(CMakePackage, PythonPackage):
     version("master", branch="master")
 
     variant("python", default=True, description="Build Python bindings")
-    depends_on("python",type=("build", "run"), when="+python")
+    depends_on("python", type=("build", "run"), when="+python")
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("wheel", type="build", when="+python")
     depends_on("cmake@3.10:", type="build")
