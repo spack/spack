@@ -19,5 +19,8 @@ class Xf86vidmodeproto(AutotoolsPackage, XorgPackage):
 
     version("2.3.1", sha256="c3512b11cefa7558576551f8582c6e7071c8a24d78176059d94b84b48b262979")
 
+    depends_on("c", type="build")
+
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+

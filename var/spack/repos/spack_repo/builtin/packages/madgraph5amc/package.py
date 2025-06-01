@@ -62,6 +62,8 @@ class Madgraph5amc(MakefilePackage):
 
     conflicts("%gcc@10:", when="@2.7.3")
 
+    depends_on("fortran", type="build")
+
     depends_on("syscalc")
     depends_on("gosam-contrib", when="+ninja")
     depends_on("collier", when="+collier")

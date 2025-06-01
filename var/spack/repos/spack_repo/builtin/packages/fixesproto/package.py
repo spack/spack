@@ -20,6 +20,9 @@ class Fixesproto(AutotoolsPackage, XorgPackage):
 
     version("5.0", sha256="67865a0e3cdc7dec1fd676f0927f7011ad4036c18eb320a2b41dbd56282f33b8")
 
+    depends_on("c", type="build")
+
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
     depends_on("xextproto")
+

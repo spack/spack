@@ -18,7 +18,11 @@ class Mkfontdir(AutotoolsPackage, XorgPackage):
 
     version("1.0.7", sha256="bccc5fb7af1b614eabe4a22766758c87bfc36d66191d08c19d2fa97674b7b5b7")
 
-    depends_on("mkfontscale", type="run")
+    depends_on("c", type="build")
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
+
+    depends_on("mkfontscale", type="run")
+
+

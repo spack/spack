@@ -52,6 +52,7 @@ class RRcpp(RPackage):
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
+    depends_on("gmake", type="build")
 
     # leave the r dependency also for newer versions
     # (not listed in Description for @1.0.5:)

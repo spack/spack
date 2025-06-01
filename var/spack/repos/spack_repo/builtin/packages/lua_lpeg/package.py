@@ -35,6 +35,8 @@ class LuaLpeg(LuaPackage):
         expand=False,
     )
 
+    depends_on("c", type="build")
+
     depends_on("lua-lang@:5.1.9", when="@:0.12.1 ^[virtuals=lua-lang] lua")
 
     @property

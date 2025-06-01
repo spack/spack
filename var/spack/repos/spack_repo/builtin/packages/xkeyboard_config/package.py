@@ -21,6 +21,8 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     version("2.34", sha256="a5882238b4199ca90428aea102790aaa847e6e214653d956bf2abba3027107ba")
     version("2.18", sha256="d5c511319a3bd89dc40622a33b51ba41a2c2caad33ee2bfe502363fcc4c3817d")
 
+    depends_on("c", type="build")
+
     depends_on("libx11@1.4.3:")
 
     depends_on("libxslt", type="build")
