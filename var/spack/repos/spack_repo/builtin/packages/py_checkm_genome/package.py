@@ -19,7 +19,7 @@ class PyCheckmGenome(PythonPackage):
     license("GPL-3.0-or-later", checked_by="caelanjmiller")
     version("1.2.3", sha256="5f8340e71d3256ba8cf407d27bdc7914d1aa86b14b2d63d1e32cceb325e5aa82")
     version("1.2.2", sha256="a748b94e93f8d5fecfd0d5b3f17fcb119b25d4b45217e047b2fd742b21e74c0e")
-    version("1.2.1", sha256="2c0b5685bb0fb49813fab1P857fd4e0e8c8832b947bbe3a89cf8432659ca945a")
+    version("1.2.1", sha256="2c0b5685bb0fb49813fab16857fd4e0e8c8832b947bbe3a89cf8432659ca945a")
 
     # pip silently replaces distutils with setuptools
     depends_on("python@3:", type=("build", "run"))
