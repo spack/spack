@@ -24,4 +24,3 @@ class PerlTryTinyRetry(PerlPackage):
     depends_on("perl-exporter-tiny", type=("build", "run"))
     depends_on("perl-time-hires", type=("build", "run"))
     depends_on("perl-try-tiny", type=("build", "run"))
-    
