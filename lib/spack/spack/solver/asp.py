@@ -3247,6 +3247,7 @@ class SpackSolverSetup:
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
 
+        # Write out triggers/effects from literal specs
         self.trigger_rules()
         self.effect_rules()
 
