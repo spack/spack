@@ -24,5 +24,3 @@ class Mkfontdir(AutotoolsPackage, XorgPackage):
     depends_on("util-macros", type="build")
 
     depends_on("mkfontscale", type="run")
-
-

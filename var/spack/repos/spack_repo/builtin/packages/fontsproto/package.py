@@ -20,4 +20,3 @@ class Fontsproto(AutotoolsPackage, XorgPackage):
 
     depends_on("pkgconfig", type="build")
     depends_on("util-macros", type="build")
-
