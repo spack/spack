@@ -1032,7 +1032,7 @@ class _EdgeMap(collections.abc.Mapping):
             child: name of the child package
             depflag: allowed dependency types in flag form
             virtuals: list of virtuals or specific virtual on the edge
-            when: condition on conditional dependency, or Spec() for unconditional dependency only
+            when: optional spec to select matching dependency conditions
         """
         if not depflag:
             return []
@@ -1778,7 +1778,7 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals on this edge
             direct: if True denotes a direct dependency (associated with the % sigil)
-            when: if non-None, condition under which dependency holds
+            when: optional condition under which dependency holds
         """
         if when is None:
             when = Spec()
