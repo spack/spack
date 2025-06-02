@@ -224,13 +224,19 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                             "NAMD_ARCH = {0}".format(self.arch),
                             "CHARMARCH = {0}".format(self.spec["charmpp"].charmarch),
                             "CXX = {0.cxx} {0.cxx11_flag}".format(self.compiler),
-                            "CXXOPTS = {0} {1}".format(
-                                optim_opts, " ".join(spec.compiler_flags["cxxflags"])
-                            ),
+                            "CXXOPTS = {0} {1} {2}".format(
+                                optim_opts,
+                                " ".join(spec.compiler_flags["cxxflags"]),
+                                " ".join(spec.compiler_flags["cppflags"]),
+                                " ".join(spec.compiler_flags["ldflags"])
+                                ),
                             "CC = {0}".format(self.compiler.cc),
                             "COPTS = {0} {1}".format(
-                                optim_opts, " ".join(spec.compiler_flags["cflags"])
-                            ),
+                                optim_opts,
+                                " ".join(spec.compiler_flags["cflags"]),
+                                " ".join(spec.compiler_flags["ldflags"])
+                                ),
+                            "EXTRALINKLIBS = {0}".format(" ".join(spec.compiler_flags["ldlibs"])),
                             "",
                         ]
                     )
