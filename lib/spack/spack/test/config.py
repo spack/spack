@@ -32,8 +32,7 @@ import spack.spec
 import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
-
-from ..enums import ConfigScopePriority
+from spack.enums import ConfigScopePriority
 
 # sample config data
 config_low = {

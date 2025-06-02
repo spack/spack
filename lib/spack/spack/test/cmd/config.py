@@ -41,36 +41,55 @@ def config_yaml_v015(mutable_config):
     return functools.partial(_create_config, data=old_data, section="config")
 
 
-def test_config_scopes():
-    output = config("scopes")
-    assert "command_line" in output.split()
-    assert "_builtin" in output.split()
-
-
-def test_config_scopes_path_scopes():
-    output = config("scopes", "--path-scopes")
-    assert "site" in output.split()
-    assert "_builtin" not in output.split()
-
-
-@pytest.mark.parametrize("with_path_scopes", [False, True])
-def test_config_scopes_include(with_path_scopes):
-    scopes_cmd = ["scopes", "--included"]
-    if with_path_scopes:
-        scopes_cmd.append("--path-scopes")
-    output = config(*scopes_cmd)
-    assert not output or all(":" in x for x in output.split())
-
-
 scope_path_re = r"\(([^\)]+)\)"
 
 
+@pytest.mark.parametrize(
+    "path,types",
+    [
+        (False, []),
+        (True, []),
+        (False, ["path"]),
+        (False, ["env"]),
+        (False, ["internal", "include"]),
+    ],
+)
+def test_config_scopes(path, types, mutable_mock_env_path):
+    ev.create("test")
+    scopes_cmd = ["scopes"]
+    if path:
+        scopes_cmd.append("-p")
+    if types:
+        scopes_cmd.extend(["-t", *types])
+    output = config(*scopes_cmd).split()
+    if not types or any(i in ("all", "internal") for i in types):
+        assert "command_line" in output
+        assert "_builtin" in output
+    if types:
+        if not any(i in ("all", "path") for i in types):
+            assert "site" not in output
+        if not any(i in ("all", "env", "include", "path") for i in types):
+            assert not output or all(":" not in x for x in output)
+        if not any(i in ("all", "env", "path") for i in types):
+            assert not output or all(not x.startswith("env:") for x in output)
+        if not any(i in ("all", "internal") for i in types):
+            assert "command_line" not in output
+            assert "_builtin" not in output
+    if path:
+        paths = (x[1] for x in (re.fullmatch(scope_path_re, s) for s in output) if x)
+        assert all(os.sep in x for x in paths)
+
+
+def test_config_scopes_include():
+    scopes_cmd = ["scopes", "-t", "include"]
+    output = config(*scopes_cmd).split()
+    assert not output or all(":" in x for x in output)
+
+
 def test_config_scopes_path_section():
-    output = config("scopes", "--included", "--show-paths", "modules")
+    output = config("scopes", "-t", "include", "-p", "modules")
     assert "_builtin" not in output
     assert "site" not in output
-    paths = (x[1] for x in (re.fullmatch(scope_path_re, s) for s in output.split()) if x)
-    assert all(os.sep in x for x in paths)
 
 
 def test_get_config_scope(mock_low_high_config):
