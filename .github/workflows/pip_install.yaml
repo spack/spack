@@ -34,6 +34,6 @@ jobs:
     - name: Install Spack package
       run: |
         cd share/spack/pip
-	pip install spack-package/
-	spack install zlib
-	bash check-pkg-location.sh
+        pip install spack-package/
+        spack install zlib
+        bash check-pkg-location.sh
