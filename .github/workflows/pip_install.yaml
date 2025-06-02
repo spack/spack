@@ -31,3 +31,9 @@ jobs:
       run: |
         cd share/spack/pip
         bash create-package.sh
+    - name: Install Spack package
+      run: |
+        cd share/spack/pip
+	pip install spack-package/
+	spack install zlib
+	bash check-pkg-location.sh
