@@ -538,16 +538,13 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
 
 
-@pytest.mark.usefixtures("install_mockery", "mock_fetch", "mutable_mock_env_path")
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
 def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
     repo_path, filename, commits = mock_git_version_info
     file_url = pathlib.Path(repo_path).as_uri()
 
     monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
 
-    env("create", "test")
-    with ev.read("test"):
-        install("--fake", "--add", f"git-test-commit commit={commits[0]}")
-
-        output = find(f"commit={commits[0]}")
-        assert "git-test-commit" in output
+    install("--fake", f"git-test-commit commit={commits[0]}")
+    output = find(f"commit={commits[0]}")
+    assert "git-test-commit" in output

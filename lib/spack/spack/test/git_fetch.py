@@ -439,11 +439,11 @@ def test_commit_variant_clone(
 ):
 
     repo_path, filename, commits = mock_git_version_info
-    test_commit = commits[-1]
+    test_commit = commits[-2]
     s = default_mock_concretization("git-test")
     args = {"git": pathlib.Path(repo_path).as_uri()}
     monkeypatch.setitem(s.package.versions, Version("git"), args)
     s.variants["commit"] = SingleValuedVariant("commit", test_commit)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
-        assert git("rev-parse", "HEAD", output=str, error=str).strip() == test_commit
+        assert git("rev-parse", "HEAD~1", output=str, error=str).strip() == test_commit

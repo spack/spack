@@ -3139,28 +3139,22 @@ def test_spec_containing_commit_variant(spec_str, error_type):
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
 @pytest.mark.parametrize(
-    "spec_str, error_type",
+    "spec_str",
     [
-        (f"git-test-commit@git.main commit={'a' * 40}", None),
-        (f"git-test-commit@git.v1.0 commit={'a' * 40}", None),
-        ("git-test-commit@{sha} commit={sha}", None),
-        ("git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", None),
+        f"git-test-commit@git.main commit={'a' * 40}",
+        f"git-test-commit@git.v1.0 commit={'a' * 40}",
+        "git-test-commit@{sha} commit={sha}",
+        "git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     ],
 )
-def test_spec_with_commit_interacts_with_lookup(
-    mock_git_version_info, monkeypatch, spec_str, error_type
-):
+def test_spec_with_commit_interacts_with_lookup(mock_git_version_info, monkeypatch, spec_str):
     # This test will be short lived. Technically we could do further checks with a Lookup
     # but skipping impl since we are going to deprecate
     repo_path, filename, commits = mock_git_version_info
     file_url = pathlib.Path(repo_path).as_uri()
     monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
     spec = spack.spec.Spec(spec_str.format(sha=commits[-1]))
-    if error_type is None:
-        spack.concretize.concretize_one(spec)
-    else:
-        with pytest.raises(error_type):
-            spack.concretize.concretize_one(spec)
+    spack.concretize.concretize_one(spec)
 
 
 @pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
@@ -3183,13 +3177,12 @@ def test_abstract_commit_spec_reuse():
     commit = "abcd" * 10
     spec_str_1 = f"git-ref-package@develop commit={commit}"
     spec_str_2 = f"git-ref-package commit={commit}"
-    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    spec1 = spack.concretize.concretize_one(spec_str_1)
     PackageInstaller([spec1.package], fake=True, explicit=True).install()
 
     with spack.config.override("concretizer:reuse", True):
-        spec2 = spack.spec.Spec(spec_str_2)
-        spec2 = spack.concretize.concretize_one(spec2)
-        assert spec1.dag_hash() == spec2.dag_hash()
+        spec2 = spack.concretize.concretize_one(spec_str_2)
+        assert spec2.dag_hash() == spec1.dag_hash()
 
 
 @pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")

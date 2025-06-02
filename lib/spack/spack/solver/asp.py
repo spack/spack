@@ -3234,10 +3234,6 @@ class SpackSolverSetup:
             allow_deprecated=allow_deprecated, require_checksum=checksummed
         )
 
-        self.gen.h1("Infinity Versions")
-        for i, v in enumerate(spack.version.infinity_versions):
-            self.gen.fact(fn.infinity_version(v, i))
-
         self.gen.h1("Package Constraints")
         for pkg in sorted(self.pkgs):
             self.gen.h2(f"Package rules: {pkg}")

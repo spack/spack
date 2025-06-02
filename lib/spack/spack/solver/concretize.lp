@@ -360,13 +360,6 @@ error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha,
      pkg_fact(Package, version_has_commit(Version, Psha)),
      Vsha != Psha.
 
-% need a rule for above, can't select a version that needs a commit if variant matches a version that has a commit
-  :- attr("version", node(ID, Package), VersionA),
-     attr("variant_value", node(ID, Package), "commit", Vsha),
-     pkg_fact(Package, version_has_commit(VersionB, Psha)),
-     Vsha == Psha,
-     VersionA != VersionB.
-
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
