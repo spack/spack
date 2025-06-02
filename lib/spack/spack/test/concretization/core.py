@@ -3874,24 +3874,6 @@ def test_satisfies_conditional_spec(
 def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, mutable_config):
     """Tests whether we can write the results of a clingo solve to the cache
     and load the same spec request from the cache to produce identical specs"""
-    # Force determinism:
-    # Solver setup is normally non-deterministic due to non-determinism in
-    # asp solver setup logic generation. The only other inputs to the cache keys are
-    # the .lp files, which are invariant over the course of this test.
-    # This method forces the same setup to be produced for the same specs
-    # which gives us a guarantee of cache hits, as it removes the only
-    # element of non deterministic solver setup for the same spec
-    # Basically just a quick and dirty memoization
-    solver_setup = spack.solver.asp.SpackSolverSetup.setup
-
-    def _setup(self, specs, *, reuse=None, allow_deprecated=False):
-        if not getattr(_setup, "cache_setup", None):
-            cache_setup = solver_setup(self, specs, reuse=reuse, allow_deprecated=allow_deprecated)
-            setattr(_setup, "cache_setup", cache_setup)
-        return getattr(_setup, "cache_setup")
-
-    # monkeypatch our forced determinism setup method into solver setup
-    monkeypatch.setattr(spack.solver.asp.SpackSolverSetup, "setup", _setup)
 
     assert spack.config.get("concretizer:concretization_cache:enable")
 
