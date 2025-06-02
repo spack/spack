@@ -60,7 +60,6 @@ import pytest
 import llnl.util.lock as lk
 from multiprocessing import Barrier
 from threading import BrokenBarrierError  # For potential future use with Barrier
-# TimeoutError is a built-in exception since Python 3.3, also potentially raised by Barrier.wait(timeout=...)
 from llnl.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
