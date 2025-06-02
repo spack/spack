@@ -45,6 +45,7 @@ class Pastix(CMakePackage, CudaPackage):
     variant("mpi", default=False, description="Enable MPI")
 
     depends_on("c", type="build")  # generated
+    depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
     # Dependencies

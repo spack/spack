@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import collections
 import warnings
 
@@ -18,7 +19,7 @@ section = "system"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # DEPRECATED: equivalent to --generic --target
     subparser.add_argument(
         "-g",

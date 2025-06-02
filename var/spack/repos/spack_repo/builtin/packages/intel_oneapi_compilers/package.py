@@ -674,7 +674,7 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         for language in ("c", "cxx", "fortran"):
             pkg("*").depends_on(
                 f"intel-oneapi-runtime@{spec.version}:",
-                when=f"%[virtuals={language}] {spec.name}@{spec.versions}",
+                when=f"%[deptypes=build virtuals={language}] {spec.name}@{spec.versions}",
                 type="link",
                 description="Inject intel-oneapi-runtime when oneapi is used as "
                 f"a {language} compiler",
@@ -683,20 +683,21 @@ class IntelOneapiCompilers(IntelOneApiPackage, CompilerPackage):
         for fortran_virtual in ("fortran-rt", "libifcore@5"):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%[virtuals=fortran] {spec.name}@{spec.versions}",
+                when=f"%[deptypes=build virtuals=fortran] {spec.name}@{spec.versions}",
                 type="link",
                 description="Add a dependency on 'libifcore' for nodes compiled with "
                 f"{spec.name}@{spec.versions} and using the 'fortran' language",
             )
         # The version of intel-oneapi-runtime is the same as the %oneapi used to "compile" it
         pkg("intel-oneapi-runtime").requires(
-            f"@{spec.versions}", when=f"%{spec.name}@{spec.versions}"
+            f"@{spec.versions}", when=f"%[deptypes=build] {spec.name}@{spec.versions}"
         )
 
         # If a node used %intel-oneapi-runtime@X.Y its dependencies must use @:X.Y
         # (technically @:X is broader than ... <= @=X but this should work in practice)
         pkg("*").propagate(
-            f"intel-oneapi-compilers@:{spec.version}", when=f"%{spec.name}@{spec.versions}"
+            f"intel-oneapi-compilers@:{spec.version}",
+            when=f"%[deptypes=build] {spec.name}@{spec.versions}",
         )
 
     def _cc_path(self):

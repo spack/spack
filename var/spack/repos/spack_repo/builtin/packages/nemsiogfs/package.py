@@ -20,11 +20,14 @@ class Nemsiogfs(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("2.5.4", sha256="212f3ccde54590940d4fd7b486f4a7f9509ad89a0b19d6903501264203bcba80")
     version("2.5.3", sha256="bf84206b08c8779787bef33e4aba18404df05f8b2fdd20fc40b3af608ae4b9af")
 
     depends_on("fortran", type="build")
 
     depends_on("nemsio")
+
+    conflicts("%oneapi", when="@:2.5.3")
 
     def check(self):
         with working_dir(self.build_directory):
