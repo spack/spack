@@ -19,6 +19,7 @@ class Mumps(Package):
 
     maintainers("jcortial-safran")
 
+    version("5.8.0", sha256="d762eb8b1d9843a0993b8cfc137d043d04c7c51877ad37c94560433a474340a0")
     version("5.7.3", sha256="84a47f7c4231b9efdf4d4f631a2cae2bdd9adeaabc088261d15af040143ed112")
     version("5.7.2", sha256="1362d377ce7422fc886c55212b4a4d2c381918b5ca4478f682a22d0627a8fbf8")
     version("5.6.2", sha256="13a2c1aff2bd1aa92fe84b7b35d88f43434019963ca09ef7e8c90821a8f1d59a")
@@ -81,9 +82,10 @@ class Mumps(Package):
     patch("gfortran8.patch", when="@5.1.2")
     # The following patches src/Makefile to fix some dependency
     # issues in lib[cdsz]mumps.so
-    patch("mumps.src-makefile.5.2.patch", when="@5.2.0 +shared")
-    patch("mumps.src-makefile.5.3.patch", when="@5.3.0:5.4.1 +shared")
-    patch("mumps.src-makefile.5.5.patch", when="@5.5.0: +shared")
+    patch("mumps.src-makefile.5.2.patch", when="@5.2 +shared")
+    patch("mumps.src-makefile.5.3.patch", when="@5.3:5.4 +shared")
+    patch("mumps.src-makefile.5.5.patch", when="@5.5:5.7 +shared")
+    patch("mumps.src-makefile.5.8.patch", when="@5.8: +shared")
 
     conflicts("+parmetis", when="~mpi", msg="You cannot use the parmetis variant without mpi")
     conflicts("+parmetis", when="~metis", msg="You cannot use the parmetis variant without metis")
