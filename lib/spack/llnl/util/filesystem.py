@@ -2600,7 +2600,7 @@ class WindowsSimulatedRPath:
             # associate with trying to create a file that already exists (winerror 183)
             # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
-                if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
+                if sys.platform == "win32" and e.errno == errno.EEXIST:
                     report_already_linked()
                 else:
                     raise e
