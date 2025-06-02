@@ -280,8 +280,11 @@ class SpecParser:
             except spack.error.SpecError as e:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
-        # Get toolchain information outside of loop
-        toolchains = spack.config.CONFIG.get("toolchains", {})
+        # FIXME: Move the expansion step outside of the parser
+        toolchains = {}
+        configuration = getattr(spack.config, "CONFIG", None)
+        if configuration is not None:
+            toolchains = configuration.get("toolchains", {})
 
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)

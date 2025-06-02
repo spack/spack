@@ -2053,7 +2053,7 @@ def shell_as(shell):
 @pytest.fixture()
 def nullify_globals(request, monkeypatch):
     ensure_configuration_fixture_run_before(request)
-    monkeypatch.setattr(spack.config, "CONFIG", {})  # So basic get operations do not throw
+    monkeypatch.setattr(spack.config, "CONFIG", None)
     monkeypatch.setattr(spack.caches, "MISC_CACHE", None)
     monkeypatch.setattr(spack.caches, "FETCH_CACHE", None)
     monkeypatch.setattr(spack.repo, "PATH", None)
