@@ -82,12 +82,8 @@ def test_conditional_compilers(c, cxx, fortran, mutable_config, mock_packages, c
     """
     # Abstract spec parametrized to depend/not on c/cxx/fortran
     # and with conditional dependencies for each on the less preferred gcc
-    abstract = spack.spec.Spec("conditional-languages")
-    abstract.constrain(f"c={c}")
-    abstract.constrain(f"cxx={cxx}")
-    abstract.constrain(f"fortran={fortran}")
-
-    preferred_gcc = spack.concretize.concretize_one(abstract)
+    abstract = spack.spec.Spec(f"conditional-languages c={c} cxx={cxx} fortran={fortran}")
+    concrete_unconstrained = spack.concretize.concretize_one(abstract)
     abstract.constrain(
         "^[when='%c' virtuals=c]gcc@10.3.1 "
         "^[when='%cxx' virtuals=cxx]gcc@10.3.1 "
@@ -101,4 +97,4 @@ def test_conditional_compilers(c, cxx, fortran, mutable_config, mock_packages, c
     assert concrete.satisfies("%[virtuals=fortran]gcc@10.3.1") == fortran
 
     # The only time the two concrete specs are the same is if we don't use gcc at all
-    assert (concrete == preferred_gcc) == (not any((c, cxx, fortran)))
+    assert (concrete == concrete_unconstrained) == (not any((c, cxx, fortran)))
