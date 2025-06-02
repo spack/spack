@@ -5,10 +5,9 @@
 
 from spack_repo.builtin.build_systems import autotools, cmake
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.packages.libflame.package import LibflameBase
 
 from spack.package import *
-
-from ..libflame.package import LibflameBase
 
 
 class Amdlibflame(CMakePackage, LibflameBase):

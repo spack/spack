@@ -25,6 +25,7 @@ class RocmSmiLib(CMakePackage):
     libraries = ["librocm_smi64"]
 
     version("master", branch="master", deprecated=True)
+    version("6.4.0", sha256="0c462520b4fa0cf9b49515b207b0ead32a5f96ddba487c5d4fa07a403690c05a")
     version("6.3.3", sha256="679dfd0cbd213d27660e546584ab013afea286eff95928d748d168503305c9c4")
     version("6.3.2", sha256="29a9190143dfcbafeac93d8064b00c9320dbca57a3344adb009ec17d9b09d036")
     version("6.3.1", sha256="0f45e4823e361a1c6ac560eabf6000c3b59e08bcd96e87150149149e861c6a63")
@@ -77,6 +78,7 @@ class RocmSmiLib(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -91,8 +93,12 @@ class RocmSmiLib(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on("llvm-amdgpu", when=f"@{ver}+asan")
+
+    depends_on("pkg-config", when="@6.4:")
+    depends_on("libdrm", when="@6.4:")
 
     patch(
         "https://github.com/ROCm/rocm_smi_lib/commit/11f12b86517d0e9868f4d16d74d4e8504c3ba7da.patch?full_index=1",
@@ -101,6 +107,12 @@ class RocmSmiLib(CMakePackage):
     )
 
     patch("disable_pdf_generation_with_doxygen_and_latex.patch", when="@:5.6")
+    patch(
+        "https://github.com/ROCm/rocm_smi_lib/commit/ce405476cabf66a884a351cb2e3253bd5c29e06b.patch?full_index=1",
+        sha256="54094b5dbd05b79341e38e95f785dcbb0ba4a5aef4bad19e075ea77470164138",
+        when="@6.4",
+    )
+    patch("0001-add-libdrm-include-dir.patch", when="@6.4")
 
     def cmake_args(self):
         args = [

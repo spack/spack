@@ -58,6 +58,10 @@ class Mpfr(AutotoolsPackage, GNUMirrorPackage):
     # Check the Bugs section of old release pages for patches.
     # https://www.mpfr.org/mpfr-X.Y.Z/#bugs
     for ver, checksum in (
+        ("4.2.1", "3ec29a67cfa75c35e90d32cafa552956018c79526b4aa412f3beff21dacfb41e"),
+        ("4.2.0", "a9099cee74188d5f522b7b3fca0097196c6dd38126f8f042d233010cbf92e8d0"),
+        ("4.1.1", "80a3c2709be21acaac12a9cc99888d63a00fa77fb75576f205fe8ba1984ff44a"),
+        ("4.1.0", "75af77904037442fcd3061a4fee2394194716c542e96989dcfac2445c842daf1"),
         ("4.0.2", "3f80b836948aa96f8d1cb9cc7f3f55973f19285482a96f9a4e1623d460bcccf0"),
         ("4.0.1", "5230aab653fa8675fc05b5bdd3890e071e8df49a92a9d58c4284024affd27739"),
         ("3.1.6", "7a6dd71bcda4803d6b89612706a17b8816e1acd5dd9bf1bec29cf748f3b60008"),

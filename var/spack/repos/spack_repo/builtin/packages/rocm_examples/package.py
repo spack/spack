@@ -20,6 +20,7 @@ class RocmExamples(CMakePackage):
 
     license("MIT")
 
+    version("6.4.0", sha256="af2be5806982a72c726cf052c512493cc004bfa98d0136fbf8fed2754a4f4b80")
     version("6.3.3", sha256="5e5bdffb4bf56d30c5f8dd8fda95d162362d17e446396e6b6a3afe8d293039f3")
     version("6.3.2", sha256="7a71dcfec782338af1d838f86b692974368e362de8ad85d5ec26c23b0afbab9e")
     version("6.3.1", sha256="c5093cd6641de478b940d2e36d6723f7ef1ccad3f4f96caf0394def2e6c7e325")
@@ -28,11 +29,12 @@ class RocmExamples(CMakePackage):
     version("6.2.1", sha256="2e426572aa5f5b44c7893ea256945c8733b79db39cca84754380f40c8b44a563")
     version("6.2.0", sha256="6fb1f954ed32b5c4085c7f071058d278c2e1e8b7b71118ee5e85cf9bbc024df0")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")
 
     depends_on("glfw", type="build")
 
-    for ver in ["6.3.3", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.1", "6.2.0"]:
+    for ver in ["6.4.0", "6.3.3", "6.3.2", "6.3.1", "6.3.0", "6.2.4", "6.2.1", "6.2.0"]:
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"hipify-clang@{ver}", when=f"@{ver}")
         depends_on(f"hipcub@{ver}", when=f"@{ver}")
@@ -43,6 +45,10 @@ class RocmExamples(CMakePackage):
         depends_on(f"hipblas@{ver}", when=f"@{ver}")
         depends_on(f"rocsparse@{ver}", when=f"@{ver}")
         depends_on(f"rocsolver@{ver}", when=f"@{ver}")
+
+    for ver in ["6.4.0", "6.3.3", "6.3.2", "6.3.1", "6.3.0"]:
+        depends_on(f"hipfft@{ver}", when=f"@{ver}")
+        depends_on(f"rocfft@{ver}", when=f"@{ver}")
 
     def patch(self):
         filter_file(

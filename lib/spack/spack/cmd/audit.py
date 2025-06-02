@@ -1,6 +1,7 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import warnings
 
 import llnl.util.tty as tty
@@ -15,7 +16,7 @@ section = "system"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Top level flags, valid for every audit class
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="subcommand")
 

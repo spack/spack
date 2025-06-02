@@ -27,7 +27,7 @@ section = "config"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")

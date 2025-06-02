@@ -6,6 +6,8 @@ import pathlib
 
 import pytest
 
+import llnl.util.lang
+
 import spack.concretize
 import spack.deptypes as dt
 import spack.directives
@@ -326,6 +328,12 @@ class TestSpecSemantics:
                     "libelf patches=ba5e3,"
                     "ba5e334fe247335f3a116decfb5284100791dc302b5571ff5e664d8f9a6806c2"
                 ),
+            ),
+            # deptypes on direct deps
+            (
+                "mpileaks %[deptypes=build] mpich",
+                "mpileaks %[deptypes=link] mpich",
+                "mpileaks %[deptypes=build,link] mpich",
             ),
         ],
     )
@@ -773,6 +781,8 @@ class TestSpecSemantics:
             ("libelf^foo", "libelf^foo~debug"),
             ("libelf", "^foo"),
             ("mpileaks ^callpath %gcc@14", "mpileaks ^callpath %gcc@14.1"),
+            ("mpileaks %[deptypes=build] mpich", "mpileaks %[deptypes=link] mpich"),
+            ("mpileaks %mpich", "mpileaks %[deptypes=link] mpich"),
         ],
     )
     def test_lhs_is_changed_when_constraining(self, lhs, rhs):
@@ -807,6 +817,7 @@ class TestSpecSemantics:
             ("libelf^foo~debug", "libelf^foo~debug"),
             ('libelf^foo cppflags="-O3"', 'libelf^foo cppflags="-O3"'),
             ("mpileaks ^callpath %gcc@14.1", "mpileaks ^callpath %gcc@14"),
+            ("mpileaks %[deptypes=build] gcc@14.1", "mpileaks %gcc@14"),
         ],
     )
     def test_lhs_is_not_changed_when_constraining(self, lhs, rhs):
@@ -2011,6 +2022,135 @@ def test_equality_discriminate_on_propagation(lhs, rhs):
 
 def test_comparison_multivalued_variants():
     assert Spec("x=a") < Spec("x=a,b") < Spec("x==a,b") < Spec("x==a,b,c")
+
+
+@pytest.mark.parametrize(
+    "specs_in_expected_order",
+    [
+        ("a", "b", "c", "d", "e"),
+        ("a@1.0", "a@2.0", "b", "c@3.0", "c@4.0"),
+        ("a^d", "b^c", "c^b", "d^a"),
+        ("e^a", "e^b", "e^c", "e^d"),
+        ("e^a@1.0", "e^a@2.0", "e^a@3.0", "e^a@4.0"),
+        ("e^a@1.0 +a", "e^a@1.0 +b", "e^a@1.0 +c", "e^a@1.0 +c"),
+        ("a^b%c", "a^b%d", "a^b%e", "a^b%f"),
+        ("a^b%c@1.0", "a^b%c@2.0", "a^b%c@3.0", "a^b%c@4.0"),
+        ("a^b%c@1.0 +a", "a^b%c@1.0 +b", "a^b%c@1.0 +c", "a^b%c@1.0 +d"),
+        ("a cflags=-O1", "a cflags=-O2", "a cflags=-O3"),
+        ("a %cmake@1.0 ^b %cmake@2.0", "a %cmake@2.0 ^b %cmake@1.0"),
+        ("a^b^c^d", "a^b^c^e", "a^b^c^f"),
+        ("a^b^c^d", "a^b^c^e", "a^b^c^e", "a^b^c^f"),
+        ("a%b%c%d", "a%b%c%e", "a%b%c%e", "a%b%c%f"),
+        ("d.a", "c.b", "b.c", "a.d"),  # names before namespaces
+    ],
+)
+def test_spec_ordering(specs_in_expected_order):
+    specs_in_expected_order = [Spec(s) for s in specs_in_expected_order]
+    assert sorted(specs_in_expected_order) == specs_in_expected_order
+    assert sorted(reversed(specs_in_expected_order)) == specs_in_expected_order
+
+    for i in range(len(specs_in_expected_order) - 1):
+        lhs, rhs = specs_in_expected_order[i : i + 2]
+        assert lhs <= rhs
+        assert (lhs < rhs and lhs != rhs) or lhs == rhs
+        assert rhs >= lhs
+        assert (rhs > lhs and rhs != lhs) or rhs == lhs
+
+
+EMPTY_VER = vn.VersionList(":")
+EMPTY_VAR = Spec().variants
+EMPTY_FLG = Spec().compiler_flags
+
+
+@pytest.mark.parametrize(
+    "spec,expected_tuplified",
+    [
+        # simple, no dependencies
+        [("a"), ((("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),), ())],
+        # with some node attributes
+        [
+            ("a@1.0 +foo cflags='-O3 -g'"),
+            (
+                (
+                    (
+                        "a",
+                        None,
+                        vn.VersionList(["1.0"]),
+                        Spec("+foo").variants,
+                        Spec("cflags='-O3 -g'").compiler_flags,
+                        None,
+                        None,
+                        None,
+                    ),
+                ),
+                (),
+            ),
+        ],
+        # single edge case
+        [
+            ("a^b"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                ((0, 1, 0, ()),),
+            ),
+        ],
+        # root with multiple deps
+        [
+            ("a^b^c^d"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
+            ),
+        ],
+        # root with multiple build deps
+        [
+            ("a%b%c%d"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
+            ),
+        ],
+        # dependencies with dependencies
+        [
+            ("a  ^b %c %d  ^e %f %g"),
+            (
+                (
+                    ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("e", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("f", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                    ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
+                ),
+                (
+                    (0, 1, 0, ()),
+                    (0, 2, 0, ()),
+                    (1, 3, 0, ()),
+                    (1, 4, 0, ()),
+                    (2, 5, 0, ()),
+                    (2, 6, 0, ()),
+                ),
+            ),
+        ],
+    ],
+)
+def test_spec_canonical_comparison_form(spec, expected_tuplified):
+    """Tests a few expected canonical comparison form of specs"""
+    assert llnl.util.lang.tuplify(Spec(spec)._cmp_iter) == expected_tuplified
 
 
 def test_comparison_after_breaking_hash_change():

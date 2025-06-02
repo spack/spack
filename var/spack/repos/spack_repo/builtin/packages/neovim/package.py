@@ -19,7 +19,11 @@ class Neovim(CMakePackage):
     license("Apache-2.0 AND Vim")
 
     version("master", branch="master")
-    version("stable", tag="stable", commit="d772f697a281ce9c58bf933997b87c7f27428a60")
+    version("stable", tag="stable")
+    version("0.11.1", sha256="ffe7f9a7633ed895ff6adb1039af7516cd6453715c8889ad844b6fa39c3df443")
+    version("0.11.0", sha256="6826c4812e96995d29a98586d44fbee7c9b2045485d50d174becd6d5242b3319")
+    version("0.10.4", sha256="10413265a915133f8a853dc757571334ada6e4f0aa15f4c4cc8cc48341186ca2")
+    version("0.10.3", sha256="39fab47d241da7b9418823cc563c689d522c1c4b2def04036393834f3f1ca94c")
     version("0.10.2", sha256="546cb2da9fffbb7e913261344bbf4cf1622721f6c5a67aa77609e976e78b8e89")
     version("0.10.0", sha256="372ea2584b0ea2a5a765844d95206bda9e4a57eaa1a2412a9a0726bab750f828")
     version("0.9.5", sha256="fe74369fc30a32ec7a086b1013acd0eacd674e7570eb1acc520a66180c9e9719")
@@ -107,11 +111,11 @@ class Neovim(CMakePackage):
     depends_on("lua-lpeg")
     depends_on("lua-mpack")
     depends_on("iconv", type="link")
-    depends_on("libtermkey", type="link")
+    depends_on("libtermkey", type="link", when="@:0.9")
     depends_on("libuv", type="link")
-    depends_on("libluv", type="link")
-    depends_on("libvterm", type="link")
-    depends_on("msgpack-c", type="link")
+    depends_on("libluv", type="link", when="@:0.9")
+    depends_on("libvterm", type="link", when="@:0.10")
+    depends_on("msgpack-c", type="link", when="@:0.10")
     depends_on("unibilium", type="link")
     depends_on("unibilium@:1.2.0", type="link", when="@0.2.0")
 
@@ -146,8 +150,15 @@ class Neovim(CMakePackage):
         depends_on("cmake@3.13:", type="build")
         depends_on("libvterm@0.3.3:")
         depends_on("tree-sitter@0.20.9:")
-    with when("@master"):
+    with when("@0.11:"):
+        depends_on("cmake@3.16:", type="build")
         depends_on("utf8proc", type="link")
+        depends_on("tree-sitter@0.25:", type="link")
+
+        # https://github.com/neovim/neovim/issues/33506#issuecomment-2812141484
+        conflicts("platform=darwin target=aarch64:")
+    with when("@master"):
+        pass
 
     # Support for `libvterm@0.2:` has been added in neovim@0.8.0
     # term: Add support for libvterm >= 0.2 (https://github.com/neovim/neovim/releases/tag/v0.8.0)

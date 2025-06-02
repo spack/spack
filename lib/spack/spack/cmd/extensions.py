@@ -19,7 +19,7 @@ section = "extensions"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.epilog = (
         "If called without argument returns the list of all valid extendable packages"
     )

@@ -27,7 +27,7 @@ class ComputeBuildSystemPathAction(argparse.Action):
         setattr(namespace, self.dest, os.path.join(spack.repo.PATH.repos[0].root, "build_systems"))
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     excl_args = subparser.add_mutually_exclusive_group()
 
     # Various types of Spack files that can be edited

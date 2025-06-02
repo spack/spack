@@ -18,6 +18,7 @@ class Hipfort(CMakePackage):
     license("MIT")
 
     maintainers("cgmb", "srekolam", "renjithravindrankannath", "afzpatel")
+    version("6.4.0", sha256="a2e4c10f1c6561789208ba5a41a00b562c8048ec503339cb4eed236ee3cf6131")
     version("6.3.3", sha256="dacb7d5a30689e6a8f81ec251daaa4a74b40f1d28145953c7d42ccd29cecee7c")
     version("6.3.2", sha256="d2438971199637eb2e09519c1f2300cdd7a84b4d948034a7cd1ce3e441faf5de")
     version("6.3.1", sha256="8141bf3d05ab4f91c561815134707123e3d06486bf775224b9a3a4cc8ee8f56f")
@@ -42,6 +43,7 @@ class Hipfort(CMakePackage):
         version("5.3.3", sha256="593be86502578b68215ffe767c26849fd27d4dbd92c8e76762275805f99e64f5")
         version("5.3.0", sha256="9e2aa142de45b2d2c29449d6f82293fb62844d511fbf51fa597845ba05c700fa")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
@@ -74,6 +76,7 @@ class Hipfort(CMakePackage):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"hip@{ver}", type="build", when=f"@{ver}")
 

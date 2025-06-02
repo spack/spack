@@ -21,7 +21,6 @@ from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import islink, readlink, symlink
 
 import spack
-import spack.caches
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -193,28 +192,38 @@ def activate(env, use_env_repo=False):
     """
     global _active_environment
 
-    # Fail early to avoid ending in an invalid state
-    if not isinstance(env, Environment):
-        raise TypeError("`env` should be of type {0}".format(Environment.__name__))
+    try:
+        _active_environment = env
 
-    # Check if we need to reinitialize the store due to pushing the configuration
-    # below.
-    install_tree_before = spack.config.get("config:install_tree")
-    upstreams_before = spack.config.get("upstreams")
-    env.manifest.prepare_config_scope()
-    install_tree_after = spack.config.get("config:install_tree")
-    upstreams_after = spack.config.get("upstreams")
-    if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
-        # Hack to store the state of the store before activation
-        env.store_token = spack.store.reinitialize()
+        # Fail early to avoid ending in an invalid state
+        if not isinstance(env, Environment):
+            raise TypeError("`env` should be of type {0}".format(Environment.__name__))
 
-    if use_env_repo:
-        spack.repo.PATH.put_first(env.repo)
+        # Check if we need to reinitialize spack.store.STORE and spack.repo.REPO due to
+        # config changes.
+        install_tree_before = spack.config.get("config:install_tree")
+        upstreams_before = spack.config.get("upstreams")
+        repos_before = spack.config.get("repos")
+        env.manifest.prepare_config_scope()
+        install_tree_after = spack.config.get("config:install_tree")
+        upstreams_after = spack.config.get("upstreams")
+        repos_after = spack.config.get("repos")
 
-    tty.debug("Using environment '%s'" % env.name)
+        if install_tree_before != install_tree_after or upstreams_before != upstreams_after:
+            setattr(env, "store_token", spack.store.reinitialize())
 
-    # Do this last, because setting up the config must succeed first.
-    _active_environment = env
+        if repos_before != repos_after:
+            setattr(env, "repo_token", spack.repo.PATH)
+            spack.repo.PATH.disable()
+            new_repo = spack.repo.RepoPath.from_config(spack.config.CONFIG)
+            if use_env_repo:
+                new_repo.put_first(env.repo)
+            spack.repo.enable_repo(new_repo)
+
+        tty.debug(f"Using environment '{env.name}'")
+    except Exception:
+        _active_environment = None
+        raise
 
 
 def deactivate():
@@ -224,18 +233,21 @@ def deactivate():
     if not _active_environment:
         return
 
-    # If we attached a store token on activation, restore the previous state
-    # and consume the token
-    if hasattr(_active_environment, "store_token"):
-        spack.store.restore(_active_environment.store_token)
+    # If any config changes affected spack.store.STORE or spack.repo.PATH, undo them.
+    store = getattr(_active_environment, "store_token", None)
+    if store is not None:
+        spack.store.restore(store)
         delattr(_active_environment, "store_token")
+
+    repo = getattr(_active_environment, "repo_token", None)
+
+    if repo is not None:
+        spack.repo.PATH.disable()
+        spack.repo.enable_repo(repo)
+
     _active_environment.manifest.deactivate_config_scope()
 
-    # use _repo so we only remove if a repo was actually constructed
-    if _active_environment._repo:
-        spack.repo.PATH.remove(_active_environment._repo)
-
-    tty.debug("Deactivated environment '%s'" % _active_environment.name)
+    tty.debug(f"Deactivated environment '{_active_environment.name}'")
 
     _active_environment = None
 
@@ -426,7 +438,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
-        for i, entry in enumerate(repos_specs):
+        for name, entry in list(repos_specs.items()):
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -436,7 +448,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
 
-            repos_specs[i] = expanded_path
+            repos_specs[name] = expanded_path
 
         spack.config.set("repos", repos_specs, scope=env.scope_name)
 
@@ -1857,6 +1869,10 @@ class Environment:
         roots = self.concrete_roots()
         specs = specs if specs is not None else roots
 
+        # Extract reporter arguments
+        reporter = install_args.pop("reporter", None)
+        report_file = install_args.pop("report_file", None)
+
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
             *install_args.get("overwrite", ()),
@@ -1869,7 +1885,17 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        PackageInstaller([spec.package for spec in specs], **install_args).install()
+        try:
+            builder = PackageInstaller([spec.package for spec in specs], **install_args)
+            builder.install()
+        finally:
+            if reporter:
+                if isinstance(builder.reports, dict):
+                    reporter.build_report(report_file, list(builder.reports.values()))
+                elif isinstance(builder.reports, list):
+                    reporter.build_report(report_file, builder.reports)
+                else:
+                    raise TypeError("builder.reports must be either a dictionary or a list")
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""
@@ -2425,11 +2451,11 @@ def display_specs(specs):
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    repos = [
+    repos = (
         spack.repo.from_path(os.path.dirname(p))
         for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
-    ]
-    return spack.repo.RepoPath(*repos, cache=spack.caches.MISC_CACHE)
+    )
+    return spack.repo.RepoPath(*repos)
 
 
 def manifest_file(env_name_or_dir):

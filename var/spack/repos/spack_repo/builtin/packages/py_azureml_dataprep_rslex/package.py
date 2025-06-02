@@ -6,8 +6,6 @@ import sys
 
 from spack_repo.builtin.build_systems.python import PythonPackage
 
-import archspec
-
 from spack.package import *
 
 
@@ -71,9 +69,4 @@ class PyAzuremlDataprepRslex(PythonPackage):
     depends_on("python@3.9.0:3.9", when="@1.9.0-py3.9,1.8.0-py3.9", type=("build", "run"))
     depends_on("python@3.8.0:3.8", when="@1.9.0-py3.8,1.8.0-py3.8", type=("build", "run"))
 
-    for t in set(
-        [str(x.family) for x in archspec.cpu.TARGETS.values() if str(x.family) != "x86_64"]
-    ):
-        conflicts(
-            "target={0}:".format(t), msg="py-azureml-dataprep-rslex is available x86_64 only"
-        )
+    requires("target=x86_64:", msg="py-azureml-dataprep-rslex is available x86_64 only")

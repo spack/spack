@@ -24,8 +24,8 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
     alias less='less -R'
 
-If you do not see colorized output when using ``less -R`` it is because color
-is being disabled in the piped output. In this case, tell spack to force
+If you do not see colorized output when using ``less -R``, it is because color
+is being disabled in the piped output. In this case, tell Spack to force
 colorized output with a flag
 
 .. code-block:: console
@@ -39,7 +39,7 @@ or an environment variable
    $ SPACK_COLOR=always spack find | less -R
 
 --------------------------
-Listing available packages
+Listing Available Packages
 --------------------------
 
 To install software with Spack, you need to know what software is
@@ -64,9 +64,9 @@ can find a `full list here <https://packages.spack.io>`_.
 Packages are listed by name in alphabetical order.
 A pattern to match with no wildcards, ``*`` or ``?``,
 will be treated as though it started and ended with
-``*``, so ``util`` is equivalent to ``*util*``.  All patterns will be treated
+``*``, so ``util`` is equivalent to ``*util*``. All patterns will be treated
 as case-insensitive. You can also add the ``-d`` to search the description of
-the package in addition to the name.  Some examples:
+the package in addition to the name. Some examples:
 
 All packages whose names contain "sql":
 
@@ -90,7 +90,7 @@ To get more information on a particular package from `spack list`, use
 Most of the information is self-explanatory.  The *safe versions* are
 versions that Spack knows the checksum for, and it will use the
 checksum to verify that these versions download without errors or
-viruses.
+malware.
 
 :ref:`Dependencies <sec-specs>` and :ref:`virtual dependencies
 <sec-virtual-dependencies>` are described in more detail later.
@@ -111,13 +111,13 @@ for which Spack has a checksum on file.  It can verify that these
 versions are downloaded correctly.
 
 In many cases, Spack can also show you what versions are available out
-on the web---these are *remote versions*.  Spack gets this information
-by scraping it directly from package web pages.  Depending on the
+on the web -- these are *remote versions*. Spack gets this information
+by scraping it directly from package web pages. Depending on the
 package and how its releases are organized, Spack may or may not be
 able to find remote versions.
 
 ---------------------------
-Installing and uninstalling
+Installing and Uninstalling
 ---------------------------
 
 .. _cmd-spack-install:
@@ -127,7 +127,7 @@ Installing and uninstalling
 ^^^^^^^^^^^^^^^^^
 
 ``spack install`` will install any package shown by ``spack list``.
-For example, To install the latest version of the ``mpileaks``
+For example, to install the latest version of the ``mpileaks``
 package, you might type this:
 
 .. code-block:: console
@@ -135,7 +135,7 @@ package, you might type this:
    $ spack install mpileaks
 
 If ``mpileaks`` depends on other packages, Spack will install the
-dependencies first.  It then fetches the ``mpileaks`` tarball, expands
+dependencies first. It then fetches the ``mpileaks`` tarball, expands
 it, verifies that it was downloaded without errors, builds it, and
 installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
 a number of messages from Spack, a lot of build output, and a message
@@ -163,7 +163,7 @@ mpileaks`` -- to get additional (and even more verbose) output.
 Building a specific version
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Spack can also build *specific versions* of a package.  To do this,
+Spack can also build *specific versions* of a package. To do this,
 just add ``@`` after the package name, followed by a version:
 
 .. code-block:: console
@@ -171,21 +171,21 @@ just add ``@`` after the package name, followed by a version:
    $ spack install mpich@3.0.4
 
 Any number of versions of the same package can be installed at once
-without interfering with each other.  This is good for multi-user
+without interfering with each other. This is good for multi-user
 sites, as installing a version that one user needs will not disrupt
 existing installations for other users.
 
 In addition to different versions, Spack can customize the compiler,
 compile-time options (variants), compiler flags, and platform (for
-cross compiles) of an installation.  Spack is unique in that it can
-also configure the *dependencies* a package is built with.  For example,
+cross-compiles) of an installation. Spack is unique in that it can
+also configure the *dependencies* a package is built with. For example,
 two configurations of the same version of a package, one built with boost
 1.39.0, and the other version built with version 1.43.0, can coexist.
 
 This can all be done on the command line using the *spec* syntax.
 Spack calls the descriptor used to refer to a particular package
-configuration a **spec**.  In the commands above, ``mpileaks`` and
-``mpileaks@3.0.4`` are both valid *specs*.  We'll talk more about how
+configuration a **spec**. In the commands above, ``mpileaks`` and
+``mpileaks@3.0.4`` are both valid *specs*. We'll talk more about how
 you can use them to customize an installation in :ref:`sec-specs`.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -193,7 +193,7 @@ Reusing installed dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, when you run ``spack install``, Spack tries hard to reuse existing installations
-as dependencies, either from a local store or from remote buildcaches if configured.
+as dependencies, either from a local store or from remote buildcaches, if configured.
 This minimizes unwanted rebuilds of common dependencies, in particular if
 you update Spack frequently.
 
@@ -204,7 +204,7 @@ you can add the ``--fresh`` option:
 
    $ spack install --fresh mpich
 
-Reusing installations in this mode is "accidental", and happening only if
+Reusing installations in this mode is "accidental" and happening only if
 there's a match between existing installations and what Spack would have installed
 anyhow.
 
@@ -225,7 +225,7 @@ You can configure Spack to use the ``--fresh`` behavior by default in
 ``spack uninstall``
 ^^^^^^^^^^^^^^^^^^^
 
-To uninstall a package, type ``spack uninstall <package>``.  This will ask
+To uninstall a package, type ``spack uninstall <package>``. This will ask
 the user for confirmation before completely removing the directory
 in which the package was installed.
 
@@ -234,7 +234,7 @@ in which the package was installed.
    $ spack uninstall mpich
 
 If there are still installed packages that depend on the package to be
-uninstalled, spack will refuse to uninstall it.
+uninstalled, Spack will refuse to uninstall it.
 
 To uninstall a package and every package that depends on it, you may give the
 ``--dependents`` option.
@@ -244,7 +244,7 @@ To uninstall a package and every package that depends on it, you may give the
    $ spack uninstall --dependents mpich
 
 will display a list of all the packages that depend on ``mpich`` and, upon
-confirmation, will uninstall them in the right order.
+confirmation, will uninstall them in the correct order.
 
 A command like
 
@@ -256,8 +256,8 @@ may be ambiguous if multiple ``mpich`` configurations are installed.
 For example, if both ``mpich@3.0.2`` and ``mpich@3.1`` are installed,
 ``mpich`` could refer to either one. Because it cannot determine which
 one to uninstall, Spack will ask you either to provide a version number
-to remove the ambiguity or use the ``--all`` option to uninstall all of
-the matching packages.
+to remove the ambiguity or use the ``--all`` option to uninstall all
+matching packages.
 
 You may force uninstall a package with the ``--force`` option
 
@@ -266,7 +266,7 @@ You may force uninstall a package with the ``--force`` option
    $ spack uninstall --force mpich
 
 but you risk breaking other installed packages. In general, it is safer to
-remove dependent packages *before* removing their dependencies or use the
+remove dependent packages *before* removing their dependencies or to use the
 ``--dependents`` option.
 
 
@@ -278,7 +278,7 @@ Garbage collection
 
 When Spack builds software from sources, it often installs tools that are needed
 just to build or test other software. These are not necessary at runtime.
-To support cases where removing these tools can be a benefit Spack provides
+To support cases where removing these tools can be a benefit, Spack provides
 the ``spack gc`` ("garbage collector") command, which will uninstall all unneeded packages:
 
 .. code-block:: console
@@ -307,7 +307,7 @@ the ``spack gc`` ("garbage collector") command, which will uninstall all unneede
    -- linux-ubuntu18.04-broadwell / gcc@9.0.1 ----------------------
    hdf5@1.10.5  libiconv@1.16  libpciaccess@0.13.5  libszip@2.1.1  libxml2@2.9.9  mpich@3.3.2  openjpeg@2.3.1  xz@5.2.4  zlib@1.2.11
 
-In the example above Spack went through all the packages in the package database
+In the example above, Spack went through all the packages in the package database
 and removed everything that is not either:
 
 1. A package installed upon explicit request of the user
@@ -367,20 +367,20 @@ packages that are no longer required.
 
   ==> Do you want to proceed? [y/N]
 
-In the example above, we ended up with two versions of ``m4`` since they depend
+In the example above, we ended up with two versions of ``m4`` because they depend
 on different versions of ``libsigsegv``. ``spack gc`` will not remove any of
-the packages since both versions of ``m4`` have been installed explicitly
+the packages because both versions of ``m4`` have been installed explicitly
 and both versions of ``libsigsegv`` are required by the ``m4`` packages.
 
 ``spack mark`` can also be used to implement upgrade workflows. The following
-example demonstrates how the ``spack mark`` and ``spack gc`` can be used to
+example demonstrates how ``spack mark`` and ``spack gc`` can be used to
 only keep the current version of a package installed.
 
 When updating Spack via ``git pull``, new versions for either ``libsigsegv``
 or ``m4`` might be introduced. This will cause Spack to install duplicates.
-Since we only want to keep one version, we mark everything as implicitly
+Because we only want to keep one version, we mark everything as implicitly
 installed before updating Spack. If there is no new version for either of the
-packages, ``spack install`` will simply mark them as explicitly installed and
+packages, ``spack install`` will simply mark them as explicitly installed, and
 ``spack gc`` will not remove them.
 
 .. code-block:: console
@@ -406,7 +406,7 @@ packages, ``spack install`` will simply mark them as explicitly installed and
   ==> There are no unused specs. Spack's store is clean.
 
 When using this workflow for installations that contain more packages, care
-has to be taken to either only mark selected packages or issue ``spack install``
+must be taken to either only mark selected packages or issue ``spack install``
 for all packages that should be kept.
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly
@@ -420,7 +420,7 @@ The tarballs for some packages cannot be automatically downloaded by
 Spack.  This could be for a number of reasons:
 
 #. The author requires users to manually accept a license agreement
-   before downloading (``jdk`` and ``galahad``).
+   before downloading (e.g., ``jdk`` and ``galahad``).
 
 #. The software is proprietary and cannot be downloaded on the open
    Internet.
@@ -459,7 +459,7 @@ the tarballs in question to it (see :ref:`mirrors`):
 
 
 -------------------------
-Seeing installed packages
+Seeing Installed Packages
 -------------------------
 
 We know that ``spack list`` shows you the names of available packages,
@@ -471,9 +471,9 @@ but how do you figure out which are already installed?
 ``spack find``
 ^^^^^^^^^^^^^^
 
-``spack find`` shows the *specs* of installed packages.  A spec is
+``spack find`` shows the *specs* of installed packages. A spec is
 like a name, but it has a version, compiler, architecture, and build
-options associated with it.  In spack, you can have many installations
+options associated with it. In Spack, you can have many installations
 of the same package with different specs.
 
 Running ``spack find`` with no arguments lists installed packages:
@@ -512,7 +512,7 @@ Running ``spack find`` with no arguments lists installed packages:
    libelf@0.8.10  mpich@3.0.4
 
 Packages are divided into groups according to their architecture and
-compiler.  Within each group, Spack tries to keep the view simple, and
+compiler. Within each group, Spack tries to keep the view simple and
 only shows the version of installed packages.
 
 .. _cmd-spack-find-metadata:
@@ -522,18 +522,18 @@ Viewing more metadata
 """"""""""""""""""""""""""""""""
 
 ``spack find`` can filter the package list based on the package name,
-spec, or a number of properties of their installation status.  For
+spec, or a number of properties of their installation status. For
 example, missing dependencies of a spec can be shown with
 ``--missing``, deprecated packages can be included with
-``--deprecated``, packages which were explicitly installed with
-``spack install <package>`` can be singled out with ``--explicit`` and
-those which have been pulled in only as dependencies with
+``--deprecated``, packages that were explicitly installed with
+``spack install <package>`` can be singled out with ``--explicit``, and
+those that have been pulled in only as dependencies with
 ``--implicit``.
 
 In some cases, there may be different configurations of the *same*
-version of a package installed.  For example, there are two
-installations of ``libdwarf@20130729`` above.  We can look at them
-in more detail using ``spack find --deps``, and by asking only to show
+version of a package installed. For example, there are two
+installations of ``libdwarf@20130729`` above. We can look at them
+in more detail using ``spack find --deps`` and by asking only to show
 ``libdwarf`` packages:
 
 .. code-block:: console
@@ -547,8 +547,8 @@ in more detail using ``spack find --deps``, and by asking only to show
            ^libelf@0.8.13
 
 Now we see that the two instances of ``libdwarf`` depend on
-*different* versions of ``libelf``: 0.8.12 and 0.8.13.  This view can
-become complicated for packages with many dependencies.  If you just
+*different* versions of ``libelf``: 0.8.12 and 0.8.13. This view can
+become complicated for packages with many dependencies. If you just
 want to know whether two packages' dependencies differ, you can use
 ``spack find --long``:
 
@@ -559,8 +559,8 @@ want to know whether two packages' dependencies differ, you can use
    -- linux-debian7-x86_64 / gcc@4.4.7 --------------------------------
    libdwarf@20130729-d9b90962  libdwarf@20130729-b52fac98
 
-Now the ``libdwarf`` installs have hashes after their names.  These are
-hashes over all of the dependencies of each package.  If the hashes
+Now the ``libdwarf`` installs have hashes after their names. These are
+hashes over all of the dependencies of each package. If the hashes
 are the same, then the packages have the same dependency configuration.
 
 If you want to know the path where each package is installed, you can
@@ -595,7 +595,7 @@ name:
 Spec queries
 """"""""""""""""""""""""""""""""
 
-``spack find`` actually does a lot more than this.  You can use
+``spack find`` actually does a lot more than this. You can use
 *specs* to query for specific configurations and builds of each
 package. If you want to find only libelf versions greater than version
 0.8.12, you could say:
@@ -628,7 +628,7 @@ Machine-readable output
 """"""""""""""""""""""""""""""""
 
 If you only want to see very specific things about installed packages,
-Spack has some options for you.  ``spack find --format`` can be used to
+Spack has some options for you. ``spack find --format`` can be used to
 output only specific fields:
 
 .. code-block:: console
@@ -653,14 +653,14 @@ or:
    7cf6onn
    ...
 
-This uses the same syntax as described in documentation for
+This uses the same syntax as described in the documentation for
 :meth:`~spack.spec.Spec.format` -- you can use any of the options there.
 This is useful for passing metadata about packages to other command-line
 tools.
 
-Alternately, if you want something even more machine readable, you can
-output each spec as JSON records using ``spack find --json``.  This will
-output metadata on specs and all dependencies as json:
+Alternatively, if you want something even more machine readable, you can
+output each spec as JSON records using ``spack find --json``. This will
+output metadata on specs and all dependencies as JSON:
 
 .. code-block:: console
 
@@ -739,7 +739,7 @@ and one without the optimize variant:
    $ spack install zlib
    $ spack install zlib -optimize
 
-When we do ``spack find`` we see the two versions.
+When we do ``spack find``, we see the two versions.
 
 .. code-block:: console
 
@@ -749,8 +749,8 @@ When we do ``spack find`` we see the two versions.
     zlib@1.2.11  zlib@1.2.11
 
 
-Let's now say that we want to uninstall zlib. We run the command, and hit a problem
-real quickly since we have two!
+Let's now say that we want to uninstall zlib. We run the command and hit a problem
+quickly because we have two!
 
 .. code-block:: console
 
@@ -769,7 +769,7 @@ Oh no! We can see from the above that we have two different versions of zlib ins
 and the only difference between the two is the hash. This is a good use case for
 ``spack diff``, which can easily show us the "diff" or set difference
 between properties for two packages. Let's try it out.
-Since the only difference we see in the ``spack find`` view is the hash, let's use
+Because the only difference we see in the ``spack find`` view is the hash, let's use
 ``spack diff`` to look for more detail. We will provide the two hashes:
 
 .. code-block:: console
@@ -784,7 +784,7 @@ Since the only difference we see in the ``spack find`` view is the hash, let's u
     +  zlib optimize True
 
 
-The output is colored, and written in the style of a git diff. This means that you
+The output is colored and written in the style of a git diff. This means that you
 can copy and paste it into a GitHub markdown as a code block with language "diff"
 and it will render nicely! Here is an example:
 
@@ -825,7 +825,7 @@ example with an additional difference type, ``version``:
     +  python 3.8.11
 
 Let's say that we were only interested in one kind of attribute above, ``version``.
-We can ask the command to only output this attribute.  To do this, you'd add
+We can ask the command to only output this attribute. To do this, you'd add
 the ``--attribute`` for attribute parameter, which defaults to all. Here is how you
 would filter to show just versions:
 
@@ -844,7 +844,7 @@ would filter to show just versions:
 
 And you can add as many attributes as you'd like with multiple `--attribute` arguments
 (for lots of attributes, you can use ``-a`` for short). Finally, if you want to view the
-data as json (and possibly pipe into an output file) just add ``--json``:
+data as JSON (and possibly pipe into an output file), just add ``--json``:
 
 
 .. code-block:: console
@@ -853,15 +853,15 @@ data as json (and possibly pipe into an output file) just add ``--json``:
 
 
 This data will be much longer because along with the differences for ``A`` vs. ``B`` and
-``B`` vs. ``A``, the JSON output also showsthe intersection.
+``B`` vs. ``A``, the JSON output also shows the intersection.
 
 
 ------------------------
-Using installed packages
+Using Installed Packages
 ------------------------
 
 There are several different ways to use Spack packages once you have
-installed them. As you've seen, spack packages are installed into long
+installed them. As you've seen, Spack packages are installed into long
 paths with hashes, and you need a way to get them into your path. The
 easiest way is to use :ref:`spack load <cmd-spack-load>`, which is
 described in this section.
@@ -883,7 +883,7 @@ Some more advanced ways to use Spack packages include:
 If you have :ref:`shell support <shell-support>` enabled you can use the
 ``spack load`` command to quickly get a package on your ``PATH``.
 
-For example this will add the ``mpich`` package built with ``gcc`` to
+For example, this will add the ``mpich`` package built with ``gcc`` to
 your path:
 
 .. code-block:: console
@@ -912,7 +912,7 @@ unuse similarly:
 Ambiguous specs
 """""""""""""""
 
-If a spec used with load/unload or is ambiguous (i.e. more than one
+If a spec used with load/unload is ambiguous (i.e., more than one
 installed package matches it), then Spack will warn you:
 
 .. code-block:: console
@@ -926,9 +926,9 @@ installed package matches it), then Spack will warn you:
 
 You can either type the ``spack load`` command again with a fully
 qualified argument, or you can add just enough extra constraints to
-identify one package.  For example, above, the key differentiator is
+identify one package. For example, above, the key differentiator is
 that one ``libelf`` is built with the Intel compiler, while the other
-used ``gcc``.  You could therefore just type:
+used ``gcc``. You could therefore just type:
 
 .. code-block:: console
 
@@ -942,7 +942,7 @@ first ``libelf`` above, you would run:
 
    $ spack load /qmm4kso
 
-To see which packages that you have loaded to your environment you would
+To see which packages that you have loaded into your environment, you would
 use ``spack find --loaded``.
 
 .. code-block:: console
@@ -978,18 +978,18 @@ different from any other package:
    $ python3
    >>> import numpy
 
-The ``spack load`` command sets the ``PATH`` variable so that the right Python
-executable is used, and makes sure that ``numpy`` and its dependencies can be
+The ``spack load`` command sets the ``PATH`` variable so that the correct Python
+executable is used and makes sure that ``numpy`` and its dependencies can be
 located in the ``PYTHONPATH``.
 
 Spack is different from other Python package managers in that it installs
 every package into its *own* prefix. This is in contrast to ``pip``, which
-installs all packages into the same prefix, be it in a virtual environment
+installs all packages into the same prefix, whether in a virtual environment
 or not.
 
 For many users, **virtual environments** are more convenient than repeated
 ``spack load`` commands, particularly when working with multiple Python
-packages. Fortunately Spack supports environments itself, which together
+packages. Fortunately, Spack supports environments itself, which together
 with a view are no different from Python virtual environments.
 
 The recommended way of working with Python extensions such as ``py-numpy``
@@ -1047,12 +1047,12 @@ Specs & dependencies
 --------------------
 
 We know that ``spack install``, ``spack uninstall``, and other
-commands take a package name with an optional version specifier.  In
-Spack, that descriptor is called a *spec*.  Spack uses specs to refer
+commands take a package name with an optional version specifier. In
+Spack, that descriptor is called a *spec*. Spack uses specs to refer
 to a particular build configuration (or configurations) of a package.
 Specs are more than a package name and a version; you can use them to
 specify the compiler, compiler version, architecture, compile options,
-and dependency options for a build.  In this section, we'll go over
+and dependency options for a build. In this section, we'll go over
 the full syntax of specs.
 
 Here is an example of a much longer spec than we've seen thus far:
@@ -1064,9 +1064,9 @@ Here is an example of a much longer spec than we've seen thus far:
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
 built using ``gcc`` at version 4.7.5 for a generic ``x86_64`` architecture,
-with debug options enabled, and without Qt support.  Additionally, it
+with debug options enabled, and without Qt support. Additionally, it
 says to link it with the ``callpath`` library (which it depends on),
-and to build callpath with ``gcc`` 4.7.2.  Most specs will not be as
+and to build callpath with ``gcc`` 4.7.2. Most specs will not be as
 complicated as this one, but this is a good example of what is
 possible with specs.
 
@@ -1087,21 +1087,21 @@ More formally, a spec consists of the following pieces:
   ``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and ``ldlibs``.
   Use ``name==<value>`` to propagate compiler flags through the dependencies.
 * ``target=<value> os=<value>`` Optional architecture specifier
-  (``target=haswell os=CNL10``)
-* ``^`` Dependency specs (``^callpath@1.1``)
+  (e.g., ``target=haswell os=CNL10``)
+* ``^`` Dependency specs (e.g., ``^callpath@1.1``)
 
-There are two things to notice here.  The first is that specs are
-recursively defined.  That is, each dependency after ``^`` is a spec
-itself.  The second is that everything is optional *except* for the
-initial package name identifier.  Users can be as vague or as specific
+There are two things to notice here. The first is that specs are
+recursively defined. That is, each dependency after ``^`` is a spec
+itself. The second is that everything is optional *except* for the
+initial package name identifier. Users can be as vague or as specific
 as they want about the details of building packages, and this makes
-spack good for beginners and experts alike.
+Spack good for beginners and experts alike.
 
 To really understand what's going on above, we need to think about how
-software is structured.  An executable or a library (these are
+software is structured. An executable or a library (these are
 generally the artifacts produced by building software) depends on
-other libraries in order to run.  We can represent the relationship
-between a package and its dependencies as a graph.  Here is the full
+other libraries in order to run. We can represent the relationship
+between a package and its dependencies as a graph. Here is the full
 dependency graph for ``mpileaks``:
 
 .. graphviz::
@@ -1114,45 +1114,45 @@ dependency graph for ``mpileaks``:
        dyninst  -> libelf
    }
 
-Each box above is a package and each arrow represents a dependency on
-some other package.  For example, we say that the package ``mpileaks``
-*depends on* ``callpath`` and ``mpich``.  ``mpileaks`` also depends
+Each box above is a package, and each arrow represents a dependency on
+some other package. For example, we say that the package ``mpileaks``
+*depends on* ``callpath`` and ``mpich``. ``mpileaks`` also depends
 *indirectly* on ``dyninst``, ``libdwarf``, and ``libelf``, in that
-these libraries are dependencies of ``callpath``.  To install
-``mpileaks``, Spack has to build all of these packages.  Dependency
+these libraries are dependencies of ``callpath``. To install
+``mpileaks``, Spack has to build all of these packages. Dependency
 graphs in Spack have to be acyclic, and the *depends on* relationship
 is directional, so this is a *directed, acyclic graph* or *DAG*.
 
 The package name identifier in the spec is the root of some dependency
-DAG, and the DAG itself is implicit.  Spack knows the precise
+DAG, and the DAG itself is implicit. Spack knows the precise
 dependencies among packages, but users do not need to know the full
 DAG structure. Each ``^`` in the full spec refers to some dependency
 of the root package. Spack will raise an error if you supply a name
-after ``^`` that the root does not actually depend on (e.g. ``mpileaks
+after ``^`` that the root does not actually depend on (e.g., ``mpileaks
 ^emacs@23.3``).
 
 Spack further simplifies things by only allowing one configuration of
-each package within any single build.  Above, both ``mpileaks`` and
+each package within any single build. Above, both ``mpileaks`` and
 ``callpath`` depend on ``mpich``, but ``mpich`` appears only once in
-the DAG.  You cannot build an ``mpileaks`` version that depends on one
+the DAG. You cannot build an ``mpileaks`` version that depends on one
 version of ``mpich`` *and* on a ``callpath`` version that depends on
-some *other* version of ``mpich``.  In general, such a configuration
+some *other* version of ``mpich``. In general, such a configuration
 would likely behave unexpectedly at runtime, and Spack enforces this
 to ensure a consistent runtime environment.
 
-The point of specs is to abstract this full DAG from Spack users.  If
+The point of specs is to abstract this full DAG from Spack users. If
 a user does not care about the DAG at all, she can refer to mpileaks
-by simply writing ``mpileaks``.  If she knows that ``mpileaks``
+by simply writing ``mpileaks``. If she knows that ``mpileaks``
 indirectly uses ``dyninst`` and she wants a particular version of
-``dyninst``, then she can refer to ``mpileaks ^dyninst@8.1``.  Spack
+``dyninst``, then she can refer to ``mpileaks ^dyninst@8.1``. Spack
 will fill in the rest when it parses the spec; the user only needs to
 know package names and minimal details about their relationship.
 
-When spack prints out specs, it sorts package names alphabetically to
+When Spack prints out specs, it sorts package names alphabetically to
 normalize the way they are displayed, but users do not need to worry
-about this when they write specs.  The only restriction on the order
+about this when they write specs. The only restriction on the order
 of dependencies within a spec is that they appear *after* the root
-package.  For example, these two specs represent exactly the same
+package. For example, these two specs represent exactly the same
 configuration:
 
 .. code-block:: none
@@ -1161,29 +1161,29 @@ configuration:
    mpileaks ^libelf@0.8.3 ^callpath@1.0
 
 You can put all the same modifiers on dependency specs that you would
-put on the root spec.  That is, you can specify their versions,
+put on the root spec. That is, you can specify their versions,
 compilers, variants, and architectures just like any other spec.
 Specifiers are associated with the nearest package name to their left.
-For example, above, ``@1.1`` and ``%gcc@4.7.2`` associates with the
+For example, above, ``@1.1`` and ``%gcc@4.7.2`` associate with the
 ``callpath`` package, while ``@1.2:1.4``, ``%gcc@4.7.5``, ``+debug``,
 ``-qt``, and ``target=haswell os=CNL10`` all associate with the ``mpileaks`` package.
 
 In the diagram above, ``mpileaks`` depends on ``mpich`` with an
 unspecified version, but packages can depend on other packages with
-*constraints* by adding more specifiers.  For example, ``mpileaks``
+*constraints* by adding more specifiers. For example, ``mpileaks``
 could depend on ``mpich@1.2:`` if it can only build with version
 ``1.2`` or higher of ``mpich``.
 
 .. note:: Windows Spec Syntax Caveats
-   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells
-   Spack's spec dependency syntax uses the carat (``^``) character, however this is an escape string in CMD
-   so it must be escaped with an additional carat (i.e. ``^^``).
+   Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
+   Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD,
+   so it must be escaped with an additional carat (i.e., ``^^``).
    CMD also will attempt to interpret strings with ``=`` characters in them. Any spec including this symbol
-   must double quote the string.
+   must double-quote the string.
 
-   Note: All of these issues are unique to CMD, they can be avoided by using Powershell.
+   Note: All of these issues are unique to CMD; they can be avoided by using PowerShell.
 
-   For more context on these caveats see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_
+   For more context on these caveats, see the related issues: `carat <https://github.com/spack/spack/issues/42833>`_ and `equals <https://github.com/spack/spack/issues/43348>`_.
 
 Below are more details about the specifiers that you can add to specs.
 
@@ -1195,31 +1195,31 @@ Version specifier
 
 A version specifier ``pkg@<specifier>`` comes after a package name
 and starts with ``@``. It can be something abstract that matches
-multiple known versions, or a specific version. During concretization,
+multiple known versions or a specific version. During concretization,
 Spack will pick the optimal version within the spec's constraints
 according to policies set for the particular Spack installation.
 
 The version specifier can be *a specific version*, such as ``@=1.0.0`` or
 ``@=1.2a7``. Or, it can be *a range of versions*, such as ``@1.0:1.5``.
 Version ranges are inclusive, so this example includes both ``1.0``
-and any ``1.5.x`` version. Version ranges can be unbounded, e.g. ``@:3``
+and any ``1.5.x`` version. Version ranges can be unbounded, e.g., ``@:3``
 means any version up to and including ``3``. This would include ``3.4``
-and ``3.4.2``.  Similarly, ``@4.2:`` means any version above and including
-``4.2``.  As a short-hand, ``@3`` is equivalent to the range ``@3:3`` and
+and ``3.4.2``. Similarly, ``@4.2:`` means any version above and including
+``4.2``. As a shorthand, ``@3`` is equivalent to the range ``@3:3`` and
 includes any version with major version ``3``.
 
-Versions are ordered lexicograpically by its components. For more details
+Versions are ordered lexicographically by their components. For more details
 on the order, see :ref:`the packaging guide <version-comparison>`.
 
 Notice that you can distinguish between the specific version ``@=3.2`` and
 the range ``@3.2``. This is useful for packages that follow a versioning
 scheme that omits the zero patch version number: ``3.2``, ``3.2.1``,
-``3.2.2``, etc. In general it is preferable to use the range syntax
-``@3.2``, since ranges also match versions with one-off suffixes, such as
+``3.2.2``, etc. In general, it is preferable to use the range syntax
+``@3.2``, because ranges also match versions with one-off suffixes, such as
 ``3.2-custom``.
 
 A version specifier can also be a list of ranges and specific versions,
-separated by commas.  For example, ``@1.0:1.5,=1.7.1`` matches any version
+separated by commas. For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
 ^^^^^^^^^^^^
@@ -1227,9 +1227,9 @@ Git versions
 ^^^^^^^^^^^^
 
 For packages with a ``git`` attribute, ``git`` references
-may be specified instead of a numerical version i.e. branches, tags
-and commits. Spack will stage and build based off the ``git``
-reference provided.  Acceptable syntaxes for this are:
+may be specified instead of a numerical version (i.e., branches, tags,
+and commits). Spack will stage and build based off the ``git``
+reference provided. Acceptable syntaxes for this are:
 
 .. code-block:: sh
 
@@ -1243,10 +1243,10 @@ reference provided.  Acceptable syntaxes for this are:
 
 Spack always needs to associate a Spack version with the git reference,
 which is used for version comparison. This Spack version is heuristically
-taken from the closest valid git tag among ancestors of the git ref.
+taken from the closest valid git tag among the ancestors of the git ref.
 
-Once a Spack version is associated with a git ref, it always printed with
-the git ref.  For example, if the commit ``@git.abcdefg`` is tagged
+Once a Spack version is associated with a git ref, it is always printed with
+the git ref. For example, if the commit ``@git.abcdefg`` is tagged
 ``0.19``, then the spec will be shown as ``@git.abcdefg=0.19``.
 
 If the git ref is not exactly a tag, then the distance to the nearest tag
@@ -1270,15 +1270,15 @@ Compiler specifier
 ^^^^^^^^^^^^^^^^^^
 
 A compiler specifier comes somewhere after a package name and starts
-with ``%``.  It tells Spack what compiler(s) a particular package
-should be built with.  After the ``%`` should come the name of some
-registered Spack compiler.  This might include ``gcc``, or ``intel``,
-but the specific compilers available depend on the site.  You can run
+with ``%``. It tells Spack what compiler(s) a particular package
+should be built with. After the ``%`` should come the name of some
+registered Spack compiler. This might include ``gcc`` or ``intel``,
+but the specific compilers available depend on the site. You can run
 ``spack compilers`` to get a list; more on this below.
 
 The compiler spec can be followed by an optional *compiler version*.
 A compiler version specifier looks exactly like a package version
-specifier.  Version specifiers will associate with the nearest package
+specifier. Version specifiers will associate with the nearest package
 name or compiler specifier to their left in the spec.
 
 If the compiler spec is omitted, Spack will choose a default compiler
@@ -1321,7 +1321,7 @@ There are different types of variants:
 
 .. note::
 
-   In certain shells, the the ``~`` character is expanded to the home
+   In certain shells, the ``~`` character is expanded to the home
    directory. To avoid these issues, avoid whitespace between the package
    name and the variant:
 
@@ -1348,7 +1348,7 @@ Variant propagation to dependencies
 """""""""""""""""""""""""""""""""""
 
 Spack allows variants to propagate their value to the package's
-dependency by using ``++``, ``--``, and ``~~`` for boolean variants.
+dependencies by using ``++``, ``--``, and ``~~`` for boolean variants.
 For example, for a ``debug`` variant:
 
 .. code-block:: sh
@@ -1382,7 +1382,7 @@ libelf with the ``-g`` flag injected into their compile line.
 
 .. note::
 
-   versions of spack prior to 0.19.0 will propagate compiler flags using
+   Versions of Spack prior to 0.19.0 will propagate compiler flags using
    the ``=`` syntax.
 
 Notice that the value of the compiler flags must be quoted if it
@@ -1395,7 +1395,7 @@ will be interpreted as an attempt to set ``cppflags="-O3%intel"``.
 
 The six compiler flags are injected in the order of implicit make commands
 in GNU Autotools. If all flags are set, the order is
-``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++ and
+``$cppflags $cflags|$cxxflags $ldflags <command> $ldlibs`` for C and C++, and
 ``$fflags $cppflags $ldflags <command> $ldlibs`` for Fortran.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1409,8 +1409,8 @@ section. See also the :ref:`configuration_environment_variables` section
 of the configuration files docs for more information.
 
 It is also possible to specify additional ``RPATHs`` that the
-compiler will add to all executables generated by that compiler.  This is
-useful for forcing certain compilers to RPATH their own runtime libraries, so
+compiler will add to all executables generated by that compiler. This is
+useful for forcing certain compilers to RPATH their own runtime libraries so
 that executables will run without the need to set ``LD_LIBRARY_PATH``.
 
 .. code-block:: yaml
@@ -1445,9 +1445,9 @@ Architecture specifiers
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Each node in the dependency graph of a spec has an architecture attribute.
-This attribute is a triplet of platform, operating system and processor.
-You can specify the elements either separately, by using
-the reserved keywords ``platform``, ``os`` and ``target``:
+This attribute is a triplet of platform, operating system, and processor.
+You can specify the elements either separately by using
+the reserved keywords ``platform``, ``os``, and ``target``:
 
 .. code-block:: console
 
@@ -1455,9 +1455,9 @@ the reserved keywords ``platform``, ``os`` and ``target``:
    $ spack install libelf os=ubuntu18.04
    $ spack install libelf target=broadwell
 
-Normally users don't have to bother specifying the architecture if they
+Normally, users don't have to bother specifying the architecture if they
 are installing software for their current host, as in that case the
-values will be detected automatically.  If you need fine-grained control
+values will be detected automatically. If you need fine-grained control
 over which packages use which targets (or over *all* packages' default
 target), see :ref:`package-preferences`.
 
@@ -1469,13 +1469,13 @@ Support for specific microarchitectures
 """""""""""""""""""""""""""""""""""""""
 
 Spack knows how to detect and optimize for many specific microarchitectures
-(including recent Intel, AMD and IBM chips) and encodes this information in
+(including recent Intel, AMD, and IBM chips) and encodes this information in
 the ``target`` portion of the architecture specification. A complete list of
 the microarchitectures known to Spack can be obtained in the following way:
 
 .. command-output:: spack arch --known-targets
 
-When a spec is installed Spack matches the compiler being used with the
+When a spec is installed, Spack matches the compiler being used with the
 microarchitecture being targeted to inject appropriate optimization flags
 at compile time. Giving a command such as the following:
 
@@ -1530,11 +1530,11 @@ of failing:
    zlib@1.2.11%gcc@9.0.1+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
 
 In the snippet above, for instance, the microarchitecture was demoted to ``haswell`` when
-compiling with ``gcc@4.8`` since support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
+compiling with ``gcc@4.8`` because support to optimize for ``broadwell`` starts from ``gcc@4.9:``.
 
 Finally, if Spack has no information to match compiler and target, it will
-proceed with the installation but avoid injecting any microarchitecture
-specific flags.
+proceed with the installation but avoid injecting any microarchitecture-specific
+flags.
 
 .. warning::
 
@@ -1549,10 +1549,10 @@ Virtual dependencies
 --------------------
 
 The dependency graph for ``mpileaks`` we saw above wasn't *quite*
-accurate.  ``mpileaks`` uses MPI, which is an interface that has many
-different implementations.  Above, we showed ``mpileaks`` and
+accurate. ``mpileaks`` uses MPI, which is an interface that has many
+different implementations. Above, we showed ``mpileaks`` and
 ``callpath`` depending on ``mpich``, which is one *particular*
-implementation of MPI.  However, we could build either with another
+implementation of MPI. However, we could build either with another
 implementation, such as ``openmpi`` or ``mvapich``.
 
 Spack represents interfaces like this using *virtual dependencies*.
@@ -1580,12 +1580,12 @@ getting info on it:
 .. command-output:: spack info --virtuals mpich
 
 Spack is unique in that its virtual packages can be versioned, just
-like regular packages.  A particular version of a package may provide
+like regular packages. A particular version of a package may provide
 a particular version of a virtual package, and we can see above that
 ``mpich`` versions ``1`` and above provide all ``mpi`` interface
 versions up to ``1``, and ``mpich`` versions ``3`` and above provide
-``mpi`` versions up to ``3``.  A package can *depend on* a particular
-version of a virtual package, e.g. if an application needs MPI-2
+``mpi`` versions up to ``3``. A package can *depend on* a particular
+version of a virtual package, e.g., if an application needs MPI-2
 functions, it can depend on ``mpi@2:`` to indicate that it needs some
 implementation that provides MPI-2 functions.
 
@@ -1595,13 +1595,13 @@ Constraining virtual packages
 
 When installing a package that depends on a virtual package, you can
 opt to specify the particular provider you want to use, or you can let
-Spack pick.  For example, if you just type this:
+Spack pick. For example, if you just type this:
 
 .. code-block:: console
 
    $ spack install mpileaks
 
-Then spack will pick a provider for you according to site policies.
+Then Spack will pick a provider for you according to site policies.
 If you really want a particular version, say ``mpich``, then you could
 run this instead:
 
@@ -1609,8 +1609,8 @@ run this instead:
 
    $ spack install mpileaks ^mpich
 
-This forces spack to use some version of ``mpich`` for its
-implementation.  As always, you can be even more specific and require
+This forces Spack to use some version of ``mpich`` for its
+implementation. As always, you can be even more specific and require
 a particular ``mpich`` version:
 
 .. code-block:: console
@@ -1618,10 +1618,10 @@ a particular ``mpich`` version:
    $ spack install mpileaks ^mpich@3
 
 The ``mpileaks`` package in particular only needs MPI-1 commands, so
-any MPI implementation will do.  If another package depends on
+any MPI implementation will do. If another package depends on
 ``mpi@2`` and you try to give it an insufficient MPI implementation
 (e.g., one that provides only ``mpi@:1``), then Spack will raise an
-error.  Likewise, if you try to plug in some package that doesn't
+error. Likewise, if you try to plug in some package that doesn't
 provide MPI, Spack will raise an error.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1629,7 +1629,7 @@ Explicit binding of virtual dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are packages that provide more than just one virtual dependency. When interacting with them, users
-might want to utilize just a subset of what they could provide, and use other providers for virtuals they
+might want to utilize just a subset of what they could provide and use other providers for virtuals they
 need.
 
 It is possible to be more explicit and tell Spack which dependency should provide which virtual, using a
@@ -1660,7 +1660,7 @@ discussed the spec hash that Spack computes. In place of a spec in any
 command, substitute ``/<hash>`` where ``<hash>`` is any amount from
 the beginning of a spec hash.
 
-For example, lets say that you accidentally installed two different
+For example, let's say that you accidentally installed two different
 ``mvapich2`` installations. If you want to uninstall one of them but don't
 know what the difference is, you can run:
 
@@ -1702,7 +1702,7 @@ Note that this will not work to reinstall a dependency uninstalled by
 ^^^^^^^^^^^^^^^^^^^
 
 You can see what packages provide a particular virtual package using
-``spack providers``.  If you wanted to see what packages provide
+``spack providers``. If you wanted to see what packages provide
 ``mpi``, you would just run:
 
 .. command-output:: spack providers mpi
@@ -1717,7 +1717,7 @@ versions are now filtered out.
 
 
 -----------------------------
-Deprecating insecure packages
+Deprecating Insecure Packages
 -----------------------------
 
 ``spack deprecate`` allows for the removal of insecure packages with
@@ -1763,7 +1763,7 @@ behavior is symbolic links, but the ``-l/--link-type`` flag can take
 options ``hard`` or ``soft``.
 
 -----------------------
-Verifying installations
+Verifying Installations
 -----------------------
 
 The ``spack verify`` command can be used to verify the validity of
@@ -1776,13 +1776,13 @@ Spack-installed packages any time after installation.
 
 At installation time, Spack creates a manifest of every file in the
 installation prefix. For links, Spack tracks the mode, ownership, and
-destination. For directories, Spack tracks the mode, and
+destination. For directories, Spack tracks the mode and
 ownership. For files, Spack tracks the mode, ownership, modification
 time, hash, and size. The ``spack verify manifest`` command will check,
 for every file in each package, whether any of those attributes have
 changed. It will also check for newly added files or deleted files from
 the installation prefix. Spack can either check all installed packages
-using the `-a,--all` or accept specs listed on the command line to
+using the ``-a,--all`` option or accept specs listed on the command line to
 verify.
 
 The ``spack verify manifest`` command can also verify for individual files
@@ -1798,8 +1798,8 @@ at install time.
 
 The ``spack verify`` command also accepts the ``-l,--local`` option to
 check only local packages (as opposed to those used transparently from
-``upstream`` spack instances) and the ``-j,--json`` option to output
-machine-readable json data for any errors.
+``upstream`` Spack instances) and the ``-j,--json`` option to output
+machine-readable JSON data for any errors.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 ``spack verify libraries``
@@ -1810,7 +1810,7 @@ do not have accidental system dependencies. This command scans the install
 prefixes of packages for executables and shared libraries, and resolves
 their needed libraries in their RPATHs. When needed libraries cannot be
 located, an error is reported. This typically indicates that a package
-was linked against a system library, instead of a library provided by
+was linked against a system library instead of a library provided by
 a Spack package.
 
 This verification can also be enabled as a post-install hook by setting
@@ -1818,14 +1818,14 @@ This verification can also be enabled as a post-install hook by setting
 in :ref:`config.yaml <config-yaml>`.
 
 -----------------------
-Filesystem requirements
+Filesystem Requirements
 -----------------------
 
 By default, Spack needs to be run from a filesystem that supports
-``flock`` locking semantics.  Nearly all local filesystems and recent
+``flock`` locking semantics. Nearly all local filesystems and recent
 versions of NFS support this, but parallel filesystems or NFS volumes may
-be configured without ``flock`` support enabled.  You can determine how
-your filesystems are mounted with ``mount``.  The output for a Lustre
+be configured without ``flock`` support enabled. You can determine how
+your filesystems are mounted with ``mount``. The output for a Lustre
 filesystem might look like this:
 
 .. code-block:: console
@@ -1851,8 +1851,8 @@ If none of those work, you can disable locking in one of two ways:
 .. warning::
 
    If you disable locking, concurrent instances of Spack will have no way
-   to avoid stepping on each other.  You must ensure that there is only
-   **one** instance of Spack running at a time.  Otherwise, Spack may end
+   to avoid stepping on each other. You must ensure that there is only
+   **one** instance of Spack running at a time. Otherwise, Spack may end
    up with a corrupted database file, or you may not be able to see all
    installed packages in commands like ``spack find``.
 
@@ -1883,7 +1883,7 @@ This issue typically manifests with the error below:
      fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
    IOError: [Errno 38] Function not implemented
 
-A nicer error message is TBD in future versions of Spack.
+A nicer error message is to be determined in future versions of Spack.
 
 ---------------
 Troubleshooting
@@ -1894,12 +1894,12 @@ The ``spack audit`` command:
 .. command-output:: spack audit -h
 
 can be used to detect a number of configuration issues. This command detects
-configuration settings which might not be strictly wrong but are not likely
+configuration settings that might not be strictly wrong but are not likely
 to be useful outside of special cases.
 
-It can also be used to detect dependency issues with packages - for example
+It can also be used to detect dependency issues with packages -- for example,
 cases where a package constrains a dependency with a variant that doesn't
-exist (in this case Spack could report the problem ahead of time but
+exist (in this case, Spack could report the problem ahead of time, but
 automatically performing the check would slow down most runs of Spack).
 
 A detailed list of the checks currently implemented for each subcommand can be
@@ -1930,14 +1930,14 @@ Getting Help
 ^^^^^^^^^^^^^^
 
 If you don't find what you need here, the ``help`` subcommand will
-print out out a list of *all* of spack's options and subcommands:
+print out a list of *all* of Spack's options and subcommands:
 
 .. command-output:: spack help
 
-Adding an argument, e.g. ``spack help <subcommand>``, will print out
+Adding an argument, e.g., ``spack help <subcommand>``, will print out
 usage information for a particular subcommand:
 
 .. command-output:: spack help install
 
-Alternately, you can use ``spack --help`` in place of ``spack help``, or
+Alternatively, you can use ``spack --help`` in place of ``spack help``, or
 ``spack <subcommand> --help`` to get help on a particular subcommand.

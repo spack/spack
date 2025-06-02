@@ -408,6 +408,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     with when("+rocm"):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@6.0:", when="@2.14:")
+            depends_on(f"{pkg_dep}@:6.3", when="@:2.18")
             depends_on(pkg_dep)
 
     # Check configure and configure.py to see when these variants are supported
@@ -482,6 +483,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("%clang@:15", when="@2.18:")
     # https://github.com/tensorflow/tensorflow/issues/62416
     conflicts("%clang@17:", when="@:2.14")
+
+    # https://github.com/tensorflow/tensorflow/issues/94277
+    # https://github.com/tensorflow/tensorflow/pull/94289
+    patch("h5py-3.13.0.patch", when="@2.18")
 
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.

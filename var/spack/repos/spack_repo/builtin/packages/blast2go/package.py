@@ -4,23 +4,19 @@
 
 from spack_repo.builtin.build_systems.generic import Package
 
-import archspec
-
 from spack.package import *
 
 
 class Blast2go(Package):
     """Blast2GO is a bioinformatics platform for high-quality functional
-    annotation and analysis of genomic datasets."""
+    annotation and analysis of genomic datasets.
+    """
 
     homepage = "https://www.blast2go.com/"
 
     version("5.2.5", sha256="c37aeda25f96ac0553b52da6b5af3167d50671ddbfb3b39bcb11afe5d0643891")
 
-    for t in set(
-        [str(x.family) for x in archspec.cpu.TARGETS.values() if str(x.family) != "x86_64"]
-    ):
-        conflicts("target={0}:".format(t), msg="blast2go is available x86_64 only")
+    requires("target=x86_64:", msg="blast2go is available x86_64 only")
 
     depends_on("bash", type="build")
     depends_on("blast-plus", type="run")

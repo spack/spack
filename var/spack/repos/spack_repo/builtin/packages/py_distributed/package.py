@@ -42,6 +42,8 @@ class PyDistributed(PythonPackage):
     version("2020.12.0", sha256="2a0b6acc921cd4e0143a7c4383cdcbed7defbc4bd9dc3aab0c7f1c45f14f80e1")
 
     depends_on("python@3.8:", when="@2022.2.1:", type=("build", "run"))
+    # https://github.com/dask/distributed/pull/6605
+    depends_on("python@:3.11", when="@:2022.6.0", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
     depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")

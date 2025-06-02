@@ -17,6 +17,7 @@ class Rocal(CMakePackage):
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
+    version("6.4.0", sha256="6239caa398c2779c1c7ecff3cebe7d206cd2fa591c1800f6f2ae16329876dd4a")
     version("6.3.3", sha256="aaccd951f176356561d8ab8210696d80a94553fd48ace72993a7cfac4b98d6cf")
     version("6.3.2", sha256="ceae8a86770c1f5d8cb56f4c38d6b354e16bda6b877cf93417d6a3e4e33354c6")
     version("6.3.1", sha256="e332c9c2b2eb4081d7dd8a66a141f95fe8c7fccbbfdd0fea7572a62a28a62bbb")
@@ -27,14 +28,21 @@ class Rocal(CMakePackage):
 
     depends_on("libjpeg-turbo@2.0.6+partial_decoder", when="@6.2.0")
     depends_on("libjpeg-turbo@3.0.2:", when="@6.2.1:")
+    depends_on("python@3")
     depends_on("rapidjson")
     depends_on("ffmpeg@4.4:")
     depends_on("abseil-cpp", when="@6.3:")
 
-    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3"]:
+    for ver in ["6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2", "6.3.3", "6.4.0"]:
         depends_on(f"mivisionx@{ver}", when=f"@{ver}")
         depends_on(f"llvm-amdgpu@{ver}", when=f"@{ver}")
         depends_on(f"rpp@{ver}", when=f"@{ver}")
+
+    patch(
+        "https://github.com/ROCm/rocAL/commit/357dfcb25b9ff959615efa45736d4368cf7b51fd.patch?full_index=1",
+        sha256="5df45c3a0e870d6e6310a23071e05f1795a450eef5fde6445cb37caf2653a86f",
+        when="@6.4:",
+    )
 
     def patch(self):
         filter_file(
@@ -113,6 +121,18 @@ class Rocal(CMakePackage):
             args.append(
                 self.define("CMAKE_CXX_FLAGS", "-I{0} -I{1}".format(abspath, rapidjsonpath))
             )
+        if self.spec.satisfies("@6.4.0:"):
+            args.append(
+                self.define("CMAKE_C_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang")
+            )
+            args.append(
+                self.define(
+                    "CMAKE_CXX_COMPILER", f"{self.spec['llvm-amdgpu'].prefix}/bin/amdclang++"
+                )
+            )
+            # force rocAL to use Spack installed python
+            args.append(self.define("PYTHON_VERSION_SUGGESTED", self.spec["python"].version))
+            args.append(self.define("Python3_ROOT_DIR", self.spec["python"].prefix))
         return args
 
     def check(self):

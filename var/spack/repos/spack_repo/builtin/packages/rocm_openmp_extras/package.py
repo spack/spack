@@ -39,6 +39,7 @@ aomp = [
     "8fefdd0d9eecd11866ddecbe039347560469eb69d974934005d480eac4432b81",
     "eeda81dafd17df7e1d2b9dbf91a23924c6dd8de29f0792725fc25a6cd1d9c5fa",
     "b43b889b5778572d6d348c6a6614dc02258212004d1f1f64f0cdc74dc3249e86",
+    "b9b1537fcbb7226d99145a1c01e8c5961ab83a5834286397943ff86676d545ed",
 ]
 
 devlib = [
@@ -64,6 +65,7 @@ devlib = [
     "e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c",
     "1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827",
     "4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d",
+    "dca1c145a23f05229d5d646241f9d1d3c5dbf1d745b338ae020eabe33beb965c",
 ]
 
 llvm = [
@@ -89,6 +91,7 @@ llvm = [
     "e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c",
     "1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827",
     "4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d",
+    "dca1c145a23f05229d5d646241f9d1d3c5dbf1d745b338ae020eabe33beb965c",
 ]
 
 flang = [
@@ -114,6 +117,7 @@ flang = [
     "2e38ba138312d18b2677347839a960802bb04090bb92b5e6a15ac06ed789dbc0",
     "4b4d8025a215c52e62dd6317cafce224d95f91040e90942c9a93ade568a8dd48",
     "e0f650fc633ab4a8eab30b0c1ba0efb46ec596b540c3a4c13ca24d92c512d255",
+    "a51fbdda9d5d968fe6d23eaeabbe04a0db810a88a7a609ae924e3caaed4539f1",
 ]
 
 extras = [
@@ -139,6 +143,7 @@ extras = [
     "4050c60cbbf582122cc0a30b4a99200341c426f2fa3d81ac8dc61f5a0890ed15",
     "70b49c1198bf176498ec4a94584b8ed8a07f623ebfa567e4fcf1a6545b635185",
     "9615235b4d5ae78e43ca4854f316b83e75f7d9ed3fc187ed1869b7d8d7e26341",
+    "105dd0ccae2864275de5a6370010d923d25307e6a8c35af3befdd0064ea743bc",
 ]
 
 versions = [
@@ -164,6 +169,7 @@ versions = [
     "6.3.1",
     "6.3.2",
     "6.3.3",
+    "6.4.0",
 ]
 versions_dict = dict()  # type: Dict[str,Dict[str,str]]
 components = ["aomp", "devlib", "llvm", "flang", "extras"]
@@ -187,6 +193,7 @@ class RocmOpenmpExtras(Package):
     license("Apache-2.0")
 
     maintainers("srekolam", "renjithravindrankannath", "estewart08", "afzpatel")
+    version("6.4.0", sha256=versions_dict["6.4.0"]["aomp"])
     version("6.3.3", sha256=versions_dict["6.3.3"]["aomp"])
     version("6.3.2", sha256=versions_dict["6.3.2"]["aomp"])
     version("6.3.1", sha256=versions_dict["6.3.1"]["aomp"])
@@ -247,6 +254,7 @@ class RocmOpenmpExtras(Package):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")
 
@@ -321,6 +329,7 @@ class RocmOpenmpExtras(Package):
         "6.3.1",
         "6.3.2",
         "6.3.3",
+        "6.4.0",
     ]:
         depends_on(f"comgr@{ver}", when=f"@{ver}")
         depends_on(f"hsa-rocr-dev@{ver}", when=f"@{ver}")
@@ -362,12 +371,20 @@ class RocmOpenmpExtras(Package):
         when="@6.1",
     )
     patch("0001-Avoid-duplicate-registration-on-cuda-env.patch", when="@6.1")
-    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:")
+    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.2.patch", when="@6.2:6.3")
+    patch("0001-Avoid-duplicate-registration-on-cuda-env-6.4.patch", when="@6.4:")
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
-        devlibs_prefix = self.spec["llvm-amdgpu"].prefix
-        llvm_prefix = self.spec["llvm-amdgpu"].prefix
-        hsa_prefix = self.spec["hsa-rocr-dev"].prefix
+        if self.spec.external:
+            devlibs_prefix = self.prefix
+            llvm_prefix = self.prefix
+            # prefix is set to either <rocm_path>/llvm or <rocm_path>/lib/llvm
+            path_parts = self.prefix.rstrip("llvm").rstrip("lib/")
+            hsa_prefix = os.path.dirname(path_parts)
+        else:
+            devlibs_prefix = self.spec["llvm-amdgpu"].prefix
+            llvm_prefix = self.spec["llvm-amdgpu"].prefix
+            hsa_prefix = self.spec["hsa-rocr-dev"].prefix
         env.set("AOMP", f"{llvm_prefix}")
         env.set("HIP_DEVICE_LIB_PATH", f"{devlibs_prefix}/amdgcn/bitcode")
         env.prepend_path("CPATH", f"{self.prefix}/include")
@@ -391,7 +408,10 @@ class RocmOpenmpExtras(Package):
 
     def patch(self):
         src = self.stage.source_path
-        libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
+        if self.spec.satisfies("@6.4:"):
+            libomptarget = "{0}/rocm-openmp-extras/llvm-project/offload"
+        else:
+            libomptarget = "{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget"
         flang = "{0}/rocm-openmp-extras/flang/"
 
         plugin = "/plugins/amdgpu/CMakeLists.txt"

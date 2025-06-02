@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
+
 import llnl.util.tty as tty
 from llnl.string import plural
 
@@ -14,7 +16,7 @@ section = "environments"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-f", "--force", action="store_true", help="re-concretize even if already concretized"
     )

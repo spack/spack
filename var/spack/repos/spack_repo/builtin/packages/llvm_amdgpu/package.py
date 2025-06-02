@@ -7,10 +7,9 @@ import shutil
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
 from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.packages.llvm.package import LlvmDetection
 
 from spack.package import *
-
-from ..llvm.package import LlvmDetection
 
 
 class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
@@ -21,13 +20,9 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     git = "https://github.com/ROCm/llvm-project.git"
     url = "https://github.com/ROCm/llvm-project/archive/rocm-6.2.4.tar.gz"
     tags = ["rocm", "compiler"]
-    executables = [r"amdclang", r"amdclang\+\+", r"amdflang", r"clang.*", r"flang.*", "llvm-.*"]
+    executables = [r"amdclang", r"amdclang\+\+", r"clang.*", "llvm-.*"]
 
-    compiler_wrapper_link_paths = {
-        "c": "rocmcc/amdclang",
-        "cxx": "rocmcc/amdclang++",
-        "fortran": "rocmcc/amdflang",
-    }
+    compiler_wrapper_link_paths = {"c": "rocmcc/amdclang", "cxx": "rocmcc/amdclang++"}
 
     stdcxx_libs = ("-lstdc++",)
 
@@ -38,6 +33,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     license("Apache-2.0")
 
     version("master", branch="amd-stg-open", deprecated=True)
+    version("6.4.0", sha256="dca1c145a23f05229d5d646241f9d1d3c5dbf1d745b338ae020eabe33beb965c")
     version("6.3.3", sha256="4df9aba24e574edf23844c0d2d9dda112811db5c2b08c9428604a21b819eb23d")
     version("6.3.2", sha256="1f52e45660ea508d3fe717a9903fe27020cee96de95a3541434838e0193a4827")
     version("6.3.1", sha256="e9c2481cccacdea72c1f8d3970956c447cec47e18dfb9712cbbba76a2820552c")
@@ -63,7 +59,6 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
         version("5.3.0", sha256="4e3fcddb5b8ea8dcaa4417e0e31a9c2bbdc9e7d4ac3401635a636df32905c93e")
 
     provides("c", "cxx")
-    provides("fortran")
 
     variant(
         "rocm-device-libs",
@@ -88,7 +83,8 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
     provides("libllvm@15", when="@5.3:5.4")
     provides("libllvm@16", when="@5.5:5.6")
     provides("libllvm@17", when="@5.7:6.1")
-    provides("libllvm@18", when="@6.2:")
+    provides("libllvm@18", when="@6.2:6.3")
+    provides("libllvm@19", when="@6.4:")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -179,6 +175,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
         when="@master +rocm-device-libs",
     )
     for d_version, d_shasum in [
+        ("6.4.0", "ff740e8c8f2229c6dc47577363f707b1a44ea4254f8ad74f8f0a669998829535"),
         ("6.3.3", "aa2e30d3d68707d6df4840e954bb08cc13cd312cec1a98a64d97adbe07262f50"),
         ("6.3.2", "aaecaa7206b6fa1d5d7b8f7c1f7c5057a944327ba4779448980d7e7c7122b074"),
         ("6.3.1", "547ceeeda9a41cdffa21e57809dc5834f94938a0a2809c283aebcbcf01901df0"),
@@ -288,7 +285,7 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
             args.append(self.define("CLANG_LINK_CLANG_DYLIB", True))
 
         # Get the GCC prefix for LLVM.
-        if self.compiler.name == "gcc":
+        if self.compiler.name == "gcc" and self.spec.satisfies("@:6.3"):
             args.append(self.define("GCC_INSTALL_PREFIX", self.compiler.prefix))
         if self.spec.satisfies("@5.4.3:"):
             args.append("-DCMAKE_INSTALL_LIBDIR=lib")
@@ -377,6 +374,3 @@ class LlvmAmdgpu(CMakePackage, LlvmDetection, CompilerPackage):
 
     def _cxx_path(self):
         return os.path.join(self.spec.prefix.bin, "amdclang++")
-
-    def _fortran_path(self):
-        return os.path.join(self.spec.prefix.bin, "amdflang")

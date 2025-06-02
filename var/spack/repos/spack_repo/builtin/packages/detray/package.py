@@ -21,6 +21,10 @@ class Detray(CMakePackage):
 
     license("MPL-2.0", checked_by="stephenswat")
 
+    version("0.98.0", sha256="d90c70d2d4bdd9dbd09024ff6990d57f610947c9544afccadf611316de76b2d9")
+    version("0.97.0", sha256="cddee6074b92da9823afe016949c023843d9bc079caddaa7f52900dbefdf64a7")
+    version("0.96.0", sha256="b009fad9780adf2bf8d683469d6167b37b4f682da0dbaf58f9f67166096f9bcc")
+    version("0.95.0", sha256="86cc981eb0105143b971acea3544b9a668326e1027f317d77cf76918f766e7c4")
     version("0.94.0", sha256="a04e8193757846df50d0fbec858744dd66629a98be8ffc6faa04c2ab51770492")
     version("0.93.0", sha256="7d56771d213649de836905efbb21b5be59cc966b00417b0b1fa85bfe12ac92da")
     version("0.92.0", sha256="512669c1ea51936b0fe871fb5a33450b54161e811e48cc51445dc83fe3338c42")
@@ -79,12 +83,14 @@ class Detray(CMakePackage):
     variant("vc", default=True, description="Enable the Vc math plugin")
 
     depends_on("cmake@3.11:", type="build")
+    depends_on("cmake@3.21:", type="build", when="@0.95:")
     depends_on("vecmem@1.6.0:")
     depends_on("vecmem@1.8.0:", when="@0.76:")
     depends_on("covfie@0.10.0:")
     depends_on("nlohmann-json@3.11.0:", when="+json")
     depends_on("dfelibs@20211029:", when="@:0.88")
     depends_on("acts-algebra-plugins@0.18.0: +vecmem")
+    depends_on("acts-algebra-plugins@0.27.0: +vecmem", when="@0.95:")
     depends_on("acts-algebra-plugins +vc", when="+vc")
     depends_on("acts-algebra-plugins +eigen", when="+eigen")
     depends_on("acts-algebra-plugins +smatrix", when="+smatrix")

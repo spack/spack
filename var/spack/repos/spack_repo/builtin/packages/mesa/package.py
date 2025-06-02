@@ -6,7 +6,6 @@ import sys
 from spack_repo.builtin.build_systems import meson
 from spack_repo.builtin.build_systems.meson import MesonPackage
 
-import spack.variant
 from spack.package import *
 
 
@@ -85,9 +84,7 @@ class Mesa(MesonPackage):
     #   @:21  - swr was removed in 22.0
     variant(
         "swr",
-        values=spack.variant.DisjointSetsOfValues(
-            ("none",), ("auto",), ("avx", "avx2", "knl", "skx")
-        )
+        values=disjoint_sets(("none",), ("auto",), ("avx", "avx2", "knl", "skx"))
         .with_non_feature_values("auto")
         .with_non_feature_values("none")
         .with_default("auto"),

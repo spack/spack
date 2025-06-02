@@ -4,13 +4,13 @@
 
 import os
 
-from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems import autotools, cmake
 from spack_repo.builtin.build_systems.cuda import CudaPackage
 
 from spack.package import *
 
 
-class Octopus(AutotoolsPackage, CudaPackage):
+class Octopus(cmake.CMakePackage, autotools.AutotoolsPackage, CudaPackage):
     """A real-space finite-difference (time-dependent) density-functional
     theory code."""
 
@@ -20,8 +20,13 @@ class Octopus(AutotoolsPackage, CudaPackage):
 
     maintainers("fangohr", "RemiLacroix-IDRIS", "iamashwin99")
 
-    license("Apache-2.0")
+    license("GPL-3.0-or-later")
 
+    version(
+        "16.0",
+        sha256="b44067fc96d27891aab331df36ceebde8f7b628b1dca8a967ce9aec5e0543917",
+        url="https://gitlab.com/octopus-code/octopus/-/archive/16.0/octopus-16.0.tar.gz",
+    )
     version("15.1", sha256="6c4deb535ddfcdcdf6f26764b38fb1ad05faa9b418ec18d5d93f8d1040165bda")
     version("15.0", sha256="d339721d06155b3470f5a798c5b1eb3fe6252fa8c4b2a4efe27ed715f60a4313")
     version("14.1", sha256="6955f4020e69f038650a24509ff19ef35de4fd34e181539f92fa432db9b66ca7")
@@ -78,7 +83,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
     variant("likwid", default=False, description="Compile with likwid")
     variant("libvdwxc", default=False, description="Compile with libvdwxc")
     variant("libyaml", default=False, description="Compile with libyaml")
-    variant("elpa", default=False, description="Compile with ELPA")
+    variant("elpa", default=False, when="+scalapack", description="Compile with ELPA")
     variant("etsf-io", default=False, description="Compile with etsf-io")
     variant("nlopt", default=False, description="Compile with nlopt")
     variant(
@@ -89,14 +94,24 @@ class Octopus(AutotoolsPackage, CudaPackage):
     )
     variant("debug", default=False, description="Compile with debug flags")
 
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
-    depends_on("fortran", type="build")  # generated
+    # CMake support introduced in octopus@14 but buggy prior to octopus@16
+    # Autotools support will be removed from Octopus after transition to CMake is complete
+    build_system(
+        conditional("cmake", when="@16:"), conditional("autotools", when="@:15"), default="cmake"
+    )
 
-    depends_on("autoconf", type="build", when="@develop")
-    depends_on("automake", type="build", when="@develop")
-    depends_on("libtool", type="build", when="@develop")
-    depends_on("m4", type="build", when="@develop")
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
+
+    with when("build_system=cmake"):
+        depends_on("cmake@3.25:", type="build", when="@17:")
+        depends_on("cmake@3.20:", type="build", when="@:16")
+        depends_on("pkgconf", type="build")
+        cmake.generator("ninja")
+
+    depends_on("perl", type="build")
+
     depends_on("mpi", when="+mpi")
 
     depends_on("blas")
@@ -108,7 +123,10 @@ class Octopus(AutotoolsPackage, CudaPackage):
     depends_on("libxc@2:3", when="@6:7")
     depends_on("libxc@2:4", when="@8:9")
     depends_on("libxc@5.1.0:6", when="@10:")
-    depends_on("libxc@5.1.0:6", when="@develop")
+    depends_on("libxc@5.1.0:", when="@16:")
+
+    depends_on("spglib@2.1", when="@16")
+
     depends_on("netcdf-fortran", when="+netcdf")  # NetCDF fortran lib without mpi variant
     with when("+mpi"):  # list all the parallel dependencies
         depends_on("fftw@3:+mpi+openmp", when="@8:9")  # FFT library
@@ -122,7 +140,7 @@ class Octopus(AutotoolsPackage, CudaPackage):
             # From octopus@14:, upstream switched support from BerkeleyGW@2.1 to @3.0:
             # see https://gitlab.com/octopus-code/octopus/-/merge_requests/2257
             # BerkeleyGW 2.1 is the last supported version until octopus@14
-            depends_on("berkeleygw@3:+mpi", when="@14:")
+            depends_on("berkeleygw@3+mpi", when="@14:16")
             depends_on("berkeleygw@2.1+mpi", when="@:13")
 
     with when("~mpi"):  # list all the serial dependencies
@@ -156,6 +174,151 @@ class Octopus(AutotoolsPackage, CudaPackage):
     # TODO: etsf-io, sparskit,
     # feast, libfm, pfft, isf, pnfft, poke
 
+    @run_after("install")
+    @on_package_attributes(run_tests=True)
+    def benchmark_tests_after_install(self):
+        """Function stub to run tests after install if desired
+        (for example through `spack install --test=root octopus`)
+        """
+        self.test_version()
+        self.test_example()
+        self.test_he()
+
+    def test_version(self):
+        """Check octopus can execute (--version)"""
+        # Example output:
+        #
+        # spack-v0.17.2$ octopus --version
+        # octopus 11.3 (git commit )
+
+        exe = which(self.spec.prefix.bin.octopus)
+        out = exe("--version", output=str.split, error=str.split)
+        assert "octopus " in out
+
+    def test_recipe(self):
+        """run recipe example"""
+
+        # Octopus expects a file with name `inp` in the current working
+        # directory to read configuration information for a simulation run from
+        # that file. We copy the relevant configuration file in a dedicated
+        # subfolder for the test.
+        #
+        # As we like to be able to run these tests also with the
+        # `spack install --test=root` command, we cannot rely on
+        # self.test_suite.current_test_data_dir, and need to copy the test
+        # input files manually (see below).
+
+        expected = [
+            "Running octopus",
+            "CalculationMode = recipe",
+            "DISCLAIMER: The authors do not " "guarantee that the implementation",
+            "recipe leads to an edible dish, " 'for it is clearly "system-dependent".',
+            "Calculation ended on",
+        ]
+
+        with working_dir("example-recipe", create=True):
+            print("Current working directory (in example-recipe)")
+            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
+            exe = which(self.spec.prefix.bin.octopus)
+            out = exe(output=str.split, error=str.split)
+            check_outputs(expected, out)
+
+    def test_he(self):
+        """run He example"""
+
+        # Octopus expects a file with name `inp` in the current working
+        # directory to read configuration information for a simulation run from
+        # that file. We copy the relevant configuration file in a dedicated
+        # subfolder for the test.
+        #
+        # As we like to be able to run these tests also with the
+        # `spack install --test=root` command, we cannot rely on
+        # self.test_suite.current_test_data_dir, and need to copy the test
+        # input files manually (see below).
+
+        expected = [
+            "Running octopus",
+            "Info: Starting calculation mode.",
+            "CalculationMode = gs",
+            """Species "helium" is a user-defined potential.""",
+            "Info: Writing states.",
+            "Calculation ended on",
+        ]
+
+        with working_dir("example-he", create=True):
+            print("Current working directory (in example-he)")
+            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
+            exe = which(self.spec.prefix.bin.octopus)
+            out = exe(output=str.split, error=str.split)
+            check_outputs(expected, out)
+
+
+class CMakeBuilder(cmake.CMakeBuilder):
+    def invert_bool_variant(self, cmake_var, variant):
+        """
+        Octopus will search for all optional dependencies by default.
+        To disable that set the option -DCMAKE_DISABLE_FIND_PACKAGE_<package>=true
+        when the spec contains ~package.
+        """
+        try:
+            value = self.pkg.spec.variants[variant].value
+        except KeyError:
+            # conditional variants are not in the dict
+            # when they are not available
+            value = False
+        assert isinstance(value, bool)
+        return self.define(cmake_var, not value)
+
+    def cmake_args(self):
+        # TODO
+        # 1. commented options are not yet supported in this package.py file
+        # 2. several variants are not supported in the CMake builder; some of them
+        #    are deprecated/removed in Octopus; cleanup of the package file is required
+        args = [
+            # disable compiling tests; they are (i) not used in the package.py file
+            # and (ii) known to often fail on unseen hardware due to too tight
+            # tolerances
+            self.define("OCTOPUS_UNIT_TESTS", False),
+            self.define("OCTOPUS_APP_TESTS", False),
+            # mimic behaviour of autotools package: unconditionally enable OpenMP
+            # TODO this should become a variant
+            self.define("OCTOPUS_OpenMP", True),
+            self.define_from_variant("OCTOPUS_MPI", "mpi"),
+            self.define_from_variant("OCTOPUS_ScaLAPACK", "scalapack"),
+            self.define_from_variant("OCTOPUS_CUDA", "cuda"),
+            # self.define("OCOTPUS_HIP", "hip"),
+            # self.define("OCTOPUS_OpenCL", "opencl"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_netCDF-Fortran", "netcdf"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_ELPA", "elpa"),
+            # self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_DftbPlus", ""),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_CGAL", "cgal"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_NLopt", "nlopt"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_libvdwxc", "libvdwxc"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_nfft", "nfft"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_pfft", "pfft"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_pnfft", "pnfft"),
+            # self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_PSolver", ),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_BerkeleyGW", "berkleygw"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_METIS", "metis"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_ParMETIS", "parmetis"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_SPARSKIT", "sparskit"),
+            self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_etsf-io", "etsf-io"),
+            # self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_pspio", ),
+            # self.invert_bool_variant("CMAKE_DISABLE_FIND_PACKAGE_GD", ),
+            # TODO ensure octopus picks up the correct libxc
+            # self.define("Libxc_ROOT", self.pkg.spec["libxc"].prefix),
+        ]
+        if "^fftw" in self.spec:
+            args.append(self.define("OCTOPUS_FFTW", True))
+            args.append(self.define("OCTOPUS_MKL", False))
+        else:
+            # TODO add support for MKL and other providers; requires disabling pfft and
+            # a few other variants that are incompatible with MKL's FFT implementation.
+            tty.die(f"Unsupported provider for fftw-api\n{self.spec}")
+        return args
+
+
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         spec = self.spec
         lapack = spec["lapack"].libs
@@ -325,81 +488,3 @@ class Octopus(AutotoolsPackage, CudaPackage):
         args.append("--disable-gdlib")
 
         return args
-
-    @run_after("install")
-    @on_package_attributes(run_tests=True)
-    def benchmark_tests_after_install(self):
-        """Function stub to run tests after install if desired
-        (for example through `spack install --test=root octopus`)
-        """
-        self.test_version()
-        self.test_example()
-        self.test_he()
-
-    def test_version(self):
-        """Check octopus can execute (--version)"""
-        # Example output:
-        #
-        # spack-v0.17.2$ octopus --version
-        # octopus 11.3 (git commit )
-
-        exe = which(self.spec.prefix.bin.octopus)
-        out = exe("--version", output=str.split, error=str.split)
-        assert "octopus " in out
-
-    def test_recipe(self):
-        """run recipe example"""
-
-        # Octopus expects a file with name `inp` in the current working
-        # directory to read configuration information for a simulation run from
-        # that file. We copy the relevant configuration file in a dedicated
-        # subfolder for the test.
-        #
-        # As we like to be able to run these tests also with the
-        # `spack install --test=root` command, we cannot rely on
-        # self.test_suite.current_test_data_dir, and need to copy the test
-        # input files manually (see below).
-
-        expected = [
-            "Running octopus",
-            "CalculationMode = recipe",
-            "DISCLAIMER: The authors do not " "guarantee that the implementation",
-            "recipe leads to an edible dish, " 'for it is clearly "system-dependent".',
-            "Calculation ended on",
-        ]
-
-        with working_dir("example-recipe", create=True):
-            print("Current working directory (in example-recipe)")
-            copy(join_path(os.path.dirname(__file__), "test", "recipe.inp"), "inp")
-            exe = which(self.spec.prefix.bin.octopus)
-            out = exe(output=str.split, error=str.split)
-            check_outputs(expected, out)
-
-    def test_he(self):
-        """run He example"""
-
-        # Octopus expects a file with name `inp` in the current working
-        # directory to read configuration information for a simulation run from
-        # that file. We copy the relevant configuration file in a dedicated
-        # subfolder for the test.
-        #
-        # As we like to be able to run these tests also with the
-        # `spack install --test=root` command, we cannot rely on
-        # self.test_suite.current_test_data_dir, and need to copy the test
-        # input files manually (see below).
-
-        expected = [
-            "Running octopus",
-            "Info: Starting calculation mode.",
-            "CalculationMode = gs",
-            """Species "helium" is a user-defined potential.""",
-            "Info: Writing states.",
-            "Calculation ended on",
-        ]
-
-        with working_dir("example-he", create=True):
-            print("Current working directory (in example-he)")
-            copy(join_path(os.path.dirname(__file__), "test", "he.inp"), "inp")
-            exe = which(self.spec.prefix.bin.octopus)
-            out = exe(output=str.split, error=str.split)
-            check_outputs(expected, out)

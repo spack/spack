@@ -19,6 +19,8 @@ class Su2(MesonPackage):
 
     license("BSD-3-Clause")
 
+    version("8.2.0", commit="a6006047c1d431a7353bd940726a71e648206533", submodules=True)
+    version("8.1.0", commit="a991912e65f927ca9a500cb9600f88c3c739888f", submodules=True)
     version("8.0.1", commit="8ef4b1be045122b2fdb485bfb5fe4eecd1bc4246", submodules=True)
     version("8.0.0", commit="1fe59817e984f67ff55146d90d0059e27b772891", submodules=True)
     version("7.5.1", commit="09ba9e3a9605c02d38290e34f42aa6982cb4dd05", submodules=True)
@@ -139,7 +141,11 @@ class Su2(MesonPackage):
             args.append("-Dmkl_root=" + self.spec["intel-oneapi-mkl"].prefix)
 
         if "+mpi" in self.spec:
-            args.append("-Dwith-mpi=auto")
+            if self.spec["mpi"].name == "intel-oneapi-mpi":
+                args.append("-Dcustom-mpi=true")
+                args.append("-Dextra-deps=impi")
+            else:
+                args.append("-Dwith-mpi=auto")
         else:
             args.append("-Dwith-mpi=disabled")
 

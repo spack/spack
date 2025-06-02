@@ -20,6 +20,8 @@ class HipTests(CMakePackage):
 
     maintainers("srekolam", "renjithravindrankannath", "afzpatel")
 
+    version("6.4.0", sha256="bf609b7b4c7a567ed265d3cb305510321a47c5f311a80ae8d1beed1f4891c070")
+    version("6.3.3", sha256="7c8ccc78bdc7d684f2bc55ef1affa64e7ddad4b2bf28f12a5aede079002b8a12")
     version("6.3.2", sha256="5af72efd608962df5a73c8b66b479954dc432fe01828b671a91bce0451ac688b")
     version("6.3.1", sha256="0fc1cf4f46f2bbef377d65803d86c2489b01b598c468070c79c5114a661f07c6")
     version("6.3.0", sha256="8081d4ab1a43ffa1cebd646668d83008b799ab98c14daf7b455922355a439c8a")
@@ -34,7 +36,19 @@ class HipTests(CMakePackage):
     depends_on("cxx", type="build")  # generated
     depends_on("cmake", type="run")
 
-    for ver in ["6.1.0", "6.1.1", "6.1.2", "6.2.0", "6.2.1", "6.2.4", "6.3.0", "6.3.1", "6.3.2"]:
+    for ver in [
+        "6.1.0",
+        "6.1.1",
+        "6.1.2",
+        "6.2.0",
+        "6.2.1",
+        "6.2.4",
+        "6.3.0",
+        "6.3.1",
+        "6.3.2",
+        "6.3.3",
+        "6.4.0",
+    ]:
         depends_on(f"rocm-cmake@{ver}:", type="build", when=f"@{ver}")
         depends_on(f"hip@{ver}", when=f"@{ver}")
         depends_on(f"rocm-core@{ver}", when=f"@{ver}")

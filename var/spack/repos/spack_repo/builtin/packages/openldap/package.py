@@ -51,6 +51,7 @@ class Openldap(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
+    depends_on("uuid")
     depends_on("icu4c", when="+icu")
 
     with when("~client_only"):

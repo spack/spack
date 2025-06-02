@@ -5,7 +5,6 @@
 from spack_repo.builtin.build_systems.generic import Package
 
 from spack.package import *
-from spack.variant import DisjointSetsOfValues
 
 
 class Spack(Package):
@@ -48,17 +47,15 @@ class Spack(Package):
     variant("development_tools", default=False, description="Build development dependencies")
     variant(
         "fetchers",
-        # TODO: make Spack support default=... with any_combination_of :(
-        values=DisjointSetsOfValues(
-            ("none",), ("curl", "git", "mercurial", "subversion", "s3")
-        ).with_default("git"),
+        values=any_combination_of("curl", "git", "mercurial", "subversion", "s3").with_default(
+            "git"
+        ),
         description="Fetchers for sources and binaries. "
         "By default, urllib is used since Spack 0.17",
     )
     variant(
         "modules",
-        # TODO: make Spack support default=... with any_combination_of :(
-        values=DisjointSetsOfValues(("none",), ("environment-modules", "lmod")).with_default(
+        values=any_combination_of("environment-modules", "lmod").with_default(
             "environment-modules,lmod"
         ),
         description="This variant makes Spack install the specified module system; "

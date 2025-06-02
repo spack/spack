@@ -6,10 +6,9 @@ import pathlib
 import platform
 import sys
 
+import _vendoring.archspec.cpu
 import _vendoring.jinja2
 import pytest
-
-import archspec.cpu
 
 import llnl.util.lang
 
@@ -120,6 +119,8 @@ def binary_compatibility(monkeypatch, request):
         "conflict",
         "conflict~foo%clang",
         "conflict-parent%gcc",
+        # Direct dependency with different deptypes
+        "mpileaks %[deptypes=link] mpich",
     ]
 )
 def spec(request):
@@ -146,12 +147,12 @@ def current_host(request, monkeypatch):
 
     monkeypatch.setattr(spack.platforms.Test, "default", cpu)
     if not is_preference:
-        target = archspec.cpu.TARGETS[cpu]
-        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
+        target = _vendoring.archspec.cpu.TARGETS[cpu]
+        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
         yield target
     else:
-        target = archspec.cpu.TARGETS["sapphirerapids"]
-        monkeypatch.setattr(archspec.cpu, "host", lambda: target)
+        target = _vendoring.archspec.cpu.TARGETS["sapphirerapids"]
+        monkeypatch.setattr(_vendoring.archspec.cpu, "host", lambda: target)
         with spack.config.override("packages:all", {"target": [cpu]}):
             yield target
 
@@ -383,7 +384,7 @@ class TestConcretize:
                 "gcc": {"externals": [gcc11_with_flags]},
             },
         )
-        t = archspec.cpu.host().family
+        t = _vendoring.archspec.cpu.host().family
         client = spack.concretize.concretize_one(
             Spec(
                 f"cmake-client platform=test os=redhat6 target={t} %gcc@11.1.0"
@@ -976,7 +977,7 @@ class TestConcretize:
     def test_adjusting_default_target_based_on_compiler(
         self, spec, compiler_spec, best_achievable, current_host, compiler_factory, mutable_config
     ):
-        best_achievable = archspec.cpu.TARGETS[best_achievable]
+        best_achievable = _vendoring.archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host else current_host
         mutable_config.set(
             "packages", {"gcc": {"externals": [compiler_factory(spec=f"{compiler_spec}")]}}
@@ -1645,7 +1646,7 @@ class TestConcretize:
         # The test architecture uses core2 as the default target. Check that when
         # we configure Spack for "generic" granularity we concretize for x86_64
         default_target = spack.platforms.test.Test.default
-        generic_target = archspec.cpu.TARGETS[default_target].generic.name
+        generic_target = _vendoring.archspec.cpu.TARGETS[default_target].generic.name
         s = Spec("python")
         assert spack.concretize.concretize_one(s).satisfies("target=%s" % default_target)
         with spack.config.override("concretizer:targets", {"granularity": "generic"}):
@@ -2011,7 +2012,7 @@ class TestConcretize:
     def test_require_targets_are_allowed(self, mutable_config, mutable_database):
         """Test that users can set target constraints under the require attribute."""
         # Configuration to be added to packages.yaml
-        required_target = archspec.cpu.TARGETS[spack.platforms.test.Test.default].family
+        required_target = _vendoring.archspec.cpu.TARGETS[spack.platforms.test.Test.default].family
         external_conf = {"all": {"require": f"target={required_target}"}}
         mutable_config.set("packages", external_conf)
 
@@ -2111,7 +2112,7 @@ class TestConcretize:
         prefix = os.path.sep + "fake"
         python_spec = Spec.from_detection("python@=detected", external_path=prefix)
 
-        def find_fake_python(classes, path_hints):
+        def find_fake_python(classes, path_hints, **kwargs):
             return {
                 "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
             }
@@ -3702,3 +3703,51 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
 
     assert s["c"].dag_hash() == installed_spec.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # Simple build requirement on gcc, as a provider for c
+        (
+            "mpileaks %gcc",
+            ["%[deptypes=build] gcc"],
+            ["%[deptypes=link] gcc", "%[deptypes=run] gcc"],
+        ),
+        # Require mpich as a direct dependency of mpileaks
+        (
+            "mpileaks %[deptypes=link] mpich",
+            ["%[deptypes=build,link] mpich", "^callpath%[deptypes=build,link] mpich"],
+            ["%[deptypes=run] mpich"],
+        ),
+        (
+            "mpileaks %[deptypes=link] mpich+debug",  # non-default variant
+            ["%[deptypes=build,link] mpich+debug"],
+            ["% mpich~debug"],
+        ),
+        # Require mpich as a direct dependency of two nodes, with compatible constraints
+        (
+            "mpileaks %mpich+debug ^callpath %mpich@3.0.3",  # non-default variant
+            [
+                "%[deptypes=build,link] mpich@3.0.3+debug",
+                "^callpath %[deptypes=build,link] mpich@3.0.3+debug",
+            ],
+            ["%mpich~debug"],
+        ),
+        # Package that has a conditional link dependency on a compiler
+        ("emacs +native", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %[virtuals=c] gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+    ],
+)
+def test_specifying_direct_dependencies(
+    spec_str, expected, not_expected, default_mock_concretization
+):
+    """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
+    concrete_spec = default_mock_concretization(spec_str)
+
+    for c in expected:
+        assert concrete_spec.satisfies(c)
+
+    for c in not_expected:
+        assert not concrete_spec.satisfies(c)

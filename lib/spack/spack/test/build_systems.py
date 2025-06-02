@@ -5,10 +5,9 @@
 import glob
 import os
 
+import _vendoring.archspec.cpu
 import py.path
 import pytest
-
-import archspec.cpu
 
 import llnl.util.filesystem as fs
 
@@ -217,7 +216,8 @@ class TestAutotoolsPackage:
 
     @pytest.mark.disable_clean_stage_check
     @pytest.mark.skipif(
-        str(archspec.cpu.host().family) != "x86_64", reason="test data is specific for x86_64"
+        str(_vendoring.archspec.cpu.host().family) != "x86_64",
+        reason="test data is specific for x86_64",
     )
     def test_autotools_gnuconfig_replacement_no_gnuconfig(self, mutable_database, monkeypatch):
         """

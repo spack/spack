@@ -21,6 +21,7 @@ class Amdsmi(CMakePackage):
     libraries = ["libamd_smi"]
 
     license("MIT")
+    version("6.4.0", sha256="6f0200ba7305171e9dadbfcd41ff00c194b98d2b88e0555c57739ef01c767233")
     version("6.3.3", sha256="e23abc65a1cd75764d7da049b91cce2a095b287279efcd4f90b4b9b63b974dd5")
     version("6.3.2", sha256="1ed452eedfe51ac6e615d7bfe0bd7a0614f21113874ae3cbea7df72343cc2d13")
     version("6.3.1", sha256="a3a5a711052e813b9be9304d5e818351d3797f668ec2a455e61253a73429c355")
@@ -38,6 +39,7 @@ class Amdsmi(CMakePackage):
     version("5.5.1", sha256="b794c7fd562fd92f2c9f2bbdc2d5dded7486101fcd4598f2e8c3484c9a939281")
     version("5.5.0", sha256="dcfbd96e93afcf86b1261464e008e9ef7e521670871a1885e6eaffc7cdc8f555")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cmake@3.11:")

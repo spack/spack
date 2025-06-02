@@ -241,6 +241,9 @@ class Opencv(CMakePackage, CudaPackage):
         depends_on("java")
         depends_on("ant")
 
+    with when("+ffmpeg"):
+        depends_on("pkgconfig", type="build")
+
     with when("+objc"):
         conflicts("~imgproc")
         conflicts("~objc_bindings_generator")

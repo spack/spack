@@ -26,6 +26,7 @@ import spack.error
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.report
 import spack.spec
 import spack.util.executable
 import spack.util.path
@@ -399,9 +400,10 @@ class PackageTest:
         """
         import spack.build_environment  # avoid circular dependency
 
-        spack.build_environment.start_build_process(
+        process = spack.build_environment.start_build_process(
             self.pkg, test_process, kwargs, timeout=timeout
         )
+        process.complete()
 
     def parts(self) -> int:
         """The total number of (checked) test parts."""
@@ -862,6 +864,8 @@ class TestSuite:
 
         self.counts: "Counter" = Counter()
 
+        self.reports: List[spack.report.RequestRecord] = []
+
     @property
     def name(self) -> str:
         """The name (alias or, if none, hash) of the test suite."""
@@ -890,6 +894,14 @@ class TestSuite:
     ):
         self.write_reproducibility_data()
         for spec in self.specs:
+            # Setup cdash/junit/etc reports
+            report = spack.report.RequestRecord(spec)
+            self.reports.append(report)
+
+            record = spack.report.TestRecord(spec, self.stage)
+            report.append_record(record)
+            record.start()
+
             try:
                 if spec.package.test_suite:
                     raise TestSuiteSpecError(
@@ -917,13 +929,17 @@ class TestSuite:
                 status = self.test_status(spec, externals)
                 self.counts[status] += 1
                 self.write_test_result(spec, status)
+                record.succeed(externals)
 
             except SkipTest:
+                record.skip(msg="Test marked to skip")
                 status = TestStatus.SKIPPED
                 self.counts[status] += 1
                 self.write_test_result(spec, TestStatus.SKIPPED)
 
             except BaseException as exc:
+                record.fail(exc)
+
                 status = TestStatus.FAILED
                 self.counts[status] += 1
                 tty.debug(f"Test failure: {str(exc)}")

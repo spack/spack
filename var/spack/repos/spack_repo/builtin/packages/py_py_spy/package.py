@@ -22,5 +22,6 @@ class PyPySpy(CargoPackage):
     # TODO: uses cargo to download and build dozens of dependencies.
     # Need to figure out how to manage these with Spack once we have a
     # CargoPackage base class.
+    depends_on("c")
     depends_on("unwind")
     depends_on("libunwind components=ptrace", when="^[virtuals=unwind] libunwind")
