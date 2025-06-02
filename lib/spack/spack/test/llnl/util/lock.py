@@ -58,7 +58,9 @@ from multiprocessing import Process, Queue
 import pytest
 
 import llnl.util.lock as lk
-import llnl.util.multiproc as mp
+from multiprocessing import Barrier
+from threading import BrokenBarrierError  # For potential future use with Barrier
+# TimeoutError is a built-in exception since Python 3.3, also potentially raised by Barrier.wait(timeout=...)
 from llnl.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
@@ -229,7 +231,7 @@ def test_poll_interval_generator():
 
 def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
-    b = mp.Barrier(len(functions), timeout=barrier_timeout)
+    b = Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get("extra_args", ()))
     procs = [Process(target=f, args=args, name=f.__name__) for f in functions]
