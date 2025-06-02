@@ -32,6 +32,7 @@ jobs:
                         --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
                         --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \
+                        --path lib/spack/spack/test/__init__.py --path-rename lib/spack/spack/test/__init__.py:repos/spack_repo/builtin/tests/__init__.py \
                         --path lib/spack/spack/test/conftest.py --path-rename lib/spack/spack/test/conftest.py:repos/spack_repo/builtin/tests/conftest.py \
                         --path lib/spack/spack/test/bootstrap.py --path-rename lib/spack/spack/test/bootstrap.py:repos/spack_repo/builtin/tests/bootstrap.py \
                         --path lib/spack/spack/test/build_system_guess.py --path-rename lib/spack/spack/test/build_system_guess.py:repos/spack_repo/builtin/tests/build_system_guess.py \
