@@ -13,14 +13,17 @@ from spack.package import *
 class Jq(AutotoolsPackage):
     """jq is a lightweight and flexible command-line JSON processor."""
 
-    homepage = "https://stedolan.github.io/jq/"
-    url = "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz"
+    homepage = "https://jqlang.org/"
+    url = "https://github.com/jqlang/jq/releases/download/jq-1.6/jq-1.6.tar.gz"
 
     license("MIT")
 
-    version("1.7.1", sha256="478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2")
-    version("1.6", sha256="5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72")
-    version("1.5", sha256="c4d2bfec6436341113419debf479d833692cc5cdab7eb0326b5a4d4fbe9f493c")
+    version("1.8.0", sha256="91811577f91d9a6195ff50c2bffec9b72c8429dc05ec3ea022fd95c06d2b319c")
+    with default_args(deprecated=True):
+        # CVE-2025-48060
+        version("1.7.1", sha256="478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2")
+        version("1.6", sha256="5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72")
+        version("1.5", sha256="c4d2bfec6436341113419debf479d833692cc5cdab7eb0326b5a4d4fbe9f493c")
 
     depends_on("c", type="build")  # generated
 
