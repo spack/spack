@@ -59,13 +59,27 @@ class NodeJs(Package):
     with default_args(deprecated=True):
         # https://github.com/nodejs/node/releases/tag/v22.15.1
         # https://github.com/advisories/GHSA-rrjv-57mm-j6cm
-        version("22.14.0", sha256="6c4e31ed5702dc45cfd8c435af56a36a474427e1bd7afe74c346136060beba8a")
-        version("22.13.1", sha256="e7d5b1e84e7f3c3cebda81e2b138469eef41ba4ecf16a87fd15fc3f7afa3f701")
-        version("22.13.0", sha256="38e15a1d0dd0e95c237bc4651d7c9930a78d3fe7954a7ee7693b403f2d879e46")
-        version("22.12.0", sha256="3157e7c002b6e964bdbefb331ec38db1e2dceb064ab11c038275155461b22ce3")
-        version("22.11.0", sha256="24e5130fa7bc1eaab218a0c9cb05e03168fa381bb9e3babddc6a11f655799222")
-        version("22.4.0", sha256="b62cd83c9a57a11349883f89b1727a16e66c02eb6255a4bf32714ff5d93165f5")
-        version("22.3.0", sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55")
+        version(
+            "22.14.0", sha256="6c4e31ed5702dc45cfd8c435af56a36a474427e1bd7afe74c346136060beba8a"
+        )
+        version(
+            "22.13.1", sha256="e7d5b1e84e7f3c3cebda81e2b138469eef41ba4ecf16a87fd15fc3f7afa3f701"
+        )
+        version(
+            "22.13.0", sha256="38e15a1d0dd0e95c237bc4651d7c9930a78d3fe7954a7ee7693b403f2d879e46"
+        )
+        version(
+            "22.12.0", sha256="3157e7c002b6e964bdbefb331ec38db1e2dceb064ab11c038275155461b22ce3"
+        )
+        version(
+            "22.11.0", sha256="24e5130fa7bc1eaab218a0c9cb05e03168fa381bb9e3babddc6a11f655799222"
+        )
+        version(
+            "22.4.0", sha256="b62cd83c9a57a11349883f89b1727a16e66c02eb6255a4bf32714ff5d93165f5"
+        )
+        version(
+            "22.3.0", sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55"
+        )
         # requires deprecated python versions
         version(
             "14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61"
