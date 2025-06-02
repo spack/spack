@@ -39,8 +39,7 @@ class Aotriton(CMakePackage):
     depends_on("py-filelock", type=("build", "run"))
 
     depends_on("cmake@3.26:", type="build")
-    depends_on("python@:3.11", when="@0.8", type="build")
-    depends_on("python@3.12:", when="@0.9", type="build")
+    depends_on("python@:3.11", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")
     depends_on("xz", type="link")
