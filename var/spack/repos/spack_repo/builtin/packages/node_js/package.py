@@ -39,16 +39,10 @@ class NodeJs(Package):
 
     # LTS (recommended for most users) - even major number
     version(
-        "22.14.0",
-        sha256="6c4e31ed5702dc45cfd8c435af56a36a474427e1bd7afe74c346136060beba8a",
+        "22.16.0",
+        sha256="108f250ff79cc103b464b3ef41fa60f4866e4e6c962117171adaac7325ebdab2",
         preferred=True,
     )
-    version("22.13.1", sha256="e7d5b1e84e7f3c3cebda81e2b138469eef41ba4ecf16a87fd15fc3f7afa3f701")
-    version("22.13.0", sha256="38e15a1d0dd0e95c237bc4651d7c9930a78d3fe7954a7ee7693b403f2d879e46")
-    version("22.12.0", sha256="3157e7c002b6e964bdbefb331ec38db1e2dceb064ab11c038275155461b22ce3")
-    version("22.11.0", sha256="24e5130fa7bc1eaab218a0c9cb05e03168fa381bb9e3babddc6a11f655799222")
-    version("22.4.0", sha256="b62cd83c9a57a11349883f89b1727a16e66c02eb6255a4bf32714ff5d93165f5")
-    version("22.3.0", sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55")
     version("20.18.3", sha256="eba088fa562735140b283c7bb33f53e026ccd5febe68c52c5737ef6e577ec874")
     version("20.18.2", sha256="cf3ef49fafbfee3cdcd936a0d6031341b73bfa6b26a484ea0a4936c26d24b829")
     version("20.18.1", sha256="5bad8ced873eef3b32e7daee703156bce9224920ac6044f4232f5393df0628b8")
@@ -63,6 +57,15 @@ class NodeJs(Package):
     version("14.16.1", sha256="5f5080427abddde7f22fd2ba77cd2b8a1f86253277a1eec54bc98a202728ce80")
     version("14.15.1", sha256="a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe")
     with default_args(deprecated=True):
+        # https://github.com/nodejs/node/releases/tag/v22.15.1
+        # https://github.com/advisories/GHSA-rrjv-57mm-j6cm
+        version("22.14.0", sha256="6c4e31ed5702dc45cfd8c435af56a36a474427e1bd7afe74c346136060beba8a")
+        version("22.13.1", sha256="e7d5b1e84e7f3c3cebda81e2b138469eef41ba4ecf16a87fd15fc3f7afa3f701")
+        version("22.13.0", sha256="38e15a1d0dd0e95c237bc4651d7c9930a78d3fe7954a7ee7693b403f2d879e46")
+        version("22.12.0", sha256="3157e7c002b6e964bdbefb331ec38db1e2dceb064ab11c038275155461b22ce3")
+        version("22.11.0", sha256="24e5130fa7bc1eaab218a0c9cb05e03168fa381bb9e3babddc6a11f655799222")
+        version("22.4.0", sha256="b62cd83c9a57a11349883f89b1727a16e66c02eb6255a4bf32714ff5d93165f5")
+        version("22.3.0", sha256="6326484853093ab6b8f361a267445f4a5bff469042cda11a3585497b13136b55")
         # requires deprecated python versions
         version(
             "14.13.0", sha256="8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61"
