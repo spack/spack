@@ -859,7 +859,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
                 "+hypre": ["-pc_type", "hypre", "-pc_hypre_type", "boomeramg"],
                 "+mkl-pardiso": ["-pc_type", "lu", "-pc_factor_mat_solver_type", "mkl_pardiso"],
             }
-            make("ex50", parallel=False)
+            make("ex50")
             for feature, featureopts in testdict.items():
                 if not feature or feature in self.spec:
                     name = f"_{feature[1:]}" if feature else ""
@@ -877,7 +877,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         w_dir = self.test_suite.current_test_cache_dir.src.ksp.ksp.tutorials
         with working_dir(w_dir):
-            make("ex7", parallel=False)
+            make("ex7")
             exeopts = [
                 "ex7",
                 "-mat_type",
@@ -904,7 +904,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         w_dir = self.test_suite.current_test_cache_dir.src.snes.tutorials
         with working_dir(w_dir):
-            make("ex3k", parallel=False)
+            make("ex3k")
             exeopts = [
                 "ex3k",
                 "-view_initial",
