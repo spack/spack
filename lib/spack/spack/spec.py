@@ -3426,9 +3426,8 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
-            # Skip checking any conditional edge that is not satisfied
-            if rhs_edge.when != Spec() and not self.satisfies(rhs_edge.when):
-                # TODO: this misses the case that the rhs statically satisfies its own condition
+            # The condition cannot be applied in any case, skip the edge
+            if not self.intersects(rhs_edge.when):
                 continue
 
             # If we are checking for ^mpi we need to verify if there is any edge

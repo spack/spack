@@ -3751,3 +3751,31 @@ def test_specifying_direct_dependencies(
 
     for c in not_expected:
         assert not concrete_spec.satisfies(c)
+
+
+@pytest.mark.parametrize(
+    "spec_str,conditional_spec,expected",
+    [
+        # Abstract spec is False, cause the set of possible solutions in the rhs is smaller
+        ("mpich", "%[when=+debug] llvm", (False, True)),
+        # Abstract spec is True, since we know the condition never applies
+        ("mpich~debug", "%[when=+debug] llvm", (True, True)),
+        # In this case we know the condition applies
+        ("mpich+debug", "%[when=+debug] llvm", (False, False)),
+        ("mpich+debug %llvm+clang", "%[when=+debug] llvm", (True, True)),
+        ("mpich+debug", "%[when=+debug] gcc", (False, True)),
+    ],
+)
+def test_satisfies_conditional_spec(
+    spec_str, conditional_spec, expected, default_mock_concretization
+):
+    """Tests satisfies semantic when testing an abstract spec and its concretized counterpart
+    with a conditional spec.
+    """
+    abstract_spec = Spec(spec_str)
+    concrete_spec = default_mock_concretization(spec_str)
+    expected_abstract, expected_concrete = expected
+
+    assert abstract_spec.satisfies(conditional_spec) is expected_abstract
+    assert concrete_spec.satisfies(conditional_spec) is expected_concrete
+    assert concrete_spec.satisfies(abstract_spec)
