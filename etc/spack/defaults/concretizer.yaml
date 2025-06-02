@@ -92,4 +92,4 @@ concretizer:
 
   concretization_cache:
     enable: true
-    url: $misc_cache/concretization
+    url: $user_cache_path/concretization
