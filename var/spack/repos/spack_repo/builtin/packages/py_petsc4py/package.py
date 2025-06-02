@@ -107,6 +107,7 @@ class PyPetsc4py(PythonPackage):
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
+    conflicts("py-cython@3.1:", when="@:3.23.1")
     depends_on("py-cython@3:", when="@3.20:", type="build")
     depends_on("py-cython@0.29.32:", when="^python@3.11:", type="build")
     depends_on("py-cython@0.24:", type="build")
