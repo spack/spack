@@ -2413,6 +2413,7 @@ class PackageInstaller:
 
         mflags = os.environ.get("MAKEFLAGS")
         if mflags and "--jobserver" in mflags:
+            print("ALREADY FOUND JOBSERVER", mflags)
             # Jobserver already set up by Make (through env depfile)
             return None, None
 
