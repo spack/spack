@@ -112,15 +112,6 @@ def split(output):
 pkg = spack.main.SpackCommand("pkg")
 
 
-@pytest.mark.requires_builtin("builtin repository path must exist")
-def test_builtin_repo():
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin")
-
-
-def test_mock_builtin_repo(mock_packages):
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
-
-
 def test_pkg_add(git, mock_pkg_git_repo):
     with working_dir(mock_pkg_git_repo):
         mkdirp("mockpkg_e")
