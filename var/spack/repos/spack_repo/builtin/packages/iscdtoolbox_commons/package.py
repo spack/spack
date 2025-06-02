@@ -27,7 +27,4 @@ class IscdtoolboxCommons(CMakePackage):
     patch("user-defined-prefix-path.patch")
 
     def cmake_args(self):
-        args = []
-        if "+openmp" in self.spec:
-            args.append(self.define_from_variant("OPENMP", "openmp"))
-        return args
+        return [self.define_from_variant("OPENMP", "openmp")]
