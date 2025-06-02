@@ -59,7 +59,6 @@ import pytest
 
 import llnl.util.lock as lk
 from multiprocessing import Barrier
-from threading import BrokenBarrierError  # For potential future use with Barrier
 from llnl.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
