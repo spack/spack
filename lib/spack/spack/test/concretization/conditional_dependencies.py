@@ -7,30 +7,78 @@ import spack.concretize
 import spack.spec
 
 
-@pytest.mark.parametrize("holds,mpi", [(True, "zmpi"), (True, "mpich"), (False, "mpich")])
-def test_conditional_deps(holds, mpi, config, mock_packages):
-    """Test concretizing conditional dependencies.
+@pytest.mark.parametrize(
+    "abstract_spec,expected,not_expected",
+    [
+        # Set +mpi explicitly
+        (
+            "hdf5+mpi ^[when='^mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        (
+            "hdf5+mpi %[when='%mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        (
+            "hdf5+mpi %[when='+mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        (
+            "hdf5+mpi ^[when='^mpi' virtuals=mpi] mpich",
+            ["%[virtuals=mpi] mpich", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] zmpi"],
+        ),
+        (
+            "hdf5+mpi %[when='%mpi' virtuals=mpi] mpich",
+            ["%[virtuals=mpi] mpich", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] zmpi"],
+        ),
+        # Use the default, which is to have +mpi
+        (
+            "hdf5 ^[when='^mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        (
+            "hdf5 %[when='%mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        (
+            "hdf5 %[when='+mpi' virtuals=mpi] zmpi",
+            ["%[virtuals=mpi] zmpi", "^mpi", "%mpi"],
+            ["%[virtuals=mpi] mpich"],
+        ),
+        # Set ~mpi explicitly
+        ("hdf5~mpi ^[when='^mpi' virtuals=mpi] zmpi", [], ["%[virtuals=mpi] zmpi", "^mpi"]),
+        ("hdf5~mpi %[when='%mpi' virtuals=mpi] zmpi", [], ["%[virtuals=mpi] zmpi", "^mpi"]),
+        ("hdf5~mpi %[when='+mpi' virtuals=mpi] zmpi", [], ["%[virtuals=mpi] zmpi", "^mpi"]),
+    ],
+)
+def test_conditional_mpi_dependency(
+    abstract_spec, expected, not_expected, default_mock_concretization
+):
+    """Test concretizing conditional mpi dependencies."""
+    concrete = default_mock_concretization(abstract_spec)
 
-    Tests two cases of the condition being true (2 different implementations)
-    Tests one case for the condition being false
+    for x in expected:
+        assert concrete.satisfies(x), x
 
-    Testing two cases for condition true ensures that the choice of provider is not coincidental
-    """
-    sigil = "+" if holds else "~"
-    request = f"hdf5{sigil}mpi ^[when='^mpi' virtuals=mpi]{mpi}"
-    concrete = spack.concretize.concretize_one(request)
+    for x in not_expected:
+        assert not concrete.satisfies(x), x
 
-    assert (mpi in concrete) == holds
-    assert ("mpi" in concrete) == holds
+    assert concrete.satisfies(abstract_spec)
 
 
 @pytest.mark.parametrize("c", [True, False])
 @pytest.mark.parametrize("cxx", [True, False])
 @pytest.mark.parametrize("fortran", [True, False])
 def test_conditional_compilers(c, cxx, fortran, mutable_config, mock_packages, config_two_gccs):
-    """Test concretizing with conditional compilers
-
-    Tests every combination of +~c, +~cxx, and +~fortran
+    """Test concretizing with conditional compilers, using every combination of +~c, +~cxx,
+    and +~fortran.
     """
     # Abstract spec parametrized to depend/not on c/cxx/fortran
     # and with conditional dependencies for each on the less preferred gcc
