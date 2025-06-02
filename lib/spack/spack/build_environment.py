@@ -1351,6 +1351,7 @@ def start_build_process(
         if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, "fileno"):
             input_fd = Connection(os.dup(sys.stdin.fileno()))
         mflags = os.environ.get("MAKEFLAGS")
+        print("mflags in build environment", mflags)
         if mflags is not None:
             m = re.search(r"--jobserver-[^=]*=(\d),(\d)", mflags)
             if m:
