@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.go
+from spack_repo.builtin.build_systems import go
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.go import GoPackage
+
 from spack.package import *
 
 
@@ -33,7 +36,7 @@ class Ollama(GoPackage, CudaPackage):
     depends_on("git", type="build")
 
 
-class GoBuilder(spack.build_systems.go.GoBuilder):
+class GoBuilder(go.GoBuilder):
     phases = ("generate", "build", "install")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

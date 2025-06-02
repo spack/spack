@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -12,7 +14,7 @@ class Cubelib(AutotoolsPackage):
     url = "https://apps.fz-juelich.de/scalasca/releases/cube/4.4/dist/cubelib-4.4.tar.gz"
 
     maintainers("swat-jsc", "wrwilliams")
-
+    version("4.9", sha256="a0658f5bf3f74bf7dcf465ab6e30476751ad07eb93618801bdcf190ba3029443")
     version("4.8.2", sha256="d6fdef57b1bc9594f1450ba46cf08f431dd0d4ae595c47e2f3454e17e4ae74f4")
     version("4.8.1", sha256="e4d974248963edab48c5d0fc5831146d391b0ae4632cccafe840bf5f12cd80a9")
     version("4.8", sha256="171c93ac5afd6bc74c50a9a58efdaf8589ff5cc1e5bd773ebdfb2347b77e2f68")

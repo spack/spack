@@ -21,7 +21,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="pkg_command")
 
     add_parser = sp.add_parser("add", help=pkg_add.__doc__)
@@ -183,7 +183,7 @@ def pkg_grep(args, unknown_args):
         grep.add_default_arg("--color=auto")
 
     # determines number of files to grep at a time
-    grouper = lambda e: e[0] // 500
+    grouper = lambda e: e[0] // 100
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
     groups = itertools.groupby(enumerate(spack.repo.PATH.all_package_paths()), grouper)

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 
@@ -24,6 +26,7 @@ class E2fsprogs(AutotoolsPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
+    depends_on("uuid")
     depends_on("texinfo", type="build")
     depends_on("fuse", when="+fuse2fs")
     depends_on("pkgconfig", when="+fuse2fs")

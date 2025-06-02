@@ -6,7 +6,6 @@ import os
 
 import spack.repo
 import spack.util.editor
-from spack.build_systems import autotools, cmake
 from spack.main import SpackCommand
 
 edit = SpackCommand("edit")
@@ -29,13 +28,15 @@ def test_edit_packages(monkeypatch, mock_packages: spack.repo.RepoPath):
     assert called
 
 
-def test_edit_files(monkeypatch):
+def test_edit_files(monkeypatch, mock_packages):
     """Test spack edit --build-system autotools cmake"""
     called = False
 
     def editor(*args: str, **kwargs):
         nonlocal called
         called = True
+        from spack_repo.builtin_mock.build_systems import autotools, cmake  # type: ignore
+
         assert os.path.samefile(args[0], autotools.__file__)
         assert os.path.samefile(args[1], cmake.__file__)
 

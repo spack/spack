@@ -55,7 +55,7 @@ Package name
 ^^^^^^^^^^^^
 
 The first thing you'll notice is that Spack prepends ``r-`` to the front
-of the package name. This is how Spack separates R package extensions
+of the package name. This is how Spack separates R extensions
 from the rest of the packages in Spack. Without this, we would end up
 with package name collisions more frequently than we would like. For
 instance, there are already packages for both:
@@ -136,26 +136,26 @@ the same packaging scheme as CRAN packages. What is different is that
 Bioconductor itself is versioned and released. This scheme, using the
 Bioconductor package installer, allows further specification of the minimum
 version of R as well as further restrictions on the dependencies between
-packages than what is possible with the native R packaging system. Spack can
-not replicate these extra features and thus Bioconductor packages in Spack need
+packages than what is possible with the native R packaging system. Spack cannot
+replicate these extra features and thus Bioconductor packages in Spack need
 to be managed as a group during updates in order to maintain package
 consistency with Bioconductor itself.
 
 Another key difference is that, while previous versions of packages are
 available, they are not available from a site that can be programmatically set,
-thus a ``list_url`` attribute can not be used. However, each package is also
+thus a ``list_url`` attribute cannot be used. However, each package is also
 available in a git repository, with branches corresponding to each Bioconductor
 release. Thus, it is always possible to retrieve the version of any package
 corresponding to a Bioconductor release simply by fetching the branch that
 corresponds to the Bioconductor release of the package repository. For this
-reason, spack Bioconductor R packages use the git repository, with the commit
+reason, Spack Bioconductor R packages use the git repository, with the commit
 of the respective branch used in the ``version()`` attribute of the package.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 cran and bioc attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Much like the ``pypi`` attribute for python packages, due to the fact that R
+Much like the ``pypi`` attribute for Python packages, due to the fact that R
 packages are obtained from specific repositories, it is possible to set up shortcut
 attributes that can be used to set ``homepage``, ``url``, ``list_url``, and
 ``git``. For example, the following ``cran`` attribute:
@@ -225,7 +225,7 @@ and list all of their dependencies in the following sections:
 * Imports
 * LinkingTo
 
-As far as Spack is concerned, all 3 of these dependency types
+As far as Spack is concerned, all three of these dependency types
 correspond to ``type=("build", "run")``, so you don't have to worry
 about the details. If you are curious what they mean,
 https://github.com/spack/spack/issues/2951 has a pretty good summary:
@@ -235,8 +235,8 @@ https://github.com/spack/spack/issues/2951 has a pretty good summary:
    so that *the package* importing these packages can access their APIs,
    while *not* being exposed to the user. When a user calls ``library(foo)``
    s/he *attaches* package ``foo`` and all of the packages under ``Depends``.
-   Any function in one of these package can be called directly as ``bar()``.
-   If there are conflicts, user can also specify ``pkgA::bar()`` and
+   Any function in one of these packages can be called directly as ``bar()``.
+   If there are conflicts, a user can also specify ``pkgA::bar()`` and
    ``pkgB::bar()`` to distinguish between them. Historically, there was only
    ``Depends`` and ``Suggests``, hence the confusing names. Today, maybe
    ``Depends`` would have been named ``Attaches``.
@@ -296,7 +296,7 @@ When you install R, there is an option called ``--with-recommended-packages``.
 This flag causes the R installation to include a few "Recommended" packages
 (legacy term). They are for historical reasons quite tied to the core R
 distribution, developed by the R core team or people closely related to it.
-The R core distribution "knows" about these package, but they are indeed
+The R core distribution "knows" about these packages, but they are indeed
 distributed via CRAN. Because they're distributed via CRAN, they can also be
 updated between R version releases.
 
@@ -353,7 +353,7 @@ Passing arguments to the installation
 Some R packages provide additional flags that can be passed to
 ``R CMD INSTALL``, often to locate non-R dependencies.
 `r-rmpi <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/r_rmpi/package.py>`_
-is an example of this, and flags for linking to an MPI library. To pass
+is an example of this, as it uses flags for linking to an MPI library. To pass
 these to the installation command, you can override ``configure_args``
 like so:
 

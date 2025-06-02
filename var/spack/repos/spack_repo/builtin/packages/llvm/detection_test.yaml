@@ -10,7 +10,7 @@ paths:
       echo "InstalledDir: /usr/bin"
   platforms: ["darwin", "linux"]
   results:
-  - spec: 'llvm@3.9.1 +clang~lld~lldb'
+  - spec: 'llvm@3.9.1 +clang~flang~lld~lldb'
     extra_attributes:
       compilers:
         c: ".*/bin/clang-3.9$"
@@ -109,7 +109,7 @@ paths:
 
   platforms: ["darwin", "linux"]
   results:
-  - spec: 'llvm@6.0.1 +clang~lld~lldb'
+  - spec: 'llvm@6.0.1 +clang~flang~lld~lldb'
     extra_attributes:
       compilers:
         c: ".*/bin/clang-6.0$"
@@ -126,7 +126,7 @@ paths:
 
   platforms: ["darwin", "linux"]
   results:
-  - spec: 'llvm@9.0.1 +clang~lld~lldb'
+  - spec: 'llvm@9.0.1 +clang~flang~lld~lldb'
     extra_attributes:
       compilers:
         c: ".*/bin/clang-9.0$"
@@ -158,13 +158,13 @@ paths:
       echo "InstalledDir: /usr/bin"
   platforms: ["darwin", "linux"]
   results:
-  - spec: 'llvm@8.0.0+clang+lld+lldb'
+  - spec: 'llvm@8.0.0+clang~flang+lld+lldb'
     extra_attributes:
       compilers:
         c: ".*/bin/clang-8$"
         cxx: ".*/bin/clang[+][+]-8$"
 
-  - spec: 'llvm@3.9.1+clang~lld~lldb'
+  - spec: 'llvm@3.9.1+clang~flang~lld~lldb'
     extra_attributes:
       compilers:
         c: ".*/bin/clang-3.9$"

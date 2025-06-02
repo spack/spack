@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import copy
 import sys
 
@@ -24,7 +25,7 @@ section = "basic"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     format_group = subparser.add_mutually_exclusive_group()
     format_group.add_argument(
         "--format",

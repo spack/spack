@@ -83,8 +83,8 @@ paths to repositories. Each path is on a separate line starting with
 
 When Spack interprets a spec, e.g., ``mpich`` in ``spack install mpich``,
 it searches these repositories in order (first to last) to resolve each
-package name.  In this example, Spack will look for the following
-packages and use the first valid file:
+package name.  In this example, Spack will look for the package in the
+following paths and use the first valid file:
 
 1. ``/opt/repos/spack_repo/local_repo/packages/mpich/package.py``
 2. ``$spack/var/spack/repos/spack_repo/builtin/packages/mpich/package.py``
@@ -209,7 +209,7 @@ Overriding built-in packages
 Spack's search semantics mean that you can make your own implementation
 of a built-in Spack package (like ``mpich``), put it in a repository, and
 use it to override the built-in package.  As long as the repository
-containing your ``mpich`` is earlier any other in ``repos.yaml``, any
+containing your ``mpich`` is earlier than any other in ``repos.yaml``, any
 built-in package that depends on ``mpich`` will be use the one in your
 repository.
 
@@ -387,7 +387,7 @@ create the corresponding directory structure for you:
 ^^^^^^^^^^^^^^^^^^
 
 Once your repository is created, you can register it with Spack with
-``spack repo add``. You nee to specify the path to the directory that
+``spack repo add``. You need to specify the path to the directory that
 contains the ``repo.yaml`` file.
 
 .. code-block:: console

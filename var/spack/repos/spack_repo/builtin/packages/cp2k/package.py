@@ -5,9 +5,14 @@ import copy
 import os
 import sys
 
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 import spack.util.environment
 from spack.build_environment import dso_suffix
-from spack.build_systems import cmake, makefile
 from spack.package import *
 
 GPU_MAP = {
@@ -166,6 +171,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         when="@2025.2: build_system=cmake",
     )
 
+    variant("vdwxc", default=False, description="Enable VDW support in SIRIUS.", when="+sirius")
+
     variant("deepmd", default=False, description="Enable DeepMD-kit support")
     conflicts("+deepmd", msg="DeepMD-kit is not yet available in Spack")
 
@@ -218,6 +225,7 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
     depends_on("greenx", when="+greenx")
     depends_on("hdf5+hl+fortran", when="+hdf5")
     depends_on("trexio", when="+trexio")
+    depends_on("libvdwxc", when="+vdwxc")
 
     # Force openmp propagation on some providers of blas / fftw-api
     with when("+openmp"):
@@ -339,6 +347,8 @@ class Cp2k(MakefilePackage, CMakePackage, CudaPackage, ROCmPackage):
         depends_on("sirius@7.5:", when="@2024.1:")
         depends_on("sirius@7.6:7.7 +pugixml", when="@2024.2:")
         depends_on("sirius@7.7: +pugixml", when="@2025.2:")
+        depends_on("sirius+vdwxc", when="+vdwxc")
+
     with when("+libvori"):
         depends_on("libvori@201219:", when="@8.1")
         depends_on("libvori@210412:", when="@8.2:")
@@ -1085,6 +1095,7 @@ class CMakeBuilder(cmake.CMakeBuilder):
             self.define_from_variant("CP2K_USE_DEEPMD", "deepmd"),
             self.define_from_variant("CP2K_USE_TREXIO", "trexio"),
             self.define_from_variant("CP2K_USE_GREENX", "greenx"),
+            self.define_from_variant("CP2K_USE_LIBVDWXC", "vdwxc"),
         ]
 
         if spec.satisfies("^[virtuals=fftw-api] fftw+openmp"):

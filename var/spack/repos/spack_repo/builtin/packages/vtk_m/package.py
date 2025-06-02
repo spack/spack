@@ -6,7 +6,10 @@
 import os
 import sys
 
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 

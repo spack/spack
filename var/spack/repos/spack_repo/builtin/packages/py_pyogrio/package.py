@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -19,6 +21,8 @@ class PyPyogrio(PythonPackage):
     version("0.9.0", sha256="6a6fa2e8cf95b3d4a7c0fac48bce6e5037579e28d3eb33b53349d6e11f15e5a8")
 
     depends_on("python@3.8:", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-wheel", type="build")
     depends_on("gdal@2.4:", type=("build", "link", "run"))
     depends_on("py-cython@0.29:", type="build")
     depends_on("py-versioneer@0.28 +toml", type="build")

@@ -158,6 +158,8 @@ def update(data):
     # root replaces install_tree, projections replace install_path_scheme
     changed = False
 
+    data = data["config"]
+
     install_tree = data.get("install_tree", None)
     if isinstance(install_tree, str):
         # deprecated short-form install tree

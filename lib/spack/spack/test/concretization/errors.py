@@ -81,8 +81,10 @@ def test_internal_error_handling_formatting(tmp_path):
     assert "the following specs were not solved:\n    - baz+z\n" in output
     assert (
         "the following specs were concretized, but do not satisfy the input:\n"
-        "    - foo+x\n"
-        "    - bar+y\n"
+        "    - input: foo+x\n"
+        "      output: foo@=1.0~x\n"
+        "    - input: bar+y\n"
+        "      output: x@=1.0~y"
     ) in output
 
     files = {f.name: str(f) for f in tmp_path.glob("spack-asp-*/*.json")}
