@@ -409,10 +409,14 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     patch("PR152569-Update-spack-includes-2.5.patch", when="@2.5+rocm")
     patch("PR152569-Update-spack-includes-2.6.patch", when="@2.6+rocm")
     patch("PR152569-Update-spack-includes-2.7.patch", when="@2.7+rocm")
+
+    # https://github.com/pytorch/pytorch/pull/147993
+    # prevents pytorch from potentially using system version of config.h
+    # and instead prioritize the CK submodule's version
     patch(
         "https://github.com/pytorch/pytorch/commit/38e81a53324146d445a81eb8f80bccebe623eb35.patch?full_index=1",
         sha256="ef05dfff1502963b87679295c07d5f2bd452879708f7124274cc549ed67cd587",
-        when="@2.6:+rocm",
+        when="@2.6:2.7+rocm",
     )
 
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
