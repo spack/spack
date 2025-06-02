@@ -30,6 +30,7 @@ class Msvc(Package, CompilerPackage):
     """
 
     homepage = "https://visualstudio.microsoft.com/vs/features/cplusplus/"
+    has_code = False
 
     has_code = False
 

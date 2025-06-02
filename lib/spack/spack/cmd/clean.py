@@ -30,7 +30,7 @@ class AllClean(argparse.Action):
         parser.parse_args(["-sdfmp"], namespace=namespace)
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-s", "--stage", action="store_true", help="remove all temporary build stages (default)"
     )

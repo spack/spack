@@ -30,11 +30,7 @@ class Ip(CMakePackage):
     version("4.2.0", sha256="9b9f47106822044ff224c6dfd9f140c146dffc833904f2a0c5db7b5d8932e39e")
     version("4.1.0", sha256="b83ca037d9a5ad3eb0fb1acfe665c38b51e01f6bd73ce9fb8bb2a14f5f63cdbe")
     version("4.0.0", sha256="a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8")
-    version(
-        "3.3.3",
-        sha256="d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633",
-        preferred=True,
-    )
+    version("3.3.3", sha256="d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633")
 
     variant("openmp", description="Enable OpenMP threading", default=True)
     variant("pic", default=True, description="Build with position-independent-code")
@@ -73,7 +69,7 @@ class Ip(CMakePackage):
     depends_on("sp precision=d", when="@4.1:4 precision=d")
     depends_on("sp precision=8", when="@4.1:4 precision=8")
     depends_on("lapack", when="@5.1:")
-    depends_on("cmake@3.18:", when="@5.1:")
+    depends_on("cmake@3.18:", when="@5.1:", type="build")
 
     def cmake_args(self):
         args = [
@@ -126,4 +122,7 @@ class Ip(CMakePackage):
     @when("@4:")
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("@5.2:"):
+                ctest("-L", "NO_INPUT_DATA")
+            else:
+                ctest()

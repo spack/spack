@@ -21,6 +21,7 @@ class WrfIo(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "Hang-Lei-NOAA", "edwardhartnett")
 
     version("develop", branch="develop")
+    version("1.3.0", sha256="9db9ac09271a9193d58284590e5cba7dcc7270e4649a7d0cae3a979dcabe6f0b")
     version("1.2.0", sha256="000cf5294a2c68460085258186e1f36c86d3d0d9c433aa969a0f92736b745617")
 
     variant("openmp", default=False, description="Enable multithreading with OpenMP")
@@ -30,6 +31,8 @@ class WrfIo(CMakePackage):
 
     depends_on("netcdf-c")
     depends_on("netcdf-fortran")
+
+    conflicts("%oneapi", when="@:1.2")
 
     def cmake_args(self):
         args = [self.define_from_variant("OPENMP", "openmp")]

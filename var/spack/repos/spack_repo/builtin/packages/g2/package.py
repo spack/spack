@@ -25,6 +25,7 @@ class G2(CMakePackage):
     license("LGPL-3.0")
 
     version("develop", branch="develop")
+    version("4.0.0", sha256="9559590b021ac0be462d975dddb92b0a1e368071aa6b13d59ce35dad8a4649fd")
     version("3.5.1", sha256="a9acdb5d23eca532838f21c4a917727ac85851fc9e1f100d65a6f27c1a563998")
     version("3.5.0", sha256="3ff59a705bedf56061bba2d667a04391d82701847f93ea5fa1c1d3bd335d07da")
     version("3.4.9", sha256="6edc33091f6bd2acb191182831499c226a1c3992c3acc104d6363528b12dfbae")
@@ -63,23 +64,21 @@ class G2(CMakePackage):
     # Required dependencies
     depends_on("jasper@:2.0.32", when="@:3.4.7")
     depends_on("jasper")
+    depends_on("g2c@2.1:", when="@4:")
+    depends_on("g2c +aec", when="+aec")
+    depends_on("g2c +utils", type="test")
     depends_on("libpng")
-    depends_on("g2c@2:", when="@4:")
-    depends_on("g2c@2: +aec", when="+aec")
-    depends_on("zlib-api", when="@4:")
+    depends_on("zlib-api", when="+utils +w3emc")
     depends_on("bacio", when="@3.4.6:")
-    depends_on("ip@3.3.3:", when="@4:")
+    depends_on("ip@3.3.3:", when="+utils +w3emc")
     requires("^ip precision=d", when="^ip@4.1:")
-    depends_on("sp", when="^ip@:4")
-    requires("^sp precision=d", when="^ip@:4 ^sp@2.4:")
-    depends_on("g2c@1.8: +utils", when="+g2c_compare")
-
+    depends_on("sp", when="+utils +w3emc ^ip@:4")
+    requires("sp precision=d", when="^sp@2.4:")
     with when("+w3emc"):
         depends_on("w3emc")
         depends_on("w3emc precision=4", when="precision=4")
         depends_on("w3emc precision=d", when="precision=d")
-        depends_on("w3emc +extradeps", when="+utils")
-        depends_on("w3emc precision=4,d", when="+utils")
+        depends_on("w3emc +extradeps precision=4,d", when="+utils")
 
     def cmake_args(self):
         args = [

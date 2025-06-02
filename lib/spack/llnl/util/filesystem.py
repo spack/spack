@@ -1030,6 +1030,7 @@ def replace_directory_transaction(directory_name):
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
+
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     directory_name = os.path.abspath(directory_name)
