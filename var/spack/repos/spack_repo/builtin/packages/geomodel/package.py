@@ -76,6 +76,7 @@ class Geomodel(CMakePackage):
     depends_on("cxx", type="build")
 
     depends_on("cmake@3.16:", type="build")
+    depends_on("cmake@:3", when="@:6.10", type="build")
 
     depends_on("eigen@3.2.9:")
     depends_on("nlohmann-json@3.6.1:")
@@ -98,7 +99,7 @@ class Geomodel(CMakePackage):
         depends_on("coin3d")
         depends_on("soqt")
         depends_on("gl")
-        depends_on("opengl", when="@6.11:")
+        depends_on("egl", when="@6.11:")
 
     depends_on("googletest", when="@6.11:")
 
