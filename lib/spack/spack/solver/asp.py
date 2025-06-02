@@ -3247,10 +3247,6 @@ class SpackSolverSetup:
         self.gen.h1("Spec Constraints")
         self.literal_specs(specs)
 
-        # Write out triggers/effects from literal specs
-        self.trigger_rules()
-        self.effect_rules()
-
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
@@ -3393,6 +3389,8 @@ class SpackSolverSetup:
             if self.concretize_everything:
                 self.gen.fact(fn.solve_literal(trigger_id))
 
+        # Trigger rules are needed to allow conditional specs
+        self.trigger_rules()
         self.effect_rules()
 
     def generate_conditional_dep_conditions(self, spec: spack.spec.Spec, condition_id: int):
