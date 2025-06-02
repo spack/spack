@@ -3431,7 +3431,8 @@ class Spec:
                 continue
 
             # If we are checking for ^mpi we need to verify if there is any edge
-            if spack.repo.PATH.is_virtual(rhs_edge.spec.name):
+            is_virtual_node = spack.repo.PATH.is_virtual(rhs_edge.spec.name)
+            if is_virtual_node:
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if rhs_edge.direct:
@@ -3464,8 +3465,9 @@ class Spec:
                         return False
 
                 else:
+                    name = rhs_edge.spec.name if not is_virtual_node else None
                     candidate_edges = current_node.edges_to_dependencies(
-                        name=rhs_edge.spec.name, virtuals=rhs_edge.virtuals or None
+                        name=name, virtuals=rhs_edge.virtuals or None
                     )
                     # Select at least the deptypes on the rhs_edge
                     candidates = [
