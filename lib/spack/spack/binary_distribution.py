@@ -723,7 +723,6 @@ def _read_specs_and_push_index(
         try:
             cache_entry = read_method(file)
             spec_dict = cache_entry.fetch_metadata()
-            cache_entry.destroy()
             fetched_spec = spack.spec.Spec.from_dict(spec_dict)
         except Exception as e:
             tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
