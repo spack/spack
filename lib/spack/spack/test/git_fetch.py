@@ -446,4 +446,4 @@ def test_commit_variant_clone(
     s.variants["commit"] = SingleValuedVariant("commit", test_commit)
     s.package.do_stage()
     with working_dir(s.package.stage.source_path):
-        assert git("rev-parse", "HEAD~1", output=str, error=str).strip() == test_commit
+        assert git("rev-parse", "HEAD", output=str, error=str).strip() == test_commit
