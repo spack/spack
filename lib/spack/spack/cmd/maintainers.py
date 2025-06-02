@@ -16,7 +16,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     maintained_group = subparser.add_mutually_exclusive_group()
     maintained_group.add_argument(
         "--maintained",

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import errno
 import glob
 import os
@@ -18,7 +19,7 @@ section = "packaging"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     excl_args = subparser.add_mutually_exclusive_group()
 
     # Various types of Spack files that can be edited

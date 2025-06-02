@@ -11,6 +11,7 @@ import spack.environment
 import spack.package_base
 import spack.paths
 import spack.repo
+import spack.schema.repos
 import spack.spec
 import spack.util.file_cache
 import spack.util.naming
@@ -537,7 +538,7 @@ def test_environment_activation_updates_repo_path(tmp_path: pathlib.Path):
         """\
 spack:
     repos:
-    - $env/foo/spack_repo/bar
+        bar: $env/foo/spack_repo/bar
 """
     )
     env = spack.environment.Environment(tmp_path)
@@ -551,3 +552,14 @@ spack:
         assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
 
     assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+
+def test_repo_update(tmp_path: pathlib.Path):
+    existing_root, _ = spack.repo.create_repo(str(tmp_path), namespace="foo")
+    nonexisting_root = str(tmp_path / "nonexisting")
+    config = {"repos": [existing_root, nonexisting_root]}
+    assert spack.schema.repos.update(config)
+    assert config["repos"] == {
+        "foo": existing_root,
+        # non-existing root is removed for simplicity; would be a warning otherwise.
+    }

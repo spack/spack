@@ -438,7 +438,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
-        for i, entry in enumerate(repos_specs):
+        for name, entry in list(repos_specs.items()):
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -448,7 +448,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
 
-            repos_specs[i] = expanded_path
+            repos_specs[name] = expanded_path
 
         spack.config.set("repos", repos_specs, scope=env.scope_name)
 
@@ -1869,6 +1869,10 @@ class Environment:
         roots = self.concrete_roots()
         specs = specs if specs is not None else roots
 
+        # Extract reporter arguments
+        reporter = install_args.pop("reporter", None)
+        report_file = install_args.pop("report_file", None)
+
         # Extend the set of specs to overwrite with modified dev specs and their parents
         install_args["overwrite"] = {
             *install_args.get("overwrite", ()),
@@ -1881,7 +1885,17 @@ class Environment:
             *(s.dag_hash() for s in roots),
         }
 
-        PackageInstaller([spec.package for spec in specs], **install_args).install()
+        try:
+            builder = PackageInstaller([spec.package for spec in specs], **install_args)
+            builder.install()
+        finally:
+            if reporter:
+                if isinstance(builder.reports, dict):
+                    reporter.build_report(report_file, list(builder.reports.values()))
+                elif isinstance(builder.reports, list):
+                    reporter.build_report(report_file, builder.reports)
+                else:
+                    raise TypeError("builder.reports must be either a dictionary or a list")
 
     def all_specs_generator(self) -> Iterable[Spec]:
         """Returns a generator for all concrete specs"""

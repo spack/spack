@@ -68,13 +68,12 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
-
-from ..enums import ConfigScopePriority
 
 mirror_cmd = SpackCommand("mirror")
 

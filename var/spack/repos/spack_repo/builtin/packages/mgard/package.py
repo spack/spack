@@ -19,6 +19,8 @@ class Mgard(CMakePackage, CudaPackage):
     git = "https://github.com/robertu94/MGARD"
 
     maintainers("robertu94")
+    maintainers("vicentebolea")
+    maintainers("kmorel")
 
     tags = ["e4s"]
 

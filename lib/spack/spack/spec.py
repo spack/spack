@@ -3430,11 +3430,15 @@ class Spec:
                         return False
 
                 else:
-                    candidates = current_node.dependencies(
-                        name=rhs_edge.spec.name,
-                        deptype=rhs_edge.depflag,
-                        virtuals=rhs_edge.virtuals or None,
+                    candidate_edges = current_node.edges_to_dependencies(
+                        name=rhs_edge.spec.name, virtuals=rhs_edge.virtuals or None
                     )
+                    # Select at least the deptypes on the rhs_edge
+                    candidates = [
+                        x.spec
+                        for x in candidate_edges
+                        if ((x.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                    ]
                     if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
                         return False
 
