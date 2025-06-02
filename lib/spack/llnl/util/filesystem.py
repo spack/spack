@@ -1435,7 +1435,7 @@ def visit_directory_tree(
         try:
             isdir = f.is_dir()
         except OSError as e:
-            if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
+            if sys.platform == "win32" and e.errno == errno.EACCES and islink:
                 # if path is a symlink, determine destination and evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
                 # link_target might be relative but resolve_link_target_relative_to_the_link
