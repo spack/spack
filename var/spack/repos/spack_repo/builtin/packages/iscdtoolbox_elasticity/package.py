@@ -28,4 +28,6 @@ class IscdtoolboxElasticity(CMakePackage):
     depends_on("iscdtoolbox_commons +openmp", when="+openmp")
     depends_on("iscdtoolbox_commons ~openmp", when="~openmp")
 
+    # Allow to specify the compilation options and the install prefix
+    # instead of being forced to use built-in ones
     patch("user-defined-prefix-path.patch")

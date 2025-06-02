@@ -24,6 +24,8 @@ class IscdtoolboxCommons(CMakePackage):
 
     variant("openmp", default=False, description="Enable OpenMP support")
 
+    # Allow to specify the compilation options and the install prefix
+    # instead of being forced to use built-in ones
     patch("user-defined-prefix-path.patch")
 
     def cmake_args(self):
