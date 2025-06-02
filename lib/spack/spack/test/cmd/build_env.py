@@ -81,7 +81,7 @@ def test_cd(cd_key, tmpdir, monkeypatch, capfd):
 
         pwd = os.getcwd()
         spec = Spec("zlib").concretized()
-        run_command_in_subshell(spec, Context.BUILD, [cmd], cd_arg=cd_key)
+        run_command_in_subshell(spec, Context.BUILD, cmd, cd_arg=cd_key)
 
         output = capfd.readouterr()
         assert pwd not in output.out
