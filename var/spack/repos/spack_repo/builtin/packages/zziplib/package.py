@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
+from spack_repo.builtin.build_systems import autotools
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -40,5 +43,5 @@ class Zziplib(AutotoolsPackage, CMakePackage):
     depends_on("unzip", type="build", when="@0.13.72:")
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     build_directory = "spack-build"

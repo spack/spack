@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack.package import *
+from spack_repo.builtin.build_systems.bundle import BundlePackage
+from spack_repo.builtin.build_systems.compiler import CompilerPackage
+from spack_repo.builtin.packages.llvm.package import LlvmDetection
 
-from ..llvm.package import LlvmDetection
+from spack.package import *
 
 
 class AppleClang(BundlePackage, LlvmDetection, CompilerPackage):

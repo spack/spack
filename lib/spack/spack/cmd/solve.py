@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import re
 import sys
 
@@ -25,7 +26,7 @@ level = "long"
 show_options = ("asp", "opt", "output", "solutions")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     # Solver arguments
     subparser.add_argument(
         "--show",

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import io
 import sys
 
@@ -15,7 +16,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.epilog = "If called without argument returns the list of all valid virtual packages"
     subparser.add_argument(
         "virtual_package", nargs="*", help="find packages that provide this virtual package"

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -34,6 +36,7 @@ class PyMaturin(PythonPackage):
     with default_args(type=("build", "run")):
         depends_on("py-tomli@1.1:", when="^python@:3.10")
         for rust, maturin in [
+            ("1.74", "1.8"),
             ("1.70", "1.5.0"),
             ("1.64", "1.0.0"),
             ("1.62", "0.14.3"),

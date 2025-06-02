@@ -1,9 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.package import *
+from spack_repo.builtin.packages.apple_gl.package import AppleGlBase
 
-from ..apple_gl.package import AppleGlBase
+from spack.package import *
 
 
 class AppleGlu(AppleGlBase):

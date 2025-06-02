@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-import spack.build_systems.cmake
-import spack.build_systems.generic
+from spack_repo.builtin.build_systems import cmake, generic
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -139,7 +141,7 @@ class AnyBuilder(BaseBuilder):
         ]
 
 
-class CMakeBuilder(AnyBuilder, spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(AnyBuilder, cmake.CMakeBuilder):
     def cmake_args(self):
         if self.pkg.version > Version("5.2.1"):
             _blaslib_key = "enable_internal_blaslib"
@@ -164,7 +166,7 @@ class CMakeBuilder(AnyBuilder, spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class GenericBuilder(AnyBuilder, spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(AnyBuilder, generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         """Use autotools before version 5"""
         # Define make.inc file

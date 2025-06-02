@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -17,6 +19,8 @@ class Ip(CMakePackage):
     maintainers("AlexanderRichert-NOAA", "edwardhartnett", "Hang-Lei-NOAA")
 
     version("develop", branch="develop")
+    version("5.3.0", sha256="17dfcb52bab58d3f1bcbbdda5e76430020d963097139e1ba240bfc5fb5c5a5d1")
+    version("5.2.0", sha256="2f7b44abcf24e448855f57d107db55d3d58cbc271164ba083491d0c07a7ea3d0")
     version("5.1.0", sha256="5279f11f4c12db68ece74cec392b7a2a6b5166bc505877289f34cc3149779619")
     version("5.0.0", sha256="54b2987bd4f94adc1f7595d2a384e646019c22d163bcd30840a916a6abd7df71")
     version("4.4.0", sha256="858d9201ce0bc4d16b83581ef94a4a0262f498ed1ea1b0535de2e575da7a8b8c")
@@ -26,11 +30,7 @@ class Ip(CMakePackage):
     version("4.2.0", sha256="9b9f47106822044ff224c6dfd9f140c146dffc833904f2a0c5db7b5d8932e39e")
     version("4.1.0", sha256="b83ca037d9a5ad3eb0fb1acfe665c38b51e01f6bd73ce9fb8bb2a14f5f63cdbe")
     version("4.0.0", sha256="a2ef0cc4e4012f9cb0389fab6097407f4c623eb49772d96eb80c44f804aa86b8")
-    version(
-        "3.3.3",
-        sha256="d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633",
-        preferred=True,
-    )
+    version("3.3.3", sha256="d5a569ca7c8225a3ade64ef5cd68f3319bcd11f6f86eb3dba901d93842eb3633")
 
     variant("openmp", description="Enable OpenMP threading", default=True)
     variant("pic", default=True, description="Build with position-independent-code")
@@ -69,7 +69,7 @@ class Ip(CMakePackage):
     depends_on("sp precision=d", when="@4.1:4 precision=d")
     depends_on("sp precision=8", when="@4.1:4 precision=8")
     depends_on("lapack", when="@5.1:")
-    depends_on("cmake@3.18:", when="@5.1:")
+    depends_on("cmake@3.18:", when="@5.1:", type="build")
 
     def cmake_args(self):
         args = [
@@ -122,4 +122,7 @@ class Ip(CMakePackage):
     @when("@4:")
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("@5.2:"):
+                ctest("-L", "NO_INPUT_DATA")
+            else:
+                ctest()

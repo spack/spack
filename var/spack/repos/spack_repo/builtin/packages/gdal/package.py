@@ -5,8 +5,10 @@
 import os
 import sys
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage, generator
+from spack_repo.builtin.build_systems.python import PythonExtension
+
 from spack.package import *
 from spack.util.environment import filter_system_paths
 

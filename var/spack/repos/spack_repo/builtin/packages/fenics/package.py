@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
-from spack.package import *
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Fenics(CMakePackage):

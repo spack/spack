@@ -4,7 +4,10 @@
 
 import sys
 
-import spack.build_systems.cmake
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -119,7 +122,7 @@ class LibjpegTurbo(CMakePackage, AutotoolsPackage):
         return find_libraries(name, root=self.prefix, shared=shared, recursive=True, runtime=False)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define("ENABLE_SHARED", self.spec.satisfies("libs=shared")),

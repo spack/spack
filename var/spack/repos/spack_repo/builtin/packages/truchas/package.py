@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -85,8 +87,8 @@ class Truchas(CMakePackage):
     # ------------------------------------------------------------ #
     # Solvers
     # ------------------------------------------------------------ #
-    depends_on("hypre@2.29: ~fortran", when="@24.06:")
-    depends_on("hypre@2.20:2.28 ~fortran", when="@:24.05")
+    depends_on("hypre@2.29:", when="@24.06:")
+    depends_on("hypre@2.20:2.28", when="@:24.05")
     depends_on("lapack")
 
     # ------------------------------------------------------------ #

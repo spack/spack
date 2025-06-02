@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -16,12 +19,17 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     git = "https://github.com/celeritas-project/celeritas.git"
     url = "https://github.com/celeritas-project/celeritas/releases/download/v0.1.0/celeritas-0.1.0.tar.gz"
 
-    maintainers("sethrj")
+    maintainers("sethrj", "drbenmorgan")
 
     license("Apache-2.0")
 
+    sanity_check_is_file = ["bin/celer-sim"]
+
     version("develop", branch="develop", get_full_repo=True)
 
+    version("0.6.0", sha256="c776dee357ecff42f85ed02c328f24b092400af28e67af2c0e195ce8f67613b0")
+    version("0.5.3", sha256="4d1fe1f34e899c3599898fb6d44686d2582a41b0872784514aa8c562597b3ee6")
+    version("0.5.2", sha256="46311c096b271d0331b82c02485ac6bf650d5b0f7bd948fb01aef5058f8824e3")
     version("0.5.1", sha256="182d5466fbd98ba9400b343b55f6a06e03b77daed4de1dd16f632ac0a3620249")
     version("0.5.0", sha256="4a8834224d96fd01897e5872ac109f60d91ef0bd7b63fac05a73dcdb61a5530e")
     version("0.4.4", sha256="8b5ae63aa2d50c2ecf48d752424e4a33c50c07d9f0f5ca5448246de3286fd836")
@@ -56,11 +64,13 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
         multi=False,
         description="C++ standard version",
     )
+    variant("covfie", default=False, when="@0.6:", description="Enable covfie magnetic fields")
     variant("debug", default=False, description="Enable runtime debug assertions")
     variant("doc", default=False, description="Build and install documentation")
     variant("geant4", default=True, description="Enable Geant4 integration")
     variant("hepmc3", default=True, description="Use HepMC3 I/O interfaces")
     variant("openmp", default=False, description="Use OpenMP multithreading")
+    variant("perfetto", default=False, when="@0.5:", description="Use Perfetto profiling")
     variant("root", default=False, description="Use ROOT I/O")
     variant("shared", default=True, description="Build shared libraries")
     variant("swig", default=False, when="@:0.4", description="Generate SWIG Python bindings")
@@ -72,7 +82,9 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("cmake@3.18:", type="build", when="+cuda+vecgeom")
     depends_on("cmake@3.22:", type="build", when="+rocm")
 
+    depends_on("cli11", when="@0.6:")
     depends_on("nlohmann-json")
+    depends_on("covfie@0.13:", when="+covfie")
     depends_on("geant4@10.5:11.1", when="@0.3.1:0.4.1 +geant4")
     depends_on("geant4@10.5:11.2", when="@0.4.2:0.4 +geant4")
     depends_on("geant4@10.5:", when="@0.5: +geant4")
@@ -101,14 +113,20 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
     for _std in _cxxstd_values:
         for _pkg in ["geant4", "root", "vecgeom"]:
             depends_on(f"{_pkg} cxxstd={_std}", when=f"+{_pkg} cxxstd={_std}")
+        # NOTE: as a private dependency, covfie cxxstd can differ from the
+        # celeritas "public" standard
 
     # Ensure consistent CUDA architectures
     depends_on("vecgeom +cuda cuda_arch=none", when="+vecgeom +cuda cuda_arch=none")
     for _arch in CudaPackage.cuda_arch_values:
-        depends_on(f"vecgeom +cuda cuda_arch={_arch}", when=f"+vecgeom +cuda cuda_arch={_arch}")
+        for _pkg in ["covfie", "vecgeom"]:
+            depends_on(f"{_pkg} +cuda cuda_arch={_arch}", when=f"+{_pkg} +cuda cuda_arch={_arch}")
 
+    conflicts("+rocm", when="+covfie", msg="HIP support is not yet available with covfie")
     conflicts("+rocm", when="+cuda", msg="AMD and NVIDIA accelerators are incompatible")
     conflicts("+rocm", when="+vecgeom", msg="HIP support is only available with ORANGE")
+    for _arch in ["cuda", "rocm"]:
+        conflicts("+perfetto", when=f"+{_arch}", msg="Perfetto is only used for CPU profiling")
 
     # geant4@11.3.0 now returns const G4Element::GetElementTable()
     patch(
@@ -131,7 +149,18 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
             define("CELERITAS_USE_Python", True),
         ]
 
-        for pkg in ["CUDA", "Geant4", "HepMC3", "OpenMP", "ROOT", "SWIG", "VecGeom"]:
+        # NOTE: package names are stylized like the dependency asks: Find{pkg}.cmake
+        for pkg in [
+            "covfie",
+            "CUDA",
+            "Geant4",
+            "HepMC3",
+            "OpenMP",
+            "Perfetto",
+            "ROOT",
+            "SWIG",
+            "VecGeom",
+        ]:
             args.append(from_variant("CELERITAS_USE_" + pkg, pkg.lower()))
 
         if self.spec.satisfies("+cuda"):
@@ -159,8 +188,9 @@ class Celeritas(CMakePackage, CudaPackage, ROCmPackage):
             args.extend(
                 (
                     define(f"CELERITAS_BUILTIN_{pkg}", False)
-                    for pkg in ["GTest", "nlohmann_json", "G4VG"]
+                    for pkg in ["covfie", "CLI11", "GTest", "nlohmann_json", "G4VG"]
                 )
             )
+            # NOTE: Perfetto is always vendored!
 
         return args

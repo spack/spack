@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -101,6 +103,7 @@ class Precice(CMakePackage):
 
     depends_on("libxml2")
     depends_on("libxml2@:2.11.99", type="build", when="@:2.5.0")
+    depends_on("libxml2@:2.13.99", type="build", when="@:3.2.0")
 
     depends_on("mpi", when="+mpi")
 
