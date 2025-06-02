@@ -53,12 +53,11 @@ import sys
 import tempfile
 import traceback
 from contextlib import contextmanager
-from multiprocessing import Process, Queue
+from multiprocessing import Barrier, Process, Queue
 
 import pytest
 
 import llnl.util.lock as lk
-from multiprocessing import Barrier
 from llnl.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
