@@ -8,19 +8,19 @@ import stat
 import sys
 from typing import Optional, Tuple
 
-import llnl.util.lock
-
-# import some llnl.util.lock names as though they're part of spack.util.lock
-from llnl.util.lock import LockError  # noqa: F401
-from llnl.util.lock import LockTimeoutError  # noqa: F401
-from llnl.util.lock import LockUpgradeError  # noqa: F401
-from llnl.util.lock import ReadTransaction  # noqa: F401
-from llnl.util.lock import WriteTransaction  # noqa: F401
+from llnl.util.lock import Lock as Llnl_lock
+from llnl.util.lock import (
+    LockError,
+    LockTimeoutError,
+    LockUpgradeError,
+    ReadTransaction,
+    WriteTransaction,
+)
 
 import spack.error
 
 
-class Lock(llnl.util.lock.Lock):
+class Lock(Llnl_lock):
     """Lock that can be disabled.
 
     This overrides the ``_lock()`` and ``_unlock()`` methods from
@@ -37,14 +37,9 @@ class Lock(llnl.util.lock.Lock):
         default_timeout: Optional[float] = None,
         debug: bool = False,
         desc: str = "",
-        enable: Optional[bool] = None,
+        enable: bool = True,
     ) -> None:
-        enable_lock = enable
-        if sys.platform == "win32":
-            enable_lock = False
-        elif sys.platform != "win32" and enable_lock is None:
-            enable_lock = True
-        self._enable = enable_lock
+        self._enable = sys.platform != "win32" and enable
         super().__init__(
             path,
             start=start,
@@ -99,3 +94,14 @@ def check_lock_safety(path: str) -> None:
                 f"restrict permissions on {path} or enable locks."
             )
             raise spack.error.SpackError(msg, long_msg)
+
+
+__all__ = [
+    "LockError",
+    "LockTimeoutError",
+    "LockUpgradeError",
+    "ReadTransaction",
+    "WriteTransaction",
+    "Lock",
+    "check_lock_safety",
+]
