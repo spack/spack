@@ -2466,7 +2466,12 @@ class PackageInstaller:
 
         # Setup FIFO jobserver for builds
         fifo_directory, jobserver_fifo_fd = self.setup_jobserver()
-        print("Fifo Dir After Setup: ", fifo_directory, "jobserver_fifo_fd after setup: ", jobserver_fifo_fd)
+        print(
+            "Fifo Dir After Setup: ",
+            fifo_directory,
+            "jobserver_fifo_fd after setup: ",
+            jobserver_fifo_fd,
+        )
         mflags = os.environ.get("MAKEFLAGS")
         print("MFLAGS after setup: ", mflags)
 
