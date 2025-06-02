@@ -231,7 +231,7 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                                 " ".join(spec.compiler_flags["ldflags"]),
                             ),
                             "CC = {0}".format(self.compiler.cc),
-                            "COPTS = {0} {1} {2}".format(
+                            "COPTS = {0} {1} {2} {3}".format(
                                 " ".join(spec.compiler_flags["cppflags"]),
                                 optim_opts,
                                 " ".join(spec.compiler_flags["cflags"]),
