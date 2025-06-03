@@ -39,6 +39,8 @@ jobs:
                         --path lib/spack/spack/test/__init__.py --path-rename lib/spack/spack/test/__init__.py:tests/__init__.py \
                         --path lib/spack/spack/test/build_systems.py --path-rename lib/spack/spack/test/build_systems.py:tests/build_systems.py \
                         --path lib/spack/spack/test/conftest.py --path-rename lib/spack/spack/test/conftest.py:tests/conftest.py \
+                        --path lib/spack/spack/test/data/make --path-rename lib/spack/spack/test/data/make:tests/data/make \
+                        --path lib/spack/spack/test/data/ninja --path-rename lib/spack/spack/test/data/ninja:tests/data/ninja \
                         --path pytest.ini \
                         --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --path share/spack/qa/validate_last_exit.ps1 --path-rename share/spack/qa/validate_last_exit.ps1:.ci/validate_last_exit.ps1 \
