@@ -7,6 +7,12 @@ config:
   - $spack/lib/spack/spack/test/data/templates_again
   build_stage:
   - $tempdir/$user/spack-stage
+  # You can also unset these next two to "solve" the
+  # problem: it goes away because in a multi-package
+  # install, the installations subprocs won't be
+  # trying to simultaneously generate the cache indices
+  # at all (for some reason, the test config is not
+  # transmitted to the subprocesses on windows)
   source_cache: $user_cache_path/source
   misc_cache: $user_cache_path/cache
   verify_ssl: true

@@ -965,7 +965,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
         per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id())
         configuration_paths.append(("this-spack", per_spack_cfg))
 
-    # add each scope and its platform-specific directory
+    # add each scope
     for name, path in configuration_paths:
         cfg.push_scope(DirectoryConfigScope(name, path), priority=ConfigScopePriority.CONFIG_FILES)
         # yield the config incrementally so that each config level's init code can get
