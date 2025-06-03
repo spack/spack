@@ -19,7 +19,7 @@ class PyDaskExpr(PythonPackage):
 
     depends_on("python@3.10:", type=("build", "run"))
     depends_on("py-setuptools@62.6:", type="build")
-    depends_on("py-versioneer@0.28+toml", type="build")
+    depends_on("py-versioneer@0.28:+toml", type="build")
 
     # Can't do circular run-time dependencies yet?
     # depends_on("py-dask@2024.7.1", type="run")
