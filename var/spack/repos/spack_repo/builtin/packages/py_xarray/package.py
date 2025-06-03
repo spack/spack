@@ -57,8 +57,6 @@ class PyXarray(PythonPackage):
     depends_on("python@3.7:", when="@0.17:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.21:", type=("build", "run"))
     depends_on("python@3.9:", when="@2023.7.0:", type=("build", "run"))
-
-    # https://github.com/pydata/xarray/releases/tag/v2024.09.0
     depends_on("python@3.10:", when="@2024.9.0:", type=("build", "run"))
 
     depends_on("py-numpy@1.7:", when="@0.9.1", type=("build", "run"))
@@ -92,7 +90,7 @@ class PyXarray(PythonPackage):
     depends_on("py-netcdf4", when="+io", type=("build", "run"))
     depends_on("py-h5netcdf", when="+io", type=("build", "run"))
     depends_on("py-scipy", when="+io", type=("build", "run"))
-    # py-pyday@3.5: for numpy@2:
+    # py-pydap@3.5: for numpy@2:
     # https://github.com/pydata/xarray/pull/9391
     depends_on("py-pydap@3.5:", when="+io ^numpy@2:", type=("build", "run"))
     depends_on("py-pydap", when="+io", type=("build", "run"))
