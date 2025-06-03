@@ -584,15 +584,6 @@ error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, Lite
    Parent == BuildDependency,
    external(node(X, Parent)).
 
-1 { virtual_build_requirement(ParentNode, node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1
-  :- attr("dependency_holds", ParentNode, Virtual, "build"),
-     not attr("dependency_holds", ParentNode, Virtual,"link"),
-     not attr("dependency_holds", ParentNode, Virtual,"run"),
-     virtual(Virtual).
-
-attr("virtual_node", VirtualNode)  :- virtual_build_requirement(ParentNode, VirtualNode).
-build_requirement(ParentNode, ProviderNode) :- virtual_build_requirement(ParentNode, VirtualNode), provider(ProviderNode, VirtualNode).
-
 % From cli we can have literal expressions like:
 %
 % root %gcc@12.0 ^dep %gcc@11.2
