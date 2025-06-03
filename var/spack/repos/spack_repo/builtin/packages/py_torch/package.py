@@ -408,7 +408,8 @@ class PyTorch(PythonPackage, CudaPackage, ROCmPackage):
     # Fixes build error when ROCm is enabled for pytorch-1.5 release
     patch("rocm.patch", when="@1.5+rocm")
 
-    # PR 152569 is to set ROCM_INCLUDE_DIRS the include path of required rocm packages in LoadHIP.cmake.
+    # PR 152569 is to set ROCM_INCLUDE_DIRS the include path
+    # of required rocm packages in LoadHIP.cmake.
     # https://github.com/pytorch/pytorch/pull/152569
     patch("PR152569-Update-spack-includes-2.5.patch", when="@2.5+rocm")
     patch("PR152569-Update-spack-includes-2.6.patch", when="@2.6+rocm")
