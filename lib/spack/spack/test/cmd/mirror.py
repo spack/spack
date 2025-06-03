@@ -584,7 +584,6 @@ def test_mirror_add_set_autopush(mutable_config):
     mirror("remove", "example")
 
 
-@pytest.mark.not_on_windows("Not supported on Windows (yet)")
 @pytest.mark.require_provenance
 @pytest.mark.nomockstage
 def test_binary_provenance_url_fails_mirror_resolves_commit(

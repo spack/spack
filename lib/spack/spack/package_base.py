@@ -1051,8 +1051,8 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if is_git_version(str(self.spec.version)):
             ref = self.spec.version.ref
         else:
-            tag = self.version_or_package_attr("tag", self.spec.version, "")
-            branch = self.version_or_package_attr("branch", self.spec.version, "")
+            tag = self.version_or_package_attr("tag", self.spec.version, None)
+            branch = self.version_or_package_attr("branch", self.spec.version, None)
             assert not (tag and branch)
             ref = tag or branch
 

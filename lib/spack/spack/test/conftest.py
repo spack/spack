@@ -103,16 +103,6 @@ def git():
     return spack.util.git.git(required=True)
 
 
-@pytest.fixture()
-def dead_git(monkeypatch):
-    """Fixture to capture/kill all git requests"""
-
-    def lambda_git(*args, **kwargs):
-        return lambda *args, **kwargs: None
-
-    monkeypatch.setattr(spack.util.git, "git", lambda_git)
-
-
 #
 # Return list of shas for latest two git commits in local spack repo
 #

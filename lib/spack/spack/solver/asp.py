@@ -4264,10 +4264,8 @@ def _specs_with_commits(spec):
     spec.package.resolve_binary_provenance()
 
     if "commit" not in spec.variants:
-        # what if users want to test concretization, but aren't configured for an airgapped system?
-        # working from a plane or something like that
         tty.warn(
-            f"Unable to resolve the git commit for {spec.name}. Need to think about this case"
+            f"Unable to resolve the git commit for {spec.name}. An installation of this binary won't have complete binary provenance."
         )
         return
 
