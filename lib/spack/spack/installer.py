@@ -2412,7 +2412,7 @@ class PackageInstaller:
 
         mflags = os.environ.get("MAKEFLAGS")
         if mflags and "--jobserver" in mflags:
-            print("ALREADY FOUND JOBSERVER", mflags)
+            # print("ALREADY FOUND JOBSERVER", mflags)
             # Jobserver already set up by Make (through env depfile)
             return None, None
 
@@ -2467,14 +2467,14 @@ class PackageInstaller:
 
         # Setup FIFO jobserver for builds
         fifo_directory, jobserver_fifo_fd = self.setup_jobserver()
-        print(
-            "Fifo Dir After Setup: ",
-            fifo_directory,
-            "jobserver_fifo_fd after setup: ",
-            jobserver_fifo_fd,
-        )
-        mflags = os.environ.get("MAKEFLAGS")
-        print("MFLAGS after setup: ", mflags)
+       # print(
+       #     "Fifo Dir After Setup: ",
+       #     fifo_directory,
+       #     "jobserver_fifo_fd after setup: ",
+       #     jobserver_fifo_fd,
+       # )
+       # mflags = os.environ.get("MAKEFLAGS")
+       # print("MFLAGS after setup: ", mflags)
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
