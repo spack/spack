@@ -29,7 +29,8 @@ class Rocshmem(CMakePackage):
         depends_on(f"rocprim@{ver}", when=f"@{ver}")
         depends_on(f"rocthrust@{ver}", when=f"@{ver}")
 
-    depends_on("mpi")
+    depends_on("ucx@1.17: +rocm")
+    depends_on("openmpi@5.0.6: fabrics=ucx")
 
     def cmake_args(self):
         args = [self.define("USE_GPU_IB", False)]
