@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -122,7 +124,7 @@ class Scotch(CMakePackage, MakefilePackage):
         return scotchlibs + zlibs
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
 
     def cmake_args(self):
         args = [
@@ -156,7 +158,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         env.unset("SPACK_TARGET_ARGS")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     build_directory = "src"
 
     def edit(self, pkg, spec, prefix):

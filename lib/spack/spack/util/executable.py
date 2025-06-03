@@ -9,7 +9,7 @@ import sys
 from pathlib import Path, PurePath
 from typing import Callable, Dict, List, Optional, Sequence, TextIO, Type, Union, overload
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 import llnl.util.tty as tty
 

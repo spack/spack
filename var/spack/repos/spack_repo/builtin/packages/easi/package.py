@@ -4,6 +4,8 @@
 
 import os
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -20,6 +22,7 @@ class Easi(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("1.6.1", tag="v1.6.1", commit="f79a943e34e1921b169af6504a68928dc626b6a9")
     version("1.5.2", tag="v1.5.2", commit="0d87b1a7db31e453d52c7213cb9b31bda88cbf40")
     version("1.5.1", tag="v1.5.1", commit="d12f3371ed26c7371e4efcc11e3cd468063ffdda")
     version("1.5.0", tag="v1.5.0", commit="391698ab0072f66280d08441974c2bdb04a65ce0")
@@ -79,6 +82,9 @@ class Easi(CMakePackage):
 
         if spec.satisfies("jit=lua"):
             args.append(self.define("LUA", True))
+
+        # Forces easilib over easilib64 in the path to python_wrapper
+        args.append(self.define("CMAKE_INSTALL_LIBDIR", "lib"))
 
         if spec.satisfies("+python"):
             args += [self.define("easi_INSTALL_PYTHONDIR", python_platlib)]

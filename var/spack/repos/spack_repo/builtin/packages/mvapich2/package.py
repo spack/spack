@@ -6,6 +6,8 @@ import os
 import re
 import sys
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 import spack.compilers.config
 from spack.package import *
 

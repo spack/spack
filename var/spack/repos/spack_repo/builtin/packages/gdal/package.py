@@ -5,8 +5,10 @@
 import os
 import sys
 
-from spack.build_systems.autotools import AutotoolsBuilder
-from spack.build_systems.cmake import CMakeBuilder
+from spack_repo.builtin.build_systems.autotools import AutotoolsBuilder, AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakeBuilder, CMakePackage, generator
+from spack_repo.builtin.build_systems.python import PythonExtension
+
 from spack.package import *
 from spack.util.environment import filter_system_paths
 
@@ -30,6 +32,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     license("MIT")
     maintainers("adamjstewart")
 
+    version("3.11.0", sha256="ba1a17a74428bfd5c789ce293f59b6a3d8bfabab747431c33331ac0ac579ea71")
     version("3.10.2", sha256="67b4e08acd1cc4b6bd67b97d580be5a8118b586ad6a426b09d5853898deeada5")
     version("3.10.1", sha256="9211eac72b53f5f85d23cf6d83ee20245c6d818733405024e71f2af41e5c5f91")
     version("3.10.0", sha256="af821a3bcf68cf085724c21c9b53605fd451d83af3c8854d8bf194638eb734a8")
@@ -104,6 +107,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         version("2.0.0", sha256="91704fafeea2349c5e268dc1e2d03921b3aae64b05ee01d59fdfc1a6b0ffc061")
 
     # Optional dependencies
+    # https://gdal.org/en/stable/development/building_from_source.html
     variant("archive", default=False, when="@3.7:", description="Optional for vsi7z VFS driver")
     variant(
         "armadillo",
@@ -129,6 +133,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("ecw", default=False, description="Required for ECW driver")
     variant("epsilon", default=False, when="@:3.2", description="Required for EPSILON driver")
     variant("expat", default=True, description="Required for XML parsing in many OGR drivers")
+    variant(
+        "exprtk",
+        default=False,
+        when="@3.11:",
+        description="Required for advanced C++ VRT expressions",
+    )
     variant("filegdb", default=False, description="Required for FileGDB driver")
     variant("fme", default=False, when="@:3.4", description="Required for FME driver")
     variant("freexl", default=False, description="Required for XLS driver")
@@ -152,7 +162,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     variant("jxl", default=False, when="@3.4:", description="Required for JPEGXL driver")
     variant("kdu", default=False, description="Required for JP2KAK and JPIPKAK drivers")
     variant("kea", default=False, description="Required for KEA driver")
-    variant("lerc", default=False, when="@2.4:", description="Required for LERC compression")
+    variant("lerc", default=True, when="@2.4:", description="Required for LERC compression")
     variant("libaec", default=False, when="@3.8:", description="Optional for GRIB driver")
     variant("libcsf", default=False, description="Required for PCRaster driver")
     variant("libkml", default=False, description="Required for LIBKML driver")
@@ -181,6 +191,12 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
         default=False,
         when="build_system=cmake",
         description="Required for MSSQLSpatial driver",
+    )
+    variant(
+        "muparser",
+        default=True,
+        when="@3.11:",
+        description="Required for nominal C++ VRT expressions",
     )
     variant("mysql", default=False, description="Required for MySQL driver")
     variant("netcdf", default=False, description="Required for NetCDF driver")
@@ -222,7 +238,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     )
     variant(
         "qhull",
-        default=False,
+        default=True,
         when="@2.1:",
         description="Used for linear interpolation of gdal_grid",
     )
@@ -307,6 +323,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # depends_on('ecw', when='+ecw')
     # depends_on('libepsilon', when='+epsilon')
     depends_on("expat@1.95:", when="+expat")
+    depends_on("exprtk", when="+exprtk")
     # depends_on('filegdb', when='+filegdb')
     # depends_on('fme', when='+fme')
     depends_on("freexl", when="+freexl")
@@ -350,6 +367,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # depends_on('lizardtech-lidar', when='+mrsid_lidar')
     # depends_on('mssql_ncli', when='+mssql_ncli')
     # depends_on('mssql_odbc', when='+mssql_odbc')
+    depends_on("muparser", when="+muparser")
     depends_on("mysql", when="+mysql")
     depends_on("netcdf-c@4.7:", when="@3.9:+netcdf")
     depends_on("netcdf-c", when="+netcdf")
@@ -422,17 +440,17 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     depends_on("py-numpy@1.0.0:", type=("build", "run"), when="+python")
     # https://github.com/OSGeo/gdal/issues/9751
     depends_on("py-numpy@:1", when="@:3.8+python", type=("build", "run"))
-    depends_on("swig", type="build", when="+python")
+    depends_on("swig@4:", type="build", when="+python")
     depends_on("java@7:", type=("build", "link", "run"), when="@3.2:+java")
     depends_on("java@6:", type=("build", "link", "run"), when="@2.4:+java")
     depends_on("java@5:", type=("build", "link", "run"), when="@2.1:+java")
     depends_on("java@4:", type=("build", "link", "run"), when="@:2.0+java")
     depends_on("ant", type="build", when="+java")
-    depends_on("swig", type="build", when="+java")
+    depends_on("swig@4:", type="build", when="+java")
     depends_on("perl", type=("build", "run"), when="+perl")
-    depends_on("swig", type="build", when="+perl")
+    depends_on("swig@4:", type="build", when="+perl")
     depends_on("php", type=("build", "link", "run"), when="+php")
-    depends_on("swig", type="build", when="+php")
+    depends_on("swig@4:", type="build", when="+php")
 
     # https://gdal.org/development/rfc/rfc88_googletest.html
     depends_on("googletest@1.10:", type="test")
@@ -492,7 +510,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
 
     # https://github.com/OSGeo/gdal/issues/3782
     patch(
-        "https://github.com/OSGeo/gdal/pull/3786.patch?full_index=1",
+        "https://github.com/OSGeo/gdal/commit/b1a01a6790d428038e3c7cd81ca54d6d468b68b9.patch?full_index=1",
         when="@3.3.0",
         level=2,
         sha256="9f9824296e75b34b3e78284ec772a5ac8f8ba92c17253ea9ca242caf766767ce",
@@ -501,7 +519,7 @@ class Gdal(CMakePackage, AutotoolsPackage, PythonExtension):
     # https://github.com/spack/spack/issues/41299
     # ensures the correct build specific libproj is used with cmake builds (gdal >=3.5.0)
     patch(
-        "https://patch-diff.githubusercontent.com/raw/OSGeo/gdal/pull/8964.patch?full_index=1",
+        "https://github.com/OSGeo/gdal/commit/cc1213052fbfc6aca8fd7268f39e84f38a7b4155.patch?full_index=1",
         when="@3.5:3.8",
         sha256="52459dc9903ced5005ba81515762a55cd829d8f5420607405c211c4a77c2bf79",
     )
@@ -566,6 +584,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("GDAL_USE_DEFLATE", "deflate"),
             self.define_from_variant("GDAL_USE_ECW", "ecw"),
             self.define_from_variant("GDAL_USE_EXPAT", "expat"),
+            self.define_from_variant("GDAL_USE_EXPRTK", "exprtk"),
             self.define_from_variant("GDAL_USE_FILEGDB", "filegdb"),
             self.define_from_variant("GDAL_USE_FREEXL", "freexl"),
             self.define_from_variant("GDAL_USE_FYBA", "fyba"),
@@ -595,6 +614,7 @@ class CMakeBuilder(CMakeBuilder):
             self.define_from_variant("GDAL_USE_MRSID", "mrsid"),
             self.define_from_variant("GDAL_USE_MSSQL_NCLI", "mssql_ncli"),
             self.define_from_variant("GDAL_USE_MSSQL_ODBC", "mssql_odbc"),
+            self.define_from_variant("GDAL_USE_MUPARSER", "muparser"),
             self.define_from_variant("GDAL_USE_MYSQL", "mysql"),
             self.define_from_variant("GDAL_USE_NETCDF", "netcdf"),
             self.define_from_variant("GDAL_USE_ODBC", "odbc"),

@@ -1,10 +1,10 @@
 import numbers
 
-from pyrsistent import pmap
-import attr
+from _vendoring.pyrsistent import pmap
+import _vendoring.attr
 
-from jsonschema.compat import int_types, str_types
-from jsonschema.exceptions import UndefinedTypeCheck
+from _vendoring.jsonschema.compat import int_types, str_types
+from _vendoring.jsonschema.exceptions import UndefinedTypeCheck
 
 
 def is_array(checker, instance):
@@ -45,7 +45,7 @@ def is_any(checker, instance):
     return True
 
 
-@attr.s(frozen=True)
+@_vendoring.attr.s(frozen=True)
 class TypeChecker(object):
     """
     A ``type`` property checker.
@@ -61,7 +61,7 @@ class TypeChecker(object):
 
             The initial mapping of types to their checking functions.
     """
-    _type_checkers = attr.ib(default=pmap(), converter=pmap)
+    _type_checkers = _vendoring.attr.ib(default=pmap(), converter=pmap)
 
     def is_type(self, instance, type):
         """
@@ -131,7 +131,7 @@ class TypeChecker(object):
 
             A new `TypeChecker` instance.
         """
-        return attr.evolve(
+        return _vendoring.attr.evolve(
             self, type_checkers=self._type_checkers.update(definitions),
         )
 
@@ -162,7 +162,7 @@ class TypeChecker(object):
                 checkers = checkers.remove(each)
             except KeyError:
                 raise UndefinedTypeCheck(each)
-        return attr.evolve(self, type_checkers=checkers)
+        return _vendoring.attr.evolve(self, type_checkers=checkers)
 
 
 draft3_type_checker = TypeChecker(

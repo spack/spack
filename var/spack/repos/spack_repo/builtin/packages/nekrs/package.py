@@ -4,8 +4,12 @@
 
 import os
 
-import spack.build_systems.cmake
-import spack.build_systems.generic
+from spack_repo.builtin.build_systems import cmake, generic
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -144,7 +148,7 @@ class SetupEnvironment:
         self._setup_runtime_flags(env)
 
 
-class GenericBuilder(spack.build_systems.generic.GenericBuilder):
+class GenericBuilder(generic.GenericBuilder):
     def install(self, pkg, spec, prefix):
         makenrs = Executable(os.path.join(os.getcwd(), "makenrs"))
 
@@ -157,7 +161,7 @@ class GenericBuilder(spack.build_systems.generic.GenericBuilder):
         makenrs(output=str, error=str, fail_on_error=True)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         cxxflags = self.spec.compiler_flags["cxxflags"]
         args = [

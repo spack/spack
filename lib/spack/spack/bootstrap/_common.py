@@ -12,7 +12,7 @@ import sysconfig
 import warnings
 from typing import Optional, Sequence, Union
 
-from typing_extensions import TypedDict
+from _vendoring.typing_extensions import TypedDict
 
 import archspec.cpu
 

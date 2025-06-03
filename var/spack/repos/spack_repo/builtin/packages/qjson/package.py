@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -16,7 +18,8 @@ class Qjson(CMakePackage):
 
     version("0.9.0", sha256="e812617477f3c2bb990561767a4cd8b1d3803a52018d4878da302529552610d4")
 
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("qt")
 

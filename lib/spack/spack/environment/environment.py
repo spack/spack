@@ -5,6 +5,7 @@ import collections
 import collections.abc
 import contextlib
 import errno
+import glob
 import os
 import pathlib
 import re
@@ -1049,7 +1050,11 @@ class Environment:
 
     def _process_concrete_includes(self):
         """Extract and load into memory included concrete spec data."""
-        self.included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        _included_concrete_envs = self.manifest[TOP_LEVEL_KEY].get(included_concrete_name, [])
+        # Expand config and environment variables
+        self.included_concrete_envs = [
+            spack.util.path.canonicalize_path(_env) for _env in _included_concrete_envs
+        ]
 
         if self.included_concrete_envs:
             if os.path.exists(self.lock_path):
@@ -2420,19 +2425,11 @@ def display_specs(specs):
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    path = spack.repo.RepoPath(cache=spack.caches.MISC_CACHE)
-
-    if os.path.isdir(root):
-        for repo_root in os.listdir(root):
-            repo_root = os.path.join(root, repo_root)
-
-            if not os.path.isdir(repo_root):
-                continue
-
-            repo = spack.repo.from_path(repo_root)
-            path.put_last(repo)
-
-    return path
+    repos = [
+        spack.repo.from_path(os.path.dirname(p))
+        for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
+    ]
+    return spack.repo.RepoPath(*repos, cache=spack.caches.MISC_CACHE)
 
 
 def manifest_file(env_name_or_dir):

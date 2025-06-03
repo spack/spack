@@ -103,6 +103,7 @@ or refer to the full manual below.
    :caption: API Docs
 
    Spack API Docs <spack>
+   Spack Builtin Repo <spack_repo>
    LLNL API Docs <llnl>
 
 ==================

@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -17,6 +19,7 @@ class Xnedit(MakefilePackage):
 
     maintainers("davekeeshan")
 
+    version("1.6.3", sha256="069f4d40445ef5db636975e0f268ca11ec828bbc62bf4e6d7343d57b0697ecb0")
     version("1.6.2", sha256="0ee832ad186b81b8ba8df43352d86e35997cea9708ff7ddad15e9d91fe81b6cb")
     version("1.6.1", sha256="46489fa3017f5e40da810170b33c681affd3cd4dff1dbd0f8a4c51f8285ca5c4")
     version("1.6.0", sha256="197e635fc1aa8e4ff2dcd2375efac597975f04170c3eace3280c4054bbbc57ac")
@@ -38,11 +41,16 @@ class Xnedit(MakefilePackage):
     version("1.0.1", sha256="3efa26d180696ea7b24c3efd2599c52183b6851fc1bc87ce9a4f85d465962a8c")
     version("1.0.0", sha256="f58dcbd268f226192584f56dd1a897290a66176d91a90d715a40d63578a84b72")
 
+    variant("motif", default=True, description="build with motif support")
+
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+
     depends_on("automake", type="build")
     depends_on("libx11")
     depends_on("libxt")
     depends_on("libxpm")
-    depends_on("motif")
+    depends_on("motif", when="+motif")
     depends_on("pcre")
 
     def setup_build_environment(self, env: EnvironmentModifications) -> None:

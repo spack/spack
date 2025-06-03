@@ -2,7 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems.python import PythonPipBuilder
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+
 from spack.package import *
 
 

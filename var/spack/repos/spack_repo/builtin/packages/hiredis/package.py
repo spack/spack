@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -44,7 +46,7 @@ class Hiredis(MakefilePackage, CMakePackage):
     depends_on("openssl@1.1:", type=("build", "link"), when="+test_ssl")
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     @property
     def build_targets(self):
         use_ssl = 1 if self.spec.satisfies("+ssl") else 0
@@ -66,7 +68,7 @@ class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
             fix_darwin_install_name(self.prefix.lib)
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         build_test = not self.spec.satisfies("+test")
         ssl_test = self.spec.satisfies("+test_ssl") and self.spec.satisfies("+test")

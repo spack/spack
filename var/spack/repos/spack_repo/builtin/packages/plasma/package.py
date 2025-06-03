@@ -1,8 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.cmake
-import spack.build_systems.makefile
+from spack_repo.builtin.build_systems import cmake, makefile
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -93,7 +94,7 @@ class Plasma(CMakePackage):
         python("tools/generate_precisions.py")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         options = [
             self.define("BLAS_LIBRARIES", self.spec["blas"].libs.joined(";")),
@@ -125,7 +126,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return options
 
 
-class MakefileBuilder(spack.build_systems.makefile.MakefileBuilder):
+class MakefileBuilder(makefile.MakefileBuilder):
     def edit(self, pkg, spec, prefix):
         # copy "make.inc.mkl-gcc" provided by default into "make.inc"
         open("make.inc", "w").write(open("make.inc.mkl-gcc").read())

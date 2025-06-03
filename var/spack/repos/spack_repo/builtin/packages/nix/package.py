@@ -6,6 +6,8 @@ import os
 import stat
 import tempfile
 
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+
 from spack.package import *
 
 from ..boost.package import Boost

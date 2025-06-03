@@ -350,7 +350,7 @@ def _ensure_no_folders_without_package_py(error_cls):
     for repository in spack.repo.PATH.repos:
         missing = []
         for entry in os.scandir(repository.packages_path):
-            if not entry.is_dir():
+            if not entry.is_dir() or entry.name == "__pycache__":
                 continue
             package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
             if not package_py.exists():

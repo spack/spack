@@ -251,7 +251,20 @@ protected-files = ["__init__.py", "README.rst", "vendor.txt"]
 patches-dir = "lib/spack/external/patches"
 
 [tool.vendoring.transformations]
-substitute = []
+substitute = [
+  { match = "typing_extensions", replace = "_vendoring.typing_extensions" },
+  { match = "ruamel.yaml", replace = "_vendoring.ruamel.yaml" },
+  { match = "altgraph", replace = "_vendoring.altgraph" },
+  { match = "macholib", replace = "_vendoring.macholib" },
+  { match = "from six", replace = "from _vendoring.six" },
+  { match = "markupsafe", replace = "_vendoring.markupsafe" },
+  { match = "jinja2", replace = "_vendoring.jinja2" },
+  { match = "pyrsistent", replace = "_vendoring.pyrsistent" },
+  { match = "import attr\n", replace = "import _vendoring.attr\n" },
+  { match = "from attr", replace = "from _vendoring.attr" },
+  { match = "import jsonschema", replace = "import _vendoring.jsonschema" },
+  { match = "from jsonschema", replace = "from _vendoring.jsonschema" },
+]
 drop = [
   # contains unnecessary scripts
   "bin/",
@@ -270,6 +283,8 @@ drop = [
   # ruamel.yaml installs unneded files
   "ruamel.*.pth",
   "pvectorc.*.so",
+  # Trim jsonschema tests
+  "jsonschema/tests",
 ]
 
 [tool.vendoring.typing-stubs]

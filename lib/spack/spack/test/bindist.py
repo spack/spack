@@ -241,13 +241,13 @@ def test_default_rpaths_create_install_default_layout(temporary_mirror_dir):
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Test installing from build caches
-    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-u", cspec.name)
+    buildcache_cmd("install", "-uo", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-fu", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     buildcache_cmd("keys", "-f")
     buildcache_cmd("list")
@@ -273,10 +273,10 @@ def test_default_rpaths_install_nondefault_layout(temporary_mirror_dir):
 
     # Install some packages with dependent packages
     # test install in non-default install path scheme
-    buildcache_cmd("install", "-u", cspec.name, sy_spec.name)
+    buildcache_cmd("install", "-uo", cspec.name, sy_spec.name)
 
     # Test force install in non-default install path scheme
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
 @pytest.mark.requires_executables(*required_executables)
@@ -298,19 +298,19 @@ def test_relative_rpaths_install_default_layout(temporary_mirror_dir):
     cspec = spack.concretize.concretize_one("corge")
 
     # Install buildcache created with relativized rpaths
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # This gives warning that spec is already installed
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # Uninstall the package and deps
     uninstall_cmd("-y", "--dependents", gspec.name)
 
     # Install build cache
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
     # Test overwrite install
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
 @pytest.mark.requires_executables(*required_executables)
@@ -327,7 +327,7 @@ def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
     cspec = spack.concretize.concretize_one("corge")
 
     # Test install in non-default install path scheme and relative path
-    buildcache_cmd("install", "-uf", cspec.name)
+    buildcache_cmd("install", "-ufo", cspec.name)
 
 
 def test_push_and_fetch_keys(mock_gnupghome, tmp_path):

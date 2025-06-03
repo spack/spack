@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -45,8 +48,8 @@ class MongoCDriver(AutotoolsPackage, CMakePackage):
     variant("zstd", default=True, description="Enable zstd support.")
 
     patch(
-        "https://github.com/mongodb/mongo-c-driver/pull/466.patch?full_index=1",
-        sha256="d8802d91226c176ba46d5b82413757121331d556a3a3d57ab65b70e175cab296",
+        "https://github.com/mongodb/mongo-c-driver/commit/5d759ff62f0c1389075b8b40932b7fdc11b4e12d.patch?full_index=1",
+        sha256="d4b6be7e885ef3e2ce12811c307b8b22fa297bfb9ea97d8493eef1d053f206a4",
         when="@1.8.1",
     )
 

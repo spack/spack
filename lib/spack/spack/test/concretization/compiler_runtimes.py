@@ -29,7 +29,7 @@ def _concretize_with_reuse(*, root_str, reused_str):
 
 @pytest.fixture
 def runtime_repo(mutable_config):
-    repo = os.path.join(spack.paths.test_repos_path, "compiler_runtime.test")
+    repo = os.path.join(spack.paths.test_repos_path, "spack_repo", "compiler_runtime_test")
     with spack.repo.use_repositories(repo) as mock_repo:
         yield mock_repo
 

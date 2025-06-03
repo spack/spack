@@ -7,8 +7,10 @@ import pathlib
 import re
 import sys
 
+from spack_repo.builtin.build_systems.cmake import get_cmake_prefix_path
+from spack_repo.builtin.build_systems.generic import Package
+
 import spack.build_environment
-from spack.build_systems.cmake import get_cmake_prefix_path
 from spack.package import *
 
 

@@ -691,36 +691,6 @@ def test_clear_compiler_related_runtime_variables_of_build_deps(default_mock_con
     assert result["ANOTHER_VAR"] == "this-should-be-present"
 
 
-@pytest.mark.parametrize("context", [Context.BUILD, Context.RUN])
-def test_build_system_globals_only_set_on_root_during_build(default_mock_concretization, context):
-    """Test whether when setting up a build environment, the build related globals are set only
-    in the top level spec.
-
-    TODO: Since module instances are globals themselves, and Spack defines properties on them, they
-    persist across tests. In principle this is not terrible, cause the variables are mostly static.
-    But obviously it can lead to very hard to find bugs... We should get rid of those globals and
-    define them instead as a property on the package instance.
-    """
-    root = spack.concretize.concretize_one("mpileaks")
-    build_variables = ("std_cmake_args", "std_meson_args", "std_pip_args")
-
-    # See todo above, we clear out any properties that may have been set by the previous test.
-    # Commenting this loop will make the test fail. I'm leaving it here as a reminder that those
-    # globals were always a bad idea, and we should pass them to the package instance.
-    for spec in root.traverse():
-        for variable in build_variables:
-            spec.package.module.__dict__.pop(variable, None)
-
-    spack.build_environment.SetupContext(root, context=context).set_all_package_py_globals()
-
-    # Excpect the globals to be set at the root in a build context only.
-    should_be_set = lambda depth: context == Context.BUILD and depth == 0
-
-    for depth, spec in root.traverse(depth=True, root=True):
-        for variable in build_variables:
-            assert hasattr(spec.package.module, variable) == should_be_set(depth)
-
-
 def test_rpath_with_duplicate_link_deps():
     """If we have two instances of one package in the same link sub-dag, only the newest version is
     rpath'ed. This is for runtime support without splicing."""

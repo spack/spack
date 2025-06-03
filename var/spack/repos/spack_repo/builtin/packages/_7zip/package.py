@@ -8,6 +8,9 @@ import platform
 import re
 import shutil
 
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
+
 from spack.package import *
 
 

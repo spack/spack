@@ -1,17 +1,17 @@
 """
-altgraph.GraphUtil - Utility classes and functions
+_vendoring.altgraph.GraphUtil - Utility classes and functions
 ==================================================
 """
 
 import random
 from collections import deque
 
-from altgraph import Graph, GraphError
+from _vendoring.altgraph import Graph, GraphError
 
 
 def generate_random_graph(node_num, edge_num, self_loops=False, multi_edges=False):
     """
-    Generates and returns a :py:class:`~altgraph.Graph.Graph` instance with
+    Generates and returns a :py:class:`~_vendoring.altgraph.Graph.Graph` instance with
     *node_num* nodes randomly connected by *edge_num* edges.
     """
     g = Graph.Graph()
@@ -52,7 +52,7 @@ def generate_random_graph(node_num, edge_num, self_loops=False, multi_edges=Fals
 
 def generate_scale_free_graph(steps, growth_num, self_loops=False, multi_edges=False):
     """
-    Generates and returns a :py:class:`~altgraph.Graph.Graph` instance that
+    Generates and returns a :py:class:`~_vendoring.altgraph.Graph.Graph` instance that
     will have *steps* \\* *growth_num* nodes and a scale free (powerlaw)
     connectivity. Starting with a fully connected graph with *growth_num*
     nodes at every step *growth_num* nodes are added to the graph and are

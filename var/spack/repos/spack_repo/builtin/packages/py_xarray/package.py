@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -57,6 +59,9 @@ class PyXarray(PythonPackage):
     depends_on("python@3.7:", when="@0.17:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.21:", type=("build", "run"))
     depends_on("python@3.9:", when="@2023.7.0:", type=("build", "run"))
+    depends_on("python@3.10:", when="@2024.9.0:", type=("build", "run"))
+
+    # https://github.com/pydata/xarray/releases/tag/v2024.09.0
     depends_on("python@3.10:", when="@2024.9.0:", type=("build", "run"))
 
     depends_on("py-numpy@1.7:", when="@0.9.1", type=("build", "run"))

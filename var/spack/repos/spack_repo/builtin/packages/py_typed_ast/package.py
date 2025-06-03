@@ -1,7 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.python
+from spack_repo.builtin.build_systems import python
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -44,7 +46,7 @@ class PyTypedAst(PythonPackage):
     depends_on("py-setuptools", type="build")
 
 
-class PythonPipBuilder(spack.build_systems.python.PythonPipBuilder):
+class PythonPipBuilder(python.PythonPipBuilder):
     @when("+wheel")
     def install(self, pkg, spec, prefix):
         args = list(filter(lambda x: x != "--no-index", self.std_args(self.pkg)))

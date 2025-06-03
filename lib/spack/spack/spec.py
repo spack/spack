@@ -74,7 +74,7 @@ from typing import (
     overload,
 )
 
-from typing_extensions import Literal
+from _vendoring.typing_extensions import Literal
 
 import archspec.cpu
 
@@ -2233,15 +2233,21 @@ class Spec:
             spec._dup(self._lookup_hash())
             return spec
 
-        # Get dependencies that need to be replaced
-        for node in self.traverse(root=False):
-            if node.abstract_hash:
-                spec._add_dependency(node._lookup_hash(), depflag=0, virtuals=())
+        # Map the dependencies that need to be replaced
+        node_lookup = {
+            id(node): node._lookup_hash()
+            for node in self.traverse(root=False)
+            if node.abstract_hash
+        }
 
-        # reattach nodes that were not otherwise satisfied by new dependencies
-        for node in self.traverse(root=False):
-            if not any(n.satisfies(node) for n in spec.traverse()):
-                spec._add_dependency(node.copy(), depflag=0, virtuals=())
+        # Reconstruct dependencies
+        for edge in self.traverse_edges(root=False):
+            key = edge.parent.name
+            current_node = spec if key == spec.name else spec[key]
+            child_node = node_lookup.get(id(edge.spec), edge.spec.copy())
+            current_node._add_dependency(
+                child_node, depflag=edge.depflag, virtuals=edge.virtuals, direct=edge.direct
+            )
 
         return spec
 
@@ -4670,6 +4676,9 @@ def substitute_abstract_variants(spec: Spec):
     # in $spack/lib/spack/spack/spec_list.py
     unknown = []
     for name, v in spec.variants.items():
+        if v.concrete and v.type == vt.VariantType.MULTI:
+            continue
+
         if name == "dev_path":
             v.type = vt.VariantType.SINGLE
             v.concrete = True

@@ -550,7 +550,6 @@ def setup_main_options(args):
         spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -560,6 +559,8 @@ def setup_main_options(args):
     # Use the spack config command to handle parsing the config strings
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
+
+    spack.repo.enable_repo(spack.repo.create(spack.config.CONFIG))
 
     # On Windows10 console handling for ASCI/VT100 sequences is not
     # on by default. Turn on before we try to write to console

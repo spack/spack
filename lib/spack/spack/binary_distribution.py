@@ -717,7 +717,11 @@ def _read_specs_and_push_index(
         temp_dir: Location to write index.json and hash for pushing
     """
     for file in file_list:
-        fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+        try:
+            fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+        except Exception as e:
+            tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
+            continue
         db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
@@ -750,6 +754,7 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
         cache_entry.destroy()
         return spec_dict
 
+    url_to_list = url_util.join(url, buildcache_relative_specs_url())
     sync_command_args = [
         "s3",
         "sync",
@@ -757,11 +762,11 @@ def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
         "*",
         "--include",
         "*.spec.manifest.json",
-        url,
+        url_to_list,
         tmpspecsdir,
     ]
 
-    tty.debug(f"Using aws s3 sync to download manifests from {url} to {tmpspecsdir}")
+    tty.debug(f"Using aws s3 sync to download manifests from {url_to_list} to {tmpspecsdir}")
 
     try:
         aws(*sync_command_args, output=os.devnull, error=os.devnull)

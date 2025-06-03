@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 from ..boost.package import Boost

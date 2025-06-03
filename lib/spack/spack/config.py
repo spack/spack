@@ -37,7 +37,7 @@ import re
 import sys
 from typing import Any, Callable, Dict, Generator, List, NamedTuple, Optional, Tuple, Union
 
-import jsonschema
+from _vendoring import jsonschema
 
 from llnl.util import filesystem, lang, tty
 

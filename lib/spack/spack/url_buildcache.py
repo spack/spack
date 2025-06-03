@@ -14,7 +14,7 @@ from contextlib import closing, contextmanager
 from tempfile import TemporaryDirectory
 from typing import Any, Dict, List, Optional, Tuple, Type
 
-import jsonschema
+import _vendoring.jsonschema
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -132,7 +132,7 @@ class BuildcacheManifest:
 
     @classmethod
     def from_dict(cls, manifest_json: Dict[str, Any]) -> "BuildcacheManifest":
-        jsonschema.validate(manifest_json, buildcache_manifest_schema)
+        _vendoring.jsonschema.validate(manifest_json, buildcache_manifest_schema)
         return BuildcacheManifest(
             layout_version=manifest_json["version"],
             data=[BlobRecord.from_dict(blob_json) for blob_json in manifest_json["data"]],
