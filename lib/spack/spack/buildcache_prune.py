@@ -48,6 +48,7 @@ def _prune_orphans(mirror: Mirror) -> int:
             cache_entry: Optional[URLBuildcacheEntry] = None
             try:
                 cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
+                assert cache_entry.manifest is not None  #  to satisfy type checker
                 return {
                     cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
                     for data in cache_entry.manifest.data
@@ -126,8 +127,8 @@ def _prune_orphans(mirror: Mirror) -> int:
         manifest_futures = [executor.submit(remove_manifest, url) for url in orphaned_manifests]
         blob_futures = [executor.submit(remove_blob, url) for url in orphaned_blobs]
 
-        for future in as_completed(manifest_futures + blob_futures):
-            pruned_objects += future.result()
+        for manifest_or_blob_future in as_completed(manifest_futures + blob_futures):
+            pruned_objects += manifest_or_blob_future.result()
 
     return pruned_objects
 
