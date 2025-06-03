@@ -46,7 +46,7 @@ class PyDistributed(PythonPackage):
     depends_on("python@:3.11", when="@:2022.6.0", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
-    depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")
+    depends_on("py-versioneer@0.28:+toml", type="build", when="@2023.4.1:")
 
     # In Spack py-dask+distributed depends on py-distributed, not the other way around.
     # Hence, no need for depends_on("py-dask", ...)
