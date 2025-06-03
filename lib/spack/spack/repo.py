@@ -656,7 +656,7 @@ class RepoPath:
             try:
                 repos.append(Repo(p, cache=cache, overrides=overrides))
             except RepoError as e:
-                tty.warn(
+                tty.debug(
                     f"Failed to initialize repository: '{p}'.",
                     e.message,
                     "To remove the bad repository, run this command:",
