@@ -72,9 +72,11 @@ class PyH5py(PythonPackage):
     # https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
     # pre-3.11 is numpy@1 only
     # https://github.com/h5py/h5py/issues/2353
+    depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
     depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.10 ^python@3.9:")
     depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
+
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
