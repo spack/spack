@@ -4,7 +4,7 @@
 
 from typing import Any
 
-from typing_extensions import Protocol
+from _vendoring.typing_extensions import Protocol
 
 
 class SupportsRichComparison(Protocol):

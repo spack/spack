@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function
 import os
 import sys
 
-from macholib.util import is_platform_file
+from _vendoring.macholib.util import is_platform_file
 
 
 def check_file(fp, path, callback):

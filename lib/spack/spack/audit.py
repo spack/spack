@@ -331,7 +331,7 @@ def _wrongly_named_spec(error_cls):
 def _ensure_all_virtual_packages_have_default_providers(error_cls):
     """All virtual packages must have a default provider explicitly set."""
     configuration = spack.config.create()
-    defaults = configuration.get("packages", scope="defaults")
+    defaults = configuration.get_config("packages", _merged_scope="defaults")
     default_providers = defaults["all"]["providers"]
     virtuals = spack.repo.PATH.provider_index.providers
     default_providers_filename = configuration.scopes["defaults"].get_section_filename("packages")
@@ -350,7 +350,7 @@ def _ensure_no_folders_without_package_py(error_cls):
     for repository in spack.repo.PATH.repos:
         missing = []
         for entry in os.scandir(repository.packages_path):
-            if not entry.is_dir():
+            if not entry.is_dir() or entry.name == "__pycache__":
                 continue
             package_py = pathlib.Path(entry.path) / spack.repo.package_file_name
             if not package_py.exists():

@@ -18,8 +18,7 @@ import io
 import re
 from typing import IO, Any, Callable, Dict, List, Optional, Union
 
-import ruamel.yaml
-from ruamel.yaml import comments, constructor, emitter, error, representer
+from _vendoring.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
 from llnl.util.tty.color import cextra, clen, colorize
 
@@ -332,7 +331,7 @@ class ConfigYAML:
     """Handles the loading and dumping of Spack's YAML files."""
 
     def __init__(self, yaml_type: YAMLType) -> None:
-        self.yaml = ruamel.yaml.YAML(typ="rt", pure=True)
+        self.yaml = YAML(typ="rt", pure=True)
         if yaml_type == YAMLType.GENERIC_YAML:
             self.yaml.Representer = SafeRepresenter
         elif yaml_type == YAMLType.ANNOTATED_SPACK_CONFIG_FILE:

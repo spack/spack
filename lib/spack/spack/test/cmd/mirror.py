@@ -61,6 +61,26 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fe
         assert mirror_res == expected
 
 
+# Test for command line-specified spec in concretized environment
+def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
+    mirror_dir = str(tmp_path / "mirror-B")
+    env_name = "test"
+
+    env("create", env_name)
+    with ev.read(env_name):
+        add("simple-standalone-test@0.9")
+        concretize()
+        with spack.config.override("config:checksum", False):
+            mirror("create", "-d", mirror_dir, "simple-standalone-test")
+
+    e = ev.read(env_name)
+    assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
+    spec = e.concrete_roots()[0]
+    mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
+    expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+    assert mirror_res == expected
+
+
 @pytest.fixture
 def source_for_pkg_with_hash(mock_packages, tmpdir):
     s = spack.concretize.concretize_one("trivial-pkg-with-valid-hash")
@@ -401,8 +421,7 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all and specs
-            ({"specs": "hdf5", "file": None, "all": True}, "cannot specify specs on command line"),
+            # Passed more than one among -f --all
             (
                 {"specs": None, "file": "input.txt", "all": True},
                 "cannot specify specs with a file if",

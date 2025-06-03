@@ -4,7 +4,10 @@
 import os
 import re
 
-import spack.build_systems.autotools
+from spack_repo.builtin.build_systems import autotools
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
+
 from spack.package import *
 
 
@@ -143,7 +146,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         assert os.path.exists(swigfile), f"SWIG+Fortran runtime does not exist at '{swigfile}'"
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     build_directory = "spack-build"
 
     @run_after("install")

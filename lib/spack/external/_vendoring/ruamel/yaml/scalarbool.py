@@ -9,7 +9,7 @@ bool.__bases__ is type 'int', so that is what is used as the basis for ScalarBoo
 You can use these in an if statement, but not when testing equivalence
 """
 
-from ruamel.yaml.anchor import Anchor
+from _vendoring.ruamel.yaml.anchor import Anchor
 
 if False:  # MYPY
     from typing import Text, Any, Dict, List  # NOQA

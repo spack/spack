@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.cmake
-from spack.package import *
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 
 class Coin3d(AutotoolsPackage, CMakePackage):
@@ -85,7 +86,7 @@ class Coin3d(AutotoolsPackage, CMakePackage):
     )
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         args = [
             self.define_from_variant("COIN_BUILD_DOCUMENTATION_MAN", "man"),
@@ -96,7 +97,7 @@ class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         args = []
         args += self.enable_or_disable("framework")

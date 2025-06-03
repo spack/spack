@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -20,6 +22,7 @@ class Edm4hep(CMakePackage):
     license("Apache-2.0")
 
     version("main", branch="main")
+    version("0.99.2", sha256="b3e7abb61fd969e4c9aef55dd6839a2186bf0b0d3801174fe6e0b9df8e0ebace")
     version("0.99.1", sha256="84d990f09dbd0ad2198596c0c51238a4b15391f51febfb15dd3d191dc7aae9f4")
     version("0.99", sha256="3636e8c14474237029bf1a8be11c53b57ad3ed438fd70a7e9b87c5d08f1f2ea6")
     version("0.10.5", sha256="003c8e0c8e1d1844592d43d41384f4320586fbfa51d4d728ae0870b9c4f78d81")
@@ -77,6 +80,7 @@ class Edm4hep(CMakePackage):
     depends_on("podio@1:", when="@0.99:")
     depends_on("podio@0.15:", when="@:0.10.5")
     depends_on("podio@:1.1", when="@:0.99.0")
+    depends_on("podio@1.3:", when="@0.99.2:")
     for _std in _cxxstd_values:
         for _v in _std:
             depends_on(f"podio cxxstd={_v.value}", when=f"cxxstd={_v.value}")
@@ -96,9 +100,9 @@ class Edm4hep(CMakePackage):
     # Fix missing nljson import
     # NOTE that downstream packages (dd4hep) may fail for 0.99 and before
     patch(
-        "https://patch-diff.githubusercontent.com/raw/key4hep/EDM4hep/pull/379.patch?full_index=1",
+        "https://github.com/key4hep/EDM4hep/commit/18799dacfdaf5d746134c957de48607aa2665d75.patch?full_index=1",
         when="@0.99.1",
-        sha256="c4be2f27c7bda4d033f92fee14e48ddf59fbe606d208e8288d9bdb3dec5ad5c2",
+        sha256="374f0b7635c632e5a57d23ad163efab7370ab471c62e2713a41aa26e33d8f221",
     )
 
     def cmake_args(self):
@@ -107,6 +111,8 @@ class Edm4hep(CMakePackage):
             self.define("BUILD_TESTING", self.run_tests),
             self.define_from_variant("EDM4HEP_WITH_JSON", "json"),
         ]
+        if self.spec.satisfies("@:0.99.1 ^podio@1.3:"):
+            args.append(self.define("PODIO_USE_CLANG_FORMAT", False))
         return args
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:

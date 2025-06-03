@@ -43,9 +43,10 @@ import glob
 import os
 import re
 
-from spack.package import *
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.boost.package import Boost
 
-from ..boost.package import Boost
+from spack.package import *
 
 # Not the nice way of doing things, but is a start for refactoring
 __all__ = [

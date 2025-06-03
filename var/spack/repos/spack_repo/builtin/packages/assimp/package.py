@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -33,7 +35,7 @@ class Assimp(CMakePackage):
     version("4.0.1", sha256="60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e")
 
     patch(
-        "https://patch-diff.githubusercontent.com/raw/assimp/assimp/pull/4203.patch?full_index=1",
+        "https://github.com/assimp/assimp/commit/92b5c284ce58fb64af2ee1f11e86aa8a65c78d03.patch?full_index=1",
         sha256="24135e88bcef205e118f7a3f99948851c78d3f3e16684104dc603439dd790d74",
         when="@5.1:5.2.2",
     )

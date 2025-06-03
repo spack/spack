@@ -23,7 +23,7 @@ BUILDER_CLS: Dict[str, Type["Builder"]] = {}
 _BUILDERS: Dict[int, "Builder"] = {}
 
 
-def builder(build_system_name: str):
+def register_builder(build_system_name: str):
     """Class decorator used to register the default builder
     for a given build-system.
 

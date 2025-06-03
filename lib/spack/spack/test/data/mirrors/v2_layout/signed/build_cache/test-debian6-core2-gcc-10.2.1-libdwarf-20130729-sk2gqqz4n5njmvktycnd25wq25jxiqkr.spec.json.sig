@@ -33,7 +33,7 @@ Hash: SHA512
 "name":"gcc",
 "version":"10.2.1"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -85,7 +85,7 @@ Hash: SHA512
 "name":"gcc",
 "version":"10.2.1"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -108,17 +108,17 @@ Hash: SHA512
 }
 -----BEGIN PGP SIGNATURE-----
 
-iQIzBAEBCgAdFiEE6J1JcfAJex56PrVzcbSEgC54180FAmfHlp8ACgkQcbSEgC54
-180hlxAAisLofFhr/PQvLcQ79T3t3V0tqGgz9x6QnPKfbPCgvb66tTNlny+ML0fY
-y1H9xXQO53QOxfN9cdXcf2EVbRQ2eT6ltmwekI3ZZuCaTguflNu/i11UV6UnDy3x
-dXOYQhky5QjtPbhJ0NxG5XDKoRFoUPR/rgXsiNG5O0sk3M5H9ldpsj8af5W/6LCL
-gCTNM8fF0TVbd4MF9TiIECFBng2CrxhHwpl2gPHHxab1zxLRCF6t1lZvL6To0hmC
-e/Tqre+42PhRSCtXuwhK22r0rvreVUaiglYn8udjOJHwNVKdzLnTZ1OBAFeIq00U
-9uuroyaF841pq9+8PitwUORurv0lsnHUbfbi/+ou0HzMiaXzz+MPdOXt8nUuyScs
-oKOi8ExvpWJ7vn6klkvQtMK/Gakzd4YOxO/nk9K8BJgVN3qrODwHYSORk8RrdITS
-tkjiEJiIoklddiwCf3NUzlxiIYWbiqKqNbY+Pxh4B+OpVDnvRmpkJHgoSuVoCS8b
-coaOTIgqDpnIClHIj7ogxO+ureRjIIkGNNh6wVhlHDlgm1GzxNUOklMrzDkYMD01
-eTYxrbicw7ZVwqhFtR8olODKT9QAqXUJOkGHS9IA6FJctatkUkIOG1DSI52AZV1r
-PYzgdKtTxS60EkN8Igl6VMTkaC05anLygCTyOvGaV7sqVKmzHY8=
-=8OR5
+iQIzBAEBCgAdFiEEy6ssEDLG/1B4BJ7A+mHVDBLK034FAmgnhqIACgkQ+mHVDBLK
+0373kg/+Iy7pfWoAa465XtWUyf87KcjmJ1hE4OmfMc9sA7kdKNYPfmttxfp8jCU5
+gRc8RnQ5K+h4GWGl9nd6bFOT3oZSBH9WnH33gcnStHubwvHzhY05ZmlKjXKKTJmG
+rcQ8+vVv/e8KfMatydPuXQmAzbJ0pr2bGnicT8fs/W35hgcyygDZvDqJo3m+q4H7
+uu4C3LnaixAf7kCZefdxReYvFBNz9Qovws3+LqVFPxWgqo4zYt1PcI24UhCpL2YJ
+6XJySW7e0rR64bwCZR/owy504aUC64wr8kM19MMJAoB0R4zciJ0YyY8xLfRMI3Tr
+JTPetuTN7ncKJ2kZJ5L+KbeYnr4+CA5ZYmjyAM5NSJ3fTXuEu477H+1XovcJtP1s
+IZS10UWX452QEBXE5nWAludmiw4BenyR2Lccg2QfER8jbiZf3U3do43aGoI5U8rg
+qf1kQ/dMcIX6oSrbxMKymdsuf6e8UCSys3KNwb44UdSBiihgYFtiMfGtQ6Ixsvky
+TB+EwweUY6LtBuep1fh+M1tHgo9qCxUH79duor0JRDgQ/VLeO6e1RCptc7EHnQZQ
+mZK7YjVtHYWzyOZ4KsWuLYBSAMvKDhrTxI8cxp816NNGUfj1jmBQR/5vn6d7nMwX
+PmWrQV9O2e899Mv30VVR9XDf6tJoT+BPvS4Kc5hw/LxjaBbAxXo=
+=Zprh
 -----END PGP SIGNATURE-----

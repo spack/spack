@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -13,6 +15,11 @@ class Nextflow(Package):
 
     maintainers("dialvarezs", "marcodelapierre")
 
+    version(
+        "25.04.0",
+        sha256="33d888b1e0127566950719316bac735975e15800018768cceb7d3d77ad0719eb",
+        expand=False,
+    )
     version(
         "24.10.5",
         sha256="a9733a736cfecdd70e504b942e823da7005f9afc288902e67afe86b43dc9bcdb",

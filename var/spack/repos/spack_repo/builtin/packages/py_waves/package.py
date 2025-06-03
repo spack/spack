@@ -4,6 +4,8 @@
 
 import pathlib
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -21,6 +23,10 @@ class PyWaves(PythonPackage):
     license("BSD-3-Clause", checked_by="kbrindley")
 
     version("main", branch="main", get_full_repo=True)
+    version("0.13.1", sha256="3d776ebd07d05e7de8704e4491864336cab4ee23c284106056a805bf7561435a")
+    version("0.13.0", sha256="cf7072ffc9a08789dc764d2beb3a1a6762a034c954c77fe056d67b4f14272f17")
+    version("0.12.10", sha256="f620f8b7c01487bf387d52312c12da8afe8ed8fbf97b0d488525cdfcb820356e")
+    version("0.12.9", sha256="876528cc0c9ecd73fc5fa780ed4c6a3305865a6cf587dff5fbe78f2801a9eceb")
     version("0.12.8", sha256="6055b4e92075c0168bf9d85b75375f2f40fa37cd3be2dce80a9b304f3523dc81")
     version("0.12.7", sha256="53d4f389351b89eb9f852f7a999a9119384aa9b62a21c27920de006f37a2e7c4")
     version("0.12.6", sha256="f25ec014b04319512d4227f7f6fb788056de60e5686795d9b5c189f1cc61b7f2")
@@ -28,7 +34,7 @@ class PyWaves(PythonPackage):
 
     depends_on("python@3.9:", type=("build", "run"))
 
-    depends_on("git", when="@develop", type="build")
+    depends_on("git", when="@main", type="build")
     depends_on("py-pip", type="build")
     depends_on("py-build", type="build")
     depends_on("py-setuptools@64:", type="build")
@@ -54,8 +60,7 @@ class PyWaves(PythonPackage):
     depends_on("py-networkx", type=("run", "test"))
     depends_on("py-numpy", type=("run", "test"))
     depends_on("py-pyyaml", type=("run", "test"))
-    # SALib 1.4.6 is required for sobol sampler. Most up-to-date version of SALib is 1.4.4.
-    # WAVES v0.12.9 upstream will introduce SALib>=1.4.6.
+    depends_on("py-salib@1.4.6:", type=("run", "test"), when="@:0.12.9")
     depends_on("py-salib@1:", type=("run", "test"), when="@:0.12.8")
     depends_on("py-scipy@1.7:", type=("run", "test"))
     depends_on("scons@4:", type=("run", "test"))
@@ -81,36 +86,43 @@ class PyWaves(PythonPackage):
             env.set("SETUPTOOLS_SCM_PRETEND_VERSION", self.version)
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            python("-m", "build", "--no-isolation")
-            python(
-                # Using the spack default python package install options
-                "-m",
-                "pip",
-                "-vvv",
-                "--no-input",
-                "--no-cache-dir",
-                "--disable-pip-version-check",
-                "install",
-                "--no-deps",
-                "--ignore-installed",
-                "--no-build-isolation",
-                "--no-warn-script-location",
-                "--no-index",
-                f"--prefix={prefix}",
-                # TODO: Figure out how to override the positional '.' of the spack install options
-                # to use the py-build output path instead of overriding the entire default install
-                # function Will require the follow on documentation installation logic to be a
-                # ``@run_after("install")`` function.
-                f"dist/waves-{self.version}.tar.gz",
-            )
-            scons = which("scons")
-            scons("html", "man")
+        if self.spec.satisfies("@0.12.10:"):
+            with working_dir(self.build_directory):
+                scons = which("scons")
+                scons("install", f"--prefix={self.prefix}")
+        else:
+            with working_dir(self.build_directory):
+                python("-m", "build", "--no-isolation")
+                python(
+                    # Using the spack default python package install options
+                    "-m",
+                    "pip",
+                    "-vvv",
+                    "--no-input",
+                    "--no-cache-dir",
+                    "--disable-pip-version-check",
+                    "install",
+                    "--no-deps",
+                    "--ignore-installed",
+                    "--no-build-isolation",
+                    "--no-warn-script-location",
+                    "--no-index",
+                    f"--prefix={prefix}",
+                    # TODO: Figure out how to override the positional '.' of the spack install
+                    # options to use the py-build output path instead of overriding the entire
+                    # default install function Will require the follow on documentation
+                    # installation logic to be a ``@run_after("install")`` function.
+                    f"dist/waves-{self.version}.tar.gz",
+                )
+                scons = which("scons")
+                scons("html", "man")
 
-            site_packages_directory = list(pathlib.Path(self.prefix).rglob("**/site-packages"))[0]
-            python_package_documentation = python.copy()
-            python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
-            python_package_documentation("package_documentation.py")
+                site_packages_directory = list(
+                    pathlib.Path(self.prefix).rglob("**/site-packages")
+                )[0]
+                python_package_documentation = python.copy()
+                python_package_documentation.add_default_env("SP_DIR", site_packages_directory),
+                python_package_documentation("package_documentation.py")
 
     @run_after("install")
     @on_package_attributes(run_tests=True)

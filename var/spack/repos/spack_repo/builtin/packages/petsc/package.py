@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.package import *
 
 
@@ -20,6 +24,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     tags = ["e4s"]
 
     version("main", branch="main")
+    version("3.23.2", sha256="030ec6c4e9ed885457a6155f20b6f914593a1cd960b28706521a19a9cdadd5e2")
     version("3.23.1", sha256="f729885710c3b42b818fdb525cbd7e1b8c95c1cc25139a44968aa0e7f9e75418")
     version("3.23.0", sha256="aeebd7094f4d583fd04700e73779caa7d9a3d54742e95eff2c3dd87768a79063")
     version("3.22.5", sha256="984dba48bd26e7b17d42c078fc4f74d59e9cbc437ee25a8635865eeca9f5dd28")
@@ -264,6 +269,10 @@ class Petsc(Package, CudaPackage, ROCmPackage):
     variant("hwloc", default=False, description="Activates support for hwloc")
     variant("kokkos", default=False, description="Activates support for kokkos and kokkos-kernels")
     variant("fortran", default=True, description="Activates fortran support")
+    # Install-time footprint is dominated by ~8 k tutorial/example files.
+    # Give packagers a switch to trim them away (‘spack install petsc ~examples’)
+    # while preserving current behaviour by default.
+    variant("examples", default=True, description="Install test and tutorial example sources")
 
     with when("+rocm"):
         # https://github.com/spack/spack/issues/37416
@@ -580,7 +589,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
         else:
             options.append("--with-sycl=0")
 
-        if spec.satisfies("^cuda@12.8.0"):
+        if spec.satisfies("@:3.22 ^cuda@12.8:"):
             options.append("CUDAPPFLAGS=-Wno-deprecated-gpu-targets")
 
         if "trilinos" in spec:
@@ -749,6 +758,13 @@ class Petsc(Package, CudaPackage, ROCmPackage):
             env["MPICXX_CXX"] = env["CXX"]
 
     def configure(self, spec, prefix):
+        if spec.satisfies("@:3.23.1 +cuda ^cuda@12.9:"):
+            filter_file(
+                "libnvToolsExt.a",
+                "libnvtx3interop.a",
+                "config/BuildSystem/config/packages/cuda.py",
+                string=True,
+            )
         self.revert_kokkos_nvcc_wrapper()
         python("configure", "--prefix=%s" % prefix, *self.configure_options())
 
@@ -761,7 +777,9 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
     def install(self, spec, prefix):
         self.revert_kokkos_nvcc_wrapper()
-        make("install", parallel=False)
+        # PETSc provides a lighter target that omits docs/examples.
+        target = "install" if "+examples" in spec else "install-lib"
+        make(target, parallel=False)
 
         if self.run_tests:
             make('check PETSC_ARCH="" PETSC_DIR={0}'.format(prefix), parallel=False)

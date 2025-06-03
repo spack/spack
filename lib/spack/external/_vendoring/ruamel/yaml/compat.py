@@ -169,7 +169,7 @@ class Nprint:
 
 
 nprint = Nprint()
-nprintf = Nprint('/var/tmp/ruamel.yaml.log')
+nprintf = Nprint('/var/tmp/_vendoring.ruamel.yaml.log')
 
 # char checkers following production rules
 
@@ -197,9 +197,9 @@ def check_anchorname_char(ch):
 def version_tnf(t1, t2=None):
     # type: (Any, Any) -> Any
     """
-    return True if ruamel.yaml version_info < t1, None if t2 is specified and bigger else False
+    return True if _vendoring.ruamel.yaml version_info < t1, None if t2 is specified and bigger else False
     """
-    from ruamel.yaml import version_info  # NOQA
+    from _vendoring.ruamel.yaml import version_info  # NOQA
 
     if version_info < t1:
         return True

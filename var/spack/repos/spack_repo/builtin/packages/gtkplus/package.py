@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -126,7 +128,7 @@ class BuildEnvironment:
         env.prepend_path("GI_TYPELIB_PATH", join_path(self.prefix.lib, "girepository-1.0"))
 
 
-class MesonBuilder(BuildEnvironment, spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(BuildEnvironment, meson.MesonBuilder):
 
     def meson_args(self):
         args = []
@@ -147,7 +149,7 @@ class MesonBuilder(BuildEnvironment, spack.build_systems.meson.MesonBuilder):
         pass
 
 
-class AutotoolsBuilder(BuildEnvironment, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(BuildEnvironment, autotools.AutotoolsBuilder):
 
     def configure_args(self):
         true = which("true")

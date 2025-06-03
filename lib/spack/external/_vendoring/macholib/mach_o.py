@@ -13,7 +13,7 @@ See /usr/include/mach-o and friends.
 
 import time
 
-from macholib.ptypes import (
+from _vendoring.macholib.ptypes import (
     Structure,
     p_int32,
     p_int64,
