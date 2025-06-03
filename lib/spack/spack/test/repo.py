@@ -567,11 +567,6 @@ def test_repo_update(tmp_path: pathlib.Path):
     }
 
 
-@pytest.mark.requires_builtin("builtin repository path must exist")
-def test_builtin_repo():
-    assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin")
-
-
 def test_mock_builtin_repo(mock_packages):
     assert spack.repo.builtin_repo() is spack.repo.PATH.get_repo("builtin_mock")
 
