@@ -3469,11 +3469,13 @@ class Spec:
                     candidate_edges = current_node.edges_to_dependencies(
                         name=name, virtuals=rhs_edge.virtuals or None
                     )
-                    # Select at least the deptypes on the rhs_edge
+                    # Select at least the deptypes on the rhs_edge, and conditional edges that
+                    # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
                     candidates = [
-                        x.spec
-                        for x in candidate_edges
-                        if ((x.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                        lhs_edge.spec
+                        for lhs_edge in candidate_edges
+                        if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                        and rhs_edge.when.satisfies(lhs_edge.when)
                     ]
                     if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
                         return False

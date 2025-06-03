@@ -3764,6 +3764,10 @@ def test_specifying_direct_dependencies(
         ("mpich+debug", "%[when=+debug] llvm", (False, False)),
         ("mpich+debug %llvm+clang", "%[when=+debug] llvm", (True, True)),
         ("mpich+debug", "%[when=+debug] gcc", (False, True)),
+        # Conditional specs on the lhs
+        ("mpich %[when=+debug] gcc", "mpich %gcc", (False, True)),
+        ("mpich %[when=+debug] gcc", "mpich %llvm", (False, False)),
+        ("mpich %[when=+debug] gcc", "mpich %[when=+debug] gcc", (True, True)),
     ],
 )
 def test_satisfies_conditional_spec(
