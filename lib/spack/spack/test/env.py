@@ -15,6 +15,7 @@ import spack.environment as ev
 import spack.platforms
 import spack.solver.asp
 import spack.spec
+import spack.traverse as traverse
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
@@ -1059,3 +1060,151 @@ def test_toolchain_definitions_are_allowed(
 
     for c in not_expected:
         assert not mpileaks.satisfies(c)
+
+
+def test_matrix_toolchains_basic(
+    tmp_path, mutable_config, mutable_mock_env_path, temporary_store, mock_packages
+):
+    """Can a toolchain be applied in a matrix
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
+spack:
+  specs:
+    - matrix:
+      - [dt-diamond-left,  dt-diamond-right]
+      - ["%mixed-toolchain"]
+  toolchains:
+    mixed-toolchain:
+    - spec: "%[virtuals=c] llvm"
+      when: "%c"
+    - spec: "%[virtuals=cxx] llvm"
+      when: "%cxx"
+    # This succeeds if I flip it to gcc, but that seems to be the built
+    # in preference (what is chosen if I force nothing). A more-robust
+    # test would try forcing several combinations and making sure they
+    # all are respected.
+    - spec: "%[virtuals=fortran] llvm"
+      when: "%fortran"
+  concretizer:
+    unify: true
+"""
+    )
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        for x in e.concrete_roots():
+            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
+                assert x.satisfies("%[virtuals=fortran] gcc")
+
+
+def test_matrix_toolchains_apply_both(
+    tmp_path, mutable_config, mutable_mock_env_path, temporary_store, mock_packages
+):
+    """Matrix that multiplies two conflicting toolchains with
+    two root specs.
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
+spack:
+  specs:
+    - matrix:
+      - [dt-diamond-left,  dt-diamond-right]
+      - ["%toolchain-1", "%toolchain-2"]
+  toolchains:
+    toolchain-1:
+    - spec: "%[virtuals=c] llvm"
+      when: "%c"
+    - spec: "%[virtuals=cxx] llvm"
+      when: "%cxx"
+    - spec: "%[virtuals=fortran] gcc"
+      when: "%fortran"
+    toolchain-2:
+    - spec: "%[virtuals=c] gcc"
+      when: "%c"
+    - spec: "%[virtuals=cxx] gcc"
+      when: "%cxx"
+    - spec: "%[virtuals=fortran] llvm"
+      when: "%fortran"
+  concretizer:
+    unify: when_possible
+"""
+    )
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        for x in e.concrete_roots():
+            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
+                if x.satisfies("%[virtuals=c] llvm"):
+                    assert x.satisfies("%[virtuals=fortran] gcc")
+                else:
+                    assert x.satisfies("%[virtuals=c] gcc")
+                    assert x.satisfies("%[virtuals=fortran] llvm")
+
+
+def test_matrix_toolchains_three_vector(
+    tmp_path, mutable_config, mutable_mock_env_path, temporary_store, mock_packages
+):
+    """Can a toolchain be applied in a matrix
+    """
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(
+        """\
+spack:
+  specs:
+    - matrix:
+      - [dt-diamond-left, dt-diamond-right]
+      - [^dt-diamond-bottom@0.9]
+      - ["%mixed-toolchain"]
+  toolchains:
+    mixed-toolchain:
+    - spec: "%[virtuals=c] llvm"
+      when: "%c"
+    - spec: "%[virtuals=cxx] llvm"
+      when: "%cxx"
+    - spec: "%[virtuals=fortran] llvm"
+      when: "%fortran"
+  concretizer:
+    unify: true
+"""
+    )
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        for x in e.concrete_roots():
+            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
+                assert x.satisfies("%[virtuals=fortran] llvm")
+
+
+# import spack_repo.builtin_mock.build_systems.compiler
+
+
+def _display_with_compilers(spec):
+    compilers = set()
+
+    for depth, dep_spec in traverse.traverse_tree(
+        [spec], deptype=("link", "run", "build"), depth_first=True
+    ):
+        node = dep_spec.spec
+        # if isinstance(node.package,
+        # spack_repo.builtin_mock.build_systems.compiler.CompilerPackage):
+        if node.name in ["llvm", "gcc"]:
+            compilers.add(node)
+        # elif node.name in ["llvm", "gcc"]:
+        #     import pdb; pdb.set_trace()
+        #     print('?')
+
+    for depth, dep_spec in traverse.traverse_tree(
+        [spec], deptype=("link", "run", "build"), depth_first=True
+    ):
+        node = dep_spec.spec
+        lang_to_comp = {}
+        for direct_dep_spec in node.edges_to_dependencies():
+            child = direct_dep_spec.spec
+            if child in compilers:
+                lang_to_comp[direct_dep_spec.virtuals] = child.name
+
+        line = "  " * depth + node.name
+        for lang, comp in sorted(lang_to_comp.items()):
+            langs_id = ",".join(lang)
+            line += f" [{langs_id}]={comp}"
+        print(line)

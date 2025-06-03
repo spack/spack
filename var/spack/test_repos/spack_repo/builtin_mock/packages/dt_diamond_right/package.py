@@ -17,3 +17,5 @@ class DtDiamondRight(Package):
 
     depends_on("dt-diamond-bottom", type=("build", "link", "run"))
     depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")

@@ -87,3 +87,4 @@ packages:
           compilers:
             c: /path/bin/clang
             cxx: /path/bin/clang++
+            fortran: /path/bin/flang
