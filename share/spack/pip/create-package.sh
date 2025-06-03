@@ -46,7 +46,11 @@ cp "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml" config.yaml.bak
 cat <<EOF > new.config.yaml
 # Since this Spack is managed by pip, this configuration is overriden
 # by the one in ../site-admin/config.yaml. Please refer to that one for
-# current settings.
+# current settings, particularly config: install_tree: root.
+#
+# This leverages the new site-admin configuration scope, which is
+# described in the configuration section under scope precedence in the
+# online documentation.
 EOF
 cat config.yaml.bak >> new.config.yaml
 mv new.config.yaml "${SPACK_PKG_SRC}/spack/etc/spack/defaults/config.yaml"
