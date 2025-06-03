@@ -4,6 +4,8 @@
 
 import subprocess
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -37,10 +39,12 @@ class Mapl(CMakePackage):
     version("develop", branch="develop")
     version("main", branch="main")
 
+    version("2.56.0", sha256="9efdbfb87b7ca8d31f4be241a9db260612310e01930681565bfdaf869090a7e8")
     version("2.55.1", sha256="eb8bbb42a9a488155bd38f9bc6f6863b8a0acb210852ee71834f160958500243")
     version("2.55.0", sha256="13ec3d81d53cf18aa18322b74b9a6990ad7e51224f1156be5d1f834ee826f95c")
     version("2.54.2", sha256="70b7be425d07a7be7d9bb0e53b93a372887a048caf23260e0ae602ca6e3670ed")
     version("2.54.1", sha256="2430ded45a98989e9100037f54cf22f5a5083e17196514b3667d3003413e49e1")
+    version("2.53.4", sha256="da38348a72fcbaa2b888578bfa630ab36261206136d33700344ed6792f9f9aeb")
     version("2.53.3", sha256="32e9f21e1fdb83a5a59924f498a57e5369732c21eff9014f35052be0a2fa6d6c")
     version("2.53.2", sha256="0f294a5289541b0028773f8e5ab2bf04734ec09241baa5a3dcea0e939d40336f")
     version("2.53.1", sha256="8371a75d4d81294eb9d99d66702f8cf62d4bd954cec3e247e1afae621b4e4726")
@@ -168,8 +172,14 @@ class Mapl(CMakePackage):
     resource(
         name="esma_cmake",
         git="https://github.com/GEOS-ESM/ESMA_cmake.git",
+        tag="v3.62.1",
+        when="@2.56:",
+    )
+    resource(
+        name="esma_cmake",
+        git="https://github.com/GEOS-ESM/ESMA_cmake.git",
         tag="v3.58.1",
-        when="@2.55:",
+        when="@2.55",
     )
     resource(
         name="esma_cmake",

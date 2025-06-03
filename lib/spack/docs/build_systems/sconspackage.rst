@@ -41,7 +41,7 @@ As previously mentioned, SCons allows developers to add subcommands like
    $ scons install
 
 
-To facilitate this, the ``SConsBuilder`` and ``SconsPackage`` base classes provide the
+To facilitate this, the ``SConsBuilder`` and ``SConsPackage`` base classes provide the
 following phases:
 
 #. ``build`` - build the package
@@ -227,7 +227,7 @@ You'll notice that cantera provides a ``scons help`` subcommand. Running
 ``scons help`` prints a list of valid command-line variables.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Passing arguments to scons
+Passing arguments to SCons
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Now that you know what arguments the project accepts, you can add them to

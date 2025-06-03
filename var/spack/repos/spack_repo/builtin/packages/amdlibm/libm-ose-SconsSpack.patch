@@ -1,10 +1,13 @@
---- a/scripts/site_scons/alm/env.py	2024-04-30 14:30:40.936684295 -0500
-+++ b/scripts/site_scons/alm/env.py	2024-04-30 14:31:10.901423863 -0500
-@@ -72,6 +72,7 @@
+diff -Naru a/scripts/site_scons/alm/env.py b/scripts/site_scons/alm/env.py
+--- a/scripts/site_scons/alm/env.py	2024-02-28 05:19:43.000000000 +0000
++++ b/scripts/site_scons/alm/env.py	2025-05-12 17:46:19.299780124 +0000
+@@ -72,6 +72,9 @@
                      'SPACK_LINKER_ARG',
                      'SPACK_SHORT_SPEC',
                      'SPACK_SYSTEM_DIRS',
 +                    'SPACK_MANAGED_DIRS',
++                    'SPACK_COMPILER_WRAPPER_PATH',
++                    'SPACK_CC_LINKER_ARG',
                  ]
  
      # add these keys to mydict if they exist in environ

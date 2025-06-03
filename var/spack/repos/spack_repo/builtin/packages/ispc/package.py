@@ -5,6 +5,8 @@
 
 import re
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 # ispc requires <gnu/stubs-32.h>, e.g. from

@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 
 
@@ -16,6 +19,8 @@ class Mgard(CMakePackage, CudaPackage):
     git = "https://github.com/robertu94/MGARD"
 
     maintainers("robertu94")
+    maintainers("vicentebolea")
+    maintainers("kmorel")
 
     tags = ["e4s"]
 

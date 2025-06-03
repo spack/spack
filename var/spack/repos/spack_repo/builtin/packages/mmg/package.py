@@ -4,7 +4,9 @@
 
 import os
 
-import spack.build_systems.cmake
+from spack_repo.builtin.build_systems import cmake
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -56,7 +58,7 @@ class Mmg(CMakePackage):
     depends_on("vtk", when="+vtk")
 
 
-class CMakeBuilder(spack.build_systems.cmake.CMakeBuilder):
+class CMakeBuilder(cmake.CMakeBuilder):
     def cmake_args(self):
         shared_active = self.spec.satisfies("+shared")
         args = [

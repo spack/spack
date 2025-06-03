@@ -1,8 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import spack.build_systems.autotools
-import spack.build_systems.meson
+from spack_repo.builtin.build_systems import autotools, meson
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.meson import MesonPackage
+
 from spack.package import *
 
 
@@ -61,7 +63,7 @@ class Libxkbcommon(MesonPackage, AutotoolsPackage):
     depends_on("wayland-protocols@1.7:", when="+wayland")
 
 
-class MesonBuilder(spack.build_systems.meson.MesonBuilder):
+class MesonBuilder(meson.MesonBuilder):
     def meson_args(self):
         args = [
             "-Dxkb-config-root={0}".format(self.spec["xkbdata-api"].prefix),
@@ -75,7 +77,7 @@ class MesonBuilder(spack.build_systems.meson.MesonBuilder):
         return args
 
 
-class AutotoolsBuilder(spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(autotools.AutotoolsBuilder):
     def configure_args(self):
         """Configure arguments are passed using meson_args functions"""
         return [

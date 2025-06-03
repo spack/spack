@@ -4,9 +4,17 @@
 
 import socket
 
-from spack.package import *
+from spack_repo.builtin.build_systems.cached_cmake import (
+    CachedCMakePackage,
+    cmake_cache_option,
+    cmake_cache_path,
+    cmake_cache_string,
+)
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+from spack_repo.builtin.packages.blt.package import llnl_link_helpers
 
-from ..blt.package import llnl_link_helpers
+from spack.package import *
 
 
 class Chai(CachedCMakePackage, CudaPackage, ROCmPackage):

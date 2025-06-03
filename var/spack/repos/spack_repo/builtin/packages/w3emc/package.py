@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from spack.package import *
 
 
@@ -57,7 +59,7 @@ class W3emc(CMakePackage):
     depends_on("fortran", type="build")
 
     depends_on("bufr", when="@2.10: +bufr")
-    depends_on("bacio", when="@2.9.2:")
+    depends_on("bacio@2.4:", when="@2.9.2:")
 
     # w3emc 2.7.3 contains gblevents which has these dependencies
     depends_on("nemsio", when="@2.7.3")

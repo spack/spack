@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.qmake import QMakePackage
+
 from spack.package import *
 
 
@@ -19,6 +21,9 @@ class Qwtpolar(QMakePackage):
 
     depends_on("qt@4.4:")
     depends_on("qwt@6.1:")
+    # qwtpolar merged with qwt as of qwt@6.2
+    # as a result, it doesn't build with qwt@6.2:
+    depends_on("qwt@:6.1", when="@1.1.1")
 
     def patch(self):
         # Modify hardcoded prefix

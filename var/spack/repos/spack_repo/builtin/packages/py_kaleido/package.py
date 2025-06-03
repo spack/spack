@@ -5,6 +5,8 @@
 import platform
 import sys
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 arch, os = platform.machine(), sys.platform
