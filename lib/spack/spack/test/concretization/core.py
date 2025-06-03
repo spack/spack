@@ -3768,6 +3768,25 @@ def test_specifying_direct_dependencies(
         ("mpich %[when=+debug] gcc", "mpich %gcc", (False, True)),
         ("mpich %[when=+debug] gcc", "mpich %llvm", (False, False)),
         ("mpich %[when=+debug] gcc", "mpich %[when=+debug] gcc", (True, True)),
+        ("mpileaks ^[when=+opt] callpath@0.9", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^[when=+opt] callpath@1.0", (True, True)),
+        # Conditional specs on both sides
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            (True, True),
+        ),
+        (
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            "mpileaks ^[when=+opt] callpath@1.0",
+            (False, True),
+        ),
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=~debug] callpath@1.0",
+            (False, True),
+        ),
     ],
 )
 def test_satisfies_conditional_spec(

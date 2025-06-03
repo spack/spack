@@ -3482,9 +3482,6 @@ class Spec:
 
                 continue
 
-            if not rhs_edge.virtuals:
-                continue
-
             # Skip edges from a concrete sub-DAG
             if rhs_edge.parent.concrete:
                 continue
@@ -3495,7 +3492,6 @@ class Spec:
                 for lhs_edge in self.traverse_edges(
                     root=False, cover="edges", deptype=("link", "run")
                 ):
-                    # TODO: do we need to avoid conditional edges here
                     lhs_edges[lhs_edge.spec.name].add(lhs_edge)
                     for virtual_name in lhs_edge.virtuals:
                         lhs_edges[virtual_name].add(lhs_edge)
@@ -3508,31 +3504,32 @@ class Spec:
 
             # We don't have edges to this dependency
             current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name not in lhs_edges:
+            if current_dependency_name is not None and current_dependency_name not in lhs_edges:
+                return False
+
+            if current_dependency_name is None:
+                # Here we have an anonymous spec e.g. ^ dev_path=*
+                candidate_edges = list(itertools.chain(*lhs_edges.values()))
+
+            else:
+                candidate_edges = [
+                    lhs_edge
+                    for lhs_edge in lhs_edges[current_dependency_name]
+                    if rhs_edge.when.satisfies(lhs_edge.when)
+                ]
+
+            if not candidate_edges:
                 return False
 
             for virtual in rhs_edge.virtuals:
-                # TODO: consider how this could apply to conditional edges
-                has_virtual = any(
-                    virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
-                )
+                has_virtual = any(virtual in edge.virtuals for edge in candidate_edges)
                 if not has_virtual:
                     return False
 
-        # Edges have been checked above already, hence deps=False
-        lhs_nodes = list(self.traverse(root=False)) + sorted(mock_nodes_from_old_specfiles)
-        for rhs in other.traverse(root=False):
-            # Possible lhs nodes to match this rhs node
-            lhs_matches = [lhs for lhs in lhs_nodes if lhs.satisfies(rhs, deps=False)]
-
-            # Check whether the node needs matching (not a conditional that isn't satisfied)
-            if not any(self.satisfies(e.when) for e in rhs.edges_from_dependents()):
-                # TODO: This technically misses the case that the edge is analogous
-                # to an edge lower in the DAG, and could give a false negative in that case
-                continue
-
-            # If there is no matching lhs for this rhs node
-            if not lhs_matches:
+            for lhs_edge in candidate_edges:
+                if lhs_edge.spec.satisfies(rhs_edge.spec, deps=False):
+                    break
+            else:
                 return False
 
         return True

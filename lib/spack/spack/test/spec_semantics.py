@@ -2243,11 +2243,12 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
 
     # Direct build dependencies
     assert s.satisfies("^[virtuals=c] gcc")
+    assert s.satisfies("%[virtuals=c] gcc")
     assert s.dependencies(name="gcc")[0] == s["gcc"]
     assert s.dependencies(name="gcc")[0] == s["c"]
 
     # Transitive build dependencies
-    assert s.satisfies("^gmake")
+    assert not s.satisfies("^gmake")
 
     # "gmake" is not in the link/run subdag + direct build deps
     with pytest.raises(KeyError):
