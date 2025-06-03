@@ -66,8 +66,11 @@ class Julia(MakefilePackage):
         default="auto",
         description=(
             "Machine architecture(s) for which to (pre)compile system and package "
-            + "images. Use pipe (|) instead of comma (,) as Spack does not support "
-            + "commas in variants"
+            "images. Use the value `auto` (the default) to let Spack automatically "
+            "determine the target architecture. Use pipe (|) instead of comma (,) "
+            "in variants as Spack does not support commas. E.g.: "
+            "`cpu_target='generic;sandybridge|-xsaveopt|clone_all;haswell|-rdrnd|base(1);"
+            "znver4|-rdrnd|base(1)'`."
         ),
         sticky=True,
     )
