@@ -1080,7 +1080,7 @@ def check_mirror_for_layout(mirror: spack.mirrors.mirror.Mirror):
 def _entries_from_cache_aws_cli(
     url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
 ):
-    """Use aws cli to sync all the specs into a local temporary directory.
+    """Use aws cli to sync all manifests into a local temporary directory.
 
     Args:
         url: prefix of the build cache on s3
@@ -1088,7 +1088,10 @@ def _entries_from_cache_aws_cli(
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
-        List of the local file paths and a function that can read each one from the file system.
+        A tuple where the first item is a list of local file paths pointing
+        to the manifests that should be read from the mirror, and the
+        second item is a function taking a url or file path and returning
+        a `URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1133,16 +1136,18 @@ def _entries_from_cache_aws_cli(
 def _entries_from_cache_fallback(
     url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
 ):
-    """Use spack.util.web module to get a list of all the specs at the remote url.
+    """Use spack.util.web module to get a list of all the manifests at the remote url.
 
     Args:
-        url: Base url of mirror (location of spec files)
+        url: Base url of mirror (location of manifest files)
         tmpspecsdir: path to temporary directory to use for writing files
         component_type: type of buildcache component to sync (spec, index, key, etc.)
 
     Return:
-        The list of complete spec file urls and a function that can read each one from its
-            remote location (also using the spack.util.web module).
+        A tuple where the first item is a list of absolute file paths or
+        urls pointing to the manifests that should be read from the mirror,
+        and the second item is a function taking a url or file path of a manifest and
+        returning a `URLBuildcacheEntry` for that manifest.
     """
     read_fn = None
     file_list = None
@@ -1174,8 +1179,7 @@ def _entries_from_cache_fallback(
 def get_entries_from_cache(
     url: str, tmpspecsdir: str, component_type: Optional[BuildcacheComponent] = None
 ):
-    """Get a list of all the spec files in the mirror and a function to
-    read them.
+    """Get a list of all the manifests in the mirror and a function to read them.
 
     Args:
         url: Base url of mirror (location of spec files)
@@ -1184,9 +1188,9 @@ def get_entries_from_cache(
 
     Return:
         A tuple where the first item is a list of absolute file paths or
-        urls pointing to the specs that should be read from the mirror,
+        urls pointing to the manifests that should be read from the mirror,
         and the second item is a function taking a url or file path and
-        returning the spec read from that location.
+        returning a `URLBuildcacheEntry` for that manifest.
     """
     callbacks: List[Callable] = []
     if url.startswith("s3://"):
@@ -1199,7 +1203,7 @@ def get_entries_from_cache(
         if file_list:
             return file_list, read_fn
 
-    raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(url))
+    raise ListMirrorSpecsError("Failed to get list of entries from {0}".format(url))
 
 
 def validate_checksum(file_path, checksum_algorithm, expected_checksum) -> None:
