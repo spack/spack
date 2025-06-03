@@ -9,8 +9,7 @@ class PyPydap(PythonPackage):
     """An implementation of the Data Access Protocol."""
 
     homepage = "https://www.pydap.org/en/latest/"
-    pypi = "pydap/pydap-3.2.2.tar.gz"
-
+    pypi = "pydap/pydap-3.5.5.tar.gz"
     license("MIT")
 
     version("3.5.5", sha256="0f8ca9b4e244c4d345d0b5269c4ebc886fcd0778b828e5ae1415b7ea5341eabd")
@@ -34,3 +33,9 @@ class PyPydap(PythonPackage):
     depends_on("py-jinja2", type=("build", "run"), when="@3.2.2")
     depends_on("py-docopt", type=("build", "run"), when="@3.2.2")
     depends_on("py-six@1.4.0:", type=("build", "run"), when="@3.2.2")
+
+    def url_for_version(self, version):
+        if version < Version("3.5"):
+            return f"https://files.pythonhosted.org/packages/source/P/Pydap/Pydap-{version}.tar.gz"
+
+        return super().url_for_version(version)
