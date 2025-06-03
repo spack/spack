@@ -338,23 +338,28 @@ class TestSpecSemantics:
             # conditional edges
             (
                 "libelf",
-                "%[when='^c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
-                "libelf %[when='^c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "libelf %[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
             ),
             (
-                "libelf %[when='^c' virtuals=c]gcc",
-                "%[when='^c' virtuals=c]gcc@10.3.1",
-                "libelf%[when='^c' virtuals=c]gcc@10.3.1",
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1",
             ),
             (
-                "libelf %[when='^c' virtuals=c]gcc",
-                "%[when='^c' virtuals=c]gcc@10.3.1 ^[when='+mpi'] mpich",
-                "libelf%[when='^c' virtuals=c]gcc@10.3.1 ^[when='+mpi']mpich",
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi'] mpich",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi']mpich",
             ),
             (
-                "libelf %[when='^c' virtuals=c]gcc",
-                "%[when='^cxx' virtuals=cxx]gcc@10.3.1",
-                "libelf%[when='^c' virtuals=c]gcc %[when='^cxx' virtuals=cxx]gcc@10.3.1",
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%cxx' virtuals=cxx]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc %[when='%cxx' virtuals=cxx]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='+c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf %[when='+c' virtuals=c]gcc %[when='%c' virtuals=c]gcc@10.3.1",
             ),
         ],
     )
