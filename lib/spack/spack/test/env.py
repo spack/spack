@@ -1065,8 +1065,7 @@ def test_toolchain_definitions_are_allowed(
 def test_matrix_toolchains_basic(
     tmp_path, mutable_config, mutable_mock_env_path, temporary_store, mock_packages
 ):
-    """Can a toolchain be applied in a matrix
-    """
+    """Can a toolchain be applied in a matrix"""
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(
         """\
@@ -1141,8 +1140,7 @@ spack:
 def test_matrix_toolchains_three_vector(
     tmp_path, mutable_config, mutable_mock_env_path, temporary_store, mock_packages
 ):
-    """Can a toolchain be applied in a matrix
-    """
+    """Can a toolchain be applied in a matrix"""
     manifest = tmp_path / "spack.yaml"
     manifest.write_text(
         """\
