@@ -236,15 +236,15 @@ class Paraview(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("mpi", when="+mpi")
     conflicts("mpi", when="~mpi")
 
-    depends_on("qt@:4", when="@:5.2.0+qt")
+    depends_on("qt@:4", when="@:5.2.0 +qt")
     depends_on("qt+sql", when="+qt")
 
     # https://discourse.paraview.org/t/paraview-5-9-and-minimum-recommended-qt-version/5333
-    depends_on("qt@5.12:5 +sql", when="+qt @5.9:")
+    depends_on("qt@5.12:5 +sql", when="@5.9:5.13 +qt")
 
     with when("+qt"):
-        depends_on("qt+opengl", when="@5.3.0:+opengl2")
-        depends_on("qt~opengl", when="@5.3.0:~opengl2")
+        depends_on("qt+opengl", when="@5.3.0: +opengl2")
+        depends_on("qt~opengl", when="@5.3.0: ~opengl2")
 
     depends_on("gl@3.2:", when="+opengl2")
     depends_on("gl@1.2:", when="~opengl2")
