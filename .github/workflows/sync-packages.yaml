@@ -28,28 +28,24 @@ jobs:
       run: |
         cd spack-packages
         git-filter-repo --quiet --source ../spack \
-                        --path var/spack/repos/README.md --path-rename var/spack/repos/README.md:README.md \
-                        --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
-                        --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
-                        --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \
-                        --path lib/spack/spack/test/__init__.py --path-rename lib/spack/spack/test/__init__.py:repos/spack_repo/builtin/tests/__init__.py \
-                        --path lib/spack/spack/test/conftest.py --path-rename lib/spack/spack/test/conftest.py:repos/spack_repo/builtin/tests/conftest.py \
-                        --path lib/spack/spack/test/bootstrap.py --path-rename lib/spack/spack/test/bootstrap.py:repos/spack_repo/builtin/tests/bootstrap.py \
-                        --path lib/spack/spack/test/build_system_guess.py --path-rename lib/spack/spack/test/build_system_guess.py:repos/spack_repo/builtin/tests/build_system_guess.py \
-                        --path lib/spack/spack/test/cmd/providers.py --path-rename lib/spack/spack/test/cmd/providers.py:repos/spack_repo/builtin/tests/cmd/providers.py \
-                        --path lib/spack/spack/test/repo.py --path-rename lib/spack/spack/test/repo.py:repos/spack_repo/builtin/tests/repo.py \
-                        --path lib/spack/spack/test/packages.py --path-rename lib/spack/spack/test/packages.py:repos/spack_repo/builtin/tests/packages.py \
-                        --path .github/workflows/unit_tests.yaml \
-                        --path pytest.ini \
+                        --path .github/CODE_OF_CONDUCT.md --path-rename .github/CODE_OF_CONDUCT.md:.github/CODE_OF_CONDUCT.md \
+                        --path .github/CONTRIBUTING.md --path-rename .github/CONTRIBUTING.md:.github/CONTRIBUTING.md \
+                        --path .github/ISSUE_TEMPLATE/ \
+                        --path .github/pull_request_template.md \
                         --path .github/workflows/audit.yaml \
                         --path .github/workflows/ci.yaml \
                         --path .github/workflows/prechecks.yml \
+                        --path .github/workflows/unit_tests.yaml \
+                        --path lib/spack/spack/test/__init__.py --path-rename lib/spack/spack/test/__init__.py:tests/__init__.py \
+                        --path lib/spack/spack/test/build_systems.py --path-rename lib/spack/spack/test/build_systems.py:tests/build_systems.py \
+                        --path lib/spack/spack/test/conftest.py --path-rename lib/spack/spack/test/conftest.py:tests/conftest.py \
+                        --path pytest.ini \
+                        --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --path share/spack/qa/validate_last_exit.ps1 --path-rename share/spack/qa/validate_last_exit.ps1:.ci/validate_last_exit.ps1 \
                         --path share/spack/qa/windows_test_setup.ps1 --path-rename share/spack/qa/windows_test_setup.ps1:.ci/windows_test_setup.ps1 \
-                        --path .github/CODE_OF_CONDUCT.md --path-rename .github/CODE_OF_CONDUCT.md:.github/CODE_OF_CONDUCT.md \
-                        --path .github/CONTRIBUTING.md --path-rename .github/CONTRIBUTING.md:.github/CONTRIBUTING.md \
-                        --path .github/pull_request_template.md \
-                        --path .github/ISSUE_TEMPLATE/ \
+                        --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
+                        --path var/spack/repos/README.md --path-rename var/spack/repos/README.md:README.md \
+                        --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \
                         --refs develop
     - name: Push
       run: |
