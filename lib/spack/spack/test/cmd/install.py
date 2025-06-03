@@ -41,16 +41,6 @@ buildcache = SpackCommand("buildcache")
 find = SpackCommand("find")
 
 
-# A test goes in here that ensures that a non-writable opt defaults to
-# spack instance location.
-
-# A test goes in here that ensures that spack instance location is a
-# reasonable value in the absence of XDG_DATA_HOME.
-
-# A test goes in here that ensures that spack instance location is a
-# reasonable value when XDG_DATA_HOME is set.
-
-
 @pytest.fixture()
 def noop_install(monkeypatch):
     def noop(*args, **kwargs):
