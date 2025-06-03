@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 from llnl.util.tty import color
 
 import spack
+import spack.caches
 import spack.config
 import spack.repo
 import spack.util.executable
@@ -157,7 +158,7 @@ def _add_repo(
     )
     descriptor.initialize(git=spack.util.executable.which("git"))
 
-    packages_repos = descriptor.construct()
+    packages_repos = descriptor.construct(cache=spack.caches.MISC_CACHE)
 
     usable_repos: Dict[str, spack.repo.Repo] = {}
 
@@ -220,7 +221,7 @@ def repo_remove(args):
             # hence "all" and not "any". We can improve this later if needed.
             if all(
                 r.namespace == namespace_or_path or r.root == canon_path
-                for r in descriptor.construct().values()
+                for r in descriptor.construct(cache=spack.caches.MISC_CACHE).values()
                 if isinstance(r, spack.repo.Repo)
             ):
                 key = name
@@ -246,7 +247,7 @@ def repo_list(args):
 
     for name, descriptor in descriptors.items():
         descriptor.initialize(fetch=False)
-        repos_for_descriptor = descriptor.construct()
+        repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
         for path, maybe_repo in repos_for_descriptor.items():
             if isinstance(maybe_repo, spack.repo.Repo):
                 color.cprint(
@@ -268,7 +269,7 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
         spack.repo.package_repository_lock(), spack.config.CONFIG
     )
 
-    repo_path, _ = descriptors.construct(fetch=False)
+    repo_path, _ = descriptors.construct(cache=spack.caches.MISC_CACHE, fetch=False)
 
     for repo in repo_path.repos:
         if repo.namespace == name_or_path:

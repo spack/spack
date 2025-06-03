@@ -170,27 +170,27 @@ def test_repo_dump_virtuals(tmpdir, mutable_mock_repo, mock_packages, ensure_deb
 
 @pytest.mark.parametrize("repos", [["mock"], ["extra"], ["mock", "extra"], ["extra", "mock"]])
 def test_repository_construction_doesnt_use_globals(nullify_globals, tmp_path, repos):
-    def _repo_paths(repos):
-        repo_paths, namespaces = [], []
+    def _repo_descriptors(repos):
+        descriptors = {}
         for entry in repos:
             if entry == "mock":
-                repo_paths.append(spack.paths.mock_packages_path)
-                namespaces.append("builtin_mock")
+                descriptors["builtin_mock"] = spack.repo.LocalRepoDescriptor(
+                    "builtin_mock", spack.paths.mock_packages_path
+                )
             if entry == "extra":
                 name = "extra_mock"
                 repo_dir = tmp_path / name
                 repo_dir.mkdir()
                 repo = spack.repo.MockRepositoryBuilder(repo_dir, name)
-                repo_paths.append(repo.root)
-                namespaces.append(repo.namespace)
-        return repo_paths, namespaces
+                descriptors[name] = spack.repo.LocalRepoDescriptor(name, repo.root)
+        return spack.repo.RepoDescriptors(descriptors)
 
-    repo_paths, namespaces = _repo_paths(repos)
+    descriptors = _repo_descriptors(repos)
 
     repo_cache = spack.util.file_cache.FileCache(tmp_path / "cache")
-    repo_path = spack.repo.RepoPath.from_paths(*repo_paths, cache=repo_cache)
-    assert len(repo_path.repos) == len(namespaces)
-    assert [x.namespace for x in repo_path.repos] == namespaces
+    repo_path = spack.repo.RepoPath.from_descriptors(descriptors, cache=repo_cache)
+    assert len(repo_path.repos) == len(descriptors)
+    assert [x.namespace for x in repo_path.repos] == list(descriptors.keys())
 
 
 @pytest.mark.parametrize("method_name", ["dirname_for_package_name", "filename_for_package_name"])
@@ -231,11 +231,14 @@ class TestRepo:
     @pytest.mark.parametrize(
         "name,expected", [("mpi", True), ("mpich", False), ("mpileaks", False)]
     )
-    @pytest.mark.parametrize("constructor", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
-    def test_is_virtual(self, constructor, name, expected, mock_test_cache):
-        repo = constructor(spack.paths.mock_packages_path, cache=mock_test_cache)
+    def test_is_virtual(self, name, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
         assert repo.is_virtual(name) is expected
         assert repo.is_virtual_safe(name) is expected
+
+        repo_path = spack.repo.RepoPath(repo)
+        assert repo_path.is_virtual(name) is expected
+        assert repo_path.is_virtual_safe(name) is expected
 
     @pytest.mark.parametrize(
         "module_name,pkg_name",
@@ -278,44 +281,63 @@ class TestRepo:
         "extended,expected",
         [("python", ["py-extension1", "python-venv"]), ("perl", ["perl-extension"])],
     )
-    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
-    def test_extensions(self, create_repo, extended, expected, mock_test_cache):
-        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        provider_names = {x.name for x in repo.extensions_for(extended)}
-        assert provider_names.issuperset(expected)
+    def test_extensions(self, extended, expected, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
+        for instance in (repo, repo_path):
+            provider_names = {x.name for x in instance.extensions_for(extended)}
+            assert provider_names.issuperset(expected)
 
-    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
-    def test_all_package_names(self, create_repo, mock_test_cache):
-        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        all_names = repo.all_package_names(include_virtuals=True)
-        real_names = repo.all_package_names(include_virtuals=False)
-        assert set(all_names).issuperset(real_names)
-        for name in set(all_names) - set(real_names):
-            assert repo.is_virtual(name)
-            assert repo.is_virtual_safe(name)
+    def test_all_package_names(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
 
-    @pytest.mark.parametrize("create_repo", [spack.repo.Repo, spack.repo.RepoPath.from_paths])
-    def test_packages_with_tags(self, create_repo, mock_test_cache):
-        repo = create_repo(spack.paths.mock_packages_path, cache=mock_test_cache)
-        r1 = repo.packages_with_tags("tag1")
-        r2 = repo.packages_with_tags("tag1", "tag2")
-        assert "mpich" in r1 and "mpich" in r2
-        assert "mpich2" in r1 and "mpich2" not in r2
-        assert set(r2).issubset(r1)
+        for instance in (repo, repo_path):
+            all_names = instance.all_package_names(include_virtuals=True)
+            real_names = instance.all_package_names(include_virtuals=False)
+            assert set(all_names).issuperset(real_names)
+            for name in set(all_names) - set(real_names):
+                assert instance.is_virtual(name)
+                assert instance.is_virtual_safe(name)
+
+    def test_packages_with_tags(self, mock_test_cache):
+        repo = spack.repo.Repo(spack.paths.mock_packages_path, cache=mock_test_cache)
+        repo_path = spack.repo.RepoPath(repo)
+
+        for instance in (repo, repo_path):
+            r1 = instance.packages_with_tags("tag1")
+            r2 = instance.packages_with_tags("tag1", "tag2")
+            assert "mpich" in r1 and "mpich" in r2
+            assert "mpich2" in r1 and "mpich2" not in r2
+            assert r2.issubset(r1)
 
 
 @pytest.mark.usefixtures("nullify_globals")
 class TestRepoPath:
     def test_creation_from_string(self, mock_test_cache):
-        repo = spack.repo.RepoPath.from_paths(
-            spack.paths.mock_packages_path, cache=mock_test_cache
+        repo = spack.repo.RepoPath.from_descriptors(
+            spack.repo.RepoDescriptors(
+                {
+                    "builtin_mock": spack.repo.LocalRepoDescriptor(
+                        "builtin_mock", spack.paths.mock_packages_path
+                    )
+                }
+            ),
+            cache=mock_test_cache,
         )
         assert len(repo.repos) == 1
         assert repo.by_namespace["builtin_mock"] is repo.repos[0]
 
     def test_get_repo(self, mock_test_cache):
-        repo = spack.repo.RepoPath.from_paths(
-            spack.paths.mock_packages_path, cache=mock_test_cache
+        repo = spack.repo.RepoPath.from_descriptors(
+            spack.repo.RepoDescriptors(
+                {
+                    "builtin_mock": spack.repo.LocalRepoDescriptor(
+                        "builtin_mock", spack.paths.mock_packages_path
+                    )
+                }
+            ),
+            cache=mock_test_cache,
         )
         # builtin_mock is there
         assert repo.get_repo("builtin_mock") is repo.repos[0]
@@ -615,6 +637,7 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     spack-repo-index.yaml file both when newly initialized and when already cloned."""
 
     lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
     # Construct 3 identical descriptors
     descriptors_1, descriptors_2, descriptors_3 = [
@@ -666,7 +689,7 @@ repo_index:
 
             return ""
 
-    repo_path_1, errors_1 = repos_1.construct(find_git=MockGit)
+    repo_path_1, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
 
     # Verify it cannot construct a Repo instance, and that this does *not* throw, since that would
     # break Spack very early on. Instead, an error is returned. Also verify that
@@ -678,7 +701,7 @@ repo_index:
     assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
 
     # Do the same test with another instance: it should *not* clone a second time.
-    repo_path_2, errors_2 = repos_2.construct(find_git=MockGit)
+    repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
     assert git_clone_calls == 1
     assert len(repo_path_2.repos) == 0
     assert len(errors_2) == 1
@@ -687,7 +710,7 @@ repo_index:
 
     # Finally fill the repo with an actual repo and check that the repo can be constructed.
     spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
-    repo_path_3, errors_3 = repos_3.construct(find_git=MockGit)
+    repo_path_3, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
     assert git_clone_calls == 1
     assert not errors_3
     assert len(repo_path_3.repos) == 1

@@ -260,10 +260,10 @@ class MockDescriptor(spack.repo.RepoDescriptor):
         self.to_construct = to_construct
         self.initialized = False
 
-    def initialize(self, git):
+    def initialize(self, fetch=True, git=None) -> None:
         self.initialized = True
 
-    def construct(self):
+    def construct(self, cache, overrides=None):
         assert self.initialized, "MockDescriptor must be initialized before construction"
         return self.to_construct
 
