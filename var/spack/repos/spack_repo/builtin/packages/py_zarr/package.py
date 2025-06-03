@@ -48,7 +48,7 @@ class PyZarr(PythonPackage):
         depends_on("python@3.11:", type=("build", "run"))
         depends_on("py-hatchling", type="build")
         depends_on("py-hatch-vcs", type="build")
-        depends_on("py-packaging@22:", type=("build", "run"))
+        depends_on("py-packaging@22:", type=("build", "run"), when="@3.0:")
         # numpy@2: in 2.18.0
         # https://github.com/zarr-developers/zarr-python/issues/1818
         depends_on("py-numpy@1.25:", type=("build", "run"))
