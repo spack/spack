@@ -10,6 +10,7 @@ from typing import List
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
+from llnl.util.tty.colify import colify_table
 
 import spack.config
 import spack.environment as ev
@@ -73,26 +74,25 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "scopes", help="list defined scopes in descending order of precedence"
     )
     scopes_parser.add_argument(
-        "-i", "--included", action="store_true", default=False, help="list only included scopes"
-    )
-    scopes_parser.add_argument(
         "-p",
-        "--path-scopes",
-        action="store_true",
-        default=False,
-        help="list only writable scopes with an associated path",
-    )
-    scopes_parser.add_argument(
-        "-s",
-        "--show-paths",
+        "--paths",
         action="store_true",
         default=False,
         help="show associated paths for appropriate scopes",
     )
     scopes_parser.add_argument(
+        "-t",
+        "--type",
+        default=["all"],
+        metavar="scope-type",
+        nargs="+",
+        choices=("all", "env", "include", "internal", "path"),
+        help="list only scopes of the specified type(s)\n\noptions: %(choices)s",
+    )
+    scopes_parser.add_argument(
         "section",
-        help="tailor scope path information to the specified section (implies -s|--show-paths)"
-        "\noptions: %(choices)s",
+        help="tailor scope path information to the specified section (implies -p|--paths)"
+        "\n\noptions: %(choices)s",
         metavar="section",
         nargs="?",
         choices=spack.config.SECTION_SCHEMAS,
@@ -245,32 +245,47 @@ def config_list(args):
     print(" ".join(list(spack.config.SECTION_SCHEMAS)))
 
 
-def _config_scope_info_string(args, scope):
-    if (args.section or args.show_paths) and hasattr(scope, "path"):
+def _config_scope_info(args, scope):
+    scope_path = None
+    if (args.section or args.paths) and hasattr(scope, "path"):
         section_path = scope.get_section_filename(args.section) if args.section else None
-        path = (
+        scope_path = (
             section_path
             if section_path and os.path.exists(section_path)
             else f"{scope.path}{os.sep}"
         )
-        return f"{scope.name} ({path})"
-    else:
-        return scope.name
+    return (scope.name, scope_path or " ")
+
+
+def _config_basic_scope_types(scope):
+    types = []
+    if isinstance(scope, spack.config.InternalConfigScope):
+        types.append("internal")
+    elif hasattr(scope, "yaml_path") and scope.yaml_path == [spack.schema.env.TOP_LEVEL_KEY]:
+        types.append("env")
+    if hasattr(scope, "path"):
+        types.append("path")
+    return sorted(types)
 
 
 def config_scopes(args):
     """List configured scopes in descending order of precedence."""
 
-    scopes = (
-        spack.config.scopes().reversed_values()
-        if (args.included or not args.path_scopes)
-        else spack.config.writable_scopes()
+    included_scopes = list(
+        i.name for s in spack.config.scopes().reversed_values() for i in s.included_scopes
     )
-    if args.included:
-        scopes = (i for s in scopes for i in s.included_scopes)
-    info = (_config_scope_info_string(args, s) for s in scopes)
 
-    print(" ".join(info))
+    scopes = list(
+        s
+        for s in spack.config.scopes().reversed_values()
+        if (
+            "include" in args.type
+            and s.name in included_scopes
+            or any(i in ("all", *_config_basic_scope_types(s)) for i in args.type)
+        )
+    )
+    if scopes:
+        colify_table([_config_scope_info(args, s) for s in scopes])
 
 
 def config_add(args):

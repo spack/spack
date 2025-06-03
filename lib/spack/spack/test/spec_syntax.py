@@ -1443,3 +1443,34 @@ expected a single spec, but got more:
 
     with pytest.raises(ValueError, match="expected a single spec, but got none"):
         parse_one_or_raise("    ")
+
+
+@pytest.mark.parametrize(
+    "input_args,expected",
+    [
+        # mpileaks %[virtuals=c deptypes=build] gcc
+        (
+            ["mpileaks", "%[virtuals=c", "deptypes=build]", "gcc"],
+            ["mpileaks %[virtuals=c deptypes=build] gcc"],
+        ),
+        # mpileaks %[ virtuals=c deptypes=build] gcc
+        (
+            ["mpileaks", "%[", "virtuals=c", "deptypes=build]", "gcc"],
+            ["mpileaks %[virtuals=c deptypes=build] gcc"],
+        ),
+        # mpileaks %[ virtuals=c deptypes=build ] gcc
+        (
+            ["mpileaks", "%[", "virtuals=c", "deptypes=build", "]", "gcc"],
+            ["mpileaks %[virtuals=c deptypes=build] gcc"],
+        ),
+    ],
+)
+def test_parse_multiple_edge_attributes(input_args, expected):
+    """Tests that we can parse correctly multiple edge attributes within square brackets,
+    from the command line.
+
+    The input are strings as they would be parsed from argparse.REMAINDER
+    """
+    s, *_ = spack.cmd.parse_specs(input_args)
+    for c in expected:
+        assert s.satisfies(c)

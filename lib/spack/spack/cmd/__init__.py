@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from collections import Counter
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Sequence, Union
 
 import llnl.string
 import llnl.util.tty as tty
@@ -702,6 +702,67 @@ def find_environment(args):
 def first_line(docstring):
     """Return the first line of the docstring."""
     return docstring.split("\n")[0]
+
+
+def group_arguments(
+    args: Sequence[str],
+    *,
+    max_group_size: int = 500,
+    prefix_length: int = 0,
+    max_group_length: Optional[int] = None,
+) -> Generator[List[str], None, None]:
+    """Splits the supplied list of arguments into groups for passing to CLI tools.
+
+    When passing CLI arguments, we need to ensure that argument lists are no longer than
+    the system command line size limit, and we may also need to ensure that groups are
+    no more than some number of arguments long.
+
+    This returns an iterator over lists of arguments that meet these constraints.
+    Arguments are in the same order they appeared in the original argument list.
+
+    If any argument's length is greater than the max_group_length, this will raise a
+    ``ValueError``.
+
+    Arguments:
+        args: list of arguments to split into groups
+        max_group_size: max number of elements in any group (default 500)
+        prefix_length: length of any additional arguments (including spaces) to be passed before
+            the groups from args; default is 0 characters
+        max_group_length: max length of characters that if a group of args is joined by " "
+            On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
+            the max usable for CreateProcess (32,768 chars)
+
+    """
+    if max_group_length is None:
+        max_group_length = 32768  # default to the Windows limit
+        if hasattr(os, "sysconf"):  # sysconf is only on unix
+            try:
+                # returns -1 if an option isn't present (soem older POSIXes)
+                sysconf_max = os.sysconf("SC_ARG_MAX")
+                max_group_length = sysconf_max if sysconf_max != -1 else max_group_length
+            except (ValueError, OSError):
+                pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
+
+    group: List[str] = []
+    grouplen, space = prefix_length, 0
+    for arg in args:
+        arglen = len(arg)
+        if arglen > max_group_length:
+            raise ValueError(f"Argument is longer than max command line size: '{arg}'")
+        if arglen + prefix_length > max_group_length:
+            raise ValueError(f"Argument with prefix is longer than max command line size: '{arg}'")
+
+        next_grouplen = grouplen + arglen + space
+        if len(group) == max_group_size or next_grouplen > max_group_length:
+            yield group
+            group, grouplen, space = [], prefix_length, 0
+
+        group.append(arg)
+        grouplen += arglen + space
+        space = 1  # add a space for elements 1, 2, etc. but not 0
+
+    if group:
+        yield group
 
 
 class CommandNotFoundError(spack.error.SpackError):

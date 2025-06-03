@@ -21,6 +21,14 @@ from spack.util.naming import pkg_name_to_class_name
 from spack.version import VersionChecksumError
 
 
+class MyPrependFileLoader(spack.repo._PrependFileLoader):
+    """Skip explicit prepending of 'spack_repo.builtin.build_systems' import."""
+
+    def __init__(self, fullname, repo, package_name):
+        super().__init__(fullname, repo, package_name)
+        self.prepend = b""
+
+
 def pkg_factory(name):
     """Return a package object tied to an abstract spec"""
     pkg_cls = spack.repo.PATH.get_pkg_class(name)
@@ -60,7 +68,8 @@ class TestPackage:
         assert "Finally" == pkg_name_to_class_name("finally")  # `Finally` is not reserved
 
     # Below tests target direct imports of spack packages from the spack.pkg namespace
-    def test_import_package(self, tmp_path: pathlib.Path):
+    def test_import_package(self, tmp_path: pathlib.Path, monkeypatch):
+        monkeypatch.setattr(spack.repo, "_PrependFileLoader", MyPrependFileLoader)
         root, _ = spack.repo.create_repo(str(tmp_path), "testing_repo", package_api=(1, 0))
         pkg_path = pathlib.Path(root) / "packages" / "mpich" / "package.py"
         pkg_path.parent.mkdir(parents=True)

@@ -57,6 +57,7 @@ class Llvm(CMakePackage, CudaPackage, LlvmDetection, CompilerPackage):
     version("main", branch="main")
 
     # Latest stable
+    version("20.1.6", sha256="afa487c401613f5e4a35935b2abfb5d07e6ebfa20df32787e34a5c7e97c6ea4b")
     version("20.1.5", sha256="205c436f93a7e185cf9d63ae57e645f23561a4d1bf854f2c5bd78995a43a5c05")
     version("20.1.4", sha256="65e3a582c4c684fa707a56ff643427bce3633eceaceae3295d81c0e830f44b89")
     version("20.1.3", sha256="b40c0d185b98c2ee3c0cb2f14cde65a06008b33dfb471cc7ad868f8ca3f7f897")
