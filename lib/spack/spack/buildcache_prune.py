@@ -28,8 +28,10 @@ def _prune_orphans(mirror: Mirror) -> int:
 
     It uses the following steps to identify and prune orphaned objects:
 
-    1. Fetch all the manifests in the cache and build up a list of all the blobs that they reference.
-    2. List all the blobs in the buildcache, resulting in a list of all the blobs that *actually* exist in the cache.
+    1. Fetch all the manifests in the cache and build up a list of all the blobs that they
+       reference.
+    2. List all the blobs in the buildcache, resulting in a list of all the blobs that
+       *actually* exist in the cache.
     3. Compare the two lists and use the difference to determine which objects are orphaned.
         - If a blob is listed in the cache but not in any manifest, that blob is orphaned.
         - If a blob is listed in a manifest but not in the cache, that manifest is orphaned.
@@ -48,7 +50,7 @@ def _prune_orphans(mirror: Mirror) -> int:
             cache_entry: Optional[URLBuildcacheEntry] = None
             try:
                 cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
-                assert cache_entry.manifest is not None  #  to satisfy type checker
+                assert cache_entry.manifest is not None  # to satisfy type checker
                 return {
                     cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
                     for data in cache_entry.manifest.data
@@ -89,7 +91,8 @@ def _prune_orphans(mirror: Mirror) -> int:
         blob_hashes_referenced_by_manifest - blob_hashes_present_in_cache
     )
 
-    # Compute set of manifests that are orphaned (i.e., they reference blobs that are not present in the cache)
+    # Compute set of manifests that are orphaned (i.e., they reference blobs that are not
+    # present in the cache)
     orphaned_manifests = {
         blob_to_manifest_mapping[blob_url] for blob_url in nonexisting_referenced_blobs
     }
