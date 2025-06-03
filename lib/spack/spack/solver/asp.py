@@ -680,9 +680,13 @@ class ConcretizationCache:
                     entry_count -= 1
                     bytes_count -= entry_size
         # remove any buckets with no more cache entries
-        for cache_dir in self.cache_buckets():
-            if not any(cache_dir.iterdir()):
-                self._fc.remove(cache_dir)
+        for cache_bucket in self.cache_buckets():
+            # remove takes a write lock, but there's a race
+            # if another process adds something to the bucket
+            # between the check for emptiness and the remove
+            with self._fc.write_transaction(cache_bucket) as bucket:
+                if bucket and not any(cache_bucket.iterdir()):
+                    self._fc.remove(cache_bucket)
 
     def cache_buckets(self):
         """Generator producing cache buckets"""
@@ -775,7 +779,11 @@ class ConcretizationCache:
         bucket, digest = self._prefix_digest(problem)
         cache_path = self.root / bucket / digest
         self._fc.init_entry(bucket)
-        with self._fc.write_transaction(bucket):
+        with self._fc.write_transaction(bucket) as exists:
+            if not exists:
+                # The directory may have been pruned between init entry and the write
+                # transaction, recreate the directory
+                os.makedirs(bucket)
             try:
                 with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
                     cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
