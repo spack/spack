@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import tempfile
-from typing import cast, Dict, Optional, Set
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import Dict, Optional, Set, cast
+
 import llnl.util.tty as tty
+
 import spack.binary_distribution as bindist
 import spack.stage
 import spack.util.url as url_util
@@ -88,8 +90,7 @@ def _prune_orphans(mirror: Mirror) -> int:
 
     # Compute set of manifests that are orphaned (i.e., they reference blobs that are not present in the cache)
     orphaned_manifests = {
-        blob_to_manifest_mapping[blob_url]
-        for blob_url in nonexisting_referenced_blobs
+        blob_to_manifest_mapping[blob_url] for blob_url in nonexisting_referenced_blobs
     }
 
     if not orphaned_blobs and not orphaned_manifests:
