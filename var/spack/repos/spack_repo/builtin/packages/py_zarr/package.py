@@ -49,9 +49,9 @@ class PyZarr(PythonPackage):
         depends_on("py-hatchling", type="build")
         depends_on("py-hatch-vcs", type="build")
         depends_on("py-packaging@22:", type=("build", "run"), when="@3.0:")
-        # numpy@2: starts in 2.18.0
+        # numpy@2: compatible
         # https://github.com/zarr-developers/zarr-python/issues/1818
-        depends_on("py-numpy@1.25:", type=("build", "run"))
+        depends_on("py-numpy@1.25:2", type=("build", "run"))
         depends_on("py-numcodecs@0.14:", type=("build", "run"))
         depends_on("py-typing-extensions@4.9:", type=("build", "run"))
         depends_on("py-donfig@0.8:", type=("build", "run"))
