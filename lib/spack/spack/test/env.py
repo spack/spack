@@ -1081,10 +1081,6 @@ spack:
       when: "%c"
     - spec: "%[virtuals=cxx] llvm"
       when: "%cxx"
-    # This succeeds if I flip it to gcc, but that seems to be the built
-    # in preference (what is chosen if I force nothing). A more-robust
-    # test would try forcing several combinations and making sure they
-    # all are respected.
     - spec: "%[virtuals=fortran] llvm"
       when: "%fortran"
   concretizer:
@@ -1095,7 +1091,7 @@ spack:
         e.concretize()
         for x in e.concrete_roots():
             if x.name in ["dt-diamond-left", "dt-diamond-right"]:
-                assert x.satisfies("%[virtuals=fortran] gcc")
+                assert x.satisfies("%[virtuals=fortran] llvm")
 
 
 def test_matrix_toolchains_apply_both(
@@ -1162,7 +1158,7 @@ spack:
       when: "%c"
     - spec: "%[virtuals=cxx] llvm"
       when: "%cxx"
-    - spec: "%[virtuals=fortran] llvm"
+    - spec: "%[virtuals=fortran] gcc"
       when: "%fortran"
   concretizer:
     unify: true
@@ -1172,7 +1168,7 @@ spack:
         e.concretize()
         for x in e.concrete_roots():
             if x.name in ["dt-diamond-left", "dt-diamond-right"]:
-                assert x.satisfies("%[virtuals=fortran] llvm")
+                assert x.satisfies("%[virtuals=fortran] gcc")
 
 
 # import spack_repo.builtin_mock.build_systems.compiler
