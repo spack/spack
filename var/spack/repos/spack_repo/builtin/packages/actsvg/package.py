@@ -21,6 +21,11 @@ class Actsvg(CMakePackage):
 
     license("MPL-2.0")
 
+    version("0.4.56", sha256="a850007036e992a2573e01bc32ee203bb3c146d124ec1135922272ba6a62008e")
+    version("0.4.55", sha256="31a95bd12d685b2f87eac4b9e5872f9fb4add5a5b2e826a8bd727d60a0ba601f")
+    version("0.4.54", sha256="204e4217936d0d6afb91f30c727e30b2a351d8ceddd9beca7550c40272a848fe")
+    version("0.4.53", sha256="c7ddec952e84c7b7b70c1e2e15b801675fe8a30d84cabdd3273ee9890dec04be")
+    version("0.4.52", sha256="3cee069bff266ad8ab7e12f1fefad7a825da6684185b8c5449d2f1dade004843")
     version("0.4.51", sha256="937385f7703c0d2d9c0af03bd5083d3f1fdac17ff573476a5fc5b1f8e3cd98b7")
     version("0.4.50", sha256="c97fb1cc75cbf23caebd3c6fb8716354bdbd0a77ad39dc43dae963692f3256e1")
     version("0.4.48", sha256="0f230c31c64b939e4d311afd997dbaa87a375454cf1595661a449b97943412c9")
@@ -56,6 +61,7 @@ class Actsvg(CMakePackage):
     depends_on("googletest", when="+examples")
     depends_on("python@3.8:", when="+python")
     depends_on("py-pybind11@2.10:", when="+python @0.4.42:")
+    depends_on("py-pybind11@2.13:", when="+python @0.4.53:")
 
     def cmake_args(self):
         args = [
