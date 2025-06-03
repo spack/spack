@@ -607,13 +607,19 @@ class TestSpecSemantics:
         c.constrain(lhs)
         assert c == constrained
 
-    def test_satisfies_conditional_dep(self):
-        concrete = spack.concretize.concretize_one("mpileaks^mpich")
-        assert concrete.satisfies("^[when='^mpi' virtuals=mpi]mpich")
-        assert concrete.satisfies("^[when='^notapackage']zmpi")
-        assert not concrete.satisfies("^[virtuals=blas]mpich")
-        assert not concrete.satisfies("^[when='^mpi' virtuals=blas]mpich")
-        assert not concrete.satisfies("^[when='^mpi']zmpi")
+    def test_satisfies_conditional_dep(self, default_mock_concretization):
+        """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # This branch exists, so the condition is met, and is satisfied
+        assert concrete.satisfies("^[virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^notapackage' virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^mpi' virtuals=mpi] mpich")
+
+        # This branch does not exist, but the condition is not met
+        assert not concrete.satisfies("^zmpi")
+        assert concrete.satisfies("^[when='^notapackage'] zmpi")
+        assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
