@@ -32,7 +32,12 @@ class Cmake(Package):
     license("BSD-3-Clause")
 
     version("master", branch="master")
-    version("3.31.6", sha256="653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0")
+    version("4.0.0", sha256="ddc54ad63b87e153cf50be450a6580f1b17b4881de8941da963ff56991a4083b")
+    version(
+        "3.31.6",
+        sha256="653427f0f5014750aafff22727fb2aa60c6c732ca91808cfb78ce22ddd9e55f0",
+        preferred=True,
+    )
     version("3.31.5", sha256="66fb53a145648be56b46fa9e8ccade3a4d0dfc92e401e52ce76bdad1fea43d27")
     version("3.31.4", sha256="a6130bfe75f5ba5c73e672e34359f7c0a1931521957e8393a5c2922c8b0f7f25")
     version("3.31.3", sha256="fac45bc6d410b49b3113ab866074888d6c9e9dc81a141874446eb239ac38cb87")
@@ -389,6 +394,10 @@ class Cmake(Package):
     @property
     def headers(self):
         return HeaderList([])
+
+    @property
+    def archive_files(self):
+        return [join_path(self.stage.source_path, "Bootstrap.cmk", "cmake_bootstrap.log")]
 
     def run_version_check(self, bin):
         """Runs and checks output of the installed binary."""

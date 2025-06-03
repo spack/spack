@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import itertools
 import os
 import sys
 
@@ -182,21 +181,23 @@ def pkg_grep(args, unknown_args):
     if "GNU" in grep("--version", output=str):
         grep.add_default_arg("--color=auto")
 
-    # determines number of files to grep at a time
-    grouper = lambda e: e[0] // 100
+    all_paths = spack.repo.PATH.all_package_paths()
+    if not all_paths:
+        return 0  # no packages to search
+
+    # these args start every command invocation (grep arg1 arg2 ...)
+    all_prefix_args = grep.exe + args.grep_args + unknown_args
+    prefix_length = sum(len(arg) for arg in all_prefix_args) + len(all_prefix_args)
 
     # set up iterator and save the first group to ensure we don't end up with a group of size 1
-    groups = itertools.groupby(enumerate(spack.repo.PATH.all_package_paths()), grouper)
-    if not groups:
-        return 0  # no packages to search
+    groups = spack.cmd.group_arguments(all_paths, prefix_length=prefix_length)
 
     # You can force GNU grep to show filenames on every line with -H, but not POSIX grep.
     # POSIX grep only shows filenames when you're grepping 2 or more files.  Since we
     # don't know which one we're running, we ensure there are always >= 2 files by
     # saving the prior group of paths and adding it to a straggling group of 1 if needed.
     # This works unless somehow there is only one package in all of Spack.
-    _, first_group = next(groups)
-    prior_paths = [path for _, path in first_group]
+    prior_paths = next(groups)
 
     # grep returns 1 for nothing found, 0 for something found, and > 1 for error
     return_code = 1
@@ -207,9 +208,7 @@ def pkg_grep(args, unknown_args):
         grep(*all_args, fail_on_error=False)
         return grep.returncode
 
-    for _, group in groups:
-        paths = [path for _, path in group]  # extract current path group
-
+    for paths in groups:
         if len(paths) == 1:
             # Only the very last group can have length 1. If it does, combine
             # it with the prior group to ensure more than one path is grepped.

@@ -92,9 +92,11 @@ from .url_buildcache import (
     BuildcacheEntryError,
     BuildcacheManifest,
     InvalidMetadataFile,
+    ListMirrorSpecsError,
     MirrorForSpec,
     MirrorURLAndVersion,
     URLBuildcacheEntry,
+    get_entries_from_cache,
     get_url_buildcache_class,
     get_valid_spec_file,
 )
@@ -701,7 +703,7 @@ def _push_index(db: BuildCacheDatabase, temp_dir: str, cache_prefix: str):
 
 def _read_specs_and_push_index(
     file_list: List[str],
-    read_method: Callable,
+    read_method: Callable[[str], URLBuildcacheEntry],
     cache_prefix: str,
     db: BuildCacheDatabase,
     temp_dir: str,
@@ -717,130 +719,21 @@ def _read_specs_and_push_index(
         temp_dir: Location to write index.json and hash for pushing
     """
     for file in file_list:
+        cache_entry: Optional[URLBuildcacheEntry] = None
         try:
-            fetched_spec = spack.spec.Spec.from_dict(read_method(file))
+            cache_entry = read_method(file)
+            spec_dict = cache_entry.fetch_metadata()
+            fetched_spec = spack.spec.Spec.from_dict(spec_dict)
         except Exception as e:
             tty.warn(f"Unable to fetch spec for manifest {file} due to: {e}")
             continue
+        finally:
+            if cache_entry:
+                cache_entry.destroy()
         db.add(fetched_spec)
         db.mark(fetched_spec, "in_buildcache", True)
 
     _push_index(db, temp_dir, cache_prefix)
-
-
-def _specs_from_cache_aws_cli(url: str, tmpspecsdir: str):
-    """Use aws cli to sync all the specs into a local temporary directory.
-
-    Args:
-        url: prefix of the build cache on s3
-        tmpspecsdir: path to temporary directory to use for writing files
-
-    Return:
-        List of the local file paths and a function that can read each one from the file system.
-    """
-    read_fn = None
-    file_list = None
-    aws = which("aws")
-
-    if not aws:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-        return file_list, read_fn
-
-    def file_read_method(manifest_path):
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url=f"file://{manifest_path}")
-        spec_dict = cache_entry.fetch_metadata()
-        cache_entry.destroy()
-        return spec_dict
-
-    url_to_list = url_util.join(url, buildcache_relative_specs_url())
-    sync_command_args = [
-        "s3",
-        "sync",
-        "--exclude",
-        "*",
-        "--include",
-        "*.spec.manifest.json",
-        url_to_list,
-        tmpspecsdir,
-    ]
-
-    tty.debug(f"Using aws s3 sync to download manifests from {url_to_list} to {tmpspecsdir}")
-
-    try:
-        aws(*sync_command_args, output=os.devnull, error=os.devnull)
-        file_list = fsys.find(tmpspecsdir, ["*.spec.manifest.json"])
-        read_fn = file_read_method
-    except Exception:
-        tty.warn("Failed to use aws s3 sync to retrieve specs, falling back to parallel fetch")
-
-    return file_list, read_fn
-
-
-def _specs_from_cache_fallback(url: str, tmpspecsdir: str):
-    """Use spack.util.web module to get a list of all the specs at the remote url.
-
-    Args:
-        cache_prefix (str): Base url of mirror (location of spec files)
-
-    Return:
-        The list of complete spec file urls and a function that can read each one from its
-            remote location (also using the spack.util.web module).
-    """
-    read_fn = None
-    file_list = None
-
-    def url_read_method(manifest_url):
-        cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
-        cache_entry = cache_class(url, allow_unsigned=True)
-        cache_entry.read_manifest(manifest_url)
-        spec_dict = cache_entry.fetch_metadata()
-        cache_entry.destroy()
-        return spec_dict
-
-    try:
-        url_to_list = url_util.join(url, buildcache_relative_specs_url())
-        file_list = [
-            url_util.join(url_to_list, entry)
-            for entry in web_util.list_url(url_to_list, recursive=True)
-            if entry.endswith("spec.manifest.json")
-        ]
-        read_fn = url_read_method
-    except Exception as err:
-        # If we got some kind of S3 (access denied or other connection error), the first non
-        # boto-specific class in the exception is Exception.  Just print a warning and return
-        tty.warn(f"Encountered problem listing packages at {url}: {err}")
-
-    return file_list, read_fn
-
-
-def _spec_files_from_cache(url: str, tmpspecsdir: str):
-    """Get a list of all the spec files in the mirror and a function to
-    read them.
-
-    Args:
-        url: Base url of mirror (location of spec files)
-        tmpspecsdir: Temporary location for writing files
-
-    Return:
-        A tuple where the first item is a list of absolute file paths or
-        urls pointing to the specs that should be read from the mirror,
-        and the second item is a function taking a url or file path and
-        returning the spec read from that location.
-    """
-    callbacks = []
-    if url.startswith("s3://"):
-        callbacks.append(_specs_from_cache_aws_cli)
-
-    callbacks.append(_specs_from_cache_fallback)
-
-    for specs_from_cache_fn in callbacks:
-        file_list, read_fn = specs_from_cache_fn(url, tmpspecsdir)
-        if file_list:
-            return file_list, read_fn
-
-    raise ListMirrorSpecsError("Failed to get list of specs from {0}".format(url))
 
 
 def _url_generate_package_index(url: str, tmpdir: str):
@@ -856,7 +749,9 @@ def _url_generate_package_index(url: str, tmpdir: str):
     """
     with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
         try:
-            file_list, read_fn = _spec_files_from_cache(url, tmpspecsdir)
+            file_list, read_fn = get_entries_from_cache(
+                url, tmpspecsdir, component_type=BuildcacheComponent.SPEC
+            )
         except ListMirrorSpecsError as e:
             raise GenerateIndexError(f"Unable to generate package index: {e}") from e
 
@@ -3060,10 +2955,6 @@ class UnsignedPackageException(spack.error.SpackError):
     Raised if installation of unsigned package is attempted without
     the use of ``--no-check-signature``.
     """
-
-
-class ListMirrorSpecsError(spack.error.SpackError):
-    """Raised when unable to retrieve list of specs from the mirror"""
 
 
 class GenerateIndexError(spack.error.SpackError):
