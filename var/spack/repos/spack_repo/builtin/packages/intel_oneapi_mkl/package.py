@@ -239,6 +239,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         else:
             return IntelOneApiStaticLibraryList(libs, system_libs)
 
+    @property
+    def headers(self):
+        headers = find_all_headers(self.component_prefix.include)
+        headers.directories = [self.component_prefix.include, self.component_prefix.include.fftw]
+        return headers
+
     def setup_dependent_build_environment(
         self, env: EnvironmentModifications, dependent_spec: Spec
     ) -> None:
