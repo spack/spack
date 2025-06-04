@@ -112,6 +112,51 @@ def test_which(tmpdir, monkeypatch):
         assert exe.path == path
 
 
+@pytest.fixture
+def make_script_exe(tmpdir):
+    if sys.platform == "win32":
+        pytest.skip("Can't test #!/bin/sh scripts on Windows.")
+
+    def make_script(name, contents):
+        script = tmpdir / f"{name}.sh"
+        with script.open("w", encoding="utf-8") as f:
+            f.write("#!/bin/sh\n")
+            f.write(contents)
+            f.write("\n")
+        fs.set_executable(str(script))
+
+        return ex.Executable(str(script))
+
+    return make_script
+
+
+def test_exe_fail(make_script_exe):
+    fail = make_script_exe("fail", "exit 107")
+    with pytest.raises(ex.ProcessError):
+        fail()
+    assert fail.returncode == 107
+
+
+def test_exe_success(make_script_exe):
+    succeed = make_script_exe("fail", "exit 0")
+    succeed()
+    assert succeed.returncode == 0
+
+
+def test_exe_timeout(make_script_exe):
+    timeout = make_script_exe("timeout", "sleep 100")
+    with pytest.raises(ex.ProcessError):
+        timeout(timeout=1)
+    assert timeout.returncode == 1
+
+
+def test_exe_not_exist(tmpdir):
+    fail = ex.Executable(str(tmpdir.join("foo")))  # doesn't exist
+    with pytest.raises(ex.ProcessError):
+        fail()
+    assert fail.returncode == 1
+
+
 def test_construct_from_pathlib(mock_executable):
     """Tests that we can construct an executable from a pathlib.Path object"""
     expected = "Hello world!"

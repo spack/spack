@@ -24,6 +24,7 @@ class PyKeras(PythonPackage):
     tags = ["e4s"]
     license("Apache-2.0")
 
+    version("3.10.0", sha256="6e9100bf66eaf6de4b7f288d34ef9bb8b5dcdd62f42c64cfd910226bb34ad2d2")
     version("3.9.2", sha256="322aab6418ee3de1e2bd0871b60a07f0e444e744a7e8cba79af8b42408879ecf")
     version("3.9.1", sha256="1ba893820258d4eab9a5a94a6faae2d8f4b134019d0bfa19868606b6381502ff")
     version("3.9.0", sha256="b5bf04e7c64c3176eda5124d035005bb7a676fb505f42496c7b03a99d5683652")
@@ -103,21 +104,24 @@ class PyKeras(PythonPackage):
 
         # requirements-tensorflow-cuda.txt
         with when("backend=tensorflow"):
-            depends_on("py-tensorflow@2.18", when="@3.7:")
+            depends_on("py-tensorflow@2.18.1:2.18", when="@3.10:")
+            depends_on("py-tensorflow@2.18", when="@3.7:3.9")
             depends_on("py-tensorflow@2.17", when="@3.5:3.6")
             depends_on("py-tensorflow@2.16.1:2.16", when="@3.0:3.4")
             # depends_on("py-tf2onnx", when="@3.8:")
 
         # requirements-jax-cuda.txt
         with when("backend=jax"):
-            depends_on("py-jax@0.4.28", when="@3.6:")
+            depends_on("py-jax@0.6.0", when="@3.10:")
+            depends_on("py-jax@0.4.28", when="@3.6:3.9")
             depends_on("py-jax@0.4.23", when="@3.0.5:3.5")
             depends_on("py-jax", when="@3:")
             # depends_on("py-flax", when="@3.2:")
 
         # requirements-torch-cuda.txt
         with when("backend=torch"):
-            depends_on("py-torch@2.5.1", when="@3.7:")
+            depends_on("py-torch@2.6.0", when="@3.10:")
+            depends_on("py-torch@2.5.1", when="@3.7:3.9")
             depends_on("py-torch@2.4.1", when="@3.6")
             depends_on("py-torch@2.4.0", when="@3.5")
             depends_on("py-torch@2.2.1", when="@3.1:3.4")

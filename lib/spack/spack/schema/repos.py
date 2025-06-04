@@ -14,7 +14,7 @@ properties: Dict[str, Any] = {
     "repos": {
         "oneOf": [
             {
-                # old format: array of paths
+                # old format: array of strings
                 "type": "array",
                 "items": {
                     "type": "string",
@@ -22,11 +22,27 @@ properties: Dict[str, Any] = {
                 },
             },
             {
-                # new format: dict of namespace => path
+                # new format: object with named repositories
                 "type": "object",
                 "additionalProperties": {
-                    "type": "string",
-                    "description": "Path to a Spack package repository directory",
+                    "oneOf": [
+                        {
+                            # local path
+                            "type": "string",
+                            "description": "Path to a Spack package repository directory",
+                        },
+                        {
+                            # remote git repository
+                            "type": "object",
+                            "properties": {
+                                "git": {"type": "string"},
+                                "destination": {"type": "string"},
+                                "paths": {"type": "array", "items": {"type": "string"}},
+                            },
+                            "required": ["git"],
+                            "additionalProperties": False,
+                        },
+                    ]
                 },
             },
         ],

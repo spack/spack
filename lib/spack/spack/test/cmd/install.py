@@ -1121,14 +1121,14 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
-def test_setting_concurrent_packages_flag():
+def test_setting_concurrent_packages_flag(mutable_config):
     """Ensure that the number of concurrent packages is properly set from the command-line flag"""
     install = SpackCommand("install")
     install("--concurrent-packages", "8", fail_on_error=False)
     assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
 
 
-def test_invalid_concurrent_packages_flag():
+def test_invalid_concurrent_packages_flag(mutable_config):
     """Test that an invalid value for --concurrent-packages CLI flag raises a ValueError"""
     install = SpackCommand("install")
     with pytest.raises(ValueError, match="expected a positive integer"):
