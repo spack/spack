@@ -32,9 +32,9 @@ class PyPydap(PythonPackage):
     depends_on("py-scipy", type="build", when="@3.5:")
     depends_on("py-lxml", type="build", when="@3.5:")
 
-    depends_on("py-jinja2", type=("build", "run"), when="@3.2.2")
-    depends_on("py-docopt", type=("build", "run"), when="@3.2.2")
-    depends_on("py-six@1.4.0:", type=("build", "run"), when="@3.2.2")
+    depends_on("py-jinja2", type=("build", "run"), when="@:3.4")
+    depends_on("py-docopt", type=("build", "run"), when="@:3.4")
+    depends_on("py-six@1.4.0:", type=("build", "run"), when="@:3.4")
 
     def url_for_version(self, version):
         if version < Version("3.5"):
