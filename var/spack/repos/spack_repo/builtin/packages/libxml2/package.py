@@ -280,6 +280,7 @@ class AutotoolsBuilder(AnyBuilder, autotools.AutotoolsBuilder):
 
         return args
 
+
 class NMakeBuilder(AnyBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
 
