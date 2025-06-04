@@ -147,6 +147,16 @@ class Libxml2(AutotoolsPackage, CMakePackage, NMakePackage):
             )
             filter_file("-Wno-long-long -Wno-format-extra-args", "", "configure")
 
+    def cmake_args(self):
+        args = [
+            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
+            self.define_from_variant("LIBXML2_WITH_PYTHON", "python"),
+            self.define("LIBXML2_WITH_LZMA", True),
+            self.define("LIBXML2_WITH_ZLIB", True),
+            self.define("LIBXML2_WITH_TESTS", True),
+        ]
+        return args
+
     def test_import(self):
         """import module test"""
         if "+python" not in self.spec:
@@ -269,19 +279,6 @@ class AutotoolsBuilder(AnyBuilder, autotools.AutotoolsBuilder):
         args.append("--without-pic")
 
         return args
-
-
-class CMakeBuilder(AnyBuilder, cmake.CMakeBuilder):
-    def cmake_args(self):
-        args = [
-            self.define_from_variant("BUILD_SHARED_LIBS", "shared"),
-            self.define_from_variant("LIBXML2_WITH_PYTHON", "python"),
-            self.define("LIBXML2_WITH_LZMA", True),
-            self.define("LIBXML2_WITH_ZLIB", True),
-            self.define("LIBXML2_WITH_TESTS", True),
-        ]
-        return args
-
 
 class NMakeBuilder(AnyBuilder, nmake.NMakeBuilder):
     phases = ("configure", "build", "install")
