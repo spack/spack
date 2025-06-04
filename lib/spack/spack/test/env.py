@@ -1068,7 +1068,7 @@ MIXED_TOOLCHAIN = """
       when: "%cxx"
     - spec: "%[virtuals=fortran] gcc"
       when: "%fortran"
-    - spec: "%[virtuals=mpi] zmpi"
+    - spec: "%[virtuals=mpi] mpich"
       when: "%mpi"
 """
 
@@ -1098,11 +1098,59 @@ spack:
         "%[when='%c' virtuals=c] llvm",
         "%[when='%cxx' virtuals=cxx] llvm",
         "%[when='%fortran' virtuals=fortran] gcc",
-        "%[when='%mpi' virtuals=mpi] zmpi",
+        "%[when='%mpi' virtuals=mpi] mpich",
     ]
     for c in expected:
         assert all(s.satisfies(c) for s in roots)
 
-    not_expected = ["^mpich", "%[virtuals=c] gcc"]
+    not_expected = ["^zmpi", "%[virtuals=c] gcc"]
     for c in not_expected:
         assert all(not s.satisfies(c) for s in roots)
+
+
+GCC_MPICH = """
+    - spec: "%[virtuals=c] gcc"
+      when: "%c"
+    - spec: "%[virtuals=cxx] gcc"
+      when: "%cxx"
+    - spec: "%[virtuals=fortran] gcc"
+      when: "%fortran"
+    - spec: "^[virtuals=mpi] zmpi"
+      when: "^mpi"
+"""
+
+
+@pytest.mark.parametrize("unify", ["false", "when_possible"])
+def test_toolchains_as_matrix_dimension(unify, tmp_path, mutable_config):
+    """Tests expanding a matrix using different toolchains as the last dimension"""
+    spack_yaml = f"""
+spack:
+  specs:
+  - matrix:
+    - [mpileaks,  dt-diamond-right]
+    - ["%mixed-toolchain", "%gcc-mpich"]
+  toolchains:
+    mixed-toolchain:
+    {MIXED_TOOLCHAIN}
+    gcc-mpich:
+    {GCC_MPICH}
+  concretizer:
+    unify: {unify}
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        roots = e.concrete_roots()
+
+    mpileaks_gcc = [s for s in roots if s.satisfies("mpileaks %[virtuals=c] gcc")][0]
+    mpileaks_clang = [s for s in roots if s.satisfies("mpileaks %[virtuals=c] clang")][0]
+
+    # GCC-MPICH toolchain
+    assert not mpileaks_gcc.satisfies("%[virtuals=mpi] mpich")
+    assert mpileaks_gcc.satisfies("%[virtuals=mpi] zmpi")
+
+    # Mixed toolchain
+    assert mpileaks_clang.satisfies("%[virtuals=mpi] mpich")
+    assert not mpileaks_clang.satisfies("%[virtuals=mpi] zmpi")
+    assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
