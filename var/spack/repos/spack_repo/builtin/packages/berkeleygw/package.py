@@ -184,7 +184,10 @@ class Berkeleygw(MakefilePackage):
             paraflags.append("-DMPI")
 
         # We need to copy fflags in case we append to it (#34019):
+        cflags = spec.compiler_flags["cflags"][:]
         fflags = spec.compiler_flags["fflags"][:]
+        cflags.append(self.compiler.cc_pic_flag)
+        fflags.append(self.compiler.fc_pic_flag)
         if spec.satisfies("+openmp"):
             paraflags.append("-DOMP")
             fflags.append(self.compiler.openmp_flag)
@@ -208,7 +211,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append("C_LINK=%s" % spack_cxx)
 
         buildopts.append("FOPTS=%s" % " ".join(fflags))
-        buildopts.append("C_OPTS=%s" % " ".join(spec.compiler_flags["cflags"]))
+        buildopts.append("C_OPTS=%s" % " ".join(cflags))
 
         mathflags = []
 

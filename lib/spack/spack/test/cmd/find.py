@@ -471,8 +471,8 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_p
 def test_repo(mock_stage):
     with spack.repo.use_repositories(
         os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
-    ) as mock_repo_path:
-        yield mock_repo_path
+    ) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_find_concretized_not_installed(

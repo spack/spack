@@ -8,7 +8,7 @@
 Spack Settings (config.yaml)
 ============================
 
-Spack's basic configuration options are set in ``config.yaml``.  You can
+Spack's basic configuration options are set in ``config.yaml``. You can
 see the default settings by looking at
 ``etc/spack/defaults/config.yaml``:
 
@@ -23,7 +23,7 @@ These settings can be overridden in ``etc/spack/config.yaml`` or
 ---------------------
 
 The location where Spack will install packages and their dependencies.
-Default is ``$spack/opt/spack``.
+The default is ``$spack/opt/spack``.
 
 ---------------
 ``projections``
@@ -33,7 +33,7 @@ Default is ``$spack/opt/spack``.
 
    Modifying projections of the install tree is strongly discouraged.
 
-By default Spack installs all packages into a unique directory relative to the install
+By default, Spack installs all packages into a unique directory relative to the install
 tree root with the following layout:
 
 .. code-block::
@@ -54,7 +54,7 @@ in very large ``PYTHONPATH`` and ``R_LIBS`` environment variables. This can caus
 ``execve`` system call to fail with ``E2BIG``, preventing processes from starting.
 
 For this reason, Spack allows users to modify the installation layout through custom
-projections. For example
+projections. For example:
 
      .. code-block:: yaml
 
@@ -64,7 +64,7 @@ projections. For example
            projections:
              all: "{name}/{version}/{hash:16}"
 
-would install packages into sub-directories using only the package name, version and a
+would install packages into subdirectories using only the package name, version, and a
 hash length of 16 characters.
 
 Notice that reducing the hash length increases the likelihood of hash collisions.
@@ -73,10 +73,10 @@ Notice that reducing the hash length increases the likelihood of hash collisions
 ``build_stage``
 --------------------
 
-Spack is designed to run out of a user home directory, and on many
-systems the home directory is a (slow) network file system.  On most systems,
-building in a temporary file system is faster.  Usually, there is also more
-space available in the temporary location than in the home directory.  If the
+Spack is designed to run from a user home directory, and on many
+systems, the home directory is a (slow) network file system. On most systems,
+building in a temporary file system is faster. Usually, there is also more
+space available in the temporary location than in the home directory. If the
 username is not already in the path, Spack will append the value of ``$user`` to
 the selected ``build_stage`` path.
 
@@ -97,17 +97,17 @@ By default, Spack's ``build_stage`` is configured like this:
     - ~/.spack/stage
 
 This can be an ordered list of paths that Spack should search when trying to
-find a temporary directory for the build stage.  The list is searched in
+find a temporary directory for the build stage. The list is searched in
 order, and Spack will use the first directory to which it has write access.
 
 Specifying `~/.spack/stage` first will ensure each user builds in their home
-directory.  The historic Spack stage path `$spack/var/spack/stage` will build
-directly inside the Spack instance.  See :ref:`config-file-variables` for more
+directory. The historic Spack stage path `$spack/var/spack/stage` will build
+directly inside the Spack instance. See :ref:`config-file-variables` for more
 on ``$tempdir`` and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
-``build_stage``.  After the package is successfully installed, Spack deletes
-the temporary directory it used to build.  Unsuccessful builds are not
+``build_stage``. After the package is successfully installed, Spack deletes
+the temporary directory it used to build. Unsuccessful builds are not
 deleted, but you can manually purge them with :ref:`spack clean --stage
 <cmd-spack-clean>`.
 
@@ -120,9 +120,9 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 ``source_cache``
 --------------------
 
-Location to cache downloaded tarballs and repositories.  By default these
-are stored in ``$spack/var/spack/cache``.  These are stored indefinitely
-by default. Can be purged with :ref:`spack clean --downloads
+Location to cache downloaded tarballs and repositories. By default, these
+are stored in ``$spack/var/spack/cache``. These are stored indefinitely
+by default and can be purged with :ref:`spack clean --downloads
 <cmd-spack-clean>`.
 
 .. _Misc Cache:
@@ -139,10 +139,10 @@ be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
 ``verify_ssl``
 --------------------
 
-When set to ``true`` (default) Spack will verify certificates of remote
-hosts when making ``ssl`` connections.  Set to ``false`` to disable, and
-tools like ``curl`` will use their ``--insecure`` options.  Disabling
-this can expose you to attacks.  Use at your own risk.
+When set to ``true`` (default), Spack will verify certificates of remote
+hosts when making ``ssl`` connections. Set to ``false`` to disable, and
+tools like ``curl`` will use their ``--insecure`` options. Disabling
+this can expose you to attacks. Use at your own risk.
 
 --------------------
 ``ssl_certs``
@@ -153,35 +153,35 @@ filesystem path, or an environment variable that expands to an absolute file pat
 The default value is set to the environment variable ``SSL_CERT_FILE``
 to use the same syntax used by many other applications that automatically
 detect custom certificates.
-When ``url_fetch_method:curl`` the ``config:ssl_certs`` should resolve to
-a single file.  Spack will then set the environment variable ``CURL_CA_BUNDLE``
+When ``url_fetch_method:curl``, the ``config:ssl_certs`` should resolve to
+a single file. Spack will then set the environment variable ``CURL_CA_BUNDLE``
 in the subprocess calling ``curl``. If additional ``curl`` arguments are required,
-they can be set in the config, e.g. ``url_fetch_method:'curl -k -q'``.
-If ``url_fetch_method:urllib`` then files and directories are supported i.e.
+they can be set in the config, e.g., ``url_fetch_method:'curl -k -q'``.
+If ``url_fetch_method:urllib``, then files and directories are supported, i.e.,
 ``config:ssl_certs:$SSL_CERT_FILE`` or ``config:ssl_certs:$SSL_CERT_DIR``
 will work.
-In all cases the expanded path must be absolute for Spack to use the certificates.
+In all cases, the expanded path must be absolute for Spack to use the certificates.
 Certificates relative to an environment can be created by prepending the path variable
-with the Spack configuration variable``$env``.
+with the Spack configuration variable ``$env``.
 
 --------------------
 ``checksum``
 --------------------
 
 When set to ``true``, Spack verifies downloaded source code using a
-checksum, and will refuse to build packages that it cannot verify.  Set
-to ``false`` to disable these checks.  Disabling this can expose you to
-attacks.  Use at your own risk.
+checksum and will refuse to build packages that it cannot verify. Set
+to ``false`` to disable these checks. Disabling this can expose you to
+attacks. Use at your own risk.
 
 --------------------
 ``locks``
 --------------------
 
 When set to ``true``, concurrent instances of Spack will use locks to
-avoid modifying the install tree, database file, etc. If false, Spack
+avoid modifying the install tree, database file, etc. If ``false``, Spack
 will disable all locking, but you must **not** run concurrent instances
-of Spack.  For file systems that don't support locking, you should set
-this to ``false`` and run one Spack at a time, but otherwise we recommend
+of Spack. For file systems that do not support locking, you should set
+this to ``false`` and run one Spack instance at a time; otherwise, we recommend
 enabling locks.
 
 --------------------
@@ -193,9 +193,9 @@ the way packages build. This includes ``LD_LIBRARY_PATH``, ``CPATH``,
 ``LIBRARY_PATH``, ``DYLD_LIBRARY_PATH``, and others.
 
 By default, builds are ``clean``, but on some machines, compilers and
-other tools may need custom ``LD_LIBRARY_PATH`` settings to run.  You can
+other tools may need custom ``LD_LIBRARY_PATH`` settings to run. You can
 set ``dirty`` to ``true`` to skip the cleaning step and make all builds
-"dirty" by default.  Be aware that this will reduce the reproducibility
+"dirty" by default. Be aware that this will reduce the reproducibility
 of builds.
 
 .. _build-jobs:
@@ -207,7 +207,7 @@ of builds.
 Unless overridden in a package or on the command line, Spack builds all
 packages in parallel. The default parallelism is equal to the number of
 cores available to the process, up to 16 (the default of ``build_jobs``).
-For a build system that uses Makefiles, this ``spack install`` runs:
+For a build system that uses Makefiles, ``spack install`` runs:
 
 - ``make -j<build_jobs>``, when ``build_jobs`` is less than the number of
   cores available
@@ -217,19 +217,19 @@ For a build system that uses Makefiles, this ``spack install`` runs:
 If you work on a shared login node or have a strict ulimit, it may be
 necessary to set the default to a lower value. By setting ``build_jobs``
 to 4, for example, commands like ``spack install`` will run ``make -j4``
-instead of hogging every core. To build all software in serial,
+instead of using every core. To build all software in serial,
 set ``build_jobs`` to 1.
 
 Note that specifying the number of jobs on the command line always takes
-priority, so that ``spack install -j<n>`` always runs `make -j<n>`, even
+priority, so that ``spack install -j<n>`` always runs ``make -j<n>``, even
 when that exceeds the number of cores available.
 
 --------------------
 ``ccache``
 --------------------
 
-When set to ``true`` Spack will use ccache to cache compiles. This is
-useful specifically in two cases: (1) when using ``spack dev-build``, and (2)
+When set to ``true``, Spack will use ccache to cache compiles. This is
+useful specifically in two cases: (1) when using ``spack dev-build`` and (2)
 when building the same package with many different variants. The default is
 ``false``.
 
@@ -239,7 +239,7 @@ executable and stop if it is not found. Some systems come with
 ccache``. ``ccache`` comes with reasonable defaults for cache size
 and location. (See the *Configuration settings* section of ``man
 ccache`` to learn more about the default settings and how to change
-them). Please note that we currently disable ccache's ``hash_dir``
+them.) Please note that we currently disable ccache's ``hash_dir``
 feature to avoid an issue with the stage directory (see
 https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 
@@ -247,19 +247,19 @@ https://github.com/spack/spack/pull/3761#issuecomment-294352232).
 ``shared_linking:type``
 -----------------------
 
-Control whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
-so that they can find their dependencies. Has no effect on macOS.
+Controls whether Spack embeds ``RPATH`` or ``RUNPATH`` attributes in ELF binaries
+so that they can find their dependencies. This has no effect on macOS.
 Two options are allowed:
 
- 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker
- 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker
+ 1. ``rpath`` uses ``RPATH`` and forces the ``--disable-new-tags`` flag to be passed to the linker.
+ 2. ``runpath`` uses ``RUNPATH`` and forces the ``--enable-new-tags`` flag to be passed to the linker.
 
-``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``
-and ld.so will search for libraries in transitive ``RPATHs`` of
+``RPATH`` search paths have higher precedence than ``LD_LIBRARY_PATH``,
+and ``ld.so`` will search for libraries in transitive RPATHs of
 parent objects.
 
 ``RUNPATH`` search paths have lower precedence than ``LD_LIBRARY_PATH``,
-and ld.so will ONLY search for dependencies in the ``RUNPATH`` of
+and ``ld.so`` will ONLY search for dependencies in the ``RUNPATH`` of
 the loading object.
 
 DO NOT MIX the two options within the same install tree.
@@ -280,14 +280,14 @@ this option to ``true`` has two advantages:
 In the current implementation, Spack sets the soname (shared object name) of
 libraries to their install path upon installation. This has two implications:
 
-1. binding does not apply to libraries installed *before* the option was enabled;
-2. toggling the option off does *not* prevent binding of libraries installed when
+1. Binding does not apply to libraries installed *before* the option was enabled.
+2. Toggling the option off does *not* prevent binding of libraries installed when
    the option was still enabled.
 
 It is also worth noting that:
 
 1. Applications relying on ``dlopen(3)`` will continue to work, even when they open
-   a library by name. This is because ``RPATH``\s are retained in binaries also
+   a library by name. This is because RPATHs are retained in binaries also
    when ``bind`` is enabled.
 2. ``LD_PRELOAD`` continues to work for the typical use case of overriding
    symbols, such as preloading a library with a more efficient ``malloc``.
@@ -298,8 +298,8 @@ It is also worth noting that:
 
 .. note::
 
-   In some cases packages provide *stub libraries* that only contain an interface
-   for linking, but lack an implementation for runtime. An example of this is
+   In some cases, packages provide *stub libraries* that only contain an interface
+   for linking but lack an implementation for runtime. An example of this is
    ``libcuda.so``, provided by the CUDA toolkit; it can be used to link against,
    but the library needed at runtime is the one installed with the CUDA driver.
    To avoid binding those libraries, they can be marked as non-bindable using
@@ -320,7 +320,7 @@ in the terminal title and inline. Setting it to ``false`` will not show any
 progress information.
 
 To work properly, this requires your terminal to reset its title after
-Spack has finished its work, otherwise Spack's status information will
+Spack has finished its work; otherwise, Spack's status information will
 remain in the terminal's title indefinitely. Most terminals should already
 be set up this way and clear Spack's status information.
 
@@ -373,7 +373,7 @@ Sets a limit on the number of concretization results that Spack will cache. The 
 after each concretization run; if Spack has stored more results than the limit allows, the
 oldest concretization results are pruned until 10% of the limit has been removed.
 
-Setting this value to 0 disables the automatic pruning. It is expected users will be
+Setting this value to 0 disables automatic pruning. It is expected that users will be
 responsible for maintaining this cache.
 
 -----------------------------------
@@ -384,5 +384,5 @@ Sets a limit on the size of the concretization cache in bytes. The limit is eval
 after each concretization run; if Spack has stored more results than the limit allows, the
 oldest concretization results are pruned until 10% of the limit has been removed.
 
-Setting this value to 0 disables the automatic pruning. It is expected users will be
+Setting this value to 0 disables automatic pruning. It is expected that users will be
 responsible for maintaining this cache.

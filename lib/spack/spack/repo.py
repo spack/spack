@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import abc
-import collections.abc
 import contextlib
 import difflib
 import errno
@@ -24,7 +23,20 @@ import traceback
 import types
 import uuid
 import warnings
-from typing import Any, Dict, Generator, List, Optional, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import llnl.path
 import llnl.util.filesystem as fs
@@ -37,12 +49,16 @@ import spack.caches
 import spack.config
 import spack.error
 import spack.patch
+import spack.paths
 import spack.provider_index
 import spack.spec
 import spack.tag
 import spack.tengine
+import spack.util.executable
 import spack.util.file_cache
 import spack.util.git
+import spack.util.hash
+import spack.util.lock
 import spack.util.naming as nm
 import spack.util.path
 import spack.util.spack_yaml as syaml
@@ -51,6 +67,15 @@ PKG_MODULE_PREFIX_V1 = "spack.pkg."
 PKG_MODULE_PREFIX_V2 = "spack_repo."
 
 _API_REGEX = re.compile(r"^v(\d+)\.(\d+)$")
+
+SPACK_REPO_INDEX_FILE_NAME = "spack-repo-index.yaml"
+
+
+def package_repository_lock() -> spack.util.lock.Lock:
+    """Lock for process safety when cloning remote package repositories"""
+    return spack.util.lock.Lock(
+        os.path.join(spack.paths.user_cache_path, "package-repository.lock")
+    )
 
 
 def is_package_module(fullname: str) -> bool:
@@ -334,7 +359,7 @@ class SpackNamespace(types.ModuleType):
         return getattr(self, name)
 
 
-class FastPackageChecker(collections.abc.Mapping):
+class FastPackageChecker(Mapping[str, os.stat_result]):
     """Cache that maps package names to the stats obtained on the
     'package.py' files associated with them.
 
@@ -346,7 +371,7 @@ class FastPackageChecker(collections.abc.Mapping):
     #: Global cache, reused by every instance
     _paths_cache: Dict[str, Dict[str, os.stat_result]] = {}
 
-    def __init__(self, packages_path: str, package_api: Tuple[int, int]):
+    def __init__(self, packages_path: str, package_api: Tuple[int, int]) -> None:
         # The path of the repository managed by this instance
         self.packages_path = packages_path
         self.package_api = package_api
@@ -358,7 +383,7 @@ class FastPackageChecker(collections.abc.Mapping):
         #: Reference to the appropriate entry in the global cache
         self._packages_to_stats = self._paths_cache[packages_path]
 
-    def invalidate(self):
+    def invalidate(self) -> None:
         """Regenerate cache for this checker."""
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
@@ -409,19 +434,19 @@ class FastPackageChecker(collections.abc.Mapping):
 
         return cache
 
-    def last_mtime(self):
+    def last_mtime(self) -> float:
         return max(sinfo.st_mtime for sinfo in self._packages_to_stats.values())
 
     def modified_since(self, since: float) -> List[str]:
         return [name for name, sinfo in self._packages_to_stats.items() if sinfo.st_mtime > since]
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> os.stat_result:
         return self._packages_to_stats[item]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._packages_to_stats)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._packages_to_stats)
 
 
@@ -628,44 +653,52 @@ class RepoIndex:
 
 
 class RepoPath:
-    """A RepoPath is a list of repos that function as one.
+    """A RepoPath is a list of Repo instances that function as one.
 
     It functions exactly like a Repo, but it operates on the combined
     results of the Repos in its list instead of on a single package
     repository.
-
-    Args:
-        repos: list Repo objects or paths to put in this RepoPath
-        cache: file cache associated with this repository
-        overrides: dict mapping package name to class attribute overrides for that package
     """
 
-    def __init__(
-        self,
-        *repos: Union[str, "Repo"],
-        cache: Optional[spack.util.file_cache.FileCache],
-        overrides: Optional[Dict[str, Any]] = None,
-    ) -> None:
+    def __init__(self, *repos: "Repo") -> None:
         self.repos: List[Repo] = []
         self.by_namespace = nm.NamespaceTrie()
         self._provider_index: Optional[spack.provider_index.ProviderIndex] = None
         self._patch_index: Optional[spack.patch.PatchCache] = None
         self._tag_index: Optional[spack.tag.TagIndex] = None
 
-        # Add each repo to this path.
         for repo in repos:
-            try:
-                if isinstance(repo, str):
-                    assert cache is not None, "cache must hold a value, when repo is a string"
-                    repo = Repo(repo, cache=cache, overrides=overrides)
-                self.put_last(repo)
-            except RepoError as e:
-                tty.warn(
-                    f"Failed to initialize repository: '{repo}'.",
-                    e.message,
-                    "To remove the bad repository, run this command:",
-                    f"    spack repo rm {repo}",
-                )
+            self.put_last(repo)
+
+    @staticmethod
+    def from_descriptors(
+        descriptors: "RepoDescriptors",
+        cache: spack.util.file_cache.FileCache,
+        overrides: Optional[Dict[str, Any]] = None,
+    ) -> "RepoPath":
+        repo_path, errors = descriptors.construct(cache=cache, fetch=True, overrides=overrides)
+
+        # Merely warn if package repositories from config could not be constructed.
+        if errors:
+            for path, error in errors.items():
+                tty.warn(f"Error constructing repository '{path}': {error}")
+
+        return repo_path
+
+    @staticmethod
+    def from_config(config: spack.config.Configuration) -> "RepoPath":
+        """Create a RepoPath from a configuration object."""
+        overrides = {
+            pkg_name: data["package_attributes"]
+            for pkg_name, data in config.get("packages").items()
+            if pkg_name != "all" and "package_attributes" in data
+        }
+
+        return RepoPath.from_descriptors(
+            descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
+            cache=spack.caches.MISC_CACHE,
+            overrides=overrides,
+        )
 
     def enable(self) -> None:
         """Set the relevant search paths for package module loading"""
@@ -676,7 +709,8 @@ class RepoPath:
 
     def disable(self) -> None:
         """Disable the search paths for package module loading"""
-        del REPOS_FINDER.repo_path
+        if hasattr(REPOS_FINDER, "repo_path"):
+            del REPOS_FINDER.repo_path
         for p in self.python_paths():
             if p in sys.path:
                 sys.path.remove(p)
@@ -685,7 +719,7 @@ class RepoPath:
         """Ensure we unwrap this object from any dynamic wrapper (like Singleton)"""
         return self
 
-    def put_first(self, repo: "Repo") -> None:
+    def put_first(self, repo: Union["Repo", "RepoPath"]) -> None:
         """Add repo first in the search path."""
         if isinstance(repo, RepoPath):
             for r in reversed(repo.repos):
@@ -915,7 +949,7 @@ class RepoPath:
 
     @staticmethod
     def unmarshal(repos):
-        return RepoPath(*repos, cache=None)
+        return RepoPath(*repos)
 
     def __reduce__(self):
         return RepoPath.unmarshal, self.marshal()
@@ -1541,8 +1575,286 @@ def create_repo(
 
 
 def from_path(path: str) -> Repo:
-    """Returns a repository from the path passed as input. Injects the global misc cache."""
+    """Constructs a Repo using global misc cache."""
     return Repo(path, cache=spack.caches.MISC_CACHE)
+
+
+MaybeExecutable = Optional[spack.util.executable.Executable]
+
+
+class RepoDescriptor:
+    """Abstract base class for repository data."""
+
+    def __init__(self, name: Optional[str]) -> None:
+        self.name = name
+
+    @property
+    def _maybe_name(self) -> str:
+        """Return the name if it exists, otherwise an empty string."""
+        return f"{self.name}: " if self.name else ""
+
+    def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
+        return None
+
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
+        """Construct Repo instances from the descriptor."""
+        raise RuntimeError("construct() must be implemented in subclasses")
+
+
+class LocalRepoDescriptor(RepoDescriptor):
+    def __init__(self, name: Optional[str], path: str) -> None:
+        super().__init__(name)
+        self.path = path
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(name={self.name!r}, path={self.path!r})"
+
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
+        try:
+            return {self.path: Repo(self.path, cache=cache, overrides=overrides)}
+        except RepoError as e:
+            return {self.path: e}
+
+
+class RemoteRepoDescriptor(RepoDescriptor):
+    def __init__(
+        self,
+        name: Optional[str],
+        repository: str,
+        destination: str,
+        relative_paths: Optional[List[str]],
+        lock: spack.util.lock.Lock,
+    ) -> None:
+        super().__init__(name)
+        self.repository = repository
+        self.destination = destination
+        self.relative_paths = relative_paths
+        self.error: Optional[str] = None
+        self.write_transaction = spack.util.lock.WriteTransaction(lock)
+        self.read_transaction = spack.util.lock.ReadTransaction(lock)
+
+    def _fetched(self) -> bool:
+        """Check if the repository has been fetched by looking for the .git directory."""
+        return os.path.isdir(os.path.join(self.destination, ".git"))
+
+    def fetched(self) -> bool:
+        with self.read_transaction:
+            return self._fetched()
+        return False
+
+    def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
+        """Clone the remote repository if it has not been fetched yet and read the index file
+        if necessary."""
+        if self.fetched():
+            self.read_index_file()
+            return
+
+        if not fetch:
+            return
+
+        if git is None:
+            self.error = "Git executable not found"
+            return
+
+        with self.write_transaction:
+            try:
+                # do not fetch if the package repository was fetched by another process while we
+                # were waiting for the lock
+                if not self._fetched():
+                    # users can always unshallow manually to fetch more.
+                    git("clone", "--depth=100", self.repository, self.destination)
+            except spack.util.executable.ProcessError as e:
+                self.error = f"Failed to clone repository {self.repository}: {e}"
+                return
+
+            self.read_index_file()
+
+    def read_index_file(self) -> None:
+        if self.relative_paths is not None:
+            return
+
+        repo_index_file = os.path.join(self.destination, SPACK_REPO_INDEX_FILE_NAME)
+        try:
+            with open(repo_index_file, encoding="utf-8") as f:
+                index_data = syaml.load(f)
+            assert "repo_index" in index_data, "missing 'repo_index' key"
+            repo_index = index_data["repo_index"]
+            assert isinstance(repo_index, dict), "'repo_index' must be a dictionary"
+            assert "paths" in repo_index, "missing 'paths' key in 'repo_index'"
+            sub_paths = repo_index["paths"]
+            assert isinstance(sub_paths, list), "'paths' under 'repo_index' must be a list"
+        except (OSError, syaml.SpackYAMLError, AssertionError) as e:
+            self.error = f"failed to read {repo_index_file}: {e}"
+            return
+
+        # validate that this is a list of relative paths.
+        if not isinstance(sub_paths, list) or not all(isinstance(p, str) for p in sub_paths):
+            self.error = "invalid repo index file format: expected a list of relative paths."
+            return
+
+        self.relative_paths = sub_paths
+
+    def __repr__(self):
+        return (
+            f"RemoteRepoDescriptor(name={self.name!r}, "
+            f"repository={self.repository!r}, "
+            f"destination={self.destination!r}, "
+            f"relative_paths={self.relative_paths!r})"
+        )
+
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
+        if self.error:
+            return {self.destination: Exception(self.error)}
+
+        repos: Dict[str, Union[Repo, Exception]] = {}
+        for subpath in self.relative_paths or []:
+            if os.path.isabs(subpath):
+                repos[self.destination] = Exception(
+                    f"Repository subpath '{subpath}' must be relative"
+                )
+                continue
+            path = os.path.join(self.destination, subpath)
+            try:
+                repos[path] = Repo(path, cache=cache, overrides=overrides)
+            except RepoError as e:
+                repos[path] = e
+        return repos
+
+
+class BrokenRepoDescriptor(RepoDescriptor):
+    """A descriptor for a broken repository, used to indicate errors in the configuration that
+    aren't fatal untill the repository is used."""
+
+    def __init__(self, name: Optional[str], error: str) -> None:
+        super().__init__(name)
+        self.error = error
+
+    def initialize(
+        self, fetch: bool = True, git: Optional[spack.util.executable.Executable] = None
+    ) -> None:
+        pass
+
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
+        return {self.name or "<unknown>": Exception(self.error)}
+
+
+class RepoDescriptors(Mapping[str, RepoDescriptor]):
+    """A collection of repository descriptors."""
+
+    def __init__(self, descriptors: Dict[str, RepoDescriptor]) -> None:
+        self.descriptors = descriptors
+
+    def __getitem__(self, name: str) -> RepoDescriptor:
+        return self.descriptors[name]
+
+    def __iter__(self):
+        return iter(self.descriptors.keys())
+
+    def __len__(self):
+        return len(self.descriptors)
+
+    def __contains__(self, name) -> bool:
+        return name in self.descriptors
+
+    def __repr__(self):
+        return f"RepoDescriptors({self.descriptors!r})"
+
+    @staticmethod
+    def from_config(
+        lock: spack.util.lock.Lock, config: spack.config.Configuration, scope=None
+    ) -> "RepoDescriptors":
+        return RepoDescriptors(
+            {
+                name: parse_config_descriptor(name, cfg, lock)
+                for name, cfg in config.get("repos", scope=scope).items()
+            }
+        )
+
+    def construct(
+        self,
+        cache: spack.util.file_cache.FileCache,
+        fetch: bool = True,
+        find_git: Callable[[], MaybeExecutable] = lambda: spack.util.executable.which("git"),
+        overrides: Optional[Dict[str, Any]] = None,
+    ) -> Tuple[RepoPath, Dict[str, Exception]]:
+        """Construct a RepoPath from the descriptors.
+
+        If init is True, initialize all remote repositories that have not been fetched yet.
+
+        Returns:
+            A tuple containing a RepoPath instance with all constructed Repos and a dictionary
+            mapping paths to exceptions that occurred during construction.
+        """
+        repos: List[Repo] = []
+        errors: Dict[str, Exception] = {}
+        git: MaybeExecutable = None
+
+        for descriptor in self.descriptors.values():
+            if fetch and isinstance(descriptor, RemoteRepoDescriptor):
+                git = git or find_git()
+                descriptor.initialize(fetch=True, git=git)
+            else:
+                descriptor.initialize(fetch=False)
+
+            for path, result in descriptor.construct(cache=cache, overrides=overrides).items():
+                if isinstance(result, Repo):
+                    repos.append(result)
+                else:
+                    errors[path] = result
+
+        return RepoPath(*repos), errors
+
+
+def parse_config_descriptor(
+    name: Optional[str], descriptor: Any, lock: spack.util.lock.Lock
+) -> RepoDescriptor:
+    """Parse a repository descriptor from the configuration. This does not instantiate Repo
+    objects, but merely parses and validates the configuration.
+
+    Args:
+        name: the name of the repository, used for error messages
+        descriptor: the configuration for the repository, which can be a string (local path),
+            or a dictionary with 'git' key containing git URL and other options.
+
+    Returns:
+        A RepoDescriptor instance, either LocalRepoDescriptor or RemoteRepoDescriptor.
+
+    Raises:
+        BadRepoError: if the descriptor is invalid or cannot be parsed.
+        RuntimeError: if the descriptor is of an unexpected type.
+
+    """
+    if isinstance(descriptor, str):
+        return LocalRepoDescriptor(name, spack.util.path.canonicalize_path(descriptor))
+
+    elif isinstance(descriptor, dict) and "git" in descriptor:
+        repository = descriptor["git"]
+        assert isinstance(repository, str), "Package repository git URL must be a string"
+
+        destination = descriptor.get("destination", None)
+
+        if destination is None:  # use a default destination
+            dir_name = spack.util.hash.b32_hash(repository)[-7:]
+            destination = os.path.join(spack.paths.user_repos_cache_path, dir_name)
+        else:
+            destination = spack.util.path.canonicalize_path(destination)
+
+        if "paths" in descriptor:
+            rel_paths = descriptor["paths"]
+        else:
+            rel_paths = None
+
+        return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
+
+    return BrokenRepoDescriptor(name, "Broken repo")
 
 
 def create_or_construct(
@@ -1558,31 +1870,16 @@ def create_or_construct(
     return from_path(repo_yaml_dir)
 
 
-def create(configuration: spack.config.Configuration) -> RepoPath:
-    """Create a RepoPath from a configuration object.
-
-    Args:
-        configuration (spack.config.Configuration): configuration object
-    """
-    repo_dirs = configuration.get("repos")
-    if not repo_dirs:
-        raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
-
-    overrides = {}
-    for pkg_name, data in configuration.get("packages").items():
-        if pkg_name == "all":
-            continue
-        value = data.get("package_attributes", {})
-        if not value:
-            continue
-        overrides[pkg_name] = value
-
-    return RepoPath(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
+def create_and_enable(config: spack.config.Configuration) -> RepoPath:
+    """Immediately call enable() on the created RepoPath instance."""
+    repo_path = RepoPath.from_config(config)
+    repo_path.enable()
+    return repo_path
 
 
 #: Global package repository instance.
 PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create(configuration=spack.config.CONFIG)
+    lambda: create_and_enable(spack.config.CONFIG)
 )  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
@@ -1609,13 +1906,13 @@ def use_repositories(
     Returns:
         Corresponding RepoPath object
     """
-    paths = [getattr(x, "root", x) for x in paths_and_repos]
+    paths = {getattr(x, "root", x): getattr(x, "root", x) for x in paths_and_repos}
     scope_name = f"use-repo-{uuid.uuid4()}"
     repos_key = "repos:" if override else "repos"
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope(name=scope_name, data={repos_key: paths})
     )
-    old_repo, new_repo = PATH, create(configuration=spack.config.CONFIG)
+    old_repo, new_repo = PATH, RepoPath.from_config(spack.config.CONFIG)
     old_repo.disable()
     enable_repo(new_repo)
     try:

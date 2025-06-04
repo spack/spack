@@ -20,6 +20,7 @@ class Benchmark(CMakePackage):
     # first properly installed CMake config packages in
     # 1.2.0 release: https://github.com/google/benchmark/issues/363
     version("main", branch="main")
+    version("1.9.4", sha256="b334658edd35efcf06a99d9be21e4e93e092bd5f95074c1673d5c8705d95c104")
     version("1.9.3", sha256="b94263b018042007eb53f79639f21ae47800808c73cf1b7df85622b6e2b1aa32")
     version("1.9.2", sha256="409075176168dc46bbb81b74c1b4b6900385b5d16bfc181d678afb060d928bd3")
     version("1.9.1", sha256="32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981")

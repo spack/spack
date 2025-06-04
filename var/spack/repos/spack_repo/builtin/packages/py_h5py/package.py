@@ -19,8 +19,14 @@ class PyH5py(PythonPackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("3.13.0", sha256="1870e46518720023da85d0895a1960ff2ce398c5671eac3b1a41ec696b7105c3")
     version("3.12.1", sha256="326d70b53d31baa61f00b8aa5f95c2fcb9621a3ee8365d770c551a13dbbcbfdf")
-    version("3.12.0", sha256="00955a079e9f86c5ae2cd08accb54396c69cda87152312ddd1528e3f90acc866")
+    # Yanked
+    version(
+        "3.12.0",
+        sha256="00955a079e9f86c5ae2cd08accb54396c69cda87152312ddd1528e3f90acc866",
+        deprecated=True,
+    )
     version("3.11.0", sha256="7b7e8f78072a2edec87c9836f25f34203fd492a4475709a18b417a33cfb21fa9")
     version("3.10.0", sha256="d93adc48ceeb33347eb24a634fb787efc7ae4644e6ea4ba733d099605045c049")
     version("3.9.0", sha256="e604db6521c1e367c6bd7fad239c847f53cc46646f2d2651372d05ae5e95f817")
@@ -69,6 +75,8 @@ class PyH5py(PythonPackage):
     depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:3.11")
     depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
     depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
+    # https://github.com/h5py/h5py/pull/2556
+    depends_on("py-numpy@:2.2", when="@:3.12", type="build")
     # https://github.com/h5py/h5py/issues/2353
     depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
 

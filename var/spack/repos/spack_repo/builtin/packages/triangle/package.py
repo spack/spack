@@ -17,6 +17,8 @@ class Triangle(Package):
     homepage = "https://www.cs.cmu.edu/~quake/triangle.html"
     url = "https://www.netlib.org/voronoi/triangle.zip"
 
+    maintainers("justinh2002")
+
     license("Unlicense")
 
     version("1.6", sha256="1766327add038495fa3499e9b7cc642179229750f7201b94f8e1b7bee76f8480")

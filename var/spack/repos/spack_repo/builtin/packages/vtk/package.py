@@ -7,10 +7,9 @@ import glob
 import os
 
 from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.packages.boost.package import Boost
 
 from spack.package import *
-
-from ..boost.package import Boost
 
 
 class Vtk(CMakePackage):
@@ -260,6 +259,17 @@ class Vtk(CMakePackage):
         sha256="174930dde06828ead84c68b1a192202766f6297a60f0c54eef6cab2605a466ef",
         when="@9.4:",
     )
+
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    #  incorrect member accesses fixed in 9.4
+    # https://gitlab.kitware.com/vtk/vtk/-/commit/98af50ca33
+    patch("vtk_patch_octree_m_children.patch", when="@9.2:9.3")
+
+    # clang 19+ no long providers std::char_traits<> for char8_t
+    # impacts any clang derivative compiler. But can be patched
+    # regardless of compiler
+    # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=280893
+    patch("vtk_clang19_size_t.patch", when="@9.2:9.4.2")
 
     # Needed to build VTK with external SEACAS >= 2022-10-14
     @when("@9.4:")

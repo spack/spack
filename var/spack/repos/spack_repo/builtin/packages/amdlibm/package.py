@@ -48,11 +48,11 @@ class Amdlibm(SConsPackage):
     variant("verbose", default=False, description="Building with verbosity", when="@:4.1")
 
     # Mandatory dependencies
-    depends_on("c", type="build")  # generated
-    depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
 
     depends_on("python@3.6.1:", type=("build", "run"))
-    depends_on("scons@3.1.2:", type=("build"))
+    depends_on("scons@3.1.2:4.8.1", type=("build"))
     depends_on("mpfr", type=("link"))
     for vers in ["4.1", "4.2", "5.0"]:
         with when(f"@{vers}"):
@@ -60,10 +60,10 @@ class Amdlibm(SConsPackage):
 
     patch("0001-libm-ose-Scripts-cleanup-pyc-files.patch", when="@2.2")
     patch("0002-libm-ose-prevent-log-v3.c-from-building.patch", when="@2.2")
-    # Patch to update the SCons environment with
-    # the newly introduced 'SPACK_MANAGED_DIRS'
-    # build environment variable.
+    # Patch to update the SCons environment with newly introduced
+    # Spack build environment variables.
     patch("libm-ose-SconsSpack.patch", when="@3.1:4.2")
+    patch("libm-ose-SconsSpack-5.patch", when="@5.0")
 
     conflicts("%gcc@:9.1.0", msg="Minimum supported GCC version is 9.2.0")
     conflicts("%clang@:9.0", msg="Minimum supported Clang version is 9")

@@ -23,7 +23,12 @@ class PyJax(PythonPackage):
 
     tags = ["e4s"]
 
-    # version("0.5.0", sha256="49df70bf293a345a7fb519f71193506d37a024c4f850b358042eb32d502c81c8")
+    version("0.6.1", sha256="c4dcb93e1d34f80cf7adfa81f3fdab62a5068b69107b7a6117f8742ab37b6779")
+    version("0.6.0", sha256="abc690c530349ce470eeef92e09a7bd8a0460424b4980bc72feea45332a636bf")
+    version("0.5.3", sha256="f17fcb0fd61dc289394af6ce4de2dada2312f2689bb0d73642c6f026a95fbb2c")
+    version("0.5.2", sha256="2aef7d1912df329470c47ce8f2e6521c105e84aa620311494048c391235087c6")
+    version("0.5.1", sha256="c098f74846ee718165bbfa83521ae10cd52cf50b47f043f8b33a6cfd3c20ddfd")
+    version("0.5.0", sha256="49df70bf293a345a7fb519f71193506d37a024c4f850b358042eb32d502c81c8")
     version("0.4.38", sha256="43bae65881628319e0a2148e8f81a202fbc2b8d048e35c7cb1df2416672fa4a8")
     version("0.4.37", sha256="7774f3d9e23fe199c65589c680c5a5be87a183b89598421a632d8245222b637b")
     version("0.4.36", sha256="088bff0575d01fc82682a9af4eb07433d60de7e5164686bd2cea3439492e608a")
@@ -67,6 +72,7 @@ class PyJax(PythonPackage):
         # setup.py
         depends_on("python@3.10:", when="@0.4.31:")
         depends_on("python@3.9:", when="@0.4.14:")
+        depends_on("py-ml-dtypes@0.5:", when="@0.6:")
         depends_on("py-ml-dtypes@0.4:", when="@0.4.29,0.4.35:")
         depends_on("py-ml-dtypes@0.2:", when="@0.4.14:")
         depends_on("py-ml-dtypes@0.1:", when="@0.4.9:")
@@ -88,7 +94,12 @@ class PyJax(PythonPackage):
         # jax/_src/lib/__init__.py
         # https://github.com/google/jax/commit/8be057de1f50756fe7522f7e98b2f30fad56f7e4
         for v in [
-            # "0.5.0",
+            "0.6.1",
+            "0.6.0",
+            "0.5.3",
+            "0.5.2",
+            "0.5.1",
+            "0.5.0",
             "0.4.38",
             "0.4.37",
             "0.4.36",
@@ -129,7 +140,11 @@ class PyJax(PythonPackage):
             depends_on(f"py-jaxlib@:{v}", when=f"@{v}")
 
         # See _minimum_jaxlib_version in jax/version.py
-        # depends_on("py-jaxlib@0.5:", when="@0.5:")
+        depends_on("py-jaxlib@0.6.1:", when="@0.6.1:")
+        depends_on("py-jaxlib@0.6:", when="@0.6:")
+        depends_on("py-jaxlib@0.5.3:", when="@0.5.3:")
+        depends_on("py-jaxlib@0.5.1:", when="@0.5.1:")
+        depends_on("py-jaxlib@0.5:", when="@0.5:")
         depends_on("py-jaxlib@0.4.38:", when="@0.4.38:")
         depends_on("py-jaxlib@0.4.36:", when="@0.4.36:")
         depends_on("py-jaxlib@0.4.35:", when="@0.4.35:")

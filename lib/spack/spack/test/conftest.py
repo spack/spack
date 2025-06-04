@@ -68,13 +68,12 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
-
-from ..enums import ConfigScopePriority
 
 mirror_cmd = SpackCommand("mirror")
 
@@ -635,7 +634,7 @@ def _use_test_platform(test_platform):
 # Test-specific fixtures
 #
 @pytest.fixture(scope="session")
-def mock_repo_path():
+def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
@@ -652,20 +651,20 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
+def mock_packages(mock_packages_repo, mock_pkg_install, request):
     """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
-    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+    with spack.repo.use_repositories(mock_packages_repo) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path, request):
+def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 @pytest.fixture()
@@ -948,7 +947,7 @@ def _store_dir_and_cache(tmpdir_factory):
 def mock_store(
     tmpdir_factory,
     mock_wsdk_externals,
-    mock_repo_path,
+    mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache,
 ):
@@ -970,7 +969,7 @@ def mock_store(
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
+                with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     store_path.chmod(mode=0o755, rec=1)
                     _populate(store.db)
@@ -2071,11 +2070,6 @@ def pytest_runtest_setup(item):
     only_windows_marker = item.get_closest_marker(name="only_windows")
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
-
-    # Skip tests marked "requires_builtin" if builtin repo is required
-    requires_builtin_marker = item.get_closest_marker(name="requires_builtin")
-    if requires_builtin_marker and not os.path.exists(spack.paths.packages_path):
-        pytest.skip(*requires_builtin_marker.args)
 
 
 def _sequential_executor(*args, **kwargs):

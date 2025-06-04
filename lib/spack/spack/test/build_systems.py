@@ -9,20 +9,16 @@ import _vendoring.archspec.cpu
 import py.path
 import pytest
 
-import llnl.util.filesystem as fs
-
 import spack
 import spack.builder
 import spack.concretize
 import spack.environment
-import spack.error
 import spack.paths
 import spack.platforms
 import spack.platforms.test
-from spack.build_environment import ChildError, MakeExecutable, setup_package
+from spack.build_environment import ChildError, setup_package
 from spack.installer import PackageInstaller
-from spack.spec import Spec
-from spack.util.executable import which
+from spack.package import FileList, InstallError, MakeExecutable, Spec, find, which, working_dir
 
 DATA_PATH = os.path.join(spack.paths.test_path, "data")
 
@@ -59,7 +55,7 @@ class TestTargets:
     def test_affirmative_make_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly detects targets in a Makefile."""
         s = concretize_and_setup("mpich")
-        with fs.working_dir(test_dir(input_dir)):
+        with working_dir(test_dir(input_dir)):
             assert s.package._has_make_target("check")
             s.package._if_make_target_execute("check")
 
@@ -70,7 +66,7 @@ class TestTargets:
     def test_negative_make_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly ignores false positives in a Makefile."""
         s = concretize_and_setup("mpich")
-        with fs.working_dir(test_dir(input_dir)):
+        with working_dir(test_dir(input_dir)):
             assert not s.package._has_make_target("check")
             s.package._if_make_target_execute("check")
 
@@ -81,7 +77,7 @@ class TestTargets:
     def test_affirmative_ninja_check(self, input_dir, test_dir, concretize_and_setup):
         """Tests that Spack correctly detects targets in a Ninja build script."""
         s = concretize_and_setup("mpich")
-        with fs.working_dir(test_dir(input_dir)):
+        with working_dir(test_dir(input_dir)):
             assert s.package._has_ninja_target("check")
             s.package._if_ninja_target_execute("check")
 
@@ -94,7 +90,7 @@ class TestTargets:
         build script.
         """
         s = concretize_and_setup("mpich")
-        with fs.working_dir(test_dir(input_dir)):
+        with working_dir(test_dir(input_dir)):
             assert not s.package._has_ninja_target("check")
             s.package._if_ninja_target_execute("check")
 
@@ -154,7 +150,7 @@ class TestAutotoolsPackage:
         # a log of removed files
         assert not os.path.exists(spack.builder.create(s.package).libtool_archive_file)
         search_directory = os.path.join(s.prefix, ".spack")
-        libtool_deletion_log = fs.find(search_directory, "removed_la_files.txt", recursive=True)
+        libtool_deletion_log = find(search_directory, "removed_la_files.txt", recursive=True)
         assert libtool_deletion_log
 
     def test_libtool_archive_files_might_be_installed_on_demand(
@@ -280,7 +276,7 @@ class TestCMakePackage:
 
     def test_cmake_bad_generator(self, default_mock_concretization):
         s = default_mock_concretization("cmake-client")
-        with pytest.raises(spack.error.InstallError):
+        with pytest.raises(InstallError):
             spack.build_systems.cmake.CMakeBuilder.std_args(
                 s.package, generator="Yellow Sticky Notes"
             )
@@ -298,7 +294,7 @@ class TestCMakePackage:
         for cls in (list, tuple):
             assert define("MULTI", cls(["right", "up"])) == "-DMULTI:STRING=right;up"
 
-        file_list = fs.FileList(["/foo", "/bar"])
+        file_list = FileList(["/foo", "/bar"])
         assert define("MULTI", file_list) == "-DMULTI:STRING=/foo;/bar"
 
         assert define("ENABLE_TRUTH", False) == "-DENABLE_TRUTH:BOOL=OFF"

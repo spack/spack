@@ -29,6 +29,7 @@ class Petaca(CMakePackage):
     license("MIT")
 
     version("develop", branch="master")
+    version("24.12", sha256="d54d3dcc36d65b145f609549d7874b9198397ff0fdd271c1f63b90b98794fb29")
     version("24.04", sha256="951a0ba3380502fa09009af8613471256bbcb4edc14fe810f7e3afe7adc21b7e")
     version("23.12", sha256="8d7f1c7170500db52a624c891fb1563b8cfc322d138d935a5b4c6f12d9bdbd23")
     version("23.11.1", sha256="5c0809965046be5391b476edf1bc0c80584c3bc4fc5ecbf915a2344c6c5b9914")
@@ -39,7 +40,7 @@ class Petaca(CMakePackage):
     depends_on("c", type="build")  # generated
     depends_on("fortran", type="build")  # generated
 
-    depends_on("cmake@3.3:", type="build")
+    depends_on("cmake@3.20:", type="build")
     depends_on("yajl@2.0.1:")
 
     # override RelWithDebugInfo since those flags aren't set in petaca
