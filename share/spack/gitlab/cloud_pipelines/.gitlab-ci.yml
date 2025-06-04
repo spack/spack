@@ -78,7 +78,7 @@ default:
       when: never
     - if: $SPACK_CI_ENABLE_STACKS =~ /.+/ && $SPACK_CI_STACK_NAME !~ $SPACK_CI_ENABLE_STACKS
       when: never
-    - if: $CI_COMMIT_REF_NAME == "develop" || $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
+    - if: $CI_COMMIT_REF_NAME == "develop"
       # Pipelines on develop/release branches only rebuild what is missing from the mirror
       when: always
       variables:
@@ -86,9 +86,25 @@ default:
         SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
         SPACK_REQUIRE_SIGNING: "True"
         OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
-    - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/ || $CI_COMMIT_TAG =~ /^v.*/
+    - if: $CI_COMMIT_REF_NAME =~ /^releases\/v.*/
+      # Pipelines on develop/release branches only rebuild what is missing from the mirror
+      when: never
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_protected_branch"
+        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
+        SPACK_REQUIRE_SIGNING: "True"
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
+    - if: $CI_COMMIT_TAG =~ /^develop-[\d]{4}-[\d]{2}-[\d]{2}$/
       # Pipelines on tags (release or dev snapshots) only copy binaries from one mirror to another
       when: always
+      variables:
+        SPACK_PIPELINE_TYPE: "spack_copy_only"
+        SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
+        PIPELINE_MIRROR_TEMPLATE: "copy-only-protected-mirrors.yaml.in"
+        OIDC_TOKEN_AUDIENCE: "protected_binary_mirror"
+    - if: $CI_COMMIT_TAG =~ /^v.*/
+      # Pipelines on tags (release or dev snapshots) only copy binaries from one mirror to another
+      when: never
       variables:
         SPACK_PIPELINE_TYPE: "spack_copy_only"
         SPACK_COPY_BUILDCACHE: "${PROTECTED_MIRROR_PUSH_DOMAIN}/${CI_COMMIT_REF_NAME}"
