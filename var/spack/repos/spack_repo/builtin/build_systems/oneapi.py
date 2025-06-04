@@ -5,8 +5,8 @@
 import os
 import platform
 import shutil
-from os.path import basename, isdir
 import sys
+from os.path import basename, isdir
 
 from llnl.util.link_tree import LinkTree
 
@@ -44,18 +44,18 @@ class IntelOneApiPackage(Package):
     # contains precompiled binaries without rpaths
     unresolved_libraries = ["*"]
 
-    for c in [
-        "target=ppc64:",
-        "target=ppc64le:",
-        "target=aarch64:",
-        "platform=darwin",
-    ]:
+    for c in ["target=ppc64:", "target=ppc64le:", "target=aarch64:", "platform=darwin"]:
         conflicts(c, msg="This package in only available for x86_64 and Linux/Windows")
 
     # env mods are mandatory on Windows, no variant option
     for plat in ["linux", "freebsd"]:
         # Add variant to toggle environment modifications from vars.sh
-        variant("envmods", default=True, description="Toggles environment modifications", when=f"platform={plat}")
+        variant(
+            "envmods",
+            default=True,
+            description="Toggles environment modifications",
+            when=f"platform={plat}",
+        )
 
     @staticmethod
     def update_description(cls):
@@ -140,7 +140,9 @@ class IntelOneApiPackage(Package):
         elif sys.platform == "win32":
             # Installer can be executed directly
             # as it's a standalone executable
-            installer_extraction_path = os.path.join(self.stage.source_path, f"installer-{os.path.basename(self.component_dir)}")
+            installer_extraction_path = os.path.join(
+                self.stage.source_path, f"installer-{os.path.basename(self.component_dir)}"
+            )
             installer = Executable(installer_path)
             installer_args = [
                 "-s",
@@ -153,10 +155,9 @@ class IntelOneApiPackage(Package):
                 "--eula",
                 "accept",
                 "--install-dir",
-                self.prefix
+                self.prefix,
             ]
             installer(*installer_args)
-            
 
         # Some installers have a bug and do not return an error code when failing
         install_dir = self.component_prefix

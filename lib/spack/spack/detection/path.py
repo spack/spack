@@ -347,8 +347,6 @@ class Finder:
             initial_guess: initial list of paths to search from the caller if None, default paths
                 are searched. If this is an empty list, nothing will be searched.
         """
-        if "intel" in pkg_name:
-            import pdb; pdb.set_trace()
         pkg_cls = repository.get_pkg_class(pkg_name)
         patterns = self.search_patterns(pkg=pkg_cls)
         if not patterns:
@@ -443,38 +441,36 @@ def by_path(
 
     result = collections.defaultdict(list)
     repository = spack.repo.PATH.ensure_unwrapped()
-    for pkg in packages_to_search:
-        executables_finder.find(pkg_name=pkg, initial_guess=path_hints, repository=repository)
-    # with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
-    #     for pkg in packages_to_search:
-    #         executable_future = executor.submit(
-    #             executables_finder.find,
-    #             pkg_name=pkg,
-    #             initial_guess=path_hints,
-    #             repository=repository,
-    #         )
-    #         library_future = executor.submit(
-    #             libraries_finder.find,
-    #             pkg_name=pkg,
-    #             initial_guess=path_hints,
-    #             repository=repository,
-    #         )
-    #         detected_specs_by_package[pkg] = executable_future, library_future
+    with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
+        for pkg in packages_to_search:
+            executable_future = executor.submit(
+                executables_finder.find,
+                pkg_name=pkg,
+                initial_guess=path_hints,
+                repository=repository,
+            )
+            library_future = executor.submit(
+                libraries_finder.find,
+                pkg_name=pkg,
+                initial_guess=path_hints,
+                repository=repository,
+            )
+            detected_specs_by_package[pkg] = executable_future, library_future
 
-    #     for pkg_name, futures in detected_specs_by_package.items():
-    #         for future in futures:
-    #             try:
-    #                 detected = future.result(timeout=DETECTION_TIMEOUT)
-    #                 if detected:
-    #                     _, unqualified_name = spack.repo.partition_package_name(pkg_name)
-    #                     result[unqualified_name].extend(detected)
-    #             except concurrent.futures.TimeoutError:
-    #                 llnl.util.tty.debug(
-    #                     f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
-    #                 )
-    #             except Exception:
-    #                 llnl.util.tty.debug(
-    #                     f"[EXTERNAL DETECTION] Skipping {pkg_name}: {traceback.format_exc()}"
-    #                 )
+        for pkg_name, futures in detected_specs_by_package.items():
+            for future in futures:
+                try:
+                    detected = future.result(timeout=DETECTION_TIMEOUT)
+                    if detected:
+                        _, unqualified_name = spack.repo.partition_package_name(pkg_name)
+                        result[unqualified_name].extend(detected)
+                except concurrent.futures.TimeoutError:
+                    llnl.util.tty.debug(
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: timeout reached"
+                    )
+                except Exception:
+                    llnl.util.tty.debug(
+                        f"[EXTERNAL DETECTION] Skipping {pkg_name}: {traceback.format_exc()}"
+                    )
 
     return result

@@ -219,7 +219,7 @@ class CompilerPackage(PackageBase):
 
 @memoized
 def _compiler_output(
-    compiler_path: Path, *, version_argument: str, ignore_errors: Tuple[int, ...] = ()
+    compiler_path: Path, *, version_argument: Optional[str], ignore_errors: Tuple[int, ...] = ()
 ) -> str:
     """Returns the output from the compiler invoked with the given version argument.
 
@@ -243,7 +243,7 @@ def _compiler_output(
 
 
 def compiler_output(
-    compiler_path: Path, *, version_argument: str, ignore_errors: Tuple[int, ...] = ()
+    compiler_path: Path, *, version_argument: Optional[str], ignore_errors: Tuple[int, ...] = ()
 ) -> str:
     """Wrapper for _get_compiler_version_output()."""
     # This ensures that we memoize compiler output by *absolute path*,
