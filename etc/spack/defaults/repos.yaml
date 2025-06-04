@@ -11,4 +11,5 @@
 #   ~/.spack/repos.yaml
 # -------------------------------------------------------------------------
 repos:
-  builtin: $spack/var/spack/repos/spack_repo/builtin
+  builtin:
+    git: https://github.com/spack/spack-packages.git

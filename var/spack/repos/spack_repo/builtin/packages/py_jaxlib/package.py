@@ -107,6 +107,7 @@ class PyJaxlib(PythonPackage, CudaPackage, ROCmPackage):
     with when("+rocm"):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@6:", when="@0.4.28:")
+            depends_on(f"{pkg_dep}@6.3:", when="@0.6:")
             depends_on(pkg_dep)
         depends_on("rocprofiler-register", when="^hip@6.2:")
         depends_on("hipblas-common", when="^hip@6.3:")

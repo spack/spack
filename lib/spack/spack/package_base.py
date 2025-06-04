@@ -1039,7 +1039,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         Base implementation will look up git commits when appropriate.
         Packages may override this implementation for custom implementations
         """
-
         # early return cases, don't overwrite user intention
         # commit pre-assigned or develop specs don't need commits changed
         # since this would create un-necessary churn
@@ -1078,6 +1077,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
 
         if sha:
             self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
+
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and

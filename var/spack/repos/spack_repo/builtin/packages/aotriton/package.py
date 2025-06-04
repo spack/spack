@@ -18,7 +18,13 @@ class Aotriton(CMakePackage):
     maintainers("afzpatel", "srekolam", "renjithravindrankannath")
 
     license("MIT")
-
+    version(
+        "0.9.2b", tag="0.9.2b", commit="b388d223d8c7213545603e00f6f3148c54d1f525", submodules=True
+    )
+    version(
+        "0.9.1b", tag="0.9.1b", commit="6f72f6943c9da89d6f0e420c29a5d33a122185cf", submodules=True
+    )
+    version("0.9b", tag="0.9b", commit="f539cf9c2bf99dca8d0170d156c3f6f0b7b5cce5", submodules=True)
     version(
         "0.8.2b", tag="0.8.2b", commit="b24f43a9771622faa157155568b9a200c3b49e41", submodules=True
     )
@@ -35,7 +41,7 @@ class Aotriton(CMakePackage):
     depends_on("py-filelock", type=("build", "run"))
 
     depends_on("cmake@3.26:", type="build")
-    depends_on("python", type="build")
+    depends_on("python@:3.11", type="build")
     depends_on("z3", type="link")
     depends_on("zlib-api", type="link")
     depends_on("xz", type="link")
