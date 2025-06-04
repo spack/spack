@@ -44,7 +44,7 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
 
 
 def get_commit_sha(path: str, ref: str) -> Optional[str]:
-    """Get a commit sha for an arbitrary ref"""
+    """Get a commit sha for an arbitrary ref using ls-remote"""
 
     # search for matching branch, then tag
     ref_list = [f"refs/heads/{ref}", f"refs/tags/{ref}"]
@@ -55,6 +55,7 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
         ref_list.append("HEAD")
 
     for try_ref in ref_list:
+        # this command enabled in git@1.7 so no version checking supplied (1.7 released in 2009)
         query = git(required=True)("ls-remote", path, try_ref, output=str, error=str)
 
         if query:

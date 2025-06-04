@@ -333,15 +333,32 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
 
 @pytest.mark.parametrize("version,ref_type", (("main", "branch"), ("1.0", "tag")))
+@pytest.mark.parametrize("prestage", (True, False))
 @pytest.mark.require_provenance
-def test_binary_provenance_find_commit_url(
-    git, mock_git_version_info, mock_packages, config, monkeypatch, version, ref_type
+@pytest.mark.disable_clean_stage_check
+def test_binary_provenance_find_commit_ls_remote(
+    git, mock_git_version_info, mock_packages, config, monkeypatch, version, ref_type, prestage
 ):
     repo_path, _, commits = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
-    spec = spack.concretize.concretize_one(f"git-test-commit@{version}")
+
+    spec_str = f"git-test-commit@{version}"
+
+    if prestage:
+        spack.concretize.concretize_one(spec_str).package.do_stage(False)
+    else:
+        # explicitly disable ability to use stage or mirror, force url path
+        monkeypatch.setattr(
+            spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None
+        )
+
+    spec = spack.concretize.concretize_one(spec_str)
+
+    if prestage:
+        # confirmation that we actually had an expanded stage to query with ls-remote
+        assert spec.package.stage.expanded
 
     git_ref = spec.package.version_or_package_attr(ref_type, spec.version, "")
     actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
@@ -349,6 +366,7 @@ def test_binary_provenance_find_commit_url(
 
 
 @pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
 def test_binary_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
     """Fail all attempts to resolve git commits"""
     monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)

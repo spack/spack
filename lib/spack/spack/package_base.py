@@ -1057,23 +1057,26 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                 "is missing a git ref (commit, tag or branch)"
             )
 
-        url = self.version_or_package_attr("git", self.spec.version)
-        sha = spack.util.git.get_commit_sha(url, ref)
+        # Look for commits in the following places:
+        # 1) stage,                (cheap, local, static)
+        # 2) mirror archive file,  (cheapish, local, staticish)
+        # 3) URL                   (cheap, remote, dynamic)
+        # If users pre-stage, or use a mirror they can expect consistent commit resolution
+        sha = None
+        if self.stage.expanded:
+            sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
 
-        # we typically check mirrors first, but for commit resolution we query the network
-        # and fall back to mirrors assuming people want the most up-to-date commits
         if not sha:
-            if self.stage.expanded:
-                sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
-            if not sha:
-                try:
-                    self.do_fetch(mirror_only=True)
-                except spack.error.FetchError:
-                    pass
-                if self.stage.archive_file:
-                    sha = spack.util.archive.retrieve_commit_from_archive(
-                        self.stage.archive_file, ref
-                    )
+            try:
+                self.do_fetch(mirror_only=True)
+            except spack.error.FetchError:
+                pass
+            if self.stage.archive_file:
+                sha = spack.util.archive.retrieve_commit_from_archive(self.stage.archive_file, ref)
+
+        if not sha:
+            url = self.version_or_package_attr("git", self.spec.version)
+            sha = spack.util.git.get_commit_sha(url, ref)
 
         if sha:
             self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
