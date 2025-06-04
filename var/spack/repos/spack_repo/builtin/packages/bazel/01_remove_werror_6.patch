@@ -44,6 +44,6 @@ diff --color=auto --color=never -Naur a/third_party/upb/BUILD b/third_party/upb/
  
  package(default_visibility = ["//visibility:public"])
 +
-+export_files([
++exports_files([
 +    "01_remove_werror.patch",
 +])
