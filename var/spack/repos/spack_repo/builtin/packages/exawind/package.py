@@ -23,7 +23,7 @@ class Exawind(CMakePackage, CudaPackage, ROCmPackage):
 
     version("master", branch="main", submodules=True)
     version(
-        "2.0.0", tag="v2.0.0", commit="421ca84cc371755ad1bcefe8a509159b9a2f234c", submodules=True
+        "2.0.0", tag="v2.0.0", commit="d25aa549c7cbd9d6213541cd4b046bd9c0c54652", submodules=True
     )
     version(
         "1.2.0", tag="v1.2.0", commit="4c49c7775c580b6bd2556e6c00fd13c08737d5eb", submodules=True
