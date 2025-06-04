@@ -2,4 +2,3 @@ build
 twine
 hatch
 toml
-pyyaml

@@ -37,7 +37,7 @@ pip install -r requirements.txt
 mv "${SPACK_PKG_SRC}/spack/pyproject.toml" "${SPACK_PKG_SRC}/spack/pyproject.toml.bak"
 python update-pyproject-toml.py -i "${SPACK_PKG_SRC}/spack/pyproject.toml.bak" -o "${SPACK_PKG_SRC}/pyproject.toml"
 
-# Install updated site-admin config.yaml
+# Install site-admin config.yaml for external install
 mkdir -p "${SPACK_PKG_SRC}/spack/etc/spack/site-admin"
 cat <<EOF > "${SPACK_PKG_SRC}/spack/etc/spack/site-admin/config.yaml"
 config:
