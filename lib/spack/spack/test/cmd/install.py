@@ -339,40 +339,6 @@ def test_install_invalid_spec():
         install("conflict%~")
 
 
-@pytest.mark.usefixtures("noop_install", "mock_packages", "config")
-@pytest.mark.parametrize(
-    "spec,concretize,error_code",
-    [
-        (Spec("mpi"), False, 1),
-        (Spec("mpi"), True, 0),
-        (Spec("boost"), False, 1),
-        (Spec("boost"), True, 0),
-    ],
-)
-def test_install_from_file(spec, concretize, error_code, tmpdir):
-    if concretize:
-        spec = spack.concretize.concretize_one(spec)
-
-    specfile = tmpdir.join("spec.yaml")
-
-    with specfile.open("w") as f:
-        spec.to_yaml(f)
-
-    err_msg = "does not contain a concrete spec" if error_code else ""
-
-    # Relative path to specfile (regression for #6906)
-    with fs.working_dir(specfile.dirname):
-        # A non-concrete spec will fail to be installed
-        out = install("-f", specfile.basename, fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-    # Absolute path to specfile (regression for #6983)
-    out = install("-f", str(specfile), fail_on_error=False)
-    assert install.returncode == error_code
-    assert err_msg in out
-
-
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.usefixtures("mock_packages", "mock_archive", "mock_fetch", "install_mockery")
 @pytest.mark.parametrize(
@@ -851,11 +817,11 @@ def test_install_no_add_in_env(tmpdir, mutable_mock_env_path, mock_fetch, instal
 
         # Make sure we can install a concrete dependency spec from a spec.json
         # file on disk, and the spec is installed but not added as a root
-        mpi_spec_json_path = tmpdir.join("{0}.json".format(mpi_spec.name))
+        mpi_spec_json_path = tmpdir.join(f"{mpi_spec.name}.json")
         with open(mpi_spec_json_path.strpath, "w", encoding="utf-8") as fd:
             fd.write(mpi_spec.to_json(hash=ht.dag_hash))
 
-        install("-f", mpi_spec_json_path.strpath)
+        install(mpi_spec_json_path.strpath)
         assert mpi_spec not in e.roots()
 
         find_output = find("-l", output=str)
