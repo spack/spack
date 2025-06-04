@@ -18,6 +18,7 @@ class Rclone(GoPackage):
 
     license("MIT")
 
+    version("1.69.3", sha256="febfd634e4eeb2e81506673debaf9af996a390dd79f215b605ac93f3d68d2b93")
     version("1.69.2", sha256="2b3fe529ad1c534db429438bad852108ff25b1df9c98a09777866b12d85b95e3")
     version("1.69.1", sha256="02ea0fa75c0895b14153a7faf7b1a1273224c4782e6deeb60a366a48786e0722")
     version("1.69.0", sha256="45e6a329af4f98e0c71233511ab8543e454eaa22adeeb73179bfdb22456a2123")

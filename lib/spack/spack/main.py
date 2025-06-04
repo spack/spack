@@ -561,6 +561,7 @@ def setup_main_options(args):
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
 
+    # In the main function we automatically fetch remote package repositories if necessary
     spack.repo.enable_repo(spack.repo.RepoPath.from_config(spack.config.CONFIG))
 
     # On Windows10 console handling for ASCI/VT100 sequences is not

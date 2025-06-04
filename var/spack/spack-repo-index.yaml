@@ -1,2 +1,3 @@
 repo_index:
-- repos/spack_repo/builtin
+  paths:
+  - repos/spack_repo/builtin
