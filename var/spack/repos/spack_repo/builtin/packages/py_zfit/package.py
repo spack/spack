@@ -47,9 +47,12 @@ class PyZfit(PythonPackage):
     depends_on("python@:3.11", type=("build", "run"), when="@:0.18")
     depends_on("python@:3.12", type=("build", "run"), when="@0.20:")
 
-    depends_on("py-setuptools@42:", type="build")
-    depends_on("py-setuptools-scm-git-archive", type="build")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build")
+    depends_on("py-hatchling@42:", type="build", when="@0.26:")
+    depends_on("py-hatch-vcs", type="build", when="@:0.26:")
+    
+    depends_on("py-setuptools@42:", type="build", when="@:0.25")
+    depends_on("py-setuptools-scm-git-archive", type="build", when="@:0.25")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build", when="@:0.25")
 
     variant("nlopt", default=False, description="Enable nlopt support")
     variant("hs3", default=True, description="Enable serialization support")
