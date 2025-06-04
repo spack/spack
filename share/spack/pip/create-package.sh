@@ -39,11 +39,11 @@ python update-pyproject-toml.py -i "${SPACK_PKG_SRC}/spack/pyproject.toml.bak" -
 
 # Install updated site-admin config.yaml
 mkdir -p "${SPACK_PKG_SRC}/spack/etc/spack/site-admin"
-cat <<EOF
+cat <<EOF > "${SPACK_PKG_SRC}/spack/etc/spack/site-admin/config.yaml"
 config:
   install_tree:
     root:
-      $spack_xdg_state_home/$spack_instance_id/opt/spack
+      \$spack_xdg_state_home/\$spack_instance_id/opt/spack
 EOF
 
 # Update defaults/config.yaml with a warning about site-admin/config.yaml
