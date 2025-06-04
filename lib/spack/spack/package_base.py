@@ -1078,7 +1078,6 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if sha:
             self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
 
-
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
         list_url (if it contains a version) in a package in that order.
