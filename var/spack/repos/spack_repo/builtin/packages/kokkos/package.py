@@ -223,14 +223,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "westmere": "WSM",
         "ivybridge": "SNB",
         "broadwell": "BDW",
-        # @AndrewGaspar: Kokkos does not have an arch for plain-skylake - only
-        # for Skylake-X (i.e. Xeon). For now, I'm mapping this to Broadwell
-        # until Kokkos learns to optimize for SkyLake without the AVX-512
-        # extensions. SkyLake with AVX-512 will still be optimized using the
-        # separate `skylake_avx512` arch.
-        "skylake": "BDW",
-        "icelake": "SKX",
+        "skylake": "SKL",
+        "icelake": "ICL",
         "skylake_avx512": "SKX",
+        "sapphirerapids": "SPR",
     }
 
     spack_cuda_arch_map = {
