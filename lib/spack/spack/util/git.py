@@ -45,7 +45,6 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
 
 def get_commit_sha(path: str, ref: str) -> Optional[str]:
     """Get a commit sha for an arbitrary ref"""
-    sha = None
 
     # search for matching branch, then tag
     ref_list = [f"refs/heads/{ref}", f"refs/tags/{ref}"]
@@ -59,7 +58,6 @@ def get_commit_sha(path: str, ref: str) -> Optional[str]:
         query = git(required=True)("ls-remote", path, try_ref, output=str, error=str)
 
         if query:
-            sha = query.strip().split()[0]
-            break
+            return query.strip().split()[0]
 
-    return sha
+    return None

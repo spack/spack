@@ -243,10 +243,9 @@ def reproducible_tarfile_from_prefix(
         dir_stack.extend(reversed(new_dirs))  # we pop, so reverse to stay alphabetical
 
 
-def _git_prefix(archive_path):
+def _git_prefix(archive_path, tar):
     # This is an annoying method, but since we always have a prefix and can't gaurantee what
     # it is we need this.
-    tar = which("tar", required=True)
     paths = tar("-tf", archive_path, output=str, error=str, fail_on_error=False)
     if paths:
         paths = paths.strip().split()
@@ -258,17 +257,15 @@ def _git_prefix(archive_path):
 
 def retrieve_commit_from_archive(archive_path, ref):
     """extract git data from an archive with out expanding it"""
-    assert os.path.isfile(archive_path)
+    if not os.path.isfile(archive_path):
+        raise FileNotFoundError(f"The file {archive_path} does not exist")
 
-    commit = None
-    # try branch, tags then detached states
-    ref_paths = [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]
     tar = which("tar", required=True)
-    error_msg = f"Archive {archive_path} does not appear to contain git data"
+    prefix = _git_prefix(archive_path, tar)
+    commit = None
 
-    prefix = _git_prefix(archive_path)
-
-    for ref_path in ref_paths:
+    # try branch, tags then detached states
+    for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]:
         try:
             commit = tar(
                 "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
@@ -278,5 +275,5 @@ def retrieve_commit_from_archive(archive_path, ref):
         except ProcessError:
             pass
     if not commit:
-        tty.warn(error_msg)
+        tty.warn(f"Archive {archive_path} does not appear to contain git data")
     return commit

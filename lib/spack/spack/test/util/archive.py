@@ -204,7 +204,6 @@ def test_get_commits_from_archive(mock_git_repository, tmpdir, ref):
             reproducible_tarfile_from_prefix(
                 tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name
             )
-        commit = None
         commit = retrieve_commit_from_archive(archive_file, ref)
         assert commit
         assert spack.version.is_git_commit_sha(commit)

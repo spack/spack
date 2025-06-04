@@ -61,7 +61,7 @@ from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion, is_git_version
+from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -1046,21 +1046,20 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if "commit" in self.spec.variants or self.spec.is_develop:
             return
 
-        sha = None
-
         if is_git_version(str(self.spec.version)):
             ref = self.spec.version.ref
         else:
-            tag = self.version_or_package_attr("tag", self.spec.version, None)
-            branch = self.version_or_package_attr("branch", self.spec.version, None)
-            assert not (tag and branch)
-            ref = tag or branch
+            v_attrs = self.versions.get(self.spec.version, {})
+            ref = v_attrs.get("tag") or v_attrs.get("branch")
 
-        assert ref, "Missing git ref"
+        if not ref:
+            raise VersionError(
+                f"{self.name}'s version {str(self.spec.version)} "
+                "is missing a git ref (commit, tag or branch)"
+            )
 
-        if not sha:
-            url = self.version_or_package_attr("git", self.spec.version)
-            sha = spack.util.git.get_commit_sha(url, ref)
+        url = self.version_or_package_attr("git", self.spec.version)
+        sha = spack.util.git.get_commit_sha(url, ref)
 
         # we typically check mirrors first, but for commit resolution we query the network
         # and fall back to mirrors assuming people want the most up-to-date commits
