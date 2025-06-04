@@ -81,6 +81,7 @@ jobs:
                         --path var/spack/test_repos/spack_repo/builtin_mock/packages/mpich/package.py --path-rename var/spack/test_repos/spack_repo/builtin_mock/packages/mpich/package.py:tests/repos/spack_repo/builtin_mock/packages/mpich/package.py \
                         --path var/spack/test_repos/spack_repo/builtin_mock/packages/pkg_a/package.py --path-rename var/spack/test_repos/spack_repo/builtin_mock/packages/pkg_a/package.py:tests/repos/spack_repo/builtin_mock/packages/pkg_a/package.py \
                         --path var/spack/test_repos/spack_repo/builtin_mock/packages/pkg_b/package.py --path-rename var/spack/test_repos/spack_repo/builtin_mock/packages/pkg_b/package.py:tests/repos/spack_repo/builtin_mock/packages/pkg_b/package.py \
+                        --path var/spack/test_repos/spack_repo/builtin_mock/repo.yaml --path-rename var/spack/test_repos/spack_repo/builtin_mock/repo.yaml:tests/repos/spack_repo/builtin_mock/repo.yaml \
                         --refs develop
     - name: Push
       run: |
