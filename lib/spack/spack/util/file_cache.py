@@ -118,3 +118,11 @@ class DirectoryFileCache(Cache):
 
     def _rm_cache_entry(self, cache_path):
         shutil.rmtree(cache_path)
+
+    def remove(self, key: Union[str, pathlib.Path]):
+        super(DirectoryFileCache, self).remove(key)
+        # cleanup lockfile itself as well
+        lock = self._get_lock(key)
+        lock.cleanup()
+        # remove from lock dict
+        self._locks.pop(key)
