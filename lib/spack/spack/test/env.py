@@ -1167,38 +1167,3 @@ spack:
         for x in e.concrete_roots():
             if x.name in ["dt-diamond-left", "dt-diamond-right"]:
                 assert x.satisfies("%[virtuals=fortran] gcc")
-
-
-# import spack_repo.builtin_mock.build_systems.compiler
-
-
-def _display_with_compilers(spec):
-    compilers = set()
-
-    for depth, dep_spec in traverse.traverse_tree(
-        [spec], deptype=("link", "run", "build"), depth_first=True
-    ):
-        node = dep_spec.spec
-        # if isinstance(node.package,
-        # spack_repo.builtin_mock.build_systems.compiler.CompilerPackage):
-        if node.name in ["llvm", "gcc"]:
-            compilers.add(node)
-        # elif node.name in ["llvm", "gcc"]:
-        #     import pdb; pdb.set_trace()
-        #     print('?')
-
-    for depth, dep_spec in traverse.traverse_tree(
-        [spec], deptype=("link", "run", "build"), depth_first=True
-    ):
-        node = dep_spec.spec
-        lang_to_comp = {}
-        for direct_dep_spec in node.edges_to_dependencies():
-            child = direct_dep_spec.spec
-            if child in compilers:
-                lang_to_comp[direct_dep_spec.virtuals] = child.name
-
-        line = "  " * depth + node.name
-        for lang, comp in sorted(lang_to_comp.items()):
-            langs_id = ",".join(lang)
-            line += f" [{langs_id}]={comp}"
-        print(line)
