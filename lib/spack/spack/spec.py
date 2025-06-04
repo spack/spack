@@ -786,6 +786,28 @@ class DependencySpec:
         edge_attrs = filter(lambda x: bool(x), (virtuals_string, when_string))
         return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
 
+    def format(self, *, unconditional: bool = False) -> str:
+        """Returns a string, using the spec syntax, representing this edge
+
+        Args:
+            unconditional: if True, removes any condition statement from the representation
+        """
+
+        parent = self.parent.name if self.parent else ""
+        child = self.spec if self.spec else ""
+        virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
+
+        when_str = ""
+        if not unconditional and self.when != Spec():
+            when_str = f"when='{self.when}'"
+
+        dep_sigil = "%" if self.direct else "^"
+        edge_attrs = filter(lambda x: bool(x), (virtuals_str, when_str))
+
+        if edge_attrs:
+            return f"{parent} {dep_sigil}[{' '.join(edge_attrs)}] {child}"
+        return f"{parent} {dep_sigil}{child}"
+
     def flip(self) -> "DependencySpec":
         """Flip the dependency, and drop virtual and conditional information"""
         return DependencySpec(

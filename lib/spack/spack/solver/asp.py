@@ -3425,7 +3425,7 @@ class SpackSolverSetup:
 
             subcondition_id = self.condition(
                 dspec.when,
-                dspec.spec,
+                spack.spec.Spec(dspec.format(unconditional=True)),
                 required_name=dspec.parent.name,
                 context=context,
                 msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
