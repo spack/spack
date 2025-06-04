@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Single util module where Spack should get a git executable."""
 
+import os
 import sys
 from typing import List, Optional
 
@@ -42,10 +43,23 @@ def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[s
     return stdout.split()
 
 
-def get_commit_sha(path, ref):
+def get_commit_sha(path: str, ref: str) -> Optional[str]:
+    """Get a commit sha for an arbitrary ref"""
     sha = None
-    query = git(required=True)("ls-remote", path, ref, output=str, error=str)
 
-    if query:
-        sha = query.strip().split()[0]
+    # search for matching branch, then tag
+    ref_list = [f"refs/heads/{ref}", f"refs/tags/{ref}"]
+
+    if os.path.isdir(path):
+        # for the filesystem an unpacked mirror could be in a detached state from a depth 1 clone
+        # only reference there will be HEAD
+        ref_list.append("HEAD")
+
+    for try_ref in ref_list:
+        query = git(required=True)("ls-remote", path, try_ref, output=str, error=str)
+
+        if query:
+            sha = query.strip().split()[0]
+            break
+
     return sha

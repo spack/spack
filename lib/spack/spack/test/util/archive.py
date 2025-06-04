@@ -195,7 +195,7 @@ def test_reproducible_tarfile_from_prefix_path_to_name(tmp_path: Path):
         ]
 
 
-@pytest.mark.parametrize("ref", (None, "test-branch", "test-tag"))
+@pytest.mark.parametrize("ref", ("test-branch", "test-tag"))
 def test_get_commits_from_archive(mock_git_repository, tmpdir, ref):
     with tmpdir.as_cwd():
         archive_file = str(tmpdir.join("archive.tar.gz"))

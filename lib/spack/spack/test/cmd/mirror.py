@@ -585,23 +585,34 @@ def test_mirror_add_set_autopush(mutable_config):
 
 
 @pytest.mark.require_provenance
-@pytest.mark.nomockstage
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize("mirror_knows_commit", (True, False))
 def test_binary_provenance_url_fails_mirror_resolves_commit(
-    mock_git_version_info, mock_packages, monkeypatch, tmpdir, mutable_config
+    git,
+    mock_git_version_info,
+    mock_packages,
+    monkeypatch,
+    tmpdir,
+    mutable_config,
+    mirror_knows_commit,
 ):
     """Extract git commit from a source mirror since other methods failed"""
-    repo_path, _, commits = mock_git_version_info
+    repo_path, _, _ = mock_git_version_info
     monkeypatch.setattr(
         spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
     )
     monkeypatch.setattr(spack.util.git, "get_commit_sha", lambda x, y: None, raising=False)
-    # annoyin behavior since the
 
+    gold_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
     # create a fake mirror
     mirror_path = str(tmpdir.join("test-mirror"))
-    mirror("create", "-d", mirror_path, "git-test-commit@main")
+    if mirror_knows_commit:
+        mirror("create", "-d", mirror_path, f"git-test-commit@main commit={gold_commit}")
+    else:
+        mirror("create", "-d", mirror_path, "git-test-commit@main")
     mirror("add", "--type", "source", "test-mirror", mirror_path)
 
     spec = spack.concretize.concretize_one("git-test-commit@main")
     assert spec.package.stage.archive_file
     assert "commit" in spec.variants
+    assert spec.variants["commit"].value == gold_commit
