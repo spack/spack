@@ -1089,8 +1089,7 @@ spack:
     with ev.Environment(tmp_path) as e:
         e.concretize()
         for x in e.concrete_roots():
-            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
-                assert x.satisfies("%[virtuals=fortran] llvm")
+            assert x.satisfies("%[virtuals=fortran] llvm")
 
 
 def test_matrix_toolchains_apply_both(
@@ -1129,12 +1128,11 @@ spack:
     with ev.Environment(tmp_path) as e:
         e.concretize()
         for x in e.concrete_roots():
-            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
-                if x.satisfies("%[virtuals=c] llvm"):
-                    assert x.satisfies("%[virtuals=fortran] gcc")
-                else:
-                    assert x.satisfies("%[virtuals=c] gcc")
-                    assert x.satisfies("%[virtuals=fortran] llvm")
+            if x.satisfies("%[virtuals=c] llvm"):
+                assert x.satisfies("%[virtuals=fortran] gcc")
+            else:
+                assert x.satisfies("%[virtuals=c] gcc")
+                assert x.satisfies("%[virtuals=fortran] llvm")
 
 
 def test_matrix_toolchains_three_vector(
@@ -1165,5 +1163,4 @@ spack:
     with ev.Environment(tmp_path) as e:
         e.concretize()
         for x in e.concrete_roots():
-            if x.name in ["dt-diamond-left", "dt-diamond-right"]:
-                assert x.satisfies("%[virtuals=fortran] gcc")
+            assert x.satisfies("%[virtuals=fortran] gcc")
