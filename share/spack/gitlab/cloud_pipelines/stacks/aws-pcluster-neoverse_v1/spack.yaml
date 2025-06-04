@@ -42,56 +42,59 @@ spack:
       missing_library_policy: ignore  # due to use of externals
 
   packages:
+    all:
+      permissions:
+        read: world
+        write: user
+      target: ["neoverse_v1"]
+      providers:
+        blas: [armpl-gcc, openblas]
+        fftw-api: [armpl-gcc, fftw]
+        mpi: [openmpi, mpich]
+        lapack: [armpl-gcc, openblas]
+        scalapack: [netlib-scalapack]
+        c: [gcc@12, acfl]
+        cxx: [gcc@12, acfl]
+        fortran: [gcc@12, acfl]
+    c:
+      require: gcc@12
     acfl:
       require:
       - "target=aarch64"
     gromacs:
-      require:
-      - gromacs@2024.3 ^armpl-gcc ^openmpi
-      - target=neoverse_v1
+      version: [2024.3]
     libfabric:
       buildable: true
       externals:
       - prefix: /opt/amazon/efa/
         spec: libfabric@1.17.0
-      require:
+      variants:
       - fabrics=shm,efa
-      - target=neoverse_v1
     llvm:
       variants: ~lldb
     mpas-model:
-      require:
-      - precision=single ^parallelio+pnetcdf
-      - "%gcc"
-      - target=neoverse_v1
+      variants:
+       - precision=single ^parallelio+pnetcdf
     mpich:
       require:
       - mpich pmi=pmi2 device=ch4 netmod=ofi +slurm
-      - target=neoverse_v1
     nvhpc:
       require:
       - "target=aarch64"
     openfoam:
       require:
       - openfoam ^scotch@6.0.9
-      - target=neoverse_v1
     openmpi:
       variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
       require:
       - '@4:'
-      - target=neoverse_v1
     # Palace does not build correctly with armpl until https://github.com/awslabs/palace/pull/207 is merged into a version.
     # palace:
     #   require:
     #     - one_of: ["palace cxxflags=\"-include cstdint\" ^fmt@9.1.0"]
     pmix:
       require:
-      - "pmix@3:"
-      - target=neoverse_v1
-    quantum-espresso:
-      require:
-      - quantum-espresso@6.6 ^armpl-gcc %gcc
-      - target=neoverse_v1
+      - '@3:'
     slurm:
       buildable: false
       externals:
@@ -99,16 +102,3 @@ spack:
         spec: slurm@22.05.8 +pmix
       require:
       - "+pmix"
-    all:
-      target: ["neoverse_v1"]
-      require:
-      - "target=neoverse_v1"
-      providers:
-        blas: [armpl-gcc, openblas]
-        fftw-api: [armpl-gcc, fftw]
-        lapack: [armpl-gcc, openblas]
-        mpi: [openmpi, mpich]
-        scalapack: [netlib-scalapack]
-      permissions:
-        read: world
-        write: user
