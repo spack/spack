@@ -4265,7 +4265,8 @@ def _specs_with_commits(spec):
 
     if "commit" not in spec.variants:
         tty.warn(
-            f"Unable to resolve the git commit for {spec.name}. An installation of this binary won't have complete binary provenance."
+            f"Unable to resolve the git commit for {spec.name}. "
+            "An installation of this binary won't have complete binary provenance."
         )
         return
 
