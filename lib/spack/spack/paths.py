@@ -182,6 +182,8 @@ elif dir_is_occupied(old_envs_path):
 else:
     envs_path = os.path.join(spack_data_home(), "environments")
 
+default_fetch_cache_path = os.path.join(spack_data_home(), "downloads")
+
 # TODO: we could shutil.mv resources from old paths to new paths
 
 # $spack/var/spack is generally read-only. Older instances may
@@ -193,7 +195,6 @@ mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
-
 
 # Below paths are where Spack can write information for the user.
 # Some are caches, some are not exactly caches.
@@ -209,8 +210,6 @@ def _get_user_cache_path():
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
-
-default_fetch_cache_path = os.path.join(spack_data_home(), "downloads")
 
 #: junit, cdash, etc. reports about builds
 reports_path = os.path.join(user_cache_path, "reports")
