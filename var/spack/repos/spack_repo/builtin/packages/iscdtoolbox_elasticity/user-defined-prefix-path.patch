@@ -1,30 +1,27 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4576e73..c73084c 100644
+index 4576e73..b1b0bf1 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -5,27 +5,35 @@ set(CMAKE_MACOSX_RPATH 1)
- set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+@@ -1,8 +1,4 @@
+ cmake_minimum_required(VERSION 2.8)
+-set(CMAKE_BUILD_TYPE  "Release")
+-SET(CMAKE_CXX_FLAGS   "-w -g -O3")
+-set(CMAKE_MACOSX_RPATH 1)
+-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
  
  set(CMAKE_CXX_STANDARD 17)
-+#Path management
-+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-+    set (CMAKE_INSTALL_PREFIX "$ENV{HOME}"
-+        CACHE PATH "Default install prefix" FORCE)
-+endif()
-+
-+INCLUDE_DIRECTORIES(   "${CMAKE_INSTALL_PREFIX}/include")
-+LINK_DIRECTORIES(      "${CMAKE_INSTALL_PREFIX}/lib")
  
- #Elasticity library
- project(Elas)
+@@ -11,24 +7,20 @@ project(Elas)
  file(                  GLOB_RECURSE source_files sources/*)
  file(                  GLOB_RECURSE header_files sources/*.h)
  ADD_LIBRARY(           Elas SHARED ${source_files})
 -find_library(          Commons NAMES Commons HINTS "$ENV{HOME}/lib")
 -INCLUDE_DIRECTORIES(  "$ENV{HOME}/include")
 -LINK_DIRECTORIES(     "$ENV{HOME}/lib")
-+find_library(          Commons NAMES Commons HINTS "${CMAKE_INSTALL_PREFIX}/lib")
++find_library(          Commons NAMES Commons HINTS ${CMAKE_INSTALL_PREFIX})
  target_link_libraries( Elas ${Commons})
++find_path(CommonsInclude NAMES chrono.h HINTS ${CMAKE_INSTALL_PREFIX})
++target_include_directories(Elas PUBLIC sources ${CommonsInclude})
 +
  INSTALL(
    TARGETS Elas
@@ -38,10 +35,13 @@ index 4576e73..c73084c 100644
  #Executable
  project(main)
  add_executable(        elastic sources/elastic.c)
-+
- target_link_libraries( elastic ${Commons} Elas)
+-target_link_libraries( elastic ${Commons} Elas)
 -INSTALL(               TARGETS elastic RUNTIME DESTINATION "$ENV{HOME}/bin")
+-
+-
+- 
+-
+-
+ 
++target_link_libraries( elastic ${Commons} Elas)
 +INSTALL(               TARGETS elastic RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
- 
- 
-  
