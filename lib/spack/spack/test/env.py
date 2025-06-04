@@ -15,7 +15,6 @@ import spack.environment as ev
 import spack.platforms
 import spack.solver.asp
 import spack.spec
-import spack.traverse as traverse
 from spack.environment.environment import (
     EnvironmentManifestFile,
     SpackEnvironmentViewError,
