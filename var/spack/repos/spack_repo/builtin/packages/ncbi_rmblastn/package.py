@@ -15,6 +15,7 @@ class NcbiRmblastn(AutotoolsPackage):
         "https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.9.0/ncbi-blast-2.9.0+-src.tar.gz"
     )
 
+    version("2.14.1", sha256="712c2dbdf0fb13cc1c2d4f4ef5dd1ce4b06c3b57e96dfea8f23e6e99f5b1650e")
     version("2.14.0", sha256="bf477f1b0c3b82f0b7a7094bf003a9a83e37e3b0716c1df799060c4feab17500")
     version("2.11.0", sha256="d88e1858ae7ce553545a795a2120e657a799a6d334f2a07ef0330cc3e74e1954")
     version("2.9.0", sha256="a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257")
@@ -31,6 +32,12 @@ class NcbiRmblastn(AutotoolsPackage):
     #   isb-2.11.0+-rmblast.patch.gz
     # The patch is downloaded and unzipped in the ncbi-rmblastn Spack package
     # directory to make it available for the patch directive.
+    patch(
+        "https://www.repeatmasker.org/rmblast/isb-2.14.1+-rmblast.patch.gz",
+        sha256="b432dc00d726b68aafbcd393273dfeb6823022923482e87f30d87cf22dc34449",
+        archive_sha256="9c8091eb2aec97ac83287859d2bfec83cb08c082d5a121cbefe3cc626f933763",
+        when="@2.14.1",
+    )
     patch(
         "https://www.repeatmasker.org/rmblast/isb-2.14.0+-rmblast.patch.gz",
         sha256="cd083f256551c6d6021897a1b08e023976e82c59576787d4885f57d36f9e6fdf",
