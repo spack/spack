@@ -3942,7 +3942,7 @@ def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_co
     # 1000 is an absurdly low cache size, all entries should be pruned
     assert real_count == 0, "Concretization cache did not properly prune on byte limit"
 
-
+@pytest.mark.skipif(sys.platform == "win32", reason="No locks on Windows")
 def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable_config):
     """Tests to ensure we're not leaving dangling lockfiles when we perform cleanup
     operations"""
