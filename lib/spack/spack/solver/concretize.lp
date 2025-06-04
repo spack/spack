@@ -431,14 +431,24 @@ trigger_and_effect(Package, TriggerID, EffectID)
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
 
-% Effects of conditions hold if the trigger holds
-% Effects of subconditions only hold if all parent conditions hold
+% Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- pkg_fact(Package, condition_effect(ConditionID, EffectID));
-     condition_holds(ParentConditionID, node(X, Package)) : subcondition(ConditionID, ParentConditionID);
-     trigger_and_effect(Package, TriggerID, EffectID);
-     trigger_node(TriggerID, _, node(X, Package));
-     trigger_condition_holds(TriggerID, node(X, Package));
+  :- pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     not subcondition(ConditionID, _),
+     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     not do_not_impose(EffectID, node(X, Package)).
+
+% Effects of subconditions hold if the trigger holds and the
+% primary condition holds
+impose(EffectID, node(X, Package))
+  :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
+     subcondition(SubconditionID, ConditionID),
+     condition_holds(ConditionID, node(X, Package)),
+     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
 
 imposed_packages(ID, A1) :- imposed_constraint(ID, _, A1).
