@@ -3420,6 +3420,8 @@ class Spec:
             # If we are checking for ^mpi we need to verify if there is any edge
             is_virtual_node = spack.repo.PATH.is_virtual(rhs_edge.spec.name)
             if is_virtual_node:
+                # Don't mutate objects in memory that may be referred elsewhere
+                rhs_edge = rhs_edge.copy()
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if rhs_edge.direct:
