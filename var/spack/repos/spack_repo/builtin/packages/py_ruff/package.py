@@ -29,6 +29,8 @@ class PyRuff(PythonPackage):
     version("0.3.0", sha256="0886184ba2618d815067cf43e005388967b67ab9c80df52b32ec1152ab49f53a")
     version("0.1.6", sha256="1b09f29b16c6ead5ea6b097ef2764b42372aebe363722f1605ecbcd2b9207184")
 
+    depends_on("c", type="build")
+
     with default_args(type="build"):
         depends_on("py-maturin@1")
 
