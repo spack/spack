@@ -3941,3 +3941,19 @@ def test_concretization_cache_bytes_cleanup(use_concretization_cache, mutable_co
     # ensure there's fewer cache entries
     # 1000 is an absurdly low cache size, all entries should be pruned
     assert real_count == 0, "Concretization cache did not properly prune on byte limit"
+
+
+def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable_config):
+    """Tests to ensure we're not leaving dangling lockfiles when we perform cleanup
+    operations"""
+    spack.config.set("concretizer:concretization_cache:entry_limit", 1)
+    spack.concretize.concretize_one("zlib")
+    spack.concretize.concretize_one("hdf5")
+    # cleanup should have been run and there should be no lockfiles
+    lock_count = 0
+    for file in spack.solver.asp.CONC_CACHE.root.iterdir():
+        if file.is_file() and file.suffix == ".lock":
+            lock_count += 1
+    assert lock_count == 1, f"Unexpected number of lockfiles {lock_count} \
+concretization cache cleanup operation failed."
+
