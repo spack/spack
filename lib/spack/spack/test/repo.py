@@ -7,6 +7,7 @@ import pathlib
 import pytest
 
 import spack
+import spack.environment
 import spack.package_base
 import spack.paths
 import spack.repo
@@ -523,3 +524,26 @@ def test_is_package_module():
     assert spack.repo.is_package_module("spack_repo.foo.bar.baz.package")
     assert not spack.repo.is_package_module("spack_repo.builtin.build_systems.cmake")
     assert not spack.repo.is_package_module("spack.something.else")
+
+
+def test_environment_activation_updates_repo_path(tmp_path: pathlib.Path):
+    """Test that the environment activation updates the repo path correctly."""
+    repo_root, _ = spack.repo.create_repo(str(tmp_path / "foo"), namespace="bar")
+    (tmp_path / "spack.yaml").write_text(
+        """\
+spack:
+    repos:
+    - $env/foo/spack_repo/bar
+"""
+    )
+    env = spack.environment.Environment(tmp_path)
+
+    with env:
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    with env:
+        assert any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)
+
+    assert not any(os.path.samefile(repo_root, r.root) for r in spack.repo.PATH.repos)

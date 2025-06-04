@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.packages.mpich.package import MpichEnvironmentModifications
 
 from spack.package import *
-
-from ..mpich.package import MpichEnvironmentModifications
 
 
 class CrayMvapich2(MpichEnvironmentModifications, Package):

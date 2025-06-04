@@ -4,11 +4,11 @@
 import glob
 import os
 
+from spack_repo.builtin.packages.clingo.package import Clingo
+
 import spack.paths
 import spack.user_environment
 from spack.package import *
-
-from ..clingo.package import Clingo
 
 
 class ClingoBootstrap(Clingo):
