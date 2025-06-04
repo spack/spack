@@ -1059,3 +1059,50 @@ def test_toolchain_definitions_are_allowed(
 
     for c in not_expected:
         assert not mpileaks.satisfies(c)
+
+
+MIXED_TOOLCHAIN = """
+    - spec: "%[virtuals=c] llvm"
+      when: "%c"
+    - spec: "%[virtuals=cxx] llvm"
+      when: "%cxx"
+    - spec: "%[virtuals=fortran] gcc"
+      when: "%fortran"
+    - spec: "%[virtuals=mpi] zmpi"
+      when: "%mpi"
+"""
+
+
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
+def test_single_toolchain_and_matrix(unify, tmp_path, mutable_config):
+    """Tests that toolchains can be used with matrices in environments"""
+    spack_yaml = f"""
+spack:
+  specs:
+  - matrix:
+    - [mpileaks,  dt-diamond-right]
+    - ["%mixed-toolchain"]
+  toolchains:
+    mixed-toolchain:
+    {MIXED_TOOLCHAIN}
+  concretizer:
+    unify: {unify}
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        roots = e.concrete_roots()
+
+    expected = [
+        "%[when='%c' virtuals=c] llvm",
+        "%[when='%cxx' virtuals=cxx] llvm",
+        "%[when='%fortran' virtuals=fortran] gcc",
+        "%[when='%mpi' virtuals=mpi] zmpi",
+    ]
+    for c in expected:
+        assert all(s.satisfies(c) for s in roots)
+
+    not_expected = ["^mpich", "%[virtuals=c] gcc"]
+    for c in not_expected:
+        assert all(not s.satisfies(c) for s in roots)

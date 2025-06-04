@@ -3134,20 +3134,6 @@ class SpackSolverSetup:
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
-        # Fail if we already know an unreachable node is requested
-        for spec in specs:
-            # concrete roots don't need their dependencies verified
-            if spec.concrete:
-                continue
-
-            missing_deps = [
-                str(d)
-                for d in spec.traverse()
-                if d.name not in self.pkgs and not spack.repo.PATH.is_virtual(d.name)
-            ]
-            if missing_deps:
-                raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
-
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
@@ -4799,7 +4785,11 @@ class Solver:
                     if spack.repo.PATH.is_virtual(s.name):
                         continue
                     # Error if direct dependencies cannot be satisfied
-                    deps = {edge.spec.name for edge in s.edges_to_dependencies() if edge.direct}
+                    deps = {
+                        edge.spec.name
+                        for edge in s.edges_to_dependencies()
+                        if edge.direct and edge.when == spack.spec.Spec()
+                    }
                     if deps:
                         graph = analyzer.possible_dependencies(
                             s, allowed_deps=dt.ALL, transitive=False
