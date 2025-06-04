@@ -19,6 +19,14 @@ section = "packaging"
 level = "short"
 
 
+class ComputeBuildSystemPathAction(argparse.Action):
+    """Compute the path to the build system directory. This is done lazily so that we use the
+    correct spack.repo.PATH when the command is run."""
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, os.path.join(spack.repo.PATH.repos[0].root, "build_systems"))
+
+
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
     excl_args = subparser.add_mutually_exclusive_group()
 
@@ -28,8 +36,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "-b",
         "--build-system",
         dest="path",
-        action="store_const",
-        const=os.path.join(spack.repo.PATH.repos[0].root, "build_systems"),
+        action=ComputeBuildSystemPathAction,
+        nargs=0,
         help="edit the build system with the supplied name",
     )
     excl_args.add_argument(

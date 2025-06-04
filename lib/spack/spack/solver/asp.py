@@ -47,6 +47,7 @@ import spack.compilers.config
 import spack.compilers.flags
 import spack.config
 import spack.deptypes as dt
+import spack.detection
 import spack.environment as ev
 import spack.error
 import spack.package_base
@@ -1509,6 +1510,9 @@ class SpackSolverSetup:
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
+            collections.defaultdict(dict)
+        )
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
@@ -1581,6 +1585,11 @@ class SpackSolverSetup:
                     ),
                 )
             )
+
+        for v in self.possible_versions[pkg.name]:
+            if pkg.needs_commit(v):
+                commit = pkg.version_or_package_attr("commit", v, "")
+                self.git_commit_versions[pkg.name][v] = commit
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -2722,6 +2731,8 @@ class SpackSolverSetup:
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
 
+            # TODO(psakiev) Need facts about versions
+            # - requires_commit (associated with tag or branch)
             version_defs: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
@@ -2913,12 +2924,22 @@ class SpackSolverSetup:
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
+
+        for pkg_name, versions in sorted(self.possible_versions.items()):
+            for v in versions:
+                if v in self.git_commit_versions[pkg_name]:
+                    sha = self.git_commit_versions[pkg_name].get(v)
+                    if sha:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
+                    else:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+        self.gen.newline()
+
         for pkg_name, versions in sorted(self.version_constraints):
             # generate facts for each package constraint and the version
             # that satisfies it
             for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
-
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -3221,6 +3242,7 @@ class SpackSolverSetup:
 
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
+        self.define_auto_variant("commit", multi=False)
         self.define_auto_variant("patches", multi=True)
 
         self.gen.h1("Develop specs")
@@ -3264,7 +3286,7 @@ class SpackSolverSetup:
                                 arg = ast_sym(ast_sym(term.atom).arguments[0])
                                 symbol = AspFunction(name)(arg.string)
                                 self.assumptions.append((parse_term(str(symbol)), True))
-                                self.gen.asp_problem.append(f"{symbol}.\n")
+                                self.gen.asp_problem.append(f"{{ {symbol} }}.\n")
 
         path = os.path.join(parent_dir, "concretize.lp")
         parse_files([path], visit)
@@ -3922,13 +3944,20 @@ class SpecBuilder:
             compiler_str = external_spec_deps[0]
             self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
 
-        # If this is an extension, update the dependencies to include the extendee
+        # Packages that are external - but normally depend on python -
+        # get an edge inserted to python as a post-concretization step
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
-
-        if extendee_spec:
-            extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package._update_external_dependencies(self._specs.get(extendee_node))
+        if (
+            extendee_spec
+            and extendee_spec.name == "python"
+            # More-general criteria like "depends on Python" pulls in things
+            # we don't want to apply this logic to (in particular LLVM, which
+            # is now a common external because that's how we detect Clang)
+            and any([c.__name__ == "PythonPackage" for c in package.__class__.__mro__])
+        ):
+            candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
+            _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
@@ -4180,6 +4209,10 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
+        # check for commits must happen after all version adaptations are complete
+        for s in self._specs.values():
+            _specs_with_commits(s)
+
         specs = self.execute_explicit_splices()
         return specs
 
@@ -4218,6 +4251,123 @@ class SpecBuilder:
             specs[new_key] = current_spec
 
         return specs
+
+
+def _specs_with_commits(spec):
+    if not spec.package.needs_commit(spec.version):
+        return
+
+    # check integrity of specified commit shas
+    if "commit" in spec.variants:
+        invalid_commit_msg = (
+            f"Internal Error: {spec.name}'s assigned commit {spec.variants['commit'].value}"
+            " does not meet commit syntax requirements."
+        )
+        assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
+
+    spec.package.resolve_binary_provenance()
+    # TODO(psakiev) assert commit is associated with ref
+
+    if isinstance(spec.version, spack.version.GitVersion):
+        if not spec.version.commit_sha:
+            # TODO(psakiev) this will be a failure when commit look up is automated
+            return
+        if "commit" not in spec.variants:
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
+
+
+def _attach_python_to_external(
+    dependent_package, extendee_spec: Optional[spack.spec.Spec] = None
+) -> None:
+    """
+    Ensure all external python packages have a python dependency
+
+    If another package in the DAG depends on python, we use that
+    python for the dependency of the external. If not, we assume
+    that the external PythonPackage is installed into the same
+    directory as the python it depends on.
+    """
+    # TODO: Include this in the solve, rather than instantiating post-concretization
+    if "python" not in dependent_package.spec:
+        if extendee_spec:
+            python = extendee_spec
+        else:
+            python = _get_external_python_for_prefix(dependent_package)
+            if not python.concrete:
+                repo = spack.repo.PATH.repo_for_pkg(python)
+                python.namespace = repo.namespace
+
+                # Ensure architecture information is present
+                if not python.architecture:
+                    host_platform = spack.platforms.host()
+                    host_os = host_platform.default_operating_system()
+                    host_target = host_platform.default_target()
+                    python.architecture = spack.spec.ArchSpec(
+                        (str(host_platform), str(host_os), str(host_target))
+                    )
+                else:
+                    if not python.architecture.platform:
+                        python.architecture.platform = spack.platforms.host()
+                    platform = spack.platforms.by_name(python.architecture.platform)
+                    if not python.architecture.os:
+                        python.architecture.os = platform.default_operating_system()
+                    if not python.architecture.target:
+                        python.architecture.target = _vendoring.archspec.cpu.host().family.name
+
+                python.external_path = dependent_package.spec.external_path
+                python._mark_concrete()
+        dependent_package.spec.add_dependency_edge(
+            python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=()
+        )
+
+
+def _get_external_python_for_prefix(python_package):
+    """
+    For an external package that extends python, find the most likely spec for the python
+    it depends on.
+
+    First search: an "installed" external that shares a prefix with this package
+    Second search: a configured external that shares a prefix with this package
+    Third search: search this prefix for a python package
+
+    Returns:
+        spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+    """
+    python_externals_installed = [
+        s
+        for s in spack.store.STORE.db.query("python")
+        if s.prefix == python_package.spec.external_path
+    ]
+    if python_externals_installed:
+        return python_externals_installed[0]
+
+    python_external_config = spack.config.get("packages:python:externals", [])
+    python_externals_configured = [
+        spack.spec.parse_with_version_concrete(item["spec"])
+        for item in python_external_config
+        if item["prefix"] == python_package.spec.external_path
+    ]
+    if python_externals_configured:
+        return python_externals_configured[0]
+
+    python_externals_detection = spack.detection.by_path(
+        ["python"], path_hints=[python_package.spec.external_path], max_workers=1
+    )
+
+    python_externals_detected = [
+        spec
+        for spec in python_externals_detection.get("python", [])
+        if spec.external_path == python_package.spec.external_path
+    ]
+    python_externals_detected = [
+        spack.spec.parse_with_version_concrete(str(x)) for x in python_externals_detected
+    ]
+    if python_externals_detected:
+        return list(sorted(python_externals_detected, key=lambda x: x.version))[-1]
+
+    raise StopIteration(
+        "No external python could be detected for %s to depend on" % python_package.spec
+    )
 
 
 def _inject_patches_variant(root: spack.spec.Spec) -> None:

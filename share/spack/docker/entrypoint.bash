@@ -46,7 +46,7 @@ case "$mode" in
         # Spack without having to manually (re)initialize.
         #
         # Example:
-        #   FROM spack/centos7
+        #   FROM spack/almalinux9
         #   COPY spack.yaml .
         #   RUN spack install  # <- Spack is loaded and ready to use.
         #                      # No manual initialization necessary.
@@ -66,7 +66,7 @@ case "$mode" in
         #
         # This is the default behavior when running with no CMD or
         # ENTRYPOINT overrides:
-        #   docker run -it spack/centos7
+        #   docker run -it spack/almalinux9
         if [ -t 0 ] ; then
             . $SPACK_ROOT/share/spack/setup-env.sh
             . $SPACK_ROOT/share/spack/spack-completion.bash
@@ -104,18 +104,18 @@ case "$mode" in
         # Examples:
         #   # concretize the same spec on different OSes
         #   docker run --rm spack/ubuntu-xenial spec zlib
-        #   docker run --rm spack/centos7 spec zlib
+        #   docker run --rm spack/almalinux9 spec zlib
         #
         #   # a "wetter" dry-run;
         #   # install a package and then throw away the results.
-        #   docker run --rm spack/centos7 install libiconv
-        #   docker run --rm spack/centos7 find libiconv
+        #   docker run --rm spack/almalinux9 install libiconv
+        #   docker run --rm spack/almalinux9 find libiconv
         #     ==> No package matches the query: libiconv
         #
         #   # use docker volumes to persist changes
-        #   docker run --rm -v ...:/spack spack/centos7 install ...
-        #   docker run --rm -v ...:/spack spack/centos7 install ...
-        #   docker run --rm -v ...:/spack spack/centos7 install ...
+        #   docker run --rm -v ...:/spack spack/almalinux9 install ...
+        #   docker run --rm -v ...:/spack spack/almalinux9 install ...
+        #   docker run --rm -v ...:/spack spack/almalinux9 install ...
         exec 3>&1
         exec 4>&2
 

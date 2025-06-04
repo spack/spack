@@ -94,6 +94,7 @@ class PyDask(PythonPackage):
     depends_on("py-numpy@1.21.0:", type=("build", "run"), when="@2023.4.0: +dataframe")
     # https://github.com/dask/dask/issues/11066
     depends_on("py-numpy@:1", when="@:2024.5.0+dataframe", type=("build", "run"))
+
     depends_on("py-pandas@0.25.0:", type=("build", "run"), when="@2020.12.0: +dataframe")
     depends_on("py-pandas@1.0:", type=("build", "run"), when="@2022.10.2: +dataframe")
     depends_on("py-pandas@1.3:", type=("build", "run"), when="@2023.4.0: +dataframe")

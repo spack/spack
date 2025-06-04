@@ -59,6 +59,7 @@ class PyXarray(PythonPackage):
     depends_on("python@3.7:", when="@0.17:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.21:", type=("build", "run"))
     depends_on("python@3.9:", when="@2023.7.0:", type=("build", "run"))
+    depends_on("python@3.10:", when="@2024.9.0:", type=("build", "run"))
 
     depends_on("py-numpy@1.7:", when="@0.9.1", type=("build", "run"))
     depends_on("py-numpy@1.12:", when="@0.11:0.13", type=("build", "run"))
@@ -67,6 +68,9 @@ class PyXarray(PythonPackage):
     depends_on("py-numpy@1.17:", when="@0.18:", type=("build", "run"))
     depends_on("py-numpy@1.18:", when="@0.20:", type=("build", "run"))
     depends_on("py-numpy@1.21:", when="@2023.7.0:", type=("build", "run"))
+    # numpy@2 starts with v2024.06.0
+    # https://github.com/pydata/xarray/releases/tag/v2024.06.0
+    depends_on("py-numpy@:1", when="@:2024.05", type=("build", "run"))
     depends_on("py-numpy@1.23:", when="@2024.7.0:", type=("build", "run"))
 
     depends_on("py-pandas@0.15.0:", when="@0.9.1", type=("build", "run"))
@@ -82,10 +86,17 @@ class PyXarray(PythonPackage):
     depends_on("py-packaging@21.3:", when="@2023.7.0:", type=("build", "run"))
     depends_on("py-packaging@23.1:", when="@2024.7.0:", type=("build", "run"))
 
+    # These are the versions that work with numpy@2:
+    # https://github.com/pydata/xarray/pull/9136
+    depends_on("py-netcdf4@1.7.1:", when="+io ^numpy@2:", type=("build", "run"))
     depends_on("py-netcdf4", when="+io", type=("build", "run"))
     depends_on("py-h5netcdf", when="+io", type=("build", "run"))
     depends_on("py-scipy", when="+io", type=("build", "run"))
-    depends_on("py-pydap", when="+io ^python@:3.9", type=("build", "run"))
+    # py-pydap@3.5: for numpy@2:
+    # https://github.com/pydata/xarray/pull/9391
+    depends_on("py-pydap@3.5:", when="+io ^numpy@2:", type=("build", "run"))
+    depends_on("py-pydap", when="+io", type=("build", "run"))
+    depends_on("py-zarr@2.18:", when="+io ^numpy@2:", type=("build", "run"))
     depends_on("py-zarr", when="+io", type=("build", "run"))
     depends_on("py-fsspec", when="+io", type=("build", "run"))
     depends_on("py-cftime", when="+io", type=("build", "run"))

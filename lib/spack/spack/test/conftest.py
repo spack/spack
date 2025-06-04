@@ -68,13 +68,12 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
-
-from ..enums import ConfigScopePriority
 
 mirror_cmd = SpackCommand("mirror")
 
@@ -153,7 +152,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
        o second commit (v1.0)
        o first commit
 
-    The repo consists of a single file, in which the GitVersion._ref_version representation
+    The repo consists of a single file, in which the GitVersion.std_version representation
     of each commit is expressed as a string.
 
     Important attributes of the repo for test coverage are: multiple branches,
@@ -196,6 +195,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Get name of default branch (differs by git version)
         main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
+        if main != "main":
+            # assure the default branch name is consistent for tests
+            git("branch", "-m", "main")
+            main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
+        assert "main" == main
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -2071,11 +2075,6 @@ def pytest_runtest_setup(item):
     only_windows_marker = item.get_closest_marker(name="only_windows")
     if only_windows_marker and sys.platform != "win32":
         pytest.skip(*only_windows_marker.args)
-
-    # Skip tests marked "requires_builtin" if builtin repo is required
-    requires_builtin_marker = item.get_closest_marker(name="requires_builtin")
-    if requires_builtin_marker and not os.path.exists(spack.paths.packages_path):
-        pytest.skip(*requires_builtin_marker.args)
 
 
 def _sequential_executor(*args, **kwargs):

@@ -41,7 +41,7 @@ class PyNetcdf4(PythonPackage):
     depends_on("py-cftime", type=("build", "run"))
     depends_on("py-certifi", when="@1.6.5:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "link", "run"))
-    depends_on("py-numpy@2.0:", when="@1.7.1:", type=("build", "link", "run"))
+    depends_on("py-numpy@2:", when="@1.7.1:", type=("build", "link", "run"))
     depends_on("py-numpy@1.9:", when="@1.5.4:1.6.2", type=("build", "link", "run"))
     # https://github.com/Unidata/netcdf4-python/pull/1317
     depends_on("py-numpy@:1", when="@:1.6", type=("build", "link", "run"))

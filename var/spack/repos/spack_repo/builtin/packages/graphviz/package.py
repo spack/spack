@@ -161,6 +161,11 @@ class Graphviz(AutotoolsPackage):
         bash = which("bash")
         bash("./autogen.sh", "NOCONFIG")
 
+    @property
+    def libs(self):
+        libraries = ["libgvc", "libcdt", "libcgraph", "libgvpr", "libpathplan", "libxdot"]
+        return find_libraries(libraries, root=self.prefix, recursive=True)
+
     def setup_build_environment(self, env: EnvironmentModifications) -> None:
         # Set MACOSX_DEPLOYMENT_TARGET to 10.x due to old configure
         super().setup_build_environment(env)

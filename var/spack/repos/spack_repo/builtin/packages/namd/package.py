@@ -202,6 +202,9 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                         "intel": "-O2 -ip " + archopt,
                         "clang": m64 + "-O3 -ffast-math -fopenmp " + archopt,
                         "aocc": m64 + "-O3 -ffp-contract=fast -ffast-math " + archopt,
+                        "intel-oneapi-compilers": m64
+                        + "-O3 -ffp-contract=fast -ffast-math"
+                        + archopt,
                     }
 
                 if self.spec.satisfies("+avxtiles"):
@@ -209,6 +212,7 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                     optims_opts["clang"] += " -DNAMD_AVXTILES"
                     optims_opts["gcc"] += " -DNAMD_AVXTILES"
                     optims_opts["intel"] += " -DNAMD_AVXTILES"
+                    optims_opts["intel-oneapi-compilers"] += " -DNAMD_AVXTILES -xCORE-AVX512"
 
                 optim_opts = (
                     optims_opts[self.compiler.name] if self.compiler.name in optims_opts else ""
@@ -220,9 +224,20 @@ class Namd(MakefilePackage, CudaPackage, ROCmPackage):
                             "NAMD_ARCH = {0}".format(self.arch),
                             "CHARMARCH = {0}".format(self.spec["charmpp"].charmarch),
                             "CXX = {0.cxx} {0.cxx11_flag}".format(self.compiler),
-                            "CXXOPTS = {0}".format(optim_opts),
+                            "CXXOPTS = {0} {1} {2} {3}".format(
+                                " ".join(spec.compiler_flags["cppflags"]),
+                                optim_opts,
+                                " ".join(spec.compiler_flags["cxxflags"]),
+                                " ".join(spec.compiler_flags["ldflags"]),
+                            ),
                             "CC = {0}".format(self.compiler.cc),
-                            "COPTS = {0}".format(optim_opts),
+                            "COPTS = {0} {1} {2} {3}".format(
+                                " ".join(spec.compiler_flags["cppflags"]),
+                                optim_opts,
+                                " ".join(spec.compiler_flags["cflags"]),
+                                " ".join(spec.compiler_flags["ldflags"]),
+                            ),
+                            "EXTRALINKLIBS = {0}".format(" ".join(spec.compiler_flags["ldlibs"])),
                             "",
                         ]
                     )

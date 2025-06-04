@@ -1236,16 +1236,14 @@ complete -c spack -n '__fish_spack_using_command config list' -s h -l help -f -a
 complete -c spack -n '__fish_spack_using_command config list' -s h -l help -d 'show this help message and exit'
 
 # spack config scopes
-set -g __fish_spack_optspecs_spack_config_scopes h/help i/included p/path-scopes s/show-paths
+set -g __fish_spack_optspecs_spack_config_scopes h/help p/paths t/type=
 complete -c spack -n '__fish_spack_using_command_pos 0 config scopes' -f -a 'bootstrap cdash ci compilers concretizer config definitions develop env_vars include mirrors modules packages repos upstreams view'
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command config scopes' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command config scopes' -s i -l included -f -a included
-complete -c spack -n '__fish_spack_using_command config scopes' -s i -l included -d 'list only included scopes'
-complete -c spack -n '__fish_spack_using_command config scopes' -s p -l path-scopes -f -a path_scopes
-complete -c spack -n '__fish_spack_using_command config scopes' -s p -l path-scopes -d 'list only writable scopes with an associated path'
-complete -c spack -n '__fish_spack_using_command config scopes' -s s -l show-paths -f -a show_paths
-complete -c spack -n '__fish_spack_using_command config scopes' -s s -l show-paths -d 'show associated paths for appropriate scopes'
+complete -c spack -n '__fish_spack_using_command config scopes' -s p -l paths -f -a paths
+complete -c spack -n '__fish_spack_using_command config scopes' -s p -l paths -d 'show associated paths for appropriate scopes'
+complete -c spack -n '__fish_spack_using_command config scopes' -s t -l type -r -f -a 'all env include internal path'
+complete -c spack -n '__fish_spack_using_command config scopes' -s t -l type -r -d 'list only scopes of the specified type(s)'
 
 # spack config add
 set -g __fish_spack_optspecs_spack_config_add h/help f/file=
@@ -2761,7 +2759,7 @@ complete -c spack -n '__fish_spack_using_command rm' -s f -l force -d 'remove co
 set -g __fish_spack_optspecs_spack_repo h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a create -d 'create a new package repository'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a list -d 'show registered repositories and their namespaces'
-complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a add -d 'add a package source to Spack'"'"'s configuration'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a add -d 'add package repositories to Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
@@ -2784,10 +2782,14 @@ complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -f -a '_
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -d 'configuration scope to read from'
 
 # spack repo add
-set -g __fish_spack_optspecs_spack_repo_add h/help scope=
-complete -c spack -n '__fish_spack_using_command_pos 0 repo add' -f -a '(__fish_complete_directories)'
+set -g __fish_spack_optspecs_spack_repo_add h/help name= path= scope=
+
 complete -c spack -n '__fish_spack_using_command repo add' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo add' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo add' -l name -r -f -a name
+complete -c spack -n '__fish_spack_using_command repo add' -l name -r -d 'config name for the package repository, defaults to the namespace of the repository'
+complete -c spack -n '__fish_spack_using_command repo add' -l path -r -f -a path
+complete -c spack -n '__fish_spack_using_command repo add' -l path -r -d 'relative path to the Spack package repository inside a git repository. Can be repeated to add multiple package repositories in case of a monorepo'
 complete -c spack -n '__fish_spack_using_command repo add' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo add' -l scope -r -d 'configuration scope to modify'
 

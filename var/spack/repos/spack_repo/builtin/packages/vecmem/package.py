@@ -19,6 +19,8 @@ class Vecmem(CMakePackage, CudaPackage):
 
     license("MPL-2.0-no-copyleft-exception")
 
+    version("1.18.0", sha256="2b9e92d10f8883eafb45f48fd357ecaf7456badec11ccd375d3f2505e71aa9d2")
+    version("1.17.0", sha256="6032279e8fc8bdb48d39c4ac19ffe561bcc53576e36f71ee2ed3ed75835f1af9")
     version("1.16.0", sha256="04da7077381e12c2b9bf869e1357105683596ed9105e3acff3c6d9214be04fbd")
     version("1.15.0", sha256="53e03599efd5a22284b62e10338b69345d8188182a12fefe228005069d1ddd74")
     version("1.14.0", sha256="3fac19e2766e5f997712b0799bd820f65c17ea9cddcb9e765cbdf214f41c4783")

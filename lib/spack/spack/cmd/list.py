@@ -323,7 +323,8 @@ def list(parser, args):
     repos = [spack.repo.PATH]
     if args.repos:
         repos = [spack.repo.PATH.get_repo(name) for name in args.repos]
-    pkgs = set().union(*[set(repo.all_package_names(args.virtuals)) for repo in repos])
+
+    pkgs = {name for repo in repos for name in repo.all_package_names(args.virtuals)}
 
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
