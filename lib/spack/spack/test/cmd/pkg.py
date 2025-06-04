@@ -45,10 +45,9 @@ def mock_pkg_git_repo(git, tmp_path_factory):
     shutil.copytree(spack.paths.mock_packages_path, str(repo_dir))
 
     repo_cache = spack.util.file_cache.FileCache(root_dir / "cache")
-    mock_repo = spack.repo.RepoPath(str(repo_dir), cache=repo_cache)
-    mock_repo_packages = mock_repo.repos[0].packages_path
+    mock_repo = spack.repo.Repo(str(repo_dir), cache=repo_cache)
 
-    with working_dir(mock_repo_packages):
+    with working_dir(mock_repo.packages_path):
         git("init")
 
         # initial commit with mock packages
@@ -86,8 +85,8 @@ def mock_pkg_git_repo(git, tmp_path_factory):
             "change mockpkg-b, remove mockpkg-c, add mockpkg-d",
         )
 
-    with spack.repo.use_repositories(str(repo_dir)):
-        yield mock_repo_packages
+    with spack.repo.use_repositories(mock_repo):
+        yield mock_repo.packages_path
 
 
 @pytest.fixture(scope="module")

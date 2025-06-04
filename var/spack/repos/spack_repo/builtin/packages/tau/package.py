@@ -103,6 +103,12 @@ class Tau(Package):
         "rocprofv2", default=False, description="Activates ROCm rocprofiler support", when="@2.34:"
     )
     variant(
+        "rocprofiler-sdk",
+        default=False,
+        description="Activates ROCm rocprofiler-sdk support",
+        when="@2.34.1:",
+    )
+    variant(
         "salt", default=False, description="Activates SALT source instrumentation", when="@2.34:"
     )
     variant("opencl", default=False, description="Activates OpenCL support")
@@ -173,6 +179,10 @@ class Tau(Package):
     depends_on("hsa-rocr-dev", when="+rocm")
     depends_on("rocm-smi-lib", when="@2.32.1: +rocm")
     depends_on("rocm-core", when="@2.34: +rocm")
+    depends_on("rocprofiler-sdk@6.2.4:", when="+rocprofiler-sdk")
+    depends_on("hip", when="+rocprofiler-sdk")
+    depends_on("elfutils", when="+rocprofiler-sdk")
+    depends_on("comgr", when="+rocprofiler-sdk")
     depends_on("salt", when="+salt", type="run")
     depends_on("hip", when="@2.34: +roctracer")
     depends_on("java", type="run")  # for paraprof
@@ -192,19 +202,28 @@ class Tau(Package):
     conflicts("+disable-no-pie", when="@:2.33.2")
     patch("unwind.patch", when="@2.29.0")
 
-    conflicts("+rocprofiler", when="+roctracer", msg="Use either rocprofiler or roctracer")
-    conflicts("+rocprofv2", when="+rocprofiler", msg="Rocprofv2 does not need rocprofiler")
-    conflicts("+rocprofv2", when="+roctracer", msg="Rocprofv2 does not need roctracer")
+    conflicts("+rocprofiler", when="+rocprofv2", msg="Use either rocprofiler or rocprofv2")
+    conflicts(
+        "+rocprofiler", when="+rocprofiler-sdk", msg="Use either rocprofiler or rocprofiler-sdk"
+    )
+
+    conflicts("+roctracer", when="+rocprofv2", msg="Use either roctracer or rocprofv2")
+    conflicts("+roctracer", when="+rocprofiler-sdk", msg="Use either roctracer or rocprofiler-sdk")
+
+    conflicts("+rocprofv2", when="+rocprofiler-sdk", msg="Use either rocprofv2 or rocprofiler-sdk")
+
     requires("+rocm", when="+rocprofiler", msg="Rocprofiler requires ROCm")
     requires("+rocm", when="+roctracer", msg="Roctracer requires ROCm")
+    requires("+rocm", when="+rocprofiler-sdk", msg="Rocprofiler-sdk requires ROCm")
 
     requires(
         "+rocprofiler",
         "+roctracer",
         "+rocprofv2",
+        "+rocprofiler-sdk",
         policy="one_of",
         when="+rocm",
-        msg="Using ROCm, select either +rocprofiler, +roctracer or +rocprofv2",
+        msg="Using ROCm, select either +rocprofiler, +roctracer, +rocprofv2 or +rocprofiler-sdk",
     )
 
     # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
@@ -380,6 +399,12 @@ class Tau(Package):
         if "+rocprofv2" in spec:
             options.append("-rocprofiler=%s" % spec["rocprofiler-dev"].prefix)
             options.append("-rocprofv2")
+
+        if "+rocprofiler-sdk" in spec:
+            options.append("-rocprofsdk=%s" % spec["rocprofiler-sdk"].prefix)
+            options.append("-elfutils=%s" % spec["elfutils"].prefix)
+            options.append("-hip=%s" % spec["hip"].prefix)
+            options.append("-comgr=%s" % spec["comgr"].prefix)
 
         if "+adios2" in spec:
             options.append("-adios=%s" % spec["adios2"].prefix)

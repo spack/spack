@@ -65,7 +65,7 @@ spack:
   specs: []
 
   repos:
-    - $CUSTOM_REPO_PATH
+    current_dir: $CUSTOM_REPO_PATH
 """
             )
         # creating env from manifest file
@@ -74,7 +74,7 @@ spack:
         current_dir = os.getcwd()
         with ev.read("test") as newenv:
             repos_specs = spack.config.get("repos", default={}, scope=newenv.scope_name)
-            assert current_dir in repos_specs
+            assert current_dir in repos_specs.values()
 
 
 OLD_7ZIP = b"""\

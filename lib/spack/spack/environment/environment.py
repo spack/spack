@@ -21,7 +21,6 @@ from llnl.util.link_tree import ConflictingSpecsError
 from llnl.util.symlink import islink, readlink, symlink
 
 import spack
-import spack.caches
 import spack.concretize
 import spack.config
 import spack.deptypes as dt
@@ -216,7 +215,7 @@ def activate(env, use_env_repo=False):
         if repos_before != repos_after:
             setattr(env, "repo_token", spack.repo.PATH)
             spack.repo.PATH.disable()
-            new_repo = spack.repo.create(spack.config.CONFIG)
+            new_repo = spack.repo.RepoPath.from_config(spack.config.CONFIG)
             if use_env_repo:
                 new_repo.put_first(env.repo)
             spack.repo.enable_repo(new_repo)
@@ -439,7 +438,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
         repos_specs = spack.config.get("repos", default={}, scope=env.scope_name)
         if not repos_specs:
             return
-        for i, entry in enumerate(repos_specs):
+        for name, entry in list(repos_specs.items()):
             repo_path = substitute_path_variables(entry)
             expanded_path = spack.util.path.canonicalize_path(repo_path, default_wd=init_file_dir)
 
@@ -449,7 +448,7 @@ def _rewrite_relative_repos_paths_on_relocation(env, init_file_dir):
 
             tty.debug("Expanding repo path for {0} to {1}".format(entry, expanded_path))
 
-            repos_specs[i] = expanded_path
+            repos_specs[name] = expanded_path
 
         spack.config.set("repos", repos_specs, scope=env.scope_name)
 
@@ -2438,11 +2437,11 @@ def display_specs(specs):
 
 def make_repo_path(root):
     """Make a RepoPath from the repo subdirectories in an environment."""
-    repos = [
+    repos = (
         spack.repo.from_path(os.path.dirname(p))
         for p in glob.glob(os.path.join(root, "**", "repo.yaml"), recursive=True)
-    ]
-    return spack.repo.RepoPath(*repos, cache=spack.caches.MISC_CACHE)
+    )
+    return spack.repo.RepoPath(*repos)
 
 
 def manifest_file(env_name_or_dir):
