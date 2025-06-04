@@ -2405,31 +2405,30 @@ class PackageInstaller:
 
         return None
 
-    def setup_fds_jobserver(self) -> Tuple[int, int]:
-        """Setup fds implementation of make jobserver."""
-        jobserver_fds = None
+    #  def setup_fds_jobserver(self) -> Tuple[int, int]:
+    #      """Setup fds implementation of make jobserver."""
+    #      # jobserver_fds = None
 
-        if sys.platform != "win32":
-            # create a pipe for the jobserver
-            read_fd, write_fd = os.pipe()
-            
-            # initialize pipe with tokens (one per job, dediced by -j)
-            num_jobs = spack.config.determine_number_of_jobs(parallel=True)
-            os.write(write_fd, b"+" * num_jobs)
+    #      if sys.platform != "win32":
+    #          # create a pipe for the jobserver
+    #          read_fd, write_fd = os.pipe()
 
-            # set the makeflag env
+    #          # initialize pipe with tokens (one per job, dediced by -j)
+    #          num_jobs = spack.config.determine_number_of_jobs(parallel=True)
+    #          os.write(write_fd, b"+" * num_jobs)
 
+    #          # set the makeflag env
 
     def setup_fifo_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
         jobserver_fifo_fd = None
 
-      # mflags = os.environ.get("MAKEFLAGS")
-      # if mflags and "--jobserver" in mflags:
-      #     # print("ALREADY FOUND JOBSERVER", mflags)
-      #     # Jobserver already set up by Make (through env depfile)
-      #     return None, None
+        # mflags = os.environ.get("MAKEFLAGS")
+        # if mflags and "--jobserver" in mflags:
+        #     # print("ALREADY FOUND JOBSERVER", mflags)
+        #     # Jobserver already set up by Make (through env depfile)
+        #     return None, None
 
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
@@ -2462,10 +2461,10 @@ class PackageInstaller:
         if fifo_directory is not None:
             shutil.rmtree(fifo_directory)
         # fds cleanup
-        if read_fd is not None:
-            os.close(read_fd)
-        if write_fd is not None:
-            os.close(write_fd)
+        # if read_fd is not None:
+        #    os.close(read_fd)
+        # if write_fd is not None:
+        #    os.close(write_fd)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
@@ -2487,7 +2486,7 @@ class PackageInstaller:
         active_tasks: List[Task] = []
 
         # Setup FIFO jobserver for builds
-        fifo_directory, jobserver_fifo_fd = self.setup_jobserver()
+        fifo_directory, jobserver_fifo_fd = self.setup_fifo_jobserver()
         # print(
         #     "Fifo Dir After Setup: ",
         #     fifo_directory,
