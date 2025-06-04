@@ -48,7 +48,7 @@ class Mmg(CMakePackage):
     variant("doc", default=False, description="Build documentation")
     variant("vtk", default=False, when="@5.5.0:", description="Enable VTK I/O support")
     variant("private_headers", default=False, description="Enable private headers", when="@5.7.0:")
-    variant("elas", default=False, description="Required to enable Lagrangian motion")
+    variant("elas", default=False, description="Enable Lagrangian mesh motion")
 
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
@@ -57,7 +57,7 @@ class Mmg(CMakePackage):
     depends_on("scotch", when="+scotch")
     depends_on("doxygen", when="+doc")
     depends_on("vtk", when="+vtk")
-    depends_on("iscdtoolbox_elasticity", when="+elas")
+    depends_on("iscdtoolbox-elasticity", when="+elas")
 
 
 class CMakeBuilder(cmake.CMakeBuilder):
