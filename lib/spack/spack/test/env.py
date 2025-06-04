@@ -1108,7 +1108,7 @@ spack:
         assert all(not s.satisfies(c) for s in roots)
 
 
-GCC_MPICH = """
+GCC_ZMPI = """
     - spec: "%[virtuals=c] gcc"
       when: "%c"
     - spec: "%[virtuals=cxx] gcc"
@@ -1128,12 +1128,12 @@ spack:
   specs:
   - matrix:
     - [mpileaks,  dt-diamond-right]
-    - ["%mixed-toolchain", "%gcc-mpich"]
+    - ["%mixed-toolchain", "%gcc-zmpi"]
   toolchains:
     mixed-toolchain:
     {MIXED_TOOLCHAIN}
-    gcc-mpich:
-    {GCC_MPICH}
+    gcc-zmpi:
+    {GCC_ZMPI}
   concretizer:
     unify: {unify}
 """
@@ -1154,3 +1154,38 @@ spack:
     assert mpileaks_clang.satisfies("%[virtuals=mpi] mpich")
     assert not mpileaks_clang.satisfies("%[virtuals=mpi] zmpi")
     assert mpileaks_clang["mpich"].satisfies("%[virtuals=fortran] gcc")
+
+
+@pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
+def test_using_toolchain_as_requirement(unify, tmp_path, mutable_config):
+    """Tests using a toolchain as a default requirement in an environment"""
+    spack_yaml = f"""
+spack:
+  specs:
+  - mpileaks
+  - dt-diamond-right
+  toolchains:
+    mixed-toolchain:
+    {MIXED_TOOLCHAIN}
+  packages:
+    all:
+      require:
+      - "%mixed-toolchain"
+  concretizer:
+    unify: {unify}
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        roots = e.concrete_roots()
+
+    mpileaks = [s for s in roots if s.satisfies("mpileaks")][0]
+
+    assert mpileaks.satisfies("%[virtuals=mpi] mpich")
+    assert mpileaks.satisfies("^[virtuals=mpi] mpich")
+
+    mpich = mpileaks["mpi"]
+    assert mpich.satisfies("%[virtuals=c] llvm")
+    assert mpich.satisfies("%[virtuals=cxx] llvm")
+    assert mpich.satisfies("%[virtuals=fortran] gcc")
