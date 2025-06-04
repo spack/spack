@@ -684,9 +684,13 @@ class ConcretizationCache:
             # remove takes a write lock, but there's a race
             # if another process adds something to the bucket
             # between the check for emptiness and the remove
+            removed = False
             with self._fc.write_transaction(cache_bucket) as bucket:
                 if bucket and not any(cache_bucket.iterdir()):
                     self._fc.remove(cache_bucket)
+                    removed = True
+            if removed:
+                self._fc.purge_lock(cache_bucket)
 
     def cache_buckets(self):
         """Generator producing cache buckets"""
@@ -802,6 +806,7 @@ class ConcretizationCache:
         bucket, entry = self._prefix_digest(problem)
         cache_path = self.root / bucket / entry
         result, statistics = None, None
+        self._fc.init_entry(bucket)
         with self._fc.read_transaction(bucket) as exists:
             # if exists is false, then there's no chance of a hit
             # in this bucket, as it does not exist
