@@ -45,10 +45,7 @@ def update_value(fqn, value):
     to the TOML document root. This function returns a mutated value.
     """
 
-    if fqn == ".project.name":
-        # Update the project name to the appropriate PyPi name
-        new_val = "spack-package-manager"
-    elif fqn == ".project.scripts.spack":
+    if fqn == ".project.scripts.spack":
         # Update the installable main module path
         new_val = "spack." + value
     elif re.match(r"^(lib|bin|var)/spack", value):
