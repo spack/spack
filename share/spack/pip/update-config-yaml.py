@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+# This utility is used to update a config.yaml. For the pypi package,
+# we currently only need to set one variable, but this may come in
+# handy when we need to do something more invasive.
+
 import argparse
 import sys
 
