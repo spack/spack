@@ -34,7 +34,9 @@ class Resolve(CMakePackage, CudaPackage, ROCmPackage):
         description="Build the LUSOL Library. Requires fortran",
     )
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
+    depends_on("fortran", type="build")
 
     depends_on("suite-sparse", when="+klu")
 
