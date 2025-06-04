@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack_repo.builtin.build_systems.cmake import CMakePackage, generator
+from spack_repo.builtin.build_systems.makefile import MakefilePackage
+
 from spack.package import *
 
 
@@ -154,6 +157,13 @@ class Dftbplus(CMakePackage, MakefilePackage):
     # Conflicts
     conflicts("+python", when="~shared")
     conflicts("-poisson", when="+transport")
+
+    # wrong logic in OMP detection in cmake config
+    patch(
+        "https://github.com/dftbplus/dftbplus/commit/9b9c29d28117ea54487e4384a24b58eb47f1f65c.patch?full_index=1",
+        sha256="f262c47ddce9695e15e7ae74b93aa19b4dfad91ba064e1534ea06bc1bc067135",
+        when="@22.2:24.1",
+    )
 
     # Extensions
     extends("python", when="+python")

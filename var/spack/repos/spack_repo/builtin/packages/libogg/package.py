@@ -4,7 +4,11 @@
 
 import os
 
-from spack.build_systems import cmake, generic
+from spack_repo.builtin.build_systems import cmake, generic
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 

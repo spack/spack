@@ -6,8 +6,12 @@ import glob
 import sys
 import tempfile
 
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+from spack_repo.builtin.build_systems.generic import Package
+from spack_repo.builtin.build_systems.python import PythonExtension, PythonPipBuilder
+from spack_repo.builtin.build_systems.rocm import ROCmPackage
+
 from spack.build_environment import optimization_flags
-from spack.build_systems.python import PythonPipBuilder
 from spack.package import *
 
 rocm_dependencies = [
@@ -46,6 +50,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     maintainers("adamjstewart", "aweits")
     tags = ["e4s"]
 
+    version("2.18.1", sha256="467c512b631e72ad5c9d5c16b23669bcf89675de630cfbb58f9dde746d34afa8")
     version(
         "2.18.0-rocm-enhanced",
         sha256="85f44bed166927b2e22db28f5c4e4538da22221fedd9c2f47c763c52a0e40814",
@@ -352,7 +357,8 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
         depends_on("py-h5py~mpi", when="@2.1.3:~mpi")
         depends_on("hdf5+mpi", when="@2.1.3:+mpi")
         depends_on("hdf5~mpi", when="@2.1.3:~mpi")
-        depends_on("py-ml-dtypes@0.4", when="@2.18:")
+        depends_on("py-ml-dtypes@0.4:0", when="@2.18.1")
+        depends_on("py-ml-dtypes@0.4", when="@2.18.0")
         depends_on("py-ml-dtypes@0.3.1:0.4", when="@2.17")
         depends_on("py-ml-dtypes@0.3.1:0.3", when="@2.15.1:2.16")
         depends_on("py-ml-dtypes@0.2", when="@2.15.0")
@@ -404,6 +410,7 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     with when("+rocm"):
         for pkg_dep in rocm_dependencies:
             depends_on(f"{pkg_dep}@6.0:", when="@2.14:")
+            depends_on(f"{pkg_dep}@:6.3", when="@:2.18")
             depends_on(pkg_dep)
 
     # Check configure and configure.py to see when these variants are supported
@@ -478,6 +485,10 @@ class PyTensorflow(Package, CudaPackage, ROCmPackage, PythonExtension):
     conflicts("%clang@:15", when="@2.18:")
     # https://github.com/tensorflow/tensorflow/issues/62416
     conflicts("%clang@17:", when="@:2.14")
+
+    # https://github.com/tensorflow/tensorflow/issues/94277
+    # https://github.com/tensorflow/tensorflow/pull/94289
+    patch("h5py-3.13.0.patch", when="@2.18")
 
     # zlib is vendored and downloaded directly from zlib.org (or mirrors), but
     # old downloads are removed from that site immediately after a new release.

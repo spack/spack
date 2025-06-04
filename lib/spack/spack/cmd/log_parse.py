@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import llnl.util.tty as tty
@@ -15,7 +16,7 @@ level = "long"
 event_types = ("errors", "warnings")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--show",
         action="store",

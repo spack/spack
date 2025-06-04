@@ -1,6 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+from spack_repo.builtin.build_systems.cuda import CudaPackage
+
 from spack.package import *
 
 
@@ -22,6 +25,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     version("develop", branch="develop")
     version("master", branch="master")
+    version("4.6.01", sha256="95b9357f37ab3b9c3913c00741acb2501831c28ea8664de67818ae79c69c5908")
     version("4.6.00", sha256="f2b18f3df78c3c8dd970fe8ead54e05c8c09c8ac6d1893655c2a1769d33aa364")
     version("4.5.01", sha256="c111a6561f23a85af9850d1df1e9015f37a586f1da0be4b6fb1e98001d75e074")
     version("4.5.00", sha256="94726a64e349adf6cd276e9fdc1b2bf7ff81efec833e479a5d3024b83f165a59")
@@ -186,6 +190,8 @@ class KokkosKernels(CMakePackage, CudaPackage):
     depends_on("kokkos")
     depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
+    depends_on("kokkos@4.6.01", when="@4.6.01")
+    depends_on("kokkos@4.6.00", when="@4.6.00")
     depends_on("kokkos@4.5.01", when="@4.5.01")
     depends_on("kokkos@4.5.00", when="@4.5.00")
     depends_on("kokkos@4.4.01", when="@4.4.01")

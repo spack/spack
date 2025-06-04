@@ -36,7 +36,6 @@ command_path = os.path.join(module_path, "cmd")
 analyzers_path = os.path.join(module_path, "analyzers")
 platform_path = os.path.join(module_path, "platforms")
 compilers_path = os.path.join(module_path, "compilers")
-build_systems_path = os.path.join(module_path, "build_systems")
 operating_system_path = os.path.join(module_path, "operating_systems")
 test_path = os.path.join(module_path, "test")
 hooks_path = os.path.join(module_path, "hooks")
@@ -58,7 +57,7 @@ var_path = os.path.join(prefix, "var", "spack")
 repos_path = os.path.join(var_path, "repos")
 test_repos_path = os.path.join(var_path, "test_repos")
 packages_path = os.path.join(repos_path, "spack_repo", "builtin")
-mock_packages_path = os.path.join(test_repos_path, "builtin.mock")
+mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
 #
 # Writable things in $spack/var/spack

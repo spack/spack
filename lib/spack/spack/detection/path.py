@@ -441,7 +441,13 @@ def by_path(
 
     result = collections.defaultdict(list)
     repository = spack.repo.PATH.ensure_unwrapped()
-    with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
+
+    executor: concurrent.futures.Executor
+    if max_workers == 1:
+        executor = spack.util.parallel.SequentialExecutor()
+    else:
+        executor = spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False)
+    with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
                 executables_finder.find,

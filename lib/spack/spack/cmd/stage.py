@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 
 import llnl.util.tty as tty
@@ -45,7 +46,7 @@ class StageFilter:
         return False
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["no_checksum", "specs"])
     subparser.add_argument(
         "-p", "--path", dest="path", help="path to stage package, does not add to spack tree"

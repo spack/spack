@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from spack_repo.builtin.build_systems.python import PythonPackage
+
 from spack.package import *
 
 
@@ -18,6 +20,7 @@ class PyCwlUtils(PythonPackage):
 
     version("0.37", sha256="7b69c948f8593fdf44b44852bd8ef94c666736ce0ac12cf6e66e2a72ad16a773")
     version("0.21", sha256="583f05010f7572f3a69310325472ccb6efc2db7f43dc6428d03552e0ffcbaaf9")
+    version("0.16", sha256="38182e6dd12b039601ac2f72911b3d93ca4e37efca3b0165ffe162abab3edf7b")
 
     depends_on("python@3.6:", type=("build", "run"))
     depends_on("python@3.8:", when="@0.29:", type=("build", "run"))

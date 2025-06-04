@@ -376,9 +376,7 @@ def traverse_breadth_first_tree_edges(parent_id, edges, parents, key=id, depth=0
         if parents[child_id] != parent_id:
             continue
 
-        # yield from ... in Python 3.
-        for item in traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1):
-            yield item
+        yield from traverse_breadth_first_tree_edges(child_id, edges, parents, key, depth + 1)
 
 
 def traverse_breadth_first_tree_nodes(parent_id, edges, key=id, depth=0):

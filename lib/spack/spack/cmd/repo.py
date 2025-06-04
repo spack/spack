@@ -2,25 +2,31 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import ast
+import argparse
 import os
+import shlex
 import sys
-from typing import Any, Dict, List, Optional, Set
+import tempfile
+from typing import Any, Dict, List, Optional, Union
 
 import llnl.util.tty as tty
+from llnl.util.tty import color
 
 import spack
+import spack.caches
 import spack.config
 import spack.repo
+import spack.util.executable
 import spack.util.path
 from spack.cmd.common import arguments
+from spack.error import SpackError
 
 description = "manage package source repositories"
 section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser):
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="repo_command")
 
     # Create
@@ -47,7 +53,28 @@ def setup_parser(subparser):
 
     # Add
     add_parser = sp.add_parser("add", help=repo_add.__doc__)
-    add_parser.add_argument("path", help="path to a Spack package repository directory")
+    add_parser.add_argument(
+        "path_or_repo", help="path or git repository of a Spack package repository"
+    )
+    # optional positional argument for destination name in case of git repository
+    add_parser.add_argument(
+        "destination",
+        nargs="?",
+        default=None,
+        help="destination to clone git repository into (defaults to cache directory)",
+    )
+    add_parser.add_argument(
+        "--name",
+        action="store",
+        help="config name for the package repository, defaults to the namespace of the repository",
+    )
+    add_parser.add_argument(
+        "--path",
+        help="relative path to the Spack package repository inside a git repository. Can be "
+        "repeated to add multiple package repositories in case of a monorepo",
+        action="append",
+        default=[],
+    )
     add_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -72,6 +99,17 @@ def setup_parser(subparser):
     migrate_parser.add_argument(
         "namespace_or_path", help="path to a Spack package repository directory"
     )
+    patch_or_fix = migrate_parser.add_mutually_exclusive_group(required=True)
+    patch_or_fix.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="do not modify the repository, but dump a patch file",
+    )
+    patch_or_fix.add_argument(
+        "--fix",
+        action="store_true",
+        help="automatically migrate the repository to the latest Package API",
+    )
 
 
 def repo_create(args):
@@ -81,294 +119,240 @@ def repo_create(args):
     tty.msg("To register it with spack, run this command:", "spack repo add %s" % full_path)
 
 
+def _add_repo(
+    path_or_repo: str,
+    name: Optional[str],
+    scope: Optional[str],
+    paths: List[str],
+    destination: Optional[str],
+    config: Optional[spack.config.Configuration] = None,
+) -> str:
+    config = config or spack.config.CONFIG
+
+    existing: Dict[str, Any] = config.get("repos", default={}, scope=scope)
+
+    if name and name in existing:
+        raise SpackError(f"A repository with the name '{name}' already exists.")
+
+    # Interpret as a git URL when it contains a colon at index 2 or more, not preceded by a
+    # forward slash. That allows C:/ windows paths, while following git's convention to distinguish
+    # between local paths on the one hand and URLs and SCP like syntax on the other.
+    entry: Union[str, Dict[str, Any]]
+    colon_idx = path_or_repo.find(":")
+
+    if colon_idx > 1 and "/" not in path_or_repo[:colon_idx]:  # git URL
+        entry = {"git": path_or_repo}
+        if len(paths) >= 1:
+            entry["paths"] = paths
+        if destination:
+            entry["destination"] = destination
+    else:  # local path
+        if destination:
+            raise SpackError("The 'destination' argument is only valid for git repositories")
+        elif paths:
+            raise SpackError("The --paths flag is only valid for git repositories")
+        entry = spack.util.path.canonicalize_path(path_or_repo)
+
+    descriptor = spack.repo.parse_config_descriptor(
+        name or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
+    )
+    descriptor.initialize(git=spack.util.executable.which("git"))
+
+    packages_repos = descriptor.construct(cache=spack.caches.MISC_CACHE)
+
+    usable_repos: Dict[str, spack.repo.Repo] = {}
+
+    for _path, _repo_or_err in packages_repos.items():
+        if isinstance(_repo_or_err, Exception):
+            tty.warn(f"Skipping package repository '{_path}' due to: {_repo_or_err}")
+        else:
+            usable_repos[_path] = _repo_or_err
+
+    if not usable_repos:
+        raise SpackError(f"No package repository could be constructed from {path_or_repo}")
+
+    # For the config key, default to --name, then to the namespace if there's only one repo.
+    # Otherwise, the name is unclear and we require the user to specify it.
+    if name:
+        key = name
+    elif len(usable_repos) == 1:
+        key = next(iter(usable_repos.values())).namespace
+    else:
+        raise SpackError("Multiple package repositories found, please specify a name with --name.")
+
+    if key in existing:
+        raise SpackError(f"A repository with the name '{key}' already exists.")
+
+    existing[key] = entry
+    config.set("repos", existing, scope)
+    return key
+
+
 def repo_add(args):
-    """add a package source to Spack's configuration"""
-    path = args.path
-
-    # real_path is absolute and handles substitution.
-    canon_path = spack.util.path.canonicalize_path(path)
-
-    # check if the path exists
-    if not os.path.exists(canon_path):
-        tty.die("No such file or directory: %s" % path)
-
-    # Make sure the path is a directory.
-    if not os.path.isdir(canon_path):
-        tty.die("Not a Spack repository: %s" % path)
-
-    # Make sure it's actually a spack repository by constructing it.
-    repo = spack.repo.from_path(canon_path)
-
-    # If that succeeds, finally add it to the configuration.
-    repos = spack.config.get("repos", scope=args.scope)
-    if not repos:
-        repos = []
-
-    if repo.root in repos or path in repos:
-        tty.die("Repository is already registered with Spack: %s" % path)
-
-    repos.insert(0, canon_path)
-    spack.config.set("repos", repos, args.scope)
-    tty.msg("Added repo with namespace '%s'." % repo.namespace)
+    """add package repositories to Spack's configuration"""
+    name = _add_repo(
+        path_or_repo=args.path_or_repo,
+        name=args.name,
+        scope=args.scope,
+        paths=args.path,
+        destination=args.destination,
+    )
+    tty.msg(f"Added repo to config with name '{name}'.")
 
 
 def repo_remove(args):
     """remove a repository from Spack's configuration"""
-    repos = spack.config.get("repos", scope=args.scope)
     namespace_or_path = args.namespace_or_path
+    repos: Dict[str, str] = spack.config.get("repos", scope=args.scope)
 
-    # If the argument is a path, remove that repository from config.
-    canon_path = spack.util.path.canonicalize_path(namespace_or_path)
-    for repo_path in repos:
-        repo_canon_path = spack.util.path.canonicalize_path(repo_path)
-        if canon_path == repo_canon_path:
-            repos.remove(repo_path)
-            spack.config.set("repos", repos, args.scope)
-            tty.msg("Removed repository %s" % repo_path)
-            return
+    if namespace_or_path in repos:
+        # delete by name (from config)
+        key = namespace_or_path
+    else:
+        # delete by namespace or path (requires constructing the repo)
+        canon_path = spack.util.path.canonicalize_path(namespace_or_path)
+        descriptors = spack.repo.RepoDescriptors.from_config(
+            spack.repo.package_repository_lock(), spack.config.CONFIG, scope=args.scope
+        )
+        for name, descriptor in descriptors.items():
+            descriptor.initialize(fetch=False)
 
-    # If it is a namespace, remove corresponding repo
-    for path in repos:
-        try:
-            repo = spack.repo.from_path(path)
-            if repo.namespace == namespace_or_path:
-                repos.remove(path)
-                spack.config.set("repos", repos, args.scope)
-                tty.msg("Removed repository %s with namespace '%s'." % (repo.root, repo.namespace))
-                return
-        except spack.repo.RepoError:
-            continue
+            # For now you cannot delete monorepos with multipe package repositories from config,
+            # hence "all" and not "any". We can improve this later if needed.
+            if all(
+                r.namespace == namespace_or_path or r.root == canon_path
+                for r in descriptor.construct(cache=spack.caches.MISC_CACHE).values()
+                if isinstance(r, spack.repo.Repo)
+            ):
+                key = name
+                break
+        else:
+            tty.die(f"No repository with path or namespace: {namespace_or_path}")
 
-    tty.die("No repository with path or namespace: %s" % namespace_or_path)
+    del repos[key]
+    spack.config.set("repos", repos, args.scope)
+    tty.msg(f"Removed repository '{namespace_or_path}'.")
 
 
 def repo_list(args):
     """show registered repositories and their namespaces"""
-    roots = spack.config.get("repos", scope=args.scope)
-    repos: List[spack.repo.Repo] = []
-    for r in roots:
-        try:
-            repos.append(spack.repo.from_path(r))
-        except spack.repo.RepoError:
-            continue
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
+    )
 
-    if sys.stdout.isatty():
-        tty.msg(f"{len(repos)} package repositor" + ("y." if len(repos) == 1 else "ies."))
-
-    if not repos:
+    if not sys.stdout.isatty():
+        for name in descriptors:
+            print(name)
         return
 
-    max_ns_len = max(len(r.namespace) for r in repos)
-    for repo in repos:
-        print(f"{repo.namespace:<{max_ns_len + 4}}{repo.package_api_str:<8}{repo.root}")
+    for name, descriptor in descriptors.items():
+        descriptor.initialize(fetch=False)
+        repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
+        for path, maybe_repo in repos_for_descriptor.items():
+            if isinstance(maybe_repo, spack.repo.Repo):
+                color.cprint(
+                    f"@g{{[+]}} {maybe_repo.namespace} {maybe_repo.package_api_str} "
+                    f"{maybe_repo.root}"
+                )
+            else:  # exception
+                color.cprint(f"@r{{[-]}} {name} {path}: {maybe_repo}")
 
 
 def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
+    """Get a repo by path or namespace"""
     try:
         return spack.repo.from_path(name_or_path)
     except spack.repo.RepoError:
         pass
 
-    for repo in spack.config.get("repos"):
-        try:
-            r = spack.repo.from_path(spack.util.path.canonicalize_path(repo))
-        except spack.repo.RepoError:
-            continue
-        if r.namespace == name_or_path or os.path.samefile(r.root, name_or_path):
-            return r
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        spack.repo.package_repository_lock(), spack.config.CONFIG
+    )
+
+    repo_path, _ = descriptors.construct(cache=spack.caches.MISC_CACHE, fetch=False)
+
+    for repo in repo_path.repos:
+        if repo.namespace == name_or_path:
+            return repo
 
     return None
 
 
-def repo_migrate(args: Any) -> None:
+def repo_migrate(args: Any) -> int:
     """migrate a package repository to the latest Package API"""
+    from spack.repo_migrate import migrate_v1_to_v2, migrate_v2_imports
+
     repo = _get_repo(args.namespace_or_path)
 
     if repo is None:
         tty.die(f"No such repository: {args.namespace_or_path}")
 
-    if repo.package_api < (2, 0):
-        tty.die("Migration from Spack repo API < 2.0 is not supported yet")
+    if args.dry_run:
+        fd, patch_file_path = tempfile.mkstemp(
+            suffix=".patch", prefix="repo-migrate-", dir=os.getcwd()
+        )
+        patch_file = os.fdopen(fd, "bw")
+        tty.msg(f"Patch file will be written to {patch_file_path}")
+    else:
+        patch_file_path = None
+        patch_file = None
 
-    symbol_to_module = {
-        "AspellDictPackage": "spack.build_systems.aspell_dict",
-        "AutotoolsPackage": "spack.build_systems.autotools",
-        "BundlePackage": "spack.build_systems.bundle",
-        "CachedCMakePackage": "spack.build_systems.cached_cmake",
-        "cmake_cache_filepath": "spack.build_systems.cached_cmake",
-        "cmake_cache_option": "spack.build_systems.cached_cmake",
-        "cmake_cache_path": "spack.build_systems.cached_cmake",
-        "cmake_cache_string": "spack.build_systems.cached_cmake",
-        "CargoPackage": "spack.build_systems.cargo",
-        "CMakePackage": "spack.build_systems.cmake",
-        "generator": "spack.build_systems.cmake",
-        "CompilerPackage": "spack.build_systems.compiler",
-        "CudaPackage": "spack.build_systems.cuda",
-        "Package": "spack.build_systems.generic",
-        "GNUMirrorPackage": "spack.build_systems.gnu",
-        "GoPackage": "spack.build_systems.go",
-        "IntelPackage": "spack.build_systems.intel",
-        "LuaPackage": "spack.build_systems.lua",
-        "MakefilePackage": "spack.build_systems.makefile",
-        "MavenPackage": "spack.build_systems.maven",
-        "MesonPackage": "spack.build_systems.meson",
-        "MSBuildPackage": "spack.build_systems.msbuild",
-        "NMakePackage": "spack.build_systems.nmake",
-        "OctavePackage": "spack.build_systems.octave",
-        "INTEL_MATH_LIBRARIES": "spack.build_systems.oneapi",
-        "IntelOneApiLibraryPackage": "spack.build_systems.oneapi",
-        "IntelOneApiLibraryPackageWithSdk": "spack.build_systems.oneapi",
-        "IntelOneApiPackage": "spack.build_systems.oneapi",
-        "IntelOneApiStaticLibraryList": "spack.build_systems.oneapi",
-        "PerlPackage": "spack.build_systems.perl",
-        "PythonExtension": "spack.build_systems.python",
-        "PythonPackage": "spack.build_systems.python",
-        "QMakePackage": "spack.build_systems.qmake",
-        "RPackage": "spack.build_systems.r",
-        "RacketPackage": "spack.build_systems.racket",
-        "ROCmPackage": "spack.build_systems.rocm",
-        "RubyPackage": "spack.build_systems.ruby",
-        "SConsPackage": "spack.build_systems.scons",
-        "SIPPackage": "spack.build_systems.sip",
-        "SourceforgePackage": "spack.build_systems.sourceforge",
-        "SourcewarePackage": "spack.build_systems.sourceware",
-        "WafPackage": "spack.build_systems.waf",
-        "XorgPackage": "spack.build_systems.xorg",
-    }
+    try:
+        if (1, 0) <= repo.package_api < (2, 0):
+            success, repo_v2 = migrate_v1_to_v2(repo, patch_file=patch_file)
+            exit_code = 0 if success else 1
+        elif (2, 0) <= repo.package_api < (3, 0):
+            repo_v2 = None
+            exit_code = (
+                0
+                if migrate_v2_imports(repo.packages_path, repo.root, patch_file=patch_file)
+                else 1
+            )
+        else:
+            repo_v2 = None
+            exit_code = 0
+    finally:
+        if patch_file is not None:
+            patch_file.flush()
+            patch_file.close()
 
-    for f in os.scandir(repo.packages_path):
-        pkg_path = os.path.join(f.path, "package.py")
-        try:
-            if f.name in ("__init__.py", "__pycache__") or not f.is_dir():
-                continue
-            with open(pkg_path, "rb") as file:
-                tree = ast.parse(file.read())
-        except (OSError, SyntaxError) as e:
-            print(f"Skipping {pkg_path}: {e}", file=sys.stderr)
-            continue
+    if patch_file_path:
+        tty.warn(
+            f"No changes were made to the '{repo.namespace}' repository with. Review "
+            f"the changes written to {patch_file_path}. Run \n\n"
+            f"    spack repo migrate --fix {args.namespace_or_path}\n\n"
+            "to upgrade the repo."
+        )
 
-        #: Symbols that are referenced in the package and may need to be imported.
-        referenced_symbols: Set[str] = set()
+    elif exit_code == 1:
+        tty.error(
+            f"Repository '{repo.namespace}' could not be migrated to the latest Package API. "
+            "Please check the error messages above."
+        )
 
-        #: Set of symbols of interest that are already defined through imports, assignments, or
-        #: function definitions.
-        defined_symbols: Set[str] = set()
+    elif isinstance(repo_v2, spack.repo.Repo):
+        tty.info(
+            f"Repository '{repo_v2.namespace}' was successfully migrated from "
+            f"package API {repo.package_api_str} to {repo_v2.package_api_str}."
+        )
+        tty.warn(
+            "Remove the old repository from Spack's configuration and add the new one using:\n"
+            f"    spack repo remove {shlex.quote(repo.root)}\n"
+            f"    spack repo add {shlex.quote(repo_v2.root)}"
+        )
 
-        best_line: Optional[int] = None
+    else:
+        tty.info(f"Repository '{repo.namespace}' was successfully migrated")
 
-        seen_import = False
-
-        for node in ast.walk(tree):
-            # Get the last import statement from the first block of top-level imports
-            if isinstance(node, ast.Module):
-                for child in ast.iter_child_nodes(node):
-                    # if we never encounter an import statement, the best line to add is right
-                    # before the first node under the module
-                    if best_line is None and isinstance(child, ast.stmt):
-                        best_line = child.lineno
-
-                    # prefer adding right before `from spack.package import ...`
-                    if isinstance(child, ast.ImportFrom) and child.module == "spack.package":
-                        seen_import = True
-                        best_line = child.lineno  # add it right before spack.package
-                        break
-
-                    # otherwise put it right after the last import statement
-                    is_import = isinstance(child, (ast.Import, ast.ImportFrom))
-
-                    if is_import:
-                        if isinstance(child, (ast.stmt, ast.expr)):
-                            best_line = (child.end_lineno or child.lineno) + 1
-
-                    if not seen_import and is_import:
-                        seen_import = True
-                    elif seen_import and not is_import:
-                        break
-
-            # Function definitions or assignments to variables whose name is a symbol of interest
-            # are considered as redefinitions, so we skip them.
-            elif isinstance(node, ast.FunctionDef):
-                if node.name in symbol_to_module:
-                    print(
-                        f"{pkg_path}:{node.lineno}: redefinition of `{node.name}` skipped",
-                        file=sys.stderr,
-                    )
-                    defined_symbols.add(node.name)
-            elif isinstance(node, ast.Assign):
-                for target in node.targets:
-                    if isinstance(target, ast.Name) and target.id in symbol_to_module:
-                        print(
-                            f"{pkg_path}:{target.lineno}: redefinition of `{target.id}` skipped",
-                            file=sys.stderr,
-                        )
-                        defined_symbols.add(target.id)
-
-            # Register symbols that are not imported.
-            elif isinstance(node, ast.Name) and node.id in symbol_to_module:
-                referenced_symbols.add(node.id)
-
-            # Register imported symbols to make this operation idempotent
-            elif isinstance(node, ast.ImportFrom):
-                for alias in node.names:
-                    if alias.name in symbol_to_module:
-                        defined_symbols.add(alias.name)
-                        if node.module == "spack.package":
-                            print(
-                                f"{pkg_path}:{node.lineno}: `{alias.name}` is imported from "
-                                "`spack.package`, which no longer provides this symbol",
-                                file=sys.stderr,
-                            )
-
-                    if alias.asname and alias.asname in symbol_to_module:
-                        defined_symbols.add(alias.asname)
-
-        # Remove imported symbols from the referenced symbols
-        referenced_symbols.difference_update(defined_symbols)
-
-        if not referenced_symbols:
-            continue
-
-        if best_line is None:
-            print(f"{pkg_path}: failed to update imports", file=sys.stderr)
-            continue
-
-        # Add the missing imports right after the last import statement
-        with open(pkg_path, "r", encoding="utf-8") as file:
-            lines = file.readlines()
-
-        # Group missing symbols by their module
-        missing_imports_by_module: Dict[str, list] = {}
-        for symbol in referenced_symbols:
-            module = symbol_to_module[symbol]
-            if module not in missing_imports_by_module:
-                missing_imports_by_module[module] = []
-            missing_imports_by_module[module].append(symbol)
-
-        new_lines = [
-            f"from {module} import {', '.join(sorted(symbols))}\n"
-            for module, symbols in sorted(missing_imports_by_module.items())
-        ]
-
-        if not seen_import:
-            new_lines.extend(("\n", "\n"))
-
-        lines[best_line - 1 : best_line - 1] = new_lines
-
-        tmp_file = pkg_path + ".tmp"
-
-        with open(tmp_file, "w", encoding="utf-8") as file:
-            file.writelines(lines)
-
-        os.replace(tmp_file, pkg_path)
+    return exit_code
 
 
 def repo(parser, args):
-    action = {
+    return {
         "create": repo_create,
         "list": repo_list,
         "add": repo_add,
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,
-    }
-    action[args.repo_command](args)
+    }[args.repo_command](args)

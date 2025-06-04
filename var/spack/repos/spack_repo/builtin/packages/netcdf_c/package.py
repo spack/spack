@@ -6,9 +6,12 @@ import itertools
 import os
 import sys
 
+from spack_repo.builtin.build_systems import autotools, cmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.cmake import CMakePackage
+
 from llnl.util.lang import dedupe
 
-from spack.build_systems import autotools, cmake
 from spack.package import *
 from spack.util.environment import filter_system_paths
 
@@ -139,6 +142,7 @@ class NetcdfC(CMakePackage, AutotoolsPackage):
     variant("zstd", default=True, description="Enable Zstandard compression plugin")
 
     depends_on("c", type="build")
+    depends_on("cxx", type="build", when="build_system=cmake")
 
     with when("build_system=cmake"):
         # Based on the versions required by the root CMakeLists.txt:

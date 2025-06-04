@@ -5,8 +5,11 @@
 import os
 import sys
 
-import spack.build_systems.autotools
-import spack.build_systems.nmake
+from spack_repo.builtin.build_systems import autotools, nmake
+from spack_repo.builtin.build_systems.autotools import AutotoolsPackage
+from spack_repo.builtin.build_systems.nmake import NMakePackage
+from spack_repo.builtin.build_systems.sourceforge import SourceforgePackage
+
 from spack.package import *
 from spack.util.environment import is_system_path
 
@@ -183,7 +186,7 @@ class AnyBuilder(BaseBuilder):
                     env.prepend_path("TCLLIBPATH", tcllibpath, separator=" ")
 
 
-class AutotoolsBuilder(AnyBuilder, spack.build_systems.autotools.AutotoolsBuilder):
+class AutotoolsBuilder(AnyBuilder, autotools.AutotoolsBuilder):
     configure_directory = "unix"
 
     # if TCL is present on the system this may be set to the system's
@@ -222,7 +225,7 @@ class AutotoolsBuilder(AnyBuilder, spack.build_systems.autotools.AutotoolsBuilde
             make("clean")
 
 
-class NMakeBuilder(AnyBuilder, spack.build_systems.nmake.NMakeBuilder):
+class NMakeBuilder(AnyBuilder, nmake.NMakeBuilder):
     build_targets = ["all"]
     install_targets = ["install"]
 

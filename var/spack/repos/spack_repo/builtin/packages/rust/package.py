@@ -5,6 +5,8 @@
 import os
 import re
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
@@ -216,6 +218,11 @@ class Rust(Package):
 
         # Compile tools into flag for configure.
         flags.append(f"--tools={','.join(tools)}")
+
+        # by default a `-nightly` suffix we be applied even on
+        # non-nightly stable builds
+        if not self.spec.satisfies("@=nightly"):
+            flags.append("--release-channel=stable")
 
         configure(*flags)
 

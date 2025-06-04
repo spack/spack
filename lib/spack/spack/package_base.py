@@ -81,6 +81,8 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 #: Filename of json with total build and phase times (seconds)
 spack_times_log = "install_times.json"
 
+NO_DEFAULT = object()
+
 
 class WindowsRPath:
     """Collection of functionality surrounding Windows RPATH specific features
@@ -583,7 +585,7 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
     like ``homepage`` and, for a code-based package, ``url``, or functions
     such as ``install()``.
     There are many custom ``Package`` subclasses in the
-    ``spack.build_systems`` package that make things even easier for
+    ``spack_repo.builtin.build_systems`` package that make things even easier for
     specific build systems.
 
     """
@@ -986,7 +988,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         """
         return self._implement_all_urls_for_version(version)[0]
 
-    def update_external_dependencies(self, extendee_spec=None):
+    def _update_external_dependencies(
+        self, extendee_spec: Optional[spack.spec.Spec] = None
+    ) -> None:
         """
         Method to override in package classes to handle external dependencies
         """
@@ -1000,6 +1004,41 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         _, record = spack.store.STORE.db.query_by_spec_hash(self.spec.dag_hash())
         assert dev_path_var and record, "dev_path variant and record must be present"
         return fsys.recursive_mtime_greater_than(dev_path_var.value, record.installation_time)
+
+    @classmethod
+    def version_or_package_attr(cls, attr, version, default=NO_DEFAULT):
+        """
+        Get an attribute that could be on the version or package with preference to the version
+        """
+        version_attrs = cls.versions.get(version)
+        if version_attrs and attr in version_attrs:
+            return version_attrs.get(attr)
+        if default is NO_DEFAULT and not hasattr(cls, attr):
+            raise PackageError(f"{attr} attribute not defined on {cls.name}")
+        return getattr(cls, attr, default)
+
+    @classmethod
+    def needs_commit(cls, version) -> bool:
+        """
+        Method for checking if the package instance needs a commit sha to be found
+        """
+        if isinstance(version, GitVersion):
+            return True
+
+        ver_attrs = cls.versions.get(version)
+        if ver_attrs:
+            return bool(ver_attrs.get("commit") or ver_attrs.get("tag") or ver_attrs.get("branch"))
+
+        return False
+
+    def resolve_binary_provenance(self) -> None:
+        """
+        Method to ensure concrete spec has binary provenance.
+        Base implementation will look up git commits when appropriate.
+        Packages may override this implementation for custom implementations
+        """
+        # TODO in follow on PR adding here so SNL team can begin work ahead of spack core
+        pass
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and
@@ -1365,14 +1404,16 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         return [
             vspec
             for when_spec, provided in self.provided.items()
-            for vspec in provided
+            for vspec in sorted(provided)
             if self.spec.satisfies(when_spec)
         ]
 
     @classmethod
     def provided_virtual_names(cls):
         """Return sorted list of names of virtuals that can be provided by this package."""
-        return sorted(set(vpkg.name for virtuals in cls.provided.values() for vpkg in virtuals))
+        return sorted(
+            set(vpkg.name for virtuals in cls.provided.values() for vpkg in sorted(virtuals))
+        )
 
     @property
     def prefix(self):
@@ -1660,10 +1701,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         if self.spec.versions.concrete:
             try:
                 source_id = fs.for_package_version(self).source_id()
-            except (fs.ExtrapolationError, fs.InvalidArgsError):
+            except (fs.ExtrapolationError, fs.InvalidArgsError, spack.error.NoURLError):
                 # ExtrapolationError happens if the package has no fetchers defined.
                 # InvalidArgsError happens when there are version directives with args,
                 #     but none of them identifies an actual fetcher.
+                # NoURLError happens if the package is external-only with no url
                 source_id = None
 
             if not source_id:

@@ -1,3 +1,4 @@
+from spack_repo.builtin_mock.build_systems.generic import Package
 from spack.package import *
 
 class {{ cls_name }}(Package):

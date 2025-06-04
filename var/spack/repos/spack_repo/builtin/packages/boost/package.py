@@ -6,6 +6,8 @@ import os
 import sys
 from pathlib import Path
 
+from spack_repo.builtin.build_systems.generic import Package
+
 from spack.package import *
 
 
