@@ -1189,3 +1189,45 @@ spack:
     assert mpich.satisfies("%[virtuals=c] llvm")
     assert mpich.satisfies("%[virtuals=cxx] llvm")
     assert mpich.satisfies("%[virtuals=fortran] gcc")
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize("unify", ["false", "when_possible"])
+def test_using_toolchain_as_preferences(unify, tmp_path, mutable_config):
+    """Tests using a toolchain as a strong preference in an environment"""
+    spack_yaml = f"""
+spack:
+  specs:
+  - dt-diamond-right %gcc-zmpi
+  toolchains:
+    mixed-toolchain:
+    {MIXED_TOOLCHAIN}
+    gcc-zmpi:
+    {GCC_ZMPI}
+  packages:
+    all:
+      prefer:
+      - "%mixed-toolchain"
+  concretizer:
+    unify: {unify}
+"""
+    manifest = tmp_path / "spack.yaml"
+    manifest.write_text(spack_yaml)
+    with ev.Environment(tmp_path) as e:
+        e.concretize()
+        roots = e.concrete_roots()
+
+    mpileaks = [s for s in roots if s.satisfies("mpileaks")][0]
+
+    assert mpileaks.satisfies("%[virtuals=mpi] mpich")
+    assert mpileaks.satisfies("^[virtuals=mpi] mpich")
+
+    mpich = mpileaks["mpi"]
+    assert mpich.satisfies("%[virtuals=c] llvm")
+    assert mpich.satisfies("%[virtuals=cxx] llvm")
+    assert mpich.satisfies("%[virtuals=fortran] gcc")
+
+    dt = [s for s in roots if s.satisfies("dt-diamond-right")][0]
+    assert dt.satisfies("%[virtuals=c] gcc")
+    assert dt.satisfies("%[virtuals=cxx] gcc")
+    assert dt.satisfies("%[virtuals=fortran] gcc")

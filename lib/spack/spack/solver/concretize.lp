@@ -435,7 +435,7 @@ trigger_and_effect(Package, TriggerID, EffectID)
 % Effects of subconditions only hold if all parent conditions hold
 impose(EffectID, node(X, Package))
   :- pkg_fact(Package, condition_effect(ConditionID, EffectID));
-     condition_holds(ParentConditionID, node(X, Package)) : subcondition(ConditionID, ParentConditionID), attr("node", node(X, Package));
+     condition_holds(ParentConditionID, node(X, Package)) : subcondition(ConditionID, ParentConditionID);
      trigger_and_effect(Package, TriggerID, EffectID);
      trigger_node(TriggerID, _, node(X, Package));
      trigger_condition_holds(TriggerID, node(X, Package));
