@@ -3954,6 +3954,7 @@ def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable
     for file in spack.solver.asp.CONC_CACHE.root.iterdir():
         if file.is_file() and file.suffix == ".lock":
             lock_count += 1
-    assert lock_count == 1, f"Unexpected number of lockfiles {lock_count} \
+    assert (
+        lock_count == 1
+    ), f"Unexpected number of lockfiles {lock_count} \
 concretization cache cleanup operation failed."
-
