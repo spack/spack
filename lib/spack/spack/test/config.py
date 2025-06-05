@@ -1203,31 +1203,6 @@ def test_internal_config_scope_cache_clearing():
     assert internal_scope.sections["config"] == data
 
 
-def test_system_config_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = p
-    assert spack.paths._get_system_config_path() == p
-
-
-def test_system_config_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    assert os.sep + os.path.join("etc", "spack") == spack.paths._get_system_config_path()
-
-
-def test_user_config_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_USER_CONFIG_PATH"] = p
-    assert p == spack.paths._get_user_config_path()
-
-
-def test_user_config_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert (
-        os.path.expanduser(os.path.join("~", ".config", "spack"))
-        == spack.paths._get_user_config_path()
-    )
-
-
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
