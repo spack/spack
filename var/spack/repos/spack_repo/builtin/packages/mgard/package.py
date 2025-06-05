@@ -16,19 +16,9 @@ class Mgard(CMakePackage, CudaPackage):
     repository at https://github.com/CODARcode/MGARD directly from the master branch.
     """
 
-    # This is a research compressor with a fast evolving API. Historical versions
-    # use a fork with minimal changes to support spack, while new versions use upstream master.
-
     homepage = "https://github.com/CODARcode/MGARD"
-    git = "https://github.com/robertu94/MGARD"  # Fork for existing date- versions
-
-    def url_for_version(self, version):
-        """For newer versions, use upstream MGARD repository"""
-        version_str = str(version)
-        if not version_str.startswith("date-"):
-            return "https://github.com/CODARcode/MGARD"
-        else:
-            return "https://github.com/robertu94/MGARD"
+    git = "https://github.com/CODARcode/MGARD.git"
+    url = "https://github.com/CODARcode/MGARD/archive/refs/tags/1.5.2.tar.gz"
 
     maintainers("robertu94")
     maintainers("vicentebolea")
@@ -39,15 +29,40 @@ class Mgard(CMakePackage, CudaPackage):
     license("Apache-2.0")
 
     # In spack numbers take precedence over alphabetic chars when sorting versions.
-    version("1.5.2", commit="208b0c42af6ba552387aec321664d5cbb757b2e2")  # upstream v1.5.2
+    version("1.5.2", sha256="d78ff8735e9fc6f86abc4830563799a3dd3c9abf33d13d82ed42dbc28d48685d")
 
     # Historical versions using fork (with patches for Spack compatibility)
-    version("compat-2023-12-09", commit="d61d8c06c49a72b2e582cc02de88b7b27e1275d2", preferred=True)
-    version("compat-2023-03-31", commit="a8a04a86ff30f91d0b430a7c52960a12fa119589")
-    version("compat-2023-01-10", commit="3808bd8889a0f8e6647fc0251a3189bc4dfc920f")
-    version("compat-2022-11-18", commit="72dd230ed1af88f62ed3c0f662e2387a6e587748")
-    version("compat-2021-11-12", commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366")
-    version("compat-2020-10-01", commit="b67a0ac963587f190e106cc3c0b30773a9455f7a")
+    version(
+        "compat-2023-12-09",
+        commit="d61d8c06c49a72b2e582cc02de88b7b27e1275d2",
+        git="https://github.com/robertu94/MGARD.git",
+        preferred=True,
+    )
+    version(
+        "compat-2023-03-31",
+        commit="a8a04a86ff30f91d0b430a7c52960a12fa119589",
+        git="https://github.com/robertu94/MGARD.git",
+    )
+    version(
+        "compat-2023-01-10",
+        commit="3808bd8889a0f8e6647fc0251a3189bc4dfc920f",
+        git="https://github.com/robertu94/MGARD.git",
+    )
+    version(
+        "compat-2022-11-18",
+        commit="72dd230ed1af88f62ed3c0f662e2387a6e587748",
+        git="https://github.com/robertu94/MGARD.git",
+    )
+    version(
+        "compat-2021-11-12",
+        commit="3c05c80a45a51bb6cc5fb5fffe7b1b16787d3366",
+        git="https://github.com/robertu94/MGARD.git",
+    )
+    version(
+        "compat-2020-10-01",
+        commit="b67a0ac963587f190e106cc3c0b30773a9455f7a",
+        git="https://github.com/robertu94/MGARD.git",
+    )
 
     variant(
         "serial",
