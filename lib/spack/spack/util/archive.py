@@ -262,8 +262,6 @@ def retrieve_commit_from_archive(archive_path, ref):
 
     tar = which("tar", required=True)
     prefix = _git_prefix(archive_path, tar)
-    commit = None
-
     # try branch, tags then detached states
     for ref_path in [f"refs/heads/{ref}/", f"refs/tags/{ref}/", "HEAD"]:
         try:
@@ -271,9 +269,9 @@ def retrieve_commit_from_archive(archive_path, ref):
                 "-Oxzf", archive_path, f"{prefix}.git/{ref_path}", output=str, error=str
             ).strip()
             if commit and len(commit) == 40:
-                break
+                return commit
         except ProcessError:
             pass
-    if not commit:
-        tty.warn(f"Archive {archive_path} does not appear to contain git data")
-    return commit
+
+    tty.warn(f"Archive {archive_path} does not appear to contain git data")
+    return None
