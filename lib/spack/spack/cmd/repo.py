@@ -245,17 +245,35 @@ def repo_list(args):
             print(name)
         return
 
+    # Collect all repository information for aligned output
+    repo_info = []
+
     for name, descriptor in descriptors.items():
         descriptor.initialize(fetch=False)
         repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
+
+        # Register all repos and errors for this descriptor
         for path, maybe_repo in repos_for_descriptor.items():
             if isinstance(maybe_repo, spack.repo.Repo):
-                color.cprint(
-                    f"@g{{[+]}} {maybe_repo.namespace} {maybe_repo.package_api_str} "
-                    f"{maybe_repo.root}"
+                repo_info.append(
+                    ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
                 )
             else:  # exception
-                color.cprint(f"@r{{[-]}} {name} {path}: {maybe_repo}")
+                repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
+
+        # If there are no repos, it means it's not yet cloned; then we status + git repository
+        if not repos_for_descriptor and isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
+            repo_info.append(("@K{ - }", name, "", descriptor.repository))
+
+    if repo_info:
+        max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
+        max_api_width = max(len(api) for _, _, api, _ in repo_info) + 3
+
+        # Print aligned output
+        for status, namespace, api, path in repo_info:
+            color.cprint(
+                f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {path}"
+            )
 
 
 def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
