@@ -60,6 +60,16 @@ spack_xdg_data_home = lambda: _define_xdg_or_backup(
     xdg_data_home, os.path.join("~", ".local", "share")
 )
 
+spack_xdg_data_home_nodefault: Optional[str]
+if xdg_data_home in os.environ:
+    spack_xdg_data_home_nodefault = os.path.expanduser(
+        os.path.join(os.environ[xdg_data_home], "spack")
+    )
+else:
+    spack_xdg_data_home_nodefault = None
+
+spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
+
 
 class SpackPaths:
     def __init__(self, _prefix=None):
@@ -133,66 +143,57 @@ class SpackPaths:
         if not self.modules_base:
             self.modules_base = os.path.join(spack_xdg_data_home(), "modules")
 
+        # ------
+        # The next 3 locations can store a lot of data and used to be
+        # inside of Spack by default. They can be set to any location
+        # with `config:` settings, and those have priority. They
+        # can also be redirected by setting the SPACK_DATA_HOME or
+        # XDG_DATA_HOME environment variables. If none of those are
+        # set, then they point to inside of the Spack prefix.
+        #
+        # Precedence:
+        # 1. config: setting (code consults the config before this
+        #    module)
+        # 2. explicitly defined SPACK_DATA_HOME
+        # 3. explicitly defined XDG_DATA_HOME
+        # 4. old default path, if occupied (inside spack prefix)
+        # 5. inside spack prefix (slightly different compared to old
+        #    install path)
+        old_install_path = os.path.join(self.prefix, "opt", "spack")
+        self.default_install_location = self.use_spack_data_home_or_old_location("installs", old_install_path)
+
+        old_envs_path = os.path.join(self.var_path, "environments")
+        self.default_envs_path = self.use_spack_data_home_or_old_location("environments", old_envs_path)
+
+        old_fetch_cache_path = os.path.join(self.var_path, "cache")
+        self.default_fetch_cache_path = self.use_spack_data_home_or_old_location("downloads", old_fetch_cache_path)
+
+    def use_spack_data_home_or_old_location(self, subdir, old_location):
+        # spack_data_home is where we know we can put large amounts of data.
+        # Users can set SPACK_DATA_HOME to tell spack explicitly about such
+        # a location. If XDG_DATA_HOME is set, we assume we can use that.
+        # If neither are set, we assume the spack prefix is the only place
+        # available to us (we do not use ~ and in particular the default for
+        # XDG_DATA_HOME).
+        spack_data_home_explicit = None
+        if spack_data_home_varname in os.environ:
+            spack_data_home_explicit = os.environ[spack_data_home_varname]
+        elif spack_xdg_data_home_nodefault:
+            spack_data_home_explicit = spack_xdg_data_home_nodefault
+
+        spack_data_home_default = os.path.join(self.prefix, "opt", "data")
+
+        if spack_data_home_explicit:
+            return os.path.join(spack_data_home_explicit, subdir)
+        elif dir_is_occupied(old_location):
+            return old_location
+        else:
+            return os.path.join(spack_data_home_default, subdir)
+
+
 this_spack = SpackPaths()
 for attr, value in vars(this_spack).items():
     globals()[attr] = value
-
-
-
-
-spack_xdg_data_home_nodefault: Optional[str]
-if xdg_data_home in os.environ:
-    spack_xdg_data_home_nodefault = os.path.expanduser(
-        os.path.join(os.environ[xdg_data_home], "spack")
-    )
-else:
-    spack_xdg_data_home_nodefault = None
-
-spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
-
-
-def spack_data_home():
-    # spack_data_home is where we know we can put large amounts of data:
-    # users can set SPACK_DATA_HOME to tell spack explicitly about such
-    # a location. If XDG_DATA_HOME is set, we assume we can use that.
-    # If neither are set, we assume the spack prefix is the only place
-    # available to us (we do not use ~ and in particular the default for
-    # XDG_DATA_HOME).
-    if spack_data_home_varname in os.environ:
-        return os.environ[spack_data_home_varname]
-    elif spack_xdg_data_home_nodefault:
-        return spack_xdg_data_home_nodefault
-    else:
-        return os.path.join(prefix, "opt", "data")
-
-
-def default_install_location():
-    # Precedence for installs:
-    # 1. config:install_tree:root
-    # 2. explicitly defined SPACK_DATA_HOME
-    # 3. explicitly defined XDG_DATA_HOME
-    # 4. occupied old install path (inside spack prefix)
-    # 5. inside spack prefix (slightly different compared to old install path)
-    old_install_path = os.path.join(prefix, "opt", "spack")
-    if spack_data_home_varname in os.environ:
-        return os.path.join(spack_data_home(), "installs")
-    elif dir_is_occupied(old_install_path):
-        return old_install_path
-    else:
-        return os.path.join(spack_data_home(), "installs")
-
-
-# Environments follow the same precedence rules as installs
-# (the view and dev_path packages can take up significant space)
-old_envs_path = os.path.join(var_path, "environments")
-if spack_data_home_varname in os.environ:
-    envs_path = os.path.join(spack_data_home(), "environments")
-elif dir_is_occupied(old_envs_path):
-    envs_path = old_envs_path
-else:
-    envs_path = os.path.join(spack_data_home(), "environments")
-
-default_fetch_cache_path = os.path.join(spack_data_home(), "downloads")
 
 
 # Below paths are where Spack can write information for the user.
