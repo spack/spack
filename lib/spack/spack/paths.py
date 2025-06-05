@@ -101,6 +101,9 @@ default_monitor_path = os.path.join(reports_path, "monitor")
 #: git repositories fetched to compare commits to versions
 user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
 
+#: default location where remote package repositories are cloned
+package_repos_path = os.path.join(user_cache_path, "package_repos")
+
 #: bootstrap store for bootstrapping clingo and other tools
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 

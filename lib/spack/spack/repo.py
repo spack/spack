@@ -1843,7 +1843,7 @@ def parse_config_descriptor(
 
         if destination is None:  # use a default destination
             dir_name = spack.util.hash.b32_hash(repository)[-7:]
-            destination = os.path.join(spack.paths.user_repos_cache_path, dir_name)
+            destination = os.path.join(spack.paths.package_repos_path, dir_name)
         else:
             destination = spack.util.path.canonicalize_path(destination)
 
