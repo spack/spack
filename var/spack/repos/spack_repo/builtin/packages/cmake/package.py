@@ -103,12 +103,15 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant(
-        "ncurses",
-        default=sys.platform != "win32",
-        description="Enables the build of the ncurses gui",
-    )
     variant("qtgui", default=False, description="Enables the build of the Qt GUI")
+
+    for spack_platform in ["freebsd", "linux", "darwin"]:
+        with when(f"platform={spack_platform}"):
+                variant(
+                    "ncurses",
+                    default=True,
+                    description="Enables the build of the ncurses gui",
+                )
 
     # Revert the change that introduced a regression when parsing mpi link
     # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
