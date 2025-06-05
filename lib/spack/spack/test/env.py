@@ -1030,8 +1030,8 @@ spack:
           when: "%c"
         - spec: "%[virtuals=cxx] llvm"
           when: "%cxx"
-        - spec: "^[virtuals=mpi] zmpi"
-          when: "^mpi"
+        - spec: "%[virtuals=mpi] zmpi"
+          when: "%mpi"
       packages:
         all:
           require:
@@ -1115,8 +1115,8 @@ GCC_ZMPI = """
       when: "%cxx"
     - spec: "%[virtuals=fortran] gcc"
       when: "%fortran"
-    - spec: "^[virtuals=mpi] zmpi"
-      when: "^mpi"
+    - spec: "%[virtuals=mpi] zmpi"
+      when: "%mpi"
 """
 
 
@@ -1233,7 +1233,6 @@ spack:
     assert dt.satisfies("%[virtuals=fortran] gcc")
 
 
-@pytest.mark.xfail  # only unify: false fails -- unify: true and unify: when_possible succeed
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])
 def test_mixing_toolchains_in_an_input_spec(unify, tmp_path, mutable_config):
     """Tests using a toolchain as a strong preference in an environment"""

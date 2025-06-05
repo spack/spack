@@ -793,7 +793,7 @@ class DependencySpec:
             unconditional: if True, removes any condition statement from the representation
         """
 
-        parent = self.parent.name if self.parent else ""
+        parent = self.parent.name if self.parent.name else ""
         child = self.spec if self.spec else ""
         virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
 

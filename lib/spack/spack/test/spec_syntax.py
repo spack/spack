@@ -911,18 +911,18 @@ def test_cli_spec_roundtrip(args, expected):
         ),
         (
             "foo%my_toolchain2",
-            {"my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich"},
-            ["foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich"],
+            {"my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich"},
+            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
             {
                 "my_toolchain": "%[when='%c' virtuals=c]gcc",
-                "my_toolchain2": "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich",
             },
             [
                 "foo %[when='%c' virtuals=c] gcc",
-                "bar %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich",
+                "bar %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich",
             ],
         ),
         (
@@ -930,15 +930,15 @@ def test_cli_spec_roundtrip(args, expected):
             {
                 "my_toolchain2": [
                     {"spec": "%[virtuals=c]gcc", "when": "%c"},
-                    {"spec": "^[virtuals=mpi]mpich", "when": "+mpi"},
+                    {"spec": "%[virtuals=mpi]mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c' virtuals=c] gcc ^[when='+mpi' virtuals=mpi] mpich"],
+            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
         ),
         (
             "foo%my_toolchain2",
-            {"my_toolchain2": [{"spec": "%[virtuals=c]gcc ^[virtuals=mpi]mpich", "when": "%c"}]},
-            ["foo %[when='%c' virtuals=c] gcc ^[when='%c' virtuals=mpi] mpich"],
+            {"my_toolchain2": [{"spec": "%[virtuals=c]gcc %[virtuals=mpi]mpich", "when": "%c"}]},
+            ["foo %[when='%c' virtuals=c] gcc %[when='%c' virtuals=mpi] mpich"],
         ),
     ],
 )

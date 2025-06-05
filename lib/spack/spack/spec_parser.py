@@ -314,7 +314,12 @@ class SpecParser:
                 # Look ahead to match upcoming value to list of toolchains
                 if self.ctx.current_token.value == "%" and self.ctx.next_token.value in toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
-                    self._apply_toolchain(current_spec, toolchains[self.ctx.current_token.value])
+                    try:
+                        self._apply_toolchain(
+                            current_spec, toolchains[self.ctx.current_token.value]
+                        )
+                    except spack.error.SpecError as e:
+                        raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
 
                 is_direct = self.ctx.current_token.value[0] == "%"
@@ -358,19 +363,30 @@ class SpecParser:
     def _apply_toolchain(self, spec: "spack.spec.Spec", toolchain_config: Union[str, List]):
         # Single string entries constrain the spec
         if isinstance(toolchain_config, str):
-            spec.constrain(parse_one_or_raise(toolchain_config))
+            toolchain = parse_one_or_raise(toolchain_config)
+            self._ensure_all_direct_edges(toolchain)
+            spec.constrain(toolchain)
             return
 
         # List entries we apply each list element
         for entry in toolchain_config:
             constraint = parse_one_or_raise(entry["spec"])
             when = entry.get("when", "")
+            self._ensure_all_direct_edges(constraint)
 
             # Conditions are applied to every edge in the constraint
             for edge in constraint.traverse_edges():
                 edge.when.constrain(when)
 
             spec.constrain(constraint)
+
+    def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
+        for edge in constraint.traverse_edges(root=False):
+            if not edge.direct:
+                raise spack.error.SpecError(
+                    f"cannot use '^' in toolchain definitions, and the current "
+                    f"toolchain contains '{edge.format()}'"
+                )
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
