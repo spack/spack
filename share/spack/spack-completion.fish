@@ -2811,7 +2811,7 @@ complete -c spack -n '__fish_spack_using_command repo set' -l destination -r -f 
 complete -c spack -n '__fish_spack_using_command repo set' -l destination -r -d 'destination to clone git repository into'
 complete -c spack -n '__fish_spack_using_command repo set' -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command repo set' -l path -r -d 'relative path to the Spack package repository inside a git repository. Can be repeated to add multiple package repositories in case of a monorepo'
-complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -d 'configuration scope to modify'
 
 # spack repo remove
