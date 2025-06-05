@@ -17,8 +17,6 @@ import llnl.util.filesystem
 
 import spack.util.hash as hash
 
-#: This file lives in $prefix/lib/spack/spack/__file__
-prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
 xdg_config_home = "XDG_CONFIG_HOME"
 xdg_state_home = "XDG_STATE_HOME"
@@ -101,59 +99,67 @@ def dir_is_occupied(x, except_for=None):
     return x.is_dir() and bool(set(x.iterdir()) - except_for)
 
 
-#: User configuration location
-user_config_path = _get_user_config_path()
+class SpackPaths:
+    def __init__(self, _prefix=None):
+        #: This file lives in $prefix/lib/spack/spack/__file__
+        self.prefix = _prefix or str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
-#: System configuration location
-system_config_path = _get_system_config_path()
+        #: synonym for prefix
+        self.spack_root = self.prefix
 
-#: When Spack is provided by an admin to a user, the admin can
-#: provide a config that only applies for the end-users
-end_user_cfg_path = os.path.join(system_config_path, "end-user")
+        #: bin directory in the spack prefix
+        self.bin_path = os.path.join(self.prefix, "bin")
 
-#: synonym for prefix
-spack_root = prefix
+        #: The spack script itself
+        self.spack_script = os.path.join(self.bin_path, "spack")
 
-#: bin directory in the spack prefix
-bin_path = os.path.join(prefix, "bin")
+        #: The sbang script in the spack installation
+        self.sbang_script = os.path.join(self.bin_path, "sbang")
 
-#: The spack script itself
-spack_script = os.path.join(bin_path, "spack")
+        # spack directory hierarchy
+        self.lib_path = os.path.join(self.prefix, "lib", "spack")
+        self.external_path = os.path.join(self.lib_path, "external")
+        self.module_path = os.path.join(self.lib_path, "spack")
+        self.command_path = os.path.join(self.module_path, "cmd")
+        self.analyzers_path = os.path.join(self.module_path, "analyzers")
+        self.platform_path = os.path.join(self.module_path, "platforms")
+        self.compilers_path = os.path.join(self.module_path, "compilers")
+        self.operating_system_path = os.path.join(self.module_path, "operating_systems")
+        self.test_path = os.path.join(self.module_path, "test")
+        self.hooks_path = os.path.join(self.module_path, "hooks")
+        self.share_path = os.path.join(self.prefix, "share", "spack")
+        self.etc_path = os.path.join(self.prefix, "etc", "spack")
+        self.default_license_dir = os.path.join(self.etc_path, "licenses")
+        self.var_path = os.path.join(self.prefix, "var", "spack")
 
-#: The sbang script in the spack installation
-sbang_script = os.path.join(bin_path, "sbang")
+        #: User configuration location
+        self.user_config_path = _get_user_config_path()
 
-# spack directory hierarchy
-lib_path = os.path.join(prefix, "lib", "spack")
-external_path = os.path.join(lib_path, "external")
-module_path = os.path.join(lib_path, "spack")
-command_path = os.path.join(module_path, "cmd")
-analyzers_path = os.path.join(module_path, "analyzers")
-platform_path = os.path.join(module_path, "platforms")
-compilers_path = os.path.join(module_path, "compilers")
-operating_system_path = os.path.join(module_path, "operating_systems")
-test_path = os.path.join(module_path, "test")
-hooks_path = os.path.join(module_path, "hooks")
-share_path = os.path.join(prefix, "share", "spack")
-etc_path = os.path.join(prefix, "etc", "spack")
-default_license_dir = os.path.join(etc_path, "licenses")
-var_path = os.path.join(prefix, "var", "spack")
+        #: System configuration location
+        self.system_config_path = _get_system_config_path()
 
+        #: When Spack is provided by an admin to a user, the admin can
+        #: provide a config that only applies for the end-users
+        self.end_user_cfg_path = os.path.join(self.system_config_path, "end-user")
 
-spack_instance_id = lambda: hash.b32_hash(prefix)[:7]
+        self.spack_instance_id = lambda: hash.b32_hash(self.prefix)[:7]
 
-#: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(spack_xdg_state_home(), spack_instance_id(), "cache")
+        #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
+        self.default_misc_cache_path = os.path.join(spack_xdg_state_home(), self.spack_instance_id(), "cache")
 
-#: concretization cache for Spack concretizations
-default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
+        #: concretization cache for Spack concretizations
+        self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
-modules_base = None
-for module_dir in ["lmod", "modules"]:
-    if dir_is_occupied(os.path.join(share_path, module_dir)):
-        modules_base = share_path
-if not modules_base:
-    modules_base = os.path.join(spack_xdg_data_home(), "modules")
+        self.modules_base = None
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(os.path.join(self.share_path, module_dir)):
+                modules_base = self.share_path
+        if not self.modules_base:
+            self.modules_base = os.path.join(spack_xdg_data_home(), "modules")
+
+this_spack = SpackPaths()
+for attr, value in vars(this_spack).items():
+    globals()[attr] = value
 
 
 def default_install_location():
