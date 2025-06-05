@@ -344,9 +344,26 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
   :- attr("version", node(ID, Package), Version),
      pkg_fact(Package, version_satisfies(Constraint, Version)).
 
+% if a version needs a commit or has one it can use the commit variant
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_needs_commit(Version)).
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_has_commit(Version, _)).
+
+% Specs with a commit variant can't use versions that don't need commits
+error(10, "Cannot use commit variant with '{0}@={1}'", Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     not can_accept_commit(Package, Version),
+     attr("variant_value", node(ID, Package), "commit", _).
+
+error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha, Psha, Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     attr("variant_value", node(ID, Package), "commit", Vsha),
+     pkg_fact(Package, version_has_commit(Version, Psha)),
+     Vsha != Psha.
+
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
+#defined can_accept_commit/2.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints

@@ -1510,6 +1510,9 @@ class SpackSolverSetup:
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
+            collections.defaultdict(dict)
+        )
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
@@ -1582,6 +1585,11 @@ class SpackSolverSetup:
                     ),
                 )
             )
+
+        for v in self.possible_versions[pkg.name]:
+            if pkg.needs_commit(v):
+                commit = pkg.version_or_package_attr("commit", v, "")
+                self.git_commit_versions[pkg.name][v] = commit
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -2723,6 +2731,8 @@ class SpackSolverSetup:
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
 
+            # TODO(psakiev) Need facts about versions
+            # - requires_commit (associated with tag or branch)
             version_defs: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
@@ -2914,12 +2924,22 @@ class SpackSolverSetup:
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
+
+        for pkg_name, versions in sorted(self.possible_versions.items()):
+            for v in versions:
+                if v in self.git_commit_versions[pkg_name]:
+                    sha = self.git_commit_versions[pkg_name].get(v)
+                    if sha:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
+                    else:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+        self.gen.newline()
+
         for pkg_name, versions in sorted(self.version_constraints):
             # generate facts for each package constraint and the version
             # that satisfies it
             for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
-
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -3222,6 +3242,7 @@ class SpackSolverSetup:
 
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
+        self.define_auto_variant("commit", multi=False)
         self.define_auto_variant("patches", multi=True)
 
         self.gen.h1("Develop specs")
@@ -4188,6 +4209,10 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
+        # check for commits must happen after all version adaptations are complete
+        for s in self._specs.values():
+            _specs_with_commits(s)
+
         specs = self.execute_explicit_splices()
         return specs
 
@@ -4226,6 +4251,29 @@ class SpecBuilder:
             specs[new_key] = current_spec
 
         return specs
+
+
+def _specs_with_commits(spec):
+    if not spec.package.needs_commit(spec.version):
+        return
+
+    # check integrity of specified commit shas
+    if "commit" in spec.variants:
+        invalid_commit_msg = (
+            f"Internal Error: {spec.name}'s assigned commit {spec.variants['commit'].value}"
+            " does not meet commit syntax requirements."
+        )
+        assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
+
+    spec.package.resolve_binary_provenance()
+    # TODO(psakiev) assert commit is associated with ref
+
+    if isinstance(spec.version, spack.version.GitVersion):
+        if not spec.version.commit_sha:
+            # TODO(psakiev) this will be a failure when commit look up is automated
+            return
+        if "commit" not in spec.variants:
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
 
 
 def _attach_python_to_external(

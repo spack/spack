@@ -2869,7 +2869,7 @@ class Spec:
             v.ref_version
         except vn.VersionLookupError:
             before = self.cformat("{name}{@version}{/hash:7}")
-            v._ref_version = vn.StandardVersion.from_string("develop")
+            v.std_version = vn.StandardVersion.from_string("develop")
             tty.debug(
                 f"the git sha of {before} could not be resolved to spack version; "
                 f"it has been replaced by {self.cformat('{name}{@version}{/hash:7}')}."
@@ -4598,7 +4598,7 @@ class Spec:
         if not self.name:
             return
         for v in self.versions:
-            if isinstance(v, vn.GitVersion) and v._ref_version is None:
+            if isinstance(v, vn.GitVersion) and v.std_version is None:
                 v.attach_lookup(spack.version.git_ref_lookup.GitRefLookup(self.fullname))
 
     def original_spec_format(self) -> int:
@@ -4794,7 +4794,7 @@ def substitute_abstract_variants(spec: Spec):
         if v.concrete and v.type == vt.VariantType.MULTI:
             continue
 
-        if name == "dev_path":
+        if name in ("dev_path", "commit"):
             v.type = vt.VariantType.SINGLE
             v.concrete = True
             continue

@@ -179,6 +179,9 @@ class SpackPaths:
         #: git repositories fetched to compare commits to versions
         self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
 
+        #: default location where remote package repositories are cloned
+        self.package_repos_path = os.path.join(self.user_cache_path, "package_repos")
+
         #: bootstrap store for bootstrapping clingo and other tools
         #: overridden by `bootstrap:root`
         self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
@@ -301,6 +304,7 @@ reports_path = locations.reports_path
 default_test_path = locations.default_test_path
 default_monitor_path = locations.default_monitor_path
 user_repos_cache_path = locations.user_repos_cache_path
+package_repos_path = locations.package_repos_path
 default_user_bootstrap_path = locations.default_user_bootstrap_path
 gpg_path = locations.gpg_path
 gpg_keys_path = locations.gpg_keys_path

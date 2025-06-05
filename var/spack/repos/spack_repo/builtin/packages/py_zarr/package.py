@@ -16,6 +16,7 @@ class PyZarr(PythonPackage):
 
     license("MIT")
 
+    version("3.0.6", sha256="6ef23c740e34917a2a1099471361537732942e49f0cabe95c9b7124cd0d6d84f")
     version("3.0.1", sha256="033859c5603dc9c29e53af494ede24b42f1b761d2bb625466990a3b8a9afb792")
     version("2.17.0", sha256="6390a2b8af31babaab4c963efc45bf1da7f9500c9aafac193f84cf019a7c66b0")
     version("2.10.2", sha256="5c6ae914ab9215631bb95c09e76b9b9b4fffa70fec0c7bca26b68387d858ebe2")
@@ -49,8 +50,10 @@ class PyZarr(PythonPackage):
         depends_on("python@3.11:", type=("build", "run"))
         depends_on("py-hatchling", type="build")
         depends_on("py-hatch-vcs", type="build")
-        depends_on("py-packaging@:22.0", type=("build", "run"))
-        depends_on("py-numpy@0.14:", type=("build", "run"))
+        depends_on("py-packaging@22:", type=("build", "run"), when="@3.0:")
+        # numpy@2: compatible
+        # https://github.com/zarr-developers/zarr-python/issues/1818
+        depends_on("py-numpy@1.25:2", type=("build", "run"))
         depends_on("py-numcodecs@0.14:", type=("build", "run"))
         depends_on("py-typing-extensions@4.9:", type=("build", "run"))
         depends_on("py-donfig@0.8:", type=("build", "run"))

@@ -21,6 +21,7 @@ import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.platforms.test
@@ -2578,6 +2579,12 @@ class TestConcretize:
         assert s.satisfies("~opt")
         assert s.prefix == "/tmp/prefix2"
 
+    def test_git_based_version_must_exist_to_use_ref(self):
+        # gmake should fail, only has sha256
+        with pytest.raises(spack.error.UnsatisfiableSpecError) as e:
+            spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
+            assert "Cannot use commit variant with" in e.value.message
+
 
 @pytest.fixture()
 def duplicates_test_repository():
@@ -3108,6 +3115,100 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str, error_type",
+    [
+        (f"git-ref-package@main commit={'a' * 40}", None),
+        (f"git-ref-package@main commit={'a' * 39}", AssertionError),
+        (f"git-ref-package@2.1.6 commit={'a' * 40}", spack.error.UnsatisfiableSpecError),
+        (f"git-ref-package@git.2.1.6=2.1.6 commit={'a' * 40}", None),
+        (f"git-ref-package@git.{'a' * 40}=2.1.6 commit={'a' * 40}", None),
+    ],
+)
+def test_spec_containing_commit_variant(spec_str, error_type):
+    spec = spack.spec.Spec(spec_str)
+    if error_type is None:
+        spack.concretize.concretize_one(spec)
+    else:
+        with pytest.raises(error_type):
+            spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        f"git-test-commit@git.main commit={'a' * 40}",
+        f"git-test-commit@git.v1.0 commit={'a' * 40}",
+        "git-test-commit@{sha} commit={sha}",
+        "git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    ],
+)
+def test_spec_with_commit_interacts_with_lookup(mock_git_version_info, monkeypatch, spec_str):
+    # This test will be short lived. Technically we could do further checks with a Lookup
+    # but skipping impl since we are going to deprecate
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+    spec = spack.spec.Spec(spec_str.format(sha=commits[-1]))
+    spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
+def test_relationship_git_versions_and_commit_variant(version_str):
+    """
+    Confirm that GitVersions auto assign and populates the commit variant correctly
+    """
+    # This should be a short lived test and can be deleted when we remove GitVersions
+    spec = spack.spec.Spec(f"git-ref-package@{version_str}")
+    spec = spack.concretize.concretize_one(spec)
+    if spec.version.commit_sha:
+        assert spec.version.commit_sha == spec.variants["commit"].value
+    else:
+        assert "commit" not in spec.variants
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+def test_abstract_commit_spec_reuse():
+    commit = "abcd" * 10
+    spec_str_1 = f"git-ref-package@develop commit={commit}"
+    spec_str_2 = f"git-ref-package commit={commit}"
+    spec1 = spack.concretize.concretize_one(spec_str_1)
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.concretize.concretize_one(spec_str_2)
+        assert spec2.dag_hash() == spec1.dag_hash()
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "installed_commit, incoming_commit, reusable",
+    [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
+)
+def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
+    # install a non-default variant to test if reuse picks it
+    if installed_commit:
+        spec_str_1 = f"git-ref-package@develop commit={installed_commit} ~opt"
+    else:
+        spec_str_1 = "git-ref-package@develop ~opt"
+
+    if incoming_commit:
+        spec_str_2 = f"git-ref-package@develop commit={incoming_commit}"
+    else:
+        spec_str_2 = "git-ref-package@develop"
+
+    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.spec.Spec(spec_str_2)
+        spec2 = spack.concretize.concretize_one(spec2)
+        assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
 def test_concretization_cache_roundtrip(

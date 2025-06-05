@@ -799,11 +799,11 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_ls() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_info() {
@@ -1813,7 +1813,7 @@ _spack_repo_list() {
 _spack_repo_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --name --path --scope"
     else
         SPACK_COMPREPLY=""
     fi

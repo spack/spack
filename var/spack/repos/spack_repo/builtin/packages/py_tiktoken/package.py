@@ -18,6 +18,7 @@ class PyTiktoken(PythonPackage):
 
     license("MIT")
 
+    version("0.9.0", sha256="d02a5ca6a938e0490e1ff957bc48c8b078c88cb83977be1625b1fd8aac792c5d")
     version("0.4.0", sha256="59b20a819969735b48161ced9b92f05dc4519c17be4015cfb73b65270a243620")
     version("0.3.1", sha256="8295912429374f5f3c6c6bf053a091ce1de8c1792a62e3b30d4ad36f47fa8b52")
 
@@ -25,6 +26,7 @@ class PyTiktoken(PythonPackage):
     depends_on("py-setuptools@62.4:", type="build")
     depends_on("py-setuptools-rust@1.5.2:", type="build")
     depends_on("py-wheel", type="build")
+    depends_on("python@3.9:", when="@0.9.0:", type=("build", "run"))
     depends_on("python@3.8:", type=("build", "run"))
     depends_on("py-regex@2022.1.18:", type=("build", "run"))
     depends_on("py-requests@2.26.0:", type=("build", "run"))

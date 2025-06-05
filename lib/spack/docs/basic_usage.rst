@@ -1222,6 +1222,23 @@ A version specifier can also be a list of ranges and specific versions,
 separated by commas. For example, ``@1.0:1.5,=1.7.1`` matches any version
 in the range ``1.0:1.5`` and the specific version ``1.7.1``.
 
+^^^^^^^^^^^^^^^^^
+Binary Provenance
+^^^^^^^^^^^^^^^^^
+
+Spack versions are paired to attributes that determine the source code Spack
+will use to build. Checksummed assets are preferred but there are a few 
+notable exceptions such as git branches and tags i.e ``pkg@develop``.
+These versions do not naturally have source provenance because they refer to a range
+of commits (branches) or can be changed outside the spack packaging infrastructure
+(tags). Without source provenace we can not have binary provenance.
+
+Spack has a reserved variant to allow users to complete source and binary provenance
+for these cases: ``pkg@develop commit=<SHA>``.  The ``commit`` variant must be supplied
+the full 40 character commit SHA. Using a partial commit SHA or assigning
+the ``commit`` variant to a version that is not using a branch or tag reference will
+lead to an error during concretization.
+
 ^^^^^^^^^^^^
 Git versions
 ^^^^^^^^^^^^

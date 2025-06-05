@@ -46,7 +46,12 @@ class PyDistributed(PythonPackage):
     depends_on("python@:3.11", when="@:2022.6.0", type=("build", "run"))
     depends_on("py-setuptools", type="build")
     depends_on("py-setuptools@62.6:", type="build", when="@2023.4.1:")
-    depends_on("py-versioneer@0.28+toml", type="build", when="@2023.4.1:")
+
+    # Strictly, this should be 0.28. However others in the dask ecosystem
+    # require 0.29, which makes it fail to concretize. Since Versioneer 0.29 doesn't
+    # break anything with 0.28, it should be safe to keep this aligned
+    # https://github.com/python-versioneer/python-versioneer/releases/tag/0.29
+    depends_on("py-versioneer@0.28: +toml", type="build", when="@2023.4.1:")
 
     # In Spack py-dask+distributed depends on py-distributed, not the other way around.
     # Hence, no need for depends_on("py-dask", ...)
@@ -69,17 +74,21 @@ class PyDistributed(PythonPackage):
     # Note that the setup.py is wrong for py-toolz, when="@2022.10.2".
     # See https://github.com/dask/distributed/pull/7309
     depends_on("py-toolz@0.10.0:", type=("build", "run"), when="@2022.10.2:")
-    depends_on("py-tornado@5:", type=("build", "run"), when="^python@:3.7")
-    depends_on("py-tornado@6.0.3:", type=("build", "run"), when="^python@3.8:")
-    depends_on("py-tornado@6.0.3:6.1", type=("build", "run"), when="@2022.10.2:")
+
     depends_on("py-tornado@6.0.4:", type=("build", "run"), when="@2024.7.1:")
-    depends_on("py-zict@0.1.3:", type=("build", "run"))
-    depends_on("py-zict@2.2.0:", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-tornado@6.0.3:6.1", type=("build", "run"), when="@2022.10.2")
+    depends_on("py-tornado@6.0.3:", type=("build", "run"), when="^python@3.8:")
+    depends_on("py-tornado@5:", type=("build", "run"), when="^python@:3.7")
+
     depends_on("py-zict@3.0.0:", type=("build", "run"), when="@2024.7.1:")
-    depends_on("py-pyyaml", type=("build", "run"))
+    depends_on("py-zict@2.2.0:", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-zict@0.1.3:", type=("build", "run"))
+
     depends_on("py-pyyaml@5.3.1:", type=("build", "run"), when="@2023.4.1:")
-    depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
+    depends_on("py-pyyaml", type=("build", "run"))
+
     depends_on("py-urllib3@1.24.3:", type=("build", "run"), when="@2023.4.1:")
+    depends_on("py-urllib3", type=("build", "run"), when="@2022.10.2:")
 
     def patch(self):
         if self.spec.satisfies("@:2023.3"):

@@ -54,7 +54,10 @@ class PyH5py(PythonPackage):
     depends_on("c", type="build")
 
     # Python versions
-    depends_on("python@3.9:", type=("build", "run"), when="@3.12:")
+    # python@3.9+ is required in 3.12+, but 3.11 needs python@3.9+ for numpy@2
+    # as python@3.8 is deprecated in spack, harmonized on python@3.9+
+    # https://github.com/h5py/h5py/blob/3.11.0/pyproject.toml#L5
+    depends_on("python@3.9:", type=("build", "run"), when="@3.11:")
     depends_on("python@:3.9", type=("build", "run"), when="@:2.8")
 
     # Build dependencies
@@ -70,15 +73,19 @@ class PyH5py(PythonPackage):
     depends_on("py-setuptools", type="build")
 
     # Build and runtime dependencies
-    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.5,3.12: ^python@3.9.0:")
-    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
-    depends_on("py-numpy@1.17.3:", type=("build", "run"), when="@3.9:3.11")
-    depends_on("py-numpy@1.14.5:", type=("build", "run"), when="@3:")
-    depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
+    depends_on("py-numpy@2", type=("build", "run"), when="@3.11: ^python@3.9:")
+
     # https://github.com/h5py/h5py/pull/2556
-    depends_on("py-numpy@:2.2", when="@:3.12", type="build")
+    depends_on("py-numpy@2:2.2", when="@3.11:3.12", type="build")
+
+    # until 3.11.0, uses "oldest-supported-numpy" and doesn't support numpy2
+    # https://github.com/scipy/oldest-supported-numpy/blob/main/setup.cfg
+    # pre-3.11 is numpy@1 only
     # https://github.com/h5py/h5py/issues/2353
     depends_on("py-numpy@:1", when="@:3.10", type=("build", "run"))
+    depends_on("py-numpy@1.19.3:", type=("build", "run"), when="@3:3.10 ^python@3.9:")
+    depends_on("py-numpy@1.17.5:", type=("build", "run"), when="@3:3.5 ^python@3.8.0:3.8")
+    depends_on("py-numpy@1.7:", type=("build", "run"), when="@:2")
 
     # Link dependencies (py-h5py v2 cannot build against HDF5 1.12 regardless
     # of API setting)
