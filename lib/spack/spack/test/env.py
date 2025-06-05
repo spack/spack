@@ -1120,7 +1120,6 @@ GCC_ZMPI = """
 """
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("unify", ["false", "when_possible"])
 def test_toolchains_as_matrix_dimension(unify, tmp_path, mutable_config):
     """Tests expanding a matrix using different toolchains as the last dimension"""
