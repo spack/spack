@@ -3787,6 +3787,18 @@ def test_specifying_direct_dependencies(
             "mpileaks ^[when=~debug] callpath@1.0",
             (False, True),
         ),
+        # Different conditional specs associated with different nodes in the DAG, where one does
+        # not apply since the condition is not met
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] zmpi ^libelf %[when='%mpi' virtuals=mpi] mpich",
+            "mpileaks %[virtuals=mpi] zmpi",
+            (False, True),
+        ),
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] mpich ^libelf %[when='%mpi' virtuals=mpi] zmpi",
+            "mpileaks %[virtuals=mpi] mpich",
+            (False, True),
+        )
     ],
 )
 def test_satisfies_conditional_spec(
