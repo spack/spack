@@ -32,6 +32,7 @@ spack:
           - spack buildcache keys --install --trust --force
           - spack -c "config:install_tree:root:/home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh" reindex
           - spack install --use-buildcache package:only gcc@12
+          - spack install intel-oneapi-compilers target=x86_64_v3
     - signing-job:
         before_script:
             # Do not distribute Intel & ARM binaries
@@ -46,20 +47,6 @@ spack:
       missing_library_policy: ignore  # due to use of externals
 
   packages:
-    intel-oneapi-compilers:
-      externals:
-        - spec: intel-oneapi-compilers@=2024.1.0
-          prefix: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-12.4.0/intel-oneapi-compilers-2024.1.0-f5u3psfhbwscasajkn324igtupn3blop
-          extra_attributes:
-            compilers:
-              c: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-12.4.0/intel-oneapi-compilers-2024.1.0-f5u3psfhbwscasajkn324igtupn3blop/compiler/2024.1/bin/icx
-              cxx: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-12.4.0/intel-oneapi-compilers-2024.1.0-f5u3psfhbwscasajkn324igtupn3blop/compiler/2024.1/bin/icpx
-              fortran: /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-12.4.0/intel-oneapi-compilers-2024.1.0-f5u3psfhbwscasajkn324igtupn3blop/compiler/2024.1/bin/ifx
-            extra_rpaths:
-              - /home/software/spack/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeholder__/__spack_path_placeh/linux-amzn2-x86_64_v3/gcc-7.3.1/gcc-12.4.0-pttzchh7o54nhmycj4wgzw5mic6rk2nb/lib64
-    fortran:
-      require:
-      - "intel-oneapi-compilers"
     gettext:
       # Newer gettext cannot build with gcc@12 and old AL2 glibc headers
       # Older gettext versions do not build correctly with oneapi.
@@ -94,9 +81,6 @@ spack:
     mpich:
       require:
       - mpich pmi=pmi2 device=ch4 netmod=ofi +slurm
-    openfoam:
-      require:
-      - openfoam ^scotch@6.0.9 %gcc
     openmpi:
       variants: ~atomics ~cuda ~cxx ~cxx_exceptions ~internal-hwloc ~java +legacylaunchers ~lustre ~memchecker +pmi +romio ~singularity +vt +wrapper-rpath fabrics=ofi schedulers=slurm
       require:
@@ -121,12 +105,13 @@ spack:
       require:
       - wrf@4 build_type=dm+sm
     all:
-      require:
-      - "%oneapi"
       permissions:
         read: world
         write: user
       providers:
+        c: [intel-oneapi-compilers, gcc]
+        cxx: [intel-oneapi-compilers, gcc]
+        fortran: [intel-oneapi-compilers, gcc]
         blas: [intel-oneapi-mkl]
         daal: [intel-oneapi-dal]
         fftw-api: [intel-oneapi-mkl]
