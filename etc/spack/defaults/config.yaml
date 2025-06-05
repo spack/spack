@@ -69,7 +69,6 @@ config:
   build_stage:
     - $tempdir/$user/spack-stage
     - $xdg_cache_home/stage
-  # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
