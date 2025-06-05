@@ -113,27 +113,7 @@ class SpackPaths:
         self.mock_gpg_data_path = os.path.join(self.var_path, "gpg.mock", "data")
         self.mock_gpg_keys_path = os.path.join(self.var_path, "gpg.mock", "keys")
 
-        #: User configuration location
-        self.user_config_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home()
-        )
-
-        #: System configuration location
-        self.system_config_path = os.path.expanduser(
-            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-        )
-
-        #: When Spack is provided by an admin to a user, the admin can
-        #: provide a config that only applies for the end-users
-        self.end_user_cfg_path = os.path.join(self.system_config_path, "end-user")
-
         self.spack_instance_id = lambda: hash.b32_hash(self.prefix)[:7]
-
-        #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-        self.default_misc_cache_path = os.path.join(spack_xdg_state_home(), self.spack_instance_id(), "cache")
-
-        #: concretization cache for Spack concretizations
-        self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
         self.modules_base = None
         for module_dir in ["lmod", "modules"]:
@@ -206,6 +186,35 @@ class SpackPaths:
             self.gpg_keys_path = old_gpg_keys_path
         else:
             self.gpg_keys_path = os.path.join(self.user_cache_path, "gpg-keys")
+
+        # ------ Next section
+        # Spack can also write data into the following locations, and their
+        # defaults are not controlled by SPACK/XDG_DATA_HOME or 
+        # SPACK_USER_CACHE_PATH. Like the prior section, the data written
+        # into these locations isn't expected to take up much space, so in
+        # some cases defaults to "~" (in those cases in compliance with
+        # XDG defaults).
+
+        #: User configuration location
+        self.user_config_path = os.path.expanduser(
+            os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home()
+        )
+
+        #: System configuration location
+        self.system_config_path = os.path.expanduser(
+            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
+        )
+
+        #: When Spack is provided by an admin to a user, the admin can
+        #: provide a config that only applies for the end-users
+        self.end_user_cfg_path = os.path.join(self.system_config_path, "end-user")
+
+        #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
+        self.default_misc_cache_path = os.path.join(spack_xdg_state_home(), self.spack_instance_id(), "misc-cache")
+
+        #: concretization cache for Spack concretizations
+        self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
+
 
     def use_spack_data_home_or_old_location(self, subdir, old_location):
         # spack_data_home is where we know we can put large amounts of data.
