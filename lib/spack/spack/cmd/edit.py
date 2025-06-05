@@ -140,4 +140,4 @@ def edit(parser, args):
         spack.util.editor.editor(*paths)
     else:
         # By default open the directory where packages live
-        spack.util.editor.editor(spack.paths.packages_path)
+        spack.util.editor.editor(spack.repo.PATH.repos[0].packages_path)

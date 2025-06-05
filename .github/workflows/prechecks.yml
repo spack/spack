@@ -24,8 +24,6 @@ jobs:
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.13'
-        cache: 'pip'
-        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python Packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
@@ -46,8 +44,6 @@ jobs:
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.13'
-        cache: 'pip'
-        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
