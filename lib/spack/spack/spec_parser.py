@@ -62,7 +62,7 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
@@ -250,11 +250,12 @@ class SpecParser:
         self.literal_str = literal_str
         self.ctx = TokenContext(parseable_tokens(literal_str))
 
+        # TODO: Move toolchains out of the parser, and expand them as a separate step
         self.toolchains = {}
         configuration = getattr(spack.config, "CONFIG", None)
         if configuration is not None:
             self.toolchains = configuration.get("toolchains", {})
-        self.parsed_toolchains = {}
+        self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
@@ -361,34 +362,31 @@ class SpecParser:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str):
-        toolchain = self.parsed_toolchains.get(name, None)
-        if toolchain:
-            spec.constrain(toolchain)
-            return
+    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+        if name not in self.parsed_toolchains:
+            toolchain = self._parse_toolchain(name)
+            self.parsed_toolchains[name] = toolchain
 
+        toolchain = self.parsed_toolchains[name]
+        spec.constrain(toolchain)
+
+    def _parse_toolchain(self, name: str) -> "spack.spec.Spec":
         toolchain_config = self.toolchains[name]
-
-        # Single string entries constrain the spec
         if isinstance(toolchain_config, str):
             toolchain = parse_one_or_raise(toolchain_config)
             self._ensure_all_direct_edges(toolchain)
-            self.parsed_toolchains[name] = toolchain
-            spec.constrain(toolchain)
-            return
+        else:
+            toolchain = spack.spec.Spec()
+            for entry in toolchain_config:
+                toolchain_part = parse_one_or_raise(entry["spec"])
+                when = entry.get("when", "")
+                self._ensure_all_direct_edges(toolchain_part)
 
-        # List entries we apply each list element
-        for entry in toolchain_config:
-            toolchain = parse_one_or_raise(entry["spec"])
-            when = entry.get("when", "")
-            self._ensure_all_direct_edges(toolchain)
-
-            # Conditions are applied to every edge in the constraint
-            for edge in toolchain.traverse_edges():
-                edge.when.constrain(when)
-
-            self.parsed_toolchains[name] = toolchain
-            spec.constrain(toolchain)
+                # Conditions are applied to every edge in the constraint
+                for edge in toolchain_part.traverse_edges():
+                    edge.when.constrain(when)
+                toolchain.constrain(toolchain_part)
+        return toolchain
 
     def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
         for edge in constraint.traverse_edges(root=False):
