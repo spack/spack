@@ -21,7 +21,6 @@ class PyZfit(PythonPackage):
 
     tags = ["likelihood", "statistics", "inference", "fitting", "hep"]
 
-    version("0.26.0", sha256="c61e55177055e775fefb6d985b643a7db8e8eb16e872d8dc66434b36f15c0b36")
     version("0.25.0", sha256="ac5a92bc284094eae55dd9afe1fe2c8f3f67a402dfc7a8ad6087a9ea29ff2b41")
     version("0.24.3", sha256="0efe47a5c597f7c730ac25495625f8bb4460f2fa4a0f4c387f503339ac8e91b5")
     version("0.24.2", sha256="6b83315e16e07d8472d92b142b377d8d7314411d27fe8033168037fd4583f5f6")
@@ -47,12 +46,9 @@ class PyZfit(PythonPackage):
     depends_on("python@:3.11", type=("build", "run"), when="@:0.18")
     depends_on("python@:3.12", type=("build", "run"), when="@0.20:")
 
-    depends_on("py-hatchling@42:", type="build", when="@0.26:")
-    depends_on("py-hatch-vcs", type="build", when="@0.26:")
-
-    depends_on("py-setuptools@42:", type="build", when="@:0.25")
-    depends_on("py-setuptools-scm-git-archive", type="build", when="@:0.25")
-    depends_on("py-setuptools-scm@3.4:+toml", type="build", when="@:0.25")
+    depends_on("py-setuptools@42:", type="build")
+    depends_on("py-setuptools-scm-git-archive", type="build")
+    depends_on("py-setuptools-scm@3.4:+toml", type="build")
 
     variant("nlopt", default=False, description="Enable nlopt support")
     variant("hs3", default=True, description="Enable serialization support")
@@ -65,12 +61,12 @@ class PyZfit(PythonPackage):
         depends_on("py-tensorflow@2.16.2:2.19", when="@0.25.0:")
         depends_on("py-tensorflow-probability@0.25:0.26", when="@0.25.0:")
 
-        depends_on("py-tensorflow@2.16.2:2.18", when="@0.24.3:0.24")
+        depends_on("py-tensorflow@2.16.2:2.18", when="@0.24.3:")
         depends_on("py-tensorflow@2.18", when="@0.24:0.24.2")
-        depends_on("py-tensorflow-probability@0.25", when="@0.24:0.24")
+        depends_on("py-tensorflow-probability@0.25", when="@0.24:")
 
-        depends_on("py-tensorflow@2.16", when="@0.20:0.23")
-        depends_on("py-tensorflow-probability@0.24", when="@0.20:0.23")
+        depends_on("py-tensorflow@2.16", when="@0.20:")
+        depends_on("py-tensorflow-probability@0.24", when="@0.20:")
 
         depends_on("py-tensorflow@2.15", when="@0.18")
         depends_on("py-tensorflow-probability@0.23", when="@0.18")
