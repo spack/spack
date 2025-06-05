@@ -767,6 +767,7 @@ class Lammps(CMakePackage, CudaPackage, ROCmPackage, PythonExtension):
     depends_on("llvm-amdgpu ", when="+rocm", type="build")
     depends_on("rocm-openmp-extras", when="+rocm +openmp", type="build")
     depends_on("gsl@2.6:", when="+rheo")
+    depends_on("tbb", when="+intel %oneapi")
 
     # propagate CUDA and ROCm architecture when +kokkos
     for arch in CudaPackage.cuda_arch_values:
