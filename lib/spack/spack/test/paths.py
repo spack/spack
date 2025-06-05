@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.paths as paths
 import os
 import pathlib
+
+import spack.paths as paths
 
 
 def test_install_location(working_env, tmpdir):
