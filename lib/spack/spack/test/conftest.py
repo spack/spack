@@ -179,6 +179,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("config", "init.defaultBranch", "main")
 
         commits = []
 
@@ -186,20 +187,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-
         # A commit without a previous version counts as "0"
         write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
-
-        # Get name of default branch (differs by git version)
-        main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
-        if main != "main":
-            # assure the default branch name is consistent for tests
-            git("branch", "-m", "main")
-            main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
-        assert "main" == main
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -219,7 +211,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v1.1")
 
         # Add two commits and a tag on main branch
-        git("checkout", main)
+        git("checkout", "main")
         write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
@@ -1475,6 +1467,7 @@ def mock_git_repository(git, tmpdir_factory):
         git("init")
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("config", "init.defaultBranch", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
             git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
