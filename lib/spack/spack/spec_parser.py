@@ -86,6 +86,17 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
+#: Substitute a package for a virtual, e.g., c,cxx=gcc.
+#: NOTE: Overlaps w/KVP; this should be first if matched in sequence.
+VIRTUAL_ASSIGNMENT = (
+    r"(?:"
+    rf"(?P<virtuals>{IDENTIFIER}(?:,{IDENTIFIER})*)"  # comma-separated virtuals
+    rf"=(?P<substitute>{IDENTIFIER}|{DOTTED_IDENTIFIER})"  # package to substitute
+    r")"
+)
+
+STAR = r"\*"
+
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
 HASH = r"[a-zA-Z_0-9]+"
@@ -116,33 +127,41 @@ NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
 
 
 class SpecTokens(TokenBase):
-    """Enumeration of the different token kinds in the spec grammar.
+    """Enumeration of the different token kinds of tokens in the spec grammar.
+
     Order of declaration is extremely important, since text containing specs is parsed with a
     single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
     """
 
-    # Dependency
+    # Dependency, with optional virtual assignment specifier
     START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
-    END_EDGE_PROPERTIES = r"(?:\])"
-    DEPENDENCY = r"(?:[\^\%])"
+    END_EDGE_PROPERTIES = rf"(?:\]\s*{VIRTUAL_ASSIGNMENT}?)"
+    DEPENDENCY = rf"(?:[\^\%]\s*{VIRTUAL_ASSIGNMENT}?)"
+
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
     GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
     VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
+
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
+
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
+
     # Package name
     FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
-    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER})"
+    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
+
     # DAG hash
     DAG_HASH = rf"(?:/(?:{HASH}))"
+
     # White spaces
     WS = r"(?:\s+)"
+
     # Unexpected character(s)
     UNEXPECTED = r"(?:.[\s]*)"
 
@@ -175,17 +194,23 @@ def parseable_tokens(text: str) -> Iterator[Token]:
 class TokenContext:
     """Token context passed around by parsers"""
 
-    __slots__ = "token_stream", "current_token", "next_token"
+    __slots__ = "token_stream", "current_token", "next_token", "pushback_token"
 
     def __init__(self, token_stream: Iterator[Token]):
         self.token_stream = token_stream
         self.current_token = None
         self.next_token = None
+        self.pushback_token = None
         self.advance()
 
     def advance(self):
         """Advance one token"""
-        self.current_token, self.next_token = self.next_token, next(self.token_stream, None)
+        self.current_token = self.next_token
+        if self.pushback_token:
+            self.next_token = self.pushback_token
+            self.pushback_token = None
+        else:
+            self.next_token = next(self.token_stream, None)
 
     def accept(self, kind: SpecTokens):
         """If the next token is of the specified kind, advance the stream and return True.
@@ -195,6 +220,11 @@ class TokenContext:
             self.advance()
             return True
         return False
+
+    def push_back(self, token=Token):
+        """Push a token back onto the front of the stream. Enables a bit of lookahead."""
+        assert not self.pushback_token, "Parser error: Can only push one token back at a time!"
+        self.pushback_token = token
 
     def expect(self, *kinds: SpecTokens):
         return self.next_token and self.next_token.kind in kinds
@@ -311,6 +341,8 @@ class SpecParser:
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
+                print(self.ctx.current_token.subvalues)
+
                 # String replacement for toolchains
                 # Look ahead to match upcoming value to list of toolchains
                 if (
@@ -350,8 +382,8 @@ class SpecParser:
 
         return root_spec
 
-    def _parse_node(self, root_spec):
-        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse()
+    def _parse_node(self, root_spec: "spack.spec.Spec", root: bool = True):
+        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(root=root)
         if dependency is None:
             msg = (
                 "the dependency sigil and any optional edge attributes must be followed by a "
@@ -412,12 +444,13 @@ class SpecNodeParser:
         self.has_version = False
 
     def parse(
-        self, initial_spec: Optional["spack.spec.Spec"] = None
+        self, initial_spec: Optional["spack.spec.Spec"] = None, root: bool = True
     ) -> Tuple["spack.spec.Spec", List[str]]:
         """Parse a single spec node from a stream of tokens
 
         Args:
             initial_spec: object to be constructed
+            root: True if we're parsing a root, False if dependency after ^ or %
 
         Return
             The object passed as argument
@@ -434,7 +467,9 @@ class SpecNodeParser:
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
         if self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME):
-            initial_spec.name = self.ctx.current_token.value
+            # if name is '*', this is an anonymous spec
+            if self.ctx.current_token.value != "*":
+                initial_spec.name = self.ctx.current_token.value
 
         elif self.ctx.accept(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME):
             parts = self.ctx.current_token.value.split(".")
