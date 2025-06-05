@@ -56,6 +56,7 @@ spack_xdg_state_home = lambda: _define_xdg_or_backup(
 spack_xdg_config_home = lambda: _define_xdg_or_backup(
     xdg_config_home, os.path.join("~", ".config")
 )
+spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 spack_xdg_data_home = lambda: _define_xdg_or_backup(
     xdg_data_home, os.path.join("~", ".local", "share")
 )
@@ -67,8 +68,6 @@ if xdg_data_home in os.environ:
     )
 else:
     spack_xdg_data_home_nodefault = None
-
-spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
 
 
 class SpackPaths:
@@ -143,11 +142,11 @@ class SpackPaths:
         if not self.modules_base:
             self.modules_base = os.path.join(spack_xdg_data_home(), "modules")
 
-        # ------
-        # The next 3 locations can store a lot of data and used to be
-        # inside of Spack by default. They can be set to any location
-        # with `config:` settings, and those have priority. They
-        # can also be redirected by setting the SPACK_DATA_HOME or
+        # ------ Next section
+        # Spack can write a lot of data into the next 3 locations, and
+        # they used to be inside of Spack by default. They can be set
+        # to any location with `config:` settings, and those have priority.
+        # They can also be redirected by setting the SPACK_DATA_HOME or
         # XDG_DATA_HOME environment variables. If none of those are
         # set, then they point to inside of the Spack prefix.
         #
@@ -167,6 +166,46 @@ class SpackPaths:
 
         old_fetch_cache_path = os.path.join(self.var_path, "cache")
         self.default_fetch_cache_path = self.use_spack_data_home_or_old_location("downloads", old_fetch_cache_path)
+
+        # ------ Next section
+        # Spack can write data into the following locations, but it
+        # isn't expected to be substantial, so Spack can choose to set
+        # "~" as a default. They are all organized under a single
+        # directory that users can refer to in config as $user_cache_path
+        #
+        # The options that start with `default_` below are overridable in
+        # `config.yaml`, but they default to use `user_cache_path/<location>`.
+        #
+        # You can override the top-level directory (the user cache path) by
+        # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
+        self.user_cache_path = str(PurePath(os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home())))
+
+        #: junit, cdash, etc. reports about builds
+        reports_path = os.path.join(self.user_cache_path, "reports")
+
+        #: installation test (spack test) output
+        self.default_test_path = os.path.join(self.user_cache_path, "test")
+
+        #: spack monitor analysis directories
+        self.default_monitor_path = os.path.join(reports_path, "monitor")
+
+        #: git repositories fetched to compare commits to versions
+        self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
+
+        #: bootstrap store for bootstrapping clingo and other tools
+        self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
+
+        old_gpg_path = os.path.join("prefix", "opt" "spack", "gpg")
+        if dir_is_occupied(old_gpg_path):
+            self.gpg_path = old_gpg_path
+        else:
+            self.gpg_path = os.path.join(self.user_cache_path, "gpg")
+
+        old_gpg_keys_path = os.path.join(self.var_path, "gpg")
+        if dir_is_occupied(old_gpg_keys_path):
+            self.gpg_keys_path = old_gpg_keys_path
+        else:
+            self.gpg_keys_path = os.path.join(self.user_cache_path, "gpg-keys")
 
     def use_spack_data_home_or_old_location(self, subdir, old_location):
         # spack_data_home is where we know we can put large amounts of data.
@@ -195,48 +234,6 @@ this_spack = SpackPaths()
 for attr, value in vars(this_spack).items():
     globals()[attr] = value
 
-
-# Below paths are where Spack can write information for the user.
-# Some are caches, some are not exactly caches.
-#
-# The options that start with `default_` below are overridable in
-# `config.yaml`, but they default to use `user_cache_path/<location>`.
-#
-# You can override the top-level directory (the user cache path) by
-# setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
-#
-def _get_user_cache_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home())
-
-
-user_cache_path = str(PurePath(_get_user_cache_path()))
-
-#: junit, cdash, etc. reports about builds
-reports_path = os.path.join(user_cache_path, "reports")
-
-#: installation test (spack test) output
-default_test_path = os.path.join(user_cache_path, "test")
-
-#: spack monitor analysis directories
-default_monitor_path = os.path.join(reports_path, "monitor")
-
-#: git repositories fetched to compare commits to versions
-user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
-
-#: bootstrap store for bootstrapping clingo and other tools
-default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
-
-old_gpg_path = os.path.join("prefix", "opt" "spack", "gpg")
-if dir_is_occupied(old_gpg_path):
-    gpg_path = old_gpg_path
-else:
-    gpg_path = os.path.join(user_cache_path, "gpg")
-
-old_gpg_keys_path = os.path.join(var_path, "gpg")
-if dir_is_occupied(old_gpg_keys_path):
-    gpg_keys_path = old_gpg_keys_path
-else:
-    gpg_keys_path = os.path.join(user_cache_path, "gpg-keys")
 
 #: Recorded directory where spack command was originally invoked
 spack_working_dir = None
