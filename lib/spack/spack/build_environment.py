@@ -1051,9 +1051,6 @@ class SetupContext:
             if os.path.isdir(pcdir):
                 env.prepend_path("PKG_CONFIG_PATH", pcdir)
 
-        if sys.platform == "win32":
-            env.prepend_path("PATH", dep.prefix)
-
     def _make_runnable(self, dep: spack.spec.Spec, env: EnvironmentModifications):
         if is_system_path(dep.prefix):
             return
