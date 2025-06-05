@@ -46,3 +46,19 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmpdir):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
     p1 = paths.SpackPaths(str(tmpdir))
     assert os.path.expanduser(os.path.join("~", ".config", "spack")) == p1.user_config_path
+
+
+def test_user_cache_path_is_overridable(working_env, tmpdir):
+    redirect_usr_cache = "/some/path"
+    os.environ["SPACK_USER_CACHE_PATH"] = redirect_usr_cache
+    p1 = paths.SpackPaths(str(tmpdir))
+    assert p1.user_cache_path == redirect_usr_cache
+
+
+def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmpdir):
+    os.environ["SPACK_USER_CACHE_PATH"] = ""
+    p1 = paths.SpackPaths(str(tmpdir))
+    assert (
+        os.path.expanduser(os.path.join("~", ".local", "share", "spack"))
+        == p1.user_cache_path
+    )

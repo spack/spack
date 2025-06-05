@@ -1233,20 +1233,6 @@ def test_local_config_can_be_disabled(working_env):
     assert "user" in cfg.scopes
 
 
-def test_user_cache_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_USER_CACHE_PATH"] = p
-    assert spack.paths._get_user_cache_path() == p
-
-
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert (
-        os.path.expanduser(os.path.join("~", ".local", "share", "spack"))
-        == spack.paths._get_user_cache_path()
-    )
-
-
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):
     with pytest.raises(spack.config.ConfigFileError, match="not a file"):
         spack.config.read_config_file(tmpdir.strpath)
