@@ -150,7 +150,9 @@ class SpackPaths:
         # directory that users can refer to in config as $user_cache_path
         #
         # You can override the top-level directory (the user cache path) by
-        # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
+        # setting `SPACK_USER_CACHE_PATH`, `SPACK_DATA_HOME`, or
+        # `XDG_DATA_HOME`; if none of those are set, then the default for
+        # `XDG_DATA_HOME` is used (~/.local/share).
         #
         # Precedence:
         # 1. Config setting (not available for all of these)
