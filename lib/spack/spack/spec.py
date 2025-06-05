@@ -3438,6 +3438,12 @@ class Spec:
             # The condition cannot be applied in any case, skip the edge
             if not self.intersects(rhs_edge.when):
                 continue
+            if (
+                rhs_edge.parent.name
+                and rhs_edge.parent.name in self
+                and not self[rhs_edge.parent.name].intersects(rhs_edge.when)
+            ):
+                continue
 
             # If we are checking for ^mpi we need to verify if there is any edge
             is_virtual_node = spack.repo.PATH.is_virtual(rhs_edge.spec.name)
