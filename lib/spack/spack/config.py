@@ -962,7 +962,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
-        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id())
+        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id)
         configuration_paths.append(("this-spack", per_spack_cfg))
 
     # add each scope

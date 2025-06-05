@@ -245,26 +245,16 @@ class SpackPaths:
         # If neither are set, we assume the spack prefix is the only place
         # available to us (we do not use ~ and in particular the default for
         # XDG_DATA_HOME).
-        xdg_data_home_nodefault = None
-        if XDG_vars.data_home.value in os.environ:
-            xdg_data_home_nodefault = os.path.expanduser(
-                os.path.join(os.environ[XDG_vars.data_home.value], "spack")
-            )
-
-        spack_data_home_explicit = None
         if Location_vars.spack_data_home.value in os.environ:
-            spack_data_home_explicit = os.environ[Location_vars.spack_data_home.value]
-        elif xdg_data_home_nodefault:
-            spack_data_home_explicit = xdg_data_home_nodefault
-
-        spack_data_home_default = os.path.join(self.prefix, "opt", "data")
-
-        if spack_data_home_explicit:
-            return os.path.join(spack_data_home_explicit, subdir)
+            return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
+        elif XDG_vars.data_home.value in os.environ:
+            return os.path.expanduser(
+                os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
+            )
         elif dir_is_occupied(old_location):
             return old_location
         else:
-            return os.path.join(spack_data_home_default, subdir)
+            return os.path.join(self.prefix, "opt", "data")
 
 
 this_spack = SpackPaths()
