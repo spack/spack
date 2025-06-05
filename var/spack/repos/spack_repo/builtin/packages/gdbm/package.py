@@ -39,7 +39,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
 
     depends_on("c", type="build")  # generated
 
-    variant("readline", default=False, description="Build with readline support.")
+    variant("readline", default=True, description="Build with readline support.")
     variant("nls", default=True, description="Build with message translation.")
 
     depends_on("readline", when="+readline")

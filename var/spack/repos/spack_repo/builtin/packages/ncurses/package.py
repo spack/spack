@@ -51,8 +51,7 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
         values=("none", "5", "6"),
         multi=False,
     )
-    # NB: This is defaulted to false because it seems to break.
-    variant("cxx", default=False, description="Build C++ bindings.")
+    variant("cxx", default=True, description="Build C++ bindings.")
     variant("shared", default=True, description="Build shared libraries.")
 
     conflicts("abi=6", when="@:5.9", msg="6 is not compatible with this release")

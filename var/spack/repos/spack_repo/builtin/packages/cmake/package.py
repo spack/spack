@@ -103,7 +103,7 @@ class Cmake(Package):
         default=False,
         description="Enables the generation of html and man page documentation",
     )
-    variant("ncurses", default=False, description="Enables the build of the ncurses gui")
+    variant("ncurses", default=True, description="Enables the build of the ncurses gui")
     variant("qtgui", default=False, description="Enables the build of the Qt GUI")
 
     # Revert the change that introduced a regression when parsing mpi link
@@ -180,6 +180,10 @@ class Cmake(Package):
                 depends_on("rhash", when="@3.8.0:")
                 depends_on("jsoncpp build_system=meson", when="@3.2:")
 
+    conflicts(
+        "+ncurses platform=windows",
+        msg="ncurses GUI cannot be built on windows",
+    )
     depends_on("ncurses", when="+ncurses")
 
     with when("+doc"):
