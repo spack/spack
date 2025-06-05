@@ -31,19 +31,10 @@ class Vecgeom(CMakePackage, CudaPackage):
     maintainers("drbenmorgan", "sethrj")
 
     version("master", branch="master", get_full_repo=True)
-    # NOTE: the surfacedev branches are not stable or official and will be
-    # deleted when the next 2.0 RC comes out
     version(
-        "2.0.0-surfacedev.2",
-        tag="v2.0.0-surfacedev.2",
-        commit="91f5ee554e012ffa3baecd2b30e6f5e6905e5ffb",
-        deprecated=True,
-    )
-    version(
-        "2.0.0-surfacedev.1",
-        tag="v2.0.0-surfacedev.1",
-        commit="1d9797ea47e3b35ab0114e72ce5925ecbd59cbf4",
-        deprecated=True,
+        "2.0.0-rc.4",
+        url="https://gitlab.cern.ch/-/project/981/uploads/0bad6dbe49bb754f96db48dc048d8bb8/VecGeom-v2.0.0-rc.4.tar.gz",
+        sha256="fb6bae9269187c1a55509583636827b1ec232bfb3e1d78d6514a4e777477ee33",
     )
     version(
         "1.2.10",
