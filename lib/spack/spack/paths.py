@@ -113,6 +113,9 @@ class SpackPaths:
         self.mock_gpg_data_path = os.path.join(self.var_path, "gpg.mock", "data")
         self.mock_gpg_keys_path = os.path.join(self.var_path, "gpg.mock", "keys")
 
+        #: Not a location itself, but used for when Spack instances
+        #: share the same cache base directory for caches that should
+        #: not be shared between those instances.
         self.spack_instance_id = lambda: hash.b32_hash(self.prefix)[:7]
 
         # ------ Next section
