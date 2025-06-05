@@ -30,7 +30,7 @@ class W3nco(CMakePackage):
                 self.spec.satisfies("%oneapi")
                 or self.spec.satisfies("%apple-clang")
                 or self.spec.satisfies("%clang")
-                or self.spec.satisfies("%gcc@14")
+                or self.spec.satisfies("%gcc@14:")
             ):
                 flags.append("-Wno-error=implicit-function-declaration")
         return (flags, None, None)
