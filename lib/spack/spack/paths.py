@@ -10,28 +10,33 @@ dependencies.
 """
 import os
 import pathlib
+from enum import Enum
 from pathlib import PurePath
-from typing import Optional
 
 import llnl.util.filesystem
 
 import spack.util.hash as hash
 
 
-xdg_config_home = "XDG_CONFIG_HOME"
-xdg_state_home = "XDG_STATE_HOME"
-xdg_data_home = "XDG_DATA_HOME"
-spack_data_home_varname = "SPACK_DATA_HOME"
-xdg_cache_home = "XDG_CACHE_HOME"
+class XDG_vars(Enum):
+    config_home = "XDG_CONFIG_HOME"
+    state_home = "XDG_STATE_HOME"
+    data_home = "XDG_DATA_HOME"
+    cache_home = "XDG_CACHE_HOME"
+
+
+class Location_vars(Enum):
+    user_cache_path = "USER_CACHE_PATH"
+    spack_data_home = "SPACK_DATA_HOME"
 
 
 # This is for tests that want to clean the environment of XDG_ variables that
 # affect spack behavior
 def _unset_xdg_vars(env):
     saved = {}
-    for xdg_var in [xdg_config_home, xdg_state_home, xdg_data_home, xdg_cache_home]:
-        if xdg_var in env:
-            saved[xdg_var] = env.pop(xdg_var)
+    for xdg_var in XDG_vars:
+        if xdg_var.value in env:
+            saved[xdg_var.value] = env.pop(xdg_var.value)
     return saved
 
 
@@ -47,27 +52,6 @@ def dir_is_occupied(x, except_for=None):
     x = pathlib.Path(x)
     except_for = except_for or set()
     return x.is_dir() and bool(set(x.iterdir()) - except_for)
-
-
-#: Resolved XDG_STATE_HOME, with additional "spack" subdirectory
-spack_xdg_state_home = lambda: _define_xdg_or_backup(
-    xdg_state_home, os.path.join("~", ".local", "state")
-)
-spack_xdg_config_home = lambda: _define_xdg_or_backup(
-    xdg_config_home, os.path.join("~", ".config")
-)
-spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
-spack_xdg_data_home = lambda: _define_xdg_or_backup(
-    xdg_data_home, os.path.join("~", ".local", "share")
-)
-
-spack_xdg_data_home_nodefault: Optional[str]
-if xdg_data_home in os.environ:
-    spack_xdg_data_home_nodefault = os.path.expanduser(
-        os.path.join(os.environ[xdg_data_home], "spack")
-    )
-else:
-    spack_xdg_data_home_nodefault = None
 
 
 class SpackPaths:
@@ -116,7 +100,22 @@ class SpackPaths:
         #: Not a location itself, but used for when Spack instances
         #: share the same cache base directory for caches that should
         #: not be shared between those instances.
-        self.spack_instance_id = lambda: hash.b32_hash(self.prefix)[:7]
+        self.spack_instance_id = hash.b32_hash(self.prefix)[:7]
+
+        # Resolved XDG_x_HOME variables, with additional "spack" subdirectory.
+        # Resolves to default value from XDG spec if unset.
+        self.xdg_state_home = _define_xdg_or_backup(
+            XDG_vars.state_home.value, os.path.join("~", ".local", "state")
+        )
+        self.xdg_config_home = _define_xdg_or_backup(
+            XDG_vars.config_home.value, os.path.join("~", ".config")
+        )
+        self.xdg_cache_home = _define_xdg_or_backup(
+            XDG_vars.cache_home.value, os.path.join("~", ".cache")
+        )
+        self.xdg_data_home = _define_xdg_or_backup(
+            XDG_vars.data_home.value, os.path.join("~", ".local", "share")
+        )
 
         # ------ Next section
         # Spack can write a lot of data into the next 3 locations, and
@@ -158,7 +157,7 @@ class SpackPaths:
         # 3. explicitly defined SPACK_DATA_HOME
         # 4. explicitly defined XDG_DATA_HOME
         # 5. default for XDG_DATA_HOME
-        self.user_cache_path = str(PurePath(os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home())))
+        self.user_cache_path = str(PurePath(os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or self.data_home_for_small_data())))
 
         #: junit, cdash, etc. reports about builds
         reports_path = os.path.join(self.user_cache_path, "reports")
@@ -213,7 +212,7 @@ class SpackPaths:
 
         #: User configuration location
         self.user_config_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home()
+            os.getenv("SPACK_USER_CONFIG_PATH") or self.xdg_config_home
         )
 
         #: System configuration location
@@ -227,12 +226,17 @@ class SpackPaths:
 
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
-        self.default_misc_cache_path = os.path.join(spack_xdg_state_home(), self.spack_instance_id(), "misc-cache")
+        self.default_misc_cache_path = os.path.join(self.xdg_state_home, self.spack_instance_id, "misc-cache")
 
         #: concretization cache for Spack concretizations
         #: overridden by `config:concretization_cache:url`
         self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
+    def data_home_for_small_data(self):
+        if Location_vars.spack_data_home.value in os.environ:
+            return os.environ[Location_vars.spack_data_home.value]
+        else:
+            return self.xdg_data_home
 
     def use_spack_data_home_or_old_location(self, subdir, old_location):
         # spack_data_home is where we know we can put large amounts of data.
@@ -241,11 +245,17 @@ class SpackPaths:
         # If neither are set, we assume the spack prefix is the only place
         # available to us (we do not use ~ and in particular the default for
         # XDG_DATA_HOME).
+        xdg_data_home_nodefault = None
+        if XDG_vars.data_home.value in os.environ:
+            xdg_data_home_nodefault = os.path.expanduser(
+                os.path.join(os.environ[XDG_vars.data_home.value], "spack")
+            )
+
         spack_data_home_explicit = None
-        if spack_data_home_varname in os.environ:
-            spack_data_home_explicit = os.environ[spack_data_home_varname]
-        elif spack_xdg_data_home_nodefault:
-            spack_data_home_explicit = spack_xdg_data_home_nodefault
+        if Location_vars.spack_data_home.value in os.environ:
+            spack_data_home_explicit = os.environ[Location_vars.spack_data_home.value]
+        elif xdg_data_home_nodefault:
+            spack_data_home_explicit = xdg_data_home_nodefault
 
         spack_data_home_default = os.path.join(self.prefix, "opt", "data")
 
