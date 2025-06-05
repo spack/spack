@@ -179,7 +179,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
-        git("config", "init.defaultBranch", "main")
+        git("checkout", "-b", "main")
 
         commits = []
 
@@ -1467,7 +1467,7 @@ def mock_git_repository(git, tmpdir_factory):
         git("init")
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
-        git("config", "init.defaultBranch", "main")
+        git("checkout", "-b", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
             git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
