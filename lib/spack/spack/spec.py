@@ -2427,19 +2427,22 @@ class Spec:
         # Note: Relies on sorting dict by keys later in algorithm.
         deps = self._dependencies_dict(depflag=hash.depflag)
         if deps:
-            d["dependencies"] = [
-                {
-                    "name": name,
-                    hash.name: dspec.spec._cached_hash(hash),
-                    "parameters": {
-                        "deptypes": dt.flag_to_tuple(dspec.depflag),
-                        "virtuals": dspec.virtuals,
-                        "direct": dspec.direct,
-                    },
-                }
-                for name, edges_for_name in sorted(deps.items())
-                for dspec in edges_for_name
-            ]
+            dependencies = []
+            for name, edges_for_name in sorted(deps.items()):
+                for dspec in edges_for_name:
+                    dep_attrs = {
+                        "name": name,
+                        hash.name: dspec.spec._cached_hash(hash),
+                        "parameters": {
+                            "deptypes": dt.flag_to_tuple(dspec.depflag),
+                            "virtuals": dspec.virtuals,
+                        },
+                    }
+                    if dspec.direct:
+                        dep_attrs["parameters"]["direct"] = True
+                    dependencies.append(dep_attrs)
+
+            d["dependencies"] = dependencies
 
         # Name is included in case this is replacing a virtual.
         if self._build_spec:
@@ -5296,7 +5299,7 @@ class SpecfileV5(SpecfileV4):
         deptypes = elt["parameters"]["deptypes"]
         hash_type = hash.name
         virtuals = elt["parameters"]["virtuals"]
-        direct = elt["parameters"].get("direct", True)
+        direct = elt["parameters"].get("direct", False)
         return dep_hash, deptypes, hash_type, virtuals, direct
 
 
