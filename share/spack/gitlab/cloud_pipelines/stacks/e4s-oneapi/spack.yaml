@@ -84,7 +84,7 @@ spack:
   - globalarrays
   - gmp
   - gotcha
-  - gromacs
+  - gromacs +mpi +sycl ^[virtuals=fftw-api] intel-oneapi-mkl ^[virtuals=lapack] intel-oneapi-mkl
   - h5bench
   - hdf5-vol-async
   - hdf5-vol-cache
