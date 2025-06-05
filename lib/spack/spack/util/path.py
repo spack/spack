@@ -165,8 +165,8 @@ def substitute_config_variables(path):
     - $tempdir              Default temporary directory returned by tempfile.gettempdir()
     - $user                 The current user's username
     - $user_cache_path      The user cache directory ($XDG_DATA_HOME, unless overridden)
-    - $spack_xdg_cache_home Backup location for temporary data
-    - $spack_xdg_state_home Long-lived but not-essential cache
+    - $xdg_cache_home       XDG location for temporary data
+    - $xdg_state_home       XDG long-lived but not-essential cache
     - $spack_instance_id    Hash that distinguishes Spack instances on the filesystem
     - $architecture         The spack architecture triple for the current system
     - $arch                 The spack architecture triple for the current system
