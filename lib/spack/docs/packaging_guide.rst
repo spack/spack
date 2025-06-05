@@ -369,9 +369,9 @@ If you have a collection of software expected to work well together with
 no source code of its own, you can create a :ref:`BundlePackage <bundlepackage>`.
 Examples where bundle packages can be useful include defining suites of
 applications (e.g., `EcpProxyApps
-<https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_), commonly used libraries
-(e.g., `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_),
-and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/ecp_data_vis_sdk/package.py>`_).
+<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_), commonly used libraries
+(e.g., `AmdAocl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_),
+and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_data_vis_sdk/package.py>`_).
 
 These versioned packages primarily consist of dependencies on the associated
 software packages. They can include :ref:`variants <variants>` to ensure
@@ -5985,16 +5985,16 @@ with those implemented in the package itself.
    * - Parent/Provider Package
      - Stand-alone Tests
    * - `C
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/c>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/c>`_
      - Compiles ``hello.c`` and runs it
    * - `Cxx
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/cxx>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cxx>`_
      - Compiles and runs several ``hello`` programs
    * - `Fortran
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/fortran>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/fortran>`_
      - Compiles and runs ``hello`` programs (``F`` and ``f90``)
    * - `Mpi
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/mpi>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
    * - :ref:`PythonPackage <pythonpackage>`
      - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
@@ -6015,7 +6015,7 @@ maintainers provide additional stand-alone tests customized to the package.
 One example of a package that adds its own stand-alone tests to those
 "inherited" by the virtual package it provides an implementation for is
 the `OpenMPI package
-<https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/openmpi/package.py>`_.
+<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/openmpi/package.py>`_.
 
 Below are snippets from running and viewing the stand-alone test results
 for ``openmpi``:
