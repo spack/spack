@@ -67,6 +67,7 @@ def replacements():
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,
+        "large_data_home": lambda: spack.paths.large_data_home,
         "xdg_cache_home": lambda: spack.paths.xdg_cache_home,
         "xdg_state_home": lambda: spack.paths.xdg_state_home,
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
@@ -165,6 +166,7 @@ def substitute_config_variables(path):
     - $tempdir              Default temporary directory returned by tempfile.gettempdir()
     - $user                 The current user's username
     - $user_cache_path      The user cache directory ($XDG_DATA_HOME, unless overridden)
+    - $large_data_home      Where spack can write large amounts of persistent data
     - $xdg_cache_home       XDG location for temporary data
     - $xdg_state_home       XDG long-lived but not-essential cache
     - $spack_instance_id    Hash that distinguishes Spack instances on the filesystem

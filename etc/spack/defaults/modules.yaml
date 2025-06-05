@@ -36,6 +36,10 @@ modules:
 
   # These are configurations for the module set named "default"
   default:
+    # Where to install modules
+    roots:
+     tcl:    $modules_base/tcl
+     lmod:   $modules_base/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 

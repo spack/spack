@@ -133,15 +133,20 @@ class SpackPaths:
         # 5. inside spack prefix (slightly different compared to old
         #    install path)
         old_install_path = os.path.join(self.prefix, "opt", "spack")
-        self.default_install_location = self.data_home_for_large_data("installs", old_install_path)
+        self.default_install_location = self.large_data_component("installs", old_install_path)
 
         old_envs_path = os.path.join(self.var_path, "environments")
-        self.default_envs_path = self.data_home_for_large_data("environments", old_envs_path)
+        self.default_envs_path = self.large_data_component("environments", old_envs_path)
 
         old_fetch_cache_path = os.path.join(self.var_path, "cache")
-        self.default_fetch_cache_path = self.data_home_for_large_data(
+        self.default_fetch_cache_path = self.large_data_component(
             "downloads", old_fetch_cache_path
         )
+
+        # Not an explicit destination, but rather the bucket that holds
+        # the above three items, unless they are individually set with
+        # config: values
+        self.large_data_home = self.data_home_for_large_data()
 
         # ------ Next section
         # Spack can write data into the following locations, but it
@@ -258,7 +263,7 @@ class SpackPaths:
         else:
             return self.xdg_data_home
 
-    def data_home_for_large_data(self, subdir, old_location):
+    def large_data_component(self, subdir, old_location):
         if Location_vars.spack_data_home.value in os.environ:
             return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
         elif XDG_vars.data_home.value in os.environ:
@@ -267,6 +272,16 @@ class SpackPaths:
             )
         elif dir_is_occupied(old_location):
             return old_location
+        else:
+            return os.path.join(self.prefix, "opt", "data")
+
+    def data_home_for_large_data(self):
+        if Location_vars.spack_data_home.value in os.environ:
+            return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
+        elif XDG_vars.data_home.value in os.environ:
+            return os.path.expanduser(
+                os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
+            )
         else:
             return os.path.join(self.prefix, "opt", "data")
 
@@ -302,7 +317,7 @@ xdg_state_home = locations.xdg_state_home
 xdg_config_home = locations.xdg_config_home
 xdg_cache_home = locations.xdg_cache_home
 xdg_data_home = locations.xdg_data_home
-default_install_location = locations.default_install_location
+large_data_home = locations.large_data_home
 default_envs_path = locations.default_envs_path
 default_fetch_cache_path = locations.default_fetch_cache_path
 user_cache_path = locations.user_cache_path
