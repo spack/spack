@@ -221,6 +221,12 @@ class SpackPaths:
         # some cases defaults to "~" (in those cases in compliance with
         # XDG defaults).
 
+        # There are three environment variables you can use to isolate spack from
+        # the host environment:
+        # - `SPACK_USER_CONFIG_PATH`: override `~/.spack` location (for config and caches)
+        # - `SPACK_SYSTEM_CONFIG_PATH`: override `/etc/spack` configuration scope.
+        # - `SPACK_DISABLE_LOCAL_CONFIG`: disable both of these locations.
+
         #: User configuration location
         self.user_config_path = os.path.expanduser(
             os.getenv("SPACK_USER_CONFIG_PATH") or self.xdg_config_home
