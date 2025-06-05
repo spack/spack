@@ -134,17 +134,17 @@ class SpackPaths:
         # 5. inside spack prefix (slightly different compared to old
         #    install path)
         old_install_path = os.path.join(self.prefix, "opt", "spack")
-        self.default_install_location = self.use_spack_data_home_or_old_location(
+        self.default_install_location = self.data_home_for_large_data(
             "installs", old_install_path
         )
 
         old_envs_path = os.path.join(self.var_path, "environments")
-        self.default_envs_path = self.use_spack_data_home_or_old_location(
+        self.default_envs_path = self.data_home_for_large_data(
             "environments", old_envs_path
         )
 
         old_fetch_cache_path = os.path.join(self.var_path, "cache")
-        self.default_fetch_cache_path = self.use_spack_data_home_or_old_location(
+        self.default_fetch_cache_path = self.data_home_for_large_data(
             "downloads", old_fetch_cache_path
         )
 
@@ -252,13 +252,7 @@ class SpackPaths:
         else:
             return self.xdg_data_home
 
-    def use_spack_data_home_or_old_location(self, subdir, old_location):
-        # spack_data_home is where we know we can put large amounts of data.
-        # Users can set SPACK_DATA_HOME to tell spack explicitly about such
-        # a location. If XDG_DATA_HOME is set, we assume we can use that.
-        # If neither are set, we assume the spack prefix is the only place
-        # available to us (we do not use ~ and in particular the default for
-        # XDG_DATA_HOME).
+    def data_home_for_large_data(self, subdir, old_location):
         if Location_vars.spack_data_home.value in os.environ:
             return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
         elif XDG_vars.data_home.value in os.environ:
