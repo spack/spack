@@ -38,7 +38,7 @@ modules:
   default:
     # Where to install modules
     roots:
-     tcl:    $modules_base/tcl
+     tcl:    $modules_base/modules
      lmod:   $modules_base/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []

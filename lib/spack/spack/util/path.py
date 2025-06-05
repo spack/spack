@@ -67,7 +67,9 @@ def replacements():
         "user": lambda: get_user(),
         "tempdir": lambda: tempfile.gettempdir(),
         "user_cache_path": lambda: spack.paths.user_cache_path,
-        "large_data_home": lambda: spack.paths.large_data_home,
+        "default_install_root": lambda: spack.paths.default_install_location,
+        "default_envs_root": lambda: spack.paths.default_envs_path,
+        "default_download_root": lambda: spack.paths.default_fetch_cache_path,
         "xdg_cache_home": lambda: spack.paths.xdg_cache_home,
         "xdg_state_home": lambda: spack.paths.xdg_state_home,
         "spack_instance_id": lambda: spack.paths.spack_instance_id,
@@ -161,24 +163,26 @@ def substitute_config_variables(path):
 
     Spack allows paths in configs to have some placeholders, as follows:
 
-    - $env                  The active Spack environment.
-    - $spack                The Spack instance's prefix
-    - $tempdir              Default temporary directory returned by tempfile.gettempdir()
-    - $user                 The current user's username
-    - $user_cache_path      The user cache directory ($XDG_DATA_HOME, unless overridden)
-    - $large_data_home      Where spack can write large amounts of persistent data
-    - $xdg_cache_home       XDG location for temporary data
-    - $xdg_state_home       XDG long-lived but not-essential cache
-    - $spack_instance_id    Hash that distinguishes Spack instances on the filesystem
-    - $architecture         The spack architecture triple for the current system
-    - $arch                 The spack architecture triple for the current system
-    - $platform             The spack platform for the current system
-    - $os                   The OS of the current system
-    - $operating_system     The OS of the current system
-    - $target               The ISA target detected for the system
-    - $target_family        The family of the target detected for the system
-    - $date                 The current date (YYYY-MM-DD)
-    - $spack_short_version  The spack short version
+    - $env                   The active Spack environment.
+    - $spack                 The Spack instance's prefix
+    - $tempdir               Default temporary directory returned by tempfile.gettempdir()
+    - $user                  The current user's username
+    - $user_cache_path       The user cache directory ($XDG_DATA_HOME, unless overridden)
+    - $default_install_root  Where installs go by default
+    - $default_envs_root     Where environments are managed by default
+    - $default_download_root Where downloads go by default
+    - $xdg_cache_home        XDG location for temporary data
+    - $xdg_state_home        XDG long-lived but not-essential cache
+    - $spack_instance_id     Hash that distinguishes Spack instances on the filesystem
+    - $architecture          The spack architecture triple for the current system
+    - $arch                  The spack architecture triple for the current system
+    - $platform              The spack platform for the current system
+    - $os                    The OS of the current system
+    - $operating_system      The OS of the current system
+    - $target                The ISA target detected for the system
+    - $target_family         The family of the target detected for the system
+    - $date                  The current date (YYYY-MM-DD)
+    - $spack_short_version   The spack short version
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only

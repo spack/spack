@@ -143,11 +143,6 @@ class SpackPaths:
             "downloads", old_fetch_cache_path
         )
 
-        # Not an explicit destination, but rather the bucket that holds
-        # the above three items, unless they are individually set with
-        # config: values
-        self.large_data_home = self.data_home_for_large_data()
-
         # ------ Next section
         # Spack can write data into the following locations, but it
         # isn't expected to be substantial, so Spack can choose to set
@@ -275,16 +270,6 @@ class SpackPaths:
         else:
             return os.path.join(self.prefix, "opt", "data")
 
-    def data_home_for_large_data(self):
-        if Location_vars.spack_data_home.value in os.environ:
-            return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
-        elif XDG_vars.data_home.value in os.environ:
-            return os.path.expanduser(
-                os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
-            )
-        else:
-            return os.path.join(self.prefix, "opt", "data")
-
 
 locations = SpackPaths()
 
@@ -317,7 +302,7 @@ xdg_state_home = locations.xdg_state_home
 xdg_config_home = locations.xdg_config_home
 xdg_cache_home = locations.xdg_cache_home
 xdg_data_home = locations.xdg_data_home
-large_data_home = locations.large_data_home
+default_install_location = locations.default_install_location
 default_envs_path = locations.default_envs_path
 default_fetch_cache_path = locations.default_fetch_cache_path
 user_cache_path = locations.user_cache_path
