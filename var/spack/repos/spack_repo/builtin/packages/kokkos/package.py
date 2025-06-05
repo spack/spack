@@ -191,6 +191,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "cuda_ldg_intrinsic": [False, "Use CUDA LDG intrinsics"],
         "cuda_relocatable_device_code": [False, "Enable RDC for CUDA"],
         "hip_relocatable_device_code": [False, "Enable RDC for HIP"],
+        "sycl_relocatable_device_code": [False, "Enable RDC for SYCL"],
         "cuda_uvm": [False, "Enable unified virtual memory (UVM) for CUDA"],
         "debug": [False, "Activate extra debug features - may increase compiletimes"],
         "debug_bounds_check": [False, "Use bounds checking - will increase runtime"],
