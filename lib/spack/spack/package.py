@@ -35,6 +35,7 @@ from spack.builder import (
 from spack.compilers.config import find_compilers
 from spack.compilers.libraries import CompilerPropertyDetector, compiler_spec
 from spack.config import determine_number_of_jobs
+from spack.jobserver import JobserverType
 from spack.deptypes import ALL_TYPES as all_deptypes
 from spack.directives import (
     build_system,
