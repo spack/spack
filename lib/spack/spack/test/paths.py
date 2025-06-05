@@ -45,7 +45,4 @@ def test_user_config_path_is_overridable(working_env, tmpdir):
 def test_user_config_path_is_default_when_env_var_is_empty(working_env, tmpdir):
     os.environ["SPACK_USER_CONFIG_PATH"] = ""
     p1 = paths.SpackPaths(str(tmpdir))
-    assert (
-        os.path.expanduser(os.path.join("~", ".config", "spack"))
-        == p1.user_config_path
-    )
+    assert os.path.expanduser(os.path.join("~", ".config", "spack")) == p1.user_config_path
