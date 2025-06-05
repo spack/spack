@@ -149,11 +149,15 @@ class SpackPaths:
         # "~" as a default. They are all organized under a single
         # directory that users can refer to in config as $user_cache_path
         #
-        # The options that start with `default_` below are overridable in
-        # `config.yaml`, but they default to use `user_cache_path/<location>`.
-        #
         # You can override the top-level directory (the user cache path) by
         # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
+        #
+        # Precedence:
+        # 1. Config setting (not available for all of these)
+        # 2. SPACK_USER_CACHE_PATH
+        # 3. explicitly defined SPACK_DATA_HOME
+        # 4. explicitly defined XDG_DATA_HOME
+        # 5. default for XDG_DATA_HOME
         self.user_cache_path = str(PurePath(os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or spack_xdg_data_home())))
 
         #: junit, cdash, etc. reports about builds
@@ -169,6 +173,7 @@ class SpackPaths:
         self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
 
         #: bootstrap store for bootstrapping clingo and other tools
+        #: overridden by `bootstrap:root`
         self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
 
         # ------ Next section
@@ -221,9 +226,11 @@ class SpackPaths:
         self.end_user_cfg_path = os.path.join(self.system_config_path, "end-user")
 
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
+        #: overridden by `config:misc_cache`
         self.default_misc_cache_path = os.path.join(spack_xdg_state_home(), self.spack_instance_id(), "misc-cache")
 
         #: concretization cache for Spack concretizations
+        #: overridden by `config:concretization_cache:url`
         self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
 
