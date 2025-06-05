@@ -61,35 +61,39 @@ def test_install_package_and_dependency(
     assert filename in files
 
     content = filename.open().read()
-    assert 'tests="4"' in content
+
+    assert 'tests="5"' in content
     assert 'failures="0"' in content
     assert 'errors="0"' in content
 
 
+def _check_runtests_none(pkg):
+    assert not pkg.run_tests
+
+
+def _check_runtests_dttop(pkg):
+    assert pkg.run_tests == (pkg.name == "dttop")
+
+
+def _check_runtests_all(pkg):
+    assert pkg.run_tests
+
+
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_notests(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert not pkg.run_tests
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_none)
     install("-v", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_root(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert pkg.run_tests == (pkg.name == "dttop")
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_dttop)
     install("--test=root", "dttop")
 
 
 @pytest.mark.disable_clean_stage_check
 def test_install_runtests_all(monkeypatch, mock_packages, install_mockery):
-    def check(pkg):
-        assert pkg.run_tests
-
-    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", check)
+    monkeypatch.setattr(spack.package_base.PackageBase, "unit_test_check", _check_runtests_all)
     install("--test=all", "pkg-a")
 
 
@@ -377,6 +381,7 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
 def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     with tmpdir.as_cwd():
         install(
+            "--verbose",
             "--log-format=junit",
             "--log-file=test.xml",
             "raiser",
@@ -409,6 +414,21 @@ def test_junit_output_with_failures(tmpdir, exc_typename, msg):
     assert msg in content
 
 
+def _throw(task, exc_typename, exc_type, msg):
+    # Self is a spack.installer.Task
+    exc_type = getattr(builtins, exc_typename)
+    exc = exc_type(msg)
+    task.fail(exc)
+
+
+def _runtime_error(task, *args, **kwargs):
+    _throw(task, "RuntimeError", spack.error.InstallError, "something weird happened")
+
+
+def _keyboard_error(task, *args, **kwargs):
+    _throw(task, "KeyboardInterrupt", KeyboardInterrupt, "Ctrl-C strikes again")
+
+
 @pytest.mark.disable_clean_stage_check
 @pytest.mark.parametrize(
     "exc_typename,expected_exc,msg",
@@ -428,14 +448,17 @@ def test_junit_output_with_errors(
     tmpdir,
     monkeypatch,
 ):
-    def just_throw(*args, **kwargs):
-        exc_type = getattr(builtins, exc_typename)
-        raise exc_type(msg)
-
-    monkeypatch.setattr(spack.installer.PackageInstaller, "_install_task", just_throw)
+    throw = _keyboard_error if expected_exc == KeyboardInterrupt else _runtime_error
+    monkeypatch.setattr(spack.installer.BuildTask, "complete", throw)
 
     with tmpdir.as_cwd():
-        install("--log-format=junit", "--log-file=test.xml", "libdwarf", fail_on_error=False)
+        install(
+            "--verbose",
+            "--log-format=junit",
+            "--log-file=test.xml",
+            "trivial-install-test-dependent",
+            fail_on_error=False,
+        )
 
     assert isinstance(install.error, expected_exc)
 
@@ -445,7 +468,7 @@ def test_junit_output_with_errors(
 
     content = filename.open().read()
 
-    # Only libelf error is reported (through libdwarf root spec). libdwarf
+    # Only original error is reported, dependent
     # install is skipped and it is not an error.
     assert 'tests="0"' not in content
     assert 'failures="0"' in content
@@ -1079,7 +1102,10 @@ def test_install_use_buildcache(
 @pytest.mark.disable_clean_stage_check
 def test_padded_install_runtests_root(install_mockery, mock_fetch):
     spack.config.set("config:install_tree:padded_length", 255)
-    output = install("--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False)
+    output = install(
+        "--verbose", "--test=root", "--no-cache", "test-build-callbacks", fail_on_error=False
+    )
+    print(output)
     assert output.count("method not implemented") == 1
 
 
@@ -1094,3 +1120,17 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     specs = spack.cmd.install.concrete_specs_from_cli(args, {})
     filename = spack.cmd.install.report_filename(args, specs)
     assert filename != "https://blahblah/submit.php?project=debugging"
+
+
+def test_setting_concurrent_packages_flag():
+    """Ensure that the number of concurrent packages is properly set from the command-line flag"""
+    install = SpackCommand("install")
+    install("--concurrent-packages", "8", fail_on_error=False)
+    assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
+
+
+def test_invalid_concurrent_packages_flag():
+    """Test that an invalid value for --concurrent-packages CLI flag raises a ValueError"""
+    install = SpackCommand("install")
+    with pytest.raises(ValueError, match="expected a positive integer"):
+        install("--concurrent-packages", "-2", fail_on_error=False)

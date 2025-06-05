@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import re
 import sys
@@ -22,7 +23,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     view_group = subparser.add_mutually_exclusive_group()
     view_group.add_argument(
         "-t",

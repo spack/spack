@@ -229,7 +229,7 @@ class Tau(Package):
     # https://github.com/UO-OACISS/tau2/commit/1d2cb6b
     patch("tau-rocm-disable-llvm-plugin.patch", when="@2.33.2 +rocm")
     # https://github.com/UO-OACISS/tau2/commit/523df968dd17ffad74f0d944ecbb958ba0e8c6e8
-    patch("tau-rocm-disable-rocprofiler-default.patch", when="@2.34 +rocm")
+    patch("tau-rocm-disable-rocprofiler-default.patch", when="@2.34.0 +rocm")
 
     filter_compiler_wrappers("Makefile", relative_root="include")
     filter_compiler_wrappers("Makefile.tau*", relative_root="lib")

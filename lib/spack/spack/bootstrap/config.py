@@ -128,15 +128,10 @@ def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
     ]
     configuration_paths = (spack.config.CONFIGURATION_DEFAULTS_PATH, ("bootstrap", _config_path()))
     for name, path in configuration_paths:
-        platform = spack.platforms.host().name
-        platform_scope = spack.config.DirectoryConfigScope(
-            f"{name}/{platform}", os.path.join(path, platform)
-        )
         generic_scope = spack.config.DirectoryConfigScope(name, path)
-        config_scopes.extend([generic_scope, platform_scope])
+        config_scopes.append(generic_scope)
         msg = "[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}"
         tty.debug(msg.format(generic_scope.name, generic_scope.path))
-        tty.debug(msg.format(platform_scope.name, platform_scope.path))
     return config_scopes
 
 
@@ -154,8 +149,7 @@ def _ensure_bootstrap_configuration() -> Generator:
     with spack.environment.no_active_environment(), spack.platforms.use_platform(
         spack.platforms.real_host()
     ), spack.repo.use_repositories(spack.paths.packages_path), spack.config.use_configuration(
-        # Default configuration scopes excluding command line
-        # and builtin but accounting for platform specific scopes
+        # Default configuration scopes excluding command line and builtin
         *_bootstrap_config_scopes()
     ), spack.store.use_store(
         bootstrap_store_path, extra_data={"padded_length": 0}

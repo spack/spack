@@ -28,6 +28,7 @@ jobs:
       run: |
         cd spack-packages
         git-filter-repo --quiet --source ../spack \
+                        --path var/spack/repos/README.md --path-rename var/spack/repos/README.md:README.md \
                         --path var/spack/repos/ --path-rename var/spack/repos/:repos/ \
                         --path share/spack/gitlab/cloud_pipelines/ --path-rename share/spack/gitlab/cloud_pipelines/:.ci/gitlab/ \
                         --path var/spack/spack-repo-index.yaml --path-rename var/spack/spack-repo-index.yaml:spack-repo-index.yaml \

@@ -21,7 +21,7 @@ section = "developer"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="pkg_command")
 
     add_parser = sp.add_parser("add", help=pkg_add.__doc__)

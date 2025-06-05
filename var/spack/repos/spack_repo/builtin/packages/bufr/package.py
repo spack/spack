@@ -52,6 +52,7 @@ class Bufr(CMakePackage):
     depends_on("fortran", type="build")
 
     depends_on("python@3:", type=("build", "run"), when="+python")
+    depends_on("python@:3.11", type=("build", "run"), when="@:12.0 +python")
     depends_on("py-setuptools", type="build", when="+python")
     depends_on("py-numpy", type=("build", "run"), when="+python")
     depends_on("py-pip", type="build", when="+python")
@@ -152,4 +153,7 @@ class Bufr(CMakePackage):
 
     def check(self):
         with working_dir(self.build_directory):
-            make("test")
+            if self.spec.satisfies("@:12.0 +python"):
+                ctest("--exclude-regex", "(test_pyncepbufr.+|test_sinv)")
+            else:
+                make("test")
