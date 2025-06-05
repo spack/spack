@@ -24,6 +24,7 @@ class LinaroForge(Package):
     maintainers("kenche-linaro")
 
     if platform.machine() == "aarch64":
+        version("25.0", sha256="11c85015c069f3f37fd8d45f9b701d88ae2f729bdfd3fc7f8ceeb5ca0be32a90")
         version(
             "24.1.3", sha256="e79975611ae17b17481ec6626e9932bd0901cffcc6919bed523e3dc58dddefcd"
         )
@@ -74,7 +75,9 @@ class LinaroForge(Package):
         )
         version("23.0", sha256="7ae20bb27d539751d1776d1e09a65dcce821fc6a75f924675439f791261783fb")
         version(
-            "22.1.4", sha256="4e2af481a37b4c99dba0de6fac75ac945316955fc4170d06e321530adea7ac9f"
+            "22.1.4",
+            sha256="4e2af481a37b4c99dba0de6fac75ac945316955fc4170d06e321530adea7ac9f",
+            deprecated=True,
         )
     elif platform.machine() == "ppc64le":
         # N.B. support for ppc64le was dropped in 24.0
@@ -99,12 +102,17 @@ class LinaroForge(Package):
         )
         version("23.0", sha256="0962c7e0da0f450cf6daffe1156e1f59e02c9f643df458ec8458527afcde5b4d")
         version(
-            "22.1.3", sha256="6479c3a4ae6ce6648c37594eb0266161f06d9f89010fca9299855848661dda49"
+            "22.1.3",
+            sha256="6479c3a4ae6ce6648c37594eb0266161f06d9f89010fca9299855848661dda49",
+            deprecated=True,
         )
         version(
-            "22.0.4", sha256="f4cb5bcbaa67f9209299fe4653186a2829760b8b16a2883913aa43766375b04c"
+            "22.0.4",
+            sha256="f4cb5bcbaa67f9209299fe4653186a2829760b8b16a2883913aa43766375b04c",
+            deprecated=True,
         )
     elif platform.machine() == "x86_64":
+        version("25.0", sha256="903079063965c12b4f8bb934ffae32a679a78bb69b8b9c5fbf7d859897b2655a")
         version(
             "24.1.3", sha256="94ac68bbde8b56897d507c1ed27ff113bc8bf5167a2c513510a7ac7aed139d50"
         )
@@ -155,10 +163,14 @@ class LinaroForge(Package):
         )
         version("23.0", sha256="f4ab12289c992dd07cb1a15dd985ef4713d1f9c0cf362ec5e9c995cca9b1cf81")
         version(
-            "22.1.3", sha256="4f8a8b1df6ad712e89c82eedf4bd85b93b57b3c8d5b37d13480ff058fa8f4467"
+            "22.1.3",
+            sha256="4f8a8b1df6ad712e89c82eedf4bd85b93b57b3c8d5b37d13480ff058fa8f4467",
+            deprecated=True,
         )
         version(
-            "22.0.4", sha256="a2c8c1da38b9684d7c4656a98b3fc42777b03fd474cd0bf969324804f47587e5"
+            "22.0.4",
+            sha256="a2c8c1da38b9684d7c4656a98b3fc42777b03fd474cd0bf969324804f47587e5",
+            deprecated=True,
         )
 
     variant(
