@@ -47,6 +47,7 @@ import spack.compilers.config
 import spack.compilers.flags
 import spack.config
 import spack.deptypes as dt
+import spack.detection
 import spack.environment as ev
 import spack.error
 import spack.package_base
@@ -3922,13 +3923,20 @@ class SpecBuilder:
             compiler_str = external_spec_deps[0]
             self._specs[node].annotations.with_compiler(spack.spec.Spec(compiler_str))
 
-        # If this is an extension, update the dependencies to include the extendee
+        # Packages that are external - but normally depend on python -
+        # get an edge inserted to python as a post-concretization step
         package = spack.repo.PATH.get_pkg_class(self._specs[node].fullname)(self._specs[node])
         extendee_spec = package.extendee_spec
-
-        if extendee_spec:
-            extendee_node = SpecBuilder.make_node(pkg=extendee_spec.name)
-            package._update_external_dependencies(self._specs.get(extendee_node))
+        if (
+            extendee_spec
+            and extendee_spec.name == "python"
+            # More-general criteria like "depends on Python" pulls in things
+            # we don't want to apply this logic to (in particular LLVM, which
+            # is now a common external because that's how we detect Clang)
+            and any([c.__name__ == "PythonPackage" for c in package.__class__.__mro__])
+        ):
+            candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
+            _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
 
     def depends_on(self, parent_node, dependency_node, type):
         dependency_spec = self._specs[dependency_node]
@@ -4218,6 +4226,100 @@ class SpecBuilder:
             specs[new_key] = current_spec
 
         return specs
+
+
+def _attach_python_to_external(
+    dependent_package, extendee_spec: Optional[spack.spec.Spec] = None
+) -> None:
+    """
+    Ensure all external python packages have a python dependency
+
+    If another package in the DAG depends on python, we use that
+    python for the dependency of the external. If not, we assume
+    that the external PythonPackage is installed into the same
+    directory as the python it depends on.
+    """
+    # TODO: Include this in the solve, rather than instantiating post-concretization
+    if "python" not in dependent_package.spec:
+        if extendee_spec:
+            python = extendee_spec
+        else:
+            python = _get_external_python_for_prefix(dependent_package)
+            if not python.concrete:
+                repo = spack.repo.PATH.repo_for_pkg(python)
+                python.namespace = repo.namespace
+
+                # Ensure architecture information is present
+                if not python.architecture:
+                    host_platform = spack.platforms.host()
+                    host_os = host_platform.default_operating_system()
+                    host_target = host_platform.default_target()
+                    python.architecture = spack.spec.ArchSpec(
+                        (str(host_platform), str(host_os), str(host_target))
+                    )
+                else:
+                    if not python.architecture.platform:
+                        python.architecture.platform = spack.platforms.host()
+                    platform = spack.platforms.by_name(python.architecture.platform)
+                    if not python.architecture.os:
+                        python.architecture.os = platform.default_operating_system()
+                    if not python.architecture.target:
+                        python.architecture.target = _vendoring.archspec.cpu.host().family.name
+
+                python.external_path = dependent_package.spec.external_path
+                python._mark_concrete()
+        dependent_package.spec.add_dependency_edge(
+            python, depflag=dt.BUILD | dt.LINK | dt.RUN, virtuals=()
+        )
+
+
+def _get_external_python_for_prefix(python_package):
+    """
+    For an external package that extends python, find the most likely spec for the python
+    it depends on.
+
+    First search: an "installed" external that shares a prefix with this package
+    Second search: a configured external that shares a prefix with this package
+    Third search: search this prefix for a python package
+
+    Returns:
+        spack.spec.Spec: The external Spec for python most likely to be compatible with self.spec
+    """
+    python_externals_installed = [
+        s
+        for s in spack.store.STORE.db.query("python")
+        if s.prefix == python_package.spec.external_path
+    ]
+    if python_externals_installed:
+        return python_externals_installed[0]
+
+    python_external_config = spack.config.get("packages:python:externals", [])
+    python_externals_configured = [
+        spack.spec.parse_with_version_concrete(item["spec"])
+        for item in python_external_config
+        if item["prefix"] == python_package.spec.external_path
+    ]
+    if python_externals_configured:
+        return python_externals_configured[0]
+
+    python_externals_detection = spack.detection.by_path(
+        ["python"], path_hints=[python_package.spec.external_path], max_workers=1
+    )
+
+    python_externals_detected = [
+        spec
+        for spec in python_externals_detection.get("python", [])
+        if spec.external_path == python_package.spec.external_path
+    ]
+    python_externals_detected = [
+        spack.spec.parse_with_version_concrete(str(x)) for x in python_externals_detected
+    ]
+    if python_externals_detected:
+        return list(sorted(python_externals_detected, key=lambda x: x.version))[-1]
+
+    raise StopIteration(
+        "No external python could be detected for %s to depend on" % python_package.spec
+    )
 
 
 def _inject_patches_variant(root: spack.spec.Spec) -> None:

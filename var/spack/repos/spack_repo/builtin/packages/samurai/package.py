@@ -19,6 +19,8 @@ class Samurai(CMakePackage):
     license("BSD-3-Clause")
 
     version("master", branch="master")
+    version("0.23.0", tag="v0.23.0", commit="c0c01fe78aa81f6e630962a6d90f57df6b84cc08")
+    version("0.22.0", tag="v0.22.0", commit="c32a011036437b3651a0b2df409d0ddd310f8f9f")
     version("0.21.1", tag="v0.21.1", commit="29798bd9592e5b80674c49080a242378a61878c3")
     version("0.20.0", tag="v0.20.0", commit="b894b8aebf992e112e129e3b70ccdfc7c19c6647")
     version("0.19.0", tag="v0.19.0", commit="b35332c5d719a940b045210abd8e4eb9b69f6b85")

@@ -30,7 +30,7 @@ share the binaries as an OCI-compatible container image. To get started, you
 just have to configure an OCI registry and run ``spack buildcache push``.
 
 .. code-block:: console
-  
+
    # Create and install an environment in the current directory
    spack env create -d .
    spack -e . add pkg-a pkg-b
@@ -802,4 +802,3 @@ pressure on parallel builds by limiting the parallelism in your ``config.yaml``.
 
    config:
      build_jobs: 2
-
