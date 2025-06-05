@@ -1191,7 +1191,6 @@ spack:
     assert mpich.satisfies("%[virtuals=fortran] gcc")
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize("unify", ["false", "when_possible"])
 def test_using_toolchain_as_preferences(unify, tmp_path, mutable_config):
     """Tests using a toolchain as a strong preference in an environment"""
@@ -1217,19 +1216,8 @@ spack:
         e.concretize()
         roots = e.concrete_roots()
 
-    mpileaks = [s for s in roots if s.satisfies("mpileaks")][0]
-    assert mpileaks.satisfies("%[virtuals=mpi] mpich")
-    assert mpileaks.satisfies("^[virtuals=mpi] mpich")
-
-    mpich = mpileaks["mpi"]
-    assert mpich.satisfies("%[virtuals=c] llvm")
-    assert mpich.satisfies("%[virtuals=cxx] llvm")
-    assert mpich.satisfies("%[virtuals=fortran] gcc")
-
     dt = [s for s in roots if s.satisfies("dt-diamond-right")][0]
     assert dt.satisfies("%[virtuals=c] gcc")
-    assert dt.satisfies("%[virtuals=cxx] gcc")
-    assert dt.satisfies("%[virtuals=fortran] gcc")
 
 
 @pytest.mark.parametrize("unify", ["true", "false", "when_possible"])

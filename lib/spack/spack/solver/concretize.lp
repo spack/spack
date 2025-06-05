@@ -1019,11 +1019,11 @@ activate_requirement(node(ID, Package), X) :-
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
-  requirement_policy(Package, X, "one_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,
+  requirement_policy(Package, GroupID, "one_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
 
 requirement_weight(node(ID, Package), Group, W) :-
   condition_holds(Y, node(ID, Package)),
@@ -1038,11 +1038,29 @@ requirement_weight(node(ID, Package), Group, W) :-
   activate_requirement(node(ID, Package), Group),
   requirement_group(Package, Group).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } ,
-  requirement_policy(Package, X, "any_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } ,
+  requirement_policy(Package, GroupID, "any_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
+
+% Derive a fact to represent that the entire requirement, including possible subconditions, is met
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  not subcondition(_, ConditionID).
+
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  impose(EffectID, node(X, Package)) : subcondition(SubconditionID, ConditionID), pkg_fact(Package, condition_effect(SubconditionID, EffectID)), condition_holds(SubconditionID, node(X, Package));
+  subcondition(_, ConditionID).
+
+{ do_not_impose(EffectID, node(X, Package)) } :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
 % Do not impose requirements, if the conditional requirement is not active
 do_not_impose(EffectID, node(ID, Package)) :-
