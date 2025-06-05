@@ -134,14 +134,10 @@ class SpackPaths:
         # 5. inside spack prefix (slightly different compared to old
         #    install path)
         old_install_path = os.path.join(self.prefix, "opt", "spack")
-        self.default_install_location = self.data_home_for_large_data(
-            "installs", old_install_path
-        )
+        self.default_install_location = self.data_home_for_large_data("installs", old_install_path)
 
         old_envs_path = os.path.join(self.var_path, "environments")
-        self.default_envs_path = self.data_home_for_large_data(
-            "environments", old_envs_path
-        )
+        self.default_envs_path = self.data_home_for_large_data("environments", old_envs_path)
 
         old_fetch_cache_path = os.path.join(self.var_path, "cache")
         self.default_fetch_cache_path = self.data_home_for_large_data(
