@@ -1252,6 +1252,16 @@ during concretization a warning will be issued. Users may also specify which com
 want with the spec since it is simply a variant. In this case, or in the case of develop specs
 (see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
 
+.. note::
+
+   Users wanting to track the latest commits from the internet should utilize ``spack clean --stage``
+   prior to concretization to clean out old stages that will short-circuit internet queries.
+   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also
+   be necessary.
+
+   Above all else, the most robust way to ensure binaries have their desired commits is to provide
+   the SHAs via user-specs or config i.e. ``commit=<SHA>``.
+
 ^^^^^^^^^^^^
 Git versions
 ^^^^^^^^^^^^
