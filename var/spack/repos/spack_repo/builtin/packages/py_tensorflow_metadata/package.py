@@ -22,8 +22,26 @@ class PyTensorflowMetadata(PythonPackage):
 
     license("Apache-2.0")
 
+    version("1.17.1", sha256="6a49a3fac9616336d23c04990e7a8e566d4c97024730e11a7ec7a511c9167e2b")
     version("1.10.0", sha256="e7aa81aa01433e2a75c11425affd55125b64f384baf96b71eeb3a88dca8cf2ae")
     version("1.5.0", sha256="f0ec8aaf62fd772ef908efe4ee5ea3bc0d67dcbf10ae118415b7b206a1d61745")
+
+    with default_args(type="build"):
+        depends_on("bazel@6.5:", when="@1.17.1:")
+        depends_on("bazel@0.24.1:")
+        depends_on("py-setuptools")
+
+    with default_args(type=("build", "run")):
+        depends_on("python@3.9:3", when="@1.15:")
+        depends_on("python@3.7:3")
+        depends_on("py-absl-py@0.9:2", when="@1.15:")
+        depends_on("py-absl-py@0.9:1", when="@1.6:1.14")
+        depends_on("py-absl-py@0.9:0.12", when="@:1.5")
+        depends_on("py-googleapis-common-protos@1.56.4:1", when="@1.15: ^python@3.11:")
+        depends_on("py-googleapis-common-protos@1.52:1", when="@:1.14")
+        depends_on("py-protobuf@4.25.2:5", when="@1.17: ^python@3.11:")
+        depends_on("py-protobuf@4.21.6:4.21", when="@1.17: ^python@:3.10")
+        depends_on("py-protobuf@3.13:3", when="@:1.16")
 
     # Fix non-existing zlib URL
     patch(
@@ -31,14 +49,6 @@ class PyTensorflowMetadata(PythonPackage):
         sha256="a6b294d5e6099979192fcdb4d5b7b0388dc30b48671944d22e51a9e6bd5e1490",
         when="@1.10.0",
     )
-
-    depends_on("bazel@0.24.1:", type="build")
-    depends_on("python@3.7:3", type=("build", "run"))
-    depends_on("py-setuptools", type="build")
-    depends_on("py-absl-py@0.9:1", when="@1.6:", type=("build", "run"))
-    depends_on("py-absl-py@0.9:0.12", when="@:1.5", type=("build", "run"))
-    depends_on("py-googleapis-common-protos@1.52:1", type=("build", "run"))
-    depends_on("py-protobuf@3.13:3", type=("build", "run"))
 
     def patch(self):
         filter_file(
