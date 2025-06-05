@@ -115,13 +115,6 @@ class SpackPaths:
 
         self.spack_instance_id = lambda: hash.b32_hash(self.prefix)[:7]
 
-        self.modules_base = None
-        for module_dir in ["lmod", "modules"]:
-            if dir_is_occupied(os.path.join(self.share_path, module_dir)):
-                self.modules_base = self.share_path
-        if not self.modules_base:
-            self.modules_base = os.path.join(spack_xdg_data_home(), "modules")
-
         # ------ Next section
         # Spack can write a lot of data into the next 3 locations, and
         # they used to be inside of Spack by default. They can be set
@@ -175,6 +168,14 @@ class SpackPaths:
         #: bootstrap store for bootstrapping clingo and other tools
         self.default_user_bootstrap_path = os.path.join(self.user_cache_path, "bootstrap")
 
+        # ------ Next section
+        # The next three locations used to be written inside of the
+        # Spack prefix, and are now organized under $user_cache_path
+        # by default, *except* for old installs of Spack that have
+        # data written into the old locations (in which case, when
+        # they pull this update, they will continue to use those
+        # locations)
+
         old_gpg_path = os.path.join("prefix", "opt" "spack", "gpg")
         if dir_is_occupied(old_gpg_path):
             self.gpg_path = old_gpg_path
@@ -186,6 +187,13 @@ class SpackPaths:
             self.gpg_keys_path = old_gpg_keys_path
         else:
             self.gpg_keys_path = os.path.join(self.user_cache_path, "gpg-keys")
+
+        self.modules_base = None
+        for module_dir in ["lmod", "modules"]:
+            if dir_is_occupied(os.path.join(self.share_path, module_dir)):
+                self.modules_base = self.share_path
+        if not self.modules_base:
+            self.modules_base = os.path.join(self.user_cache_path, "modules")
 
         # ------ Next section
         # Spack can also write data into the following locations, and their
