@@ -271,59 +271,55 @@ class SpackPaths:
             return os.path.join(self.prefix, "opt", "data")
 
 
-this_spack = SpackPaths()
+locations = SpackPaths()
 
-prefix = this_spack.prefix
-spack_root = this_spack.spack_root
-bin_path = this_spack.bin_path
-spack_script = this_spack.spack_script
-sbang_script = this_spack.sbang_script
-lib_path = this_spack.lib_path
-external_path = this_spack.external_path
-module_path = this_spack.module_path
-command_path = this_spack.command_path
-analyzers_path = this_spack.analyzers_path
-platform_path = this_spack.platform_path
-compilers_path = this_spack.compilers_path
-operating_system_path = this_spack.operating_system_path
-test_path = this_spack.test_path
-hooks_path = this_spack.hooks_path
-share_path = this_spack.share_path
-etc_path = this_spack.etc_path
-default_license_dir = this_spack.default_license_dir
-var_path = this_spack.var_path
-repos_path = this_spack.repos_path
-test_repos_path = this_spack.test_repos_path
-packages_path = this_spack.packages_path
-mock_packages_path = this_spack.mock_packages_path
-mock_gpg_data_path = this_spack.mock_gpg_data_path
-mock_gpg_keys_path = this_spack.mock_gpg_keys_path
-spack_instance_id = this_spack.spack_instance_id
-xdg_state_home = this_spack.xdg_state_home
-xdg_config_home = this_spack.xdg_config_home
-xdg_cache_home = this_spack.xdg_cache_home
-xdg_data_home = this_spack.xdg_data_home
-default_install_location = this_spack.default_install_location
-default_envs_path = this_spack.default_envs_path
-default_fetch_cache_path = this_spack.default_fetch_cache_path
-user_cache_path = this_spack.user_cache_path
-reports_path = this_spack.reports_path
-default_test_path = this_spack.default_test_path
-default_monitor_path = this_spack.default_monitor_path
-user_repos_cache_path = this_spack.user_repos_cache_path
-default_user_bootstrap_path = this_spack.default_user_bootstrap_path
-gpg_path = this_spack.gpg_path
-gpg_keys_path = this_spack.gpg_keys_path
-modules_base = this_spack.modules_base
-user_config_path = this_spack.user_config_path
-system_config_path = this_spack.system_config_path
-end_user_cfg_path = this_spack.end_user_cfg_path
-default_misc_cache_path = this_spack.default_misc_cache_path
-default_conc_cache_path = this_spack.default_conc_cache_path
-
-
-for attr, value in vars(this_spack).items():
-    globals()[attr] = value
+prefix = locations.prefix
+spack_root = locations.spack_root
+bin_path = locations.bin_path
+spack_script = locations.spack_script
+sbang_script = locations.sbang_script
+lib_path = locations.lib_path
+external_path = locations.external_path
+module_path = locations.module_path
+command_path = locations.command_path
+analyzers_path = locations.analyzers_path
+platform_path = locations.platform_path
+compilers_path = locations.compilers_path
+operating_system_path = locations.operating_system_path
+test_path = locations.test_path
+hooks_path = locations.hooks_path
+share_path = locations.share_path
+etc_path = locations.etc_path
+default_license_dir = locations.default_license_dir
+var_path = locations.var_path
+repos_path = locations.repos_path
+test_repos_path = locations.test_repos_path
+packages_path = locations.packages_path
+mock_packages_path = locations.mock_packages_path
+mock_gpg_data_path = locations.mock_gpg_data_path
+mock_gpg_keys_path = locations.mock_gpg_keys_path
+spack_instance_id = locations.spack_instance_id
+xdg_state_home = locations.xdg_state_home
+xdg_config_home = locations.xdg_config_home
+xdg_cache_home = locations.xdg_cache_home
+xdg_data_home = locations.xdg_data_home
+default_install_location = locations.default_install_location
+default_envs_path = locations.default_envs_path
+default_fetch_cache_path = locations.default_fetch_cache_path
+user_cache_path = locations.user_cache_path
+reports_path = locations.reports_path
+default_test_path = locations.default_test_path
+default_monitor_path = locations.default_monitor_path
+user_repos_cache_path = locations.user_repos_cache_path
+default_user_bootstrap_path = locations.default_user_bootstrap_path
+gpg_path = locations.gpg_path
+gpg_keys_path = locations.gpg_keys_path
+modules_base = locations.modules_base
+user_config_path = locations.user_config_path
+system_config_path = locations.system_config_path
+end_user_cfg_path = locations.end_user_cfg_path
+default_misc_cache_path = locations.default_misc_cache_path
+default_conc_cache_path = locations.default_conc_cache_path
 
 
 #: Recorded directory where spack command was originally invoked
