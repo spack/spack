@@ -253,8 +253,6 @@ class SpecParser:
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
         filtered out.
-
-        Note: This list will not show tokens pushed when parsing an alias
         """
         return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
 
