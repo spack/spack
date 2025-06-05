@@ -68,6 +68,7 @@ class OpenfoamOrg(Package):
     license("GPL-3.0-or-later")
 
     version("develop", branch="master")
+    version("12", sha256="e59fad54c62e64f1bb89dbaebe5f99a76dc0a6a91d9aad86042a7c4cef6d0744")
     version("11", sha256="ebc0f86ead699abba61290ba8aac5b730aa93256e675d1d93a5d5f116d51e0c0")
     version("10", sha256="59d712ba798ca44b989b6ac50bcb7c534eeccb82bcf961e10ec19fc8d84000cf")
     version("9", sha256="0c48fb56e2fbb4dd534112811364d3b2dc12106e670a6486b361e4f864b435ee")
@@ -105,8 +106,10 @@ class OpenfoamOrg(Package):
     depends_on("zlib-api")
     depends_on("flex")
     depends_on("cmake", type="build")
-    # The setSet tool (removed in version 10) depends on readline
-    depends_on("readline", when="@:9")
+    depends_on("json-c")
+    depends_on("libyaml")
+    # Still require libreadline.so.8 as of openfoam-org@12
+    depends_on("readline")
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
     depends_on("scotch~metis+mpi~int64", when="+scotch~int64")
@@ -115,6 +118,8 @@ class OpenfoamOrg(Package):
 
     depends_on("metis@5:", when="+metis")
     depends_on("metis+int64", when="+metis+int64")
+
+    conflicts("%aocc@:", msg="OpenFOAM does not support AOCC compilers yet")
 
     # General patches - foamEtcFile as per openfoam.com (robuster)
     common = ["spack-Allwmake", "README-spack"]
@@ -279,13 +284,19 @@ class OpenfoamOrg(Package):
         # Avoid WM_PROJECT_INST_DIR for ThirdParty, site or jobControl.
         # Use openfoam-site.patch to handle jobControl, site.
         #
-        # Filtering: bashrc,cshrc (using a patch is less flexible)
+        # Filtering: bashrc, cshrc (using a patch is less flexible)
         edits = {
             "WM_THIRD_PARTY_DIR": r"$WM_PROJECT_DIR/ThirdParty #SPACK: No separate third-party",
-            "WM_VERSION": str(self.version),  # consistency
-            "FOAMY_HEX_MESH": "",  # This is horrible (unset variable?)
+            "WM_VERSION": str(self.version),
+            "FOAMY_HEX_MESH": "",
+            # Explicitly disable ThirdParty library lookups
+            "SCOTCH_TYPE": "none",
+            "METIS_TYPE": "none",
+            "PARMETIS_TYPE": "none",
+            "ZOLTAN_TYPE": "none",
         }
-        rewrite_environ_files(  # Adjust etc/bashrc and etc/cshrc
+
+        rewrite_environ_files(
             edits, posix=join_path("etc", "bashrc"), cshell=join_path("etc", "cshrc")
         )
         if self.spec.satisfies("@10:") and "+zoltan" in self.spec:

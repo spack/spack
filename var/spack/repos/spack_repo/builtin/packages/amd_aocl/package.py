@@ -36,6 +36,9 @@ class AmdAocl(BundlePackage):
 
     variant("openmp", default=False, description="Enable OpenMP support.")
 
+    depends_on("c", type="build")
+    depends_on("cxx", type="build")
+    depends_on("fortran", type="build")
     depends_on("scalapack")
     depends_on("lapack")
     depends_on("blas")
