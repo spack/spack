@@ -32,8 +32,6 @@ class Dpdk(MakefilePackage, MesonPackage):
     depends_on("c", type="build")  # generated
     depends_on("cxx", type="build")  # generated
 
-    conflicts("target=aarch64:", msg="DPDK is not supported on aarch64.")
-
     # Build system
     build_system(
         conditional("meson", when="@22.11:"),
@@ -50,7 +48,10 @@ class Dpdk(MakefilePackage, MesonPackage):
 
 class MesonBuilder(MesonBuilder):
     def meson_args(self):
-        return ["--warnlevel=2"]
+        args = ["--warnlevel=2"]
+        if self.spec.satifies("target=aarch64:"):
+            args.append("-Dplatform=generic")
+        return args
 
 
 class MakefileBuilder(MakefileBuilder):
