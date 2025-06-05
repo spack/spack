@@ -445,7 +445,8 @@ impose(EffectID, node(X, Package))
 impose(EffectID, node(X, Package))
   :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
      subcondition(SubconditionID, ConditionID),
-     condition_holds(ConditionID, node(X, Package)),
+     condition_holds(ConditionID, ConditionNode),
+     condition_set(ConditionNode, node(X, Package)),
      trigger_and_effect(Package, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
