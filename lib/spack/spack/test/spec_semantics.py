@@ -607,7 +607,7 @@ class TestSpecSemantics:
         c.constrain(lhs)
         assert c == constrained
 
-    def test_satisfies_conditional_dep(self, default_mock_concretization):
+    def test_basic_satisfies_conditional_dep(self, default_mock_concretization):
         """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
         concrete = default_mock_concretization("mpileaks ^mpich")
 
@@ -1544,6 +1544,41 @@ class TestSpecSemantics:
     def test_unsatisfiable_virtual_deps_bindings(self, spec_str):
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             spack.concretize.concretize_one(spec_str)
+
+    @pytest.mark.parametrize(
+        "spec_str,abstract_tests,concrete_tests",
+        [
+            # Ensure the 'when=+debug' is referred to 'callpath', and not to 'mpileaks',
+            # and that we can concretize the spec despite 'callpath' has no debug variant
+            (
+                "mpileaks+debug ^callpath %[when=+debug virtuals=mpi] zmpi",
+                [
+                    ("^zmpi", False),
+                    ("^mpich", False),
+                    ("mpileaks+debug  %[when=+debug virtuals=mpi] zmpi", False),
+                ],
+                [("^zmpi", False), ("^[virtuals=mpi] mpich", True)],
+            ),
+            # Ensure we don't skip conditional edges when testing because we associate them
+            # with the wrong node (e.g. mpileaks instead of mpich)
+            (
+                "mpileaks~debug ^mpich+debug %[when=+debug virtuals=c] llvm",
+                [("^mpich+debug %[when=+debug virtuals=c] gcc", False)],
+                [("^mpich %[virtuals=c] gcc", False), ("^mpich %[virtuals=c] llvm", True)],
+            ),
+        ],
+    )
+    def test_conditional_dependencies_satisfies(
+        self, spec_str, abstract_tests, concrete_tests, default_mock_concretization
+    ):
+        """Tests satisfaction semantics for conditional specs, in different scenarios."""
+        s = Spec(spec_str)
+        for c, result in abstract_tests:
+            assert s.satisfies(c) is result
+
+        concrete = default_mock_concretization(spec_str)
+        for c, result in concrete_tests:
+            assert concrete.satisfies(c) is result
 
 
 @pytest.mark.parametrize(

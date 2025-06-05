@@ -3409,14 +3409,18 @@ class SpackSolverSetup:
             context.transform_required = virtual_handler
             context.transform_imposed = lambda x, y: y
 
-            subcondition_id = self.condition(
-                dspec.when,
-                spack.spec.Spec(dspec.format(unconditional=True)),
-                required_name=dspec.parent.name,
-                context=context,
-                msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
-            )
-            self.gen.fact(fn.subcondition(subcondition_id, condition_id))
+            try:
+                subcondition_id = self.condition(
+                    dspec.when,
+                    spack.spec.Spec(dspec.format(unconditional=True)),
+                    required_name=dspec.parent.name,
+                    context=context,
+                    msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
+                )
+                self.gen.fact(fn.subcondition(subcondition_id, condition_id))
+            except vt.UnknownVariantError as e:
+                # A variant in the 'when=' condition can't apply to the parent of the edge
+                tty.debug(f"[{__name__}] cannot emit subcondition for {dspec.format()}: {e}")
 
     def validate_and_define_versions_from_requirements(
         self, *, allow_deprecated: bool, require_checksum: bool

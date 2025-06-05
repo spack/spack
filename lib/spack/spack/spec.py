@@ -3436,10 +3436,12 @@ class Spec:
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
             # The condition cannot be applied in any case, skip the edge
-            if not self.intersects(rhs_edge.when):
+            test_root = rhs_edge.parent.name in (None, self.name)
+            if test_root and not self.intersects(rhs_edge.when):
                 continue
+
             if (
-                rhs_edge.parent.name
+                not test_root
                 and rhs_edge.parent.name in self
                 and not self[rhs_edge.parent.name].intersects(rhs_edge.when)
             ):

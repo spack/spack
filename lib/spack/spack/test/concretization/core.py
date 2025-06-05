@@ -3798,7 +3798,7 @@ def test_specifying_direct_dependencies(
             "mpileaks %[when='%mpi' virtuals=mpi] mpich ^libelf %[when='%mpi' virtuals=mpi] zmpi",
             "mpileaks %[virtuals=mpi] mpich",
             (False, True),
-        )
+        ),
     ],
 )
 def test_satisfies_conditional_spec(
