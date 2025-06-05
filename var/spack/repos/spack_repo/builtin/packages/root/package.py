@@ -40,6 +40,7 @@ class Root(CMakePackage):
     version("6.36.00", sha256="94afc8def92842679a130a27521be66e2abdaa37620888e61d828a43fc4b01a2")
 
     # Supported LTS release series (note: more recent STS releases may be further down)
+    version("6.32.14", sha256="dfb5193127ff80ebfa10e6a4dcdf56eeec0eface65fc3de347d853ae9653aeff")
     version("6.32.12", sha256="2e41968aeb0406ee31c30af9c046143099b251846e0839cb04f4e960c7893e19")
     version("6.32.10", sha256="5a896804ec153685e8561adaa4e546b708139c484280aa6713a0a178f5b7f98b")
     version("6.32.08", sha256="29ad4945a72dff1a009c326a65b6fa5ee2478498823251d3cef86a2cbeb77b27")
