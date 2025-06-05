@@ -43,6 +43,12 @@ def _define_xdg_or_backup(xdg_var, backup):
     return os.path.expanduser(spack_xdg_defined)
 
 
+def dir_is_occupied(x, except_for=None):
+    x = pathlib.Path(x)
+    except_for = except_for or set()
+    return x.is_dir() and bool(set(x.iterdir()) - except_for)
+
+
 #: Resolved XDG_STATE_HOME, with additional "spack" subdirectory
 spack_xdg_state_home = lambda: _define_xdg_or_backup(
     xdg_state_home, os.path.join("~", ".local", "state")
@@ -53,50 +59,6 @@ spack_xdg_config_home = lambda: _define_xdg_or_backup(
 spack_xdg_data_home = lambda: _define_xdg_or_backup(
     xdg_data_home, os.path.join("~", ".local", "share")
 )
-
-spack_xdg_data_home_nodefault: Optional[str]
-if xdg_data_home in os.environ:
-    spack_xdg_data_home_nodefault = os.path.expanduser(
-        os.path.join(os.environ[xdg_data_home], "spack")
-    )
-else:
-    spack_xdg_data_home_nodefault = None
-
-spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
-
-
-def spack_data_home():
-    # spack_data_home is where we know we can put large amounts of data:
-    # users can set SPACK_DATA_HOME to tell spack explicitly about such
-    # a location. If XDG_DATA_HOME is set, we assume we can use that.
-    # If neither are set, we assume the spack prefix is the only place
-    # available to us (we do not use ~ and in particular the default for
-    # XDG_DATA_HOME).
-    if spack_data_home_varname in os.environ:
-        return os.environ[spack_data_home_varname]
-    elif spack_xdg_data_home_nodefault:
-        return spack_xdg_data_home_nodefault
-    else:
-        return os.path.join(prefix, "opt", "data")
-
-
-# User configuration
-def _get_user_config_path():
-    return os.path.expanduser(os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home())
-
-
-# Configuration in /etc/spack on the system
-# Override w/ `SPACK_SYSTEM_CONFIG_PATH`
-def _get_system_config_path():
-    return os.path.expanduser(
-        os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
-    )
-
-
-def dir_is_occupied(x, except_for=None):
-    x = pathlib.Path(x)
-    except_for = except_for or set()
-    return x.is_dir() and bool(set(x.iterdir()) - except_for)
 
 
 class SpackPaths:
@@ -132,11 +94,25 @@ class SpackPaths:
         self.default_license_dir = os.path.join(self.etc_path, "licenses")
         self.var_path = os.path.join(self.prefix, "var", "spack")
 
+        # $spack/var/spack is generally read-only. Older instances may
+        # write gpg keys or environments into ...var/
+        self.repos_path = os.path.join(self.var_path, "repos")
+        self.test_repos_path = os.path.join(self.var_path, "test_repos")
+        self.packages_path = os.path.join(self.repos_path, "spack_repo", "builtin")
+        self.mock_packages_path = os.path.join(self.test_repos_path, "spack_repo", "builtin_mock")
+
+        self.mock_gpg_data_path = os.path.join(self.var_path, "gpg.mock", "data")
+        self.mock_gpg_keys_path = os.path.join(self.var_path, "gpg.mock", "keys")
+
         #: User configuration location
-        self.user_config_path = _get_user_config_path()
+        self.user_config_path = os.path.expanduser(
+            os.getenv("SPACK_USER_CONFIG_PATH") or spack_xdg_config_home()
+        )
 
         #: System configuration location
-        self.system_config_path = _get_system_config_path()
+        self.system_config_path = os.path.expanduser(
+            os.getenv("SPACK_SYSTEM_CONFIG_PATH") or os.sep + os.path.join("etc", "spack")
+        )
 
         #: When Spack is provided by an admin to a user, the admin can
         #: provide a config that only applies for the end-users
@@ -153,7 +129,7 @@ class SpackPaths:
         self.modules_base = None
         for module_dir in ["lmod", "modules"]:
             if dir_is_occupied(os.path.join(self.share_path, module_dir)):
-                modules_base = self.share_path
+                self.modules_base = self.share_path
         if not self.modules_base:
             self.modules_base = os.path.join(spack_xdg_data_home(), "modules")
 
@@ -162,12 +138,40 @@ for attr, value in vars(this_spack).items():
     globals()[attr] = value
 
 
+
+
+spack_xdg_data_home_nodefault: Optional[str]
+if xdg_data_home in os.environ:
+    spack_xdg_data_home_nodefault = os.path.expanduser(
+        os.path.join(os.environ[xdg_data_home], "spack")
+    )
+else:
+    spack_xdg_data_home_nodefault = None
+
+spack_xdg_cache_home = lambda: _define_xdg_or_backup(xdg_cache_home, os.path.join("~", ".cache"))
+
+
+def spack_data_home():
+    # spack_data_home is where we know we can put large amounts of data:
+    # users can set SPACK_DATA_HOME to tell spack explicitly about such
+    # a location. If XDG_DATA_HOME is set, we assume we can use that.
+    # If neither are set, we assume the spack prefix is the only place
+    # available to us (we do not use ~ and in particular the default for
+    # XDG_DATA_HOME).
+    if spack_data_home_varname in os.environ:
+        return os.environ[spack_data_home_varname]
+    elif spack_xdg_data_home_nodefault:
+        return spack_xdg_data_home_nodefault
+    else:
+        return os.path.join(prefix, "opt", "data")
+
+
 def default_install_location():
     # Precedence for installs:
     # 1. config:install_tree:root
     # 2. explicitly defined SPACK_DATA_HOME
-    # 3. occupied old install path (inside spack prefix)
-    # 4. explicitly defined XDG_DATA_HOME
+    # 3. explicitly defined XDG_DATA_HOME
+    # 4. occupied old install path (inside spack prefix)
     # 5. inside spack prefix (slightly different compared to old install path)
     old_install_path = os.path.join(prefix, "opt", "spack")
     if spack_data_home_varname in os.environ:
@@ -189,18 +193,6 @@ else:
     envs_path = os.path.join(spack_data_home(), "environments")
 
 default_fetch_cache_path = os.path.join(spack_data_home(), "downloads")
-
-# TODO: we could shutil.mv resources from old paths to new paths
-
-# $spack/var/spack is generally read-only. Older instances may
-# write gpg keys or environments into ...var/
-repos_path = os.path.join(var_path, "repos")
-test_repos_path = os.path.join(var_path, "test_repos")
-packages_path = os.path.join(repos_path, "spack_repo", "builtin")
-mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
-
-mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
-mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 
 
 # Below paths are where Spack can write information for the user.
