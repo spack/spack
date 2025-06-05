@@ -183,24 +183,24 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     }
 
     options_variants = {
-        "aggressive_vectorization": [False, "Aggressively vectorize loops"],
-        "compiler_warnings": [False, "Print all compiler warnings"],
-        "complex_align": [True, "Align complex numbers"],
-        "cuda_constexpr": [False, "Activate experimental constexpr features"],
-        "cuda_lambda": [False, "Activate experimental lambda features"],
-        "cuda_ldg_intrinsic": [False, "Use CUDA LDG intrinsics"],
-        "cuda_relocatable_device_code": [False, "Enable RDC for CUDA"],
-        "hip_relocatable_device_code": [False, "Enable RDC for HIP"],
-        "sycl_relocatable_device_code": [False, "Enable RDC for SYCL"],
-        "cuda_uvm": [False, "Enable unified virtual memory (UVM) for CUDA"],
-        "debug": [False, "Activate extra debug features - may increase compiletimes"],
-        "debug_bounds_check": [False, "Use bounds checking - will increase runtime"],
-        "debug_dualview_modify_check": [False, "Debug check on dual views"],
-        "deprecated_code": [False, "Whether to enable deprecated code"],
-        "examples": [False, "Whether to build examples"],
-        "hpx_async_dispatch": [False, "Whether HPX supports asynchronous dispath"],
-        "tuning": [False, "Create bindings for tuning tools"],
-        "tests": [False, "Build for tests"],
+        "aggressive_vectorization": [False, None, "Aggressively vectorize loops"],
+        "compiler_warnings": [False, None, "Print all compiler warnings"],
+        "complex_align": [True, None, "Align complex numbers"],
+        "cuda_constexpr": [False, "+cuda", "Activate experimental constexpr features"],
+        "cuda_lambda": [False, "+cuda", "Activate experimental lambda features"],
+        "cuda_ldg_intrinsic": [False, "+cuda", "Use CUDA LDG intrinsics"],
+        "cuda_relocatable_device_code": [False, "+cuda", "Enable RDC for CUDA"],
+        "hip_relocatable_device_code": [False, None, "Enable RDC for HIP"],
+        "sycl_relocatable_device_code": [False, "@4.5: +sycl", "Enable RDC for SYCL"],
+        "cuda_uvm": [False, "+cuda", "Enable unified virtual memory (UVM) for CUDA"],
+        "debug": [False, None, "Activate extra debug features - may increase compiletimes"],
+        "debug_bounds_check": [False, None, "Use bounds checking - will increase runtime"],
+        "debug_dualview_modify_check": [False, None, "Debug check on dual views"],
+        "deprecated_code": [False, None, "Whether to enable deprecated code"],
+        "examples": [False, None, "Whether to build examples"],
+        "hpx_async_dispatch": [False, None, "Whether HPX supports asynchronous dispath"],
+        "tuning": [False, None, "Create bindings for tuning tools"],
+        "tests": [False, None, "Build for tests"],
     }
 
     spack_micro_arch_map = {
@@ -319,8 +319,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     depends_on("intel-oneapi-dpl", when="+sycl")
     depends_on("rocthrust", when="@4.3: +rocm")
 
-    for opt, (dflt, desc) in options_variants.items():
-        variant(opt, default=dflt, description=desc, when=("+cuda" if "cuda" in opt else None))
+    for opt, (dflt, when, desc) in options_variants.items():
+        variant(opt, default=dflt, description=desc, when=when)
 
     for tpl, (dflt, desc) in tpls_variants.items():
         variant(tpl, default=dflt, description=desc)
