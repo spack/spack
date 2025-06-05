@@ -59,8 +59,6 @@ licensed_files = [
     r"^share/spack/bash/spack-completion.in$",
     # action workflows
     r"^.github/actions/.*\.py$",
-    # all packages
-    r"^var/spack/repos/.*/package.py$",
 ]
 
 

@@ -39,7 +39,6 @@ properties: Dict[str, Any] = {
                                 "destination": {"type": "string"},
                                 "paths": {"type": "array", "items": {"type": "string"}},
                             },
-                            "required": ["git"],
                             "additionalProperties": False,
                         },
                     ]

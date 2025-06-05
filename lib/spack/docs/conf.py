@@ -17,7 +17,6 @@
 # serve to show the default.
 
 import os
-import re
 import subprocess
 import sys
 from glob import glob
@@ -34,20 +33,24 @@ from sphinx.parsers import RSTParser
 link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
-sys.path.append(os.path.abspath("_spack_root/var/spack/repos/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
-os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
+os.environ["SPACK_USER_CONFIG_PATH"] = os.path.abspath(".spack")
+os.environ["PATH"] += os.pathsep + os.path.abspath("_spack_root/bin")
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate a command index if an update is needed
+sys.path[0:0] = [
+    os.path.abspath("_spack_root/lib/spack/external"),
+    os.path.abspath("_spack_root/lib/spack/"),
+    os.path.abspath(".spack/spack-packages/repos"),
+]
+
+# Generate a command index if an update is needed -- this also clones the package repository.
 subprocess.call(
     [
         "spack",
@@ -55,8 +58,8 @@ subprocess.call(
         "--format=rst",
         "--header=command_index.in",
         "--update=command_index.rst",
+        *glob("*rst"),
     ]
-    + glob("*rst")
 )
 
 #
@@ -86,8 +89,8 @@ sphinx_apidoc(
     apidoc_args
     + [
         "--implicit-namespaces",
-        "_spack_root/var/spack/repos/spack_repo",
-        "_spack_root/var/spack/repos/spack_repo/builtin/packages",
+        ".spack/spack-packages/repos/spack_repo",
+        ".spack/spack-packages/repos/spack_repo/builtin/packages",
     ]
 )
 

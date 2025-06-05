@@ -631,6 +631,16 @@ def test_parse_config_descriptor_local(tmp_path: pathlib.Path):
     assert descriptor.path == str(tmp_path / "local_repo")
 
 
+def test_parse_config_descriptor_no_git(tmp_path: pathlib.Path):
+    """Test that we can parse a descriptor without a git key."""
+    with pytest.raises(RuntimeError, match="Invalid configuration for repository"):
+        spack.repo.parse_config_descriptor(
+            name="name",
+            descriptor={"destination": str(tmp_path / "some/destination"), "paths": ["some/path"]},
+            lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+        )
+
+
 def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
     construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the

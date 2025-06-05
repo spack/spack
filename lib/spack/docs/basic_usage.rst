@@ -1933,7 +1933,7 @@ diagnostics. Issues, if found, are reported to stdout:
    PKG-DIRECTIVES: 1 issue found
    1. lammps: wrong variant in "conflicts" directive
        the variant 'adios' does not exist
-       in /home/spack/spack/var/spack/repos/spack_repo/builtin/packages/lammps/package.py
+       in spack_repo/builtin/packages/lammps/package.py
 
 
 ------------

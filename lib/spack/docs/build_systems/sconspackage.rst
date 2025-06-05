@@ -104,10 +104,10 @@ Finding available options
 
 The first place to start when looking for a list of valid options to
 build a package is ``scons --help``. Some packages like
-`kahip <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/kahip/package.py>`_
+`kahip <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/kahip/package.py>`_
 don't bother overwriting the default SCons help message, so this isn't
 very useful, but other packages like
-`serf <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/serf/package.py>`_
+`serf <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/serf/package.py>`_
 print a list of valid command-line variables:
 
 .. code-block:: console
@@ -177,7 +177,7 @@ print a list of valid command-line variables:
 
 
 More advanced packages like
-`cantera <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/cantera/package.py>`_
+`cantera <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cantera/package.py>`_
 use ``scons --help`` to print a list of subcommands:
 
 .. code-block:: console
