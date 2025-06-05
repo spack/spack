@@ -244,11 +244,17 @@ def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
 class SpecParser:
     """Parse text into specs"""
 
-    __slots__ = "literal_str", "ctx"
+    __slots__ = "literal_str", "ctx", "toolchains", "parsed_toolchains"
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
         self.ctx = TokenContext(parseable_tokens(literal_str))
+
+        self.toolchains = {}
+        configuration = getattr(spack.config, "CONFIG", None)
+        if configuration is not None:
+            self.toolchains = configuration.get("toolchains", {})
+        self.parsed_toolchains = {}
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
@@ -278,12 +284,6 @@ class SpecParser:
             except spack.error.SpecError as e:
                 raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str) from e
 
-        # FIXME: Move the expansion step outside of the parser
-        toolchains = {}
-        configuration = getattr(spack.config, "CONFIG", None)
-        if configuration is not None:
-            toolchains = configuration.get("toolchains", {})
-
         initial_spec = initial_spec or spack.spec.Spec()
         root_spec, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(initial_spec)
         current_spec = root_spec
@@ -312,12 +312,13 @@ class SpecParser:
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 # String replacement for toolchains
                 # Look ahead to match upcoming value to list of toolchains
-                if self.ctx.current_token.value == "%" and self.ctx.next_token.value in toolchains:
+                if (
+                    self.ctx.current_token.value == "%"
+                    and self.ctx.next_token.value in self.toolchains
+                ):
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
                     try:
-                        self._apply_toolchain(
-                            current_spec, toolchains[self.ctx.current_token.value]
-                        )
+                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
                     except spack.error.SpecError as e:
                         raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
@@ -360,25 +361,34 @@ class SpecParser:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
 
-    def _apply_toolchain(self, spec: "spack.spec.Spec", toolchain_config: Union[str, List]):
+    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str):
+        toolchain = self.parsed_toolchains.get(name, None)
+        if toolchain:
+            spec.constrain(toolchain)
+            return
+
+        toolchain_config = self.toolchains[name]
+
         # Single string entries constrain the spec
         if isinstance(toolchain_config, str):
             toolchain = parse_one_or_raise(toolchain_config)
             self._ensure_all_direct_edges(toolchain)
+            self.parsed_toolchains[name] = toolchain
             spec.constrain(toolchain)
             return
 
         # List entries we apply each list element
         for entry in toolchain_config:
-            constraint = parse_one_or_raise(entry["spec"])
+            toolchain = parse_one_or_raise(entry["spec"])
             when = entry.get("when", "")
-            self._ensure_all_direct_edges(constraint)
+            self._ensure_all_direct_edges(toolchain)
 
             # Conditions are applied to every edge in the constraint
-            for edge in constraint.traverse_edges():
+            for edge in toolchain.traverse_edges():
                 edge.when.constrain(when)
 
-            spec.constrain(constraint)
+            self.parsed_toolchains[name] = toolchain
+            spec.constrain(toolchain)
 
     def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
         for edge in constraint.traverse_edges(root=False):
