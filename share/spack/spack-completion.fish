@@ -2764,6 +2764,7 @@ set -g __fish_spack_optspecs_spack_repo h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a create -d 'create a new package repository'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a list -d 'show registered repositories and their namespaces'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a add -d 'add package repositories to Spack'"'"'s configuration'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a set -d 'modify an existing repository configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a rm -d 'remove a repository from Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a migrate -d 'migrate a package repository to the latest Package API'
@@ -2796,6 +2797,18 @@ complete -c spack -n '__fish_spack_using_command repo add' -l path -r -f -a path
 complete -c spack -n '__fish_spack_using_command repo add' -l path -r -d 'relative path to the Spack package repository inside a git repository. Can be repeated to add multiple package repositories in case of a monorepo'
 complete -c spack -n '__fish_spack_using_command repo add' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo add' -l scope -r -d 'configuration scope to modify'
+
+# spack repo set
+set -g __fish_spack_optspecs_spack_repo_set h/help destination= path= scope=
+
+complete -c spack -n '__fish_spack_using_command repo set' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command repo set' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo set' -l destination -r -f -a destination
+complete -c spack -n '__fish_spack_using_command repo set' -l destination -r -d 'destination to clone git repository into'
+complete -c spack -n '__fish_spack_using_command repo set' -l path -r -f -a path
+complete -c spack -n '__fish_spack_using_command repo set' -l path -r -d 'relative path to the Spack package repository inside a git repository. Can be repeated to add multiple package repositories in case of a monorepo'
+complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command repo set' -l scope -r -d 'configuration scope to modify'
 
 # spack repo remove
 set -g __fish_spack_optspecs_spack_repo_remove h/help scope=
