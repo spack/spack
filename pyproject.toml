@@ -91,7 +91,7 @@ llnl = ["llnl"]
 
 [tool.black]
 line-length = 99
-include = "(lib/spack|var/spack/repos|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
+include = "(lib/spack|var/spack/test_repos)/.*\\.pyi?$|bin/spack$"
 extend-exclude = "lib/spack/external"
 skip_magic_trailing_comma = true
 
@@ -116,9 +116,8 @@ honor_noqa = true
 files = [
   "lib/spack/llnl/**/*.py",
   "lib/spack/spack/**/*.py",
-  "var/spack/repos/spack_repo/builtin/packages/*/package.py",
 ]
-mypy_path = ["lib/spack", "lib/spack/external", "var/spack/repos"]
+mypy_path = ["lib/spack", "lib/spack/external"]
 allow_redefinition = true
 
 # This and a generated import file allows supporting packages
@@ -188,7 +187,7 @@ follow_imports_for_stubs = true
 useLibraryCodeForTypes = true
 reportMissingImports = true
 reportWildcardImportFromLibrary = false
-include = ["lib/spack", "var/spack/repos", "var/spack/test_repos"]
+include = ["lib/spack", "var/spack/test_repos"]
 ignore = ["lib/spack/external"]
 extraPaths = ["lib/spack", "lib/spack/external"]
 
