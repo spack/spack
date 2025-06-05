@@ -107,11 +107,7 @@ class Cmake(Package):
 
     for spack_platform in ["freebsd", "linux", "darwin"]:
         with when(f"platform={spack_platform}"):
-                variant(
-                    "ncurses",
-                    default=True,
-                    description="Enables the build of the ncurses gui",
-                )
+            variant("ncurses", default=True, description="Enables the build of the ncurses gui")
 
     # Revert the change that introduced a regression when parsing mpi link
     # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
