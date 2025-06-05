@@ -2763,6 +2763,7 @@ complete -c spack -n '__fish_spack_using_command rm' -s f -l force -d 'remove co
 set -g __fish_spack_optspecs_spack_repo h/help
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a create -d 'create a new package repository'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a list -d 'show registered repositories and their namespaces'
+complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a ls -d 'show registered repositories and their namespaces'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a add -d 'add package repositories to Spack'"'"'s configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a set -d 'modify an existing repository configuration'
 complete -c spack -n '__fish_spack_using_command_pos 0 repo' -f -a remove -d 'remove a repository from Spack'"'"'s configuration'
@@ -2785,6 +2786,13 @@ complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -f -a h
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -d 'configuration scope to read from'
+
+# spack repo ls
+set -g __fish_spack_optspecs_spack_repo_ls h/help scope=
+complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -d 'configuration scope to read from'
 
 # spack repo add
 set -g __fish_spack_optspecs_spack_repo_add h/help name= path= scope=
