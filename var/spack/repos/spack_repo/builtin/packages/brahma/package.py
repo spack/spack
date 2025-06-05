@@ -30,6 +30,7 @@ class Brahma(CMakePackage):
 
     variant("mpi", default=False, description="Enable MPI support")
 
+    depends_on("c", type="build")
     depends_on("cxx", type="build")  # generated
 
     depends_on("cpp-logger@0.0.1", when="@:0.0.1")
