@@ -82,6 +82,26 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="configuration scope to modify",
     )
 
+    # Set (modify existing repository configuration)
+    set_parser = sp.add_parser("set", help=repo_set.__doc__)
+    set_parser.add_argument("namespace", help="namespace of a Spack package repository")
+    set_parser.add_argument(
+        "--destination", help="destination to clone git repository into", action="store"
+    )
+    set_parser.add_argument(
+        "--path",
+        help="relative path to the Spack package repository inside a git repository. Can be "
+        "repeated to add multiple package repositories in case of a monorepo",
+        action="append",
+        default=[],
+    )
+    set_parser.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
+        help="configuration scope to modify",
+    )
+
     # Remove
     remove_parser = sp.add_parser("remove", help=repo_remove.__doc__, aliases=["rm"])
     remove_parser.add_argument(
@@ -365,11 +385,46 @@ def repo_migrate(args: Any) -> int:
     return exit_code
 
 
+def repo_set(args):
+    """modify an existing repository configuration"""
+    namespace = args.namespace
+
+    # First, check if the repository exists across all scopes for validation
+    all_repos: Dict[str, Any] = spack.config.get("repos", default={})
+
+    if namespace not in all_repos:
+        raise SpackError(f"No repository with namespace '{namespace}' found in configuration.")
+
+    # Validate that it's a git repository
+    if not isinstance(all_repos[namespace], dict):
+        raise SpackError(
+            f"Repository '{namespace}' is not a git repository. "
+            "The 'set' command only works with git repositories."
+        )
+
+    # Now get the repos for the specific scope we're modifying
+    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+
+    updated_entry = scope_repos[namespace] if namespace in scope_repos else {}
+
+    if args.destination:
+        updated_entry["destination"] = args.destination
+
+    if args.path:
+        updated_entry["paths"] = args.path
+
+    scope_repos[namespace] = updated_entry
+    spack.config.set("repos", scope_repos, args.scope)
+
+    tty.msg(f"Updated repo '{namespace}'")
+
+
 def repo(parser, args):
     return {
         "create": repo_create,
         "list": repo_list,
         "add": repo_add,
+        "set": repo_set,
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,
