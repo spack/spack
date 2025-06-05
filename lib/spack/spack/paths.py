@@ -134,13 +134,19 @@ class SpackPaths:
         # 5. inside spack prefix (slightly different compared to old
         #    install path)
         old_install_path = os.path.join(self.prefix, "opt", "spack")
-        self.default_install_location = self.use_spack_data_home_or_old_location("installs", old_install_path)
+        self.default_install_location = self.use_spack_data_home_or_old_location(
+            "installs", old_install_path
+        )
 
         old_envs_path = os.path.join(self.var_path, "environments")
-        self.default_envs_path = self.use_spack_data_home_or_old_location("environments", old_envs_path)
+        self.default_envs_path = self.use_spack_data_home_or_old_location(
+            "environments", old_envs_path
+        )
 
         old_fetch_cache_path = os.path.join(self.var_path, "cache")
-        self.default_fetch_cache_path = self.use_spack_data_home_or_old_location("downloads", old_fetch_cache_path)
+        self.default_fetch_cache_path = self.use_spack_data_home_or_old_location(
+            "downloads", old_fetch_cache_path
+        )
 
         # ------ Next section
         # Spack can write data into the following locations, but it
@@ -157,16 +163,22 @@ class SpackPaths:
         # 3. explicitly defined SPACK_DATA_HOME
         # 4. explicitly defined XDG_DATA_HOME
         # 5. default for XDG_DATA_HOME
-        self.user_cache_path = str(PurePath(os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or self.data_home_for_small_data())))
+        self.user_cache_path = str(
+            PurePath(
+                os.path.expanduser(
+                    os.getenv("SPACK_USER_CACHE_PATH") or self.data_home_for_small_data()
+                )
+            )
+        )
 
         #: junit, cdash, etc. reports about builds
-        reports_path = os.path.join(self.user_cache_path, "reports")
+        self.reports_path = os.path.join(self.user_cache_path, "reports")
 
         #: installation test (spack test) output
         self.default_test_path = os.path.join(self.user_cache_path, "test")
 
         #: spack monitor analysis directories
-        self.default_monitor_path = os.path.join(reports_path, "monitor")
+        self.default_monitor_path = os.path.join(self.reports_path, "monitor")
 
         #: git repositories fetched to compare commits to versions
         self.user_repos_cache_path = os.path.join(self.user_cache_path, "git_repos")
@@ -204,7 +216,7 @@ class SpackPaths:
 
         # ------ Next section
         # Spack can also write data into the following locations, and their
-        # defaults are not controlled by SPACK/XDG_DATA_HOME or 
+        # defaults are not controlled by SPACK/XDG_DATA_HOME or
         # SPACK_USER_CACHE_PATH. Like the prior section, the data written
         # into these locations isn't expected to take up much space, so in
         # some cases defaults to "~" (in those cases in compliance with
@@ -226,7 +238,9 @@ class SpackPaths:
 
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
-        self.default_misc_cache_path = os.path.join(self.xdg_state_home, self.spack_instance_id, "misc-cache")
+        self.default_misc_cache_path = os.path.join(
+            self.xdg_state_home, self.spack_instance_id, "misc-cache"
+        )
 
         #: concretization cache for Spack concretizations
         #: overridden by `config:concretization_cache:url`
@@ -258,6 +272,56 @@ class SpackPaths:
 
 
 this_spack = SpackPaths()
+
+prefix = this_spack.prefix
+spack_root = this_spack.spack_root
+bin_path = this_spack.bin_path
+spack_script = this_spack.spack_script
+sbang_script = this_spack.sbang_script
+lib_path = this_spack.lib_path
+external_path = this_spack.external_path
+module_path = this_spack.module_path
+command_path = this_spack.command_path
+analyzers_path = this_spack.analyzers_path
+platform_path = this_spack.platform_path
+compilers_path = this_spack.compilers_path
+operating_system_path = this_spack.operating_system_path
+test_path = this_spack.test_path
+hooks_path = this_spack.hooks_path
+share_path = this_spack.share_path
+etc_path = this_spack.etc_path
+default_license_dir = this_spack.default_license_dir
+var_path = this_spack.var_path
+repos_path = this_spack.repos_path
+test_repos_path = this_spack.test_repos_path
+packages_path = this_spack.packages_path
+mock_packages_path = this_spack.mock_packages_path
+mock_gpg_data_path = this_spack.mock_gpg_data_path
+mock_gpg_keys_path = this_spack.mock_gpg_keys_path
+spack_instance_id = this_spack.spack_instance_id
+xdg_state_home = this_spack.xdg_state_home
+xdg_config_home = this_spack.xdg_config_home
+xdg_cache_home = this_spack.xdg_cache_home
+xdg_data_home = this_spack.xdg_data_home
+default_install_location = this_spack.default_install_location
+default_envs_path = this_spack.default_envs_path
+default_fetch_cache_path = this_spack.default_fetch_cache_path
+user_cache_path = this_spack.user_cache_path
+reports_path = this_spack.reports_path
+default_test_path = this_spack.default_test_path
+default_monitor_path = this_spack.default_monitor_path
+user_repos_cache_path = this_spack.user_repos_cache_path
+default_user_bootstrap_path = this_spack.default_user_bootstrap_path
+gpg_path = this_spack.gpg_path
+gpg_keys_path = this_spack.gpg_keys_path
+modules_base = this_spack.modules_base
+user_config_path = this_spack.user_config_path
+system_config_path = this_spack.system_config_path
+end_user_cfg_path = this_spack.end_user_cfg_path
+default_misc_cache_path = this_spack.default_misc_cache_path
+default_conc_cache_path = this_spack.default_conc_cache_path
+
+
 for attr, value in vars(this_spack).items():
     globals()[attr] = value
 
