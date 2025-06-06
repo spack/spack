@@ -2261,9 +2261,14 @@ class Environment:
         # and add them to the spec, including build specs
         for lockfile_key, node_dict in json_specs_by_hash.items():
             name, data = reader.name_and_data(node_dict)
-            for _, dep_hash, deptypes, _, virtuals in reader.dependencies_from_node_dict(data):
+            for _, dep_hash, deptypes, _, virtuals, direct in reader.dependencies_from_node_dict(
+                data
+            ):
                 specs_by_hash[lockfile_key]._add_dependency(
-                    specs_by_hash[dep_hash], depflag=dt.canonicalize(deptypes), virtuals=virtuals
+                    specs_by_hash[dep_hash],
+                    depflag=dt.canonicalize(deptypes),
+                    virtuals=virtuals,
+                    direct=direct,
                 )
 
             if "build_spec" in node_dict:

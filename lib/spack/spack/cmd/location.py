@@ -43,7 +43,14 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="directory enclosing a spec's package.py file",
     )
     directories.add_argument(
-        "-P", "--packages", action="store_true", help="top-level packages directory for Spack"
+        "--repo",
+        # for backwards compatibility
+        "--packages",
+        "-P",
+        nargs="?",
+        default=False,
+        metavar="repo",
+        help="package repository root (defaults to first configured repository)",
     )
     directories.add_argument(
         "-s", "--stage-dir", action="store_true", help="stage directory for a spec"
@@ -108,8 +115,14 @@ def location(parser, args):
         print(path)
         return
 
-    if args.packages:
-        print(spack.repo.PATH.first_repo().root)
+    if args.repo is not False:
+        if args.repo is None:
+            print(spack.repo.PATH.first_repo().root)
+            return
+        try:
+            print(spack.repo.PATH.get_repo(args.repo).root)
+        except spack.repo.UnknownNamespaceError:
+            tty.die(f"no such repository: '{args.repo}'")
         return
 
     if args.stages:

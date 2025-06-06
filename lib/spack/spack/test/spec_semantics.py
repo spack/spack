@@ -2169,7 +2169,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()),),
+                ((0, 1, 0, (), False),),
             ),
         ],
         # root with multiple deps
@@ -2182,7 +2182,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
+                ((0, 1, 0, (), False), (0, 2, 0, (), False), (0, 3, 0, (), False)),
             ),
         ],
         # root with multiple build deps
@@ -2195,7 +2195,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, ()), (0, 2, 0, ()), (0, 3, 0, ())),
+                ((0, 1, 0, (), True), (0, 2, 0, (), True), (0, 3, 0, (), True)),
             ),
         ],
         # dependencies with dependencies
@@ -2212,12 +2212,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, ()),
-                    (0, 2, 0, ()),
-                    (1, 3, 0, ()),
-                    (1, 4, 0, ()),
-                    (2, 5, 0, ()),
-                    (2, 6, 0, ()),
+                    (0, 1, 0, (), False),
+                    (0, 2, 0, (), False),
+                    (1, 3, 0, (), True),
+                    (1, 4, 0, (), True),
+                    (2, 5, 0, (), True),
+                    (2, 6, 0, (), True),
                 ),
             ),
         ],
@@ -2310,3 +2310,17 @@ def test_spec_format_with_compiler_adaptors(
     """Tests the output of spec format, when involving `Spec.compiler` adaptors"""
     s = default_mock_concretization(spec_str)
     assert s.format(spec_fmt) == expected
+
+
+@pytest.mark.parametrize(
+    "lhs,rhs,expected",
+    [
+        ("mpich %gcc", "mpich %gcc", True),
+        ("mpich %gcc", "mpich ^gcc", False),
+        ("mpich ^callpath %gcc", "mpich %gcc ^callpath", False),
+    ],
+)
+def test_specs_equality(lhs, rhs, expected):
+    """Tests the semantic of == for abstract specs"""
+    lhs, rhs = Spec(lhs), Spec(rhs)
+    assert (lhs == rhs) is expected

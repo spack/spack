@@ -1168,7 +1168,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     mirror_dir = tmpdir.join("mirror_dir")
     mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
-    s = Spec("libdwarf").concretized()
+    s = spack.concretize.concretize_one("libdwarf")
 
     # Install libdwarf
     install_cmd("--fake", s.name)

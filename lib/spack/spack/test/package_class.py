@@ -24,6 +24,7 @@ import spack.package_base
 import spack.spec
 import spack.store
 import spack.subprocess_context
+import spack.util.git
 from spack.error import InstallError
 from spack.package_base import PackageBase
 from spack.solver.input_analysis import NoStaticAnalysis, StaticAnalysis
@@ -329,3 +330,49 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
 
     y = spack.subprocess_context.deserialize(spack.subprocess_context.serialize(x))
     assert y.spec._package is y
+
+
+@pytest.mark.parametrize("version", ("main", "tag"))
+@pytest.mark.parametrize("pre_stage", (True, False))
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+def test_binary_provenance_find_commit_ls_remote(
+    git, mock_git_repository, mock_packages, config, monkeypatch, version, pre_stage
+):
+    repo_path = mock_git_repository.path
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+
+    spec_str = f"git-test-commit@{version}"
+
+    if pre_stage:
+        spack.concretize.concretize_one(spec_str).package.do_stage(False)
+    else:
+        # explicitly disable ability to use stage or mirror, force url path
+        monkeypatch.setattr(
+            spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None
+        )
+
+    spec = spack.concretize.concretize_one(spec_str)
+
+    if pre_stage:
+        # confirmation that we actually had an expanded stage to query with ls-remote
+        assert spec.package.stage.expanded
+
+    vattrs = spec.package.versions[spec.version]
+    git_ref = vattrs.get("tag") or vattrs.get("branch")
+    actual_commit = git("-C", repo_path, "rev-parse", git_ref, output=str, error=str).strip()
+    assert spec.variants["commit"].value == actual_commit
+
+
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+def test_binary_provenance_cant_resolve_commit(mock_packages, monkeypatch, config, capsys):
+    """Fail all attempts to resolve git commits"""
+    monkeypatch.setattr(spack.package_base.PackageBase, "do_fetch", lambda *args, **kwargs: None)
+    monkeypatch.setattr(spack.util.git, "get_commit_sha", lambda x, y: None, raising=False)
+    spec = spack.concretize.concretize_one("git-ref-package@develop")
+    captured = capsys.readouterr()
+    assert "commit" not in spec.variants
+    assert "Warning: Unable to resolve the git commit" in captured.err

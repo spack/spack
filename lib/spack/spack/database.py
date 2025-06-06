@@ -766,7 +766,7 @@ class Database:
             spec_node_dict = spec_node_dict[spec.name]
         if "dependencies" in spec_node_dict:
             yaml_deps = spec_node_dict["dependencies"]
-            for dname, dhash, dtypes, _, virtuals in spec_reader.read_specfile_dep_specs(
+            for dname, dhash, dtypes, _, virtuals, direct in spec_reader.read_specfile_dep_specs(
                 yaml_deps
             ):
                 # It is important that we always check upstream installations in the same order,
@@ -785,7 +785,9 @@ class Database:
                     )
                     continue
 
-                spec._add_dependency(child, depflag=dt.canonicalize(dtypes), virtuals=virtuals)
+                spec._add_dependency(
+                    child, depflag=dt.canonicalize(dtypes), virtuals=virtuals, direct=direct
+                )
 
     def _read_from_file(self, filename: pathlib.Path, *, reindex: bool = False) -> None:
         """Fill database from file, do not maintain old data.

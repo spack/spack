@@ -181,8 +181,9 @@ def test_dev_build_fails_no_version(mock_packages):
 
 def test_dev_build_can_parse_path_with_at_symbol(tmpdir, install_mockery):
     special_char_dir = tmpdir.mkdir("tmp@place")
-    spec = spack.spec.Spec(f'dev-build-test-install@0.0.0 dev_path="{special_char_dir}"')
-    spec.concretize()
+    spec = spack.concretize.concretize_one(
+        f'dev-build-test-install@0.0.0 dev_path="{special_char_dir}"'
+    )
 
     with special_char_dir.as_cwd():
         with open(spec.package.filename, "w", encoding="utf-8") as f:
