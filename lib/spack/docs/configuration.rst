@@ -40,7 +40,7 @@ Here is an example ``config.yaml`` file:
      install_tree: $spack/opt/data/installs
      build_stage:
        - $tempdir/$user/spack-stage
-       - $xdg_cache_home/stage
+       - $spack_cache_home/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -383,7 +383,7 @@ your configurations look like this:
      install_tree: $spack/opt/data/installs
      build_stage:
        - $tempdir/$user/spack-stage
-       - $xdg_cache_home/stage
+       - $spack_cache_home/stage
 
 
 .. code-block:: yaml
@@ -406,7 +406,7 @@ command:
      install_tree: /some/other/directory
      build_stage:
        - $tempdir/$user/spack-stage
-       - $xdg_cache_home/stage
+       - $spack_cache_home/stage
 
 
 .. _config-prepend-append:
@@ -437,7 +437,7 @@ Spack will then append to the lower-precedence configuration under the
      install_tree: /some/other/directory/my/custom/suffix
      build_stage:
        - $tempdir/$user/spack-stage
-       - $xdg_cache_home/stage
+       - $spack_cache_home/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
@@ -490,7 +490,7 @@ Let's revisit the ``config.yaml`` example one more time. The
 
    build_stage:
      - $tempdir/$user/spack-stage
-     - $xdg_cache_home/stage
+     - $spack_cache_home/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
@@ -519,7 +519,7 @@ get config`` shows the result:
        - /lustre-scratch/$user/spack
        - ~/mystage
        - $tempdir/$user/spack-stage
-       - $xdg_cache_home/stage
+       - $spack_cache_home/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -591,8 +591,8 @@ Spack understands over a dozen special variables. These are:
 * ``$date``: the current date in the format YYYY-MM-DD
 * ``$spack_short_version``: the Spack version truncated to the first components.
 * ``$spack_instance_id``: a hash that distinguishes Spack instances on the filesystem.
-* ``$xdg_state_home``: the XDG location for long-lived but not-essential cache.
-* ``$xdg_cache_home``: the XDG location for temporary data.
+* ``$spack_state_home``: the XDG-derived location for long-lived but not-essential cache.
+* ``$spack_cache_home``: the XDG-derived location for temporary data.
 * ``$default_download_root``: the location where downloads go by default.
 * ``$default_envs_root``: the location where environments are managed by default.
 * ``$default_install_root``: the location where installs go by default.
@@ -686,9 +686,9 @@ account all scopes. For example, to see the fully merged
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      build_stage:
      - $tempdir/$user/spack-stage
-     - $xdg_cache_home/stage
+     - $spack_cache_home/stage
      source_cache: $default_download_root
-     misc_cache: $xdg_state_home/$spack_instance_id/cache
+     misc_cache: $spack_state_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -732,9 +732,9 @@ down the source of the configuration:
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $xdg_cache_home/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $spack_cache_home/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $default_download_root
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $xdg_state_home/$spack_instance_id/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $spack_state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
@@ -830,6 +830,7 @@ Spack also includes the variables ``SPACK_DATA_HOME``,
 ``SPACK_CONFIG_HOME``, and ``SPACK_STATE_HOME`` that map directly to
 the XDG variables described above. They work the same way, but have
 higher precedence than the XDG variables. If the Spack-specific
-variables *are not* defined, Spack uses the XDG variables with a suffix
-of "/spack". If they are defined, they are used directly without any
-additional suffix.
+environment variables *are not* defined, Spack will uses the XDG
+variables with a suffix of "/spack" to define ``$spack_state_home``,
+``$spack_data_home``, and ``spack_cache_home``. If they are defined,
+they are used directly without any additional suffix.

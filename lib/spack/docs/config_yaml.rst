@@ -96,14 +96,14 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir/$user/spack-stage
-    - $xdg_cache_home/stage
+    - $spack_cache_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage. The list is searched in
 order, and Spack will use the first directory to which it has write access.
 
-Specifying `$xdg_cache_home` first will ensure each user builds in
-their home directory (or wherever the user overrides XDG_CACHE_HOME to
+Specifying `$spack_cache_home` first will ensure each user builds in
+their home directory (or wherever the user overrides ``XDG_CACHE_HOME`` to
 be; see :ref:`xdg_overrides` for more information). The historic Spack
 stage path `$spack/var/spack/stage` will build directly inside the
 Spack instance. See :ref:`config-file-variables` for more on
