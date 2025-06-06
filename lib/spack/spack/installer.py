@@ -1428,16 +1428,6 @@ class RewireTask(Task):
             self.record.fail(e)
 
 
-if sys.platform == "win32":
-    # This seems like the real problem: AFAIK we don't have
-    # locks on Windows (we still skip the entire llnl.util.lock
-    # test module there) and we shouldn't be doing concurrent
-    # installs there.
-    _default_concurrent_procs = 1
-else:
-    _default_concurrent_procs = 4
-
-
 class PackageInstaller:
     """
     Class for managing the install process for a Spack instance based on a bottom-up DAG approach.
@@ -1474,7 +1464,7 @@ class PackageInstaller:
         unsigned: Optional[bool] = None,
         use_cache: bool = False,
         verbose: bool = False,
-        concurrent_packages: int = _default_concurrent_procs,
+        concurrent_packages: int = 4,
     ) -> None:
         """
         Arguments:
