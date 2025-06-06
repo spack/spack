@@ -812,6 +812,11 @@ value is ``~/.local/state``. ``misc_cache`` is placed by default using
 this variable.
 * ``misc_cache``: ``$XDG_STATE_HOME/$spack_instance_id/spack``
 
+``XDG_CACHE_HOME`` is used to store temporary data. If not defined,
+its default value is ``~/.cache``. Build stages are placed by default
+using this variable.
+* Build stages: ``$XDG_CACHE_HOME/spack``
+
 The user configuration scope's files will be located with ``XDG_CONFIG_HOME``. Its
 default value is ``~/.config``.
 * User configuration scope: ``$XDG_CONFIG_HOME/spack``

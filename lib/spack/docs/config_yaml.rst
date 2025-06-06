@@ -62,7 +62,7 @@ projections. For example:
 
        config:
          install_tree:
-           root: $spack/opt/spack
+           root: $default_install_root
            projections:
              all: "{name}/{version}/{hash:16}"
 
@@ -102,10 +102,12 @@ This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage. The list is searched in
 order, and Spack will use the first directory to which it has write access.
 
-Specifying `~/.spack/stage` first will ensure each user builds in their home
-directory. The historic Spack stage path `$spack/var/spack/stage` will build
-directly inside the Spack instance. See :ref:`config-file-variables` for more
-on ``$tempdir`` and ``$spack``.
+Specifying `$xdg_cache_home` first will ensure each user builds in
+their home directory (or wherever the user overrides XDG_CACHE_HOME to
+be; see :ref:`xdg_overrides` for more information). The historic Spack
+stage path `$spack/var/spack/stage` will build directly inside the
+Spack instance. See :ref:`config-file-variables` for more on
+``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``. After the package is successfully installed, Spack deletes
