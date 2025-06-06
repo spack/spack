@@ -11,9 +11,11 @@ from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
 
+import spack.binary_distribution
 import spack.compilers.config
 import spack.config
 import spack.spec
+import spack.store
 from spack.cmd.common import arguments
 
 description = "manage compilers"
@@ -66,6 +68,9 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     list_parser = sp.add_parser("list", aliases=["ls"], help="list available compilers")
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+    )
+    list_parser.add_argument(
+        "--remote", action="store_true", help="list also compilers from registered buildcaches"
     )
 
     # Info
@@ -170,7 +175,19 @@ def compiler_info(args):
 
 
 def compiler_list(args):
-    compilers = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
+    supported_compilers = spack.compilers.config.supported_compilers()
+
+    def _is_compiler(x):
+        return x.name in supported_compilers and x.package.supported_languages and not x.external
+
+    compilers_from_store = [x for x in spack.store.STORE.db.query() if _is_compiler(x)]
+    compilers_from_yaml = spack.compilers.config.all_compilers(scope=args.scope, init_config=False)
+    compilers = compilers_from_yaml + compilers_from_store
+
+    if args.remote:
+        compilers.extend(
+            [x for x in spack.binary_distribution.update_cache_and_get_specs() if _is_compiler(x)]
+        )
 
     # If there are no compilers in any scope, and we're outputting to a tty, give a
     # hint to the user.
@@ -205,7 +222,10 @@ def compiler_list(args):
             os_str += f"-{target}"
         cname = f"{spack.spec.COMPILER_COLOR}{{{name}}} {os_str}"
         tty.hline(colorize(cname), char="-")
-        colify(reversed(sorted(c.format("{name}@{version}") for c in compilers)))
+        result = {
+            colorize(c.install_status().value) + c.format("{name}@{version}") for c in compilers
+        }
+        colify(reversed(sorted(result)))
 
 
 def compiler(parser, args):

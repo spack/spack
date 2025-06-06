@@ -799,11 +799,11 @@ _spack_compiler_rm() {
 }
 
 _spack_compiler_list() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_ls() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_compiler_info() {
@@ -816,7 +816,7 @@ _spack_compiler_info() {
 }
 
 _spack_compilers() {
-    SPACK_COMPREPLY="-h --help --scope"
+    SPACK_COMPREPLY="-h --help --scope --remote"
 }
 
 _spack_concretize() {
@@ -870,7 +870,7 @@ _spack_config_list() {
 _spack_config_scopes() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -i --included -p --path-scopes -s --show-paths"
+        SPACK_COMPREPLY="-h --help -p --paths -t --type"
     else
         _config_sections
     fi
@@ -1793,7 +1793,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add remove rm migrate"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate"
     fi
 }
 
@@ -1810,12 +1810,25 @@ _spack_repo_list() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
+_spack_repo_ls() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
 _spack_repo_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --name --path --scope"
     else
         SPACK_COMPREPLY=""
+    fi
+}
+
+_spack_repo_set() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --destination --path --scope"
+    else
+        _repos
     fi
 }
 

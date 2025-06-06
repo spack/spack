@@ -1,5 +1,0 @@
-packages:
-  all:
-    target: ["x86_64_v3"]
-    require:
-    - "target=x86_64_v3"

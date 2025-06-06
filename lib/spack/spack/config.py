@@ -59,6 +59,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
@@ -86,6 +87,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "toolchains": spack.schema.toolchains.schema,
 }
 
 # Same as above, but including keys for environments
