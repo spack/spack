@@ -1464,7 +1464,7 @@ class PackageInstaller:
         unsigned: Optional[bool] = None,
         use_cache: bool = False,
         verbose: bool = False,
-        concurrent_packages: int,
+        concurrent_packages: int = 4,
     ) -> None:
         """
         Arguments:
