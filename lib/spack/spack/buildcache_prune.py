@@ -4,7 +4,8 @@
 
 import tempfile
 from concurrent.futures import as_completed
-from typing import Dict, Optional, Set, cast
+from contextlib import contextmanager
+from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
 
 import llnl.util.tty as tty
 
@@ -18,7 +19,37 @@ from .mirrors.mirror import Mirror
 from .url_buildcache import URLBuildcacheEntry, get_entries_from_cache
 
 
-def _prune_orphans(mirror: Mirror) -> int:
+@contextmanager
+def _fetch_manifests(
+    mirror: Mirror,
+) -> Generator[Tuple[List[str], Callable[[str], URLBuildcacheEntry], List[str]], None, None]:
+    """
+    Fetch all manifests from the buildcache for a given mirror.
+
+    This function retrieves all the manifest files from the buildcache of the specified
+    mirror and returns a list of tuples containing the file names and a callable to read
+    each manifest.
+
+    :param mirror: The mirror from which to fetch the manifests.
+    :return: A list of tuples, each containing a list of file names and a callable to read
+             the manifest entries.
+    """
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
+        url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
+        tty.debug(f"Listing blobs in {url_to_list}")
+        blobs = web_util.list_url(url_to_list, recursive=True) or []
+        if not blobs:
+            tty.warn(f"Unable to list blobs in {url_to_list}")
+        yield file_list, read_fn, blobs
+
+
+def _prune_orphans(
+    mirror: Mirror,
+    manifests: List[str],
+    read_fn: Callable[[str], URLBuildcacheEntry],
+    blobs: List[str],
+) -> int:
     """
     Prune orphaned manifests and blobs from the buildcache.
 
@@ -44,36 +75,27 @@ def _prune_orphans(mirror: Mirror) -> int:
     # we will need to know which manifest to prune.
     blob_to_manifest_mapping: Dict[str, str] = {}
 
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
+    def process_manifest(blob_name: str) -> Dict[str, str]:
+        cache_entry: Optional[URLBuildcacheEntry] = None
+        try:
+            cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
+            assert cache_entry.manifest is not None  # to satisfy type checker
+            return {
+                cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
+                for data in cache_entry.manifest.data
+            }
+        except Exception as e:
+            tty.warn(f"Unable to fetch spec for manifest {blob_name} due to: {e}")
+            return {}
+        finally:
+            if cache_entry:
+                cache_entry.destroy()
 
-        def process_manifest(blob_name: str) -> Dict[str, str]:
-            cache_entry: Optional[URLBuildcacheEntry] = None
-            try:
-                cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
-                assert cache_entry.manifest is not None  # to satisfy type checker
-                return {
-                    cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
-                    for data in cache_entry.manifest.data
-                }
-            except Exception as e:
-                tty.warn(f"Unable to fetch spec for manifest {blob_name} due to: {e}")
-                return {}
-            finally:
-                if cache_entry:
-                    cache_entry.destroy()
-
-        with spack.util.parallel.make_concurrent_executor() as executor:
-            futures = {executor.submit(process_manifest, blob): blob for blob in file_list}
-            for future in as_completed(futures):
-                result = future.result()
-                blob_to_manifest_mapping.update(result)
-
-    url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
-    tty.debug(f"Listing blobs in {url_to_list}")
-    blobs = web_util.list_url(url_to_list, recursive=True)
-    if not blobs:
-        tty.warn(f"Unable to list blobs in {url_to_list}")
+    with spack.util.parallel.make_concurrent_executor() as executor:
+        futures = {executor.submit(process_manifest, blob): blob for blob in manifests}
+        for future in as_completed(futures):
+            result = future.result()
+            blob_to_manifest_mapping.update(result)
 
     # Blobs that are referenced in a manifest file (but not necessarily present in the cache)
     blob_hashes_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
@@ -112,6 +134,11 @@ def _prune_orphans(mirror: Mirror) -> int:
     def remove_manifest(url: str) -> int:
         try:
             web_util.remove_url(url=url)
+            # Remove the manifest file from the local list of manifests.
+            # It may not be present in the local list if it was already removed
+            # during the pruning of another orphaned blob.
+            if url in manifests:
+                manifests.remove(url)
             tty.info(f"Removed manifest {url}")
             return 1
         except Exception as e:
@@ -121,6 +148,7 @@ def _prune_orphans(mirror: Mirror) -> int:
     def remove_blob(url: str) -> int:
         try:
             web_util.remove_url(url=url)
+            del blob_to_manifest_mapping[url]
             tty.debug(f"Removed {url}")
             return 1
         except Exception as e:
@@ -146,11 +174,14 @@ def prune(mirror: Mirror) -> None:
     tty.debug(f"Pruning mirror: {mirror.fetch_url}")
 
     total_pruned = 0
-    while True:
-        # Continue pruning until no more orphaned objects are found
-        pruned = _prune_orphans(mirror)
-        if pruned == 0:
-            break
-        total_pruned += pruned
+    with _fetch_manifests(mirror) as (manifest_list, read_fn, blob_list):
+        while True:
+            # Continue pruning until no more orphaned objects are found
+            pruned = _prune_orphans(
+                mirror=mirror, manifests=manifest_list, read_fn=read_fn, blobs=blob_list
+            )
+            if pruned == 0:
+                break
+            total_pruned += pruned
 
     tty.debug(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
