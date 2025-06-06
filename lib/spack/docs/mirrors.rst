@@ -238,7 +238,7 @@ To remove a mirror by name, run:
 Mirror precedence
 -----------------
 
-Adding a mirror really adds a line in ``~/.spack/mirrors.yaml``:
+Adding a mirror really adds a line in ``~/.config/spack/mirrors.yaml``:
 
 .. code-block:: yaml
 

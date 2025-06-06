@@ -133,7 +133,7 @@ Libraries
 
 If you want Spack to use oneMKL that you have installed without Spack in
 the default location, then add the following to
-``~/.spack/packages.yaml``, adjusting the version as appropriate::
+``~/.config/spack/packages.yaml``, adjusting the version as appropriate::
 
   intel-oneapi-mkl:
     externals:

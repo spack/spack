@@ -575,7 +575,7 @@ Spack understands over a dozen special variables. These are:
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
 * ``$user``: name of the current user
-* ``$user_cache_path``: user cache directory (``~/.spack`` unless
+* ``$user_cache_path``: user cache directory (``~/.local/share/spack`` unless
   :ref:`overridden <local-config-overrides>`)
 * ``$architecture``: the architecture triple of the current host, as
   detected by Spack.

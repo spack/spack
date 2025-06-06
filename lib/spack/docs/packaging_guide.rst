@@ -5255,7 +5255,7 @@ Configuring the test stage directory
 
 Stand-alone tests utilize a test stage directory to build, run, and track
 tests in the same way Spack uses a build stage directory to install software.
-The default test stage root directory, ``$HOME/.spack/test``, is defined in
+The default test stage root directory, ``$user_cache_path/test``, is defined in
 :ref:`config.yaml <config-yaml>`. This location is customizable by adding or
 changing the ``test_stage`` path such that:
 

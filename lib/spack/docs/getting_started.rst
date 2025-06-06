@@ -188,7 +188,7 @@ The Bootstrap Store
 """""""""""""""""""
 
 All the tools Spack needs for its own functioning are installed in a separate store, which lives
-under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+under the ``${HOME}/.local/share/spack`` directory. The software installed there can be queried with:
 
 .. code-block:: console
 

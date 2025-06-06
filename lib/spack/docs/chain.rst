@@ -21,7 +21,7 @@ you can add it as an entry to ``upstreams.yaml`` at any of the
     spack-instance-2:
       install_tree: /path/to/another/spack/opt/spack
 
-The ``install_tree`` must point to the ``opt/spack`` directory inside of the
+The ``install_tree`` must point to the ``opt/data/installs`` directory inside of the
 Spack base directory, or the location of the ``install_tree`` defined
 in :ref:`config.yaml <config-yaml>`.
 
