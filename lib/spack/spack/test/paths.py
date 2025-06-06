@@ -88,7 +88,7 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
     (old_gpg_dir).mkdir(parents=True)
     p1 = paths.SpackPaths(base_prefix)
     # Old dir exists, but is empty, so it should not be used
-    assert p1.gpg_path == str(pathlib.Path(user_cache_path) / "gpg") 
+    assert p1.gpg_path == str(pathlib.Path(user_cache_path) / "gpg")
     (old_gpg_dir / "something").touch()
     p1 = paths.SpackPaths(base_prefix)
     # Now it should redirect
