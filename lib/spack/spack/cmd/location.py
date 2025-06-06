@@ -48,7 +48,6 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--packages",
         "-P",
         nargs="?",
-        const=True,
         default=False,
         metavar="repo",
         help="package repository root (defaults to first configured repository)",
@@ -117,7 +116,7 @@ def location(parser, args):
         return
 
     if args.repo is not False:
-        if args.repo is True:
+        if args.repo is None:
             print(spack.repo.PATH.first_repo().root)
             return
         try:
