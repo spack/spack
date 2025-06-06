@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import tempfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import as_completed
 from typing import Dict, Optional, Set, cast
 
 import llnl.util.tty as tty
 
 import spack.binary_distribution as bindist
 import spack.stage
+import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
 
@@ -62,7 +63,7 @@ def _prune_orphans(mirror: Mirror) -> int:
                 if cache_entry:
                     cache_entry.destroy()
 
-        with ThreadPoolExecutor() as executor:
+        with spack.util.parallel.make_concurrent_executor() as executor:
             futures = {executor.submit(process_manifest, blob): blob for blob in file_list}
             for future in as_completed(futures):
                 result = future.result()
@@ -126,7 +127,7 @@ def _prune_orphans(mirror: Mirror) -> int:
             tty.warn(f"Unable to prune blob {url} due to: {e}")
             return 0
 
-    with ThreadPoolExecutor() as executor:
+    with spack.util.parallel.make_concurrent_executor() as executor:
         manifest_futures = [executor.submit(remove_manifest, url) for url in orphaned_manifests]
         blob_futures = [executor.submit(remove_blob, url) for url in orphaned_blobs]
 
