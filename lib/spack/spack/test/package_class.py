@@ -332,6 +332,12 @@ def test_deserialize_preserves_package_attribute(default_mock_concretization):
     assert y.spec._package is y
 
 
+@pytest.mark.require_provenance
+def test_binary_provenance_commit_version(mock_packages):
+    spec = spack.concretize.concretize_one("git-ref-package@stable")
+    assert spec.satisfies(f"commit={'c' * 40}")
+
+
 @pytest.mark.parametrize("version", ("main", "tag"))
 @pytest.mark.parametrize("pre_stage", (True, False))
 @pytest.mark.require_provenance

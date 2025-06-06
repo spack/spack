@@ -1049,6 +1049,11 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
             ref = self.spec.version.ref
         else:
             v_attrs = self.versions.get(self.spec.version, {})
+            if "commit" in v_attrs:
+                self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+                    "commit", v_attrs["commit"]
+                )
+                return
             ref = v_attrs.get("tag") or v_attrs.get("branch")
 
         if not ref:
