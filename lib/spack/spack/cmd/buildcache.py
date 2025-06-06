@@ -213,7 +213,9 @@ def setup_parser(subparser: argparse.ArgumentParser):
     download.set_defaults(func=download_fn)
 
     prune = subparsers.add_parser("prune", help=prune_fn.__doc__)
-    prune.add_argument("mirror", type=arguments.mirror_name, help="name of a configured mirror")
+    prune.add_argument(
+        "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
+    )
     prune.set_defaults(func=prune_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
