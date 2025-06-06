@@ -15,5 +15,6 @@ class PyPyclibrary(PythonPackage):
 
     version("0.2.2", sha256="9902fffe361bb86f57ab62aa4195ec4dd382b63c5c6892be6d9784ec0a3575f7")
 
-    depends_on("py-setuptools", type=("build"))
+    depends_on("py-setuptools", type="build")
     depends_on("python", type=("build", "run"))
+    depends_on("py-pyparsing@2.3.1:3", type=("build", "run"))

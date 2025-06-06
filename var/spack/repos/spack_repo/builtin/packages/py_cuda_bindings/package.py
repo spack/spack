@@ -20,15 +20,15 @@ class PyCudaBindings(PythonPackage):
     version("12.8.0", sha256="6cc8db1e65a1f995e289b64f9b9bff4362321d36ecf9b54eb192d0781475fbca")
     version("11.8.7", sha256="613ec6d0cde3db4d48074010ed6015ff60462f14c5fa7d8fe82fe7a7ecd5d1ac")
 
-    depends_on("python@3.9:", type=("build", "run"))
-    depends_on("py-cython", type="build")
-    depends_on("py-pyparsing", type="build")
-    depends_on("py-pyclibrary", type="build")
-    depends_on("py-setuptools", type="build")
-
     depends_on("cuda@12.9", when="@12.9.0")
     depends_on("cuda@12.8", when="@12.8.0")
     depends_on("cuda@11.8", when="@11.8.7")
+    depends_on("python@3.9:", type=("build", "run"))
+    depends_on("py-cython", type="build")
+    depends_on("py-pyclibrary", type=("build", "run"))
+    depends_on("py-pywin32", when="platform=windows", type=("build", "run"))
+    depends_on("py-setuptools", type="build")
+    depends_on("py-setuptools@77.0.0:", when="@12.9.0", type="build")
 
     build_directory = "cuda_bindings"
 
