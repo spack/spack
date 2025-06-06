@@ -37,6 +37,10 @@ modules:
   # These are configurations for the module set named "default"
   default:
     # Where to install modules
+    # If set to a non-default value, this setting has precedence.
+    # This default value tells spack to check (in order of precedence):
+    # $spack/share/spack/{modules/lmod} if previously used by an older version of spack
+    # $user_cache_path/modules/{modules/lmod} otherwise
     roots:
      tcl:    $modules_base/modules
      lmod:   $modules_base/lmod
