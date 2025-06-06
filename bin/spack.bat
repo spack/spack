@@ -13,7 +13,7 @@
 ::
 @echo off
 
-set spack="%SPACK_ROOT%"\bin\spack
+set spack="%SPACK_ROOT%\bin\spack"
 
 ::#######################################################################
 :: This is a wrapper around the spack command that forwards calls to
@@ -95,20 +95,20 @@ if defined cl_args goto :process_cl_args
 :: If we encounter, execute and exit
 if defined _sp_flags (
     if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
-        python "%spack%" %_sp_flags%
+        python %spack% %_sp_flags%
         exit /B 0
     ) else if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-        python "%spack%" %_sp_flags%
+        python %spack% %_sp_flags%
         exit /B 0
     ) else if NOT "%_sp_flags%"=="%_sp_flags:-V=%" (
-        python "%spack%" %_sp_flags%
+        python %spack% %_sp_flags%
         exit /B 0
     )
 )
 if not defined _sp_subcommand (
    if not defined _sp_args (
       if not defined _sp_flags (
-         python "%spack%" --help
+         python %spack% --help
          exit /B 0
       )
    )
@@ -146,16 +146,16 @@ if "%_sp_subcommand%" == "cd" (
 :: Here, they may be anywhere in the args
 if defined _sp_args (
     if NOT "%_sp_args%"=="%_sp_args:--help=%" (
-        python "%spack%" cd -h
+        python %spack% cd -h
         goto :end_switch
     ) else if NOT "%_sp_args%"=="%_sp_args:-h=%" (
-        python "%spack%" cd -h
+        python %spack% cd -h
         goto :end_switch
     )
 )
 
 for /F "tokens=* USEBACKQ" %%F in (
-  `python "%spack%" location %_sp_args%`) do (
+  `python %spack% location %_sp_args%`) do (
     set "LOC=%%F"
 )
 for %%Z in ("%LOC%") do if EXIST %%~sZ\NUL (cd /d "%LOC%")
@@ -203,13 +203,13 @@ if NOT "%_sp_args%"=="%_sp_args:--help=%" (
 )
 
 for /f "tokens=* USEBACKQ" %%I in (
-    `python "%spack%" %_sp_flags% %_sp_subcommand% --bat %_sp_args%`
+    `python %spack% %_sp_flags% %_sp_subcommand% --bat %_sp_args%`
     ) do %%I
 
 goto :end_switch
 
 :default_case
-python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
+python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
 goto :end_switch
 
 :end_switch
