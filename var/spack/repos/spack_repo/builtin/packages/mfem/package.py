@@ -294,6 +294,8 @@ class Mfem(Package, CMakePackage, CudaPackage, ROCmPackage):
     conflicts("^mpich@4:", when="@:4.3+mpi")
 
     depends_on("cxx", type="build")  # generated
+    depends_on("c", type="build")
+    depends_on("fortran", type="build")
     depends_on("gmake", type="build")
 
     depends_on("mpi", when="+mpi")
