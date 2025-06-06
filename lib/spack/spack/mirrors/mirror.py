@@ -25,12 +25,14 @@ def _url_or_path_to_url(url_or_path: str) -> str:
     This helper function takes care of distinguishing between URLs and paths, and
     canonicalizes paths before transforming them into file:// URLs."""
     # Is it a supported URL already? Then don't do path-related canonicalization.
-    parsed = urllib.parse.urlparse(url_or_path)
+    canonical_url_or_path = spack.util.path.canonicalize_path(url_or_path)
+
+    parsed = urllib.parse.urlparse(canonical_url_or_path)
     if parsed.scheme in supported_url_schemes:
-        return url_or_path
+        return canonical_url_or_path
 
     # Otherwise we interpret it as path, and we should promote it to file:// URL.
-    return url_util.path_to_file_url(spack.util.path.canonicalize_path(url_or_path))
+    return url_util.path_to_file_url(canonical_url_or_path)
 
 
 class Mirror:

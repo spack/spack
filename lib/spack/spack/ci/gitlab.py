@@ -113,13 +113,26 @@ def generate_gitlab_yaml(pipeline: PipelineDag, spack_ci: SpackCIConfig, options
     pipeline_artifacts_dir = os.path.join(ci_project_dir, artifacts_root)
     output_file = options.output_file
 
+    # Default name is .gitlab-ci.yml
     if not output_file:
-        output_file = os.path.abspath(".gitlab-ci.yml")
-    else:
-        output_file_path = os.path.abspath(output_file)
-        gen_ci_dir = os.path.dirname(output_file_path)
-        if not os.path.exists(gen_ci_dir):
-            os.makedirs(gen_ci_dir)
+        output_file = ".gitlab-ci.yml"
+
+    # If not abs, assume output is relative to the artifacts dir
+    if not os.path.isabs(output_file):
+        output_file = os.path.join(pipeline_artifacts_dir, output_file)
+
+    output_file = os.path.abspath(output_file)
+    gen_ci_dir = os.path.dirname(output_file)
+    if not os.path.exists(gen_ci_dir):
+        os.makedirs(gen_ci_dir)
+
+    if not output_file.startswith(os.path.abspath(pipeline_artifacts_dir)):
+        msg = "output-file must be under artifacts-root for reproudction"
+        msg += f"\n\tartifacts-dir: {os.path.abspath(pipeline_artifacts_dir)}"
+        msg += f"\n\toutput-file: {output_file}"
+        raise SpackCIError(msg)
+
+    tty.msg(f"writing output to {output_file}")
 
     spack_ci_ir = spack_ci.generate_ir()
 

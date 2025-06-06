@@ -107,8 +107,16 @@ def ci_generate_test(tmp_path, mutable_mock_env_path, install_mockery, ci_base_e
         spack_yaml = tmp_path / "spack.yaml"
         spack_yaml.write_text(spack_yaml_content)
 
+        ci_project_root_dir = os.environ["CI_PROJECT_DIR"]
+        artifact_root = os.path.join(ci_project_root_dir, "jobs_scratch_dir")
+        for arg in args:
+            if not artifact_root:
+                artifact_root = arg
+            if arg == "--artifacts-root":
+                artifact_root = None
+
         env_cmd("create", "test", str(spack_yaml))
-        outputfile = tmp_path / ".gitlab-ci.yml"
+        outputfile = pathlib.Path(os.path.join(artifact_root, ".gitlab-ci.yml"))
         with ev.read("test"):
             output = ci_cmd(
                 "generate",
@@ -807,9 +815,11 @@ spack:
             # Now test the --prune-dag (default) option of spack ci generate
             mirror_cmd("add", "test-ci", mirror_url)
 
-            outputfile_pruned = str(tmp_path / "pruned_pipeline.yml")
-            ci_cmd("generate", "--output-file", outputfile_pruned)
+            ci_cmd("generate", "--output-file", "pruned_pipeline.yml")
 
+            outputfile_pruned = os.path.join(
+                os.environ["CI_PROJECT_DIR"], "jobs_scratch_dir", "pruned_pipeline.yml"
+            )
             with open(outputfile_pruned, encoding="utf-8") as f:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
@@ -826,10 +836,12 @@ spack:
                 assert "rules" in yaml_contents["workflow"]
                 assert yaml_contents["workflow"]["rules"] == [{"when": "always"}]
 
-            outputfile_not_pruned = str(tmp_path / "unpruned_pipeline.yml")
-            ci_cmd("generate", "--no-prune-dag", "--output-file", outputfile_not_pruned)
+            ci_cmd("generate", "--no-prune-dag", "--output-file", "unpruned_pipeline.yml")
 
             # Test the --no-prune-dag option of spack ci generate
+            outputfile_not_pruned = os.path.join(
+                os.environ["CI_PROJECT_DIR"], "jobs_scratch_dir", "unpruned_pipeline.yml"
+            )
             with open(outputfile_not_pruned, encoding="utf-8") as f:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
@@ -1164,7 +1176,7 @@ spack:
             # Check the 'generate' subcommand
             expect = "spack ci generate requires a mirror named 'buildcache-destination'"
             with pytest.raises(ci.SpackCIError, match=expect):
-                ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
+                ci_cmd("generate", "--output-file", ".gitlab-ci.yml")
 
             # Also check the 'rebuild-index' subcommand
             output = ci_cmd("rebuild-index", output=str, fail_on_error=False)
@@ -1569,11 +1581,11 @@ spack:
           image: donotcare
 """
         )
-
+    output_file = os.path.join(os.environ["CI_PROJECT_DIR"], "jobs_scratch_dir", ".gitlab-ci.yml")
     with ev.Environment(tmp_path):
-        ci_cmd("generate", "--output-file", str(tmp_path / ".gitlab-ci.yml"))
+        ci_cmd("generate", "--output-file", output_file)
 
-    with open(tmp_path / ".gitlab-ci.yml", encoding="utf-8") as f:
+    with open(output_file, encoding="utf-8") as f:
         pipeline_doc = syaml.load(f)
         assert fst not in pipeline_doc["rebuild-index"]["script"][0]
         assert snd in pipeline_doc["rebuild-index"]["script"][0]
@@ -1622,7 +1634,7 @@ def test_ci_dynamic_mapping_empty(
     _ = dynamic_mapping_setup(tmpdir)
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+        outputfile = ".gitlab-ci.yml"
 
         with ev.read("test"):
             output = ci_cmd("generate", "--output-file", outputfile)
@@ -1651,12 +1663,15 @@ def test_ci_dynamic_mapping_full(
     label = dynamic_mapping_setup(tmpdir)
     with tmpdir.as_cwd():
         env_cmd("create", "test", "./spack.yaml")
-        outputfile = str(tmpdir.join(".gitlab-ci.yml"))
+        outputfile = ".gitlab-ci.yml"
 
         with ev.read("test"):
             ci_cmd("generate", "--output-file", outputfile)
 
-            with open(outputfile, encoding="utf-8") as of:
+            with open(
+                os.path.join(os.environ["CI_PROJECT_DIR"], "jobs_scratch_dir", outputfile),
+                encoding="utf-8",
+            ) as of:
                 pipeline_doc = syaml.load(of.read())
                 assert label in pipeline_doc
                 job = pipeline_doc[label]
@@ -1770,11 +1785,11 @@ spack:
     assert copy_job["stage"] == copy_stage
 
     # Make sure a pipeline manifest was generated
-    output_directory = os.path.dirname(output_file)
+    ci_project_dir = os.environ["CI_PROJECT_DIR"]
     assert "SPACK_ARTIFACTS_ROOT" in pipeline_doc["variables"]
     artifacts_root = pipeline_doc["variables"]["SPACK_ARTIFACTS_ROOT"]
     pipeline_manifest_path = os.path.join(
-        output_directory, artifacts_root, "specs_to_copy", "copy_rebuilt_specs.json"
+        ci_project_dir, artifacts_root, "specs_to_copy", "copy_rebuilt_specs.json"
     )
 
     assert os.path.exists(pipeline_manifest_path)
@@ -1796,6 +1811,10 @@ def generate_unittest_pipeline(
     """Define a custom pipeline generator for the target 'unittestgenerator'."""
     output_file = options.output_file
     assert output_file is not None
+
+    if not os.path.exists(os.path.dirname(output_file)):
+        os.makedirs(os.path.dirname(output_file))
+
     with open(output_file, "w", encoding="utf-8") as fd:
         fd.write("unittestpipeline\n")
         for _, node in pipeline.traverse_nodes(direction="children"):
