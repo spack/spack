@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 
-from spack_repo.builtin_mock.build_systems.python import PythonExtension
 from spack_repo.builtin_mock.build_systems.generic import Package
+from spack_repo.builtin_mock.build_systems.python import PythonExtension
 
 from spack.package import *
 
