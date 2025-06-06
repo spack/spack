@@ -132,7 +132,7 @@ def test_delete_is_idempotent(file_cache):
 
 def test_destroy_file_cache(file_cache):
     """Test populating and then destroying a file cache"""
-    with file_cache.write_transaction(os.path.join("tmpdir", "test.yaml")) as (old, new):
+    with file_cache.write_transaction("test.yaml") as (old, new):
         assert old is None
         assert new is not None
         new.write("foobar\n")
