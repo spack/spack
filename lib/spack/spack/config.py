@@ -941,8 +941,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     except PermissionError:
         pass
     if site_admin_accessible:
-        # TODO: this does not need to be platform specific, and it should
-        # not be writable
+        # TODO: list this as an available scope, but not a writable one
         configuration_paths.append(("site-admin", site_admin_path))
 
     # System configuration is per machine.
