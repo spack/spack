@@ -10,6 +10,7 @@ dependencies.
 """
 import os
 import pathlib
+from collections import namedtuple
 from enum import Enum
 from pathlib import PurePath
 
@@ -25,9 +26,25 @@ class XDG_vars(Enum):
     cache_home = "XDG_CACHE_HOME"
 
 
+class XDG_overrides(Enum):
+    config_home = "SPACK_CONFIG_HOME"
+    state_home = "SPACK_STATE_HOME"
+    data_home = "SPACK_DATA_HOME"
+    cache_home = "SPACK_CACHE_HOME"
+
+
+xdg_mapping = namedtuple("xdg_mapping", ["spack", "xdg", "xdg_default"])
+
+
+class XDG_mappings(Enum):
+    config_home = xdg_mapping(spack=XDG_overrides.config_home.value, xdg=XDG_vars.config_home.value, xdg_default=os.path.join("~", ".config"))
+    state_home = xdg_mapping(spack=XDG_overrides.state_home.value, xdg=XDG_vars.state_home.value, xdg_default=os.path.join("~", ".local", "state"))
+    data_home = xdg_mapping(spack=XDG_overrides.data_home.value, xdg=XDG_vars.data_home.value, xdg_default=os.path.join("~", ".local", "share"))
+    cache_home = xdg_mapping(spack=XDG_overrides.cache_home.value, xdg=XDG_vars.cache_home.value, xdg_default=os.path.join("~", ".cache"))
+
+
 class Location_vars(Enum):
     user_cache_path = "USER_CACHE_PATH"
-    spack_data_home = "SPACK_DATA_HOME"
 
 
 # This is for tests that want to clean the environment of XDG_ variables that
@@ -40,12 +57,15 @@ def _unset_xdg_vars(env):
     return saved
 
 
-def _define_xdg_or_backup(xdg_var, backup):
-    if xdg_var in os.environ:
-        spack_xdg_defined = os.path.join(os.environ[xdg_var], "spack")
+def _spack_xdg_or_backup(xdg_mapping):
+    if xdg_mapping.spack in os.environ:
+        val = os.environ[xdg_mapping.spack]
+    elif xdg_mapping.xdg in os.environ:
+        val =  os.path.join(os.environ[xdg_mapping.xdg], "spack")
     else:
-        spack_xdg_defined = os.path.join(backup, "spack")
-    return os.path.expanduser(spack_xdg_defined)
+        val = os.path.join(xdg_mapping.xdg_default, "spack")
+
+    return os.path.expanduser(val)
 
 
 def dir_is_occupied(x, except_for=None):
@@ -103,18 +123,10 @@ class SpackPaths:
 
         # Resolved XDG_x_HOME variables, with additional "spack" subdirectory.
         # Resolves to default value from XDG spec if unset.
-        self.xdg_state_home = _define_xdg_or_backup(
-            XDG_vars.state_home.value, os.path.join("~", ".local", "state")
-        )
-        self.xdg_config_home = _define_xdg_or_backup(
-            XDG_vars.config_home.value, os.path.join("~", ".config")
-        )
-        self.xdg_cache_home = _define_xdg_or_backup(
-            XDG_vars.cache_home.value, os.path.join("~", ".cache")
-        )
-        self.xdg_data_home = _define_xdg_or_backup(
-            XDG_vars.data_home.value, os.path.join("~", ".local", "share")
-        )
+        self.spack_state_home = _spack_xdg_or_backup(XDG_mappings.state_home.value)
+        self.spack_config_home = _spack_xdg_or_backup(XDG_mappings.config_home.value)
+        self.spack_cache_home = _spack_xdg_or_backup(XDG_mappings.cache_home.value)
+        self.spack_data_home = _spack_xdg_or_backup(XDG_mappings.data_home.value)
 
         # ------ Next section
         # Spack can write a lot of data into the next 3 locations, and
@@ -230,7 +242,7 @@ class SpackPaths:
 
         #: User configuration location
         self.user_config_path = os.path.expanduser(
-            os.getenv("SPACK_USER_CONFIG_PATH") or self.xdg_config_home
+            os.getenv("SPACK_USER_CONFIG_PATH") or self.spack_config_home
         )
 
         #: System configuration location
@@ -245,7 +257,7 @@ class SpackPaths:
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
         self.default_misc_cache_path = os.path.join(
-            self.xdg_state_home, self.spack_instance_id, "misc-cache"
+            self.spack_state_home, self.spack_instance_id, "misc-cache"
         )
 
         #: concretization cache for Spack concretizations
@@ -253,14 +265,11 @@ class SpackPaths:
         self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
 
     def data_home_for_small_data(self):
-        if Location_vars.spack_data_home.value in os.environ:
-            return os.environ[Location_vars.spack_data_home.value]
-        else:
-            return self.xdg_data_home
+        return self.spack_data_home
 
     def large_data_component(self, subdir, old_location):
-        if Location_vars.spack_data_home.value in os.environ:
-            return os.path.join(os.environ[Location_vars.spack_data_home.value], subdir)
+        if XDG_overrides.data_home.value in os.environ:
+            return os.path.join(os.environ[XDG_overrides.data_home.value], subdir)
         elif XDG_vars.data_home.value in os.environ:
             return os.path.expanduser(
                 os.path.join(os.environ[XDG_vars.data_home.value], "spack", subdir)
@@ -298,10 +307,10 @@ mock_packages_path = locations.mock_packages_path
 mock_gpg_data_path = locations.mock_gpg_data_path
 mock_gpg_keys_path = locations.mock_gpg_keys_path
 spack_instance_id = locations.spack_instance_id
-xdg_state_home = locations.xdg_state_home
-xdg_config_home = locations.xdg_config_home
-xdg_cache_home = locations.xdg_cache_home
-xdg_data_home = locations.xdg_data_home
+spack_state_home = locations.spack_state_home
+spack_config_home = locations.spack_config_home
+spack_cache_home = locations.spack_cache_home
+spack_data_home = locations.spack_data_home
 default_install_location = locations.default_install_location
 default_envs_path = locations.default_envs_path
 default_fetch_cache_path = locations.default_fetch_cache_path
