@@ -74,7 +74,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - $xdg_cache_home/stage
+    - $spack_cache_home/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
@@ -105,7 +105,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $xdg_state_home/$spack_instance_id/cache
+  misc_cache: $spack_state_home/$spack_instance_id/cache
 
 
   # Abort downloads after this many seconds if not data is received.
