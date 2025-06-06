@@ -18,6 +18,7 @@ import spack.config
 import spack.repo
 import spack.util.executable
 import spack.util.path
+import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
 
@@ -203,8 +204,8 @@ def _add_repo(
     if key in existing:
         raise SpackError(f"A repository with the name '{key}' already exists.")
 
-    existing[key] = entry
-    config.set("repos", existing, scope)
+    # Prepend the new repository
+    config.set("repos", spack.util.spack_yaml.syaml_dict({key: entry, **existing}), scope)
     return key
 
 
