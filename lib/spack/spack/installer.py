@@ -1428,13 +1428,6 @@ class RewireTask(Task):
             self.record.fail(e)
 
 
-if sys.platform == "win32":
-    # No locks on Windows, we should always use 1 process
-    _default_concurrent_procs = 1
-else:
-    _default_concurrent_procs = 4
-
-
 class PackageInstaller:
     """
     Class for managing the install process for a Spack instance based on a bottom-up DAG approach.
@@ -1471,7 +1464,7 @@ class PackageInstaller:
         unsigned: Optional[bool] = None,
         use_cache: bool = False,
         verbose: bool = False,
-        concurrent_packages: int = _default_concurrent_procs,
+        concurrent_packages: int,
     ) -> None:
         """
         Arguments:
@@ -1497,6 +1490,10 @@ class PackageInstaller:
             verbose: Display verbose build output (by default, suppresses it)
             concurrent_packages: Max packages to be built concurrently
         """
+        if sys.platform == "win32":
+            # No locks on Windows, we should always use 1 process
+            concurrent_packages = 1
+
         if isinstance(explicit, bool):
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
