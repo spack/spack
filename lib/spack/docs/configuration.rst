@@ -66,19 +66,21 @@ are multiple configuration scopes. From lowest to highest precedence:
    here, but should override them in other configuration scopes. The
    defaults here will change from version to version of Spack.
 
-#. **system**: Stored in ``/etc/spack/``. These are settings for this
-   machine or for all machines on which this file system is
-   mounted. The system scope can be used for settings idiosyncratic to a
-   particular machine, such as the locations of compilers or external
-   packages. These settings are presumably controlled by someone with
-   root access on the machine. They override the defaults scope.
-
 #. **site-admin**: Stored in ``$spack/etc/site-admin``, which does not
    exist by default. This scope contains private settings shared by
    those administering a Spack instance on behalf of other
    users. These settings affect only *this instance* of Spack. This
    scope is meant to have read access restricted to control which
-   users are affected by these settings.
+   users are affected by these settings. This scope only overrides
+   defaults.
+
+#. **system**: Stored in ``/etc/spack/``. These are settings for this
+   machine or for all machines on which this file system is
+   mounted. The system scope can be used for settings idiosyncratic to
+   a particular machine, such as the locations of compilers or
+   external packages. These settings are presumably controlled by
+   someone with root access on the machine. They override the defaults
+   and site-admin scopes.
 
 #. **site**: Stored in ``$(prefix)/etc/spack/``. Settings here affect
    only *this instance* of Spack, and they override the defaults,
@@ -298,12 +300,12 @@ set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is
 included as by ``$(prefix)/etc/spack/defaults/include.yaml``. Since it
 is an included configuration of the ``defaults`` scope, settings in
 the ``defaults`` scope will take precedence. You can override the
-values by specifying settings in ``system``, ``site-admin``, ``site``,
+values by specifying settings in ``site-admin``, ``system``, ``site``,
 ``user``, ``per-spack``, or ``custom``, where scope precedence is:
 
 #. ``defaults``
-#. ``system``
 #. ``site-admin``
+#. ``system``
 #. ``site``
 #. ``user``
 #. ``per-spack``
