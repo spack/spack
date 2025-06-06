@@ -12,7 +12,6 @@ import spack.config
 import spack.deptypes as dt
 from spack.installer import PackageInstaller
 from spack.solver.asp import SolverError, UnsatisfiableSpecError
-from spack.spec import Spec
 
 
 def _make_specs_non_buildable(specs: List[str]):
