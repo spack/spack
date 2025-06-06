@@ -8,11 +8,11 @@ Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
+import itertools
 import os
 import pathlib
 from collections import namedtuple
 from enum import Enum
-import itertools
 from pathlib import PurePath
 
 import llnl.util.filesystem
