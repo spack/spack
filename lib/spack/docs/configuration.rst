@@ -797,7 +797,7 @@ XDG variables can help users organize their Spack artifacts.
 is ``$HOME/.local/share``. The following items are always stored by
 default using ``$XDG_DATA_HOME``:
 
-* Modules: ``$XDG_DATA_HOME/share/spack``
+* Modules: ``$XDG_DATA_HOME/spack/``
 * Package indices: ``$XDG_DATA_HOME/$spack_instance_id/spack``
 
 The data listed below will be placed in ``$spack`` by default. However,
