@@ -15,15 +15,17 @@ see the default settings by looking at
 .. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
-These settings can be overridden in ``etc/spack/config.yaml`` or
-``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
+These settings can be overridden in ``etc/spack/config.yaml``, or
+``~/.config/spack/config.yaml``, or
+``~/.config/spack/$spack_instance_id/config.yaml``.  See
+:ref:`configuration-scopes` for details.
 
 ---------------------
 ``install_tree:root``
 ---------------------
 
 The location where Spack will install packages and their dependencies.
-The default is ``$spack/opt/spack``.
+The default is ``$spack/opt/data/installs``.
 
 ---------------
 ``projections``
@@ -94,7 +96,7 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $xdg_cache_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage. The list is searched in
@@ -120,8 +122,8 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 ``source_cache``
 --------------------
 
-Location to cache downloaded tarballs and repositories. By default, these
-are stored in ``$spack/var/spack/cache``. These are stored indefinitely
+Location to cache downloaded tarballs and repositories. By default,
+these are stored in ``$spack/opt/data``. These are stored indefinitely
 by default and can be purged with :ref:`spack clean --downloads
 <cmd-spack-clean>`.
 
@@ -131,9 +133,10 @@ by default and can be purged with :ref:`spack clean --downloads
 ``misc_cache``
 --------------------
 
-Temporary directory to store long-lived cache files, such as indices of
-packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
-be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
+Temporary directory to store long-lived cache files, such as indices
+of packages available in repositories.  Defaults to
+``~/.local/state/spack/$spack_instance_id/spack``.  Can be purged with
+:ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
 --------------------
 ``verify_ssl``
