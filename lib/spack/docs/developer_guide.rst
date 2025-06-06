@@ -84,7 +84,7 @@ with a high-level view of Spack's directory structure:
 
       etc/
          spack/            <- Spack config files.
-                              Can be overridden by files in ~/.spack.
+                              Can be overridden by files in ~/.config/spack.
 
       var/
          spack/            <- build & stage directories

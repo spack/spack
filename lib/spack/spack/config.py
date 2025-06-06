@@ -59,6 +59,7 @@ import spack.schema.mirrors
 import spack.schema.modules
 import spack.schema.packages
 import spack.schema.repos
+import spack.schema.toolchains
 import spack.schema.upstreams
 import spack.schema.view
 import spack.util.remote_file_cache as rfc_util
@@ -86,6 +87,7 @@ SECTION_SCHEMAS: Dict[str, Any] = {
     "bootstrap": spack.schema.bootstrap.schema,
     "ci": spack.schema.ci.schema,
     "cdash": spack.schema.cdash.schema,
+    "toolchains": spack.schema.toolchains.schema,
 }
 
 # Same as above, but including keys for environments
@@ -927,17 +929,6 @@ def create_incremental() -> Generator[Configuration, None, None]:
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
 
-    # System configuration is per machine.
-    # This is disabled if user asks for no local configuration.
-    if not disable_local_config:
-        configuration_paths.append(("system", spack.paths.system_config_path))
-        if end_user_system_scope:
-            configuration_paths.append(("end-user", spack.paths.end_user_cfg_path))
-
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    configuration_paths.append(("site", spack.paths.etc_path))
-
     # Site admin scope has two uses: (a) admins can share config with one
     # another, but not with end users (b) pip/apt-installed spack can
     # change the default install root
@@ -950,9 +941,19 @@ def create_incremental() -> Generator[Configuration, None, None]:
     except PermissionError:
         pass
     if site_admin_accessible:
-        # TODO: this does not need to be platform specific, and it should
-        # not be writable
+        # TODO: list this as an available scope, but not a writable one
         configuration_paths.append(("site-admin", site_admin_path))
+
+    # System configuration is per machine.
+    # This is disabled if user asks for no local configuration.
+    if not disable_local_config:
+        configuration_paths.append(("system", spack.paths.system_config_path))
+        if end_user_system_scope:
+            configuration_paths.append(("end-user", spack.paths.end_user_cfg_path))
+
+    # Site configuration is per spack instance, for sites or projects
+    # No site-level configs should be checked into spack by default.
+    configuration_paths.append(("site", spack.paths.etc_path))
 
     # Python package's can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
@@ -962,7 +963,7 @@ def create_incremental() -> Generator[Configuration, None, None]:
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
 
-        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id())
+        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id)
         configuration_paths.append(("this-spack", per_spack_cfg))
 
     # add each scope

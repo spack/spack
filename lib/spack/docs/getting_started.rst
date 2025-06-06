@@ -188,7 +188,7 @@ The Bootstrap Store
 """""""""""""""""""
 
 All the tools Spack needs for its own functioning are installed in a separate store, which lives
-under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+under the ``${HOME}/.local/share/spack`` directory. The software installed there can be queried with:
 
 .. code-block:: console
 
@@ -689,6 +689,59 @@ Or it can be set permanently in your ``packages.yaml``:
          flags:
            fflags: -mismatch
 
+.. _toolchains:
+
+----------
+Toolchains
+----------
+
+Spack can be configured to associate certain combinations of specs for
+easy reference on the command line and in config and environment
+files. These combinations are called ``toolchains``, because their
+primary intended use is for associating compiler combinations to
+apply. Toolchains are referenced by name like a direct dependency,
+using the ``%`` sigil. There are two styles of toolchain config, one
+using conditional dependencies through the spec syntax and one with
+conditionals explicitly in the yaml:
+
+.. code-block:: yaml
+
+   toolchains:
+     gcc_all: cflags=-O3 '%[when=%c virtuals=c]gcc %[when=%cxx virtuals=cxx]gcc %[when=%fortran virtuals=fortran]gcc'
+     llvm_gfortran:
+     - spec: cflags=-O3
+     - spec: '%[virtuals=c]llvm'
+       when: '%c'
+     - spec: '%[virtuals=cxx]llvm'
+       when: '%cxx'
+     - spec: '%[virtuals=fortran]gcc'
+       when: '%fortran'
+
+The two syntaxes are equivalent. It is not necessary to use
+conditional dependencies with toolchains, but in most cases it his
+highly recommended. Similarly, while any spec constraint can be
+included, it is most useful to use compiler flags, architectures, and
+conditional dependencies. With the above config, the ``gcc_all``
+toolchain imposes conditional dependencies such that gcc is used as
+the provider for ``c``, ``cxx``, and ``fortran`` for any package using
+that toolchain that depends on each language. The conditional
+dependencies allow the toolchain to be applied to any package
+regardless of which languages it depends on. The ``llvm_gfortran``
+toolchain is the same, except it uses ``llvm`` for ``c`` and ``cxx``
+and ``gcc`` for ``fortran``.
+
+These two toolchains could be used independently or even in the same
+spec, e.g. ``spack install hdf5+fortran%llvm_gfortran ^mpich
+%gcc_all``. This will install an hdf5 compiled with ``llvm`` for the
+C/C++ components, but with the fortran components compiled with
+``gfortran``, but will build it against an MPICH installation compiled
+entirely with ``gcc`` for C, C++, and Fortran.
+
+.. note::
+
+   Toolchains are currently limited to exclude non-direct dependencies
+   (using the ``^`` syntax).
+
 ---------------
 System Packages
 ---------------
@@ -1093,12 +1146,14 @@ the key that we just created:
 
 .. code-block:: console
 
-    gpgconf: socketdir is '/run/user/1000/gnupg'
-    /home/spackuser/spack/opt/spack/gpg/pubring.kbx
-    ----------------------------------------------------------
-    pub   rsa4096 2021-03-25 [SC]
-          60D2685DAB647AD4DB54125961E09BB6F2A0ADCB
-    uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
+   gpg: checking the trustdb
+   gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+   gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+   /home/spackuser/.local/share/spack/gpg/pubring.kbx
+   ------------------------------------------------
+   pub   rsa4096 2025-06-06 [SC]
+         85E7556B528FC163410BA1F9C30374F7F1248184
+   uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
 
 
 Note that the name "dinosaur" can be seen under the uid, which is the unique

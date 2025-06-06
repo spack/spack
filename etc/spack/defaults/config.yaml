@@ -11,12 +11,19 @@
 #   $SPACK_ROOT/etc/spack/config.yaml
 #
 # Per-user settings (overrides default and site settings):
-#   ~/.spack/config.yaml
+#   ~/.config/spack/config.yaml
 # -------------------------------------------------------------------------
 config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
+    # If set to a non-default value, this setting has precedence.
+    # This default value tells spack to check (in order of precedence):
+    # $SPACK_DATA_HOME/installs
+    # $XDG_DATA_HOME/spack/installs
+    # $spack/opt/spack if previously used by an older version of spack
+    # $spack/opt/data/installs
+    root: $default_install_root
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
     # install_tree can include an optional padded length (int or boolean)
@@ -67,8 +74,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - $spack_xdg_cache_home/stage
-  # - $spack/var/spack/stage
+    - $spack_cache_home/stage
 
   # Directory in which to run tests and store test results.
   # Tests will be stored in directories named by date/time and package
@@ -76,13 +82,30 @@ config:
   test_stage: $user_cache_path/test
 
 
+  # Cache directory for already downloaded source tarballs and archived
+  # repositories. This can be purged with `spack clean --downloads`.
+  # If set to a non-default value, this setting has precedence.
+  # This default value tells spack to check (in order of precedence):
+  # $SPACK_DATA_HOME/downloads
+  # $XDG_DATA_HOME/spack/downloads
+  # $spack/var/spack/cache if previously used by an older version of spack
+  # $spack/opt/data/downloads
+  source_cache: $default_download_root
+
+
   ## Directory where spack managed environments are created and stored
-  # environments_root: $spack/var/spack/environments
+  # If set to a non-default value, this setting has precedence.
+  # This default value tells spack to check (in order of precedence):
+  # $SPACK_DATA_HOME/environments
+  # $XDG_DATA_HOME/spack/environments
+  # $spack/var/spack/environments if previously used by an older version of spack
+  # $spack/opt/data/environments
+  # environments_root: $default_envs_root
 
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $spack_xdg_state_home/$spack_instance_id/cache
+  misc_cache: $spack_state_home/$spack_instance_id/cache
 
 
   # Abort downloads after this many seconds if not data is received.

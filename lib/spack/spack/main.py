@@ -42,7 +42,6 @@ import spack.environment.environment
 import spack.error
 import spack.paths
 import spack.platforms
-import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.store
@@ -571,20 +570,6 @@ def setup_main_options(args):
     # Use the spack config command to handle parsing the config strings
     for config_var in args.config_vars or []:
         spack.config.add(fullpath=config_var, scope="command_line")
-
-    # In the main function we automatically fetch remote package repositories if necessary
-    repo_descriptors = spack.repo.RepoDescriptors.from_config(
-        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
-    )
-
-    repo_path, errors = repo_descriptors.construct(fetch=True)
-
-    # Merely warn if package repositories from config could not be constructed.
-    if errors:
-        for path, error in errors.items():
-            tty.warn(f"Error constructing repository '{path}': {error}")
-
-    spack.repo.enable_repo(repo_path)
 
     # On Windows10 console handling for ASCI/VT100 sequences is not
     # on by default. Turn on before we try to write to console

@@ -61,7 +61,7 @@ _active_environment: Optional["Environment"] = None
 
 
 #: default path where environments are stored in the spack tree
-default_env_path = spack.paths.envs_path
+default_env_path = spack.paths.default_envs_path
 
 
 #: Name of the input yaml file for an environment

@@ -152,7 +152,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
        o second commit (v1.0)
        o first commit
 
-    The repo consists of a single file, in which the GitVersion._ref_version representation
+    The repo consists of a single file, in which the GitVersion.std_version representation
     of each commit is expressed as a string.
 
     Important attributes of the repo for test coverage are: multiple branches,
@@ -195,6 +195,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         # Get name of default branch (differs by git version)
         main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
+        if main != "main":
+            # assure the default branch name is consistent for tests
+            git("branch", "-m", "main")
+            main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
+        assert "main" == main
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -2245,3 +2250,27 @@ def no_compilers_init(monkeypatch):
 def disable_end_user_config(monkeypatch):
     """Emulates --disable-end-user-config to Spack executable"""
     monkeypatch.setattr(spack.config, "end_user_system_scope", False)
+
+
+@pytest.fixture(scope="function")
+def config_two_gccs(mutable_config):
+    # Configure two gcc compilers that could be concretized to
+    extra_attributes_block = {
+        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
+    }
+    mutable_config.set(
+        "packages:gcc:externals::",
+        [
+            {
+                "spec": "gcc@12.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+            {
+                "spec": "gcc@10.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+        ],
+    )
+>>>>>>> scheibelp/features/shared-spack-5

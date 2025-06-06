@@ -1501,6 +1501,7 @@ def test_cmd_first_line():
     assert spack.cmd.first_line(doc) == first
 
 
+@pytest.mark.skip(reason="Gitlab CI was removed from Spack")
 def test_gitlab_config_scopes(ci_generate_test, tmp_path):
     """Test pipeline generation with real configs included"""
     configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")

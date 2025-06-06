@@ -13,6 +13,7 @@ import llnl.util.tty as tty
 from llnl.util.tty import color
 
 import spack
+import spack.caches
 import spack.config
 import spack.repo
 import spack.util.executable
@@ -45,7 +46,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # List
-    list_parser = sp.add_parser("list", help=repo_list.__doc__)
+    list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
@@ -75,6 +76,26 @@ def setup_parser(subparser: argparse.ArgumentParser):
         default=[],
     )
     add_parser.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
+        help="configuration scope to modify",
+    )
+
+    # Set (modify existing repository configuration)
+    set_parser = sp.add_parser("set", help=repo_set.__doc__)
+    set_parser.add_argument("namespace", help="namespace of a Spack package repository")
+    set_parser.add_argument(
+        "--destination", help="destination to clone git repository into", action="store"
+    )
+    set_parser.add_argument(
+        "--path",
+        help="relative path to the Spack package repository inside a git repository. Can be "
+        "repeated to add multiple package repositories in case of a monorepo",
+        action="append",
+        default=[],
+    )
+    set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
         default=lambda: spack.config.default_modify_scope(),
@@ -157,7 +178,7 @@ def _add_repo(
     )
     descriptor.initialize(git=spack.util.executable.which("git"))
 
-    packages_repos = descriptor.construct()
+    packages_repos = descriptor.construct(cache=spack.caches.MISC_CACHE)
 
     usable_repos: Dict[str, spack.repo.Repo] = {}
 
@@ -220,7 +241,7 @@ def repo_remove(args):
             # hence "all" and not "any". We can improve this later if needed.
             if all(
                 r.namespace == namespace_or_path or r.root == canon_path
-                for r in descriptor.construct().values()
+                for r in descriptor.construct(cache=spack.caches.MISC_CACHE).values()
                 if isinstance(r, spack.repo.Repo)
             ):
                 key = name
@@ -244,17 +265,35 @@ def repo_list(args):
             print(name)
         return
 
+    # Collect all repository information for aligned output
+    repo_info = []
+
     for name, descriptor in descriptors.items():
         descriptor.initialize(fetch=False)
-        repos_for_descriptor = descriptor.construct()
+        repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
+
+        # Register all repos and errors for this descriptor
         for path, maybe_repo in repos_for_descriptor.items():
             if isinstance(maybe_repo, spack.repo.Repo):
-                color.cprint(
-                    f"@g{{[+]}} {maybe_repo.namespace} {maybe_repo.package_api_str} "
-                    f"{maybe_repo.root}"
+                repo_info.append(
+                    ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
                 )
             else:  # exception
-                color.cprint(f"@r{{[-]}} {name} {path}: {maybe_repo}")
+                repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
+
+        # If there are no repos, it means it's not yet cloned; then we status + git repository
+        if not repos_for_descriptor and isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
+            repo_info.append(("@K{ - }", name, "", descriptor.repository))
+
+    if repo_info:
+        max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
+        max_api_width = max(len(api) for _, _, api, _ in repo_info) + 3
+
+        # Print aligned output
+        for status, namespace, api, path in repo_info:
+            color.cprint(
+                f"{status} {namespace:<{max_namespace_width}} {api:<{max_api_width}} {path}"
+            )
 
 
 def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
@@ -268,7 +307,7 @@ def _get_repo(name_or_path: str) -> Optional[spack.repo.Repo]:
         spack.repo.package_repository_lock(), spack.config.CONFIG
     )
 
-    repo_path, _ = descriptors.construct(fetch=False)
+    repo_path, _ = descriptors.construct(cache=spack.caches.MISC_CACHE, fetch=False)
 
     for repo in repo_path.repos:
         if repo.namespace == name_or_path:
@@ -346,11 +385,47 @@ def repo_migrate(args: Any) -> int:
     return exit_code
 
 
+def repo_set(args):
+    """modify an existing repository configuration"""
+    namespace = args.namespace
+
+    # First, check if the repository exists across all scopes for validation
+    all_repos: Dict[str, Any] = spack.config.get("repos", default={})
+
+    if namespace not in all_repos:
+        raise SpackError(f"No repository with namespace '{namespace}' found in configuration.")
+
+    # Validate that it's a git repository
+    if not isinstance(all_repos[namespace], dict):
+        raise SpackError(
+            f"Repository '{namespace}' is not a git repository. "
+            "The 'set' command only works with git repositories."
+        )
+
+    # Now get the repos for the specific scope we're modifying
+    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+
+    updated_entry = scope_repos[namespace] if namespace in scope_repos else {}
+
+    if args.destination:
+        updated_entry["destination"] = args.destination
+
+    if args.path:
+        updated_entry["paths"] = args.path
+
+    scope_repos[namespace] = updated_entry
+    spack.config.set("repos", scope_repos, args.scope)
+
+    tty.msg(f"Updated repo '{namespace}'")
+
+
 def repo(parser, args):
     return {
         "create": repo_create,
         "list": repo_list,
+        "ls": repo_list,
         "add": repo_add,
+        "set": repo_set,
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,

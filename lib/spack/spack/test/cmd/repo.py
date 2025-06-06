@@ -260,10 +260,10 @@ class MockDescriptor(spack.repo.RepoDescriptor):
         self.to_construct = to_construct
         self.initialized = False
 
-    def initialize(self, git):
+    def initialize(self, fetch=True, git=None) -> None:
         self.initialized = True
 
-    def construct(self):
+    def construct(self, cache, overrides=None):
         assert self.initialized, "MockDescriptor must be initialized before construction"
         return self.to_construct
 
@@ -660,3 +660,35 @@ def test_add_repo_git_url_detection_edge_cases(monkeypatch, test_url, expected_t
         assert entry == {"git": test_url}
     else:
         assert isinstance(entry, str)
+
+
+def test_repo_set_git_config(mutable_config):
+    """Test that 'spack repo set' properly modifies git repository configurations."""
+    # Set up initial git repository config in defaults scope
+    git_url = "https://github.com/example/test-repo.git"
+    initial_config = {"repos": {"test-repo": {"git": git_url}}}
+    spack.config.set("repos", initial_config["repos"], scope="site")
+
+    # Test setting destination and paths
+    repo("set", "--scope=user", "--destination", "/custom/path", "test-repo")
+    repo("set", "--scope=user", "--path", "subdir1", "--path", "subdir2", "test-repo")
+
+    # Check that the user config has the updated entry
+    user_repos = spack.config.get("repos", scope="user")
+    assert user_repos["test-repo"]["paths"] == ["subdir1", "subdir2"]
+    assert user_repos["test-repo"]["destination"] == "/custom/path"
+
+    # Check that site scope is unchanged
+    site_repos = spack.config.get("repos", scope="site")
+    assert "destination" not in site_repos["test-repo"]
+
+
+def test_repo_set_nonexistent_repo(mutable_config):
+    with pytest.raises(SpackError, match="No repository with namespace 'nonexistent'"):
+        repo("set", "--destination", "/some/path", "nonexistent")
+
+
+def test_repo_set_does_not_work_on_local_path(mutable_config):
+    spack.config.set("repos", {"local-repo": "/local/path"}, scope="site")
+    with pytest.raises(SpackError, match="is not a git repository"):
+        repo("set", "--destination", "/some/path", "local-repo")

@@ -199,7 +199,7 @@ a variant to control this:
 However, not every CMake package accepts all four of these options.
 Grep the ``CMakeLists.txt`` file to see if the default values are
 missing or replaced. For example, the
-`dealii <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/dealii/package.py>`_
+`dealii <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/dealii/package.py>`_
 package overrides the default variant with:
 
 .. code-block:: python

@@ -11,7 +11,7 @@
 #   $SPACK_ROOT/etc/spack/modules.yaml
 #
 # Per-user settings (overrides default and site settings):
-#   ~/.spack/modules.yaml
+#   ~/.config/spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
   # This maps paths in the package install prefix to environment variables
@@ -36,6 +36,14 @@ modules:
 
   # These are configurations for the module set named "default"
   default:
+    # Where to install modules
+    # If set to a non-default value, this setting has precedence.
+    # This default value tells spack to check (in order of precedence):
+    # $spack/share/spack/{modules/lmod} if previously used by an older version of spack
+    # $user_cache_path/modules/{modules/lmod} otherwise
+    roots:
+     tcl:    $modules_base/modules
+     lmod:   $modules_base/lmod
     # What type of modules to use ("tcl" and/or "lmod")
     enable: []
 

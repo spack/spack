@@ -335,6 +335,32 @@ class TestSpecSemantics:
                 "mpileaks %[deptypes=link] mpich",
                 "mpileaks %[deptypes=build,link] mpich",
             ),
+            # conditional edges
+            (
+                "libelf",
+                "%[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+                "libelf %[when='%c' virtuals=c]gcc ^[when='+mpi' virtuals=mpi]mpich",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi'] mpich",
+                "libelf%[when='%c' virtuals=c]gcc@10.3.1 ^[when='+mpi']mpich",
+            ),
+            (
+                "libelf %[when='%c' virtuals=c]gcc",
+                "%[when='%cxx' virtuals=cxx]gcc@10.3.1",
+                "libelf%[when='%c' virtuals=c]gcc %[when='%cxx' virtuals=cxx]gcc@10.3.1",
+            ),
+            (
+                "libelf %[when='+c' virtuals=c]gcc",
+                "%[when='%c' virtuals=c]gcc@10.3.1",
+                "libelf %[when='+c' virtuals=c]gcc %[when='%c' virtuals=c]gcc@10.3.1",
+            ),
         ],
     )
     def test_abstract_specs_can_constrain_each_other(self, lhs, rhs, expected):
@@ -580,6 +606,20 @@ class TestSpecSemantics:
         c = rhs.copy()
         c.constrain(lhs)
         assert c == constrained
+
+    def test_basic_satisfies_conditional_dep(self, default_mock_concretization):
+        """Tests basic semantic of satisfies with conditional dependencies, on a concrete spec"""
+        concrete = default_mock_concretization("mpileaks ^mpich")
+
+        # This branch exists, so the condition is met, and is satisfied
+        assert concrete.satisfies("^[virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^notapackage' virtuals=mpi] mpich")
+        assert concrete.satisfies("^[when='^mpi' virtuals=mpi] mpich")
+
+        # This branch does not exist, but the condition is not met
+        assert not concrete.satisfies("^zmpi")
+        assert concrete.satisfies("^[when='^notapackage'] zmpi")
+        assert not concrete.satisfies("^[when='^mpi'] zmpi")
 
     def test_satisfies_single_valued_variant(self):
         """Tests that the case reported in
@@ -1505,6 +1545,41 @@ class TestSpecSemantics:
         with pytest.raises(spack.solver.asp.UnsatisfiableSpecError):
             spack.concretize.concretize_one(spec_str)
 
+    @pytest.mark.parametrize(
+        "spec_str,abstract_tests,concrete_tests",
+        [
+            # Ensure the 'when=+debug' is referred to 'callpath', and not to 'mpileaks',
+            # and that we can concretize the spec despite 'callpath' has no debug variant
+            (
+                "mpileaks+debug ^callpath %[when=+debug virtuals=mpi] zmpi",
+                [
+                    ("^zmpi", False),
+                    ("^mpich", False),
+                    ("mpileaks+debug  %[when=+debug virtuals=mpi] zmpi", False),
+                ],
+                [("^zmpi", False), ("^[virtuals=mpi] mpich", True)],
+            ),
+            # Ensure we don't skip conditional edges when testing because we associate them
+            # with the wrong node (e.g. mpileaks instead of mpich)
+            (
+                "mpileaks~debug ^mpich+debug %[when=+debug virtuals=c] llvm",
+                [("^mpich+debug %[when=+debug virtuals=c] gcc", False)],
+                [("^mpich %[virtuals=c] gcc", False), ("^mpich %[virtuals=c] llvm", True)],
+            ),
+        ],
+    )
+    def test_conditional_dependencies_satisfies(
+        self, spec_str, abstract_tests, concrete_tests, default_mock_concretization
+    ):
+        """Tests satisfaction semantics for conditional specs, in different scenarios."""
+        s = Spec(spec_str)
+        for c, result in abstract_tests:
+            assert s.satisfies(c) is result
+
+        concrete = default_mock_concretization(spec_str)
+        for c, result in concrete_tests:
+            assert concrete.satisfies(c) is result
+
 
 @pytest.mark.parametrize(
     "spec_str,format_str,expected",
@@ -2203,11 +2278,12 @@ def test_satisfies_and_subscript_with_compilers(default_mock_concretization):
 
     # Direct build dependencies
     assert s.satisfies("^[virtuals=c] gcc")
+    assert s.satisfies("%[virtuals=c] gcc")
     assert s.dependencies(name="gcc")[0] == s["gcc"]
     assert s.dependencies(name="gcc")[0] == s["c"]
 
     # Transitive build dependencies
-    assert s.satisfies("^gmake")
+    assert not s.satisfies("^gmake")
 
     # "gmake" is not in the link/run subdag + direct build deps
     with pytest.raises(KeyError):

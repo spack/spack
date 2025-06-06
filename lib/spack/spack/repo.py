@@ -671,43 +671,34 @@ class RepoPath:
             self.put_last(repo)
 
     @staticmethod
-    def from_paths(
-        *path: str,
+    def from_descriptors(
+        descriptors: "RepoDescriptors",
         cache: spack.util.file_cache.FileCache,
         overrides: Optional[Dict[str, Any]] = None,
     ) -> "RepoPath":
-        repos: List[Repo] = []
+        repo_path, errors = descriptors.construct(cache=cache, fetch=True, overrides=overrides)
 
-        for p in path:
-            try:
-                repos.append(Repo(p, cache=cache, overrides=overrides))
-            except RepoError as e:
-                tty.warn(
-                    f"Failed to initialize repository: '{p}'.",
-                    e.message,
-                    "To remove the bad repository, run this command:",
-                    f"    spack repo rm {p}",
-                )
+        # Merely warn if package repositories from config could not be constructed.
+        if errors:
+            for path, error in errors.items():
+                tty.warn(f"Error constructing repository '{path}': {error}")
 
-        return RepoPath(*repos)
+        return repo_path
 
     @staticmethod
     def from_config(config: spack.config.Configuration) -> "RepoPath":
         """Create a RepoPath from a configuration object."""
-        repo_dirs = config.get("repos").values()
-        if not repo_dirs:
-            raise NoRepoConfiguredError("Spack configuration contains no package repositories.")
+        overrides = {
+            pkg_name: data["package_attributes"]
+            for pkg_name, data in config.get("packages").items()
+            if pkg_name != "all" and "package_attributes" in data
+        }
 
-        overrides = {}
-        for pkg_name, data in config.get("packages").items():
-            if pkg_name == "all":
-                continue
-            value = data.get("package_attributes", {})
-            if not value:
-                continue
-            overrides[pkg_name] = value
-
-        return RepoPath.from_paths(*repo_dirs, cache=spack.caches.MISC_CACHE, overrides=overrides)
+        return RepoPath.from_descriptors(
+            descriptors=RepoDescriptors.from_config(lock=package_repository_lock(), config=config),
+            cache=spack.caches.MISC_CACHE,
+            overrides=overrides,
+        )
 
     def enable(self) -> None:
         """Set the relevant search paths for package module loading"""
@@ -1605,7 +1596,9 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
-    def construct(self) -> Dict[str, Union[Repo, Exception]]:
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
         """Construct Repo instances from the descriptor."""
         raise RuntimeError("construct() must be implemented in subclasses")
 
@@ -1618,9 +1611,11 @@ class LocalRepoDescriptor(RepoDescriptor):
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, path={self.path!r})"
 
-    def construct(self) -> Dict[str, Union[Repo, Exception]]:
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
         try:
-            return {self.path: from_path(self.path)}
+            return {self.path: Repo(self.path, cache=cache, overrides=overrides)}
         except RepoError as e:
             return {self.path: e}
 
@@ -1711,7 +1706,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
             f"relative_paths={self.relative_paths!r})"
         )
 
-    def construct(self) -> Dict[str, Union[Repo, Exception]]:
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
         if self.error:
             return {self.destination: Exception(self.error)}
 
@@ -1724,7 +1721,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                 continue
             path = os.path.join(self.destination, subpath)
             try:
-                repos[path] = from_path(path)
+                repos[path] = Repo(path, cache=cache, overrides=overrides)
             except RepoError as e:
                 repos[path] = e
         return repos
@@ -1743,7 +1740,9 @@ class BrokenRepoDescriptor(RepoDescriptor):
     ) -> None:
         pass
 
-    def construct(self) -> Dict[str, Union[Repo, Exception]]:
+    def construct(
+        self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Union[Repo, Exception]]:
         return {self.name or "<unknown>": Exception(self.error)}
 
 
@@ -1781,8 +1780,10 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 
     def construct(
         self,
+        cache: spack.util.file_cache.FileCache,
         fetch: bool = True,
         find_git: Callable[[], MaybeExecutable] = lambda: spack.util.executable.which("git"),
+        overrides: Optional[Dict[str, Any]] = None,
     ) -> Tuple[RepoPath, Dict[str, Exception]]:
         """Construct a RepoPath from the descriptors.
 
@@ -1803,7 +1804,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
             else:
                 descriptor.initialize(fetch=False)
 
-            for path, result in descriptor.construct().items():
+            for path, result in descriptor.construct(cache=cache, overrides=overrides).items():
                 if isinstance(result, Repo):
                     repos.append(result)
                 else:
@@ -1815,8 +1816,8 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 def parse_config_descriptor(
     name: Optional[str], descriptor: Any, lock: spack.util.lock.Lock
 ) -> RepoDescriptor:
-    """Parse a repository descriptor from the configuration. This does not instantiate Repo
-    objects, but merely parses and validates the configuration.
+    """Parse a repository descriptor from validated configuration. This does not instantiate Repo
+    objects, but merely turns the config into a more useful RepoDescriptor instance.
 
     Args:
         name: the name of the repository, used for error messages
@@ -1834,26 +1835,35 @@ def parse_config_descriptor(
     if isinstance(descriptor, str):
         return LocalRepoDescriptor(name, spack.util.path.canonicalize_path(descriptor))
 
-    elif isinstance(descriptor, dict) and "git" in descriptor:
-        repository = descriptor["git"]
-        assert isinstance(repository, str), "Package repository git URL must be a string"
+    # Should be the case due to config validation.
+    assert isinstance(descriptor, dict), "Repository descriptor must be a string or a dictionary"
 
-        destination = descriptor.get("destination", None)
+    # Configuration validation works per scope, and we want to allow overriding e.g. destination
+    # in user config without the user having to repeat the `git` key and value again. This is a
+    # hard error, since config validation is a hard error.
+    if "git" not in descriptor:
+        raise RuntimeError(
+            f"Invalid configuration for repository '{name}': {descriptor!r}. A `git` attribute is "
+            "required for remote repositories."
+        )
 
-        if destination is None:  # use a default destination
-            dir_name = spack.util.hash.b32_hash(repository)[-7:]
-            destination = os.path.join(spack.paths.user_repos_cache_path, dir_name)
-        else:
-            destination = spack.util.path.canonicalize_path(destination)
+    repository = descriptor["git"]
+    assert isinstance(repository, str), "Package repository git URL must be a string"
 
-        if "paths" in descriptor:
-            rel_paths = descriptor["paths"]
-        else:
-            rel_paths = None
+    destination = descriptor.get("destination", None)
 
-        return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
+    if destination is None:  # use a default destination
+        dir_name = spack.util.hash.b32_hash(repository)[-7:]
+        destination = os.path.join(spack.paths.package_repos_path, dir_name)
+    else:
+        destination = spack.util.path.canonicalize_path(destination)
 
-    return BrokenRepoDescriptor(name, "Broken repo")
+    if "paths" in descriptor:
+        rel_paths = descriptor["paths"]
+    else:
+        rel_paths = None
+
+    return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
 
 
 def create_or_construct(
