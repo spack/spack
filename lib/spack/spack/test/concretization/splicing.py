@@ -34,7 +34,7 @@ def install_specs(
     mutable_config.set("concretizer:reuse", True)
 
     def _impl(*specs_str):
-        concrete_specs = [Spec(s).concretized() for s in specs_str]
+        concrete_specs = [spack.concretize.concretize_one(s) for s in specs_str]
         PackageInstaller([s.package for s in concrete_specs], fake=True, explicit=True).install()
         return concrete_specs
 

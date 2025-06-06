@@ -1937,29 +1937,6 @@ class Spec:
         return self._package
 
     @property
-    def package_class(self):
-        """Internal package call gets only the class object for a package.
-        Use this to just get package metadata.
-        """
-        warnings.warn(
-            "`Spec.package_class` is deprecated and will be removed in version 1.0.0. Use "
-            "`spack.repo.PATH.get_pkg_class(spec.fullname) instead.",
-            category=spack.error.SpackAPIWarning,
-            stacklevel=2,
-        )
-        return spack.repo.PATH.get_pkg_class(self.fullname)
-
-    @property
-    def virtual(self):
-        warnings.warn(
-            "`Spec.virtual` is deprecated and will be removed in version 1.0.0. Use "
-            "`spack.repo.PATH.is_virtual(spec.name)` instead.",
-            category=spack.error.SpackAPIWarning,
-            stacklevel=2,
-        )
-        return spack.repo.PATH.is_virtual(self.name)
-
-    @property
     def concrete(self):
         """A spec is concrete if it describes a single build of a package.
 
@@ -2902,18 +2879,6 @@ class Spec:
             msg += "    For each package listed, choose another spec\n"
             raise SpecDeprecatedError(msg)
 
-    def concretize(self, tests: Union[bool, Iterable[str]] = False) -> None:
-        from spack.concretize import concretize_one
-
-        warnings.warn(
-            "`Spec.concretize` is deprecated and will be removed in version 1.0.0. Use "
-            "`spack.concretize.concretize_one` instead.",
-            category=spack.error.SpackAPIWarning,
-            stacklevel=2,
-        )
-
-        self._dup(concretize_one(self, tests))
-
     def _mark_root_concrete(self, value=True):
         """Mark just this spec (not dependencies) concrete."""
         if (not value) and self.concrete and self.installed:
@@ -3000,18 +2965,6 @@ class Spec:
         # DAG hash.
         for spec in self.traverse():
             spec._cached_hash(ht.dag_hash)
-
-    def concretized(self, tests: Union[bool, Iterable[str]] = False) -> "Spec":
-        from spack.concretize import concretize_one
-
-        warnings.warn(
-            "`Spec.concretized` is deprecated and will be removed in version 1.0.0. Use "
-            "`spack.concretize.concretize_one` instead.",
-            category=spack.error.SpackAPIWarning,
-            stacklevel=2,
-        )
-
-        return concretize_one(self, tests)
 
     def index(self, deptype="all"):
         """Return a dictionary that points to all the dependencies in this

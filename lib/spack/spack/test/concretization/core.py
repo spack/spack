@@ -3314,7 +3314,7 @@ packages:
 
 def test_compiler_can_depend_on_themselves_to_build(config, mock_packages):
     """Tests that a compiler can depend on "itself" to bootstrap."""
-    s = Spec("gcc@14 %gcc@9.4.0").concretized()
+    s = spack.concretize.concretize_one("gcc@14 %gcc@9.4.0")
     assert s.satisfies("gcc@14")
     assert s.satisfies("^gcc-runtime@9.4.0")
 
@@ -3342,7 +3342,7 @@ packages:
 
 def test_compiler_can_be_built_with_other_compilers(config, mock_packages):
     """Tests that a compiler can be built also with another compiler."""
-    s = Spec("llvm@18 +clang %gcc").concretized()
+    s = spack.concretize.concretize_one("llvm@18 +clang %gcc")
     assert s.satisfies("llvm@18")
 
     c_compiler = s.dependencies(virtuals=("c",))

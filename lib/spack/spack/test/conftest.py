@@ -2211,7 +2211,7 @@ def mock_include_cache(monkeypatch):
 @pytest.fixture()
 def wrapper_dir(install_mockery):
     """Installs the compiler wrapper and returns the prefix where the script is installed."""
-    wrapper = spack.spec.Spec("compiler-wrapper").concretized()
+    wrapper = spack.concretize.concretize_one("compiler-wrapper")
     wrapper_pkg = wrapper.package
     PackageInstaller([wrapper_pkg], explicit=True).install()
     return wrapper_pkg.bin_dir()
