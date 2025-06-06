@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import enum
 import os
 import re
@@ -58,8 +59,6 @@ licensed_files = [
     r"^share/spack/bash/spack-completion.in$",
     # action workflows
     r"^.github/actions/.*\.py$",
-    # all packages
-    r"^var/spack/repos/.*/package.py$",
 ]
 
 
@@ -185,7 +184,7 @@ def verify(args):
         tty.msg("No license issues found.")
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--root",
         action="store",

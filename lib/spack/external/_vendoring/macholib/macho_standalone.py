@@ -3,8 +3,8 @@
 import os
 import sys
 
-from macholib.MachOStandalone import MachOStandalone
-from macholib.util import strip_files
+from _vendoring.macholib.MachOStandalone import MachOStandalone
+from _vendoring.macholib.util import strip_files
 
 
 def standaloneApp(path):
@@ -18,7 +18,7 @@ def standaloneApp(path):
 def main():
     print(
         "WARNING: 'macho_standalone' is deprecated, use "
-        "'python -mmacholib standalone' instead"
+        "'python -m_vendoring.macholib standalone' instead"
     )
     if not sys.argv[1:]:
         raise SystemExit("usage: %s [appbundle ...]" % (sys.argv[0],))

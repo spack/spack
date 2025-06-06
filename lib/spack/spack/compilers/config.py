@@ -10,7 +10,7 @@ import sys
 import warnings
 from typing import Any, Dict, List, Optional, Tuple
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.filesystem as fs
 import llnl.util.lang
@@ -246,7 +246,7 @@ def name_os_target(spec: spack.spec.Spec) -> Tuple[str, str, str]:
         target = spec.architecture.target
         if not target:
             target = spack.platforms.host().target("default_target")
-        target = target
+        target = target.family
 
         operating_system = spec.os
         if not operating_system:
@@ -316,7 +316,7 @@ class CompilerFactory:
     @staticmethod
     def _finalize_external_concretization(abstract_spec):
         if CompilerFactory._GENERIC_TARGET is None:
-            CompilerFactory._GENERIC_TARGET = archspec.cpu.host().family
+            CompilerFactory._GENERIC_TARGET = _vendoring.archspec.cpu.host().family
 
         if abstract_spec.architecture:
             abstract_spec.architecture.complete_with_defaults()

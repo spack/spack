@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 import sys
 
@@ -21,7 +22,7 @@ section = "build"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["jobs", "no_checksum", "spec"])
     subparser.add_argument(
         "-d",

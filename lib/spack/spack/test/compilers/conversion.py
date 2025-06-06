@@ -6,6 +6,8 @@ import pytest
 
 from spack.compilers.config import CompilerFactory
 
+pytestmark = [pytest.mark.usefixtures("config", "mock_packages")]
+
 
 @pytest.fixture()
 def mock_compiler(mock_executable):
@@ -55,7 +57,7 @@ def test_compiler_conversion_with_flags(mock_compiler):
     assert compiler_spec.extra_attributes["flags"]["cxxflags"] == "-O2 -g"
 
 
-def tests_compiler_conversion_with_environment(mock_compiler):
+def test_compiler_conversion_with_environment(mock_compiler):
     """Tests that custom environment modifications are converted appropriately
     for external compilers
     """
@@ -67,7 +69,7 @@ def tests_compiler_conversion_with_environment(mock_compiler):
     assert compiler_spec.extra_attributes["environment"] == mods
 
 
-def tests_compiler_conversion_extra_rpaths(mock_compiler):
+def test_compiler_conversion_extra_rpaths(mock_compiler):
     """Tests that extra rpaths are converted appropriately for external compilers"""
     mock_compiler["extra_rpaths"] = ["/foo/bar"]
     compiler_spec = CompilerFactory.from_legacy_yaml(mock_compiler)[0]
@@ -76,7 +78,7 @@ def tests_compiler_conversion_extra_rpaths(mock_compiler):
     assert compiler_spec.extra_attributes["extra_rpaths"] == ["/foo/bar"]
 
 
-def tests_compiler_conversion_modules(mock_compiler):
+def test_compiler_conversion_modules(mock_compiler):
     """Tests that modules are converted appropriately for external compilers"""
     modules = ["foo/4.1.2", "bar/5.1.4"]
     mock_compiler["modules"] = modules
@@ -86,7 +88,7 @@ def tests_compiler_conversion_modules(mock_compiler):
 
 
 @pytest.mark.regression("49717")
-def tests_compiler_conversion_corrupted_paths(mock_compiler):
+def test_compiler_conversion_corrupted_paths(mock_compiler):
     """Tests that compiler entries with corrupted path do not raise"""
     mock_compiler["paths"] = {"cc": "gcc", "cxx": "g++", "fc": "gfortran", "f77": "gfortran"}
     # Test this call doesn't raise

@@ -1,8 +1,8 @@
-from pyrsistent._checked_types import (InvariantException, CheckedType, _restore_pickle, store_invariants)
-from pyrsistent._field_common import (
+from _vendoring.pyrsistent._checked_types import (InvariantException, CheckedType, _restore_pickle, store_invariants)
+from _vendoring.pyrsistent._field_common import (
     set_fields, check_type, is_field_ignore_extra_complaint, PFIELD_NO_INITIAL, serialize, check_global_invariants
 )
-from pyrsistent._transformations import transform
+from _vendoring.pyrsistent._transformations import transform
 
 
 def _is_pclass(bases):
@@ -41,7 +41,7 @@ class PClass(CheckedType, metaclass=PClassMeta):
     is not a PMap and hence not a collection but rather a plain Python object.
 
 
-    More documentation and examples of PClass usage is available at https://github.com/tobgu/pyrsistent
+    More documentation and examples of PClass usage is available at https://github.com/tobgu/_vendoring.pyrsistent
     """
     def __new__(cls, **kwargs):    # Support *args?
         result = super(PClass, cls).__new__(cls)
@@ -84,7 +84,7 @@ class PClass(CheckedType, metaclass=PClassMeta):
         Set a field in the instance. Returns a new instance with the updated value. The original instance remains
         unmodified. Accepts key-value pairs or single string representing the field name and a value.
 
-        >>> from pyrsistent import PClass, field
+        >>> from _vendoring.pyrsistent import PClass, field
         >>> class AClass(PClass):
         ...     x = field()
         ...

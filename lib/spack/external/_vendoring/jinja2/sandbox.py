@@ -9,8 +9,8 @@ from collections import abc
 from collections import deque
 from string import Formatter
 
-from markupsafe import EscapeFormatter
-from markupsafe import Markup
+from _vendoring.markupsafe import EscapeFormatter
+from _vendoring.markupsafe import Markup
 
 from .environment import Environment
 from .exceptions import SecurityError
@@ -128,7 +128,7 @@ def is_internal_attribute(obj: t.Any, attr: str) -> bool:
     python objects.  This is useful if the environment method
     :meth:`~SandboxedEnvironment.is_safe_attribute` is overridden.
 
-    >>> from jinja2.sandbox import is_internal_attribute
+    >>> from _vendoring.jinja2.sandbox import is_internal_attribute
     >>> is_internal_attribute(str, "mro")
     True
     >>> is_internal_attribute(str, "upper")

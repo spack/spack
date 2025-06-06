@@ -9,7 +9,7 @@ with Python's reflection capabilities.
 
 import sys
 
-from jsonschema.compat import PY3
+from _vendoring.jsonschema.compat import PY3
 
 
 class _NoModuleFound(Exception):

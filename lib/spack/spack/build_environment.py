@@ -31,6 +31,7 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
+
 import inspect
 import io
 import multiprocessing
@@ -46,6 +47,7 @@ from enum import Flag, auto
 from itertools import chain
 from multiprocessing.connection import Connection
 from typing import (
+    Any,
     Callable,
     Dict,
     List,
@@ -59,7 +61,7 @@ from typing import (
     overload,
 )
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.tty as tty
 from llnl.string import plural
@@ -68,9 +70,6 @@ from llnl.util.lang import dedupe, stable_partition
 from llnl.util.symlink import symlink
 from llnl.util.tty.color import cescape, colorize
 
-import spack.build_systems.cmake
-import spack.build_systems.meson
-import spack.build_systems.python
 import spack.builder
 import spack.compilers.libraries
 import spack.config
@@ -443,10 +442,12 @@ def optimization_flags(compiler, target):
     # Try to check if the current compiler comes with a version number or
     # has an unexpected suffix. If so, treat it as a compiler with a
     # custom spec.
-    version_number, _ = archspec.cpu.version_components(compiler.version.dotted_numeric_string)
+    version_number, _ = _vendoring.archspec.cpu.version_components(
+        compiler.version.dotted_numeric_string
+    )
     try:
         result = target.optimization_flags(compiler.name, version_number)
-    except (ValueError, archspec.cpu.UnsupportedMicroarchitecture):
+    except (ValueError, _vendoring.archspec.cpu.UnsupportedMicroarchitecture):
         result = ""
 
     return result
@@ -567,9 +568,6 @@ def set_package_py_globals(pkg, context: Context = Context.BUILD):
 
     jobs = spack.config.determine_number_of_jobs(parallel=pkg.parallel)
     module.make_jobs = jobs
-    if context == Context.BUILD:
-        module.std_meson_args = spack.build_systems.meson.MesonBuilder.std_args(pkg)
-        module.std_pip_args = spack.build_systems.python.PythonPipBuilder.std_args(pkg)
 
     module.make = DeprecatedExecutable(pkg.name, "make", "gmake")
     module.gmake = DeprecatedExecutable(pkg.name, "gmake", "gmake")
@@ -998,15 +996,6 @@ class SetupContext:
                 pkg.setup_dependent_package(dependent_module, spec)
                 dependent_module.propagate_changes_to_mro()
 
-        if self.context == Context.BUILD:
-            pkg = self.specs[0].package
-            module = ModuleChangePropagator(pkg)
-            # std_cmake_args is not sufficiently static to be defined
-            # in set_package_py_globals and is deprecated so its handled
-            # here as a special case
-            module.std_cmake_args = spack.build_systems.cmake.CMakeBuilder.std_args(pkg)
-            module.propagate_changes_to_mro()
-
     def get_env_modifications(self) -> EnvironmentModifications:
         """Returns the environment variable modifications for the given input specs and context.
         Environment modifications include:
@@ -1104,7 +1093,7 @@ def _setup_pkg_and_run(
 
     ``_setup_pkg_and_run`` is called by the child process created in
     ``start_build_process()``, and its main job is to run ``function()`` on behalf of
-    some Spack installation (see :ref:`spack.installer.PackageInstaller._install_task`).
+    some Spack installation (see :ref:`spack.installer.PackageInstaller._complete_task`).
 
     The child process is passed a ``write_pipe``, on which it's expected to send one of
     the following:
@@ -1217,11 +1206,45 @@ def _setup_pkg_and_run(
 
 
 class BuildProcess:
-    def __init__(self, *, target, args) -> None:
+    """Class used to manage builds launched by Spack.
+
+    Each build is launched in its own child process, and the main Spack process
+    tracks each child with a ``BuildProcess`` object. `BuildProcess`` is used to:
+    - Start and monitor an active child process.
+    - Clean up its processes and resources when the child process completes.
+    - Kill the child process if needed.
+
+    See also ``start_build_process()`` and ``complete_build_process()``.
+    """
+
+    def __init__(
+        self,
+        *,
+        target: Callable,
+        args: Tuple[Any, ...],
+        pkg: "spack.package_base.PackageBase",
+        read_pipe: Connection,
+        timeout: Optional[int],
+    ) -> None:
         self.p = multiprocessing.Process(target=target, args=args)
+        self.pkg = pkg
+        self.read_pipe = read_pipe
+        self.timeout = timeout
 
     def start(self) -> None:
         self.p.start()
+
+    def poll(self) -> bool:
+        """Check if there is data available to receive from the read pipe."""
+        return self.read_pipe.poll()
+
+    def complete(self):
+        """Wait (if needed) for child process to complete
+        and return its exit status.
+
+        See ``complete_build_process()``.
+        """
+        return complete_build_process(self)
 
     def is_alive(self) -> bool:
         return self.p.is_alive()
@@ -1242,34 +1265,43 @@ class BuildProcess:
             self.p.join()
 
     @property
+    def pid(self):
+        return self.p.pid
+
+    @property
     def exitcode(self):
         return self.p.exitcode
 
 
-def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None):
+def start_build_process(
+    pkg: "spack.package_base.PackageBase",
+    function: Callable,
+    kwargs: Dict[str, Any],
+    *,
+    timeout: Optional[int] = None,
+) -> BuildProcess:
     """Create a child process to do part of a spack build.
 
     Args:
-
-        pkg (spack.package_base.PackageBase): package whose environment we should set up the
+        pkg: package whose environment we should set up the
             child process for.
-        function (typing.Callable): argless function to run in the child process.
+        function: argless function to run in the child
+            process.
+        kwargs: additional keyword arguments to pass to ``function()``
         timeout: maximum time allowed to finish the execution of function
 
     Usage::
 
         def child_fun():
             # do stuff
-        build_env.start_build_process(pkg, child_fun)
+        process = build_env.start_build_process(pkg, child_fun)
+        complete_build_process(process)
 
     The child process is run with the build environment set up by
     spack.build_environment.  This allows package authors to have full
     control over the environment, etc. without affecting other builds
     that might be executed in the same spack call.
 
-    If something goes wrong, the child process catches the error and
-    passes it to the parent wrapped in a ChildError.  The parent is
-    expected to handle (or re-raise) the ChildError.
     """
     read_pipe, write_pipe = multiprocessing.Pipe(duplex=False)
     input_fd = None
@@ -1300,6 +1332,9 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
                 jobserver_fd1,
                 jobserver_fd2,
             ),
+            read_pipe=read_pipe,
+            timeout=timeout,
+            pkg=pkg,
         )
 
         p.start()
@@ -1319,29 +1354,41 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
         if input_fd is not None:
             input_fd.close()
 
-    def exitcode_msg(p):
-        typ = "exit" if p.exitcode >= 0 else "signal"
-        return f"{typ} {abs(p.exitcode)}"
+    return p
 
-    p.join(timeout=timeout)
-    if p.is_alive():
+
+def complete_build_process(process: BuildProcess):
+    """
+    Wait for the child process to complete and handles its exit status.
+
+    If something goes wrong, the child process catches the error and
+    passes it to the parent wrapped in a ChildError.  The parent is
+    expected to handle (or re-raise) the ChildError.
+    """
+
+    def exitcode_msg(process):
+        typ = "exit" if process.exitcode >= 0 else "signal"
+        return f"{typ} {abs(process.exitcode)}"
+
+    timeout = process.timeout
+    process.join(timeout=timeout)
+    if process.is_alive():
         warnings.warn(f"Terminating process, since the timeout of {timeout}s was exceeded")
-        p.terminate()
-        p.join()
+        process.terminate()
 
     try:
-        child_result = read_pipe.recv()
+        # Check if information from the read pipe has been received.
+        child_result = process.read_pipe.recv()
     except EOFError:
-        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(p)})")
+        raise InstallError(f"The process has stopped unexpectedly ({exitcode_msg(process)})")
 
     # If returns a StopPhase, raise it
     if isinstance(child_result, spack.error.StopPhase):
-        # do not print
         raise child_result
 
     # let the caller know which package went wrong.
     if isinstance(child_result, InstallError):
-        child_result.pkg = pkg
+        child_result.pkg = process.pkg
 
     if isinstance(child_result, ChildError):
         # If the child process raised an error, print its output here rather
@@ -1352,13 +1399,13 @@ def start_build_process(pkg, function, kwargs, *, timeout: Optional[int] = None)
         raise child_result
 
     # Fallback. Usually caught beforehand in EOFError above.
-    if p.exitcode != 0:
-        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(p)})")
+    if process.exitcode != 0:
+        raise InstallError(f"The process failed unexpectedly ({exitcode_msg(process)})")
 
     return child_result
 
 
-CONTEXT_BASES = (spack.package_base.PackageBase, spack.builder.Builder)
+CONTEXT_BASES = (spack.package_base.PackageBase, spack.builder.BaseBuilder)
 
 
 def get_package_context(traceback, context=3):

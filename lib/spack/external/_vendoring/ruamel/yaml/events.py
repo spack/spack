@@ -1,6 +1,6 @@
 # coding: utf-8
 
-from ruamel.yaml.compat import _F
+from _vendoring.ruamel.yaml.compat import _F
 
 # Abstract classes.
 

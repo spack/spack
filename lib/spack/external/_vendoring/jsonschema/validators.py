@@ -8,16 +8,16 @@ import contextlib
 import json
 import numbers
 
-from six import add_metaclass
+from _vendoring.six import add_metaclass
 
-from jsonschema import (
+from _vendoring.jsonschema import (
     _legacy_validators,
     _types,
     _utils,
     _validators,
     exceptions,
 )
-from jsonschema.compat import (
+from _vendoring.jsonschema.compat import (
     Sequence,
     int_types,
     iteritems,
@@ -33,7 +33,7 @@ from jsonschema.compat import (
 # Sigh. https://gitlab.com/pycqa/flake8/issues/280
 #       https://github.com/pyga/ebb-lint/issues/7
 # Imported for backwards compatibility.
-from jsonschema.exceptions import ErrorTree
+from _vendoring.jsonschema.exceptions import ErrorTree
 ErrorTree
 
 

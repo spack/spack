@@ -54,7 +54,7 @@
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -166,7 +166,7 @@
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -190,7 +190,7 @@
 "platform_os":"debian6",
 "target":"aarch64"
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "languages":[
@@ -272,7 +272,7 @@
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],
@@ -350,7 +350,7 @@
 "cpupart":"0x022"
 }
 },
-"namespace":"builtin.mock",
+"namespace":"builtin_mock",
 "parameters":{
 "build_system":"generic",
 "cflags":[],

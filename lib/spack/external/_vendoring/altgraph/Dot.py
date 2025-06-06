@@ -1,8 +1,8 @@
 """
-altgraph.Dot - Interface to the dot language
+_vendoring.altgraph.Dot - Interface to the dot language
 ============================================
 
-The :py:mod:`~altgraph.Dot` module provides a simple interface to the
+The :py:mod:`~_vendoring.altgraph.Dot` module provides a simple interface to the
 file format used in the
 `graphviz <http://www.research.att.com/sw/tools/graphviz/>`_
 program. The module is intended to offload the most tedious part of the process
@@ -20,7 +20,7 @@ Example usage
 
 Here is a typical usage::
 
-    from altgraph import Graph, Dot
+    from _vendoring.altgraph import Graph, Dot
 
     # create a graph
     edges = [ (1,2), (1,3), (3,4), (3,5), (4,5), (5,4) ]
@@ -77,7 +77,7 @@ Example::
 
 .. note::
 
-   dotty (invoked via :py:func:`~altgraph.Dot.display`) may not be able to
+   dotty (invoked via :py:func:`~_vendoring.altgraph.Dot.display`) may not be able to
    display all graphics styles. To verify the output save it to an image file
    and look at it that way.
 
@@ -111,7 +111,7 @@ Valid attributes
 import os
 import warnings
 
-from altgraph import GraphError
+from _vendoring.altgraph import GraphError
 
 
 class Dot(object):

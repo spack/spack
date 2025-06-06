@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import os
 
 import llnl.util.tty as tty
@@ -14,7 +15,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="resource_command")
 
     list_parser = sp.add_parser("list", help=resource_list.__doc__)

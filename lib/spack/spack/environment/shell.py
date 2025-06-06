@@ -181,8 +181,7 @@ def activate(
     # become PATH variables.
     #
 
-    with env.manifest.use_config():
-        env_vars_yaml = spack.config.get("env_vars", None)
+    env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 

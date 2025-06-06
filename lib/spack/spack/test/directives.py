@@ -12,7 +12,6 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
-from spack.test.conftest import create_test_repo
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -213,16 +212,16 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
 @pytest.mark.parametrize(
     "spec_str,distribute_src,distribute_bin",
     [
-        ("x@1.1~foo", False, False),
-        ("x@1.2+foo", False, False),
-        ("x@1.2~foo", False, True),
-        ("x@1.0~foo", False, True),
-        ("x@1.3+foo", True, True),
-        ("y@2.0", False, False),
-        ("y@2.1+bar", False, False),
+        ("redistribute-x@1.1~foo", False, False),
+        ("redistribute-x@1.2+foo", False, False),
+        ("redistribute-x@1.2~foo", False, True),
+        ("redistribute-x@1.0~foo", False, True),
+        ("redistribute-x@1.3+foo", True, True),
+        ("redistribute-y@2.0", False, False),
+        ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(test_repo, spec_str, distribute_src, distribute_bin):
+def test_redistribute_directive(mock_packages, spec_str, distribute_src, distribute_bin):
     spec = spack.spec.Spec(spec_str)
     assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
