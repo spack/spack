@@ -14,7 +14,9 @@ def test_install_location(working_env, tmpdir):
     # where it used to be
     base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
     p1 = paths.SpackPaths(base_prefix)
-    assert p1.default_install_location == str(pathlib.Path(base_prefix) / "opt" / "data" / "installs")
+    assert p1.default_install_location == str(
+        pathlib.Path(base_prefix) / "opt" / "data" / "installs"
+    )
 
     # If XDG_DATA_HOME and SPACK_DATA_HOME aren't set, and
     # there are installs in the old prefix, use that
