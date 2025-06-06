@@ -260,7 +260,7 @@ Spack caches resources that are downloaded as part of installations. The cache i
 a valid Spack mirror: it uses the same directory structure and naming scheme
 as other Spack mirrors (so it can be copied anywhere and referenced with a URL
 like other mirrors). The mirror is maintained locally (within the Spack
-installation directory) at :file:`var/spack/cache/`. It is always enabled (and
+installation directory) at :file:`$spack/opt/data`. It is always enabled (and
 is always searched first when attempting to retrieve files for an installation)
 but can be cleared with :ref:`clean <cmd-spack-clean>`; the cache directory can also
 be deleted manually without issue.
