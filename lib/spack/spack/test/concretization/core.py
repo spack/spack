@@ -3953,7 +3953,7 @@ def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable
     spack.config.set("concretizer:concretization_cache:entry_limit", 1)
     spack.concretize.concretize_one("zlib")
     spack.concretize.concretize_one("hdf5")
-    # cleanup should have been run and there should be no lockfiles
+    # cleanup should have been run and there should be one lockfile
     lock_count = 0
     for file in spack.solver.asp.CONC_CACHE.root.iterdir():
         if file.is_file() and file.suffix == ".lock":
