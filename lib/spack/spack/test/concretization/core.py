@@ -1,6 +1,8 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import gzip
+import json
 import os
 import pathlib
 import platform
@@ -3881,8 +3883,9 @@ def test_concretization_cache_roundtrip(use_concretization_cache, monkeypatch, m
     # memoization
     h = spack.concretize.concretize_one("hdf5")
 
-    # due to our forced determinism above, we should not be observing
-    # cache misses, assert that we're not storing any new cache entries
+    # ASP output should be stable, concretizing the same spec
+    # should have the same problem output
+    # assert that we're not storing any new cache entries
     def _ensure_no_store(self, problem: str, result, statistics, test=False):
         # always throw, we never want to reach this code path
         assert False, "Concretization cache hit expected"
@@ -3959,3 +3962,28 @@ def test_concretization_cache_lockfile_cleanup(use_concretization_cache, mutable
         lock_count == 1
     ), f"Unexpected number of lockfiles {lock_count} \
 concretization cache cleanup operation failed."
+
+
+def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
+    def store(self, problem, result, statistics, test = False):
+        bucket, digest = self._prefix_digest(problem)
+        cache_path = self.root / bucket / digest
+        self._fc.init_entry(bucket)
+        with self._fc.write_transaction(bucket) as exists:
+            if not exists:
+                # The directory may have been pruned between init entry and the write
+                # transaction, recreate the directory
+                os.makedirs(bucket)
+            try:
+                with open(cache_path, "x") as cache_entry:
+                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+                    cache_entry.write(json.dumps(cache_dict))
+            except FileExistsError:
+                # Entry for this conc hash exists already, do not overwrite
+                pass
+
+    monkeypatch.setattr(spack.solver.asp.ConcretizationCache, "store", store)
+    # Store the results in plaintext
+    spack.concretize.concretize_one("zlib")
+    # Ensure fetch can handle the plaintext cache entry
+    spack.concretize.concretize_one("zlib")

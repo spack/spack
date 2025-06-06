@@ -822,10 +822,10 @@ class ConcretizationCache:
                     pass
                 except OSError:
                     # Cache may have been created pre compression
-                    # check if gzip, and if so, read from plaintext
+                    # check if gzip, and if not, read from plaintext
                     # otherwise re raise
                     with open(cache_path, "rb") as f:
-                        if GZipFileType().matches_magic(f):
+                        if not GZipFileType().matches_magic(f):
                             cache_entry_content = f.read().decode()
                         else:
                             raise
