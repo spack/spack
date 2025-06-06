@@ -694,19 +694,22 @@ def test_repo_set_does_not_work_on_local_path(mutable_config):
         repo("set", "--destination", "/some/path", "local-repo")
 
 
-def test_add_repo_prepends_instead_of_appends(monkeypatch):
+def test_add_repo_prepends_instead_of_appends(monkeypatch, tmp_path):
     """Test that newly added repositories are prepended to the configuration,
     giving them higher priority than existing repositories."""
-    config = make_repo_config({"existing_repo": "/path/to/existing"})
+    existing_path = str(tmp_path / "existing_repo")
+    new_path = str(tmp_path / "new_repo")
+
+    config = make_repo_config({"existing_repo": existing_path})
 
     def mock_parse_config_descriptor(name, entry, lock):
-        return MockDescriptor({"/new/path": MockRepo("new_repo")})
+        return MockDescriptor({new_path: MockRepo("new_repo")})
 
     monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
 
     # Add a new repository
     key = spack.cmd.repo._add_repo(
-        path_or_repo="/new/path",
+        path_or_repo=new_path,
         name="new_repo",
         scope=None,
         paths=[],
@@ -722,5 +725,5 @@ def test_add_repo_prepends_instead_of_appends(monkeypatch):
 
     # The new repository should be first (highest priority)
     assert repo_names == ["new_repo", "existing_repo"]
-    assert repos_config["new_repo"] == "/new/path"
-    assert repos_config["existing_repo"] == "/path/to/existing"
+    assert repos_config["new_repo"] == new_path
+    assert repos_config["existing_repo"] == existing_path
