@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: Package build issue reports have moved
+  - name: "\U0001F41E Package build error"
     url: https://github.com/spack/spack-packages/issues/new?template=build_error.yml
-    about: Please report installation issues in the spack/spack-packages repository.
+    about: Report installation issues in the spack/spack-packages repository
+  - name: "\U0001F41E Package test error"
+    url: https://github.com/spack/spack-packages/issues/new?template=test_error.yml
+    about: Report standalone package test issues in the spack/spack-packages repository
