@@ -1492,6 +1492,8 @@ class PackageInstaller:
         """
         if sys.platform == "win32":
             # No locks on Windows, we should always use 1 process
+            # TODO: perhaps raise an error instead and update cmd-line interface
+            # to omit this option on Windows for nwo
             concurrent_packages = 1
 
         if isinstance(explicit, bool):
