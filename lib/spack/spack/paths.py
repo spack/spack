@@ -268,7 +268,7 @@ class SpackPaths:
         elif dir_is_occupied(old_location):
             return old_location
         else:
-            return os.path.join(self.prefix, "opt", "data")
+            return os.path.join(self.prefix, "opt", "data", subdir)
 
 
 locations = SpackPaths()

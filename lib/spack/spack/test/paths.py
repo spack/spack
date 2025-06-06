@@ -9,13 +9,27 @@ import spack.paths as paths
 
 
 def test_install_location(working_env, tmpdir):
+    # With no direction from env vars, a fresh clone of Spack
+    # should default to using the Spack prefix. It was moved from
+    # where it used to be
     base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
+    p1 = paths.SpackPaths(base_prefix)
+    assert p1.default_install_location == str(pathlib.Path(base_prefix) / "opt" / "data" / "installs")
+
+    # If XDG_DATA_HOME and SPACK_DATA_HOME aren't set, and
+    # there are installs in the old prefix, use that
+    preexisting_install_dir = pathlib.Path(base_prefix) / "opt" / "spack" / ".spack-db"
+    (preexisting_install_dir).mkdir(parents=True)
+    p1 = paths.SpackPaths(base_prefix)
+    assert p1.default_install_location == str(preexisting_install_dir.parent)
+
+    # XDG_DATA_HOME overrides all the above
     xdg_data_home = str(tmpdir.join("xdg_data_home"))
     os.environ["XDG_DATA_HOME"] = xdg_data_home
     p1 = paths.SpackPaths(base_prefix)
     assert p1.default_install_location == str(pathlib.Path(xdg_data_home) / "spack" / "installs")
 
-    # Check that SPACK_DATA_HOME overrides
+    # Check that SPACK_DATA_HOME overrides all the above
     spack_data_home = str(tmpdir.join("spack_data_home"))
     os.environ["SPACK_DATA_HOME"] = spack_data_home
     p2 = paths.SpackPaths(base_prefix)
