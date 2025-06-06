@@ -3974,7 +3974,7 @@ def test_concretization_cache_uncompressed_entry(use_concretization_cache, monke
                 # transaction, recreate the directory
                 os.makedirs(bucket)
             try:
-                with open(cache_path, "x") as cache_entry:
+                with open(cache_path, "x", encoding="utf-8") as cache_entry:
                     cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
                     cache_entry.write(json.dumps(cache_dict))
             except FileExistsError:
