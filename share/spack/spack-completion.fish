@@ -2795,7 +2795,7 @@ complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -d 'conf
 set -g __fish_spack_optspecs_spack_repo_ls h/help scope=
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system end-user site user this-spack command_line'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -d 'configuration scope to read from'
 
 # spack repo add
