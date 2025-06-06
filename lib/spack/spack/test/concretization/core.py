@@ -1,7 +1,6 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import gzip
 import json
 import os
 import pathlib
@@ -3965,7 +3964,7 @@ concretization cache cleanup operation failed."
 
 
 def test_concretization_cache_uncompressed_entry(use_concretization_cache, monkeypatch):
-    def store(self, problem, result, statistics, test = False):
+    def store(self, problem, result, statistics, test=False):
         bucket, digest = self._prefix_digest(problem)
         cache_path = self.root / bucket / digest
         self._fc.init_entry(bucket)

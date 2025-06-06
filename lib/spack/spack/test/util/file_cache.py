@@ -9,7 +9,7 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-from spack.util.file_cache import CacheError, FileCache, DirectoryFileCache
+from spack.util.file_cache import CacheError, DirectoryFileCache, FileCache
 
 
 @pytest.fixture()
@@ -149,7 +149,9 @@ def test_destroy_directory_cache(directory_cache):
         with open(directory_cache.root / entry / "test.yml", "w", encoding="utf-8") as f:
             f.write("test")
     directory_cache.destroy()
-    assert not any(directory_cache.root.iterdir()), "Directory Cache destroy unsucessful, files remain"
+    assert not any(
+        directory_cache.root.iterdir()
+    ), "Directory Cache destroy unsucessful, files remain"
 
 
 def test_purge_directory_cache(directory_cache):
@@ -161,9 +163,13 @@ def test_purge_directory_cache(directory_cache):
         with open(directory_cache.root / entry / "test.yml", "w", encoding="utf-8") as f:
             f.write("test")
     directory_cache.remove(entry)
-    assert not (directory_cache.root / entry).exists(), "Directory cache remove failed, entry remains"
+    assert not (
+        directory_cache.root / entry
+    ).exists(), "Directory cache remove failed, entry remains"
     directory_cache.purge_lock(entry)
-    assert not (directory_cache.root / ("." + entry + ".lock")).exists(), "Directory Cache lock purge failed, lockfile remains"
+    assert not (
+        directory_cache.root / ("." + entry + ".lock")
+    ).exists(), "Directory Cache lock purge failed, lockfile remains"
 
 
 def test_directory_cache_reports_non_existent_entry(directory_cache):
@@ -171,4 +177,3 @@ def test_directory_cache_reports_non_existent_entry(directory_cache):
     entry = "tmpdir"
     with directory_cache.write_transaction(entry) as entry_exists:
         assert not entry_exists, "Directory cache incorrectly validates entries"
-
