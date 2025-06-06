@@ -519,3 +519,25 @@ def test_specfile_alias_is_updated():
     specfile_class_name = f"SpecfileV{spack.spec.SPECFILE_FORMAT_VERSION}"
     specfile_cls = getattr(spack.spec, specfile_class_name)
     assert specfile_cls is spack.spec.SpecfileLatest
+
+
+@pytest.mark.parametrize("spec_str", ["mpileaks %gcc", "mpileaks ^zmpi ^callpath%gcc"])
+def test_direct_edges_and_round_tripping_to_dict(spec_str, default_mock_concretization):
+    """Tests that we preserve edge information when round-tripping to dict"""
+    original = Spec(spec_str)
+    reconstructed = Spec.from_dict(original.to_dict())
+    assert original == reconstructed
+    assert original.to_dict() == reconstructed.to_dict()
+
+    concrete = default_mock_concretization(spec_str)
+    concrete_reconstructed = Spec.from_dict(concrete.to_dict())
+    assert concrete == concrete_reconstructed
+    assert concrete.to_dict() == concrete_reconstructed.to_dict()
+
+    # Ensure we don't get 'direct' in concrete JSON specs, for the time being
+    d = concrete.to_dict()
+    for node in d["spec"]["nodes"]:
+        if "dependencies" not in node:
+            continue
+        for dependency_data in node["dependencies"]:
+            assert "direct" not in dependency_data["parameters"]
