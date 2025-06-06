@@ -12,6 +12,7 @@ import spack.directives
 import spack.repo
 import spack.spec
 import spack.version
+from spack.test.conftest import create_test_repo
 
 
 def test_false_directives_do_not_exist(mock_packages):
@@ -221,7 +222,9 @@ def test_repo(_create_test_repo, monkeypatch, mock_stage):
         ("redistribute-y@2.1+bar", False, False),
     ],
 )
-def test_redistribute_directive(mock_packages, spec_str, distribute_src, distribute_bin):
+def test_redistribute_directive(
+    mock_packages, spec_str, distribute_src, distribute_bin, _create_test_repo
+):
     spec = spack.spec.Spec(spec_str)
     assert spack.repo.PATH.get_pkg_class(spec.fullname).redistribute_source(spec) == distribute_src
     concretized_spec = spack.concretize.concretize_one(spec)
