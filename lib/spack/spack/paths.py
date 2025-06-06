@@ -37,10 +37,26 @@ xdg_mapping = namedtuple("xdg_mapping", ["spack", "xdg", "xdg_default"])
 
 
 class XDG_mappings(Enum):
-    config_home = xdg_mapping(spack=XDG_overrides.config_home.value, xdg=XDG_vars.config_home.value, xdg_default=os.path.join("~", ".config"))
-    state_home = xdg_mapping(spack=XDG_overrides.state_home.value, xdg=XDG_vars.state_home.value, xdg_default=os.path.join("~", ".local", "state"))
-    data_home = xdg_mapping(spack=XDG_overrides.data_home.value, xdg=XDG_vars.data_home.value, xdg_default=os.path.join("~", ".local", "share"))
-    cache_home = xdg_mapping(spack=XDG_overrides.cache_home.value, xdg=XDG_vars.cache_home.value, xdg_default=os.path.join("~", ".cache"))
+    config_home = xdg_mapping(
+        spack=XDG_overrides.config_home.value,
+        xdg=XDG_vars.config_home.value,
+        xdg_default=os.path.join("~", ".config"),
+    )
+    state_home = xdg_mapping(
+        spack=XDG_overrides.state_home.value,
+        xdg=XDG_vars.state_home.value,
+        xdg_default=os.path.join("~", ".local", "state"),
+    )
+    data_home = xdg_mapping(
+        spack=XDG_overrides.data_home.value,
+        xdg=XDG_vars.data_home.value,
+        xdg_default=os.path.join("~", ".local", "share"),
+    )
+    cache_home = xdg_mapping(
+        spack=XDG_overrides.cache_home.value,
+        xdg=XDG_vars.cache_home.value,
+        xdg_default=os.path.join("~", ".cache"),
+    )
 
 
 class Location_vars(Enum):
@@ -61,7 +77,7 @@ def _spack_xdg_or_backup(xdg_mapping):
     if xdg_mapping.spack in os.environ:
         val = os.environ[xdg_mapping.spack]
     elif xdg_mapping.xdg in os.environ:
-        val =  os.path.join(os.environ[xdg_mapping.xdg], "spack")
+        val = os.path.join(os.environ[xdg_mapping.xdg], "spack")
     else:
         val = os.path.join(xdg_mapping.xdg_default, "spack")
 
