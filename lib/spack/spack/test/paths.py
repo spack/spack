@@ -91,7 +91,16 @@ def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
     assert p1.gpg_path == str(pathlib.Path(user_cache_path) / "gpg") 
     (old_gpg_dir / "something").touch()
     p1 = paths.SpackPaths(base_prefix)
+    # Now it should redirect
     assert p1.gpg_path == str(old_gpg_dir)
+    # But the keys are handled separately and should use the new path
+    assert p1.gpg_keys_path == str(pathlib.Path(user_cache_path) / "gpg-keys")
+
+    old_gpg_keys_dir = pathlib.Path(base_prefix) / "var" / "spack" / "gpg"
+    old_gpg_keys_dir.mkdir(parents=True)
+    (old_gpg_keys_dir / "something").touch()
+    p1 = paths.SpackPaths(base_prefix)
+    assert p1.gpg_keys_path == str(old_gpg_keys_dir)
 
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmpdir):
