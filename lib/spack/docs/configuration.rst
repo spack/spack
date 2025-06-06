@@ -796,12 +796,14 @@ XDG variables can help users organize their Spack artifacts.
 ``XDG_DATA_HOME`` is used to store long-lived data. Its default value
 is ``$HOME/.local/share``. The following items are always stored by
 default using ``$XDG_DATA_HOME``:
+
 * Modules: ``$XDG_DATA_HOME/share/spack``
 * Package indices: ``$XDG_DATA_HOME/$spack_instance_id/spack``
 
 The data listed below will be placed in ``$spack`` by default. However,
 if ``XDG_DATA_HOME`` is set, they will be stored under that path. The
 default values for these are as follows:
+
 * Source caches: ``$HOME/.local/share`` or ``$XDG_DATA_HOME/spack/downloads``.
 * The install tree: ``$spack/opt/data/installs`` or ``$XDG_DATA_HOME/spack/installs``.
 * Environment management: ``$spack/opt/data/environments`` or ``$XDG_DATA_HOME/spack/environments``
@@ -810,13 +812,16 @@ default values for these are as follows:
 but not integral to Spack's functionality. If not defined, its default
 value is ``~/.local/state``. ``misc_cache`` is placed by default using
 this variable.
+
 * ``misc_cache``: ``$XDG_STATE_HOME/$spack_instance_id/spack``
 
 ``XDG_CACHE_HOME`` is used to store temporary data. If not defined,
 its default value is ``~/.cache``. Build stages are placed by default
 using this variable.
+
 * Build stages: ``$XDG_CACHE_HOME/spack``
 
 The user configuration scope's files will be located with ``XDG_CONFIG_HOME``. Its
 default value is ``~/.config``.
+
 * User configuration scope: ``$XDG_CONFIG_HOME/spack``
