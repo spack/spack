@@ -2239,7 +2239,7 @@ def skip_provenance_check(monkeypatch, request):
     if "require_provenance" not in request.keywords:
         monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
 
-        
+
 @pytest.fixture(scope="function")
 def config_two_gccs(mutable_config):
     # Configure two gcc compilers that could be concretized to
