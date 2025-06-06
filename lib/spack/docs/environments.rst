@@ -431,6 +431,8 @@ from being added again.  At the same time, a spec that already exists in the
 environment, but only as a dependency, will be added to the environment as a
 root spec without the ``--no-add`` option.
 
+.. _develop-specs:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Developing Packages in a Spack Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

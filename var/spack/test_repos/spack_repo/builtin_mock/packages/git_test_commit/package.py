@@ -11,9 +11,19 @@ class GitTestCommit(Package):
     """Mock package that tests installing specific commit"""
 
     homepage = "http://www.git-fetch-example.com"
+
     # git='to-be-filled-in-by-test'
 
+    # ----------------------------
+    # -- mock_git_repository, or mock_git_version_info
     version("main", branch="main")
+    # ----------------------------
+    # -- only mock_git_repository
+    # (session scope)
+    version("tag", tag="test-tag")
+    # ----------------------------
+    # -- only mock_git_version_info below
+    # (function scope)
     version("1.0", tag="v1.0")
     version("1.1", tag="v1.1")
     version("1.2", tag="1.2")  # not a typo

@@ -660,3 +660,70 @@ def test_add_repo_git_url_detection_edge_cases(monkeypatch, test_url, expected_t
         assert entry == {"git": test_url}
     else:
         assert isinstance(entry, str)
+
+
+def test_repo_set_git_config(mutable_config):
+    """Test that 'spack repo set' properly modifies git repository configurations."""
+    # Set up initial git repository config in defaults scope
+    git_url = "https://github.com/example/test-repo.git"
+    initial_config = {"repos": {"test-repo": {"git": git_url}}}
+    spack.config.set("repos", initial_config["repos"], scope="site")
+
+    # Test setting destination and paths
+    repo("set", "--scope=user", "--destination", "/custom/path", "test-repo")
+    repo("set", "--scope=user", "--path", "subdir1", "--path", "subdir2", "test-repo")
+
+    # Check that the user config has the updated entry
+    user_repos = spack.config.get("repos", scope="user")
+    assert user_repos["test-repo"]["paths"] == ["subdir1", "subdir2"]
+    assert user_repos["test-repo"]["destination"] == "/custom/path"
+
+    # Check that site scope is unchanged
+    site_repos = spack.config.get("repos", scope="site")
+    assert "destination" not in site_repos["test-repo"]
+
+
+def test_repo_set_nonexistent_repo(mutable_config):
+    with pytest.raises(SpackError, match="No repository with namespace 'nonexistent'"):
+        repo("set", "--destination", "/some/path", "nonexistent")
+
+
+def test_repo_set_does_not_work_on_local_path(mutable_config):
+    spack.config.set("repos", {"local-repo": "/local/path"}, scope="site")
+    with pytest.raises(SpackError, match="is not a git repository"):
+        repo("set", "--destination", "/some/path", "local-repo")
+
+
+def test_add_repo_prepends_instead_of_appends(monkeypatch, tmp_path):
+    """Test that newly added repositories are prepended to the configuration,
+    giving them higher priority than existing repositories."""
+    existing_path = str(tmp_path / "existing_repo")
+    new_path = str(tmp_path / "new_repo")
+
+    config = make_repo_config({"existing_repo": existing_path})
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({new_path: MockRepo("new_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+
+    # Add a new repository
+    key = spack.cmd.repo._add_repo(
+        path_or_repo=new_path,
+        name="new_repo",
+        scope=None,
+        paths=[],
+        destination=None,
+        config=config,
+    )
+
+    assert key == "new_repo"
+
+    # Check that the new repository is first in the configuration
+    repos_config = config.get("repos", scope=None)
+    repo_names = list(repos_config.keys())
+
+    # The new repository should be first (highest priority)
+    assert repo_names == ["new_repo", "existing_repo"]
+    assert repos_config["new_repo"] == new_path
+    assert repos_config["existing_repo"] == existing_path

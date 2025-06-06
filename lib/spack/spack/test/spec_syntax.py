@@ -11,6 +11,7 @@ import pytest
 import spack.binary_distribution
 import spack.cmd
 import spack.concretize
+import spack.config
 import spack.platforms.test
 import spack.repo
 import spack.solver.asp
@@ -737,6 +738,19 @@ def specfile_for(default_mock_concretization):
             ],
             "mvapich %gcc languages:='c,c++' arch=None-None-x86_64",
         ),
+        # Test conditional dependencies
+        (
+            "foo ^[when='%c' virtuals=c]gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo ^[when='%c' virtuals=c] gcc",
+        ),
     ],
 )
 def test_parse_single_spec(spec_str, tokens, expected_roundtrip, mock_git_test_package):
@@ -880,6 +894,73 @@ def test_cli_spec_roundtrip(args, expected):
     specs = spack.cmd.parse_specs(args)
     output_string = " ".join(str(spec) for spec in specs)
     assert expected == output_string
+
+
+@pytest.mark.parametrize(
+    ["spec_str", "toolchain", "expected_roundtrip"],
+    [
+        (
+            "foo%my_toolchain",
+            {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
+            ["foo %[when='%c' virtuals=c] gcc"],
+        ),
+        (
+            "foo%my_toolchain",
+            {"my_toolchain": "+bar cflags=baz %[when='%c' virtuals=c]gcc"},
+            ["foo cflags=baz +bar %[when='%c' virtuals=c] gcc"],
+        ),
+        (
+            "foo%my_toolchain2",
+            {"my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich"},
+            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
+        ),
+        (
+            "foo%my_toolchain bar%my_toolchain2",
+            {
+                "my_toolchain": "%[when='%c' virtuals=c]gcc",
+                "my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich",
+            },
+            [
+                "foo %[when='%c' virtuals=c] gcc",
+                "bar %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich",
+            ],
+        ),
+        (
+            "foo%my_toolchain2",
+            {
+                "my_toolchain2": [
+                    {"spec": "%[virtuals=c]gcc", "when": "%c"},
+                    {"spec": "%[virtuals=mpi]mpich", "when": "+mpi"},
+                ]
+            },
+            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
+        ),
+        (
+            "foo%my_toolchain2",
+            {"my_toolchain2": [{"spec": "%[virtuals=c]gcc %[virtuals=mpi]mpich", "when": "%c"}]},
+            ["foo %[when='%c' virtuals=c] gcc %[when='%c' virtuals=mpi] mpich"],
+        ),
+        # Test that we don't get caching wrong in the parser
+        (
+            "foo %gcc-mpich ^bar%gcc-mpich",
+            {
+                "gcc-mpich": [
+                    {"spec": "%[virtuals=c] gcc", "when": "%c"},
+                    {"spec": "%[virtuals=mpi] mpich", "when": "%mpi"},
+                ]
+            },
+            [
+                "foo %[when='%c' virtuals=c] gcc %[when='%mpi' virtuals=mpi] mpich "
+                "^bar %[when='%c' virtuals=c] gcc %[when='%mpi' virtuals=mpi] mpich"
+            ],
+        ),
+    ],
+)
+def test_parse_toolchain(spec_str, toolchain, expected_roundtrip, mutable_config):
+    spack.config.CONFIG.set("toolchains", toolchain)
+    parser = SpecParser(spec_str)
+    for expected in expected_roundtrip:
+        assert expected == str(parser.next_spec())
 
 
 @pytest.mark.parametrize(

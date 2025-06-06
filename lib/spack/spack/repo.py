@@ -1816,8 +1816,8 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
 def parse_config_descriptor(
     name: Optional[str], descriptor: Any, lock: spack.util.lock.Lock
 ) -> RepoDescriptor:
-    """Parse a repository descriptor from the configuration. This does not instantiate Repo
-    objects, but merely parses and validates the configuration.
+    """Parse a repository descriptor from validated configuration. This does not instantiate Repo
+    objects, but merely turns the config into a more useful RepoDescriptor instance.
 
     Args:
         name: the name of the repository, used for error messages
@@ -1835,26 +1835,35 @@ def parse_config_descriptor(
     if isinstance(descriptor, str):
         return LocalRepoDescriptor(name, spack.util.path.canonicalize_path(descriptor))
 
-    elif isinstance(descriptor, dict) and "git" in descriptor:
-        repository = descriptor["git"]
-        assert isinstance(repository, str), "Package repository git URL must be a string"
+    # Should be the case due to config validation.
+    assert isinstance(descriptor, dict), "Repository descriptor must be a string or a dictionary"
 
-        destination = descriptor.get("destination", None)
+    # Configuration validation works per scope, and we want to allow overriding e.g. destination
+    # in user config without the user having to repeat the `git` key and value again. This is a
+    # hard error, since config validation is a hard error.
+    if "git" not in descriptor:
+        raise RuntimeError(
+            f"Invalid configuration for repository '{name}': {descriptor!r}. A `git` attribute is "
+            "required for remote repositories."
+        )
 
-        if destination is None:  # use a default destination
-            dir_name = spack.util.hash.b32_hash(repository)[-7:]
-            destination = os.path.join(spack.paths.package_repos_path, dir_name)
-        else:
-            destination = spack.util.path.canonicalize_path(destination)
+    repository = descriptor["git"]
+    assert isinstance(repository, str), "Package repository git URL must be a string"
 
-        if "paths" in descriptor:
-            rel_paths = descriptor["paths"]
-        else:
-            rel_paths = None
+    destination = descriptor.get("destination", None)
 
-        return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
+    if destination is None:  # use a default destination
+        dir_name = spack.util.hash.b32_hash(repository)[-7:]
+        destination = os.path.join(spack.paths.package_repos_path, dir_name)
+    else:
+        destination = spack.util.path.canonicalize_path(destination)
 
-    return BrokenRepoDescriptor(name, "Broken repo")
+    if "paths" in descriptor:
+        rel_paths = descriptor["paths"]
+    else:
+        rel_paths = None
+
+    return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
 
 
 def create_or_construct(
