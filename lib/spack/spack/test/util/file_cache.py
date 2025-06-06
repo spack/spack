@@ -163,9 +163,12 @@ def test_purge_directory_cache(directory_cache):
     directory_cache.remove(entry)
     assert not (directory_cache.root / entry).exists(), "Directory cache remove failed, entry remains"
     directory_cache.purge_lock(entry)
-    assert not (directory_cache.root / "." + entry + ".lock").exists(), "Directory Cache lock purge failed, lockfile remains"
+    assert not (directory_cache.root / ("." + entry + ".lock")).exists(), "Directory Cache lock purge failed, lockfile remains"
+
 
 def test_directory_cache_reports_non_existent_entry(directory_cache):
     """Test initializing an entry for a path that doesn't exist"""
     entry = "tmpdir"
-    assert not directory_cache.init_entry(entry), "Directory cache incorrectly validates entries"
+    with directory_cache.write_transaction(entry) as entry_exists:
+        assert not entry_exists, "Directory cache incorrectly validates entries"
+
