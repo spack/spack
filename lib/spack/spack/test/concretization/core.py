@@ -21,6 +21,7 @@ import spack.deptypes as dt
 import spack.detection
 import spack.error
 import spack.hash_types as ht
+import spack.package_base
 import spack.paths
 import spack.platforms
 import spack.platforms.test
@@ -119,6 +120,8 @@ def binary_compatibility(monkeypatch, request):
         "conflict",
         "conflict~foo%clang",
         "conflict-parent%gcc",
+        # Direct dependency with different deptypes
+        "mpileaks %[deptypes=link] mpich",
     ]
 )
 def spec(request):
@@ -2110,7 +2113,7 @@ class TestConcretize:
         prefix = os.path.sep + "fake"
         python_spec = Spec.from_detection("python@=detected", external_path=prefix)
 
-        def find_fake_python(classes, path_hints):
+        def find_fake_python(classes, path_hints, **kwargs):
             return {
                 "python": [Spec.from_detection("python@=detected", external_path=path_hints[0])]
             }
@@ -2575,6 +2578,12 @@ class TestConcretize:
         assert s.external
         assert s.satisfies("~opt")
         assert s.prefix == "/tmp/prefix2"
+
+    def test_git_based_version_must_exist_to_use_ref(self):
+        # gmake should fail, only has sha256
+        with pytest.raises(spack.error.UnsatisfiableSpecError) as e:
+            spack.concretize.concretize_one(f"gmake commit={'a' * 40}")
+            assert "Cannot use commit variant with" in e.value.message
 
 
 @pytest.fixture()
@@ -3106,6 +3115,100 @@ def test_spec_unification(unify, mutable_config, mock_packages):
     maybe_fails = pytest.raises if unify is True else llnl.util.lang.nullcontext
     with maybe_fails(spack.solver.asp.UnsatisfiableSpecError):
         _ = spack.cmd.parse_specs([a_restricted, b], concretize=True)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str, error_type",
+    [
+        (f"git-ref-package@main commit={'a' * 40}", None),
+        (f"git-ref-package@main commit={'a' * 39}", AssertionError),
+        (f"git-ref-package@2.1.6 commit={'a' * 40}", spack.error.UnsatisfiableSpecError),
+        (f"git-ref-package@git.2.1.6=2.1.6 commit={'a' * 40}", None),
+        (f"git-ref-package@git.{'a' * 40}=2.1.6 commit={'a' * 40}", None),
+    ],
+)
+def test_spec_containing_commit_variant(spec_str, error_type):
+    spec = spack.spec.Spec(spec_str)
+    if error_type is None:
+        spack.concretize.concretize_one(spec)
+    else:
+        with pytest.raises(error_type):
+            spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "spec_str",
+    [
+        f"git-test-commit@git.main commit={'a' * 40}",
+        f"git-test-commit@git.v1.0 commit={'a' * 40}",
+        "git-test-commit@{sha} commit={sha}",
+        "git-test-commit@{sha} commit=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    ],
+)
+def test_spec_with_commit_interacts_with_lookup(mock_git_version_info, monkeypatch, spec_str):
+    # This test will be short lived. Technically we could do further checks with a Lookup
+    # but skipping impl since we are going to deprecate
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+    spec = spack.spec.Spec(spec_str.format(sha=commits[-1]))
+    spack.concretize.concretize_one(spec)
+
+
+@pytest.mark.usefixtures("mutable_config", "mock_packages", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize("version_str", [f"git.{'a' * 40}=main", "git.2.1.5=main"])
+def test_relationship_git_versions_and_commit_variant(version_str):
+    """
+    Confirm that GitVersions auto assign and populates the commit variant correctly
+    """
+    # This should be a short lived test and can be deleted when we remove GitVersions
+    spec = spack.spec.Spec(f"git-ref-package@{version_str}")
+    spec = spack.concretize.concretize_one(spec)
+    if spec.version.commit_sha:
+        assert spec.version.commit_sha == spec.variants["commit"].value
+    else:
+        assert "commit" not in spec.variants
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+def test_abstract_commit_spec_reuse():
+    commit = "abcd" * 10
+    spec_str_1 = f"git-ref-package@develop commit={commit}"
+    spec_str_2 = f"git-ref-package commit={commit}"
+    spec1 = spack.concretize.concretize_one(spec_str_1)
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.concretize.concretize_one(spec_str_2)
+        assert spec2.dag_hash() == spec1.dag_hash()
+
+
+@pytest.mark.usefixtures("install_mockery", "do_not_check_runtimes_on_reuse")
+@pytest.mark.parametrize(
+    "installed_commit, incoming_commit, reusable",
+    [("a" * 40, "b" * 40, False), (None, "b" * 40, False), ("a" * 40, None, True)],
+)
+def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusable):
+    # install a non-default variant to test if reuse picks it
+    if installed_commit:
+        spec_str_1 = f"git-ref-package@develop commit={installed_commit} ~opt"
+    else:
+        spec_str_1 = "git-ref-package@develop ~opt"
+
+    if incoming_commit:
+        spec_str_2 = f"git-ref-package@develop commit={incoming_commit}"
+    else:
+        spec_str_2 = "git-ref-package@develop"
+
+    spec1 = spack.concretize.concretize_one(spack.spec.Spec(spec_str_1))
+    PackageInstaller([spec1.package], fake=True, explicit=True).install()
+
+    with spack.config.override("concretizer:reuse", True):
+        spec2 = spack.spec.Spec(spec_str_2)
+        spec2 = spack.concretize.concretize_one(spec2)
+        assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
 def test_concretization_cache_roundtrip(
@@ -3701,3 +3804,114 @@ def test_use_compiler_by_hash(mock_packages, mutable_database, mutable_config):
         s = spack.concretize.concretize_one(f"mpileaks %gcc/{installed_spec.dag_hash()}")
 
     assert s["c"].dag_hash() == installed_spec.dag_hash()
+
+
+@pytest.mark.parametrize(
+    "spec_str,expected,not_expected",
+    [
+        # Simple build requirement on gcc, as a provider for c
+        (
+            "mpileaks %gcc",
+            ["%[deptypes=build] gcc"],
+            ["%[deptypes=link] gcc", "%[deptypes=run] gcc"],
+        ),
+        # Require mpich as a direct dependency of mpileaks
+        (
+            "mpileaks %[deptypes=link] mpich",
+            ["%[deptypes=build,link] mpich", "^callpath%[deptypes=build,link] mpich"],
+            ["%[deptypes=run] mpich"],
+        ),
+        (
+            "mpileaks %[deptypes=link] mpich+debug",  # non-default variant
+            ["%[deptypes=build,link] mpich+debug"],
+            ["% mpich~debug"],
+        ),
+        # Require mpich as a direct dependency of two nodes, with compatible constraints
+        (
+            "mpileaks %mpich+debug ^callpath %mpich@3.0.3",  # non-default variant
+            [
+                "%[deptypes=build,link] mpich@3.0.3+debug",
+                "^callpath %[deptypes=build,link] mpich@3.0.3+debug",
+            ],
+            ["%mpich~debug"],
+        ),
+        # Package that has a conditional link dependency on a compiler
+        ("emacs +native", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+        ("emacs +native %[virtuals=c] gcc", ["%[virtuals=c deptypes=build,link] gcc"], []),
+    ],
+)
+def test_specifying_direct_dependencies(
+    spec_str, expected, not_expected, default_mock_concretization
+):
+    """Tests solving % in different scenarios, either for runtime or buildtime dependencies."""
+    concrete_spec = default_mock_concretization(spec_str)
+
+    for c in expected:
+        assert concrete_spec.satisfies(c)
+
+    for c in not_expected:
+        assert not concrete_spec.satisfies(c)
+
+
+@pytest.mark.parametrize(
+    "spec_str,conditional_spec,expected",
+    [
+        # Abstract spec is False, cause the set of possible solutions in the rhs is smaller
+        ("mpich", "%[when=+debug] llvm", (False, True)),
+        # Abstract spec is True, since we know the condition never applies
+        ("mpich~debug", "%[when=+debug] llvm", (True, True)),
+        # In this case we know the condition applies
+        ("mpich+debug", "%[when=+debug] llvm", (False, False)),
+        ("mpich+debug %llvm+clang", "%[when=+debug] llvm", (True, True)),
+        ("mpich+debug", "%[when=+debug] gcc", (False, True)),
+        # Conditional specs on the lhs
+        ("mpich %[when=+debug] gcc", "mpich %gcc", (False, True)),
+        ("mpich %[when=+debug] gcc", "mpich %llvm", (False, False)),
+        ("mpich %[when=+debug] gcc", "mpich %[when=+debug] gcc", (True, True)),
+        ("mpileaks ^[when=+opt] callpath@0.9", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^callpath@1.0", (False, True)),
+        ("mpileaks ^[when=+opt] callpath@1.0", "mpileaks ^[when=+opt] callpath@1.0", (True, True)),
+        # Conditional specs on both sides
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            (True, True),
+        ),
+        (
+            "mpileaks ^[when=+opt+debug] callpath@1.0",
+            "mpileaks ^[when=+opt] callpath@1.0",
+            (False, True),
+        ),
+        (
+            "mpileaks ^[when=+opt] callpath@1.0",
+            "mpileaks ^[when=~debug] callpath@1.0",
+            (False, True),
+        ),
+        # Different conditional specs associated with different nodes in the DAG, where one does
+        # not apply since the condition is not met
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] zmpi ^libelf %[when='%mpi' virtuals=mpi] mpich",
+            "mpileaks %[virtuals=mpi] zmpi",
+            (False, True),
+        ),
+        (
+            "mpileaks %[when='%mpi' virtuals=mpi] mpich ^libelf %[when='%mpi' virtuals=mpi] zmpi",
+            "mpileaks %[virtuals=mpi] mpich",
+            (False, True),
+        ),
+    ],
+)
+def test_satisfies_conditional_spec(
+    spec_str, conditional_spec, expected, default_mock_concretization
+):
+    """Tests satisfies semantic when testing an abstract spec and its concretized counterpart
+    with a conditional spec.
+    """
+    abstract_spec = Spec(spec_str)
+    concrete_spec = default_mock_concretization(spec_str)
+    expected_abstract, expected_concrete = expected
+
+    assert abstract_spec.satisfies(conditional_spec) is expected_abstract
+    assert concrete_spec.satisfies(conditional_spec) is expected_concrete
+    assert concrete_spec.satisfies(abstract_spec)

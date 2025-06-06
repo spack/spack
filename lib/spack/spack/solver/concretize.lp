@@ -183,11 +183,12 @@ literal_node(Root, node(min_dupe_id, Root)) :-  mentioned_in_literal(Root, Root)
   mentioned_in_literal(Root, Mentioned), Mentioned != Root,
   internal_error("must have exactly one condition_set for literals").
 
-1 { build_dependency_of_literal_node(LiteralNode, node(0..Y-1, BuildDependency)) : max_dupes(BuildDependency, Y) } 1 :-
+build_dependency_of_literal_node(LiteralNode, node(X, BuildDependency)) :-
   literal_node(Root, LiteralNode),
   build(LiteralNode),
   not external(LiteralNode),
-  attr("build_requirement", LiteralNode, build_requirement("node", BuildDependency)).
+  build_requirement(LiteralNode, node(X, BuildDependency)),
+  attr("direct_dependency", LiteralNode, node_requirement("node", BuildDependency)).
 
 condition_set(node(min_dupe_id, Root), LiteralNode) :- literal_node(Root, LiteralNode).
 condition_set(LiteralNode, BuildNode) :- build_dependency_of_literal_node(LiteralNode, BuildNode).
@@ -343,9 +344,26 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
   :- attr("version", node(ID, Package), Version),
      pkg_fact(Package, version_satisfies(Constraint, Version)).
 
+% if a version needs a commit or has one it can use the commit variant
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_needs_commit(Version)).
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_has_commit(Version, _)).
+
+% Specs with a commit variant can't use versions that don't need commits
+error(10, "Cannot use commit variant with '{0}@={1}'", Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     not can_accept_commit(Package, Version),
+     attr("variant_value", node(ID, Package), "commit", _).
+
+error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha, Psha, Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     attr("variant_value", node(ID, Package), "commit", Vsha),
+     pkg_fact(Package, version_has_commit(Version, Psha)),
+     Vsha != Psha.
+
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
+#defined can_accept_commit/2.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -429,8 +447,24 @@ trigger_and_effect(Package, TriggerID, EffectID)
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
+
+% Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- trigger_and_effect(Package, TriggerID, EffectID),
+  :- pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     not subcondition(ConditionID, _),
+     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     not do_not_impose(EffectID, node(X, Package)).
+
+% Effects of subconditions hold if the trigger holds and the
+% primary condition holds
+impose(EffectID, node(X, Package))
+  :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
+     subcondition(SubconditionID, ConditionID),
+     condition_holds(ConditionID, ConditionNode),
+     condition_set(ConditionNode, node(X, Package)),
+     trigger_and_effect(Package, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
@@ -511,78 +545,79 @@ attr("concrete_variant_set", node(X, A1), Variant, Value, ID)
 
 % If the parent is built, then we have a build_requirement on another node. For concrete nodes,
 % or external nodes, we don't since we are trimming their build dependencies.
-1 { attr("depends_on",  node(X, Parent), node(0..Y-1, BuildDependency), "build") : max_dupes(BuildDependency, Y) } 1
-  :- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
-     build(node(X, Parent)),
-     not external(node(X, Parent)).
 
 % Concrete nodes
-:- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
+:- attr("direct_dependency", ParentNode, node_requirement("node", BuildDependency)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    concrete(ParentNode),
    not attr("concrete_build_dependency", ParentNode, BuildDependency, _).
 
-:- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+:- attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, Constraint)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
 
-:- attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
+:- attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    attr("virtual_on_build_edge", ParentNode, BuildDependency, Virtual),
    not 1 { pkg_fact(BuildDependency, version_satisfies(Constraint, Version)) : hash_attr(BuildDependencyHash, "version", BuildDependency, Version) } 1.
 
 error(100, "Cannot satisfy the request on {0} to have {1}={2}", BuildDependency, Variant, Value)
-:- attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+:- attr("direct_dependency", ParentNode, node_requirement("variant_set", BuildDependency, Variant, Value)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "variant_value", BuildDependency, Variant, Value).
 
 error(100, "Cannot satisfy the request on {0} to have the target set to {1}", BuildDependency, Target)
-:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+:- attr("direct_dependency", ParentNode, node_requirement("node_target_set", BuildDependency, Target)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_target", BuildDependency, Target).
 
 error(100, "Cannot satisfy the request on {0} to have the os set to {1}", BuildDependency, NodeOS)
-:- attr("build_requirement", ParentNode, build_requirement("node_os_set", BuildDependency, NodeOS)),
+:- attr("direct_dependency", ParentNode, node_requirement("node_os_set", BuildDependency, NodeOS)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_os", BuildDependency, NodeOS).
 
 error(100, "Cannot satisfy the request on {0} to have the platform set to {1}", BuildDependency, Platform)
-:- attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, Platform)),
+:- attr("direct_dependency", ParentNode, node_requirement("node_platform_set", BuildDependency, Platform)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
    not hash_attr(BuildDependencyHash, "node_platform", BuildDependency, Platform).
 
 error(100, "Cannot satisfy the request on {0} to have the following hash {1}", BuildDependency, BuildHash)
-:- attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+:- attr("direct_dependency", ParentNode, node_requirement("node_target_set", BuildDependency, Target)),
+   concrete_build_requirement(ParentNode, BuildDependency),
    attr("concrete_build_dependency", ParentNode, BuildDependency, BuildDependencyHash),
-   attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
+   attr("direct_dependency", ParentNode, node_requirement("hash", BuildDependency, BuildHash)),
    BuildHash != BuildDependencyHash.
 
 % External nodes
-:- attr("build_requirement", ParentNode, build_requirement("node", BuildDependency)),
+:- attr("direct_dependency", ParentNode, node_requirement("node", BuildDependency)),
    external(ParentNode),
-   not attr("external_build_requirement", ParentNode, build_requirement("node", BuildDependency)).
+   not attr("external_build_requirement", ParentNode, node_requirement("node", BuildDependency)).
 
 candidate_external_version(Constraint, BuildDependency, Version)
-  :- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+  :- attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, Constraint)),
      external(ParentNode),
      pkg_fact(BuildDependency, version_satisfies(Constraint, Version)).
 
 error(100, "External {0} cannot satisfy both {1} and {2}", BuildDependency, LiteralConstraint, ExternalConstraint)
-  :- attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, LiteralConstraint)),
+  :- attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, LiteralConstraint)),
      external(ParentNode),
-     attr("external_build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, ExternalConstraint)),
+     attr("external_build_requirement", ParentNode, node_requirement("node_version_satisfies", BuildDependency, ExternalConstraint)),
      not 1 { pkg_fact(BuildDependency, version_satisfies(ExternalConstraint, Version)) : candidate_external_version(LiteralConstraint, BuildDependency, Version) }.
 
 
 % Asking for gcc@10 %gcc@9 shouldn't give us back an external gcc@10, just because of the hack
 % we have on externals
-:- attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)),
+:- attr("direct_dependency", node(X, Parent), node_requirement("node", BuildDependency)),
    Parent == BuildDependency,
    external(node(X, Parent)).
 
-build_requirement(node(X, Parent), node(Y, BuildDependency)) :-
-  attr("depends_on", node(X, Parent), node(Y, BuildDependency), "build"),
-  attr("build_requirement", node(X, Parent), build_requirement("node", BuildDependency)).
-
+% If a virtual is needed only to build a package, its provider can be considered a build requirement
 1 { virtual_build_requirement(ParentNode, node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1
   :- attr("dependency_holds", ParentNode, Virtual, "build"),
      not attr("dependency_holds", ParentNode, Virtual,"link"),
@@ -590,16 +625,18 @@ build_requirement(node(X, Parent), node(Y, BuildDependency)) :-
      virtual(Virtual).
 
 attr("virtual_node", VirtualNode)  :- virtual_build_requirement(ParentNode, VirtualNode).
-build_requirement(ParentNode, ProviderNode) :- virtual_build_requirement(ParentNode, VirtualNode), provider(ProviderNode, VirtualNode).
+{ build_requirement(ParentNode, ProviderNode) } :-
+  virtual_build_requirement(ParentNode, VirtualNode),
+  provider(ProviderNode, VirtualNode).
 
 % From cli we can have literal expressions like:
 %
 % root %gcc@12.0 ^dep %gcc@11.2
 %
-% Adding a "build_requirement" is a way to discriminate between the incompatible
+% Adding a "direct_dependency" is a way to discriminate between the incompatible
 % version constraints on "gcc" in the "imposed_constraint".
 attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
-  attr("build_requirement", ParentNode, build_requirement("node_version_satisfies", BuildDependency, Constraint)),
+  attr("direct_dependency", ParentNode, node_requirement("node_version_satisfies", BuildDependency, Constraint)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 % Account for properties on the build requirements
@@ -607,30 +644,30 @@ attr("node_version_satisfies", node(X, BuildDependency), Constraint) :-
 % root %gcc@12.0 <properties for gcc> ^dep
 %
 attr("variant_set", node(X, BuildDependency), Variant, Value) :-
-  attr("build_requirement", ParentNode, build_requirement("variant_set", BuildDependency, Variant, Value)),
+  attr("direct_dependency", ParentNode, node_requirement("variant_set", BuildDependency, Variant, Value)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 attr("depends_on",  node(X, Parent), node(Y, BuildDependency), "build") :- build_requirement(node(X, Parent), node(Y, BuildDependency)).
 
 attr("node_target_set", node(X, BuildDependency), Target) :-
-  attr("build_requirement", ParentNode, build_requirement("node_target_set", BuildDependency, Target)),
+  attr("direct_dependency", ParentNode, node_requirement("node_target_set", BuildDependency, Target)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 attr("node_os_set", node(X, BuildDependency), NodeOS) :-
-  attr("build_requirement", ParentNode, build_requirement("node_os_set", BuildDependency, NodeOS)),
+  attr("direct_dependency", ParentNode, node_requirement("node_os_set", BuildDependency, NodeOS)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 attr("node_platform_set", node(X, BuildDependency), NodePlatform) :-
-  attr("build_requirement", ParentNode, build_requirement("node_platform_set", BuildDependency, NodePlatform)),
+  attr("direct_dependency", ParentNode, node_requirement("node_platform_set", BuildDependency, NodePlatform)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 attr("hash", node(X, BuildDependency), BuildHash) :-
-  attr("build_requirement", ParentNode, build_requirement("hash", BuildDependency, BuildHash)),
+  attr("direct_dependency", ParentNode, node_requirement("hash", BuildDependency, BuildHash)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 
 1 { attr("provider_set", node(X, BuildDependency), node(0..Y-1, Virtual)) : max_dupes(Virtual, Y) } 1 :-
-  attr("build_requirement", ParentNode, build_requirement("provider_set", BuildDependency, Virtual)),
+  attr("direct_dependency", ParentNode, node_requirement("provider_set", BuildDependency, Virtual)),
   build_requirement(ParentNode, node(X, BuildDependency)).
 
 % Reconstruct virtual dependencies for reused specs
@@ -644,6 +681,16 @@ virtual_condition_holds(node(Y, A2), Virtual)
   :- impose(ID, node(X, A1)),
      attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual),
      not build(node(X, A1)).
+
+% Simplified virtual information for conditionl requirements in
+% conditional dependencies
+% Most specs track virtuals on edges
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_edge", PackageNode, _, Virtual).
+
+% Reused specs don't track a real edge to build-only deps
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_build_edge", PackageNode, _, Virtual).
 
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
@@ -660,6 +707,7 @@ virtual_condition_holds(node(Y, A2), Virtual)
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
+#defined subcondition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.
@@ -968,13 +1016,13 @@ attr("external_spec_selected", node(ID, Package), LocalIndex) :-
 
 % Account for compiler annotation on externals
 :- not attr("root", ExternalNode),
-   attr("external_build_requirement", ExternalNode, build_requirement("node", Compiler)),
+   attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
    not node_compiler(_, node(_, Compiler)).
 
 1 { attr("node_version_satisfies", node(X, Compiler), Constraint) : node_compiler(_, node(X, Compiler)) }
   :- not attr("root", ExternalNode),
-     attr("external_build_requirement", ExternalNode, build_requirement("node", Compiler)),
-     attr("external_build_requirement", ExternalNode, build_requirement("node_version_satisfies", Compiler, Constraint)).
+     attr("external_build_requirement", ExternalNode, node_requirement("node", Compiler)),
+     attr("external_build_requirement", ExternalNode, node_requirement("node_version_satisfies", Compiler, Constraint)).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
@@ -1000,11 +1048,11 @@ activate_requirement(node(ID, Package), X) :-
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
-  requirement_policy(Package, X, "one_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,
+  requirement_policy(Package, GroupID, "one_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
 
 requirement_weight(node(ID, Package), Group, W) :-
   condition_holds(Y, node(ID, Package)),
@@ -1013,17 +1061,35 @@ requirement_weight(node(ID, Package), Group, W) :-
   requirement_policy(Package, Group, "one_of"),
   requirement_group_satisfied(node(ID, Package), Group).
 
- { attr("build_requirement", node(ID, Package), BuildRequirement) : condition_requirement(TriggerID, "build_requirement", Package, BuildRequirement) } :-
+ { attr("direct_dependency", node(ID, Package), BuildRequirement) : condition_requirement(TriggerID, "direct_dependency", Package, BuildRequirement) } :-
   pkg_fact(Package, condition_trigger(ConditionID, TriggerID)),
   requirement_group_member(ConditionID, Package, Group),
   activate_requirement(node(ID, Package), Group),
   requirement_group(Package, Group).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } ,
-  requirement_policy(Package, X, "any_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } ,
+  requirement_policy(Package, GroupID, "any_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
+
+% Derive a fact to represent that the entire requirement, including possible subconditions, is met
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  not subcondition(_, ConditionID).
+
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  impose(EffectID, node(X, Package)) : subcondition(SubconditionID, ConditionID), pkg_fact(Package, condition_effect(SubconditionID, EffectID)), condition_holds(SubconditionID, node(X, Package));
+  subcondition(_, ConditionID).
+
+{ do_not_impose(EffectID, node(X, Package)) } :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
 % Do not impose requirements, if the conditional requirement is not active
 do_not_impose(EffectID, node(ID, Package)) :-

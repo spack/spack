@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import pathlib
 import sys
 from textwrap import dedent
 
@@ -14,6 +15,7 @@ import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
+import spack.package_base
 import spack.paths
 import spack.repo
 import spack.store
@@ -471,8 +473,8 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_p
 def test_repo(mock_stage):
     with spack.repo.use_repositories(
         os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
-    ) as mock_repo_path:
-        yield mock_repo_path
+    ) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_find_concretized_not_installed(
@@ -534,3 +536,15 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag0")) == (1, 0)
         assert _nresults(_query(e, "--tag=tag1")) == (1, 1)
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+
+    install("--fake", f"git-test-commit commit={commits[0]}")
+    output = find(f"commit={commits[0]}")
+    assert "git-test-commit" in output

@@ -6,19 +6,25 @@
       "features": []
     },
     "i686": {
-      "from": ["x86"],
+      "from": [
+        "x86"
+      ],
       "vendor": "GenuineIntel",
       "features": []
     },
     "pentium2": {
-      "from": ["i686"],
+      "from": [
+        "i686"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx"
       ]
     },
     "pentium3": {
-      "from": ["pentium2"],
+      "from": [
+        "pentium2"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -26,7 +32,9 @@
       ]
     },
     "pentium4": {
-      "from": ["pentium3"],
+      "from": [
+        "pentium3"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -35,7 +43,9 @@
       ]
     },
     "prescott": {
-      "from": ["pentium4"],
+      "from": [
+        "pentium4"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -103,11 +113,13 @@
             "flags": "-march={name} -mtune=generic"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "x86_64_v2": {
-      "from": ["x86_64"],
+      "from": [
+        "x86_64"
+      ],
       "vendor": "generic",
       "features": [
         "cx16",
@@ -145,6 +157,13 @@
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "x86-64-v2",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "intel": [
           {
             "versions": "16.0:",
@@ -166,11 +185,13 @@
             "flags": "-march={name} -mtune=generic"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "x86_64_v3": {
-      "from": ["x86_64_v2"],
+      "from": [
+        "x86_64_v2"
+      ],
       "vendor": "generic",
       "features": [
         "cx16",
@@ -217,6 +238,13 @@
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave"
           }
         ],
+        "aocc": [
+          {
+            "versions": "2.2:",
+            "name": "x86-64-v3",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -245,7 +273,7 @@
             "flags": "-march={name} -mtune=generic"
           }
         ],
-        "nvhpc" : [
+        "nvhpc": [
           {
             "versions": ":",
             "name": "px",
@@ -255,7 +283,9 @@
       }
     },
     "x86_64_v4": {
-      "from": ["x86_64_v3"],
+      "from": [
+        "x86_64_v3"
+      ],
       "vendor": "generic",
       "features": [
         "cx16",
@@ -307,6 +337,13 @@
             "flags": "-march={name} -mtune=generic -mcx16 -msahf -mpopcnt -msse3 -msse4.1 -msse4.2 -mssse3 -mavx -mavx2 -mbmi -mbmi2 -mf16c -mfma -mlzcnt -mmovbe -mxsave -mavx512f -mavx512bw -mavx512cd -mavx512dq -mavx512vl"
           }
         ],
+        "aocc": [
+          {
+            "versions": "4:",
+            "name": "x86-64-v4",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
         "apple-clang": [
           {
             "versions": "8.0:",
@@ -315,11 +352,11 @@
           }
         ],
         "intel": [
-            {
+          {
             "versions": "16.0:",
             "name": "skylake-avx512",
             "flags": "-march={name} -mtune={name}"
-            }
+          }
         ],
         "oneapi": [
           {
@@ -345,7 +382,9 @@
       }
     },
     "nocona": {
-      "from": ["x86_64"],
+      "from": [
+        "x86_64"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -396,11 +435,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "core2": {
-      "from": ["nocona"],
+      "from": [
+        "nocona"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -451,11 +492,14 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "nehalem": {
-      "from": ["core2", "x86_64_v2"],
+      "from": [
+        "core2",
+        "x86_64_v2"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -517,11 +561,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "westmere": {
-      "from": ["nehalem"],
+      "from": [
+        "nehalem"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -580,11 +626,13 @@
             "flags": "-march={name} -mtune={name}"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "sandybridge": {
-      "from": ["westmere"],
+      "from": [
+        "westmere"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -660,7 +708,9 @@
       }
     },
     "ivybridge": {
-      "from": ["sandybridge"],
+      "from": [
+        "sandybridge"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -738,7 +788,10 @@
       }
     },
     "haswell": {
-      "from": ["ivybridge", "x86_64_v3"],
+      "from": [
+        "ivybridge",
+        "x86_64_v3"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -821,7 +874,9 @@
       }
     },
     "broadwell": {
-      "from": ["haswell"],
+      "from": [
+        "haswell"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -897,7 +952,9 @@
       }
     },
     "skylake": {
-      "from": ["broadwell"],
+      "from": [
+        "broadwell"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -976,7 +1033,9 @@
       }
     },
     "mic_knl": {
-      "from": ["broadwell"],
+      "from": [
+        "broadwell"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -1056,7 +1115,10 @@
       }
     },
     "skylake_avx512": {
-      "from": ["skylake", "x86_64_v4"],
+      "from": [
+        "skylake",
+        "x86_64_v4"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -1147,7 +1209,9 @@
       }
     },
     "cannonlake": {
-      "from": ["skylake"],
+      "from": [
+        "skylake"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -1234,7 +1298,9 @@
       }
     },
     "cascadelake": {
-      "from": ["skylake_avx512"],
+      "from": [
+        "skylake_avx512"
+      ],
       "vendor": "GenuineIntel",
       "features": [
         "mmx",
@@ -1483,7 +1549,10 @@
         "movdir64b",
         "movdiri",
         "serialize",
-        "waitpkg"
+        "waitpkg",
+        "amx_bf16",
+        "amx_tile",
+        "amx_int8"
       ],
       "compilers": {
         "gcc": [
@@ -1512,14 +1581,16 @@
         ],
         "dpcpp": [
           {
-              "versions": "2021.2:",
+            "versions": "2021.2:",
             "flags": "-march={name} -mtune={name}"
           }
         ]
       }
     },
     "k10": {
-      "from": ["x86_64"],
+      "from": [
+        "x86_64"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1574,11 +1645,13 @@
             "flags": "-msse2"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "bulldozer": {
-      "from": ["x86_64_v2"],
+      "from": [
+        "x86_64_v2"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1648,7 +1721,9 @@
       }
     },
     "piledriver": {
-      "from": ["bulldozer"],
+      "from": [
+        "bulldozer"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1722,7 +1797,9 @@
       }
     },
     "steamroller": {
-      "from": ["piledriver"],
+      "from": [
+        "piledriver"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1798,7 +1875,10 @@
       }
     },
     "excavator": {
-      "from": ["steamroller", "x86_64_v3"],
+      "from": [
+        "steamroller",
+        "x86_64_v3"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "mmx",
@@ -1880,7 +1960,9 @@
       }
     },
     "zen": {
-      "from": ["x86_64_v3"],
+      "from": [
+        "x86_64_v3"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
@@ -1964,7 +2046,9 @@
       }
     },
     "zen2": {
-      "from": ["zen"],
+      "from": [
+        "zen"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
@@ -2049,7 +2133,9 @@
       }
     },
     "zen3": {
-      "from": ["zen2"],
+      "from": [
+        "zen2"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
@@ -2137,7 +2223,10 @@
       }
     },
     "zen4": {
-      "from": ["zen3", "x86_64_v4"],
+      "from": [
+        "zen3",
+        "x86_64_v4"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "bmi1",
@@ -2182,7 +2271,7 @@
         "avx512_vbmi2",
         "avx512_vnni",
         "avx512_bitalg",
-	"avx512_vpopcntdq"
+        "avx512_vpopcntdq"
       ],
       "compilers": {
         "gcc": [
@@ -2208,7 +2297,7 @@
             "name": "znver4",
             "flags": "-march={name} -mtune={name}"
           }
-	],
+        ],
         "aocc": [
           {
             "versions": "3.0:3.9",
@@ -2225,19 +2314,21 @@
         "nvhpc": [
           {
             "versions": "21.11:23.8",
-	    "name": "zen3",
+            "name": "zen3",
             "flags": "-tp {name}",
-	    "warnings": "zen4 is not fully supported by nvhpc versions < 23.9, falling back to zen3"
+            "warnings": "zen4 is not fully supported by nvhpc versions < 23.9, falling back to zen3"
           },
           {
             "versions": "23.9:",
             "flags": "-tp {name}"
           }
-	]
+        ]
       }
     },
     "zen5": {
-      "from": ["zen4"],
+      "from": [
+        "zen4"
+      ],
       "vendor": "AuthenticAMD",
       "features": [
         "abm",
@@ -2335,7 +2426,9 @@
       }
     },
     "power7": {
-      "from": ["ppc64"],
+      "from": [
+        "ppc64"
+      ],
       "vendor": "IBM",
       "generation": 7,
       "features": [],
@@ -2355,7 +2448,9 @@
       }
     },
     "power8": {
-      "from": ["power7"],
+      "from": [
+        "power7"
+      ],
       "vendor": "IBM",
       "generation": 8,
       "features": [],
@@ -2380,7 +2475,9 @@
       }
     },
     "power9": {
-      "from": ["power8"],
+      "from": [
+        "power8"
+      ],
       "vendor": "IBM",
       "generation": 9,
       "features": [],
@@ -2400,7 +2497,9 @@
       }
     },
     "power10": {
-      "from": ["power9"],
+      "from": [
+        "power9"
+      ],
       "vendor": "IBM",
       "generation": 10,
       "features": [],
@@ -2437,11 +2536,13 @@
             "flags": "-mcpu={name} -mtune={name}"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "power8le": {
-      "from": ["ppc64le"],
+      "from": [
+        "ppc64le"
+      ],
       "vendor": "IBM",
       "generation": 8,
       "features": [],
@@ -2467,7 +2568,7 @@
             "flags": "-mcpu={name} -mtune={name}"
           }
         ],
-	"nvhpc": [
+        "nvhpc": [
           {
             "versions": ":",
             "name": "pwr8",
@@ -2477,7 +2578,9 @@
       }
     },
     "power9le": {
-      "from": ["power8le"],
+      "from": [
+        "power8le"
+      ],
       "vendor": "IBM",
       "generation": 9,
       "features": [],
@@ -2497,7 +2600,7 @@
             "flags": "-mcpu={name} -mtune={name}"
           }
         ],
-	"nvhpc": [
+        "nvhpc": [
           {
             "versions": ":",
             "name": "pwr9",
@@ -2507,7 +2610,9 @@
       }
     },
     "power10le": {
-      "from": ["power9le"],
+      "from": [
+        "power9le"
+      ],
       "vendor": "IBM",
       "generation": 10,
       "features": [],
@@ -2558,11 +2663,13 @@
             "flags": "-march=armv8-a -mtune=generic"
           }
         ],
-	"nvhpc": []
+        "nvhpc": []
       }
     },
     "armv8.1a": {
-      "from": ["aarch64"],
+      "from": [
+        "aarch64"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2593,7 +2700,9 @@
       }
     },
     "armv8.2a": {
-      "from": ["armv8.1a"],
+      "from": [
+        "armv8.1a"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2624,7 +2733,9 @@
       }
     },
     "armv8.3a": {
-      "from": ["armv8.2a"],
+      "from": [
+        "armv8.2a"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2655,7 +2766,9 @@
       }
     },
     "armv8.4a": {
-      "from": ["armv8.3a"],
+      "from": [
+        "armv8.3a"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2686,7 +2799,9 @@
       }
     },
     "armv8.5a": {
-      "from": ["armv8.4a"],
+      "from": [
+        "armv8.4a"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2717,7 +2832,9 @@
       }
     },
     "armv9.0a": {
-      "from": ["armv8.5a"],
+      "from": [
+        "armv8.5a"
+      ],
       "vendor": "generic",
       "features": [],
       "compilers": {
@@ -2748,7 +2865,9 @@
       }
     },
     "thunderx2": {
-      "from": ["armv8.1a"],
+      "from": [
+        "armv8.1a"
+      ],
       "vendor": "Cavium",
       "features": [
         "fp",
@@ -2796,7 +2915,9 @@
       "cpupart": "0x0af"
     },
     "a64fx": {
-      "from": ["armv8.2a"],
+      "from": [
+        "armv8.2a"
+      ],
       "vendor": "Fujitsu",
       "features": [
         "fp",
@@ -2865,610 +2986,628 @@
       "cpupart": "0x001"
     },
     "cortex_a72": {
-      "from": ["aarch64"],
+      "from": [
+        "aarch64"
+      ],
       "vendor": "ARM",
       "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "cpuid"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "cpuid"
       ],
-      "compilers" : {
-          "gcc": [
-              {
-                  "versions": "4.8:4.8.9",
-                  "flags" : "-march=armv8-a"
-              },
-              {
-                  "versions": "4.9:5.9",
-                  "flags" : "-march=armv8-a+crc+crypto"
-              },
-              {
-                  "versions": "6:",
-                  "flags" : "-mcpu=cortex-a72"
-              }
-          ],
-          "clang" : [
-              {
-                  "versions": "3.9:",
-                  "flags" : "-mcpu=cortex-a72"
-              }
-          ]
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:",
+            "flags": "-mcpu=cortex-a72"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "3.9:",
+            "flags": "-mcpu=cortex-a72"
+          }
+        ]
       },
       "cpupart": "0xd08"
     },
     "neoverse_n1": {
-      "from": ["cortex_a72", "armv8.2a"],
+      "from": [
+        "cortex_a72",
+        "armv8.2a"
+      ],
       "vendor": "ARM",
       "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "atomics",
-          "fphp",
-          "asimdhp",
-          "cpuid",
-          "asimdrdm",
-          "lrcpc",
-          "dcpop",
-          "asimddp"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "lrcpc",
+        "dcpop",
+        "asimddp"
       ],
-      "compilers" : {
-          "gcc": [
-              {
-                  "versions": "4.8:4.8.9",
-                  "flags": "-march=armv8-a"
-              },
-              {
-                  "versions": "4.9:5.9",
-                  "flags": "-march=armv8-a+crc+crypto"
-              },
-              {
-                  "versions": "6:6.9",
-                  "flags" : "-march=armv8.1-a"
-              },
-              {
-                  "versions": "7:7.9",
-                  "flags" : "-march=armv8.2-a+fp16 -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.0:8.0",
-                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.1:8.9",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto -mtune=cortex-a72"
-              },
-              {
-                  "versions": "9.0:",
-                  "flags" : "-mcpu=neoverse-n1"
-              }
-          ],
-          "clang" : [
-              {
-                  "versions": "3.9:4.9",
-                  "flags" : "-march=armv8.2-a+fp16+crc+crypto"
-              },
-              {
-                  "versions": "5:",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
-              },
-              {
-                  "versions": "10:",
-                  "flags" : "-mcpu=neoverse-n1"
-              }
-          ],
-          "arm" : [
-              {
-                  "versions": "20:21.9",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
-              },
-              {
-                  "versions": "22:",
-                  "flags" : "-mcpu=neoverse-n1"
-              }
-          ],
-          "nvhpc" : [
-              {
-                  "versions": "22.5:",
-                  "name": "neoverse-n1",
-                  "flags": "-tp {name}"
-              }
-          ]
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a"
+          },
+          {
+            "versions": "7:7.9",
+            "flags": "-march=armv8.2-a+fp16 -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.0:8.0",
+            "flags": "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.1:8.9",
+            "flags": "-march=armv8.2-a+fp16+rcpc+dotprod+crypto -mtune=cortex-a72"
+          },
+          {
+            "versions": "9.0:",
+            "flags": "-mcpu=neoverse-n1"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "3.9:4.9",
+            "flags": "-march=armv8.2-a+fp16+crc+crypto"
+          },
+          {
+            "versions": "5:",
+            "flags": "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+          },
+          {
+            "versions": "10:",
+            "flags": "-mcpu=neoverse-n1"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "20:21.9",
+            "flags": "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+          },
+          {
+            "versions": "22:",
+            "flags": "-mcpu=neoverse-n1"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "22.5:",
+            "name": "neoverse-n1",
+            "flags": "-tp {name}"
+          }
+        ]
       },
       "cpupart": "0xd0c"
     },
     "neoverse_v1": {
-      "from": ["neoverse_n1", "armv8.4a"],
+      "from": [
+        "neoverse_n1",
+        "armv8.4a"
+      ],
       "vendor": "ARM",
       "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "atomics",
-          "fphp",
-          "asimdhp",
-          "cpuid",
-          "asimdrdm",
-          "jscvt",
-          "fcma",
-          "lrcpc",
-          "dcpop",
-          "sha3",
-          "asimddp",
-          "sha512",
-          "sve",
-          "asimdfhm",
-          "dit",
-          "uscat",
-          "ilrcpc",
-          "flagm",
-          "dcpodp",
-          "svei8mm",
-          "svebf16",
-          "i8mm",
-          "bf16",
-          "dgh",
-          "rng"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "sve",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "dcpodp",
+        "svei8mm",
+        "svebf16",
+        "i8mm",
+        "bf16",
+        "dgh",
+        "rng"
       ],
-      "compilers" : {
-          "gcc": [
-              {
-                  "versions": "4.8:4.8.9",
-                  "flags": "-march=armv8-a"
-              },
-              {
-                  "versions": "4.9:5.9",
-                  "flags": "-march=armv8-a+crc+crypto"
-              },
-              {
-                  "versions": "6:6.9",
-                  "flags" : "-march=armv8.1-a"
-              },
-              {
-                  "versions": "7:7.9",
-                  "flags" : "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.0:8.4",
-                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.5:8.9",
-                  "flags" : "-mcpu=neoverse-v1"
-              },
-              {
-                  "versions": "9.0:9.3",
-                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
-              },
-              {
-                  "versions": "9.4:9.9",
-                  "flags" : "-mcpu=neoverse-v1"
-              },
-              {
-                  "versions": "10.0:10.1",
-                  "flags" : "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
-              },
-              {
-                  "versions": "10.2:10.2.99",
-                  "flags" : "-mcpu=zeus"
-              },
-              {
-                  "versions": "10.3:",
-                  "flags" : "-mcpu=neoverse-v1"
-              }
-
-          ],
-          "clang" : [
-              {
-                  "versions": "3.9:4.9",
-                  "flags" : "-march=armv8.2-a+fp16+crc+crypto"
-              },
-              {
-                  "versions": "5:10",
-                  "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
-              },
-              {
-                  "versions": "11:",
-                  "flags" : "-march=armv8.4-a+sve+fp16+bf16+crypto+i8mm+rng"
-              },
-              {
-                  "versions": "12:",
-                  "flags" : "-mcpu=neoverse-v1"
-              }
-          ],
-          "arm" : [
-              {
-                  "versions": "20:21.9",
-                  "flags" : "-march=armv8.2-a+sve+fp16+rcpc+dotprod+crypto"
-              },
-	            {
-                  "versions": "22:",
-                  "flags" : "-mcpu=neoverse-v1"
-              }
-          ],
-          "nvhpc" : [
-              {
-                  "versions": "22.5:",
-                  "name": "neoverse-n1",
-                  "flags": "-tp {name}"
-              }
-          ]
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:4.8.9",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "4.9:5.9",
+            "flags": "-march=armv8-a+crc+crypto"
+          },
+          {
+            "versions": "6:6.9",
+            "flags": "-march=armv8.1-a"
+          },
+          {
+            "versions": "7:7.9",
+            "flags": "-march=armv8.2-a+crypto+fp16 -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.0:8.4",
+            "flags": "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.5:8.9",
+            "flags": "-mcpu=neoverse-v1"
+          },
+          {
+            "versions": "9.0:9.3",
+            "flags": "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+          },
+          {
+            "versions": "9.4:9.9",
+            "flags": "-mcpu=neoverse-v1"
+          },
+          {
+            "versions": "10.0:10.1",
+            "flags": "-march=armv8.2-a+fp16+dotprod+crypto -mtune=cortex-a72"
+          },
+          {
+            "versions": "10.2:10.2.99",
+            "flags": "-mcpu=zeus"
+          },
+          {
+            "versions": "10.3:",
+            "flags": "-mcpu=neoverse-v1"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "3.9:4.9",
+            "flags": "-march=armv8.2-a+fp16+crc+crypto"
+          },
+          {
+            "versions": "5:10",
+            "flags": "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
+          },
+          {
+            "versions": "11:",
+            "flags": "-march=armv8.4-a+sve+fp16+bf16+crypto+i8mm+rng"
+          },
+          {
+            "versions": "12:",
+            "flags": "-mcpu=neoverse-v1"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "20:21.9",
+            "flags": "-march=armv8.2-a+sve+fp16+rcpc+dotprod+crypto"
+          },
+          {
+            "versions": "22:",
+            "flags": "-mcpu=neoverse-v1"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "22.5:",
+            "name": "neoverse-n1",
+            "flags": "-tp {name}"
+          }
+        ]
       },
       "cpupart": "0xd40"
     },
     "neoverse_v2": {
-      "from": ["neoverse_n1", "armv9.0a"],
+      "from": [
+        "neoverse_n1",
+        "armv9.0a"
+      ],
       "vendor": "ARM",
       "features": [
-          "fp",
-	  "asimd",
-	  "evtstrm",
-	  "aes",
-	  "pmull",
-	  "sha1",
-	  "sha2",
-	  "crc32",
-	  "atomics",
-	  "fphp",
-	  "asimdhp",
-	  "cpuid",
-	  "asimdrdm",
-	  "jscvt",
-	  "fcma",
-	  "lrcpc",
-	  "dcpop",
-	  "sha3",
-	  "asimddp",
-	  "sha512",
-	  "sve",
-	  "asimdfhm",
-	  "uscat",
-	  "ilrcpc",
-	  "flagm",
-	  "sb",
-	  "dcpodp",
-	  "sve2",
-	  "flagm2",
-	  "frint",
-	  "svei8mm",
-	  "svebf16",
-	  "i8mm",
-	  "bf16"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "sve",
+        "asimdfhm",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "sb",
+        "dcpodp",
+        "sve2",
+        "flagm2",
+        "frint",
+        "svei8mm",
+        "svebf16",
+        "i8mm",
+        "bf16"
       ],
-      "compilers" : {
-          "gcc": [
-              {
-                  "versions": "4.8:5.99",
-                  "flags": "-march=armv8-a"
-              },
-              {
-                  "versions": "6:6.99",
-                  "flags" : "-march=armv8.1-a"
-              },
-              {
-                  "versions": "7.0:7.99",
-                  "flags" : "-march=armv8.2-a -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.0:8.99",
-                  "flags" : "-march=armv8.4-a+sve -mtune=cortex-a72"
-              },
-              {
-                  "versions": "9.0:9.99",
-                  "flags" : "-march=armv8.5-a+sve -mtune=cortex-a76"
-              },
-              {
-                  "versions": "10.0:11.3.99",
-                  "flags" : "-march=armv8.5-a+sve+sve2+i8mm+bf16 -mtune=cortex-a77"
-              },
-	      {
-                  "versions": "11.4:11.99",
-                  "flags" : "-mcpu=neoverse-v2"
-              },
-              {
-                  "versions": "12.0:12.2.99",
-                  "flags" : "-march=armv9-a+i8mm+bf16 -mtune=cortex-a710"
-              },
-	      {
-                  "versions": "12.3:",
-                  "flags" : "-mcpu=neoverse-v2"
-              }
-          ],
-          "clang" : [
-              {
-                  "versions": "9.0:10.99",
-                  "flags" : "-march=armv8.5-a+sve"
-              },
-              {
-                  "versions": "11.0:13.99",
-                  "flags" : "-march=armv8.5-a+sve+sve2+i8mm+bf16"
-              },
-              {
-                  "versions": "14.0:15.99",
-                  "flags" : "-march=armv9-a+i8mm+bf16"
-              },
-              {
-                  "versions": "16.0:",
-                  "flags" : "-mcpu=neoverse-v2"
-              }
-          ],
-          "arm" : [
-              {
-                  "versions": "23.04.0:",
-                  "flags" : "-mcpu=neoverse-v2"
-              }
-          ],
-          "nvhpc" : [
-              {
-                  "versions": "23.3:",
-                  "name": "neoverse-v2",
-                  "flags": "-tp {name}"
-              }
-          ]
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:5.99",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "6:6.99",
+            "flags": "-march=armv8.1-a"
+          },
+          {
+            "versions": "7.0:7.99",
+            "flags": "-march=armv8.2-a -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.0:8.99",
+            "flags": "-march=armv8.4-a+sve -mtune=cortex-a72"
+          },
+          {
+            "versions": "9.0:9.99",
+            "flags": "-march=armv8.5-a+sve -mtune=cortex-a76"
+          },
+          {
+            "versions": "10.0:11.3.99",
+            "flags": "-march=armv8.5-a+sve+sve2+i8mm+bf16 -mtune=cortex-a77"
+          },
+          {
+            "versions": "11.4:11.99",
+            "flags": "-mcpu=neoverse-v2"
+          },
+          {
+            "versions": "12.0:12.2.99",
+            "flags": "-march=armv9-a+i8mm+bf16 -mtune=cortex-a710"
+          },
+          {
+            "versions": "12.3:",
+            "flags": "-mcpu=neoverse-v2"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "9.0:10.99",
+            "flags": "-march=armv8.5-a+sve"
+          },
+          {
+            "versions": "11.0:13.99",
+            "flags": "-march=armv8.5-a+sve+sve2+i8mm+bf16"
+          },
+          {
+            "versions": "14.0:15.99",
+            "flags": "-march=armv9-a+i8mm+bf16"
+          },
+          {
+            "versions": "16.0:",
+            "flags": "-mcpu=neoverse-v2"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "23.04.0:",
+            "flags": "-mcpu=neoverse-v2"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "23.3:",
+            "name": "neoverse-v2",
+            "flags": "-tp {name}"
+          }
+        ]
       },
       "cpupart": "0xd4f"
     },
     "neoverse_n2": {
-      "from": ["neoverse_n1", "armv9.0a"],
+      "from": [
+        "neoverse_n1",
+        "armv9.0a"
+      ],
       "vendor": "ARM",
       "features": [
-          "fp",
-	  "asimd",
-	  "evtstrm",
-	  "aes",
-	  "pmull",
-	  "sha1",
-	  "sha2",
-	  "crc32",
-	  "atomics",
-	  "fphp",
-	  "asimdhp",
-	  "cpuid",
-	  "asimdrdm",
-	  "jscvt",
-	  "fcma",
-	  "lrcpc",
-	  "dcpop",
-	  "sha3",
-	  "asimddp",
-	  "sha512",
-	  "sve",
-	  "asimdfhm",
-	  "uscat",
-	  "ilrcpc",
-	  "flagm",
-	  "sb",
-	  "dcpodp",
-	  "sve2",
-	  "flagm2",
-	  "frint",
-	  "svei8mm",
-	  "svebf16",
-	  "i8mm",
-	  "bf16"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "sve",
+        "asimdfhm",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "sb",
+        "dcpodp",
+        "sve2",
+        "flagm2",
+        "frint",
+        "svei8mm",
+        "svebf16",
+        "i8mm",
+        "bf16"
       ],
-      "compilers" : {
-          "gcc": [
-              {
-                  "versions": "4.8:5.99",
-                  "flags": "-march=armv8-a"
-              },
-              {
-                  "versions": "6:6.99",
-                  "flags" : "-march=armv8.1-a"
-              },
-              {
-                  "versions": "7.0:7.99",
-                  "flags" : "-march=armv8.2-a -mtune=cortex-a72"
-              },
-              {
-                  "versions": "8.0:8.99",
-                  "flags" : "-march=armv8.4-a+sve -mtune=cortex-a72"
-              },
-              {
-                  "versions": "9.0:9.99",
-                  "flags" : "-march=armv8.5-a+sve -mtune=cortex-a76"
-              },
-              {
-                  "versions": "10.0:10.99",
-                  "flags" : "-march=armv8.5-a+sve+sve2+i8mm+bf16 -mtune=cortex-a77"
-              },
-              {
-                  "versions": "11.0:",
-                  "flags" : "-mcpu=neoverse-n2"
-              }
-          ],
-          "clang" : [
-              {
-                  "versions": "9.0:10.99",
-                  "flags" : "-march=armv8.5-a+sve"
-              },
-              {
-                  "versions": "11.0:13.99",
-                  "flags" : "-march=armv8.5-a+sve+sve2+i8mm+bf16"
-              },
-              {
-                  "versions": "14.0:15.99",
-                  "flags" : "-march=armv9-a+i8mm+bf16"
-              },
-              {
-                  "versions": "16.0:",
-                  "flags" : "-mcpu=neoverse-n2"
-              }
-          ],
-          "arm" : [
-              {
-                  "versions": "23.04.0:",
-                  "flags" : "-mcpu=neoverse-n2"
-              }
-          ],
-          "nvhpc" : [
-              {
-                  "versions": "23.3:",
-                  "name": "neoverse-n1",
-                  "flags": "-tp {name}"
-              }
-          ]
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.8:5.99",
+            "flags": "-march=armv8-a"
+          },
+          {
+            "versions": "6:6.99",
+            "flags": "-march=armv8.1-a"
+          },
+          {
+            "versions": "7.0:7.99",
+            "flags": "-march=armv8.2-a -mtune=cortex-a72"
+          },
+          {
+            "versions": "8.0:8.99",
+            "flags": "-march=armv8.4-a+sve -mtune=cortex-a72"
+          },
+          {
+            "versions": "9.0:9.99",
+            "flags": "-march=armv8.5-a+sve -mtune=cortex-a76"
+          },
+          {
+            "versions": "10.0:10.99",
+            "flags": "-march=armv8.5-a+sve+sve2+i8mm+bf16 -mtune=cortex-a77"
+          },
+          {
+            "versions": "11.0:",
+            "flags": "-mcpu=neoverse-n2"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "9.0:10.99",
+            "flags": "-march=armv8.5-a+sve"
+          },
+          {
+            "versions": "11.0:13.99",
+            "flags": "-march=armv8.5-a+sve+sve2+i8mm+bf16"
+          },
+          {
+            "versions": "14.0:15.99",
+            "flags": "-march=armv9-a+i8mm+bf16"
+          },
+          {
+            "versions": "16.0:",
+            "flags": "-mcpu=neoverse-n2"
+          }
+        ],
+        "arm": [
+          {
+            "versions": "23.04.0:",
+            "flags": "-mcpu=neoverse-n2"
+          }
+        ],
+        "nvhpc": [
+          {
+            "versions": "23.3:",
+            "name": "neoverse-n1",
+            "flags": "-tp {name}"
+          }
+        ]
       },
       "cpupart": "0xd49"
     },
     "m1": {
-      "from": ["armv8.4a"],
+      "from": [
+        "armv8.4a"
+      ],
       "vendor": "Apple",
       "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "atomics",
-          "fphp",
-          "asimdhp",
-          "cpuid",
-          "asimdrdm",
-          "jscvt",
-          "fcma",
-          "lrcpc",
-          "dcpop",
-          "sha3",
-          "asimddp",
-          "sha512",
-          "asimdfhm",
-          "dit",
-          "uscat",
-          "ilrcpc",
-          "flagm",
-          "ssbs",
-          "sb",
-          "paca",
-          "pacg",
-          "dcpodp",
-          "flagm2",
-          "frint"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint"
       ],
       "compilers": {
         "gcc": [
           {
             "versions": "8.0:",
-            "flags" : "-march=armv8.4-a -mtune=generic"
+            "flags": "-march=armv8.4-a -mtune=generic"
           }
         ],
-        "clang" : [
+        "clang": [
           {
             "versions": "9.0:12.0",
-            "flags" : "-march=armv8.4-a"
+            "flags": "-march=armv8.4-a"
           },
           {
             "versions": "13.0:",
-            "flags" : "-mcpu=apple-m1"
+            "flags": "-mcpu=apple-m1"
           }
         ],
         "apple-clang": [
           {
             "versions": "11.0:12.5",
-            "flags" : "-march=armv8.4-a"
+            "flags": "-march=armv8.4-a"
           },
           {
             "versions": "13.0:",
-            "flags" : "-mcpu=apple-m1"
+            "flags": "-mcpu=apple-m1"
           }
         ]
       },
       "cpupart": "0x022"
     },
     "m2": {
-      "from": ["m1", "armv8.5a"],
+      "from": [
+        "m1",
+        "armv8.5a"
+      ],
       "vendor": "Apple",
       "features": [
-          "fp",
-          "asimd",
-          "evtstrm",
-          "aes",
-          "pmull",
-          "sha1",
-          "sha2",
-          "crc32",
-          "atomics",
-          "fphp",
-          "asimdhp",
-          "cpuid",
-          "asimdrdm",
-          "jscvt",
-          "fcma",
-          "lrcpc",
-          "dcpop",
-          "sha3",
-          "asimddp",
-          "sha512",
-          "asimdfhm",
-          "dit",
-          "uscat",
-          "ilrcpc",
-          "flagm",
-          "ssbs",
-          "sb",
-          "paca",
-          "pacg",
-          "dcpodp",
-          "flagm2",
-          "frint",
-          "ecv",
-          "bf16",
-          "i8mm",
-          "bti"
+        "fp",
+        "asimd",
+        "evtstrm",
+        "aes",
+        "pmull",
+        "sha1",
+        "sha2",
+        "crc32",
+        "atomics",
+        "fphp",
+        "asimdhp",
+        "cpuid",
+        "asimdrdm",
+        "jscvt",
+        "fcma",
+        "lrcpc",
+        "dcpop",
+        "sha3",
+        "asimddp",
+        "sha512",
+        "asimdfhm",
+        "dit",
+        "uscat",
+        "ilrcpc",
+        "flagm",
+        "ssbs",
+        "sb",
+        "paca",
+        "pacg",
+        "dcpodp",
+        "flagm2",
+        "frint",
+        "ecv",
+        "bf16",
+        "i8mm",
+        "bti"
       ],
       "compilers": {
         "gcc": [
           {
             "versions": "8.0:",
-            "flags" : "-march=armv8.5-a -mtune=generic"
+            "flags": "-march=armv8.5-a -mtune=generic"
           }
         ],
-        "clang" : [
+        "clang": [
           {
             "versions": "9.0:12.0",
-            "flags" : "-march=armv8.5-a"
+            "flags": "-march=armv8.5-a"
           },
           {
             "versions": "13.0:",
-            "flags" : "-mcpu=apple-m1"
+            "flags": "-mcpu=apple-m1"
           },
           {
             "versions": "16.0:",
-            "flags" : "-mcpu=apple-m2"
+            "flags": "-mcpu=apple-m2"
           }
         ],
         "apple-clang": [
           {
             "versions": "11.0:12.5",
-            "flags" : "-march=armv8.5-a"
+            "flags": "-march=armv8.5-a"
           },
           {
             "versions": "13.0:14.0.2",
-            "flags" : "-mcpu=apple-m1"
+            "flags": "-mcpu=apple-m1"
           },
           {
             "versions": "14.0.2:",
-            "flags" : "-mcpu=apple-m2"
+            "flags": "-mcpu=apple-m2"
           }
         ]
       },
@@ -3492,29 +3631,25 @@
       "from": [],
       "vendor": "generic",
       "features": [],
-      "compilers": {
-      }
+      "compilers": {}
     },
     "ppcle": {
       "from": [],
       "vendor": "generic",
       "features": [],
-      "compilers": {
-      }
+      "compilers": {}
     },
     "sparc": {
       "from": [],
       "vendor": "generic",
       "features": [],
-      "compilers": {
-      }
+      "compilers": {}
     },
     "sparc64": {
       "from": [],
       "vendor": "generic",
       "features": [],
-      "compilers": {
-      }
+      "compilers": {}
     },
     "riscv64": {
       "from": [],
@@ -3524,32 +3659,34 @@
         "gcc": [
           {
             "versions": "7.1:",
-            "flags" : "-march=rv64gc"
+            "flags": "-march=rv64gc"
           }
         ],
         "clang": [
           {
             "versions": "9.0:",
-            "flags" : "-march=rv64gc"
+            "flags": "-march=rv64gc"
           }
         ]
       }
     },
     "u74mc": {
-      "from": ["riscv64"],
+      "from": [
+        "riscv64"
+      ],
       "vendor": "SiFive",
       "features": [],
       "compilers": {
         "gcc": [
           {
             "versions": "10.2:",
-            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+            "flags": "-march=rv64gc -mtune=sifive-7-series"
           }
         ],
-        "clang" : [
+        "clang": [
           {
             "versions": "12.0:",
-            "flags" : "-march=rv64gc -mtune=sifive-7-series"
+            "flags": "-march=rv64gc -mtune=sifive-7-series"
           }
         ]
       }

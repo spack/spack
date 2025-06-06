@@ -32,8 +32,7 @@ import spack.spec
 import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
-
-from ..enums import ConfigScopePriority
+from spack.enums import ConfigScopePriority
 
 # sample config data
 config_low = {
@@ -71,7 +70,7 @@ spack:
         all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
     return env_yaml
@@ -248,8 +247,8 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
 #
 # Sample repo data and tests
 #
-repos_low = {"repos": ["/some/path"]}
-repos_high = {"repos": ["/some/other/path"]}
+repos_low = {"repos": {"low": "/some/path"}}
+repos_high = {"repos": {"high": "/some/other/path"}}
 
 # Test setting config values via path in filename
 
@@ -327,7 +326,7 @@ def test_write_list_in_memory(mock_low_high_config):
     spack.config.set("repos", repos_high["repos"], scope="high")
 
     config = spack.config.get("repos")
-    assert config == repos_high["repos"] + repos_low["repos"]
+    assert config == {**repos_high["repos"], **repos_low["repos"]}
 
 
 class MockEnv:
@@ -785,14 +784,15 @@ def test_config_parse_dict_in_list(tmpdir):
             spack.schema.repos.schema,
             """\
 repos:
-- https://foobar.com/foo
-- https://foobar.com/bar
-- error:
-  - abcdef
-- https://foobar.com/baz
+  a: https://foobar.com/foo
+  b: https://foobar.com/bar
+  c:
+    error:
+    - abcdef
+  d: https://foobar.com/baz
 """,
         )
-        assert "repos.yaml:4" in str(e)
+        assert "repos.yaml:2" in str(e)
 
 
 def test_config_parse_str_not_bool(tmpdir):
@@ -914,7 +914,10 @@ def test_single_file_scope(config, env_yaml):
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("packages:externalmodule:buildable") is False
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/spack_repo/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
 def test_single_file_scope_section_override(tmpdir, config):
@@ -934,7 +937,7 @@ spack:
         all:
             target: [ x86_64 ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
 
@@ -950,7 +953,10 @@ spack:
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert not spack.config.get("packages:externalmodule")
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/spack_repo/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
 def test_write_empty_single_file_scope(tmpdir):
