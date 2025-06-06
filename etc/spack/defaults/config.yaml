@@ -17,6 +17,10 @@ config:
   # This is the path to the root of the Spack install tree.
   # You can use $spack here to refer to the root of the spack instance.
   install_tree:
+    # If you set this to anything else, that setting has precedence. This
+    # value tells spack to check several possibilities by order of
+    # preference: SPACK_DATA_HOME, XDG_DATA_HOME, and then lastly
+    # choosing a location inside of Spack if neither are defined.
     root: $default_install_root
     projections:
       all: "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
