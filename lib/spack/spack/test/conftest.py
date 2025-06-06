@@ -179,6 +179,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
 
         commits = []
 
@@ -186,20 +187,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-
         # A commit without a previous version counts as "0"
         write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
-
-        # Get name of default branch (differs by git version)
-        main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
-        if main != "main":
-            # assure the default branch name is consistent for tests
-            git("branch", "-m", "main")
-            main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
-        assert "main" == main
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -219,7 +211,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v1.1")
 
         # Add two commits and a tag on main branch
-        git("checkout", main)
+        git("checkout", "main")
         write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
@@ -420,11 +412,12 @@ def pytest_collection_modifyitems(config, items):
 @pytest.fixture(scope="function")
 def use_concretization_cache(mutable_config, tmpdir):
     """Enables the use of the concretization cache"""
-    spack.config.set("config:concretization_cache:enable", True)
+    spack.config.set("concretizer:concretization_cache:enable", True)
     # ensure we have an isolated concretization cache
     new_conc_cache_loc = str(tmpdir.mkdir("concretization"))
-    spack.config.set("config:concretization_cache:path", new_conc_cache_loc)
+    spack.config.set("concretizer:concretization_cache:url", new_conc_cache_loc)
     yield
+    shutil.rmtree(tmpdir)
 
 
 #
@@ -1432,9 +1425,7 @@ def mock_git_repository(git, tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    We used to test with 'master', but git has since developed the ability to
-    have differently named default branches, so now we query the user's config to
-    determine what the default branch should be.
+    We force the default branch to be "main" to ensure that it behaves with package class tests.
 
     There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
@@ -1482,6 +1473,7 @@ def mock_git_repository(git, tmpdir_factory):
         git("init")
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
             git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
@@ -1515,10 +1507,7 @@ def mock_git_repository(git, tmpdir_factory):
         tag = "test-tag"
         git("tag", tag)
 
-        try:
-            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
-        except Exception:
-            default_branch = "master"
+        default_branch = "main"
         git("checkout", default_branch)
 
         r2_file = "r2_file"
@@ -2230,7 +2219,7 @@ def mock_include_cache(monkeypatch):
 @pytest.fixture()
 def wrapper_dir(install_mockery):
     """Installs the compiler wrapper and returns the prefix where the script is installed."""
-    wrapper = spack.spec.Spec("compiler-wrapper").concretized()
+    wrapper = spack.concretize.concretize_one("compiler-wrapper")
     wrapper_pkg = wrapper.package
     PackageInstaller([wrapper_pkg], explicit=True).install()
     return wrapper_pkg.bin_dir()
@@ -2244,6 +2233,19 @@ def _noop(*args, **kwargs):
 def no_compilers_init(monkeypatch):
     """Disables automatic compiler initialization"""
     monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture(autouse=True)
+def skip_provenance_check(monkeypatch, request):
+    """Skip binary provenance check for git versions
+
+    Binary provenance checks require querying git repositories and mirrors.
+    The infrastructure for this is complex and a heavy lift for simple things like spec syntax
+    checks. This fixture defaults to skipping this check, but can be overridden with the
+    @pytest.mark.require_provenance decorator
+    """
+    if "require_provenance" not in request.keywords:
+        monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
 
 
 @pytest.fixture(scope="function")

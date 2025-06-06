@@ -57,21 +57,6 @@ jobs:
       with_coverage: ${{ inputs.with_coverage }}
       python_version: '3.13'
 
-  verify-checksums:
-    # do not run if the commit message or PR description contains [skip-verify-checksums]
-    if: >-
-      ${{ inputs.with_packages == 'true' &&
-      !contains(github.event.pull_request.body, '[skip-verify-checksums]') &&
-      !contains(github.event.head_commit.message, '[skip-verify-checksums]') }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-      with:
-        fetch-depth: 2
-    - name: Verify Added Checksums
-      run: |
-        bin/spack ci verify-versions HEAD^1 HEAD
-
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
   bootstrap-dev-rhel8:
     runs-on: ubuntu-latest

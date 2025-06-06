@@ -1500,6 +1500,12 @@ class PackageInstaller:
             verbose: Display verbose build output (by default, suppresses it)
             concurrent_packages: Max packages to be built concurrently
         """
+        if sys.platform == "win32":
+            # No locks on Windows, we should always use 1 process
+            # TODO: perhaps raise an error instead and update cmd-line interface
+            # to omit this option on Windows for nwo
+            concurrent_packages = 1
+
         if isinstance(explicit, bool):
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 

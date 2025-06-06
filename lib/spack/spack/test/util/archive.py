@@ -9,8 +9,15 @@ import shutil
 import tarfile
 from pathlib import Path, PurePath
 
+import pytest
+
 import spack.util.crypto
-from spack.util.archive import gzip_compressed_tarfile, reproducible_tarfile_from_prefix
+import spack.version
+from spack.util.archive import (
+    gzip_compressed_tarfile,
+    reproducible_tarfile_from_prefix,
+    retrieve_commit_from_archive,
+)
 
 
 def test_gzip_compressed_tarball_is_reproducible(tmpdir):
@@ -186,3 +193,31 @@ def test_reproducible_tarfile_from_prefix_path_to_name(tmp_path: Path):
             "some/common/prefix/file1",
             "some/common/prefix/file2",
         ]
+
+
+@pytest.mark.parametrize("ref", ("test-branch", "test-tag"))
+def test_get_commits_from_archive(mock_git_repository, tmpdir, ref):
+    with tmpdir.as_cwd():
+        archive_file = str(tmpdir.join("archive.tar.gz"))
+        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
+        with gzip_compressed_tarfile(archive_file) as (tar, _, _):
+            reproducible_tarfile_from_prefix(
+                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name
+            )
+        commit = retrieve_commit_from_archive(archive_file, ref)
+        assert commit
+        assert spack.version.is_git_commit_sha(commit)
+
+
+def test_can_tell_if_archive_has_git(mock_git_repository, tmpdir):
+    with tmpdir.as_cwd():
+        archive_file = str(tmpdir.join("archive.tar.gz"))
+        path_to_name = lambda path: PurePath(path).relative_to(mock_git_repository.path).as_posix()
+        exclude = lambda entry: ".git" in PurePath(entry.path).parts
+        with gzip_compressed_tarfile(archive_file) as (tar, _, _):
+            reproducible_tarfile_from_prefix(
+                tar=tar, prefix=mock_git_repository.path, path_to_name=path_to_name, skip=exclude
+            )
+            with pytest.raises(AssertionError) as err:
+                retrieve_commit_from_archive(archive_file, "main")
+                assert "does not contain git data" in str(err.value)

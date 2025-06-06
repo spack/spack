@@ -1240,7 +1240,7 @@ Binary Provenance
 ^^^^^^^^^^^^^^^^^
 
 Spack versions are paired to attributes that determine the source code Spack
-will use to build. Checksummed assets are preferred but there are a few 
+will use to build. Checksummed assets are preferred but there are a few
 notable exceptions such as git branches and tags i.e ``pkg@develop``.
 These versions do not naturally have source provenance because they refer to a range
 of commits (branches) or can be changed outside the spack packaging infrastructure
@@ -1248,9 +1248,32 @@ of commits (branches) or can be changed outside the spack packaging infrastructu
 
 Spack has a reserved variant to allow users to complete source and binary provenance
 for these cases: ``pkg@develop commit=<SHA>``.  The ``commit`` variant must be supplied
-the full 40 character commit SHA. Using a partial commit SHA or assigning
+using the full 40 character commit SHA. Using a partial commit SHA or assigning
 the ``commit`` variant to a version that is not using a branch or tag reference will
 lead to an error during concretization.
+
+Spack will attempt to establish binary provenance by looking up commit SHA's for branch
+and tag based versions during concretization. There are 3 sources that it uses. In order, they
+are
+
+1. Staged source code (already cached source code for the version needing provenance) 
+2. Source mirrors (compressed archives of the source code)
+3. The git url provided in the package definition
+
+If Spack is unable to determine what the commit should be
+during concretization a warning will be issued. Users may also specify which commit SHA they
+want with the spec since it is simply a variant. In this case, or in the case of develop specs
+(see :ref:`develop-specs`), Spack will skip attempts to assign the commit SHA automatically.
+
+.. note::
+
+   Users wanting to track the latest commits from the internet should utilize ``spack clean --stage``
+   prior to concretization to clean out old stages that will short-circuit internet queries.
+   Disabling source mirrors or ensuring they don't contain branch/tag based versions will also
+   be necessary.
+
+   Above all else, the most robust way to ensure binaries have their desired commits is to provide
+   the SHAs via user-specs or config i.e. ``commit=<SHA>``.
 
 ^^^^^^^^^^^^
 Git versions
