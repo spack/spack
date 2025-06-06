@@ -1417,9 +1417,7 @@ def mock_git_repository(git, tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    We used to test with 'master', but git has since developed the ability to
-    have differently named default branches, so now we query the user's config to
-    determine what the default branch should be.
+    We force the default branch to be "main" to ensure that it behaves with package class tests.
 
     There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
@@ -1501,10 +1499,7 @@ def mock_git_repository(git, tmpdir_factory):
         tag = "test-tag"
         git("tag", tag)
 
-        try:
-            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
-        except Exception:
-            default_branch = "master"
+        default_branch = "main"
         git("checkout", default_branch)
 
         r2_file = "r2_file"
