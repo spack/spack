@@ -125,9 +125,9 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 --------------------
 
 Location to cache downloaded tarballs and repositories. By default,
-these are stored in ``$spack/opt/data``. These are stored indefinitely
-by default and can be purged with :ref:`spack clean --downloads
-<cmd-spack-clean>`.
+these are stored in ``$spack/opt/data/downloads``. These are stored
+indefinitely by default and can be purged with :ref:`spack
+clean --downloads <cmd-spack-clean>`.
 
 .. _Misc Cache:
 

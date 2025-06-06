@@ -97,7 +97,7 @@ are multiple configuration scopes. From lowest to highest precedence:
    Spack and take higher precedence than site, system, plugin, or
    defaults scopes.
 
-#. **per-spack**: Stored in the home directory:
+#. **this-spack**: Stored in the home directory:
    ``~/.local/config/spack/$spack_instance_id/``. These settings
    affect the instance of spack that corresponds to the specified
    ``$spack_instance_id``. This scope is most useful for overriding
@@ -166,7 +166,7 @@ Scopes and XDG Compliance
 Spack respects XDG variables, and the search location for user
 configuration files can be affected by them. When ``XDG_CONFIG_HOME``
 is not defined, Spack assumes the XDG default value of ``~/.config``,
-and will apply user and per-spack configuration files located in
+and will apply user and this-spack configuration files located in
 ``~/.config/spack``. Defining ``XDG_CONFIG_HOME`` will change where
 Spack searches for configuration files. To override this behavior,
 define ``SPACK_USER_CONFIG_PATH`` to be the desired path. For more
@@ -301,14 +301,14 @@ included as by ``$(prefix)/etc/spack/defaults/include.yaml``. Since it
 is an included configuration of the ``defaults`` scope, settings in
 the ``defaults`` scope will take precedence. You can override the
 values by specifying settings in ``site-admin``, ``system``, ``site``,
-``user``, ``per-spack``, or ``custom``, where scope precedence is:
+``user``, ``this-spack``, or ``custom``, where scope precedence is:
 
 #. ``defaults``
 #. ``site-admin``
 #. ``system``
 #. ``site``
 #. ``user``
-#. ``per-spack``
+#. ``this-spack``
 #. ``custom``
 
 and settings in each scope taking precedence over those found in configuration
