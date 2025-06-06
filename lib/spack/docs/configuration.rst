@@ -825,3 +825,11 @@ The user configuration scope's files will be located with ``XDG_CONFIG_HOME``. I
 default value is ``~/.config``.
 
 * User configuration scope: ``$XDG_CONFIG_HOME/spack``
+
+Spack also includes the variables ``SPACK_DATA_HOME``,
+``SPACK_CONFIG_HOME``, and ``SPACK_STATE_HOME`` that map directly to
+the XDG variables described above. They work the same way, but have
+higher precedence than the XDG variables. If the Spack-specific
+variables *are not* defined, Spack uses the XDG variables with a suffix
+of "/spack". If they are defined, they are used directly without any
+additional suffix.
