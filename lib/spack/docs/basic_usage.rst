@@ -1059,7 +1059,7 @@ Here is an example of a much longer spec than we've seen thus far:
 
 .. code-block:: none
 
-   mpileaks @1.2:1.4 %gcc@4.7.5 +debug -qt target=x86_64 ^callpath @1.1 %gcc@4.7.2
+   mpileaks @1.2:1.4 +debug ~qt target=x86_64 %gcc@4.7.5 ^callpath @1.1 %gcc@4.7.2
 
 If provided to ``spack install``, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
@@ -1074,8 +1074,6 @@ More formally, a spec consists of the following pieces:
 
 * Package name identifier (``mpileaks`` above)
 * ``@`` Optional version specifier (``@1.2:1.4``)
-* ``%`` Optional compiler specifier, with an optional compiler version
-  (``gcc`` or ``gcc@4.7.3``)
 * ``+`` or ``-`` or ``~`` Optional variant specifiers (``+debug``,
   ``-qt``, or ``~qt``) for boolean variants. Use ``++`` or ``--`` or
   ``~~`` to propagate variants through the dependencies (``++debug``,
@@ -1088,14 +1086,18 @@ More formally, a spec consists of the following pieces:
   Use ``name==<value>`` to propagate compiler flags through the dependencies.
 * ``target=<value> os=<value>`` Optional architecture specifier
   (e.g., ``target=haswell os=CNL10``)
-* ``^`` Dependency specs (e.g., ``^callpath@1.1``)
+* ``%`` Direct dependency specs. Specs the user knows are not merely present in
+  the graph, but depended on directly by the previous node.
+* ``^`` Dependency specs (e.g., ``^callpath@1.1``). These dependencies may appear
+  anywhere in the link/run dependencies of the root, or in the direct build
+  dependencies.
 
 There are two things to notice here. The first is that specs are
-recursively defined. That is, each dependency after ``^`` is a spec
-itself. The second is that everything is optional *except* for the
-initial package name identifier. Users can be as vague or as specific
-as they want about the details of building packages, and this makes
-Spack good for beginners and experts alike.
+recursively defined. That is, each dependency after ``%`` or ``^`` is
+a spec itself. The second is that everything is optional *except* for
+the initial package name identifier. Users can be as vague or as
+specific as they want about the details of building packages, and this
+makes Spack good for beginners and experts alike.
 
 To really understand what's going on above, we need to think about how
 software is structured. An executable or a library (these are
@@ -1129,16 +1131,19 @@ dependencies among packages, but users do not need to know the full
 DAG structure. Each ``^`` in the full spec refers to some dependency
 of the root package. Spack will raise an error if you supply a name
 after ``^`` that the root does not actually depend on (e.g., ``mpileaks
-^emacs@23.3``).
+^emacs@23.3``). Each ``%`` refers to some direct dependency, and Spack will
+similarly raise an error if that relationship is invalid.
 
 Spack further simplifies things by only allowing one configuration of
-each package within any single build. Above, both ``mpileaks`` and
-``callpath`` depend on ``mpich``, but ``mpich`` appears only once in
-the DAG. You cannot build an ``mpileaks`` version that depends on one
-version of ``mpich`` *and* on a ``callpath`` version that depends on
-some *other* version of ``mpich``. In general, such a configuration
-would likely behave unexpectedly at runtime, and Spack enforces this
-to ensure a consistent runtime environment.
+each package within the link/run + direct build dependencies of a
+single spec (in most cases you can treat this as the entire
+DAG). Above, both ``mpileaks`` and ``callpath`` depend on ``mpich``,
+but ``mpich`` appears only once in the DAG. You cannot build an
+``mpileaks`` version that depends on one version of ``mpich`` *and* on
+a ``callpath`` version that depends on some *other* version of
+``mpich``. In general, such a configuration would likely behave
+unexpectedly at runtime, and Spack enforces this to ensure a
+consistent runtime environment.
 
 The point of specs is to abstract this full DAG from Spack users. If
 a user does not care about the DAG at all, she can refer to mpileaks
@@ -1151,7 +1156,7 @@ know package names and minimal details about their relationship.
 When Spack prints out specs, it sorts package names alphabetically to
 normalize the way they are displayed, but users do not need to worry
 about this when they write specs. The only restriction on the order
-of dependencies within a spec is that they appear *after* the root
+of ``^`` dependencies within a spec is that they appear *after* the root
 package. For example, these two specs represent exactly the same
 configuration:
 
@@ -1159,6 +1164,14 @@ configuration:
 
    mpileaks ^callpath@1.0 ^libelf@0.8.3
    mpileaks ^libelf@0.8.3 ^callpath@1.0
+
+Direct dependencies specified with ``%`` also differ from general
+dependencies because they associate with the most recent node, rather
+than with the root of the DAG. So in the spec ``root ^dep1 ^dep2
+^dep3`` all three dependencies are associated with the package
+``root``, but in the spec ``root ^dep1 %dep2 %dep3`` the spec
+``%dep2`` is associated with ``dep1`` and the spec ``%dep3`` is
+associated with ``dep2``.
 
 You can put all the same modifiers on dependency specs that you would
 put on the root spec. That is, you can specify their versions,
@@ -1558,6 +1571,45 @@ flags.
    Currently, Spack doesn't print any warning to the user if it has no information
    on which optimization flags should be used for a given compiler. This behavior
    might change in the future.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Dependency edge attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some specs require additional information about the relationship
+between a package and its dependency. These edge attributes can be
+specified by following the dependency sigil with square-brackets.
+
+Edge attributes are specified as key-value pairs, either for
+conditional dependencies (``when=<spec>``) or for virtuals
+(``virtuals=first,second``).
+
+"""""""""""""""""
+Virtuals on edges
+"""""""""""""""""
+
+Virtual packages will be discussed in more detail in :ref:`Virtual
+dependencies<sec-virtual-dependencies>` for a more complete discussion
+of virtual dependencies. Packages can "provide" and depend on multiple virtual packages, and the edge attribute can be used to specify which of several virtuals the dependency can provide should be used. For example:
+
+.. code-block:: none
+
+   spack install mpich %[virtuals=c,cxx]clang %[virtuals=fortran]gcc
+
+tells Spack to use ``clang`` to provide the ``c`` and ``cxx``
+virtuals, and ``gcc`` to provide the ``fortran`` virtual.
+
+""""""""""""""""""""""""
+Conditional dependencies
+""""""""""""""""""""""""
+
+Conditional dependencies allow dependency constraints to be applied only under certain conditions.
+
+.. code-block:: none
+
+   spack install hdf5 ^[when=+mpi]mpich@3.1
+
+means that hdf5 should depend on ``mpich@3.1`` if it is configured with MPI support.
 
 .. _sec-virtual-dependencies:
 

@@ -62,10 +62,11 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
+import spack.config
 import spack.deptypes
 import spack.error
 import spack.paths
@@ -90,7 +91,7 @@ NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 HASH = r"[a-zA-Z_0-9]+"
 
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
-VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
+VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
@@ -160,6 +161,15 @@ def tokenize(text: str) -> Iterator[Token]:
         if token.kind == SpecTokens.UNEXPECTED:
             raise SpecTokenizationError(list(SPEC_TOKENIZER.tokenize(text)), text)
         yield token
+
+
+def parseable_tokens(text: str) -> Iterator[Token]:
+    """Return non-whitespace tokens from the text passed as input
+
+    Raises:
+        SpecTokenizationError: when unexpected characters are found in the text
+    """
+    return filter(lambda x: x.kind != SpecTokens.WS, tokenize(text))
 
 
 class TokenContext:
@@ -234,11 +244,18 @@ def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
 class SpecParser:
     """Parse text into specs"""
 
-    __slots__ = "literal_str", "ctx"
+    __slots__ = "literal_str", "ctx", "toolchains", "parsed_toolchains"
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
-        self.ctx = TokenContext(filter(lambda x: x.kind != SpecTokens.WS, tokenize(literal_str)))
+        self.ctx = TokenContext(parseable_tokens(literal_str))
+
+        # TODO: Move toolchains out of the parser, and expand them as a separate step
+        self.toolchains = {}
+        configuration = getattr(spack.config, "CONFIG", None)
+        if configuration is not None:
+            self.toolchains = configuration.get("toolchains", {})
+        self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
@@ -294,6 +311,19 @@ class SpecParser:
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
+                # String replacement for toolchains
+                # Look ahead to match upcoming value to list of toolchains
+                if (
+                    self.ctx.current_token.value == "%"
+                    and self.ctx.next_token.value in self.toolchains
+                ):
+                    assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
+                    try:
+                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                    except spack.error.SpecError as e:
+                        raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
+                    continue
+
                 is_direct = self.ctx.current_token.value[0] == "%"
                 dependency, warnings = self._parse_node(root_spec)
                 edge_properties = {}
@@ -331,6 +361,40 @@ class SpecParser:
         if root_spec.concrete:
             raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
+
+    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+        if name not in self.parsed_toolchains:
+            toolchain = self._parse_toolchain(name)
+            self.parsed_toolchains[name] = toolchain
+
+        toolchain = self.parsed_toolchains[name]
+        spec.constrain(toolchain)
+
+    def _parse_toolchain(self, name: str) -> "spack.spec.Spec":
+        toolchain_config = self.toolchains[name]
+        if isinstance(toolchain_config, str):
+            toolchain = parse_one_or_raise(toolchain_config)
+            self._ensure_all_direct_edges(toolchain)
+        else:
+            toolchain = spack.spec.Spec()
+            for entry in toolchain_config:
+                toolchain_part = parse_one_or_raise(entry["spec"])
+                when = entry.get("when", "")
+                self._ensure_all_direct_edges(toolchain_part)
+
+                # Conditions are applied to every edge in the constraint
+                for edge in toolchain_part.traverse_edges():
+                    edge.when.constrain(when)
+                toolchain.constrain(toolchain_part)
+        return toolchain
+
+    def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
+        for edge in constraint.traverse_edges(root=False):
+            if not edge.direct:
+                raise spack.error.SpecError(
+                    f"cannot use '^' in toolchain definitions, and the current "
+                    f"toolchain contains '{edge.format()}'"
+                )
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
@@ -506,10 +570,10 @@ class EdgeAttributeParser:
                     name = name[:-1]
                 value = value.strip("'\" ").split(",")
                 attributes[name] = value
-                if name not in ("deptypes", "virtuals"):
+                if name not in ("deptypes", "virtuals", "when"):
                     msg = (
                         "the only edge attributes that are currently accepted "
-                        'are "deptypes" and "virtuals"'
+                        'are "deptypes", "virtuals", and "when"'
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
@@ -523,6 +587,11 @@ class EdgeAttributeParser:
         if "deptypes" in attributes:
             deptype_string = attributes.pop("deptypes")
             attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
+
+        # Turn "when" into a spec
+        if "when" in attributes:
+            attributes["when"] = parse_one_or_raise(attributes["when"][0])
+
         return attributes
 
 
@@ -568,8 +637,9 @@ class SpecParsingError(spack.error.SpecSyntaxError):
 
     def __init__(self, message, token, text):
         message += f"\n{text}"
-        underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
-        message += color.colorize(f"@*r{{{underline}}}")
+        if token:
+            underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+            message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
 

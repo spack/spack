@@ -46,7 +46,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # List
-    list_parser = sp.add_parser("list", help=repo_list.__doc__)
+    list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
@@ -423,6 +423,7 @@ def repo(parser, args):
     return {
         "create": repo_create,
         "list": repo_list,
+        "ls": repo_list,
         "add": repo_add,
         "set": repo_set,
         "remove": repo_remove,

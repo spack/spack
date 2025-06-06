@@ -35,8 +35,9 @@ class EdgeAndDepth(NamedTuple):
     depth: int
 
 
+# Sort edges by name first, then abstract hash, then full edge string to break ties
 def sort_edges(edges):
-    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or ""))
+    edges.sort(key=lambda edge: (edge.spec.name or "", edge.spec.abstract_hash or "", str(edge)))
     return edges
 
 

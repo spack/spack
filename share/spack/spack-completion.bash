@@ -1793,7 +1793,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list add set remove rm migrate"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate"
     fi
 }
 
@@ -1807,6 +1807,10 @@ _spack_repo_create() {
 }
 
 _spack_repo_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_repo_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 

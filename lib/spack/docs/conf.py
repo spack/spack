@@ -50,6 +50,8 @@ sys.path[0:0] = [
     os.path.abspath(".spack/spack-packages/repos"),
 ]
 
+subprocess.call(["spack", "list"])
+
 # Generate a command index if an update is needed -- this also clones the package repository.
 subprocess.call(
     [
