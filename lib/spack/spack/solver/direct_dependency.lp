@@ -43,7 +43,8 @@ attr("depends_on", node(X, Parent), node(Y, BuildDependency), "build") :-
 
 attr(AttributeName, node(X, ChildPackage), A1)
   :- runtime_requirement(ParentNode, node(X, ChildPackage)),
-     attr("direct_dependency", ParentNode, node_requirement(AttributeName, ChildPackage, A1)).
+     attr("direct_dependency", ParentNode, node_requirement(AttributeName, ChildPackage, A1)),
+     AttributeName != "provider_set".
 
 attr(AttributeName, node(X, ChildPackage), A1, A2)
   :- runtime_requirement(ParentNode, node(X, ChildPackage)),
