@@ -689,6 +689,59 @@ Or it can be set permanently in your ``packages.yaml``:
          flags:
            fflags: -mismatch
 
+.. _toolchains:
+
+----------
+Toolchains
+----------
+
+Spack can be configured to associate certain combinations of specs for
+easy reference on the command line and in config and environment
+files. These combinations are called ``toolchains``, because their
+primary intended use is for associating compiler combinations to
+apply. Toolchains are referenced by name like a direct dependency,
+using the ``%`` sigil. There are two styles of toolchain config, one
+using conditional dependencies through the spec syntax and one with
+conditionals explicitly in the yaml:
+
+.. code-block:: yaml
+
+   toolchains:
+     gcc_all: cflags=-O3 '%[when=%c virtuals=c]gcc %[when=%cxx virtuals=cxx]gcc %[when=%fortran virtuals=fortran]gcc'
+     llvm_gfortran:
+     - spec: cflags=-O3
+     - spec: '%[virtuals=c]llvm'
+       when: '%c'
+     - spec: '%[virtuals=cxx]llvm'
+       when: '%cxx'
+     - spec: '%[virtuals=fortran]gcc'
+       when: '%fortran'
+
+The two syntaxes are equivalent. It is not necessary to use
+conditional dependencies with toolchains, but in most cases it his
+highly recommended. Similarly, while any spec constraint can be
+included, it is most useful to use compiler flags, architectures, and
+conditional dependencies. With the above config, the ``gcc_all``
+toolchain imposes conditional dependencies such that gcc is used as
+the provider for ``c``, ``cxx``, and ``fortran`` for any package using
+that toolchain that depends on each language. The conditional
+dependencies allow the toolchain to be applied to any package
+regardless of which languages it depends on. The ``llvm_gfortran``
+toolchain is the same, except it uses ``llvm`` for ``c`` and ``cxx``
+and ``gcc`` for ``fortran``.
+
+These two toolchains could be used independently or even in the same
+spec, e.g. ``spack install hdf5+fortran%llvm_gfortran ^mpich
+%gcc_all``. This will install an hdf5 compiled with ``llvm`` for the
+C/C++ components, but with the fortran components compiled with
+``gfortran``, but will build it against an MPICH installation compiled
+entirely with ``gcc`` for C, C++, and Fortran.
+
+.. note::
+
+   Toolchains are currently limited to exclude non-direct dependencies
+   (using the ``^`` syntax).
+
 ---------------
 System Packages
 ---------------

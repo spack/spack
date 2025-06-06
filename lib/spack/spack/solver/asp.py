@@ -1399,12 +1399,17 @@ class ConstraintOrigin(enum.Enum):
     result.
     """
 
+    CONDITIONAL_SPEC = 0
     DEPENDS_ON = 1
     REQUIRE = 2
 
     @staticmethod
     def _SUFFIXES() -> Dict["ConstraintOrigin", str]:
-        return {ConstraintOrigin.DEPENDS_ON: "_dep", ConstraintOrigin.REQUIRE: "_req"}
+        return {
+            ConstraintOrigin.CONDITIONAL_SPEC: "_cond",
+            ConstraintOrigin.DEPENDS_ON: "_dep",
+            ConstraintOrigin.REQUIRE: "_req",
+        }
 
     @staticmethod
     def append_type_suffix(pkg_id: str, kind: "ConstraintOrigin") -> str:
@@ -2236,6 +2241,10 @@ class SpackSolverSetup:
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
                         context=context,
                     )
+
+                    # Conditions don't handle conditional dependencies directly
+                    # Those are handled separately here
+                    self.generate_conditional_dep_conditions(spec, member_id)
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
                     # would be impaired. If a rule does not apply for a specific package, just
@@ -2602,6 +2611,10 @@ class SpackSolverSetup:
         # Dependencies
         edge_clauses = []
         for dspec in spec.edges_to_dependencies():
+            # Ignore conditional dependencies, they are handled by caller
+            if dspec.when != spack.spec.Spec():
+                continue
+
             dep = dspec.spec
 
             if spec.concrete:
@@ -3141,20 +3154,6 @@ class SpackSolverSetup:
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
-        # Fail if we already know an unreachable node is requested
-        for spec in specs:
-            # concrete roots don't need their dependencies verified
-            if spec.concrete:
-                continue
-
-            missing_deps = [
-                str(d)
-                for d in spec.traverse()
-                if d.name not in self.pkgs and not spack.repo.PATH.is_virtual(d.name)
-            ]
-            if missing_deps:
-                raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
-
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
@@ -3389,10 +3388,60 @@ class SpackSolverSetup:
             cache[imposed_spec_key] = (effect_id, requirements)
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
 
+            # Create subcondition with any conditional dependencies
+            # self.spec_clauses does not do anything with conditional
+            # dependencies
+            self.generate_conditional_dep_conditions(spec, condition_id)
+
             if self.concretize_everything:
                 self.gen.fact(fn.solve_literal(trigger_id))
 
+        # Trigger rules are needed to allow conditional specs
+        self.trigger_rules()
         self.effect_rules()
+
+    def generate_conditional_dep_conditions(self, spec: spack.spec.Spec, condition_id: int):
+        """Generate a subcondition in the trigger for any conditional dependencies.
+
+        Dependencies are always modeled by a condition. For conditional dependencies,
+        the when-spec is added as a subcondition of the trigger to ensure the dependency
+        is only activated when the subcondition holds.
+        """
+        for dspec in spec.traverse_edges():
+            # Ignore unconditional deps
+            if dspec.when == spack.spec.Spec():
+                continue
+
+            # Cannot use "virtual_node" attr as key for condition
+            # because reused specs do not track virtual nodes.
+            # Instead, track whether the parent uses the virtual
+            def virtual_handler(input_spec, requirements):
+                ret = remove_facts("virtual_node")(input_spec, requirements)
+                for edge in input_spec.traverse_edges(root=False, cover="edges"):
+                    if spack.repo.PATH.is_virtual(edge.spec.name):
+                        ret.append(fn.attr("uses_virtual", edge.parent.name, edge.spec.name))
+                return ret
+
+            context = ConditionContext()
+            context.source = ConstraintOrigin.append_type_suffix(
+                dspec.parent.name, ConstraintOrigin.CONDITIONAL_SPEC
+            )
+            # Default is to remove node-like attrs, override here
+            context.transform_required = virtual_handler
+            context.transform_imposed = lambda x, y: y
+
+            try:
+                subcondition_id = self.condition(
+                    dspec.when,
+                    spack.spec.Spec(dspec.format(unconditional=True)),
+                    required_name=dspec.parent.name,
+                    context=context,
+                    msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
+                )
+                self.gen.fact(fn.subcondition(subcondition_id, condition_id))
+            except vt.UnknownVariantError as e:
+                # A variant in the 'when=' condition can't apply to the parent of the edge
+                tty.debug(f"[{__name__}] cannot emit subcondition for {dspec.format()}: {e}")
 
     def validate_and_define_versions_from_requirements(
         self, *, allow_deprecated: bool, require_checksum: bool
@@ -3841,6 +3890,7 @@ class SpecBuilder:
                 r"^package_hash$",
                 r"^root$",
                 r"^track_dependencies$",
+                r"^uses_virtual$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_on_incoming_edges$",
@@ -4787,7 +4837,11 @@ class Solver:
                     if spack.repo.PATH.is_virtual(s.name):
                         continue
                     # Error if direct dependencies cannot be satisfied
-                    deps = {edge.spec.name for edge in s.edges_to_dependencies() if edge.direct}
+                    deps = {
+                        edge.spec.name
+                        for edge in s.edges_to_dependencies()
+                        if edge.direct and edge.when == spack.spec.Spec()
+                    }
                     if deps:
                         graph = analyzer.possible_dependencies(
                             s, allowed_deps=dt.ALL, transitive=False

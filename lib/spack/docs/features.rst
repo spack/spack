@@ -131,7 +131,7 @@ creates a simple Python file:
 It doesn't take much Python coding to get from there to a working
 package:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/libelf/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/libelf/package.py
    :lines: 5-
 
 Spack also provides wrapper functions around common commands like

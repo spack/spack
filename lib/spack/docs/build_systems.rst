@@ -83,7 +83,7 @@ packages. You can quickly find examples by running:
 
 .. code-block:: console
 
-   $ cd var/spack/repos/spack_repo/builtin/packages
+   $ spack cd --packages
    $ grep -l QMakePackage */package.py
 
 

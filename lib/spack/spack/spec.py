@@ -721,7 +721,7 @@ class DependencySpec:
         virtuals: virtual packages provided from child to parent node.
     """
 
-    __slots__ = "parent", "spec", "depflag", "virtuals", "direct"
+    __slots__ = "parent", "spec", "depflag", "virtuals", "direct", "when"
 
     def __init__(
         self,
@@ -731,12 +731,14 @@ class DependencySpec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         self.parent = parent
         self.spec = spec
         self.depflag = depflag
         self.virtuals = tuple(sorted(set(virtuals)))
         self.direct = direct
+        self.when = when or Spec()
 
     def update_deptypes(self, depflag: dt.DepFlag) -> bool:
         """Update the current dependency types"""
@@ -767,6 +769,7 @@ class DependencySpec:
             depflag=self.depflag,
             virtuals=self.virtuals,
             direct=self.direct,
+            when=self.when,
         )
 
     def _cmp_iter(self):
@@ -778,10 +781,35 @@ class DependencySpec:
     def __str__(self) -> str:
         parent = self.parent.name if self.parent else None
         child = self.spec.name if self.spec else None
-        return f"{parent} {self.depflag}[virtuals={','.join(self.virtuals)}] --> {child}"
+        virtuals_string = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
+        when_string = f"when='{self.when}'" if self.when != Spec() else ""
+        edge_attrs = filter(lambda x: bool(x), (virtuals_string, when_string))
+        return f"{parent} {self.depflag}[{' '.join(edge_attrs)}] --> {child}"
+
+    def format(self, *, unconditional: bool = False) -> str:
+        """Returns a string, using the spec syntax, representing this edge
+
+        Args:
+            unconditional: if True, removes any condition statement from the representation
+        """
+
+        parent = self.parent.name if self.parent.name else ""
+        child = self.spec if self.spec else ""
+        virtuals_str = f"virtuals={','.join(self.virtuals)}" if self.virtuals else ""
+
+        when_str = ""
+        if not unconditional and self.when != Spec():
+            when_str = f"when='{self.when}'"
+
+        dep_sigil = "%" if self.direct else "^"
+        edge_attrs = filter(lambda x: bool(x), (virtuals_str, when_str))
+
+        if edge_attrs:
+            return f"{parent} {dep_sigil}[{' '.join(edge_attrs)}] {child}"
+        return f"{parent} {dep_sigil}{child}"
 
     def flip(self) -> "DependencySpec":
-        """Flip the dependency, and drop virtual information"""
+        """Flip the dependency, and drop virtual and conditional information"""
         return DependencySpec(
             parent=self.spec, spec=self.parent, depflag=self.depflag, virtuals=()
         )
@@ -1618,20 +1646,26 @@ class Spec:
 
         union = DependencySpec(parent=Spec(), spec=self, depflag=0, virtuals=())
         all_direct_edges = all(x.direct for x in edges)
+        dep_conditions = set()
 
         for edge in edges:
             union.update_deptypes(edge.depflag)
             union.update_virtuals(edge.virtuals)
+            dep_conditions.add(edge.when)
 
         deptypes_str = ""
         if not all_direct_edges and union.depflag:
             deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(union.depflag))}"
 
         virtuals_str = f"virtuals={','.join(union.virtuals)}" if union.virtuals else ""
-        if not deptypes_str and not virtuals_str:
-            return ""
-        result = f"{deptypes_str} {virtuals_str}".strip()
-        return f"[{result}]"
+
+        conditions = [str(c) for c in dep_conditions if c != Spec()]
+        when_str = f"when='{','.join(conditions)}'" if conditions else ""
+
+        result = " ".join(filter(lambda x: bool(x), (when_str, deptypes_str, virtuals_str)))
+        if result:
+            result = f"[{result}]"
+        return result
 
     def dependencies(
         self,
@@ -1737,7 +1771,13 @@ class Spec:
                     setattr(self.architecture, new_attr, new_value)
 
     def _add_dependency(
-        self, spec: "Spec", *, depflag: dt.DepFlag, virtuals: Tuple[str, ...], direct: bool = False
+        self,
+        spec: "Spec",
+        *,
+        depflag: dt.DepFlag,
+        virtuals: Tuple[str, ...],
+        direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         """Called by the parser to add another spec as a dependency.
 
@@ -1745,23 +1785,33 @@ class Spec:
             depflag: dependency type for this edge
             virtuals: virtuals on this edge
             direct: if True denotes a direct dependency (associated with the % sigil)
+            when: optional condition under which dependency holds
         """
+        if when is None:
+            when = Spec()
+
         if spec.name not in self._dependencies or not spec.name:
-            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals, direct=direct)
+            self.add_dependency_edge(
+                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            )
             return
 
         # Keep the intersection of constraints when a dependency is added multiple times with
         # the same deptype. Add a new dependency if it is added with a compatible deptype
-        # (for example, a build-only dependency is compatible with a link-only dependenyc).
+        # (for example, a build-only dependency is compatible with a link-only dependency).
         # The only restrictions, currently, are that we cannot add edges with overlapping
         # dependency types and we cannot add multiple edges that have link/run dependency types.
         # See ``spack.deptypes.compatible``.
         orig = self._dependencies[spec.name]
         try:
-            dspec = next(dspec for dspec in orig if depflag == dspec.depflag)
+            dspec = next(
+                dspec for dspec in orig if depflag == dspec.depflag and when == dspec.when
+            )
         except StopIteration:
             # Error if we have overlapping or incompatible deptypes
-            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig):
+            if any(not dt.compatible(dspec.depflag, depflag) for dspec in orig) and all(
+                dspec.when == when for dspec in orig
+            ):
                 edge_attrs = f"deptypes={dt.flag_to_chars(depflag).strip()}"
                 required_dep_str = f"^[{edge_attrs}] {str(spec)}"
 
@@ -1770,7 +1820,9 @@ class Spec:
                     f"\t'{str(self)}' cannot depend on '{required_dep_str}'"
                 )
 
-            self.add_dependency_edge(spec, depflag=depflag, virtuals=virtuals, direct=direct)
+            self.add_dependency_edge(
+                spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
+            )
             return
 
         try:
@@ -1788,6 +1840,7 @@ class Spec:
         depflag: dt.DepFlag,
         virtuals: Tuple[str, ...],
         direct: bool = False,
+        when: Optional["Spec"] = None,
     ):
         """Add a dependency edge to this spec.
 
@@ -1796,12 +1849,19 @@ class Spec:
             deptypes: dependency types for this edge
             virtuals: virtuals provided by this edge
             direct: if True denotes a direct dependency
+            when: if non-None, condition under which dependency holds
         """
+        if when is None:
+            when = Spec()
+
         # Check if we need to update edges that are already present
         selected = self._dependencies.select(child=dependency_spec.name)
         for edge in selected:
             has_errors, details = False, []
             msg = f"cannot update the edge from {edge.parent.name} to {edge.spec.name}"
+
+            if edge.when != when:
+                continue
 
             # If the dependency is to an existing spec, we can update dependency
             # types. If it is to a new object, check deptype compatibility.
@@ -1826,7 +1886,7 @@ class Spec:
                 raise spack.error.SpecError(msg, "\n".join(details))
 
         for edge in selected:
-            if id(dependency_spec) == id(edge.spec):
+            if id(dependency_spec) == id(edge.spec) and edge.when == when:
                 # If we are here, it means the edge object was previously added to
                 # both the parent and the child. When we update this object they'll
                 # both see the deptype modification.
@@ -1835,7 +1895,7 @@ class Spec:
                 return
 
         edge = DependencySpec(
-            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct
+            self, dependency_spec, depflag=depflag, virtuals=virtuals, direct=direct, when=when
         )
         self._dependencies.add(edge)
         dependency_spec._dependents.add(edge)
@@ -2070,14 +2130,14 @@ class Spec:
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
             # note: depflag not allowed, currently, on "direct" edges
             edge_attributes = ""
-            if item.virtuals:
+            if item.virtuals or item.when != Spec():
                 edge_attributes = item.spec.format("{edge_attributes}") + " "
 
             parts.append(f"%{edge_attributes}{item.spec.format()}".replace(current_name, new_name))
         for item in sorted(transitive, key=lambda x: x.spec.name):
             # Recurse to attach build deps in order
             edge_attributes = ""
-            if item.virtuals or item.depflag:
+            if item.virtuals or item.depflag or item.when != Spec():
                 edge_attributes = item.spec.format("{edge_attributes}") + " "
             parts.append(f"^{edge_attributes}{str(item.spec)}")
         return " ".join(parts).strip()
@@ -3111,41 +3171,24 @@ class Spec:
         if any(not d.name for d in other.traverse(root=False)):
             raise UnconstrainableDependencySpecError(other)
 
-        # Handle common first-order constraints directly
-        # Note: This doesn't handle constraining transitive dependencies with the same name
-        # as direct dependencies
-        changed = False
-        common_dependencies = {x.name for x in self.dependencies()}
-        common_dependencies &= {x.name for x in other.dependencies()}
-        for name in common_dependencies:
-            changed |= self[name].constrain(other[name], deps=True)
-            if name in self._dependencies:
-                # WARNING: This function is an implementation detail of the
-                # WARNING: original concretizer. Since with that greedy
-                # WARNING: algorithm we don't allow multiple nodes from
-                # WARNING: the same package in a DAG, here we hard-code
-                # WARNING: using index 0 i.e. we assume that we have only
-                # WARNING: one edge from package "name"
-                edges_from_name = self._dependencies[name]
-                changed |= edges_from_name[0].update_deptypes(other._dependencies[name][0].depflag)
-                changed |= edges_from_name[0].update_virtuals(
-                    other._dependencies[name][0].virtuals
+        reference_spec = self.copy(deps=True)
+        for edge in other.edges_to_dependencies():
+            existing = [
+                e for e in self.edges_to_dependencies(edge.spec.name) if e.when == edge.when
+            ]
+            if existing:
+                existing[0].spec.constrain(edge.spec)
+                existing[0].update_deptypes(edge.depflag)
+                existing[0].update_virtuals(edge.virtuals)
+            else:
+                self.add_dependency_edge(
+                    edge.spec,
+                    depflag=edge.depflag,
+                    virtuals=edge.virtuals,
+                    direct=edge.direct,
+                    when=edge.when,
                 )
-
-        # Update with additional constraints from other spec
-        # operate on direct dependencies only, because a concrete dep
-        # represented by hash may have structure that needs to be preserved
-        for name in other.direct_dep_difference(self):
-            dep_spec_copy = other._get_dependency(name)
-            self._add_dependency(
-                dep_spec_copy.spec.copy(),
-                depflag=dep_spec_copy.depflag,
-                virtuals=dep_spec_copy.virtuals,
-                direct=dep_spec_copy.direct,
-            )
-            changed = True
-
-        return changed
+        return self != reference_spec
 
     def common_dependencies(self, other):
         """Return names of dependencies that self and other have in common."""
@@ -3382,10 +3425,6 @@ class Spec:
         if not other._dependencies:
             return True
 
-        # If we have no dependencies, we can't satisfy any constraints.
-        if not self._dependencies and self.original_spec_format() >= 5 and not self.external:
-            return False
-
         # If we arrived here, the lhs root node satisfies the rhs root node. Now we need to check
         # all the edges that have an abstract parent, and verify that they match some edge in the
         # lhs.
@@ -3396,8 +3435,23 @@ class Spec:
         lhs_edges: Dict[str, Set[DependencySpec]] = collections.defaultdict(set)
         mock_nodes_from_old_specfiles = set()
         for rhs_edge in other.traverse_edges(root=False, cover="edges"):
+            # The condition cannot be applied in any case, skip the edge
+            test_root = rhs_edge.parent.name in (None, self.name)
+            if test_root and not self.intersects(rhs_edge.when):
+                continue
+
+            if (
+                not test_root
+                and rhs_edge.parent.name in self
+                and not self[rhs_edge.parent.name].intersects(rhs_edge.when)
+            ):
+                continue
+
             # If we are checking for ^mpi we need to verify if there is any edge
-            if spack.repo.PATH.is_virtual(rhs_edge.spec.name):
+            is_virtual_node = spack.repo.PATH.is_virtual(rhs_edge.spec.name)
+            if is_virtual_node:
+                # Don't mutate objects in memory that may be referred elsewhere
+                rhs_edge = rhs_edge.copy()
                 rhs_edge.update_virtuals(virtuals=(rhs_edge.spec.name,))
 
             if rhs_edge.direct:
@@ -3430,21 +3484,21 @@ class Spec:
                         return False
 
                 else:
+                    name = rhs_edge.spec.name if not is_virtual_node else None
                     candidate_edges = current_node.edges_to_dependencies(
-                        name=rhs_edge.spec.name, virtuals=rhs_edge.virtuals or None
+                        name=name, virtuals=rhs_edge.virtuals or None
                     )
-                    # Select at least the deptypes on the rhs_edge
+                    # Select at least the deptypes on the rhs_edge, and conditional edges that
+                    # constrain a bigger portion of the search space (so it's rhs.when <= lhs.when)
                     candidates = [
-                        x.spec
-                        for x in candidate_edges
-                        if ((x.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                        lhs_edge.spec
+                        for lhs_edge in candidate_edges
+                        if ((lhs_edge.depflag & rhs_edge.depflag) ^ rhs_edge.depflag) == 0
+                        and rhs_edge.when.satisfies(lhs_edge.when)
                     ]
                     if not candidates or not any(x.satisfies(rhs_edge.spec) for x in candidates):
                         return False
 
-                continue
-
-            if not rhs_edge.virtuals:
                 continue
 
             # Skip edges from a concrete sub-DAG
@@ -3469,22 +3523,35 @@ class Spec:
 
             # We don't have edges to this dependency
             current_dependency_name = rhs_edge.spec.name
-            if current_dependency_name not in lhs_edges:
+            if current_dependency_name is not None and current_dependency_name not in lhs_edges:
+                return False
+
+            if current_dependency_name is None:
+                # Here we have an anonymous spec e.g. ^ dev_path=*
+                candidate_edges = list(itertools.chain(*lhs_edges.values()))
+
+            else:
+                candidate_edges = [
+                    lhs_edge
+                    for lhs_edge in lhs_edges[current_dependency_name]
+                    if rhs_edge.when.satisfies(lhs_edge.when)
+                ]
+
+            if not candidate_edges:
                 return False
 
             for virtual in rhs_edge.virtuals:
-                has_virtual = any(
-                    virtual in edge.virtuals for edge in lhs_edges[current_dependency_name]
-                )
+                has_virtual = any(virtual in edge.virtuals for edge in candidate_edges)
                 if not has_virtual:
                     return False
 
-        # Edges have been checked above already, hence deps=False
-        lhs_nodes = [x for x in self.traverse(root=False)] + sorted(mock_nodes_from_old_specfiles)
-        return all(
-            any(lhs.satisfies(rhs, deps=False) for lhs in lhs_nodes)
-            for rhs in other.traverse(root=False)
-        )
+            for lhs_edge in candidate_edges:
+                if lhs_edge.spec.satisfies(rhs_edge.spec, deps=False):
+                    break
+            else:
+                return False
+
+        return True
 
     @property  # type: ignore[misc] # decorated prop not supported in mypy
     def patches(self):
@@ -3618,6 +3685,7 @@ class Spec:
                 depflag=edge.depflag,
                 virtuals=edge.virtuals,
                 direct=edge.direct,
+                when=edge.when,
             )
 
     def copy(self, deps: Union[bool, dt.DepTypes, dt.DepFlag] = True, **kwargs):

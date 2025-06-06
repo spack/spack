@@ -280,7 +280,7 @@ All of these can be installed with Spack, e.g.:
 
 .. warning::
 
-   Sphinx has `several required dependencies <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/py-sphinx/package.py>`_.
+   Sphinx has `several required dependencies <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/py-sphinx/package.py>`_.
    If you are using a Python from Spack and you installed
    ``py-sphinx`` and friends, you need to make them available to your
    Python interpreter. The easiest way to do this is to run:
