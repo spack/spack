@@ -70,6 +70,28 @@ def test_user_cache_path_is_overridable(working_env, tmpdir):
     p1 = paths.SpackPaths(str(tmpdir.join("base-prefix").ensure(dir=True)))
     assert p1.user_cache_path == redirect_usr_cache
 
+    # Check that things that are supposed to be bundled inside of
+    # $user_cache_path are also relocated
+    assert p1.package_repos_path == str(pathlib.Path(redirect_usr_cache) / "package_repos")
+
+def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
+    user_cache_path = str(tmpdir.join("user_cache"))
+    base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
+    os.environ["SPACK_USER_CACHE_PATH"] = user_cache_path
+
+    p1 = paths.SpackPaths(base_prefix)
+    assert p1.gpg_path == str(pathlib.Path(user_cache_path) / "gpg")
+    assert p1.gpg_keys_path == str(pathlib.Path(user_cache_path) / "gpg-keys")
+
+    old_gpg_dir = pathlib.Path(base_prefix) / "opt" / "spack" / "gpg"
+    (old_gpg_dir).mkdir(parents=True)
+    p1 = paths.SpackPaths(base_prefix)
+    # Old dir exists, but is empty, so it should not be used
+    assert p1.gpg_path == str(pathlib.Path(user_cache_path) / "gpg") 
+    (old_gpg_dir / "something").touch()
+    p1 = paths.SpackPaths(base_prefix)
+    assert p1.gpg_path == str(old_gpg_dir)
+
 
 def test_user_cache_path_is_default_when_env_var_is_empty(working_env, tmpdir):
     os.environ["SPACK_USER_CACHE_PATH"] = ""
