@@ -1,4 +1,4 @@
-.spack
+.spack/spack-packages
 .spack-env
 _build
 _spack_root
