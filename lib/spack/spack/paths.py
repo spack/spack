@@ -195,7 +195,7 @@ class SpackPaths:
         # they pull this update, they will continue to use those
         # locations)
 
-        old_gpg_path = os.path.join(self.prefix, "opt" "spack", "gpg")
+        old_gpg_path = os.path.join(self.prefix, "opt", "spack", "gpg")
         if dir_is_occupied(old_gpg_path):
             self.gpg_path = old_gpg_path
         else:

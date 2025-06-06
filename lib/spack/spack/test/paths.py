@@ -74,6 +74,7 @@ def test_user_cache_path_is_overridable(working_env, tmpdir):
     # $user_cache_path are also relocated
     assert p1.package_repos_path == str(pathlib.Path(redirect_usr_cache) / "package_repos")
 
+
 def test_gpg_only_use_new_path_if_old_is_empty(working_env, tmpdir):
     user_cache_path = str(tmpdir.join("user_cache"))
     base_prefix = str(tmpdir.join("base-prefix").ensure(dir=True))
