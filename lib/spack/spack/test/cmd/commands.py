@@ -284,4 +284,19 @@ def test_updated_completion_scripts(shell, tmpdir):
 
     commands("--aliases", "--format", shell, "--header", header, "--update", new_script)
 
-    assert filecmp.cmp(old_script, new_script), msg
+    # If there is a diff, something is wrong: in that case output what the diff is.
+    # TODO: if someone runs `spack commands --update-completion` when the site-admin
+    # scope is available, it will be added to the autocompletion scripts, and
+    # cause a discrepancy with the runner; it might be worth changing the update
+    # command to omit that.
+    if not filecmp.cmp(old_script, new_script):
+        import difflib
+
+        with open(old_script, "r", encoding="utf-8") as f1, open(
+            new_script, "r", encoding="utf-8"
+        ) as f2:
+            l1 = f1.readlines()
+            l2 = f2.readlines()
+        diff = difflib.unified_diff(l1, l2, fromfile=old_script, tofile=new_script)
+        msg = "Diff failure:\n\n" + "".join(diff)
+        assert False, msg

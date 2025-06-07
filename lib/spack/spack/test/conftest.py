@@ -355,6 +355,13 @@ def clean_user_environment():
         os.environ[ev.spack_env_var] = spack_env_value
 
 
+@pytest.fixture(scope="session", autouse=True)
+def clear_xdg_vars():
+    saved = spack.paths._unset_xdg_vars(os.environ)
+    yield
+    os.environ.update(saved)
+
+
 #
 # Make sure global state of active env does not leak between tests.
 #
@@ -2226,6 +2233,12 @@ def _noop(*args, **kwargs):
 def no_compilers_init(monkeypatch):
     """Disables automatic compiler initialization"""
     monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture
+def disable_end_user_config(monkeypatch):
+    """Emulates --disable-end-user-config to Spack executable"""
+    monkeypatch.setattr(spack.config, "end_user_system_scope", False)
 
 
 @pytest.fixture(autouse=True)

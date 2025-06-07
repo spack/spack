@@ -905,6 +905,9 @@ def config_paths_from_entry_points() -> List[Tuple[str, str]]:
     return config_paths
 
 
+end_user_system_scope = True
+
+
 def create_incremental() -> Generator[Configuration, None, None]:
     """Singleton Configuration instance.
 
@@ -926,14 +929,31 @@ def create_incremental() -> Generator[Configuration, None, None]:
 
     disable_local_config = "SPACK_DISABLE_LOCAL_CONFIG" in os.environ
 
+    # Site admin scope has two uses: (a) admins can share config with one
+    # another, but not with end users (b) pip/apt-installed spack can
+    # change the default install root
+    site_admin_path = os.path.join(spack.paths.etc_path, "site-admin")
+    site_admin_accessible = False
+    try:
+        if os.path.isdir(site_admin_path):
+            os.listdir(site_admin_path)
+            site_admin_accessible = True
+    except PermissionError:
+        pass
+    if site_admin_accessible:
+        # TODO: list this as an available scope, but not a writable one
+        configuration_paths.append(("site-admin", site_admin_path))
+
     # System configuration is per machine.
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
         configuration_paths.append(("system", spack.paths.system_config_path))
+        if end_user_system_scope:
+            configuration_paths.append(("end-user", spack.paths.end_user_cfg_path))
 
     # Site configuration is per spack instance, for sites or projects
     # No site-level configs should be checked into spack by default.
-    configuration_paths.append(("site", os.path.join(spack.paths.etc_path)))
+    configuration_paths.append(("site", spack.paths.etc_path))
 
     # Python package's can register configuration scopes via entry_points
     configuration_paths.extend(config_paths_from_entry_points())
@@ -942,6 +962,9 @@ def create_incremental() -> Generator[Configuration, None, None]:
     # This is disabled if user asks for no local configuration.
     if not disable_local_config:
         configuration_paths.append(("user", spack.paths.user_config_path))
+
+        per_spack_cfg = os.path.join(spack.paths.user_config_path, spack.paths.spack_instance_id)
+        configuration_paths.append(("this-spack", per_spack_cfg))
 
     # add each scope
     for name, path in configuration_paths:

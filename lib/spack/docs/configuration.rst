@@ -37,10 +37,10 @@ Here is an example ``config.yaml`` file:
 .. code-block:: yaml
 
    config:
-     install_tree: $spack/opt/spack
+     install_tree: $spack/opt/data/installs
      build_stage:
        - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+       - $spack_cache_home/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -66,25 +66,44 @@ are multiple configuration scopes. From lowest to highest precedence:
    here, but should override them in other configuration scopes. The
    defaults here will change from version to version of Spack.
 
+#. **site-admin**: Stored in ``$spack/etc/site-admin``, which does not
+   exist by default. This scope contains private settings shared by
+   those administering a Spack instance on behalf of other
+   users. These settings affect only *this instance* of Spack. This
+   scope is meant to have read access restricted to control which
+   users are affected by these settings. This scope only overrides
+   defaults.
+
 #. **system**: Stored in ``/etc/spack/``. These are settings for this
    machine or for all machines on which this file system is
-   mounted. The system scope can be used for settings idiosyncratic to a
-   particular machine, such as the locations of compilers or external
-   packages. These settings are presumably controlled by someone with
-   root access on the machine. They override the defaults scope.
+   mounted. The system scope can be used for settings idiosyncratic to
+   a particular machine, such as the locations of compilers or
+   external packages. These settings are presumably controlled by
+   someone with root access on the machine. They override the defaults
+   and site-admin scopes.
 
 #. **site**: Stored in ``$(prefix)/etc/spack/``. Settings here affect
-   only *this instance* of Spack, and they override the defaults and system
-   scopes. The site scope can be used for per-project settings (one
-   Spack instance per project) or for site-wide settings on a multi-user
-   machine (e.g., for a common Spack instance).
+   only *this instance* of Spack, and they override the defaults,
+   system, and site-admin scopes. The site scope can be used for
+   per-project settings (one Spack instance per project) or for
+   site-wide settings on a multi-user machine (e.g., for a common
+   Spack instance).
 
 #. **plugin**: Read from a Python package's entry points. Settings here affect
    all instances of Spack running with the same Python installation. This scope takes higher precedence than site, system, and default scopes.
 
-#. **user**: Stored in the home directory: ``~/.spack/``. These settings
-   affect all instances of Spack and take higher precedence than site,
-   system, plugin, or defaults scopes.
+#. **user**: Stored in the home directory:
+   ``~/.local/config/spack/``. These settings affect all instances of
+   Spack and take higher precedence than site, system, plugin, or
+   defaults scopes.
+
+#. **this-spack**: Stored in the home directory:
+   ``~/.local/config/spack/$spack_instance_id/``. These settings
+   affect the instance of spack that corresponds to the specified
+   ``$spack_instance_id``. This scope is most useful for overriding
+   configurations for Spack instances that are not (or should not be)
+   writable by the user, such as those provided by a system
+   adminstrator or other package manager (like pip).
 
 #. **custom**: Stored in a custom directory specified by ``--config-scope``.
    If multiple scopes are listed on the command line, they are ordered
@@ -137,6 +156,22 @@ If multiple scopes are provided:
 
 #. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
 #. They must be ordered from lowest to highest precedence.
+
+.. _scopes-and-xdg-compliance:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Scopes and XDG Compliance
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack respects XDG variables, and the search location for user
+configuration files can be affected by them. When ``XDG_CONFIG_HOME``
+is not defined, Spack assumes the XDG default value of ``~/.config``,
+and will apply user and this-spack configuration files located in
+``~/.config/spack``. Defining ``XDG_CONFIG_HOME`` will change where
+Spack searches for configuration files. To override this behavior,
+define ``SPACK_USER_CONFIG_PATH`` to be the desired path. For more
+information, see the :ref:`xdg_overrides` for more details.
+
 
 """""""""""""""""""""""""""""""""""""""""""
 Example: scopes for release and development
@@ -258,19 +293,22 @@ Platform-specific Configuration
    placed :ref:`include.yaml <include-yaml>` file.
 
 There is often a need for platform-specific configuration settings.
-For example, on most platforms, GCC is the preferred compiler. However,
-on macOS (darwin), Clang often works for more packages, and is set as
-the default compiler. This configuration is set in
-``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is included
-as by ``$(prefix)/etc/spack/defaults/include.yaml``. Since it is an included
-configuration of the ``defaults`` scope, settings in the ``defaults`` scope
-will take precedence. You can override the values by specifying settings in
-``system``, ``site``, ``user``, or ``custom``, where scope precedence is:
+For example, on most platforms, GCC is the preferred
+compiler. However, on macOS (darwin), Clang often works for more
+packages, and is set as the default compiler. This configuration is
+set in ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``, which is
+included as by ``$(prefix)/etc/spack/defaults/include.yaml``. Since it
+is an included configuration of the ``defaults`` scope, settings in
+the ``defaults`` scope will take precedence. You can override the
+values by specifying settings in ``site-admin``, ``system``, ``site``,
+``user``, ``this-spack``, or ``custom``, where scope precedence is:
 
 #. ``defaults``
+#. ``site-admin``
 #. ``system``
 #. ``site``
 #. ``user``
+#. ``this-spack``
 #. ``custom``
 
 and settings in each scope taking precedence over those found in configuration
@@ -293,10 +331,10 @@ then, on macOS (``darwin``), configuration settings for files under the
    --platform``.
 
 Platform-specific configuration files can similarly be set up for the
-``system``, ``site``, and ``user`` scopes by creating an ``include.yaml``
-similar to the one above for ``defaults`` -- under the appropriate
-configuration paths (see :ref:`config-overrides`) and creating a subdirectory
-with the platform name that contains the configuration files.
+other scopes by creating an ``include.yaml`` similar to the one above
+for ``defaults`` -- under the appropriate configuration paths (see
+:ref:`config-overrides`) and creating a subdirectory with the platform
+name that contains the configuration files.
 
 .. note::
 
@@ -342,14 +380,14 @@ your configurations look like this:
    :caption: $(prefix)/etc/spack/defaults/config.yaml
 
    config:
-     install_tree: $spack/opt/spack
+     install_tree: $spack/opt/data/installs
      build_stage:
        - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+       - $spack_cache_home/stage
 
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
    config:
      install_tree: /some/other/directory
@@ -368,7 +406,7 @@ command:
      install_tree: /some/other/directory
      build_stage:
        - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+       - $spack_cache_home/stage
 
 
 .. _config-prepend-append:
@@ -384,7 +422,7 @@ string concatenation at the end of a key in a configuration file. For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
    config:
      install_tree-: /my/custom/suffix/
@@ -399,14 +437,14 @@ Spack will then append to the lower-precedence configuration under the
      install_tree: /some/other/directory/my/custom/suffix
      build_stage:
        - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+       - $spack_cache_home/stage
 
 
 Similarly, ``+:`` can be used to *prepend* to a path or name:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
    config:
      install_tree+: /my/custom/suffix/
@@ -425,7 +463,7 @@ at the end of a key in a configuration file. For example:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
    config::
      install_tree: /some/other/directory
@@ -452,14 +490,14 @@ Let's revisit the ``config.yaml`` example one more time. The
 
    build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
+     - $spack_cache_home/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
 paths:
 
 .. code-block:: yaml
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
    build_stage:
      - /lustre-scratch/$user/spack
@@ -467,7 +505,7 @@ paths:
 
 
 Spack will first look at the paths in the defaults ``config.yaml``, then the
-paths in the user's ``~/.spack/config.yaml``. The list in the
+paths in the user's ``~/.config/spack/config.yaml``. The list in the
 higher-precedence scope is *prepended* to the defaults. ``spack config
 get config`` shows the result:
 
@@ -481,7 +519,7 @@ get config`` shows the result:
        - /lustre-scratch/$user/spack
        - ~/mystage
        - $tempdir/$user/spack-stage
-       - ~/.spack/stage
+       - $spack_cache_home/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -490,11 +528,12 @@ user config looked like this:
 
 .. code-block:: yaml
    :emphasize-lines: 1
-   :caption: ~/.spack/config.yaml
+   :caption: ~/.config/spack/config.yaml
 
-   build_stage::
-     - /lustre-scratch/$user/spack
-     - ~/mystage
+   config:
+     build_stage::
+       - /lustre-scratch/$user/spack
+       - ~/mystage
 
 
 The merged configuration would look like this:
@@ -536,7 +575,7 @@ Spack understands over a dozen special variables. These are:
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
 * ``$user``: name of the current user
-* ``$user_cache_path``: user cache directory (``~/.spack`` unless
+* ``$user_cache_path``: user cache directory (``~/.local/share/spack`` unless
   :ref:`overridden <local-config-overrides>`)
 * ``$architecture``: the architecture triple of the current host, as
   detected by Spack.
@@ -551,7 +590,12 @@ Spack understands over a dozen special variables. These are:
   detected by ArchSpec. E.g. ``x86_64`` or ``aarch64``.
 * ``$date``: the current date in the format YYYY-MM-DD
 * ``$spack_short_version``: the Spack version truncated to the first components.
-
+* ``$spack_instance_id``: a hash that distinguishes Spack instances on the filesystem.
+* ``$spack_state_home``: the XDG-derived location for long-lived but not-essential cache.
+* ``$spack_cache_home``: the XDG-derived location for temporary data.
+* ``$default_download_root``: the location where downloads go by default.
+* ``$default_envs_root``: the location where environments are managed by default.
+* ``$default_install_root``: the location where installs go by default.
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:
@@ -635,16 +679,16 @@ account all scopes. For example, to see the fully merged
      verify_ssl: true
      dirty: false
      build_jobs: 8
-     install_tree: $spack/opt/spack
+     install_tree:
+       root: $default_install_root
      template_dirs:
      - $spack/templates
      directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
      build_stage:
      - $tempdir/$user/spack-stage
-     - ~/.spack/stage
-     - $spack/var/spack/stage
-     source_cache: $spack/var/spack/cache
-     misc_cache: ~/.spack/cache
+     - $spack_cache_home/stage
+     source_cache: $default_download_root
+     misc_cache: $spack_state_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -688,10 +732,9 @@ down the source of the configuration:
    /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
-   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $spack_cache_home/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $default_download_root
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $spack_state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
@@ -713,26 +756,81 @@ installation, these scopes can be undesirable. For example, users may want to op
 global system configuration, or they may want to ignore their own home directory
 settings when running in a continuous integration environment.
 
-Spack also, by default, keeps various caches and user data in ``~/.spack``, but
+Spack also, by default, keeps various caches and user data in ``~/.config/spack``, but
 users may want to override these locations.
 
 Spack provides three environment variables that allow you to override or opt out of
 configuration locations:
 
 * ``SPACK_USER_CONFIG_PATH``: Override the path to use for the
-  ``user`` scope (``~/.spack`` by default).
+  ``user`` scope (``~/.config/spack`` by default). Note that
+  ``XDG_CONFIG_HOME`` has the same effect, but with lower precedence.
 * ``SPACK_SYSTEM_CONFIG_PATH``: Override the path to use for the
   ``system`` scope (``/etc/spack`` by default).
 * ``SPACK_DISABLE_LOCAL_CONFIG``: Set this environment variable to completely disable
-  **both** the system and user configuration directories. Spack will then only consider its
+  **all** configurations from the system, site-admin, and user directories. Spack will then only consider its
   own defaults and ``site`` configuration locations.
 
 And one that allows you to move the default cache location:
 
-* ``SPACK_USER_CACHE_PATH``: Override the default path to use for user data
-  (misc_cache, tests, reports, etc.)
+* ``SPACK_USER_CACHE_PATH``: Override the default path to use for user
+  data (misc_cache, tests, reports, etc.).
 
 With these settings, if you want to isolate Spack in a CI environment, you can do this::
 
   export SPACK_DISABLE_LOCAL_CONFIG=true
   export SPACK_USER_CACHE_PATH=/tmp/spack
+
+.. _xdg_overrides:
+
+-------------------------------------------
+Overriding default paths with XDG variables
+-------------------------------------------
+
+While Spack will by default use locations within the ``$spack`` and
+the user's home directory, it can now store all state in locations
+goverened by XDG variables. Many default storage locations have
+changed in 1.0, so this section will summarize the changes, and how
+XDG variables can help users organize their Spack artifacts.
+
+``XDG_DATA_HOME`` is used to store long-lived data. Its default value
+is ``$HOME/.local/share``. The following items are always stored by
+default using ``$XDG_DATA_HOME``:
+
+* Modules: ``$XDG_DATA_HOME/spack/``
+* Package indices: ``$XDG_DATA_HOME/$spack_instance_id/spack``
+
+The data listed below will be placed in ``$spack`` by default. However,
+if ``XDG_DATA_HOME`` is set, they will be stored under that path. The
+default values for these are as follows:
+
+* Source caches: ``$HOME/.local/share`` or ``$XDG_DATA_HOME/spack/downloads``.
+* The install tree: ``$spack/opt/data/installs`` or ``$XDG_DATA_HOME/spack/installs``.
+* Environment management: ``$spack/opt/data/environments`` or ``$XDG_DATA_HOME/spack/environments``
+
+``XDG_STATE_HOME`` is used to store data that is useful if persistent,
+but not integral to Spack's functionality. If not defined, its default
+value is ``~/.local/state``. ``misc_cache`` is placed by default using
+this variable.
+
+* ``misc_cache``: ``$XDG_STATE_HOME/$spack_instance_id/spack``
+
+``XDG_CACHE_HOME`` is used to store temporary data. If not defined,
+its default value is ``~/.cache``. Build stages are placed by default
+using this variable.
+
+* Build stages: ``$XDG_CACHE_HOME/spack``
+
+The user configuration scope's files will be located with ``XDG_CONFIG_HOME``. Its
+default value is ``~/.config``.
+
+* User configuration scope: ``$XDG_CONFIG_HOME/spack``
+
+Spack also includes the variables ``SPACK_DATA_HOME``,
+``SPACK_CONFIG_HOME``, and ``SPACK_STATE_HOME`` that map directly to
+the XDG variables described above. They work the same way, but have
+higher precedence than the XDG variables. If the Spack-specific
+environment variables *are not* defined, Spack will uses the XDG
+variables with a suffix of "/spack" to define ``$spack_state_home``,
+``$spack_data_home``, and ``spack_cache_home``. If they are defined,
+they are used directly without any additional suffix.

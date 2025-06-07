@@ -61,7 +61,7 @@ them in your own repository.
 ``repos.yaml``
 ---------------------
 
-Spack uses the ``repos.yaml`` file in ``~/.spack`` (and :ref:`elsewhere
+Spack uses the ``repos.yaml`` file in ``~/.config/spack`` (and :ref:`elsewhere
 <configuration>`) to find repositories. Note that the ``repos.yaml``
 configuration file is distinct from the ``repo.yaml`` file in each
 repository.  For more on the YAML format, and on how configuration file

@@ -188,7 +188,7 @@ The Bootstrap Store
 """""""""""""""""""
 
 All the tools Spack needs for its own functioning are installed in a separate store, which lives
-under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+under the ``${HOME}/.local/share/spack`` directory. The software installed there can be queried with:
 
 .. code-block:: console
 
@@ -1146,12 +1146,14 @@ the key that we just created:
 
 .. code-block:: console
 
-    gpgconf: socketdir is '/run/user/1000/gnupg'
-    /home/spackuser/spack/opt/spack/gpg/pubring.kbx
-    ----------------------------------------------------------
-    pub   rsa4096 2021-03-25 [SC]
-          60D2685DAB647AD4DB54125961E09BB6F2A0ADCB
-    uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
+   gpg: checking the trustdb
+   gpg: marginals needed: 3  completes needed: 1  trust model: pgp
+   gpg: depth: 0  valid:   1  signed:   0  trust: 0-, 0q, 0n, 0m, 0f, 1u
+   /home/spackuser/.local/share/spack/gpg/pubring.kbx
+   ------------------------------------------------
+   pub   rsa4096 2025-06-06 [SC]
+         85E7556B528FC163410BA1F9C30374F7F1248184
+   uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
 
 
 Note that the name "dinosaur" can be seen under the uid, which is the unique

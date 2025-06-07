@@ -34,9 +34,6 @@ import spack.paths
 import spack.spec
 import spack.util.path
 
-#: default installation root, relative to the Spack install path
-DEFAULT_INSTALL_TREE_ROOT = os.path.join(spack.paths.opt_path, "spack")
-
 
 def parse_install_tree(config_dict):
     """Parse config settings and return values relevant to the store object.
@@ -81,7 +78,7 @@ def parse_install_tree(config_dict):
 
         projections = {"all": all_projection}
     else:
-        unpadded_root = install_tree.get("root", DEFAULT_INSTALL_TREE_ROOT)
+        unpadded_root = install_tree.get("root", spack.paths.default_install_location)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
         padded_length = install_tree.get("padded_length", False)

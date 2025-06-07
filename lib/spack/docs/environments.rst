@@ -74,17 +74,17 @@ An environment is created by:
 
    $ spack env create myenv
 
-The directory ``$SPACK_ROOT/var/spack/environments/myenv`` is created
+The directory ``$SPACK_ROOT/opt/data/environments/myenv`` is created
 to manage the environment.
 
 .. note::
 
    By default, all managed environments are stored in the
-   ``$SPACK_ROOT/var/spack/environments`` folder. This location can be changed
+   ``$SPACK_ROOT/opt/data/environments`` folder. This location can be changed
    by setting the ``environments_root`` variable in ``config.yaml``.
 
 Spack creates the file ``spack.yaml``, hidden directory ``.spack-env``, and
-``spack.lock`` file under ``$SPACK_ROOT/var/spack/environments/myenv``. User
+``spack.lock`` file under ``$SPACK_ROOT/opt/data/environments/environments/myenv``. User
 interaction occurs through the ``spack.yaml`` file and the Spack commands
 that affect it. Metadata and, by default, the view are stored in the
 ``.spack-env`` directory. When the environment is concretized, Spack creates
@@ -138,7 +138,7 @@ guaranteed to initially have the same concrete specs as the original.
 
    Environment creation also accepts a full path to the file.
 
-   If the path is not under the ``$SPACK_ROOT/var/spack/environments``
+   If the path is not under the ``$SPACK_ROOT/opt/data/environments``
    directory then the source is referred to as an
    :ref:`independent environment <independent_environments>`.
 
@@ -263,7 +263,7 @@ the Spack instance. The same rule applies to the ``install`` and
   ==> No binary for zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x found: installing from source
   ==> zlib: Executing phase: 'install'
   [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
-  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
+  ==> Updating view at ~/spack/opt/data/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv

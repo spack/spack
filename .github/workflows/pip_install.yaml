@@ -1,0 +1,39 @@
+name: pip install
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+concurrency:
+  group: pip_install-${{github.ref}}-${{github.event.pull_request.number || github.run_number}}
+  cancel-in-progress: true
+
+jobs:
+  # Test build pip package
+  pip_package:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
+      with:
+        python-version: '3.8'
+    - name: Install System packages
+      run: |
+          sudo apt-get -y update
+          sudo apt-get install -y coreutils bash
+    - name: Install Python packages
+      run: |
+        cd share/spack/pip
+        pip install -r requirements.txt
+    - name: Build Spack package
+      run: |
+        cd share/spack/pip
+        bash create-package.sh
+    - name: Install Spack package
+      run: |
+        cd share/spack/pip
+        pip install spack-package/
+        spack install zlib
+        bash check-pkg-location.sh

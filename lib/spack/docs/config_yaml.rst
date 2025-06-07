@@ -15,15 +15,17 @@ see the default settings by looking at
 .. literalinclude:: _spack_root/etc/spack/defaults/config.yaml
    :language: yaml
 
-These settings can be overridden in ``etc/spack/config.yaml`` or
-``~/.spack/config.yaml``.  See :ref:`configuration-scopes` for details.
+These settings can be overridden in ``etc/spack/config.yaml``, or
+``~/.config/spack/config.yaml``, or
+``~/.config/spack/$spack_instance_id/config.yaml``.  See
+:ref:`configuration-scopes` for details.
 
 ---------------------
 ``install_tree:root``
 ---------------------
 
 The location where Spack will install packages and their dependencies.
-The default is ``$spack/opt/spack``.
+The default is ``$spack/opt/data/installs``.
 
 ---------------
 ``projections``
@@ -60,7 +62,7 @@ projections. For example:
 
        config:
          install_tree:
-           root: $spack/opt/spack
+           root: $default_install_root
            projections:
              all: "{name}/{version}/{hash:16}"
 
@@ -94,16 +96,16 @@ By default, Spack's ``build_stage`` is configured like this:
 
    build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $spack_cache_home/stage
 
 This can be an ordered list of paths that Spack should search when trying to
 find a temporary directory for the build stage. The list is searched in
 order, and Spack will use the first directory to which it has write access.
 
-Specifying `~/.spack/stage` first will ensure each user builds in their home
-directory. The historic Spack stage path `$spack/var/spack/stage` will build
-directly inside the Spack instance. See :ref:`config-file-variables` for more
-on ``$tempdir`` and ``$spack``.
+Specifying `$spack_cache_home` first will ensure each user builds in
+their home directory (or wherever the user overrides ``XDG_CACHE_HOME`` to
+be; see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on
+``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``. After the package is successfully installed, Spack deletes
@@ -120,10 +122,10 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 ``source_cache``
 --------------------
 
-Location to cache downloaded tarballs and repositories. By default, these
-are stored in ``$spack/var/spack/cache``. These are stored indefinitely
-by default and can be purged with :ref:`spack clean --downloads
-<cmd-spack-clean>`.
+Location to cache downloaded tarballs and repositories. By default,
+these are stored in ``$spack/opt/data/downloads``. These are stored
+indefinitely by default and can be purged with :ref:`spack
+clean --downloads <cmd-spack-clean>`.
 
 .. _Misc Cache:
 
@@ -131,9 +133,10 @@ by default and can be purged with :ref:`spack clean --downloads
 ``misc_cache``
 --------------------
 
-Temporary directory to store long-lived cache files, such as indices of
-packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
-be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
+Temporary directory to store long-lived cache files, such as indices
+of packages available in repositories.  Defaults to
+``~/.local/state/spack/$spack_instance_id/spack``.  Can be purged with
+:ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
 --------------------
 ``verify_ssl``

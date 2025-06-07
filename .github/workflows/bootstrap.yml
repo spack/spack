@@ -48,7 +48,7 @@ jobs:
           spack bootstrap disable github-actions-v0.5
           spack external find cmake bison
           spack -d solve zlib
-          tree ~/.spack/bootstrap/store/
+          tree ~/.local/share/spack/bootstrap/store
 
   clingo-sources:
     if: github.repository == 'spack/spack'
@@ -75,7 +75,7 @@ jobs:
           spack bootstrap disable github-actions-v0.5
           spack external find --not-buildable cmake bison
           spack -d solve zlib
-          tree $HOME/.spack/bootstrap/store/
+          tree $HOME/.local/share/spack/bootstrap/store
 
   gnupg-sources:
     if: github.repository == 'spack/spack'
@@ -103,7 +103,7 @@ jobs:
           spack bootstrap disable github-actions-v0.6
           spack bootstrap disable github-actions-v0.5
           spack -d gpg list
-          tree ~/.spack/bootstrap/store/
+          tree ~/.local/share/spack/bootstrap/store
 
   from-binaries:
     if: github.repository == 'spack/spack'
@@ -164,7 +164,7 @@ jobs:
         run: |
           source share/spack/setup-env.sh
           spack -d gpg list
-          tree $HOME/.spack/bootstrap/store/
+          tree $HOME/.local/share/spack/bootstrap/store
 
 
   windows:
@@ -190,10 +190,10 @@ jobs:
           spack external find --not-buildable cmake bison
           spack -d solve zlib
           ./share/spack/qa/validate_last_exit.ps1
-          tree $env:userprofile/.spack/bootstrap/store/
+          tree $env:userprofile/.local/share/spack/bootstrap/store
       - name: Bootstrap GnuPG
         run: |
           ./share/spack/setup-env.ps1
           spack -d gpg list
           ./share/spack/qa/validate_last_exit.ps1
-          tree $env:userprofile/.spack/bootstrap/store/
+          tree $env:userprofile/.local/share/spack/bootstrap/store

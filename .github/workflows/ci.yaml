@@ -68,6 +68,12 @@ jobs:
     uses: ./.github/workflows/unit_tests.yaml
     secrets: inherit
 
+  pip-install:
+    if: ${{ github.repository == 'spack/spack' && needs.changes.outputs.core == 'true' }}
+    needs: [ prechecks, changes ]
+    uses: ./.github/workflows/pip_install.yaml
+    secrets: inherit
+
   prechecks:
     needs: [ changes ]
     uses: ./.github/workflows/prechecks.yml

@@ -1203,28 +1203,6 @@ def test_internal_config_scope_cache_clearing():
     assert internal_scope.sections["config"] == data
 
 
-def test_system_config_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = p
-    assert spack.paths._get_system_config_path() == p
-
-
-def test_system_config_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_SYSTEM_CONFIG_PATH"] = ""
-    assert os.sep + os.path.join("etc", "spack") == spack.paths._get_system_config_path()
-
-
-def test_user_config_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_USER_CONFIG_PATH"] = p
-    assert p == spack.paths._get_user_config_path()
-
-
-def test_user_config_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_USER_CONFIG_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_config_path()
-
-
 def test_default_install_tree(monkeypatch, default_config):
     s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
@@ -1239,6 +1217,7 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
     os.environ["SPACK_DISABLE_LOCAL_CONFIG"] = ""
     cfg = spack.config.create()
@@ -1246,6 +1225,7 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" not in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" not in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
     del os.environ["SPACK_DISABLE_LOCAL_CONFIG"]
     cfg = spack.config.create()
@@ -1253,17 +1233,16 @@ def test_local_config_can_be_disabled(working_env):
     assert "system" in cfg.scopes
     assert "site" in cfg.scopes
     assert "user" in cfg.scopes
+    assert "end-user" in cfg.scopes
 
 
-def test_user_cache_path_is_overridable(working_env):
-    p = "/some/path"
-    os.environ["SPACK_USER_CACHE_PATH"] = p
-    assert spack.paths._get_user_cache_path() == p
-
-
-def test_user_cache_path_is_default_when_env_var_is_empty(working_env):
-    os.environ["SPACK_USER_CACHE_PATH"] = ""
-    assert os.path.expanduser("~%s.spack" % os.sep) == spack.paths._get_user_cache_path()
+def test_end_user_config_can_be_disabled(disable_end_user_config):
+    cfg = spack.config.create()
+    assert "defaults" in cfg.scopes
+    assert "system" in cfg.scopes
+    assert "site" in cfg.scopes
+    assert "user" in cfg.scopes
+    assert "end-user" not in cfg.scopes
 
 
 def test_config_file_dir_failure(tmpdir, mutable_empty_config):
