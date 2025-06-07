@@ -50,12 +50,6 @@ jobs:
         bin/spack license verify
         pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib
 
-  audit:
-    uses: ./.github/workflows/audit.yaml
-    secrets: inherit
-    with:
-      with_coverage: ${{ inputs.with_coverage }}
-      python_version: '3.13'
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
   bootstrap-dev-rhel8:

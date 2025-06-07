@@ -3,14 +3,16 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
+import math
 import os
 import pathlib
 import shutil
-from typing import IO, Optional, Tuple, Union
+from typing import IO, Dict, Optional, Tuple, Union
 
 from llnl.util.filesystem import rename
 
-from spack.util.cache import Cache, CacheError
+from spack.error import SpackError
+from spack.util.lock import Lock, ReadTransaction, WriteTransaction
 
 
 def _maybe_open(path: Union[str, pathlib.Path]) -> Optional[IO[str]]:
@@ -37,7 +39,7 @@ class ReadContextManager:
 
 
 class WriteContextManager:
-    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+    def __init__(self, path: str) -> None:
         self.path = path
         self.tmp_path = f"{self.path}.tmp"
 
@@ -58,30 +60,78 @@ class WriteContextManager:
             rename(self.tmp_path, self.path)
 
 
-class FileCache(Cache):
-    """This class manages cached data per file
+class FileCache:
+    """This class manages cached data in the filesystem.
+
+    - Cache files are fetched and stored by unique keys.  Keys can be relative
+      paths, so that there can be some hierarchy in the cache.
 
     - The FileCache handles locking cache files for reading and writing, so
       client code need not manage locks for cache entries.
+
     """
 
-    def _acquire_read_fn(self, path):
-        return lambda: ReadContextManager(path)
+    def __init__(self, root: Union[str, pathlib.Path], timeout=120):
+        """Create a file cache object.
 
-    def _acquire_write_fn(self, path):
-        return lambda: WriteContextManager(path)
+        This will create the cache directory if it does not exist yet.
 
-    def _entry_validation(self, cache_path):
+        Args:
+            root: specifies the root directory where the cache stores files
+
+            timeout: when there is contention among multiple Spack processes
+                for cache files, this specifies how long Spack should wait
+                before assuming that there is a deadlock.
+        """
+        if isinstance(root, str):
+            root = pathlib.Path(root)
+        self.root = root
+        self.root.mkdir(parents=True, exist_ok=True)
+
+        self._locks: Dict[Union[pathlib.Path, str], Lock] = {}
+        self.lock_timeout = timeout
+
+    def destroy(self):
+        """Remove all files under the cache root."""
+        for f in self.root.iterdir():
+            if f.is_dir():
+                shutil.rmtree(f, True)
+            else:
+                f.unlink()
+
+    def cache_path(self, key: Union[str, pathlib.Path]):
+        """Path to the file in the cache for a particular key."""
+        return self.root / key
+
+    def _lock_path(self, key: Union[str, pathlib.Path]):
+        """Path to the file in the cache for a particular key."""
+        keyfile = os.path.basename(key)
+        keydir = os.path.dirname(key)
+
+        return self.root / keydir / ("." + keyfile + ".lock")
+
+    def _get_lock(self, key: Union[str, pathlib.Path]):
+        """Create a lock for a key, if necessary, and return a lock object."""
+        if key not in self._locks:
+            self._locks[key] = Lock(str(self._lock_path(key)), default_timeout=self.lock_timeout)
+        return self._locks[key]
+
+    def init_entry(self, key: Union[str, pathlib.Path]):
+        """Ensure we can access a cache file. Create a lock for it if needed.
+
+        Return whether the cache file exists yet or not.
+        """
+        cache_path = self.cache_path(key)
         # Avoid using pathlib here to allow the logic below to
         # function as is
         # TODO: Maybe refactor the following logic for pathlib
         exists = os.path.exists(cache_path)
         if exists:
             if not cache_path.is_file():
-                raise CacheError(f"Cache file is not a file: {cache_path}")
+                raise CacheError("Cache file is not a file: %s" % cache_path)
 
             if not os.access(cache_path, os.R_OK):
-                raise CacheError(f"Cannot access cache file: {cache_path}")
+                raise CacheError("Cannot access cache file: %s" % cache_path)
         else:
             # if the file is hierarchical, make parent directories
             parent = cache_path.parent
@@ -90,38 +140,67 @@ class FileCache(Cache):
 
             if not os.access(parent, os.R_OK | os.W_OK):
                 raise CacheError("Cannot access cache directory: %s" % parent)
+
+            # ensure lock is created for this key
+            self._get_lock(key)
         return exists
 
-    def _rm_cache_entry(self, cache_path):
-        cache_path.unlink()
+    def read_transaction(self, key: Union[str, pathlib.Path]):
+        """Get a read transaction on a file cache item.
 
+        Returns a ReadTransaction context manager and opens the cache file for
+        reading.  You can use it like this:
 
-class DirectoryFileCache(Cache):
-    """This class manages cached data on a per directory level"""
+           with file_cache_object.read_transaction(key) as cache_file:
+               cache_file.read()
 
-    def _acquire_read_fn(self, path):
-        return lambda: path.exists()
+        """
+        path = self.cache_path(key)
+        return ReadTransaction(
+            self._get_lock(key), acquire=lambda: ReadContextManager(path)  # type: ignore
+        )
 
-    def _acquire_write_fn(self, path):
-        return lambda: path.exists()
+    def write_transaction(self, key: Union[str, pathlib.Path]):
+        """Get a write transaction on a file cache item.
 
-    def _entry_validation(self, cache_path):
-        if cache_path.exists() and not cache_path.is_dir():
-            raise CacheError(
-                "Entry must refer to directory (bucket) not a file. "
-                "If a File level cache is required, use FileCache"
-            )
-        cache_path.mkdir(parents=True, exist_ok=True)
-        if not os.access(cache_path, os.R_OK | os.W_OK):
-            raise CacheError(f"Cannot read/write from cache bucket {cache_path}")
-        return True
+        Returns a WriteTransaction context manager that opens a temporary file
+        for writing.  Once the context manager finishes, if nothing went wrong,
+        moves the file into place on top of the old file atomically.
 
-    def _rm_cache_entry(self, cache_path):
-        shutil.rmtree(cache_path)
+        """
+        path = self.cache_path(key)
+        if os.path.exists(path) and not os.access(path, os.W_OK):
+            raise CacheError(f"Insufficient permissions to write to file cache at {path}")
 
-    def purge_lock(self, key):
-        # cleanup lockfile itself
+        return WriteTransaction(
+            self._get_lock(key), acquire=lambda: WriteContextManager(path)  # type: ignore
+        )
+
+    def mtime(self, key: Union[str, pathlib.Path]) -> float:
+        """Return modification time of cache file, or -inf if it does not exist.
+
+        Time is in units returned by os.stat in the mtime field, which is
+        platform-dependent.
+
+        """
+        if not self.init_entry(key):
+            return -math.inf
+        else:
+            return self.cache_path(key).stat().st_mtime
+
+    def remove(self, key: Union[str, pathlib.Path]):
+        file = self.cache_path(key)
         lock = self._get_lock(key)
-        lock.cleanup()
-        # remove from lock dict
-        self._locks.pop(key)
+        try:
+            lock.acquire_write()
+            file.unlink()
+        except OSError as e:
+            # File not found is OK, so remove is idempotent.
+            if e.errno != errno.ENOENT:
+                raise
+        finally:
+            lock.release_write()
+
+
+class CacheError(SpackError):
+    pass

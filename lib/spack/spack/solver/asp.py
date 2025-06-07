@@ -7,7 +7,7 @@ import copy
 import enum
 import errno
 import functools
-import gzip
+import hashlib
 import io
 import itertools
 import json
@@ -15,18 +15,30 @@ import os
 import pathlib
 import pprint
 import re
-import shutil
 import sys
 import types
 import typing
 import warnings
 from contextlib import contextmanager
-from typing import Callable, Dict, Iterator, List, NamedTuple, Optional, Set, Tuple, Type, Union
+from typing import (
+    IO,
+    Callable,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 
 import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
+from llnl.util.filesystem import current_file_position
 from llnl.util.lang import elide_list
 
 import spack
@@ -58,8 +70,7 @@ import spack.version as vn
 import spack.version.git_ref_lookup
 from spack import traverse
 from spack.compilers.libraries import CompilerPropertyDetector
-from spack.util.compression import GZipFileType
-from spack.util.file_cache import DirectoryFileCache
+from spack.util.file_cache import FileCache
 
 from .core import (
     AspFunction,
@@ -639,90 +650,136 @@ class ConcretizationCache:
 
     def __init__(self, root: Union[str, None] = None):
         root = root or spack.config.get(
-            "concretizer:concretization_cache:url", spack.paths.default_conc_cache_path
+            "config:concretization_cache:url", spack.paths.default_conc_cache_path
         )
         self.root = pathlib.Path(spack.util.path.canonicalize_path(root))
-        self._fc = DirectoryFileCache(self.root)
+        self._fc = FileCache(self.root)
+        self._cache_manifest = ".cache_manifest"
+        self._manifest_queue: List[Tuple[pathlib.Path, int]] = []
 
     def cleanup(self):
         """Prunes the concretization cache according to configured size and entry
         count limits. Cleanup is done in FIFO ordering."""
         # TODO: determine a better default
-        entry_limit = spack.config.get("concretizer:concretization_cache:entry_limit", 1000)
-        bytes_limit = spack.config.get("concretizer:concretization_cache:size_limit", 3e8)
+        entry_limit = spack.config.get("config:concretization_cache:entry_limit", 1000)
+        bytes_limit = spack.config.get("config:concretization_cache:size_limit", 3e8)
         # lock the entire buildcache as we're removing a lot of data from the
         # manifest and cache itself
-        entry_count, bytes_count = 0, 0
-        rm_reg: List[pathlib.Path] = []
-        for bucket in self.cache_buckets():
-            with self._fc.read_transaction(bucket) as f:
-                if not f:
-                    raise RuntimeError(
-                        "Attempting to clean non existent cache bucket" f" {bucket.name}"
-                    )
-                # advance new beyond metadata entry
-                for entry in self.cache_entries(bucket):
-                    entry_count += 1
-                    bytes_count += entry.stat().st_size
-                    rm_reg.append(entry)
-        rm_reg.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-        while (entry_count > entry_limit or bytes_count > bytes_limit) and rm_reg:
-            entry_to_rm = rm_reg.pop()
-            entry_bucket = self._cache_bucket_from_path(entry_to_rm)
-            with self._fc.write_transaction(entry_bucket) as valid_bucket:
-                # cache bucket was removed by another process, that's fine
-                # try pruning something else
-                if not valid_bucket:
-                    continue
-                entry_size = entry_to_rm.stat().st_size
-                removed = self._safe_remove(entry_to_rm)
-                if removed:
-                    entry_count -= 1
-                    bytes_count -= entry_size
-        # remove any buckets with no more cache entries
-        for cache_bucket in self.cache_buckets():
-            # remove takes a write lock, but there's a race
-            # if another process adds something to the bucket
-            # between the check for emptiness and the remove
-            removed = False
-            with self._fc.write_transaction(cache_bucket) as bucket:
-                if bucket and not any(cache_bucket.iterdir()):
-                    self._fc.remove(cache_bucket)
-                    removed = True
-            if removed:
-                self._fc.purge_lock(cache_bucket)
+        with self._fc.read_transaction(self._cache_manifest) as f:
+            count, cache_bytes = self._extract_cache_metadata(f)
+            if not count or not cache_bytes:
+                return
+            entry_count = int(count)
+            manifest_bytes = int(cache_bytes)
+            # move beyond the metadata entry
+            f.readline()
+            if entry_count > entry_limit and entry_limit > 0:
+                with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                    # prune the oldest 10% or until we have removed 10% of
+                    # total bytes starting from oldest entry
+                    # TODO: make this configurable?
+                    prune_count = entry_limit // 10
+                    lines_to_prune = f.readlines(prune_count)
+                    for i, line in enumerate(lines_to_prune):
+                        sha, cache_entry_bytes = self._parse_manifest_entry(line)
+                        if sha and cache_entry_bytes:
+                            cache_path = self._cache_path_from_hash(sha)
+                            if self._fc.remove(cache_path):
+                                entry_count -= 1
+                                manifest_bytes -= int(cache_entry_bytes)
+                        else:
+                            tty.warn(
+                                f"Invalid concretization cache entry: '{line}' on line: {i+1}"
+                            )
+                    self._write_manifest(f, entry_count, manifest_bytes)
 
-    def cache_buckets(self):
-        """Generator producing cache buckets"""
-        for bucket in self.root.iterdir():
-            # skip bucket lockfiles
-            if bucket.is_dir():
-                yield bucket
+            elif manifest_bytes > bytes_limit and bytes_limit > 0:
+                with self._fc.write_transaction(self._cache_manifest) as (old, new):
+                    # take 10% of current size off
+                    prune_amount = bytes_limit // 10
+                    total_pruned = 0
+                    i = 0
+                    while total_pruned < prune_amount:
+                        sha, manifest_cache_bytes = self._parse_manifest_entry(f.readline())
+                        if sha and manifest_cache_bytes:
+                            entry_bytes = int(manifest_cache_bytes)
+                            cache_path = self.root / sha[:2] / sha
+                            if self._safe_remove(cache_path):
+                                entry_count -= 1
+                                entry_bytes -= entry_bytes
+                                total_pruned += entry_bytes
+                        else:
+                            tty.warn(
+                                "Invalid concretization cache entry "
+                                f"'{sha} {manifest_cache_bytes}' on line: {i}"
+                            )
+                        i += 1
+                    self._write_manifest(f, entry_count, manifest_bytes)
+            for cache_dir in self.root.iterdir():
+                if cache_dir.is_dir() and not any(cache_dir.iterdir()):
+                    self._safe_remove(cache_dir)
 
-    def cache_entries(self, bucket: pathlib.Path):
-        """Generator producing cache entries within a bucket"""
-        for cache_entry in bucket.iterdir():
-            if not cache_entry.is_dir():
-                yield cache_entry
-            else:
-                raise RuntimeError(
-                    "Improperly formed concretization cache. "
-                    f"Directory {cache_entry.name} is improperly located "
-                    "within the concretization cache."
-                )
+    def cache_entries(self):
+        """Generator producing cache entries"""
+        for cache_dir in self.root.iterdir():
+            # ensure component is cache entry directory
+            # not metadata file
+            if cache_dir.is_dir():
+                for cache_entry in cache_dir.iterdir():
+                    if not cache_entry.is_dir():
+                        yield cache_entry
+                    else:
+                        raise RuntimeError(
+                            "Improperly formed concretization cache. "
+                            f"Directory {cache_entry.name} is improperly located "
+                            "within the concretization cache."
+                        )
 
-    def _results_from_cache(self, cache_entry_file: str) -> Union[Result, None]:
+    def _parse_manifest_entry(self, line):
+        """Returns parsed manifest entry lines
+        with handling for invalid reads."""
+        if line:
+            cache_values = line.strip("\n").split(" ")
+            if len(cache_values) < 2:
+                tty.warn(f"Invalid cache entry at {line}")
+                return None, None
+        return None, None
+
+    def _write_manifest(self, manifest_file, entry_count, entry_bytes):
+        """Writes new concretization cache manifest file.
+
+        Arguments:
+            manifest_file: IO stream opened for readin
+                            and writing wrapping the manifest file
+                            with cursor at calltime set to location
+                            where manifest should be truncated
+            entry_count: new total entry count
+            entry_bytes: new total entry bytes count
+
+        """
+        persisted_entries = manifest_file.readlines()
+        manifest_file.truncate(0)
+        manifest_file.write(f"{entry_count} {entry_bytes}\n")
+        manifest_file.writelines(persisted_entries)
+
+    def _results_from_cache(self, cache_entry_buffer: IO[str]) -> Union[Result, None]:
         """Returns a Results object from the concretizer cache
 
         Reads the cache hit and uses `Result`'s own deserializer
         to produce a new Result object
         """
 
-        cache_entry = json.loads(cache_entry_file)
-        result_json = cache_entry["results"]
-        return Result.from_dict(result_json)
+        with current_file_position(cache_entry_buffer, 0):
+            cache_str = cache_entry_buffer.read()
+            # TODO: Should this be an error if None?
+            # Same for _stats_from_cache
+            if cache_str:
+                cache_entry = json.loads(cache_str)
+                result_json = cache_entry["results"]
+                return Result.from_dict(result_json)
+        return None
 
-    def _stats_from_cache(self, cache_entry_file: str) -> Union[List, None]:
+    def _stats_from_cache(self, cache_entry_buffer: IO[str]) -> Union[List, None]:
         """Returns concretization statistic from the
         concretization associated with the cache.
 
@@ -730,12 +787,23 @@ class ConcretizationCache:
         statistics covering the cached concretization run
         and returns the Python data structures
         """
-        return json.loads(cache_entry_file)["statistics"]
+        with current_file_position(cache_entry_buffer, 0):
+            cache_str = cache_entry_buffer.read()
+            if cache_str:
+                return json.loads(cache_str)["statistics"]
+        return None
+
+    def _extract_cache_metadata(self, cache_stream: IO[str]):
+        """Extracts and returns cache entry count and bytes count from head of manifest
+        file"""
+        # make sure we're always reading from the beginning of the stream
+        # concretization cache manifest data lives at the top of the file
+        with current_file_position(cache_stream, 0):
+            return self._parse_manifest_entry(cache_stream.readline())
 
     def _prefix_digest(self, problem: str) -> Tuple[str, str]:
         """Return the first two characters of, and the full, sha256 of the given asp problem"""
-        # compress the problem w/ gzip so we can validate checksum w/o decompressing
-        prob_digest = spack.util.hash.b32_hash(problem)
+        prob_digest = hashlib.sha256(problem.encode()).hexdigest()
         prefix = prob_digest[:2]
         return prefix, prob_digest
 
@@ -745,21 +813,51 @@ class ConcretizationCache:
         prefix, digest = self._prefix_digest(problem)
         return pathlib.Path(prefix) / digest
 
-    def _cache_bucket_from_path(self, cache_entry: pathlib.Path) -> str:
-        """Returns the 2 byte cache entry bucket string from a cache entry"""
-        return cache_entry.parent.name
-
     def _cache_path_from_hash(self, hash: str) -> pathlib.Path:
         """Returns a Path object representing the cache entry
         corresponding to the given sha256 hash"""
         return pathlib.Path(hash[:2]) / hash
 
-    def _safe_remove(self, cache_dir: pathlib.Path) -> bool:
+    def _lock_prefix_from_cache_path(self, cache_path: str):
+        """Returns the bit location corresponding to a given cache entry path
+        for file locking"""
+        return spack.util.hash.base32_prefix_bits(
+            spack.util.hash.b32_hash(cache_path), spack.util.crypto.bit_length(sys.maxsize)
+        )
+
+    def flush_manifest(self):
+        """Updates the concretization cache manifest file after a cache write operation
+        Updates the current byte count and entry counts and writes to the head of the
+        manifest file"""
+        manifest_file = self.root / self._cache_manifest
+        manifest_file.touch(exist_ok=True)
+        with open(manifest_file, "r+", encoding="utf-8") as f:
+            # check if manifest is empty
+            count, cache_bytes = self._extract_cache_metadata(f)
+            if not count or not cache_bytes:
+                # cache is unintialized
+                count = 0
+                cache_bytes = 0
+            f.seek(0, io.SEEK_END)
+            for manifest_update in self._manifest_queue:
+                entry_path, entry_bytes = manifest_update
+                count += 1
+                cache_bytes += entry_bytes
+                f.write(f"{entry_path.name} {entry_bytes}")
+            f.seek(0, io.SEEK_SET)
+            new_stats = f"{int(count)+1} {int(cache_bytes)}\n"
+            f.write(new_stats)
+
+    def _register_cache_update(self, cache_path: pathlib.Path, bytes_written: int):
+        """Adds manifest entry to update queue for later updates to the manifest"""
+        self._manifest_queue.append((cache_path, bytes_written))
+
+    def _safe_remove(self, cache_dir: pathlib.Path):
         """Removes cache entries with handling for the case where the entry has been
         removed already or there are multiple cache entries in a directory"""
         try:
             if cache_dir.is_dir():
-                shutil.rmtree(cache_dir)
+                cache_dir.rmdir()
             else:
                 cache_dir.unlink()
             return True
@@ -780,21 +878,20 @@ class ConcretizationCache:
         Hash membership is computed based on the sha256 of the provided asp
         problem.
         """
-        bucket, digest = self._prefix_digest(problem)
-        cache_path = self.root / bucket / digest
-        self._fc.init_entry(bucket)
-        with self._fc.write_transaction(bucket) as exists:
-            if not exists:
-                # The directory may have been pruned between init entry and the write
-                # transaction, recreate the directory
-                os.makedirs(bucket)
-            try:
-                with gzip.open(cache_path, "xb", compresslevel=6) as cache_entry:
-                    cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
-                    cache_entry.write(json.dumps(cache_dict).encode())
-            except FileExistsError:
+        cache_path = self._cache_path_from_problem(problem)
+        if self._fc.init_entry(cache_path):
+            # if an entry for this conc hash exists already, we're don't want
+            # to overwrite, just exit
+            tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
+            return
+        with self._fc.write_transaction(cache_path) as (old, new):
+            if old:
                 # Entry for this conc hash exists already, do not overwrite
                 tty.debug(f"Cache entry {cache_path} exists, will not be overwritten")
+                return
+            cache_dict = {"results": result.to_dict(test=test), "statistics": statistics}
+            bytes_written = new.write(json.dumps(cache_dict))
+            self._register_cache_update(cache_path, bytes_written)
 
     def fetch(self, problem: str) -> Union[Tuple[Result, List], Tuple[None, None]]:
         """Returns the concretization cache result for a lookup based on the given problem.
@@ -803,35 +900,12 @@ class ConcretizationCache:
         Python objects cached on disk representing the concretization results and statistics
         or returns none if no cache entry was found.
         """
-        bucket, entry = self._prefix_digest(problem)
-        cache_path = self.root / bucket / entry
+        cache_path = self._cache_path_from_problem(problem)
         result, statistics = None, None
-        self._fc.init_entry(bucket)
-        with self._fc.read_transaction(bucket) as exists:
-            # if exists is false, then there's no chance of a hit
-            # in this bucket, as it does not exist
-            if exists:
-                cache_entry_content = None
-                try:
-                    with gzip.open(cache_path, "rb", compresslevel=6) as f:
-                        f.peek(1)  # Try to read at least one byte
-                        f.seek(0)
-                        cache_entry_content = f.read().decode("utf-8")
-                except FileNotFoundError:
-                    # cache miss
-                    pass
-                except OSError:
-                    # Cache may have been created pre compression
-                    # check if gzip, and if not, read from plaintext
-                    # otherwise re raise
-                    with open(cache_path, "rb") as f:
-                        if not GZipFileType().matches_magic(f):
-                            cache_entry_content = f.read().decode()
-                        else:
-                            raise
-                if cache_entry_content:
-                    result = self._results_from_cache(cache_entry_content)
-                    statistics = self._stats_from_cache(cache_entry_content)
+        with self._fc.read_transaction(cache_path) as f:
+            if f:
+                result = self._results_from_cache(f)
+                statistics = self._stats_from_cache(f)
         if result and statistics:
             tty.debug(f"Concretization cache hit at {str(cache_path)}")
             return result, statistics
@@ -1123,7 +1197,7 @@ class PyclingoDriver:
                 problem_repr += "\n" + f.read()
 
         result = None
-        conc_cache_enabled = spack.config.get("concretizer:concretization_cache:enable", False)
+        conc_cache_enabled = spack.config.get("config:concretization_cache:enable", False)
         if conc_cache_enabled:
             result, concretization_stats = CONC_CACHE.fetch(problem_repr)
 
@@ -4821,11 +4895,11 @@ class Solver:
         setup = SpackSolverSetup(tests=tests)
         output = OutputConfiguration(timers=timers, stats=stats, out=out, setup_only=setup_only)
 
-        result = self.driver.solve(
+        CONC_CACHE.flush_manifest()
+        CONC_CACHE.cleanup()
+        return self.driver.solve(
             setup, specs, reuse=reusable_specs, output=output, allow_deprecated=allow_deprecated
         )
-        CONC_CACHE.cleanup()
-        return result
 
     def solve(self, specs, **kwargs):
         """
@@ -4888,6 +4962,7 @@ class Solver:
             for spec in result.specs:
                 reusable_specs.extend(spec.traverse())
 
+        CONC_CACHE.flush_manifest()
         CONC_CACHE.cleanup()
 
 
