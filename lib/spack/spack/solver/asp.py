@@ -2641,7 +2641,8 @@ class SpackSolverSetup:
     ):
         """Declare any versions in specs not declared in packages."""
         packages_yaml = spack.config.get("packages")
-        for pkg_name in sorted(possible_pkgs):
+        sorted_possible_packages = sorted(possible_pkgs)
+        for pkg_name in sorted_possible_packages:
             pkg_cls = self.pkg_class(pkg_name)
 
             # All the versions from the corresponding package.py file. Since concepts
