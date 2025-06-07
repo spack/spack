@@ -91,7 +91,7 @@ GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 VIRTUAL_ASSIGNMENT = (
     r"(?:"
     rf"(?P<virtuals>{IDENTIFIER}(?:,{IDENTIFIER})*)"  # comma-separated virtuals
-    rf"=(?P<substitute>{IDENTIFIER}|{DOTTED_IDENTIFIER})"  # package to substitute
+    rf"=(?P<substitute>{DOTTED_IDENTIFIER}|{IDENTIFIER})"  # package to substitute
     r")"
 )
 
@@ -275,6 +275,45 @@ def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
             return
 
 
+def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
+    """Look at subvalues and, if present, extract virtual and a push a substitute token.
+
+    This handles things like:
+        * ^c=gcc
+        * ^c,cxx=gcc
+        * %[when=+bar] c=gcc
+        * %[when=+bar] c,cxx=gcc
+
+    Virtual assignment can happen anywhere a dependency node can appear. It is
+    shorthand for %[virtuals=c,cxx] gcc.
+
+    The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
+    and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
+    the substitute, which is then pushed back on the parser stream so that the head
+    of the stream can be parsed like a regular node.
+
+    Returns:
+        the virtuals assigned, or None if there aren't any
+
+    """
+    subvalues = context.current_token.subvalues
+    virtuals = subvalues["virtuals"]
+    if not virtuals:
+        return ()
+
+    # build a token for the substitute that we can put back on the stream
+    pkg = subvalues["substitute"]
+    token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
+    if "." in pkg:
+        token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
+    start = context.current_token.value.index(pkg)
+
+    token = Token(token_type, pkg, start, start + len(pkg))
+    context.push_front(token)
+
+    return tuple(virtuals.split(","))
+
+
 class SpecParser:
     """Parse text into specs"""
 
@@ -296,44 +335,6 @@ class SpecParser:
         filtered out.
         """
         return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
-
-    def parse_virtual_assignment(self) -> Tuple[str]:
-        """Look at subvalues and, if present, extract virtual and a push a substitute token.
-
-        This handles things like:
-            * ^c=gcc
-            * ^c,cxx=gcc
-            * %[when=+bar] c=gcc
-            * %[when=+bar] c,cxx=gcc
-
-        Virtual assignment can happen anywhere a dependency node can appear. It is
-        shorthand for %[virtuals=c,cxx] gcc.
-
-        The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
-        and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
-        the substitute, which is then pushed back on the parser stream so that the head
-        of the stream can be parsed like a regular node.
-
-        Returns:
-            the virtuals assigned, or None if there aren't any
-
-        """
-        subvalues = self.ctx.current_token.subvalues
-
-        virtuals = subvalues["virtuals"]
-        if not virtuals:
-            return ()
-
-        substitute = subvalues["substitute"]
-        token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
-        if "." in substitute:
-            token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
-
-        start = self.ctx.current_token.value.index(substitute)
-        token = Token(token_type, substitute, start, start + len(substitute))
-        self.ctx.push_front(token)
-
-        return tuple(virtuals.split(","))
 
     def next_spec(
         self, initial_spec: Optional["spack.spec.Spec"] = None
@@ -384,7 +385,7 @@ class SpecParser:
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 is_direct = self.ctx.current_token.value == "%"
-                virtuals = self.parse_virtual_assignment()
+                virtuals = parse_virtual_assignment(self.ctx)
 
                 # if no virtual assignment, check for a toolchain - look ahead to find the
                 # toolchain and substitute it
@@ -649,6 +650,9 @@ class EdgeAttributeParser:
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
             elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
+                virtuals = attributes.get("virtuals", ())
+                virtuals += parse_virtual_assignment(self.ctx)
+                attributes["virtuals"] = virtuals
                 break
             else:
                 msg = "unexpected token in edge attributes"
