@@ -8,22 +8,74 @@
 Getting Started
 ===============
 
+Getting Spack is easy.  You can clone it from the `GitHub repository
+<https://github.com/spack/spack>`_ using this command:
+
+.. code-block:: console
+
+   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+
+This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
+
+.. code-block:: console
+
+   # For bash/zsh/sh
+   $ . spack/share/spack/setup-env.sh
+
+   # For tcsh/csh
+   $ source spack/share/spack/setup-env.csh
+
+   # For fish
+   $ . spack/share/spack/setup-env.fish
+
+That's it! You're ready to use Spack.
+
+.. note::
+   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
+
+   ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
+
 --------------------
 System Prerequisites
 --------------------
 
-Spack has the following minimum system requirements, which are assumed to
-be present on the machine where Spack is run:
+To check that the prerequisites for running Spack are met on your system you can use:
 
-.. csv-table:: System prerequisites for Spack
-   :file: tables/system_prerequisites.csv
-   :header-rows: 1
+.. code-block:: console
 
-These requirements can be easily installed on most modern Linux systems;
+   $ spack bootstrap status --optional
+   Spack v1.0.0 - python@3.13
+
+   [PASS] Core Functionalities
+
+   [PASS] Binary packages
+
+   [PASS] Optional Features
+
+If all pre-requisites are met, the output should look similar to the one shown above. When a prerequisite is missing,
+Spack will point it out, and show whether it can be bootstrapped, or it is user's responsibility to make it available:
+
+.. code-block:: console
+
+   $ spack bootstrap status --optional
+   Spack v1.0.0 - python@3.13
+
+   [PASS] Core Functionalities
+
+   [FAIL] Binary packages
+     [B] MISSING "gpg2": required to sign/verify buildcaches
+
+   [PASS] Optional Features
+
+
+   Spack will take care of bootstrapping any missing dependency marked as [B]. Dependencies marked as [-] are instead required to be found on the system.
+
+In the case above, the system is missing ``gpg2``, and thus Spack can't verify the signature on binary packages.
+
+In general, Spack's requirements can be easily installed on most modern Linux systems;
 on macOS, the Command Line Tools package is required, and a full Xcode suite
 may be necessary for some packages such as Qt and apple-gl. Spack is designed
-to run on HPC platforms like Cray.  Not all packages should be expected
-to work on all platforms.
+to run on HPC platforms like Cray.
 
 A build matrix showing which packages are working on which systems is shown below.
 
@@ -51,47 +103,13 @@ A build matrix showing which packages are working on which systems is shown belo
          brew update
          brew install gcc git zip
 
-------------
-Installation
-------------
-
-Getting Spack is easy.  You can clone it from the `GitHub repository
-<https://github.com/spack/spack>`_ using this command:
-
-.. code-block:: console
-
-   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
-
-This will create a directory called ``spack``.
-
-.. note::
-   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
-
-   ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
-
 .. _shell-support:
 
 ^^^^^^^^^^^^^
 Shell support
 ^^^^^^^^^^^^^
 
-Once you have cloned Spack, we recommend sourcing the appropriate script
-for your shell:
-
-.. code-block:: console
-
-   # For bash/zsh/sh
-   $ . spack/share/spack/setup-env.sh
-
-   # For tcsh/csh
-   $ source spack/share/spack/setup-env.csh
-
-   # For fish
-   $ . spack/share/spack/setup-env.fish
-
-That's it! You're ready to use Spack.
-
-Sourcing these files will put the ``spack`` command in your ``PATH``, set
+Sourcing the shell scripts will put the ``spack`` command in your ``PATH``, set
 up your ``MODULEPATH`` to use Spack's packages, and add other useful
 shell integration for :ref:`certain commands <packaging-shell-support>`,
 :ref:`environments <environments>`, and :ref:`modules <modules>`. For
@@ -102,9 +120,6 @@ query the ``spack`` command. On shared filesystems, this can be a bit slow,
 especially if you log in frequently. If you don't use modules, or want to set
 ``MODULEPATH`` manually instead, you can set the ``SPACK_SKIP_MODULES``
 environment variable to skip this step and speed up sourcing the file.
-
-If you do not want to use Spack's shell support, you can always just run
-the ``spack`` command directly from ``spack/bin/spack``.
 
 When the ``spack`` command is executed, it searches for an appropriate
 Python interpreter to use, which can be explicitly overridden by setting
