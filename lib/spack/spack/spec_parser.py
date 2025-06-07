@@ -363,7 +363,7 @@ class SpecParser:
         current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
-                is_direct = self.ctx.current_token.value == "%"
+                is_direct = self.ctx.current_token.value[0] == "%"
 
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
@@ -384,7 +384,7 @@ class SpecParser:
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                is_direct = self.ctx.current_token.value == "%"
+                is_direct = self.ctx.current_token.value[0] == "%"
                 virtuals = parse_virtual_assignment(self.ctx)
 
                 # if no virtual assignment, check for a toolchain - look ahead to find the

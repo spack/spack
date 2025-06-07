@@ -1640,7 +1640,7 @@ class Spec:
 
     @property
     def edge_attributes(self) -> str:
-        """Helper method to print edge attributes in spec literals"""
+        """Helper method to print edge attributes in spec strings."""
         edges = self.edges_from_dependents()
         if not edges:
             return ""
@@ -2095,6 +2095,17 @@ class Spec:
             visited=visited,
         )
 
+    def _format_edge_attributes(self, dep: DependencySpec, virtuals=True):
+        deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}" if dep.depflag else ""
+        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
+        virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
+
+        attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
+        if attrs:
+            attrs = f"[{attrs}]"
+
+        return attrs
+
     @property
     def long_spec(self):
         """Returns a string of the spec with the dependencies completely
@@ -2103,21 +2114,28 @@ class Spec:
         direct, transitive = lang.stable_partition(
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
+
         for item in sorted(direct, key=lambda x: x.spec.name):
             current_name = item.spec.name
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
-            # note: depflag not allowed, currently, on "direct" edges
-            edge_attributes = ""
-            if item.virtuals or item.when != Spec():
-                edge_attributes = item.spec.format("{edge_attributes}") + " "
 
-            parts.append(f"%{edge_attributes}{item.spec.format()}".replace(current_name, new_name))
+            edge_attributes = ""
+            if item.when != Spec():
+                edge_attributes = self._format_edge_attributes(item, virtuals=False) + " "
+            virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
+
+            parts.append(
+                f"%{edge_attributes}{virtuals}{item.spec.format()}".replace(current_name, new_name)
+            )
+
         for item in sorted(transitive, key=lambda x: x.spec.name):
             # Recurse to attach build deps in order
             edge_attributes = ""
-            if item.virtuals or item.depflag or item.when != Spec():
-                edge_attributes = item.spec.format("{edge_attributes}") + " "
-            parts.append(f"^{edge_attributes}{str(item.spec)}")
+            if item.depflag or item.when != Spec():
+                edge_attributes = self._format_edge_attributes(item, virtuals=False) + " "
+            virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
+
+            parts.append(f"^{edge_attributes}{virtuals}{str(item.spec)}")
         return " ".join(parts).strip()
 
     @property
@@ -3951,6 +3969,14 @@ class Spec:
     @property
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
+
+    @property
+    def virtuals(self):
+        return "FOOBAR"
+
+    @property
+    def compilers(self):
+        return "COMPILERS"
 
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
