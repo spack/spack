@@ -146,7 +146,7 @@ extensions = [
     "sphinxcontrib.programoutput",
 ]
 
-copybutton_exclude = '.linenos, .gp, .go'
+copybutton_exclude = ".linenos, .gp, .go"
 
 # Set default graphviz options
 graphviz_dot_args = [
