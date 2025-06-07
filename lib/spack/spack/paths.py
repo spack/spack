@@ -243,7 +243,7 @@ class SpackPaths:
             if dir_is_occupied(os.path.join(self.share_path, module_dir)):
                 self.modules_base = self.share_path
         if not self.modules_base:
-            self.modules_base = os.path.join(self.user_cache_path, "modules")
+            self.modules_base = self.user_cache_path
 
         # ------ Next section
         # Spack can also write data into the following locations, and their
