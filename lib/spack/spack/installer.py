@@ -1500,8 +1500,7 @@ class PackageInstaller:
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
 
         if concurrent_packages is None:
-            concurrent_packages = spack.config.get('config:concurrent_packages', default=4)
-            print("concurrent packages when trying to get it: ", concurrent_packages) 
+            concurrent_packages = spack.config.get("config:concurrent_packages", default=4)
         self.concurrent_packages = concurrent_packages
 
         install_args = {
@@ -1565,7 +1564,6 @@ class PackageInstaller:
 
         # Maximum number of concurrent packages to build
         self.max_active_tasks = self.concurrent_packages
-        print("max active tasks = ", self.max_active_tasks)
 
         # Reports on install success/failure
         self.reports: Dict[str, spack.report.RequestRecord] = {}
