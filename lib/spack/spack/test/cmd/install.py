@@ -1133,3 +1133,9 @@ def test_invalid_concurrent_packages_flag(mutable_config):
     install = SpackCommand("install")
     with pytest.raises(ValueError, match="expected a positive integer"):
         install("--concurrent-packages", "-2", fail_on_error=False)
+
+
+def test_concurrent_packages_set_in_config(mutable_config):
+    """Ensure that the number of concurrent packages is properly set from adding to config"""
+    spack.config.set("config:concurrent_packages", 3)
+    assert spack.config.get("config:concurrent_packages") == 3
