@@ -17,16 +17,25 @@ Getting Spack is easy.  You can clone it from the `GitHub repository
 
 This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
 
-.. code-block:: console
+.. tab-set::
 
-   # For bash/zsh/sh
-   $ . spack/share/spack/setup-env.sh
+   .. tab-item:: bash/zsh/sh
 
-   # For tcsh/csh
-   $ source spack/share/spack/setup-env.csh
+      .. code-block:: console
 
-   # For fish
-   $ . spack/share/spack/setup-env.fish
+         $ . spack/share/spack/setup-env.sh
+
+   .. tab-item:: tcsh/csh
+
+      .. code-block:: console
+
+         $ source spack/share/spack/setup-env.csh
+
+   .. tab-item:: fish
+
+      .. code-block:: console
+
+         $ . spack/share/spack/setup-env.fish
 
 That's it! You're ready to use Spack.
 
