@@ -263,7 +263,7 @@ the Spack instance. The same rule applies to the ``install`` and
   ==> No binary for zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x found: installing from source
   ==> zlib: Executing phase: 'install'
   [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
-  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
+  ==> Updating view at ~/spack/opt/data/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv

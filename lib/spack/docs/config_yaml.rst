@@ -104,9 +104,7 @@ order, and Spack will use the first directory to which it has write access.
 
 Specifying `$spack_cache_home` first will ensure each user builds in
 their home directory (or wherever the user overrides ``XDG_CACHE_HOME`` to
-be; see :ref:`xdg_overrides` for more information). The historic Spack
-stage path `$spack/var/spack/stage` will build directly inside the
-Spack instance. See :ref:`config-file-variables` for more on
+be; see :ref:`xdg_overrides` and :ref:`config-file-variables` for more on
 ``$tempdir``, XDG variables, and ``$spack``.
 
 When Spack builds a package, it creates a temporary directory within the
