@@ -194,21 +194,23 @@ def parseable_tokens(text: str) -> Iterator[Token]:
 class TokenContext:
     """Token context passed around by parsers"""
 
-    __slots__ = "token_stream", "current_token", "next_token", "pushback_token"
+    __slots__ = "token_stream", "current_token", "next_token", "pushed_tokens"
 
     def __init__(self, token_stream: Iterator[Token]):
         self.token_stream = token_stream
         self.current_token = None
-        self.next_token = None
-        self.pushback_token = None
+        self.next_token = None  # the next token to be read
+
+        # if not empty, back of list is front of stream, and we pop from here instead.
+        self.pushed_tokens: Optional[List] = None
+
         self.advance()
 
     def advance(self):
         """Advance one token"""
         self.current_token = self.next_token
-        if self.pushback_token:
-            self.next_token = self.pushback_token
-            self.pushback_token = None
+        if self.pushed_tokens and self.pushed_tokens is not None:
+            self.next_token = self.pushed_tokens.pop()
         else:
             self.next_token = next(self.token_stream, None)
 
@@ -221,10 +223,12 @@ class TokenContext:
             return True
         return False
 
-    def push_back(self, token=Token):
-        """Push a token back onto the front of the stream. Enables a bit of lookahead."""
-        assert not self.pushback_token, "Parser error: Can only push one token back at a time!"
-        self.pushback_token = token
+    def push_front(self, token=Token):
+        """Push a token onto the front of the stream. Enables a bit of lookahead."""
+        if self.pushed_tokens is None:
+            self.pushed_tokens = []
+        self.pushed_tokens.append(self.next_token)  # back of list is front of stream
+        self.next_token = token
 
     def expect(self, *kinds: SpecTokens):
         return self.next_token and self.next_token.kind in kinds
@@ -293,6 +297,44 @@ class SpecParser:
         """
         return list(filter(lambda x: x.kind != SpecTokens.WS, tokenize(self.literal_str)))
 
+    def parse_virtual_assignment(self) -> Tuple[str]:
+        """Look at subvalues and, if present, extract virtual and a push a substitute token.
+
+        This handles things like:
+            * ^c=gcc
+            * ^c,cxx=gcc
+            * %[when=+bar] c=gcc
+            * %[when=+bar] c,cxx=gcc
+
+        Virtual assignment can happen anywhere a dependency node can appear. It is
+        shorthand for %[virtuals=c,cxx] gcc.
+
+        The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
+        and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
+        the substitute, which is then pushed back on the parser stream so that the head
+        of the stream can be parsed like a regular node.
+
+        Returns:
+            the virtuals assigned, or None if there aren't any
+
+        """
+        subvalues = self.ctx.current_token.subvalues
+
+        virtuals = subvalues["virtuals"]
+        if not virtuals:
+            return ()
+
+        substitute = subvalues["substitute"]
+        token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
+        if "." in substitute:
+            token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
+
+        start = self.ctx.current_token.value.index(substitute)
+        token = Token(token_type, substitute, start, start + len(substitute))
+        self.ctx.push_front(token)
+
+        return tuple(virtuals.split(","))
+
     def next_spec(
         self, initial_spec: Optional["spack.spec.Spec"] = None
     ) -> Optional["spack.spec.Spec"]:
@@ -320,7 +362,7 @@ class SpecParser:
         current_spec = root_spec
         while True:
             if self.ctx.accept(SpecTokens.START_EDGE_PROPERTIES):
-                is_direct = self.ctx.current_token.value[0] == "%"
+                is_direct = self.ctx.current_token.value == "%"
 
                 edge_properties = EdgeAttributeParser(self.ctx, self.literal_str).parse()
                 edge_properties.setdefault("virtuals", ())
@@ -341,14 +383,12 @@ class SpecParser:
                 add_dependency(dependency, **edge_properties)
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
-                print(self.ctx.current_token.subvalues)
+                is_direct = self.ctx.current_token.value == "%"
+                virtuals = self.parse_virtual_assignment()
 
-                # String replacement for toolchains
-                # Look ahead to match upcoming value to list of toolchains
-                if (
-                    self.ctx.current_token.value == "%"
-                    and self.ctx.next_token.value in self.toolchains
-                ):
+                # if no virtual assignment, check for a toolchain - look ahead to find the
+                # toolchain and substitute it
+                if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
                     assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
                     try:
                         self._apply_toolchain(current_spec, self.ctx.current_token.value)
@@ -356,12 +396,8 @@ class SpecParser:
                         raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
                     continue
 
-                is_direct = self.ctx.current_token.value[0] == "%"
+                edge_properties = {"direct": is_direct, "virtuals": virtuals, "depflag": 0}
                 dependency, warnings = self._parse_node(root_spec)
-                edge_properties = {}
-                edge_properties["direct"] = is_direct
-                edge_properties["virtuals"] = tuple()
-                edge_properties.setdefault("depflag", 0)
 
                 if is_direct:
                     target_spec = current_spec
