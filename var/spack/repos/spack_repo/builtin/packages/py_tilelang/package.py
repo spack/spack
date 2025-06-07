@@ -23,8 +23,7 @@ class PyTilelang(PythonPackage, CudaPackage, ROCmPackage):
     import_modules = ["tilelang", "tilelang.language", "tilelang.intrinsics"]
 
     version("main", branch="main")
-    version("0.1.5", tag="v0.1.5", commit="a32009bf1e314b514c07389123648ba19009f3a5")
-    version("0.1.4", tag="v0.1.4", commit="a41a473abbd0a187947af227339c346a033c8c3e")
+    version("0.1.5", tag="v0.1.5")
 
     depends_on("c", type="build")
     depends_on("cxx", type="build")
@@ -45,14 +44,10 @@ class PyTilelang(PythonPackage, CudaPackage, ROCmPackage):
     depends_on("py-torch@2.2.0:", type=["build", "run"])
 
     def cmake_args(self):
-        ret = [self.define_from_variant("USE_CUDA", "cuda")]
-        if self.spec.satisfies("+rocm"):
-            ret.append(self.define("USE_ROCM", self.spec["rocm"].prefix))
-        return ret
-
-    def setup_build_environment(self, env: EnvironmentModifications) -> None:
-        if self.spec.satisfies("+cuda"):
-            env.set("CUDA_HOME", self.spec["cuda"].prefix)
+        return [
+            self.define_from_variant("USE_CUDA", "cuda"),
+            self.define_from_variant("USE_ROCM", "rocm"),
+        ]
 
     def setup_run_environment(self, env: EnvironmentModifications) -> None:
         if self.spec.satisfies("+cuda"):
