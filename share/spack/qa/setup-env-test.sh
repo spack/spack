@@ -221,3 +221,18 @@ contains 'True' spack -c config:ccache:true python -c "import spack.config;print
 succeeds spack -c config:ccache:true python "$SHARE_DIR/qa/config_state.py"
 
 spack env deactivate
+
+echo "Testing correct scope precedence on command line"
+contains 'unify: true' spack -e scopes/true config get concretizer
+contains 'unify: true' spack -D scopes/true config get concretizer
+contains 'unify: false' spack -C scopes/false config get concretizer
+contains 'unify: when_possible' spack -C scopes/wp config get concretizer
+
+contains 'unify: true' spack -C scopes/wp -C scopes/false -e scopes/true config get concretizer
+contains 'unify: false' spack -C scopes/wp -C scopes/false config get concretizer
+contains 'unify: when_possible' spack -C scopes/false -e scopes/true -C scopes/wp config get concretizer
+contains 'unify: false' spack -e scopes/true -C scopes/wp -C scopes/false config get concretizer
+
+contains 'unify: true' spack -C scopes/wp -C scopes/false -D scopes/true config get concretizer
+contains 'unify: when_possible' spack -C scopes/false -D scopes/true -C scopes/wp config get concretizer
+contains 'unify: false' spack -D scopes/true -C scopes/wp -C scopes/false config get concretizer
