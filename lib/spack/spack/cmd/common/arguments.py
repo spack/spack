@@ -401,7 +401,7 @@ def concurrent_packages():
         "--concurrent-packages",
         action=SetConcurrentPackages,
         type=int,
-        default=4,
+        default=None,
         help="maximum number of packages to build concurrently",
     )
 
