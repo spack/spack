@@ -93,4 +93,4 @@ concretizer:
 
   concretization_cache:
     enable: true
-    url: $spack_state_home/$spack_instance_id/misc-cache/concretization
+    url: $user_cache_path/cache/concretization
