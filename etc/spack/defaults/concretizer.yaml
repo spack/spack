@@ -89,7 +89,3 @@ concretizer:
   # Static analysis may reduce the concretization time by generating smaller ASP problems, in
   # cases where there are requirements that prevent part of the search space to be explored.
   static_analysis: false
-
-  concretization_cache:
-    enable: true
-    url: $user_cache_path/concretization

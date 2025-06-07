@@ -363,7 +363,7 @@ When ``false`` or ommitted, all concretization requests will be performed from s
 Path to the location where Spack will root the concretization cache. Currently this only supports
 paths on the local filesystem.
 
-Default location is under the :ref:`Misc Cache` at: ``$user_cache_path/concretization``
+Default location is under the :ref:`Misc Cache` at: ``$misc_cache/concretization``
 
 ------------------------------------
 ``concretization_cache:entry_limit``

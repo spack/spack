@@ -9,19 +9,13 @@ import pytest
 
 import llnl.util.filesystem as fs
 
-from spack.util.file_cache import CacheError, DirectoryFileCache, FileCache
+from spack.util.file_cache import CacheError, FileCache
 
 
 @pytest.fixture()
 def file_cache(tmpdir):
     """Returns a properly initialized FileCache instance"""
     return FileCache(str(tmpdir))
-
-
-@pytest.fixture()
-def directory_cache(tmpdir):
-    """Returns an initialized DirectoryCache instance"""
-    return DirectoryFileCache(str(tmpdir))
 
 
 def test_write_and_read_cache_file(file_cache):
@@ -128,52 +122,3 @@ def test_delete_is_idempotent(file_cache):
     """Deleting a non-existent key should be idempotent, to simplify life when
     running delete with multiple processes"""
     file_cache.remove("test.yaml")
-
-
-def test_destroy_file_cache(file_cache):
-    """Test populating and then destroying a file cache"""
-    with file_cache.write_transaction("test.yaml") as (old, new):
-        assert old is None
-        assert new is not None
-        new.write("foobar\n")
-    file_cache.destroy()
-    assert not any(file_cache.root.iterdir()), "File Cache destroy unsucessful, files remain"
-
-
-def test_destroy_directory_cache(directory_cache):
-    """Test populating and then destroying a directory cache"""
-    entry = os.path.join("tmpdir", "subdir")
-    with directory_cache.write_transaction(entry) as entry_exists:
-        if not entry_exists:
-            os.makedirs(os.path.join(directory_cache.root, entry))
-        with open(directory_cache.root / entry / "test.yml", "w", encoding="utf-8") as f:
-            f.write("test")
-    directory_cache.destroy()
-    assert not any(
-        directory_cache.root.iterdir()
-    ), "Directory Cache destroy unsucessful, files remain"
-
-
-def test_purge_directory_cache(directory_cache):
-    """Test removing a cache entry and purging the associated lockfile"""
-    entry = "tmpdir"
-    with directory_cache.write_transaction(entry) as entry_exists:
-        if not entry_exists:
-            os.makedirs(directory_cache.root / entry)
-        with open(directory_cache.root / entry / "test.yml", "w", encoding="utf-8") as f:
-            f.write("test")
-    directory_cache.remove(entry)
-    assert not (
-        directory_cache.root / entry
-    ).exists(), "Directory cache remove failed, entry remains"
-    directory_cache.purge_lock(entry)
-    assert not (
-        directory_cache.root / ("." + entry + ".lock")
-    ).exists(), "Directory Cache lock purge failed, lockfile remains"
-
-
-def test_directory_cache_reports_non_existent_entry(directory_cache):
-    """Test initializing an entry for a path that doesn't exist"""
-    entry = "tmpdir"
-    with directory_cache.write_transaction(entry) as entry_exists:
-        assert not entry_exists, "Directory cache incorrectly validates entries"

@@ -5,5 +5,3 @@ concretizer:
     host_compatible: false
   duplicates:
     strategy: minimal
-  concretization_cache:
-    enable: false
