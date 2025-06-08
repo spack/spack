@@ -1068,7 +1068,7 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
     temporary_store.failure_tracker.clear_all()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def temporary_mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp("mirror")
     yield str(dir)
