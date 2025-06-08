@@ -112,7 +112,7 @@ Spack can clone and use repositories directly from Git URLs:
   repos:
     my_remote_repo: https://github.com/myorg/spack-custom-pkgs.git
 
-**Automatic Cloning and Updates.**
+**Automatic Cloning.**
 When Spack first encounters a Git-based repository configuration, it automatically clones it. By default, these repositories are cloned into a subdirectory within ``~/.spack/package_repos/``, named with a hash of the repository URL.
 
 To change directories to the package repository, you can use ``spack cd --repo [name]``. To find where a repository is cloned, you can use ``spack location --repo [name]`` or ``spack repo list``. The ``name`` argument is optional; if omitted, Spack will use the first package repository in configuration order.
@@ -139,6 +139,11 @@ If the ``git`` URL is defined in a lower-precedence configuration (like Spack's 
     builtin:
       destination: ~/spack-packages
 
+**Updating and pinning.**
+There is currently no automatic update mechanism for Git-based repositories in Spack.
+Additionally, package repositories cannot be pinned to a specific commit or branch in configuration files.
+We are still gathering feedback and use cases from the community to determine the best approach for these features.
+For now, we encourage users to update Git repositories manually, by navigating to the clone directory ``spack cd --repo`` or ``spack cd --repo [name]`` and using standard Git commands (e.g., ``git pull`` to get the latest changes, or ``git checkout <commit|tag>`` to switch to a specific version).
 
 **Git repositories need a package repo index.**
 A single Git repository can contain one or more Spack package repositories. To enable Spack to discover these, the root of the Git repository should contain a ``spack-repo-index.yaml`` file. This file lists the relative paths to package repository roots within the git repo.
