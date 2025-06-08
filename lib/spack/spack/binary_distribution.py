@@ -193,10 +193,10 @@ class BinaryCacheIndex:
         self._mirrors_for_spec: Dict[str, List[MirrorForSpec]] = {}
 
     def _init_local_index_cache(self):
-        if not self._index_file_cache_initialized:
-            cache_key = self._index_contents_key
-            self._index_file_cache.init_entry(cache_key)
+        cache_key = self._index_contents_key
+        file_exists = self._index_file_cache.init_entry(cache_key)
 
+        if not self._index_file_cache_initialized or not file_exists:
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
@@ -252,10 +252,14 @@ class BinaryCacheIndex:
             db = BuildCacheDatabase(tmpdir)
 
             try:
-                self._index_file_cache.init_entry(cache_key)
+                cache_exists = self._index_file_cache.init_entry(cache_key)
                 cache_path = self._index_file_cache.cache_path(cache_key)
-                with self._index_file_cache.read_transaction(cache_key):
-                    db._read_from_file(pathlib.Path(cache_path))
+                if cache_exists:
+                    with self._index_file_cache.read_transaction(cache_key):
+                        db._read_from_file(cache_path)
+                else:
+                    # this is a logic bug, we should never hit this
+                    raise FileNotFoundError(f"cache index file missing: {cache_path}")
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
