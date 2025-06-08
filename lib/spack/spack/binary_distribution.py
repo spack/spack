@@ -194,9 +194,9 @@ class BinaryCacheIndex:
 
     def _init_local_index_cache(self):
         cache_key = self._index_contents_key
-        file_exists = self._index_file_cache.init_entry(cache_key)
+        self._index_file_cache.init_entry(cache_key)
 
-        if not self._index_file_cache_initialized or not file_exists:
+        if not self._index_file_cache_initialized:
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
@@ -211,6 +211,7 @@ class BinaryCacheIndex:
         clear associated data structures."""
         if self._index_file_cache:
             self._index_file_cache.destroy()
+            self._index_file_cache_initialized = False
             self._index_file_cache = file_cache.FileCache(self._index_cache_root)
         self._local_index_cache = {}
         self._specs_already_associated = set()
