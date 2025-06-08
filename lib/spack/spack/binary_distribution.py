@@ -194,9 +194,10 @@ class BinaryCacheIndex:
 
     def _init_local_index_cache(self):
         cache_key = self._index_contents_key
-        self._index_file_cache.init_entry(cache_key)
+        exists = self._index_file_cache.init_entry(cache_key)
 
-        if not self._index_file_cache_initialized:
+        if not self._index_file_cache_initialized or not exists:
+            self.clear()
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
