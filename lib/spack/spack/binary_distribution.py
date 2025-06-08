@@ -197,7 +197,6 @@ class BinaryCacheIndex:
         exists = self._index_file_cache.init_entry(cache_key)
 
         if not self._index_file_cache_initialized or not exists:
-            self.clear()
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
