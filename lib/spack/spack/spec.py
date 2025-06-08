@@ -133,7 +133,7 @@ SPEC_FORMAT_RE = re.compile(
     r"|"  # or
     # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
-    r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
+    r"( ?[%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
     r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
     # after the sigil or depname, we can have a hash expression or another attribute
     r"(?:"  # one of
@@ -173,6 +173,7 @@ DEFAULT_FORMAT = (
 DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    "{compilers}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -2095,8 +2096,12 @@ class Spec:
             visited=visited,
         )
 
-    def _format_edge_attributes(self, dep: DependencySpec, virtuals=True):
-        deptypes_str = f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}" if dep.depflag else ""
+    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
+            if deptypes and dep.depflag
+            else ""
+        )
         when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
         virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
 
@@ -2106,37 +2111,91 @@ class Spec:
 
         return attrs
 
-    @property
-    def long_spec(self):
-        """Returns a string of the spec with the dependencies completely
-        enumerated."""
-        parts = [self.format()]
+    def _format_dependencies(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        predicate: Optional[Callable[[DependencySpec], bool]] = None,
+        deptypes=True,
+        _force_direct=False,
+    ):
+        if predicate is None:
+            predicate = lambda dep: True
+
+        parts = []
+
         direct, transitive = lang.stable_partition(
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
 
         for item in sorted(direct, key=lambda x: x.spec.name):
+            if not predicate(item):
+                continue
+
             current_name = item.spec.name
             new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
 
             edge_attributes = ""
             if item.when != Spec():
-                edge_attributes = self._format_edge_attributes(item, virtuals=False) + " "
+                edge_attributes = self._format_edge_attributes(
+                    item, deptypes=deptypes, virtuals=False
+                )
+                if edge_attributes:
+                    edge_attributes += " "
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
             parts.append(
-                f"%{edge_attributes}{virtuals}{item.spec.format()}".replace(current_name, new_name)
+                f"%{edge_attributes}{virtuals}{item.spec.format(format_string)}".replace(
+                    current_name, new_name
+                )
             )
 
         for item in sorted(transitive, key=lambda x: x.spec.name):
-            # Recurse to attach build deps in order
+            if not predicate(item):
+                continue
+
             edge_attributes = ""
             if item.depflag or item.when != Spec():
-                edge_attributes = self._format_edge_attributes(item, virtuals=False) + " "
+                edge_attributes = self._format_edge_attributes(
+                    item, deptypes=deptypes, virtuals=False
+                )
+                if edge_attributes:
+                    edge_attributes += " "
+
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
-            parts.append(f"^{edge_attributes}{virtuals}{str(item.spec)}")
+            sigil = "%" if _force_direct else "^"  # hack until direct deps are represented better
+            parts.append(f"{sigil}{edge_attributes}{virtuals}{item.spec.format(format_string)}")
+
+            # also recursively add any build dependencies of transitive dependencies
+            if item.spec._dependencies:
+                parts.append(
+                    item.spec._format_dependencies(
+                        format_string=format_string,
+                        predicate=predicate,
+                        deptypes=deptypes,
+                        _force_direct=_force_direct,
+                    )
+                )
+
         return " ".join(parts).strip()
+
+    @property
+    def compilers(self):
+        # TODO: get rid of the space here and make formatting smarter
+        return " " + self._format_dependencies(
+            "{name}{@version}",
+            predicate=lambda dep: any(lang in dep.virtuals for lang in ("c", "cxx", "fortran")),
+            deptypes=False,
+            _force_direct=True,
+        )
+
+    @property
+    def long_spec(self):
+        """Returns a string of the spec with the dependencies completely enumerated."""
+        string = self.format()
+        deps = self._format_dependencies()
+        string = f"{string} {deps}" if deps else string
+        return string.strip()
 
     @property
     def short_spec(self):
@@ -3970,14 +4029,6 @@ class Spec:
     def namespace_if_anonymous(self):
         return self.namespace if not self.name else None
 
-    @property
-    def virtuals(self):
-        return "FOOBAR"
-
-    @property
-    def compilers(self):
-        return "COMPILERS"
-
     def format(self, format_string: str = DEFAULT_FORMAT, color: Optional[bool] = False) -> str:
         r"""Prints out attributes of a spec according to a format string.
 
@@ -3993,6 +4044,7 @@ class Spec:
             name
             version
             compiler_flags
+            compilers
             variants
             architecture
             architecture.platform
@@ -4159,7 +4211,7 @@ class Spec:
                 color = ARCHITECTURE_COLOR
             elif "variants" in parts or sig.endswith("="):
                 color = VARIANT_COLOR
-            elif "compiler" in parts or "compiler_flags" in parts:
+            elif any(c in parts for c in ("compiler", "compilers", "compiler_flags")):
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR

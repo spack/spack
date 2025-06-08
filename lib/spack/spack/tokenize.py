@@ -30,18 +30,21 @@ class Token:
 
     __slots__ = "kind", "value", "start", "end", "subvalues"
 
-    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0):
+    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0, **kwargs):
         self.kind = kind
         self.value = value
         self.start = start
         self.end = end
-        self.subvalues = None
+        self.subvalues = kwargs if kwargs else None
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return f"({self.kind}, {self.value})"
+        parts = [self.kind, self.value]
+        if self.subvalues:
+            parts += [self.subvalues]
+        return f"({', '.join(f'`{p}`' for p in parts)})"
 
     def __eq__(self, other):
         return (
@@ -114,6 +117,9 @@ class Tokenizer:
             # add any subvalues to the token
             subvalues = self.token_subvalues.get(m.lastgroup)
             if subvalues:
-                token.subvalues = {subval: m.group(rewritten) for subval, rewritten in subvalues}
+                if any(m.group(rewritten) for subval, rewritten in subvalues):
+                    token.subvalues = {
+                        subval: m.group(rewritten) for subval, rewritten in subvalues
+                    }
 
             yield token

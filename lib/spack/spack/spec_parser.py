@@ -135,8 +135,8 @@ class SpecTokens(TokenBase):
 
     # Dependency, with optional virtual assignment specifier
     START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
-    END_EDGE_PROPERTIES = rf"(?:\]\s*{VIRTUAL_ASSIGNMENT}?)"
-    DEPENDENCY = rf"(?:[\^\%]\s*{VIRTUAL_ASSIGNMENT}?)"
+    END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    DEPENDENCY = rf"(?:[\^\%](?:\s*{VIRTUAL_ASSIGNMENT})?)"
 
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
@@ -297,8 +297,7 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
 
     """
     subvalues = context.current_token.subvalues
-    virtuals = subvalues["virtuals"]
-    if not virtuals:
+    if not subvalues:
         return ()
 
     # build a token for the substitute that we can put back on the stream
@@ -311,7 +310,7 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
     token = Token(token_type, pkg, start, start + len(pkg))
     context.push_front(token)
 
-    return tuple(virtuals.split(","))
+    return tuple(subvalues["virtuals"].split(","))
 
 
 class SpecParser:
