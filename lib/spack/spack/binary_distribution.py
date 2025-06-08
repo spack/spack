@@ -192,21 +192,17 @@ class BinaryCacheIndex:
         # Each entry is a MirrorURLAndVersion.
         self._mirrors_for_spec: Dict[str, List[MirrorForSpec]] = {}
 
-    def _init_local_index_cache(self, ignore_file_presence=False):
-        cache_key = self._index_contents_key
-        # Hypothesis: TODO for refactoring
-        #
-        # odd logic for bootstrapping where in memory the cache is getting populated
-        # but then the root is changed so the index file doesn't exist
-        # the goal of bootstrapping is to get info about the system from the pre-existing cache
-        # but then use a separate store for after it is establisihed
-        if ignore_file_presence:
-            self._index_file_cache.init_entry(cache_key)
-            exists = True
-        else:
-            exists = self._index_file_cache.init_entry(cache_key)
+    def _init_local_index_cache(self):
+        # seems logical but fails bootstrapping
+        # cache_key = self._index_contents_key
+        # exists = self._index_file_cache.init_entry(cache_key)
+        # cache_path = self._index_file_cache.cache_path(cache_key)
+        # if not exists and self._index_file_cache_initialized:
+        # raise FileNotFoundError(f"Missing {cache_path}")
 
         if not self._index_file_cache_initialized:
+            cache_key = self._index_contents_key
+            self._index_file_cache.init_entry(cache_key)
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
@@ -233,12 +229,12 @@ class BinaryCacheIndex:
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             json.dump(self._local_index_cache, new)
 
-    def regenerate_spec_cache(self, clear_existing=False, ignore_index_file_presence=False):
+    def regenerate_spec_cache(self, clear_existing=False):
         """Populate the local cache of concrete specs (``_mirrors_for_spec``)
         from the locally cached buildcache index files.  This is essentially a
         no-op if it has already been done, as we keep track of the index
         hashes for which we have already associated the built specs."""
-        self._init_local_index_cache(ignore_index_file_presence)
+        self._init_local_index_cache()
 
         if clear_existing:
             self._specs_already_associated = set()
@@ -264,6 +260,11 @@ class BinaryCacheIndex:
             try:
                 cache_exists = self._index_file_cache.init_entry(cache_key)
                 cache_path = self._index_file_cache.cache_path(cache_key)
+                if not cache_exists:
+                    # recreate index if it is missing
+                    cache_entry = self._local_index_cache[cache_key]
+                    self._fetch_and_cache_index(url_and_version, cache_entry)
+                    cache_exists = self._index_file_cache.init_entry(cache_key)
                 if cache_exists:
                     with self._index_file_cache.read_transaction(cache_key):
                         db._read_from_file(cache_path)
