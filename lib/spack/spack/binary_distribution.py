@@ -260,17 +260,12 @@ class BinaryCacheIndex:
             try:
                 cache_exists = self._index_file_cache.init_entry(cache_key)
                 cache_path = self._index_file_cache.cache_path(cache_key)
-                if not cache_exists:
-                    # recreate index if it is missing
-                    cache_entry = self._local_index_cache[cache_key]
-                    self._fetch_and_cache_index(url_and_version, cache_entry)
-                    cache_exists = self._index_file_cache.init_entry(cache_key)
-                if cache_exists:
-                    with self._index_file_cache.read_transaction(cache_key):
-                        db._read_from_file(cache_path)
-                else:
-                    # this is a logic bug, we should never hit this
-                    raise FileNotFoundError(f"cache index file missing: {cache_path}")
+                with self._index_file_cache.read_transaction(cache_key):
+                    if not cache_exists:
+                        # recreate index if it is missing
+                        cache_entry = self._local_index_cache[cache_key]
+                        self._fetch_and_cache_index(url_and_version, cache_entry)
+                    db._read_from_file(cache_path)
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
@@ -555,7 +550,7 @@ class BinaryCacheIndex:
         # Persist new index.json
         url_hash = compute_hash(f"{mirror_url}/v{layout_version}")
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        pre_existing = self._index_file_cache.init_entry(cache_key)
+        self._index_file_cache.init_entry(cache_key)
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             new.write(result.data)
 
@@ -567,7 +562,7 @@ class BinaryCacheIndex:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key and not pre_existing:
+        if old_cache_key and old_cache_key != cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
