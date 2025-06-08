@@ -209,6 +209,7 @@ class BinaryCacheIndex:
     def clear(self):
         """For testing purposes we need to be able to empty the cache and
         clear associated data structures."""
+        print("USE CACHE: CLEAR")
         if self._index_file_cache:
             self._index_file_cache.destroy()
             self._index_file_cache = file_cache.FileCache(self._index_cache_root)
@@ -254,6 +255,8 @@ class BinaryCacheIndex:
             try:
                 self._index_file_cache.init_entry(cache_key)
                 cache_path = self._index_file_cache.cache_path(cache_key)
+                # os.remove(str(cache_path))
+                print("USE CACHE: READ", str(cache_path))
                 with self._index_file_cache.read_transaction(cache_key):
                     db._read_from_file(pathlib.Path(cache_path))
             except spack_db.InvalidDatabaseVersionError as e:
