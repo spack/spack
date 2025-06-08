@@ -544,7 +544,7 @@ class BinaryCacheIndex:
         # Persist new index.json
         url_hash = compute_hash(f"{mirror_url}/v{layout_version}")
         cache_key = "{}_{}.json".format(url_hash[:10], result.hash[:10])
-        self._index_file_cache.init_entry(cache_key)
+        pre_existing = self._index_file_cache.init_entry(cache_key)
         with self._index_file_cache.write_transaction(cache_key) as (old, new):
             new.write(result.data)
 
@@ -556,7 +556,7 @@ class BinaryCacheIndex:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
+        if old_cache_key and not pre_existing:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should
