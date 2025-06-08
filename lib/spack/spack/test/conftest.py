@@ -633,29 +633,6 @@ def _use_test_platform(test_platform):
 # *USE*, or things can get really confusing.
 #
 
-import logging
-
-# Set up logging configuration
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-@pytest.fixture(autouse=True)
-def check_read_cache(capfd, request):
-    # This fixture will automatically run for each test
-    yield  # This allows the test to run
-
-    # Capture the output after the test has run
-    captured = capfd.readouterr()
-    output = captured.out
-
-    # Check for the substring "READ CACHE"
-    if "USE CACHE" in output:
-        # Get the test name
-        test_name = request.node.name
-        # Log the test name and the output line containing "READ CACHE"
-        for line in output.splitlines():
-            if "USE CACHE" in line:
-                logger.info(f"Test: {test_name}, Output: {line}")
 
 #
 # Test-specific fixtures
