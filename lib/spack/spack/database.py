@@ -795,6 +795,9 @@ class Database:
 
         Does not do any locking.
         """
+        if not filename.is_file():
+            raise FileNotFoundError(f"database does not exist {filename}")
+
         try:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
             fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
