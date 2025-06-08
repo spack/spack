@@ -275,9 +275,7 @@ class SpackPaths:
 
         #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
         #: overridden by `config:misc_cache`
-        self.default_misc_cache_path = os.path.join(
-            self.spack_state_home, self.spack_instance_id, "cache"
-        )
+        self.default_misc_cache_path = os.path.join(self.user_cache_path, "cache")
         #: concretization cache for Spack concretizations
         #: overridden by `config:concretization_cache:url`
         self.default_conc_cache_path = os.path.join(self.default_misc_cache_path, "concretization")
