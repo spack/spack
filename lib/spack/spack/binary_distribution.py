@@ -264,7 +264,7 @@ class BinaryCacheIndex:
                 if not cache_file_exists:
                     # recreate index if it is missing
                     with self._index_file_cache.write_transaction(cache_key):
-                        cache_entry = self._local_index_cache[cache_key]
+                        cache_entry = self._local_index_cache[str(url_and_version)]
                         self._fetch_and_cache_index(url_and_version, cache_entry)
                 with self._index_file_cache.read_transaction(cache_key):
                     db._read_from_file(cache_file_path)
