@@ -259,14 +259,15 @@ class BinaryCacheIndex:
             db = BuildCacheDatabase(tmpdir)
 
             try:
-                cache_exists = self._index_file_cache.init_entry(cache_key)
-                cache_path = self._index_file_cache.cache_path(cache_key)
-                with self._index_file_cache.read_transaction(cache_key):
-                    if not cache_exists:
-                        # recreate index if it is missing
+                cache_file_exists = self._index_file_cache.init_entry(cache_key)
+                cache_file_path = self._index_file_cache.cache_path(cache_key)
+                if not cache_file_exists:
+                    # recreate index if it is missing
+                    with self._index_file_cache.write_transaction(cache_key):
                         cache_entry = self._local_index_cache[cache_key]
                         self._fetch_and_cache_index(url_and_version, cache_entry)
-                    db._read_from_file(cache_path)
+                with self._index_file_cache.read_transaction(cache_key):
+                    db._read_from_file(cache_file_path)
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
