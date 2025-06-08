@@ -54,7 +54,7 @@ class Token:
         )
 
 
-def token_match_regex(token: Token):
+def token_match_regex(token: TokenBase):
     """Generate a regular expression that matches the provided token and its subvalues.
 
     This will extract named capture groups from the provided regex and prefix them with

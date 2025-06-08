@@ -296,6 +296,8 @@ def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
         the virtuals assigned, or None if there aren't any
 
     """
+    assert context.current_token is not None
+
     subvalues = context.current_token.subvalues
     if not subvalues:
         return ()
@@ -427,7 +429,7 @@ class SpecParser:
             )
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
-            raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
+            raise spack.error.SpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
 
     def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
