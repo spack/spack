@@ -2138,7 +2138,7 @@ class Spec:
 
         attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
         if attrs:
-            attrs = f"[{attrs}]"
+            attrs = f"[{attrs}] "
 
         return attrs
 
@@ -2158,53 +2158,46 @@ class Spec:
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
 
-        for item in sorted(direct, key=lambda x: x.spec.name):
-            if not predicate(item):
+        def format_edge(edge, sigil, dep_spec=None):
+            dep_spec = dep_spec or edge.spec
+            dep_format = dep_spec.format(format_string)
+
+            edge_attributes = (
+                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
+                if edge.depflag or edge.when != Spec()
+                else ""
+            )
+            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
+            star = _anonymous_star(edge, dep_format)
+            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
+
+        # direct dependencies
+        for edge in sorted(direct, key=lambda x: x.spec.name):
+            if not predicate(edge):
                 continue
 
-            current_name = item.spec.name
-            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
+            # replace legacy compiler names
+            old_name = edge.spec.name
+            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
+            try:
+                # this is ugly but copies can be expensive
+                if new_name:
+                    edge.spec.name = new_name
+                parts.append(format_edge(edge, "%", edge.spec))
+            finally:
+                edge.spec.name = old_name
 
-            edge_attributes = ""
-            if item.when != Spec():
-                edge_attributes = self._format_edge_attributes(
-                    item, deptypes=deptypes, virtuals=False
-                )
-                if edge_attributes:
-                    edge_attributes += " "
-            virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
-
-            # need a * for anonymous specs with key-value variants
-            dep_format = item.spec.format(format_string)
-            star = _anonymous_star(item, dep_format)
-            string = f"%{edge_attributes}{star}{virtuals}{dep_format}"
-            if current_name is not None:
-                string = string.replace(current_name, new_name)
-            parts.append(string)
-
-        for item in sorted(transitive, key=lambda x: x.spec.name):
-            if not predicate(item):
+        # transitive dependencies (with any direct dependencies)
+        for edge in sorted(transitive, key=lambda x: x.spec.name):
+            if not predicate(edge):
                 continue
+            sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
+            parts.append(format_edge(edge, sigil, edge.spec))
 
-            edge_attributes = ""
-            if item.depflag or item.when != Spec():
-                edge_attributes = self._format_edge_attributes(
-                    item, deptypes=deptypes, virtuals=False
-                )
-                if edge_attributes:
-                    edge_attributes += " "
-
-            virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
-
-            sigil = "%" if _force_direct else "^"  # hack until direct deps are represented better
-            dep_format = item.spec.format(format_string)
-            star = _anonymous_star(item, dep_format)
-            parts.append(f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}")
-
-            # also recursively add any build dependencies of transitive dependencies
-            if item.spec._dependencies:
+            # also recursively add any direct dependencies of transitive dependencies
+            if edge.spec._dependencies:
                 parts.append(
-                    item.spec._format_dependencies(
+                    edge.spec._format_dependencies(
                         format_string=format_string,
                         predicate=predicate,
                         deptypes=deptypes,
