@@ -135,7 +135,7 @@ clean --downloads <cmd-spack-clean>`.
 
 Temporary directory to store long-lived cache files, such as indices
 of packages available in repositories.  Defaults to
-``$user_cache_path/cache``.  Can be purged with
+``~/.local/state/spack/$spack_instance_id/spack``.  Can be purged with
 :ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
 --------------------

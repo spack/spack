@@ -93,12 +93,12 @@ are multiple configuration scopes. From lowest to highest precedence:
    all instances of Spack running with the same Python installation. This scope takes higher precedence than site, system, and default scopes.
 
 #. **user**: Stored in the home directory:
-   ``~/.config/spack/``. These settings affect all instances of
+   ``~/.local/config/spack/``. These settings affect all instances of
    Spack and take higher precedence than site, system, plugin, or
    defaults scopes.
 
 #. **this-spack**: Stored in the home directory:
-   ``~/.config/spack/$spack_instance_id/``. These settings
+   ``~/.local/config/spack/$spack_instance_id/``. These settings
    affect the instance of spack that corresponds to the specified
    ``$spack_instance_id``. This scope is most useful for overriding
    configurations for Spack instances that are not (or should not be)
@@ -688,7 +688,7 @@ account all scopes. For example, to see the fully merged
      - $tempdir/$user/spack-stage
      - $spack_cache_home/stage
      source_cache: $default_download_root
-     misc_cache: $user_cache_path/cache
+     misc_cache: $spack_state_home/$spack_instance_id/cache
      locks: true
 
 Likewise, this will show the fully merged ``packages.yaml``:
@@ -734,7 +734,7 @@ down the source of the configuration:
    /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:51    - $spack_cache_home/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $default_download_root
-   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $user_cache_path/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: $spack_state_home/$spack_instance_id/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
 You can see above that the ``build_jobs`` and ``debug`` settings are
@@ -774,7 +774,7 @@ configuration locations:
 And one that allows you to move the default cache location:
 
 * ``SPACK_USER_CACHE_PATH``: Override the default path to use for user
-  data (modules, misc_cache, tests, reports, etc.).
+  data (misc_cache, tests, reports, etc.).
 
 With these settings, if you want to isolate Spack in a CI environment, you can do this::
 
@@ -794,7 +794,11 @@ changed in 1.0, so this section will summarize the changes, and how
 XDG variables can help users organize their Spack artifacts.
 
 ``XDG_DATA_HOME`` is used to store long-lived data. Its default value
-is ``$HOME/.local/share``. It is the default value for ``$user_cache_path``.
+is ``$HOME/.local/share``. The following items are always stored by
+default using ``$XDG_DATA_HOME``:
+
+* Modules: ``$XDG_DATA_HOME/spack/``
+* Package indices: ``$XDG_DATA_HOME/$spack_instance_id/spack``
 
 The data listed below will be placed in ``$spack`` by default. However,
 if ``XDG_DATA_HOME`` is set, they will be stored under that path. The
@@ -806,7 +810,10 @@ default values for these are as follows:
 
 ``XDG_STATE_HOME`` is used to store data that is useful if persistent,
 but not integral to Spack's functionality. If not defined, its default
-value is ``~/.local/state``.
+value is ``~/.local/state``. ``misc_cache`` is placed by default using
+this variable.
+
+* ``misc_cache``: ``$XDG_STATE_HOME/$spack_instance_id/spack``
 
 ``XDG_CACHE_HOME`` is used to store temporary data. If not defined,
 its default value is ``~/.cache``. Build stages are placed by default
