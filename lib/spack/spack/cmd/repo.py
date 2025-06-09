@@ -136,6 +136,31 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="automatically migrate the repository to the latest Package API",
     )
 
+    # Update
+    update_parser = sp.add_parser("update", help=repo_update.__doc__)
+    update_parser.add_argument("namespace", nargs="?", help="repository namespace to update")
+    update_parser.add_argument(
+        "--remote",
+        "-r",
+        default="origin",
+        nargs="?",
+        help="name of remote to check for branches, tags, or commits",
+    )
+    update_parser.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
+        help="configuration scope to modify",
+    )
+    refspec = update_parser.add_mutually_exclusive_group(required=False)
+    refspec.add_argument(
+        "--branch", "-b", nargs="?", default=None, help="name of a branch to change to"
+    )
+    refspec.add_argument("--tag", "-t", nargs="?", default=None, help="name of a tag to change to")
+    refspec.add_argument(
+        "--commit", "-c", nargs="?", default=None, help="name of a commit to change to"
+    )
+
 
 def repo_create(args):
     """create a new package repository"""
@@ -447,6 +472,30 @@ def _iter_repos_from_descriptors(
             yield name, descriptor.repository, None  # None indicates remote descriptor
 
 
+def repo_update(args: Any) -> int:
+    config = spack.config.CONFIG
+    scope = args.scope
+
+    if args.namespace:
+        existing: Dict[str, Any] = config.get("repos", default={}, scope=scope)
+        if args.namespace not in existing:
+            raise SpackError(f"{args.namespace} is not a known repository namespace.")
+
+        entry = spack.util.path.canonicalize_path(args.namespace)
+        descriptors = {
+            args.namespace: spack.repo.parse_config_descriptor(
+                args.namespace or "<unnamed>", entry, lock=spack.repo.package_repository_lock()
+            )
+        }
+    else:
+        descriptors = spack.repo.RepoDescriptors.from_config(
+            spack.repo.package_repository_lock(), spack.config.CONFIG
+        )
+
+    for _, descriptor in descriptors.items():
+        descriptor.update(git=spack.util.executable.which("git"))
+
+
 def repo(parser, args):
     return {
         "create": repo_create,
@@ -457,4 +506,5 @@ def repo(parser, args):
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,
+        "update": repo_update,
     }[args.repo_command](args)

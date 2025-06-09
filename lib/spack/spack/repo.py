@@ -1092,8 +1092,7 @@ class Repo:
             # From Package API v2.0 the namespace follows from the directory structure.
             check(
                 f"{os.sep}spack_repo{os.sep}" in self.root,
-                f"Invalid repository path '{self.root}'. "
-                f"Path must contain 'spack_repo{os.sep}'",
+                f"Invalid repository path '{self.root}'. Path must contain 'spack_repo{os.sep}'",
             )
             derived_namespace = self.root.rpartition(f"spack_repo{os.sep}")[2].replace(os.sep, ".")
             if "namespace" in config:
@@ -1596,6 +1595,9 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
+    def update(self, git: MaybeExecutable = None) -> None:
+        return None
+
     def construct(
         self, cache: spack.util.file_cache.FileCache, overrides: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Union[Repo, Exception]]:
@@ -1625,12 +1627,18 @@ class RemoteRepoDescriptor(RepoDescriptor):
         self,
         name: Optional[str],
         repository: str,
+        branch: str,
+        commit: str,
+        tag: str,
         destination: str,
         relative_paths: Optional[List[str]],
         lock: spack.util.lock.Lock,
     ) -> None:
         super().__init__(name)
         self.repository = repository
+        self.branch = branch
+        self.commit = commit
+        self.tag = tag
         self.destination = destination
         self.relative_paths = relative_paths
         self.error: Optional[str] = None
@@ -1646,6 +1654,73 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
+    def _init_git_repo(self, git: spack.util.executable.Executable, remote: str):
+        git("init", self.destination, output=str)
+        git("-C", self.destination, "remote", "add", "origin", self.repository)
+        git("-C", self.destination, "config", "feature.manyFiles", "true")
+
+    def _pull_checkout_commit(self, git: spack.util.executable.Executable, commit: str):
+        git("-C", self.destination, "fetch", "--all")
+        git("-C", self.destination, "checkout", commit)
+
+    def _pull_checkout_tag(self, git: spack.util.executable.Executable, remote: str, depth: int):
+        git("-C", self.destination, "fetch", f"--depth={depth}", "--force", "--tags", remote)
+        git("-C", self.destination, "checkout", self.tag)
+
+    def _pull_checkout_branch(
+        self, git: spack.util.executable.Executable, remote: str, depth: int
+    ):
+        git("-C", self.destination, "fetch", f"--depth={depth}", remote, self.branch)
+        git("-C", self.destination, "checkout", self.branch)
+        git("-C", self.destination, "rebase", f"{remote}/{self.branch}")
+
+    def _clone_or_pull(
+        self,
+        git: spack.util.executable.Executable,
+        update: bool = False,
+        remote: str = "origin",
+        depth: int = 20,
+    ) -> None:
+        with self.write_transaction:
+            try:
+                # do not fetch if the package repository was fetched by another
+                # process while we were waiting for the lock
+                fetched = self._fetched()
+                if not fetched:
+                    self._init_git_repo(git, remote)
+
+                    refs = git(
+                        "-C", self.destination, "ls-remote", "--symref", remote, "HEAD", output=str
+                    )
+                    ref_match = re.search(r"refs/heads/(\S+)", refs)
+                    self.branch = ref_match.group(1)
+
+                elif update and not (self.commit or self.tag or self.branch):
+                    # need to add logic here to see if we're on a branch, tag, or commit
+                    self.branch = git(
+                        "-C", self.destination, "rev-parse", "--abbrev-ref", "HEAD", output=str
+                    )
+                    remote = git("-C", self.destination, "config", f"branch.{self.branch}.remote")
+
+                if update or not fetched:
+                    if self.commit:
+                        self._pull_checkout_commit(git, remote)
+
+                    elif self.tag:
+                        self._pull_checkout_tag(git, remote, depth)
+
+                    else:
+                        self._pull_checkout_branch(git, remote, depth)
+
+            except spack.util.executable.ProcessError as e:
+                self.error = f"Failed to {'update' if update else 'clone'} repository {self.repository}: {e}"
+                return
+
+            self.read_index_file()
+
+    def update(self, git: MaybeExecutable = None) -> None:
+        self._clone_or_pull(git, update=True)
+
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         """Clone the remote repository if it has not been fetched yet and read the index file
         if necessary."""
@@ -1660,18 +1735,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
             self.error = "Git executable not found"
             return
 
-        with self.write_transaction:
-            try:
-                # do not fetch if the package repository was fetched by another process while we
-                # were waiting for the lock
-                if not self._fetched():
-                    # users can always unshallow manually to fetch more.
-                    git("clone", "--depth=100", self.repository, self.destination)
-            except spack.util.executable.ProcessError as e:
-                self.error = f"Failed to clone repository {self.repository}: {e}"
-                return
-
-            self.read_index_file()
+        self._clone_or_pull(git)
 
     def read_index_file(self) -> None:
         if self.relative_paths is not None:
@@ -1858,12 +1922,29 @@ def parse_config_descriptor(
     else:
         destination = spack.util.path.canonicalize_path(destination)
 
+    if "branch" in descriptor:
+        branch = descriptor["branch"]
+    else:
+        branch = None
+
+    if "commit" in descriptor:
+        commit = descriptor["commit"]
+    else:
+        commit = None
+
+    if "tag" in descriptor:
+        tag = descriptor["tag"]
+    else:
+        tag = None
+
     if "paths" in descriptor:
         rel_paths = descriptor["paths"]
     else:
         rel_paths = None
 
-    return RemoteRepoDescriptor(name, repository, destination, rel_paths, lock)
+    return RemoteRepoDescriptor(
+        name, repository, branch, commit, tag, destination, rel_paths, lock
+    )
 
 
 def create_or_construct(
@@ -1887,9 +1968,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
