@@ -2228,10 +2228,7 @@ class Spec:
     @property
     def long_spec(self):
         """Returns a string of the spec with the dependencies completely enumerated."""
-        string = self.format()
-        deps = self._format_dependencies()
-        string = f"{string} {deps}" if deps else string
-        return string.strip()
+        return f"{self.format()} {self._format_dependencies()}".strip()
 
     @property
     def short_spec(self):
