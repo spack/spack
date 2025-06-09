@@ -109,7 +109,10 @@ def make_concurrent_executor(
     if the platform does not enable forking as the default start method. Effectively
     require_fork=True makes the executor sequential in the current process on Windows, macOS, and
     Linux from Python 3.14+ (which changes defaults)"""
+    from spack.subprocess_context import GlobalStateMarshaler
+
     if require_fork and multiprocessing.get_start_method() != "fork":
         return SequentialExecutor()
     jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
-    return concurrent.futures.ProcessPoolExecutor(jobs)
+    marshaler = GlobalStateMarshaler()
+    return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)
