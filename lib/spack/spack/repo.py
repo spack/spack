@@ -1886,10 +1886,17 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
     return repo_path
 
 
+MAIN_WAS_RUN = False
+
+
+def _lazy():
+    if not MAIN_WAS_RUN:
+        raise RuntimeError("spack.repo.PATH is initialized lazily with wrong config.")
+    return create_and_enable(spack.config.CONFIG)
+
+
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(_lazy)  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
