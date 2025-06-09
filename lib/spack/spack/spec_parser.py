@@ -202,14 +202,14 @@ class TokenContext:
         self.next_token = None  # the next token to be read
 
         # if not empty, back of list is front of stream, and we pop from here instead.
-        self.pushed_tokens: Optional[List] = None
+        self.pushed_tokens: List[Token] = []
 
         self.advance()
 
     def advance(self):
         """Advance one token"""
         self.current_token = self.next_token
-        if self.pushed_tokens and self.pushed_tokens is not None:
+        if self.pushed_tokens:
             self.next_token = self.pushed_tokens.pop()
         else:
             self.next_token = next(self.token_stream, None)
@@ -225,8 +225,6 @@ class TokenContext:
 
     def push_front(self, token=Token):
         """Push a token onto the front of the stream. Enables a bit of lookahead."""
-        if self.pushed_tokens is None:
-            self.pushed_tokens = []
         self.pushed_tokens.append(self.next_token)  # back of list is front of stream
         self.next_token = token
 
