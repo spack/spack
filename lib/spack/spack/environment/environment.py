@@ -2075,7 +2075,16 @@ class Environment:
         If these specs appear under different user_specs, only one copy
         is added to the list returned.
         """
-        specs = [self.specs_by_hash[h] for h in self.all_concretized_orders()]
+        specs = []
+        for concretized_hash in self.all_concretized_orders():
+            if concretized_hash in self.specs_by_hash:
+                specs.append(self.specs_by_hash[concretized_hash])
+            else:
+                for env_path in self.included_specs_by_hash.keys():
+                    if concretized_hash in self.included_specs_by_hash[env_path]:
+                        specs.append(self.included_specs_by_hash[env_path][concretized_hash])
+                        break
+
         if recurse_dependencies:
             specs.extend(
                 traverse.traverse_nodes(
