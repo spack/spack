@@ -1089,7 +1089,7 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, monkeypatch):
     specs that were not affected by a change"""
     monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
 
-    def fake_compute_affected(r1=None, r2=None):
+    def fake_compute_affected(repo=None, r1=None, r2=None):
         return ["libdwarf"]
 
     def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
