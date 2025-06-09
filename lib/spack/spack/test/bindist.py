@@ -137,6 +137,7 @@ def default_config(tmp_path, config_directory, mock_packages_repo, install_mocke
             spack.config.set(
                 "config:build_stage", [str(mutable_dir / "build_stage")], scope="user"
             )
+        spack.config.set("config:misc_cache:", str(mutable_dir / "misc_cache"), scope="user")
         timeout = spack.config.get("config:connect_timeout")
         if not timeout:
             spack.config.set("config:connect_timeout", 10, scope="user")
@@ -325,6 +326,11 @@ def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
     into the non-default directory layout scheme.
     """
     cspec = spack.concretize.concretize_one("corge")
+    # Install 'corge' without using a cache
+    install_cmd("--no-cache", cspec.name)
+    buildcache_cmd("push", "-u", temporary_mirror_dir, cspec.name)
+    buildcache_cmd("update-index", temporary_mirror_dir)
+    uninstall_cmd("-y", "--dependents", cspec.name)
 
     # Test install in non-default install path scheme and relative path
     buildcache_cmd("install", "-ufo", cspec.name)
