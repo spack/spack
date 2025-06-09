@@ -222,17 +222,51 @@ succeeds spack -c config:ccache:true python "$SHARE_DIR/qa/config_state.py"
 
 spack env deactivate
 
+
+# -----------------------------------------------------------------------
+# Make sure environments and custom scopes on the CLI have the right
+# precedence, based on order of appearance
+# -----------------------------------------------------------------------
 echo "Testing correct scope precedence on command line"
-contains 'unify: true' spack -e scopes/true config get concretizer
-contains 'unify: true' spack -D scopes/true config get concretizer
-contains 'unify: false' spack -C scopes/false config get concretizer
-contains 'unify: when_possible' spack -C scopes/wp config get concretizer
+contains 'unify: true' spack -e $QA_DIR/scopes/true config get concretizer
+contains 'unify: true' spack -D $QA_DIR/scopes/true config get concretizer
+contains 'unify: false' spack -C $QA_DIR/scopes/false config get concretizer
+contains 'unify: when_possible' spack -C $QA_DIR/scopes/wp config get concretizer
+contains 'unify: false' \
+         spack -C $QA_DIR/scopes/wp -C $QA_DIR/scopes/false config get concretizer
 
-contains 'unify: true' spack -C scopes/wp -C scopes/false -e scopes/true config get concretizer
-contains 'unify: false' spack -C scopes/wp -C scopes/false config get concretizer
-contains 'unify: when_possible' spack -C scopes/false -e scopes/true -C scopes/wp config get concretizer
-contains 'unify: false' spack -e scopes/true -C scopes/wp -C scopes/false config get concretizer
+contains 'unify: true' \
+         spack -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+               -e $QA_DIR/scopes/true \
+               config get concretizer
 
-contains 'unify: true' spack -C scopes/wp -C scopes/false -D scopes/true config get concretizer
-contains 'unify: when_possible' spack -C scopes/false -D scopes/true -C scopes/wp config get concretizer
-contains 'unify: false' spack -D scopes/true -C scopes/wp -C scopes/false config get concretizer
+contains 'unify: when_possible' \
+         spack -C $QA_DIR/scopes/false \
+               -e $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               config get concretizer
+
+contains 'unify: false' \
+         spack -e $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+         config get concretizer
+
+contains 'unify: true' \
+         spack -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+               -D $QA_DIR/scopes/true \
+         config get concretizer
+
+contains 'unify: when_possible' \
+         spack -C $QA_DIR/scopes/false \
+               -D $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               config get concretizer
+
+contains 'unify: false' \
+         spack -D $QA_DIR/scopes/true \
+               -C $QA_DIR/scopes/wp \
+               -C $QA_DIR/scopes/false \
+              config get concretizer
