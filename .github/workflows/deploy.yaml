@@ -1,0 +1,45 @@
+name: deploy
+on:
+  release:
+    types:
+      - published
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4.2.2
+      - name: Set up python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: '3.13'
+      - name: Install pip dependencies
+        run: pip install build
+      - name: List pip dependencies
+        run: pip list
+      - name: Build project
+        run: python3 -m build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: pypi-dist
+          path: dist/
+  pypi:
+    name: pypi
+    needs:
+      - build
+    environment:
+      name: pypi
+      url: https://pypi.org/p/spack
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: pypi-dist
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4

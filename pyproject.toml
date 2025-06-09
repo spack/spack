@@ -1,11 +1,61 @@
+# https://packaging.python.org/en/latest/specifications/pyproject-toml/
 [project]
 name = "spack"
 description = "The spack package manager"
+readme = "README.md"
 requires-python = ">=3.6"
-dependencies = ["clingo", "setuptools"]
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-*"]
+authors = [
+    {name="Todd Gamblin", email="tgamblin@llnl.gov"},
+]
+maintainers = [
+    {name="Todd Gamblin", email="tgamblin@llnl.gov"},
+    {name="Adam J. Stewart", email="ajstewart426@gmail.com"},
+]
+keywords = [
+    "python",
+    "windows",
+    "macos",
+    "linux",
+    "package-manager",
+    "hpc",
+    "scientific-computing",
+    "spack",
+    "build-tools",
+    "radiuss",
+    "hpsf"
+]
+classifiers = [
+    # https://pypi.org/classifiers/
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: System Administrators",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Installation/Setup",
+    "Topic :: System :: Software Distribution",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = ["clingo"]
 dynamic = ["version"]
 
 [project.scripts]
+# https://packaging.python.org/en/latest/specifications/entry-points/
 spack = "lib.spack.spack_installable.main:main"
 
 [tool.hatch.version]
@@ -16,8 +66,6 @@ dev = [
   "pip>=21.3",
   "pytest",
   "pytest-xdist",
-  "setuptools",
-  "click",
   "black",
   "mypy",
   "isort",
@@ -27,24 +75,26 @@ dev = [
 ci = ["pytest-cov", "codecov[toml]"]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26"]
 build-backend = "hatchling.build"
 
+# https://packaging.python.org/en/latest/specifications/well-known-project-urls/
+[project.urls]
+homepage = "https://spack.io/"
+source = "https://github.com/spack/spack"
+changelog = "https://github.com/spack/spack/blob/develop/CHANGELOG.md"
+releasenotes = "https://github.com/spack/spack/releases"
+documentation = "https://spack.readthedocs.io/en/latest/"
+issues = "https://github.com/spack/spack/issues"
+
 [tool.hatch.build.targets.wheel]
-include = [
-  "/bin",
-  "/etc",
-  "/lib",
-  "/share",
-  "/var",
-  "CITATION.cff",
-  "COPYRIGHT",
-  "LICENSE-APACHE",
-  "LICENSE-MIT",
-  "NOTICE",
-  "README.md",
-  "SECURITY.md",
-]
+# https://hatch.pypa.io/latest/config/build/
+packages = ["lib/spack"]
+include = ["etc/spack/defaults"]
+exclude = ["lib/spack/docs"]
+
+[tool.hatch.build.targets.wheel.sources]
+"etc/spack/defaults" = "spack/etc"
 
 [tool.hatch.envs.default]
 features = ["dev"]
