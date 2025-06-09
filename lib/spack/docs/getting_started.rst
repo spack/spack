@@ -281,13 +281,15 @@ compilers`` or ``spack compiler list``:
    $ spack compilers
    ==> Available compilers
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
-   gcc@9.4.0  gcc@8.4.0  gcc@10.5.0
+   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
-   -- llvm ubuntu20.04-x86_64 --------------------------------------
-   llvm@12.0.0  llvm@11.0.0  llvm@10.0.0
+   -- intel-oneapi-compilers ubuntu20.04-x86_64 --------------------
+   [+]  intel-oneapi-compilers@2025.1.1
 
-Any of these compilers can be used to build Spack packages.  More on
-how this is done is in :ref:`sec-specs`.
+Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]``
+are installed in the local Spack's store.
+
+Any of these compilers can be used to build Spack packages.  More on how this is done is in :ref:`sec-specs`.
 
 .. _cmd-spack-compiler-add:
 
