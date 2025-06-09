@@ -254,23 +254,6 @@ environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-Optional: Alternate Prefix
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-You may want to run Spack out of a prefix other than the git repository
-you cloned.  The ``spack clone`` command provides this
-functionality.  To install Spack in a new directory, simply type:
-
-.. code-block:: console
-
-   $ spack clone /my/favorite/prefix
-
-This will install a new Spack script in ``/my/favorite/prefix/bin``,
-which you can use just like you would the regular spack script.  Each
-copy of Spack installs packages into its own ``$PREFIX/opt``
-directory.
-
 
 .. _compiler-config:
 
