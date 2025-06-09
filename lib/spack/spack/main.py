@@ -42,6 +42,7 @@ import spack.environment.environment
 import spack.error
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.solver.asp
 import spack.spec
 import spack.store
@@ -1044,6 +1045,8 @@ def main(argv=None):
             the executable name. If None, parses from sys.argv.
 
     """
+    spack.config.MAIN_WAS_RUN = True
+    spack.repo.MAIN_WAS_RUN = True
     try:
         return _main(argv)
 

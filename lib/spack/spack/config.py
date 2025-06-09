@@ -963,8 +963,17 @@ def create() -> Configuration:
     return list(create_incremental())[-1]
 
 
+MAIN_WAS_RUN = False
+
+
+def _lazy():
+    if not MAIN_WAS_RUN:
+        raise RuntimeError("spack.config.CONFIG is initialized lazily with wrong config.")
+    return create_incremental()
+
+
 #: This is the singleton configuration instance for Spack.
-CONFIG: Configuration = lang.Singleton(create_incremental)  # type: ignore
+CONFIG: Configuration = lang.Singleton(_lazy)  # type: ignore
 
 
 def add_from_file(filename: str, scope: Optional[str] = None) -> None:
