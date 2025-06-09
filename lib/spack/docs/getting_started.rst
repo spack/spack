@@ -44,9 +44,9 @@ That's it! You're ready to use Spack.
 
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
---------------------
-System Prerequisites
---------------------
+-------------
+Prerequisites
+-------------
 
 To check that the prerequisites for running Spack are met on your system you can use:
 
