@@ -1448,6 +1448,37 @@ class SpecAnnotations:
         return result
 
 
+def _anonymous_star(dep, dep_format):
+    """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
+
+    Returns:
+        "*" if a star is needed, "" otherwise
+    """
+    # named spec never needs star
+    if dep.spec.name:
+        return ""
+
+    # virtuals without a name always need *: %c=* @4.0 foo=bar
+    if dep.virtuals:
+        return "*"
+
+    # versions are first so checking for @ is faster than != VersionList(':')
+    if dep_format.startswith("@"):
+        return ""
+
+    # compiler flags are key-value pairs and can be ambiguous with virtual assignment
+    if dep.spec.compiler_flags:
+        return "*"
+
+    # booleans come first, and they don't need a star. key-value pairs do. If there are
+    # no key value pairs, we're left with either an empty spec, which needs * as in
+    # '^*', or we're left with arch, which is a key value pair, and needs a star.
+    if not any(v.type == spack.variant.VariantType.BOOL for v in dep.spec.variants.values()):
+        return "*"
+
+    return "*" if dep.spec.architecture else ""
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
@@ -2143,24 +2174,13 @@ class Spec:
                     edge_attributes += " "
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
-            spec_format = item.spec.format(format_string)
-
             # need a * for anonymous specs with key-value variants
-            star = (
-                "*"
-                if (
-                    not item.spec.name
-                    and not virtuals
-                    and not item.spec.version
-                    and any(v.variant_type != BOOL for v in item.spec.variants.values())
-                )
-                else "*"
-            )
-
-            ddep_string = f"%{edge_attributes}{star}{virtuals}{spec_format}"
+            dep_format = item.spec.format(format_string)
+            star = _anonymous_star(item, dep_format)
+            string = f"%{edge_attributes}{star}{virtuals}{dep_format}"
             if current_name is not None:
-                ddep_string = ddep_string.replace(current_name, new_name)
-            parts.append(ddep_string)
+                string = string.replace(current_name, new_name)
+            parts.append(string)
 
         for item in sorted(transitive, key=lambda x: x.spec.name):
             if not predicate(item):
@@ -2177,9 +2197,9 @@ class Spec:
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
             sigil = "%" if _force_direct else "^"  # hack until direct deps are represented better
-            spec_format = item.spec.format(format_string)
-            star = ""
-            parts.append(f"{sigil}{edge_attributes}{star}{virtuals}{spec_format}")
+            dep_format = item.spec.format(format_string)
+            star = _anonymous_star(item, dep_format)
+            parts.append(f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}")
 
             # also recursively add any build dependencies of transitive dependencies
             if item.spec._dependencies:

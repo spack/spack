@@ -316,8 +316,9 @@ def specfile_for(default_mock_concretization):
             "y+a~b+c~d+e~f",
         ),
         # Things that evaluate to Spec()
-        ("@:", [Token(SpecTokens.VERSION, value="@:")], r"*"),
-        ("*", [Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*")], r"*"),
+        # TODO: consider making these format to "*" instead of ""
+        ("@:", [Token(SpecTokens.VERSION, value="@:")], r""),
+        ("*", [Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*")], r""),
         # virtual assignment on a dep of an anonymous spec (more of these later)
         (
             "%foo=bar",
