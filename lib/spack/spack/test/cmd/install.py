@@ -1138,4 +1138,6 @@ def test_invalid_concurrent_packages_flag(mutable_config):
 def test_concurrent_packages_set_in_config(mutable_config):
     """Ensure that the number of concurrent packages is properly set from adding to config"""
     spack.config.set("config:concurrent_packages", 3)
-    assert spack.config.get("config:concurrent_packages") == 3
+    spec = spack.concretize.concretize_one("pkg-a")
+    installer = spack.installer.PackageInstaller([spec.package])
+    assert installer.concurrent_packages == 3
