@@ -169,6 +169,8 @@ config:
   # on `spack install`, but this will be less of an issue in the future when we
   # introduce support for the gmake job server and allow more dynamic parallelism.
   # This, like `build_jobs`, is also limited by available cores.
+  # Note: This option has no effect on windows, as parallel builds are disabled on
+  # windows due to a lack of filesystem locks.
   concurrent_packages: 4
 
 
