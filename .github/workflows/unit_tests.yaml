@@ -132,7 +132,7 @@ jobs:
   # only on PRs modifying core Spack
   rhel8-platform-python:
     runs-on: ubuntu-latest
-    container: registry.access.redhat.com/ubi8/ubi
+    container: rockylinux:8
     steps:
     - name: Install dependencies
       run: |
