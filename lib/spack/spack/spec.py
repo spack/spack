@@ -2145,19 +2145,26 @@ class Spec:
     def _format_dependencies(
         self,
         format_string: str = DEFAULT_FORMAT,
-        predicate: Optional[Callable[[DependencySpec], bool]] = None,
+        include: Optional[Callable[[DependencySpec], bool]] = None,
         deptypes=True,
         _force_direct=False,
     ):
-        if predicate is None:
-            predicate = lambda dep: True
+        """Helper for formatting dependencies on specs.
 
+        Arguments:
+            format_string: format string to use for each dependency
+            include: predicate to select which dependencies to include
+            deptypes: whether to format deptypes
+            _force_direct: if True, print all dependencies as direct dependencies
+                (to be removed when we have this metadata on concrete edges)
+        """
+        include = include or (lambda dep: True)
         parts = []
-
         direct, transitive = lang.stable_partition(
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
 
+        # helper for direct and transitive loops below
         def format_edge(edge, sigil, dep_spec=None):
             dep_spec = dep_spec or edge.spec
             dep_format = dep_spec.format(format_string)
@@ -2169,11 +2176,12 @@ class Spec:
             )
             virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
             star = _anonymous_star(edge, dep_format)
+
             return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
 
         # direct dependencies
         for edge in sorted(direct, key=lambda x: x.spec.name):
-            if not predicate(edge):
+            if not include(edge):
                 continue
 
             # replace legacy compiler names
@@ -2189,7 +2197,7 @@ class Spec:
 
         # transitive dependencies (with any direct dependencies)
         for edge in sorted(transitive, key=lambda x: x.spec.name):
-            if not predicate(edge):
+            if not include(edge):
                 continue
             sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
             parts.append(format_edge(edge, sigil, edge.spec))
@@ -2199,7 +2207,7 @@ class Spec:
                 parts.append(
                     edge.spec._format_dependencies(
                         format_string=format_string,
-                        predicate=predicate,
+                        include=include,
                         deptypes=deptypes,
                         _force_direct=_force_direct,
                     )
