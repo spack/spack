@@ -113,6 +113,10 @@ def make_concurrent_executor(
 
     if require_fork and multiprocessing.get_start_method() != "fork":
         return SequentialExecutor()
+
+    if sys.version_info[:2] == (3, 6):
+        return SequentialExecutor()
+
     jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
     marshaler = GlobalStateMarshaler()
-    return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)
+    return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)  # novermin
