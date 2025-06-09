@@ -315,7 +315,76 @@ def specfile_for(default_mock_concretization):
             ],
             "y+a~b+c~d+e~f",
         ),
-        ("@:", [Token(SpecTokens.VERSION, value="@:")], r""),
+        # Things that evaluate to Spec()
+        ("@:", [Token(SpecTokens.VERSION, value="@:")], r"*"),
+        ("*", [Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*")], r"*"),
+        # virtual assignment on a dep of an anonymous spec (more of these later)
+        (
+            "%foo=bar",
+            [Token(SpecTokens.DEPENDENCY, value="%foo=bar", virtuals="foo", substitute="bar")],
+            "%foo=bar",
+        ),
+        (
+            "^foo=bar",
+            [Token(SpecTokens.DEPENDENCY, value="^foo=bar", virtuals="foo", substitute="bar")],
+            "^foo=bar",
+        ),
+        # anonymous dependencies with variants
+        (
+            "^*foo=bar",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
+            ],
+            "^*foo=bar",
+        ),
+        (
+            "%*foo=bar",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
+            ],
+            "%*foo=bar",
+        ),
+        (
+            "^*+foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+            ],
+            "^+foo",
+        ),
+        (
+            "^*~foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="~foo"),
+            ],
+            "^~foo",
+        ),
+        (
+            "%*+foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+            ],
+            "%+foo",
+        ),
+        (
+            "%*~foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="~foo"),
+            ],
+            "%~foo",
+        ),
+        # version range and list
         ("@1.6,1.2:1.4", [Token(SpecTokens.VERSION, value="@1.6,1.2:1.4")], r"@1.2:1.4,1.6"),
         (
             r"os=fe",  # Various translations associated with the architecture

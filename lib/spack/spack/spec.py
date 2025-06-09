@@ -2143,11 +2143,24 @@ class Spec:
                     edge_attributes += " "
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
-            parts.append(
-                f"%{edge_attributes}{virtuals}{item.spec.format(format_string)}".replace(
-                    current_name, new_name
+            spec_format = item.spec.format(format_string)
+
+            # need a * for anonymous specs with key-value variants
+            star = (
+                "*"
+                if (
+                    not item.spec.name
+                    and not virtuals
+                    and not item.spec.version
+                    and any(v.variant_type != BOOL for v in item.spec.variants.values())
                 )
+                else "*"
             )
+
+            ddep_string = f"%{edge_attributes}{star}{virtuals}{spec_format}"
+            if current_name is not None:
+                ddep_string = ddep_string.replace(current_name, new_name)
+            parts.append(ddep_string)
 
         for item in sorted(transitive, key=lambda x: x.spec.name):
             if not predicate(item):
@@ -2164,7 +2177,9 @@ class Spec:
             virtuals = f"{','.join(item.virtuals)}=" if item.virtuals else ""
 
             sigil = "%" if _force_direct else "^"  # hack until direct deps are represented better
-            parts.append(f"{sigil}{edge_attributes}{virtuals}{item.spec.format(format_string)}")
+            spec_format = item.spec.format(format_string)
+            star = ""
+            parts.append(f"{sigil}{edge_attributes}{star}{virtuals}{spec_format}")
 
             # also recursively add any build dependencies of transitive dependencies
             if item.spec._dependencies:
