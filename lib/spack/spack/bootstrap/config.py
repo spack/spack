@@ -14,9 +14,9 @@ import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.modules
-import spack.repo
 import spack.paths
 import spack.platforms
+import spack.repo
 import spack.spec
 import spack.store
 import spack.util.path
