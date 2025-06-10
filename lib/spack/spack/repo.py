@@ -1625,11 +1625,12 @@ class LocalRepoDescriptor(RepoDescriptor):
 class RemoteRepoDescriptor(RepoDescriptor):
     def __init__(
         self,
+        *,
         name: Optional[str],
         repository: str,
-        branch: str,
-        commit: str,
-        tag: str,
+        branch: Optional[str],
+        commit: Optional[str],
+        tag: Optional[str],
         destination: str,
         relative_paths: Optional[List[str]],
         lock: spack.util.lock.Lock,
@@ -1657,7 +1658,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
     def _init_git_repo(self, git: spack.util.executable.Executable, remote: str):
         git("init", self.destination, output=str)
         git("remote", "add", "origin", self.repository)
-        git("config", "feature.manyFiles", "true")
+        # versions of git prior to v2.24 may not have the manyFiles feature
+        # so we should ignore errors here on older versions of git
+        git("config", "feature.manyFiles", "true", ignore_errors=True)
 
     def _pull_checkout_commit(self, git: spack.util.executable.Executable):
         git("fetch", "--all")
@@ -1943,28 +1946,15 @@ def parse_config_descriptor(
     else:
         destination = spack.util.path.canonicalize_path(destination)
 
-    if "branch" in descriptor:
-        branch = descriptor["branch"]
-    else:
-        branch = None
-
-    if "commit" in descriptor:
-        commit = descriptor["commit"]
-    else:
-        commit = None
-
-    if "tag" in descriptor:
-        tag = descriptor["tag"]
-    else:
-        tag = None
-
-    if "paths" in descriptor:
-        rel_paths = descriptor["paths"]
-    else:
-        rel_paths = None
-
     return RemoteRepoDescriptor(
-        name, repository, branch, commit, tag, destination, rel_paths, lock
+        name=name,
+        repository=repository,
+        branch=descriptor.get("branch"),
+        commit=descriptor.get("commit"),
+        tag=descriptor.get("tag"),
+        destination=destination,
+        relative_paths=descriptor.get("paths"),
+        lock=lock,
     )
 
 
