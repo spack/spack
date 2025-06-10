@@ -518,6 +518,8 @@ def repo_update(args: Any) -> int:
             scope_repos[namespace][active_flag] = args.commit or args.tag or args.branch
 
         descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
+        if descriptor.error:
+            raise SpackError(descriptor.error)
 
     spack.config.set("repos", scope_repos, args.scope)
     return 0

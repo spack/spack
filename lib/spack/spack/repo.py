@@ -1672,7 +1672,11 @@ class RemoteRepoDescriptor(RepoDescriptor):
     ):
         git("fetch", f"--depth={depth}", remote, self.branch)
         git("checkout", self.branch)
-        git("rebase", f"{remote}/{self.branch}")
+        try:
+            git("rebase", f"{remote}/{self.branch}")
+        except spack.util.executable.ProcessError as e:
+            git("rebase", "--abort")
+            raise e
 
     def _clone_or_pull(
         self,
@@ -1710,7 +1714,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             self._pull_checkout_branch(git, remote, depth)
 
             except spack.util.executable.ProcessError as e:
-                self.error = f"Failed to {'update' if update else 'clone'} repository {self.repository}: {e}"
+                self.error = (
+                    f"Failed to {'update' if update else 'clone'} repository {self.name}: {e}"
+                )
                 return
 
             self.read_index_file()
