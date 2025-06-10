@@ -122,9 +122,9 @@ def concretize_separately(
     # all the indexes if there's any need for that.
     _ = spack.repo.PATH.provider_index
 
-    # Ensure we have compilers in compilers.yaml to avoid that
+    # Ensure we have compilers in packages.yaml to avoid that
     # processes try to write the config file in parallel
-    _ = spack.compilers.config.all_compilers_from(spack.config.CONFIG)
+    _ = spack.compilers.config.all_compilers()
 
     # Early return if there is nothing to do
     if len(args) == 0:
