@@ -1655,32 +1655,6 @@ class RemoteRepoDescriptor(RepoDescriptor):
             return self._fetched()
         return False
 
-    def _init_git_repo(self, git: spack.util.executable.Executable, remote: str):
-        git("init", self.destination, output=str)
-        git("remote", "add", "origin", self.repository)
-        # versions of git prior to v2.24 may not have the manyFiles feature
-        # so we should ignore errors here on older versions of git
-        git("config", "feature.manyFiles", "true", ignore_errors=True)
-
-    def _pull_checkout_commit(self, git: spack.util.executable.Executable):
-        git("fetch", "--all")
-        git("checkout", self.commit)
-
-    def _pull_checkout_tag(self, git: spack.util.executable.Executable, remote: str, depth: int):
-        git("fetch", f"--depth={depth}", "--force", "--tags", remote)
-        git("checkout", self.tag)
-
-    def _pull_checkout_branch(
-        self, git: spack.util.executable.Executable, remote: str, depth: int
-    ):
-        git("fetch", f"--depth={depth}", remote, self.branch)
-        git("checkout", self.branch)
-        try:
-            git("rebase", f"{remote}/{self.branch}")
-        except spack.util.executable.ProcessError as e:
-            git("rebase", "--abort")
-            raise e
-
     def _clone_or_pull(
         self,
         git: spack.util.executable.Executable,
@@ -1700,7 +1674,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                     # setup the repository if it does not exist
                     if not fetched:
-                        self._init_git_repo(git, remote)
+                        spack.util.git.init_git_repo(self.repository, self.destination, remote)
 
                         # determine the default branch from ls-remote
                         refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
@@ -1716,12 +1690,12 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
                     if self.commit:
-                        self._pull_checkout_commit(git)
+                        spack.util.git.pull_checkout_commit(self.commit)
 
                     elif self.tag:
-                        self._pull_checkout_tag(git, remote, depth)
+                        spack.util.git.pull_checkout_tag(self.tag, remote, depth)
 
-                    else:
+                    elif self.branch:
                         # if the branch already exists we should use the
                         # previously configured remote
                         try:
@@ -1729,7 +1703,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             remote = output.strip()
                         except spack.util.executable.ProcessError:
                             pass
-                        self._pull_checkout_branch(git, remote, depth)
+                        spack.util.git.pull_checkout_branch(
+                            self.branch, remote=remote, depth=depth
+                        )
 
             except spack.util.executable.ProcessError as e:
                 self.error = (

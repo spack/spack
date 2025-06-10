@@ -47,6 +47,63 @@ def git(required: bool = False) -> Optional[exe.Executable]:
     return git
 
 
+def init_git_repo(repository: str, destination: str, remote: str = "origin"):
+    """Initialize a new Git repository and configure it with a remote.
+
+    Creates a new Git repository at the specified destination directory,
+    adds a remote repository URL, and optimizes configuration for repositories
+    with many files.
+
+    Args:
+        repository: The URL of the remote repository to add.
+        destination: The local directory path where the Git repository will be initialized.
+        remote: The name for the remote repository. Defaults to "origin".
+
+    Raises:
+        RuntimeError: If git executable is not found or git init/remote add commands fail.
+
+    Note:
+        The manyFiles configuration may fail silently on Git versions prior to v2.24.
+    """
+    git_exe = git(required=True)
+
+    git_exe("init", destination, output=str)
+    git_exe("remote", "add", remote, repository)
+    # versions of git prior to v2.24 may not have the manyFiles feature
+    # so we should ignore errors here on older versions of git
+    git_exe("config", "feature.manyFiles", "true", ignore_errors=True)
+
+
+def pull_checkout_commit(commit: str):
+    """Fetch all remotes and checkout the specified commit."""
+    git_exe = git(required=True)
+
+    git_exe("fetch", "--all")
+    git_exe("checkout", commit)
+
+
+def pull_checkout_tag(tag: str, remote: str = "origin", depth: int = 20):
+    """Fetch tags with specified depth and checkout the given tag."""
+    git_exe = git(required=True)
+
+    git_exe("fetch", f"--depth={depth}", "--force", "--tags", remote)
+    git_exe("checkout", tag)
+
+
+def pull_checkout_branch(branch: str, remote: str = "origin", depth: int = 20):
+    """Fetch and checkout branch, then rebase with remote tracking branch."""
+    git_exe = git(required=True)
+
+    git_exe("fetch", f"--depth={depth}", remote, branch)
+    git_exe("checkout", branch)
+
+    try:
+        git_exe("rebase", f"{remote}/{branch}")
+    except exe.ProcessError as e:
+        git_exe("rebase", "--abort")
+        raise e
+
+
 def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[str]:
     """Get a list of files modified between `from_ref` and `to_ref`
     Args:
