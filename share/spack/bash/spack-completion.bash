@@ -219,7 +219,7 @@ _mirrors() {
 _repos() {
     if [[ -z "${SPACK_REPOS:-}" ]]
     then
-        SPACK_REPOS="$(spack repo list | awk '{print $1}')"
+        SPACK_REPOS="$(spack repo list --config-names)"
     fi
     SPACK_COMPREPLY="$SPACK_REPOS"
 }

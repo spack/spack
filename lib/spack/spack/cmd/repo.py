@@ -5,7 +5,6 @@
 import argparse
 import os
 import shlex
-import sys
 import tempfile
 from typing import Any, Dict, List, Optional, Union
 
@@ -50,6 +49,13 @@ def setup_parser(subparser: argparse.ArgumentParser):
     list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+    )
+    output_group = list_parser.add_mutually_exclusive_group()
+    output_group.add_argument(
+        "--config-names", action="store_true", help="show configuration names only"
+    )
+    output_group.add_argument(
+        "--namespaces", action="store_true", help="show repository namespaces only"
     )
 
     # Add
@@ -261,11 +267,28 @@ def repo_list(args):
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
 
-    if not sys.stdout.isatty():
+    # Handle --config-names: just print config names
+    if args.config_names:
         for name in descriptors:
             print(name)
         return
 
+    # Handle --namespaces: print all repo namespaces
+    if args.namespaces:
+        namespaces = []
+        for name, descriptor in descriptors.items():
+            descriptor.initialize(fetch=False)
+            repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
+
+            for path, maybe_repo in repos_for_descriptor.items():
+                if isinstance(maybe_repo, spack.repo.Repo):
+                    namespaces.append(maybe_repo.namespace)
+
+        for namespace in namespaces:
+            print(namespace)
+        return
+
+    # Default table format: verbose output always (no more tty check)
     # Collect all repository information for aligned output
     repo_info = []
 
