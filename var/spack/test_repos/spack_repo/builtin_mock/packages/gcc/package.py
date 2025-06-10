@@ -103,7 +103,7 @@ class Gcc(CompilerPackage, Package):
         for language in ("c", "cxx", "fortran"):
             pkg("*").depends_on(
                 f"gcc-runtime@{spec.version}:",
-                when=f"%[virtuals={language}] {spec.name}@{spec.versions}",
+                when=f"%[deptypes=build virtuals={language}] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Inject gcc-runtime when gcc is used as a {language} compiler",
             )
@@ -117,14 +117,18 @@ class Gcc(CompilerPackage, Package):
         for fortran_virtual in ("fortran-rt", gfortran_str):
             pkg("*").depends_on(
                 fortran_virtual,
-                when=f"%[virtuals=fortran] {spec.name}@{spec.versions}",
+                when=f"%[deptypes=build virtuals=fortran] {spec.name}@{spec.versions}",
                 type="link",
                 description=f"Add a dependency on '{gfortran_str}' for nodes compiled with "
                 f"{spec} and using the 'fortran' language",
             )
         # The version of gcc-runtime is the same as the %gcc used to "compile" it
-        pkg("gcc-runtime").requires(f"@{spec.versions}", when=f"%{spec.name}@{spec.versions}")
+        pkg("gcc-runtime").requires(
+            f"@{spec.versions}", when=f"%[deptypes=build] {spec.name}@{spec.versions}"
+        )
 
         # If a node used %gcc@X.Y its dependencies must use gcc-runtime@:X.Y
         # (technically @:X is broader than ... <= @=X but this should work in practice)
-        pkg("*").propagate(f"gcc@:{spec.version}", when=f"%{spec.name}@{spec.versions}")
+        pkg("*").propagate(
+            f"gcc@:{spec.version}", when=f"%[deptypes=build] {spec.name}@{spec.versions}"
+        )

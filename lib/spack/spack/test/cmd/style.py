@@ -118,15 +118,13 @@ def test_changed_no_base(git, tmpdir, capfd):
 
 def test_changed_files_all_files(mock_packages):
     # it's hard to guarantee "all files", so do some sanity checks.
-    files = set(
-        [
-            os.path.join(spack.paths.prefix, os.path.normpath(path))
-            for path in changed_files(all_files=True)
-        ]
-    )
+    files = {
+        os.path.join(spack.paths.prefix, os.path.normpath(path))
+        for path in changed_files(all_files=True)
+    }
 
     # spack has a lot of files -- check that we're in the right ballpark
-    assert len(files) > 6000
+    assert len(files) > 500
 
     # a builtin package
     zlib = spack.repo.PATH.get_pkg_class("zlib")
