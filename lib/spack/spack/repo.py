@@ -1691,9 +1691,15 @@ class RemoteRepoDescriptor(RepoDescriptor):
                     # do not fetch if the package repository was fetched by another
                     # process while we were waiting for the lock
                     fetched = self._fetched()
+                    if fetched and not update:
+                        self.read_index_file()
+                        return
+
+                    # setup the repository if it does not exist
                     if not fetched:
                         self._init_git_repo(git, remote)
 
+                        # determine the default branch from ls-remote
                         refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
                         ref_match = re.search(r"refs/heads/(\S+)", refs)
                         if not ref_match:
@@ -1701,20 +1707,26 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             return
                         self.branch = ref_match.group(1)
 
-                    elif update and not (self.commit or self.tag or self.branch):
-                        # need to add logic here to see if we're on a branch, tag, or commit
-                        self.branch = str(git("rev-parse", "--abbrev-ref", "HEAD", output=str))
-                        remote = str(git("config", f"branch.{self.branch}.remote"))
+                    # determine the branch and remote if no config values exist
+                    elif not (self.commit or self.tag or self.branch):
+                        self.branch = git("rev-parse", "--abbrev-ref", "HEAD", output=str).strip()
+                        remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
-                    if update or not fetched:
-                        if self.commit:
-                            self._pull_checkout_commit(git)
+                    if self.commit:
+                        self._pull_checkout_commit(git)
 
-                        elif self.tag:
-                            self._pull_checkout_tag(git, remote, depth)
+                    elif self.tag:
+                        self._pull_checkout_tag(git, remote, depth)
 
-                        else:
-                            self._pull_checkout_branch(git, remote, depth)
+                    else:
+                        # if the branch already exists we should use the
+                        # previously configured remote
+                        try:
+                            output = git("config", f"branch.{self.branch}.remote", output=str)
+                            remote = output.strip()
+                        except spack.util.executable.ProcessError:
+                            pass
+                        self._pull_checkout_branch(git, remote, depth)
 
             except spack.util.executable.ProcessError as e:
                 self.error = (
