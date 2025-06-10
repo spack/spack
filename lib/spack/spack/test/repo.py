@@ -665,8 +665,11 @@ repo_index:
         )
 
     with fs.working_dir(os.path.join(tmp_path, "foo.git")):
-        git("add", "-A")
-        git("commit", "--no-gpg-sign", "-m", "add index to repo")
+        git("config", "user.name", "Spack")
+        git("config", "user.email", "spack@spack.io")
+
+        git("add", "spack-repo-index.yaml")
+        git("commit", "--no-gpg-sign", "-am", "add index to repo")
 
     # Construct 3 identical descriptors
     descriptors_1, descriptors_2, descriptors_3 = [
