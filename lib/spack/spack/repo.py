@@ -1891,10 +1891,7 @@ MAIN_WAS_RUN = False
 
 def _lazy():
     if not MAIN_WAS_RUN:
-        import traceback
-
-        traceback.print_stack()
-        raise RuntimeError("spack.repo.PATH is initialized lazily with wrong config.")
+        return False, create_and_enable(spack.config.CONFIG)
     return create_and_enable(spack.config.CONFIG)
 
 

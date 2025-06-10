@@ -771,11 +771,17 @@ class Singleton:
         """
         self.factory = factory
         self._instance = None
+        self._final = False
 
     @property
     def instance(self):
-        if self._instance is None:
+        if not self._final:
             instance = self.factory()
+            final = True
+
+            if isinstance(instance, tuple):
+                final, instance = instance
+            self._final = final
 
             if isinstance(instance, types.GeneratorType):
                 # if it's a generator, assign every value

@@ -968,10 +968,7 @@ MAIN_WAS_RUN = False
 
 def _lazy():
     if not MAIN_WAS_RUN:
-        import traceback
-
-        traceback.print_stack()
-        raise RuntimeError("spack.config.CONFIG is initialized lazily with wrong config.")
+        return False, create_incremental()
     return create_incremental()
 
 
