@@ -485,7 +485,7 @@ def repo_update(args: Any) -> int:
     # Get the repos for the specific scope we're modifying
     scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
 
-    namespace_flags = ["commit", "tag", "branch", "remote"]
+    namespace_flags = ["commit", "tag", "branch"]
     active_flag = next((attr for attr in namespace_flags if getattr(args, attr)), None)
     if active_flag and len(args.namespaces) != 1:
         error_msg = (
@@ -528,7 +528,9 @@ def repo_update(args: Any) -> int:
         if descriptor.error:  # need to fix this / find a better way
             raise SpackError(descriptor.error)
 
-    spack.config.set("repos", scope_repos, args.scope)
+    if active_flag:
+        spack.config.set("repos", scope_repos, args.scope)
+
     return 0
 
 
