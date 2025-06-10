@@ -510,7 +510,7 @@ def repo_update(args: Any) -> int:
         )
 
     for name, descriptor in descriptors.items():
-        if descriptor is not spack.repo.RemoteRepoDescriptor:
+        if not isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
             continue
 
         if active_flag:
