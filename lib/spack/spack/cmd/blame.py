@@ -12,6 +12,7 @@ from llnl.util.filesystem import working_dir
 from llnl.util.lang import pretty_date
 from llnl.util.tty.colify import colify_table
 
+import spack.config
 import spack.paths
 import spack.repo
 import spack.util.git
@@ -112,6 +113,23 @@ def dump_json(rows, last_mod, total_lines, emails):
     sjson.dump(result, sys.stdout)
 
 
+def repo_prefix(path):
+    if path.startswith(spack.paths.prefix):
+        return spack.paths.prefix
+
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
+    )
+    for _, desc in descriptors.items():
+        index = desc.path.find("repos/spack_repo")
+        if index > -1:
+            prefix = desc.path[: index - 1]
+            if path.startswith(prefix):
+                return prefix
+
+    return None
+
+
 def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
@@ -120,37 +138,41 @@ def blame(parser, args):
 
     # Get name of file to blame
     blame_file = None
+    prefix = None
     if os.path.isfile(args.package_or_file):
         path = os.path.realpath(args.package_or_file)
-        if path.startswith(spack.paths.prefix):
+        prefix = repo_prefix(path)
+        if prefix is not None:
             blame_file = path
 
+    # get path to what we assume is a package
     if not blame_file:
-        pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
-        blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
+        try:
+            pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
+            blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
+            prefix = repo_prefix(blame_file)
+        except spack.repo.UnknownNamespaceError:
+            pass
 
-    # get git blame for the package EVEN IF it is located in a different
+    if prefix is None:
+        tty.die(f"The file ({path}) is not within a spack repo. Can't use 'spack blame'.")
+
+    # get git blame for the package EVEN when it is located in a different spack
     # repository (e.g., spack/spack-packages)
-    in_spack_repo = blame_file.startswith(spack.paths.prefix)
-    work_dir = spack.paths.prefix if in_spack_repo else os.path.dirname(blame_file)
-    with working_dir(work_dir):
+    with working_dir(prefix):
+        options = ["blame"]
         # ignore the great black reformatting of 2022
-        ignore_file = os.path.join(spack.paths.prefix, ".git-blame-ignore-revs")
+        ignore_file = os.path.join(prefix, ".git-blame-ignore-revs")
+        if os.path.exists(ignore_file):
+            options.extend(["--ignore-revs-file", ignore_file])
 
         if args.view == "git":
-            git("blame", "--ignore-revs-file", ignore_file, blame_file)
+            options.append(blame_file)
+            git(*options)
             return
         else:
-            if not in_spack_repo:
-                tty.debug(f"Processing blame for {blame_file}")
-            output = git(
-                "blame",
-                "--line-porcelain",
-                "--ignore-revs-file",
-                ignore_file,
-                blame_file,
-                output=str,
-            )
+            options.extend(["--line-porcelain", blame_file])
+            output = git(*options, output=str)
             lines = output.split("\n")
 
     # Histogram authors
