@@ -1696,12 +1696,15 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                         refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
                         ref_match = re.search(r"refs/heads/(\S+)", refs)
+                        if not ref_match:
+                            self.error = f"Unable to locate a default branch for {self.repository}"
+                            return
                         self.branch = ref_match.group(1)
 
                     elif update and not (self.commit or self.tag or self.branch):
                         # need to add logic here to see if we're on a branch, tag, or commit
-                        self.branch = git("rev-parse", "--abbrev-ref", "HEAD", output=str)
-                        remote = git("config", f"branch.{self.branch}.remote")
+                        self.branch = str(git("rev-parse", "--abbrev-ref", "HEAD", output=str))
+                        remote = str(git("config", f"branch.{self.branch}.remote"))
 
                     if update or not fetched:
                         if self.commit:
@@ -1722,6 +1725,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
             self.read_index_file()
 
     def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+        if git is None:
+            self.error = "Git executable not found"
+            return
         self._clone_or_pull(git, update=True, remote=remote)
 
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:

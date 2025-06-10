@@ -501,11 +501,18 @@ def repo_update(args: Any) -> int:
                 raise SpackError(f"{namespace} is not a known repository namespace.")
 
         # filter descriptors when namespaces are provided as arguments
-        descriptors = {
-            name: descriptor for name, descriptor in descriptors.items() if name in args.namespaces
-        }
+        descriptors = spack.repo.RepoDescriptors(
+            {
+                name: descriptor
+                for name, descriptor in descriptors.items()
+                if name in args.namespaces
+            }
+        )
 
     for name, descriptor in descriptors.items():
+        if descriptor is not spack.repo.RemoteRepoDescriptor:
+            continue
+
         if active_flag:
             # update the git commit, tag, or branch of the descriptor
             setattr(descriptor, active_flag, getattr(args, active_flag))
@@ -518,7 +525,7 @@ def repo_update(args: Any) -> int:
             scope_repos[namespace][active_flag] = args.commit or args.tag or args.branch
 
         descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
-        if descriptor.error:
+        if descriptor.error:  # need to fix this / find a better way
             raise SpackError(descriptor.error)
 
     spack.config.set("repos", scope_repos, args.scope)
