@@ -242,7 +242,7 @@ function __fish_spack_providers
 end
 
 function __fish_spack_repos
-    spack repo list --config-names
+    spack repo list --names
 end
 
 function __fish_spack_scopes

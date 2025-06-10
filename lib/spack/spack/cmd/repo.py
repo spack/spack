@@ -51,9 +51,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
     )
     output_group = list_parser.add_mutually_exclusive_group()
-    output_group.add_argument(
-        "--config-names", action="store_true", help="show configuration names only"
-    )
+    output_group.add_argument("--names", action="store_true", help="show configuration names only")
     output_group.add_argument(
         "--namespaces", action="store_true", help="show repository namespaces only"
     )
@@ -267,13 +265,13 @@ def repo_list(args):
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
 
-    # Handle --config-names: just print config names
-    if args.config_names:
+    # --names: just print config names
+    if args.names:
         for name in descriptors:
             print(name)
         return
 
-    # Handle --namespaces: print all repo namespaces
+    # --namespaces: print all repo namespaces
     if args.namespaces:
         for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
             if isinstance(maybe_repo, spack.repo.Repo):
