@@ -1955,7 +1955,9 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(
+    lambda: create_and_enable(spack.config.CONFIG)
+)  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
