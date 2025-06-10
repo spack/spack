@@ -315,7 +315,77 @@ def specfile_for(default_mock_concretization):
             ],
             "y+a~b+c~d+e~f",
         ),
+        # Things that evaluate to Spec()
+        # TODO: consider making these format to "*" instead of ""
         ("@:", [Token(SpecTokens.VERSION, value="@:")], r""),
+        ("*", [Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*")], r""),
+        # virtual assignment on a dep of an anonymous spec (more of these later)
+        (
+            "%foo=bar",
+            [Token(SpecTokens.DEPENDENCY, value="%foo=bar", virtuals="foo", substitute="bar")],
+            "%foo=bar",
+        ),
+        (
+            "^foo=bar",
+            [Token(SpecTokens.DEPENDENCY, value="^foo=bar", virtuals="foo", substitute="bar")],
+            "^foo=bar",
+        ),
+        # anonymous dependencies with variants
+        (
+            "^*foo=bar",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
+            ],
+            "^*foo=bar",
+        ),
+        (
+            "%*foo=bar",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.KEY_VALUE_PAIR, value="foo=bar"),
+            ],
+            "%*foo=bar",
+        ),
+        (
+            "^*+foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+            ],
+            "^+foo",
+        ),
+        (
+            "^*~foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="^"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="~foo"),
+            ],
+            "^~foo",
+        ),
+        (
+            "%*+foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+            ],
+            "%+foo",
+        ),
+        (
+            "%*~foo",
+            [
+                Token(SpecTokens.DEPENDENCY, value="%"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="*"),
+                Token(SpecTokens.BOOL_VARIANT, value="~foo"),
+            ],
+            "%~foo",
+        ),
+        # version range and list
         ("@1.6,1.2:1.4", [Token(SpecTokens.VERSION, value="@1.6,1.2:1.4")], r"@1.2:1.4,1.6"),
         (
             r"os=fe",  # Various translations associated with the architecture
@@ -582,7 +652,19 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
             ],
-            "^[virtuals=mpi] openmpi",
+            "^mpi=openmpi",
+        ),
+        (
+            "^mpi=openmpi",
+            [
+                Token(
+                    SpecTokens.DEPENDENCY,
+                    value="^mpi=openmpi",
+                    virtuals="mpi",
+                    substitute="openmpi",
+                )
+            ],
+            "^mpi=openmpi",
         ),
         # Allow merging attributes, if deptypes match
         (
@@ -599,7 +681,21 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="openmpi"),
                 Token(SpecTokens.BOOL_VARIANT, value="+bar"),
             ],
-            "^[virtuals=lapack,mpi] openmpi+bar+foo",
+            "^lapack,mpi=openmpi+bar+foo",
+        ),
+        (
+            "^lapack,mpi=openmpi+foo+bar",
+            [
+                Token(
+                    SpecTokens.DEPENDENCY,
+                    value="^lapack,mpi=openmpi",
+                    virtuals="lapack,mpi",
+                    substitute="openmpi",
+                ),
+                Token(SpecTokens.BOOL_VARIANT, value="+foo"),
+                Token(SpecTokens.BOOL_VARIANT, value="+bar"),
+            ],
+            "^lapack,mpi=openmpi+bar+foo",
         ),
         (
             "^[deptypes=link,build] zlib",
@@ -668,7 +764,15 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
-            "zlib %[virtuals=c] gcc",
+            "zlib %c=gcc",
+        ),
+        (
+            "zlib %c=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(SpecTokens.DEPENDENCY, value="%c=gcc", virtuals="c", substitute="gcc"),
+            ],
+            "zlib %c=gcc",
         ),
         (
             "zlib %[virtuals=c,cxx] gcc",
@@ -679,7 +783,17 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
             ],
-            "zlib %[virtuals=c,cxx] gcc",
+            "zlib %c,cxx=gcc",
+        ),
+        (
+            "zlib %c,cxx=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(
+                    SpecTokens.DEPENDENCY, value="%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"
+                ),
+            ],
+            "zlib %c,cxx=gcc",
         ),
         (
             "zlib %[virtuals=c,cxx] gcc@14.1",
@@ -691,7 +805,18 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="gcc"),
                 Token(SpecTokens.VERSION, value="@14.1"),
             ],
-            "zlib %[virtuals=c,cxx] gcc@14.1",
+            "zlib %c,cxx=gcc@14.1",
+        ),
+        (
+            "zlib %c,cxx=gcc@14.1",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(
+                    SpecTokens.DEPENDENCY, value="%c,cxx=gcc", virtuals="c,cxx", substitute="gcc"
+                ),
+                Token(SpecTokens.VERSION, value="@14.1"),
+            ],
+            "zlib %c,cxx=gcc@14.1",
         ),
         (
             "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
@@ -707,7 +832,27 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, value="]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, value="clang"),
             ],
-            "zlib %[virtuals=fortran] gcc@14.1 %[virtuals=c,cxx] clang",
+            "zlib %fortran=gcc@14.1 %c,cxx=clang",
+        ),
+        (
+            "zlib %fortran=gcc@14.1 %c,cxx=clang",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "zlib"),
+                Token(
+                    SpecTokens.DEPENDENCY,
+                    value="%fortran=gcc",
+                    virtuals="fortran",
+                    substitute="gcc",
+                ),
+                Token(SpecTokens.VERSION, value="@14.1"),
+                Token(
+                    SpecTokens.DEPENDENCY,
+                    value="%c,cxx=clang",
+                    virtuals="c,cxx",
+                    substitute="clang",
+                ),
+            ],
+            "zlib %fortran=gcc@14.1 %c,cxx=clang",
         ),
         # test := and :== syntax for key value pairs
         (
@@ -740,6 +885,18 @@ def specfile_for(default_mock_concretization):
         ),
         # Test conditional dependencies
         (
+            "foo ^[when='%c' virtuals=c] gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.KEY_VALUE_PAIR, "virtuals=c"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
+            ],
+            "foo ^[when='%c'] c=gcc",
+        ),
+        (
             "foo ^[when='%c' virtuals=c]gcc",
             [
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
@@ -749,7 +906,17 @@ def specfile_for(default_mock_concretization):
                 Token(SpecTokens.END_EDGE_PROPERTIES, "]"),
                 Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "gcc"),
             ],
-            "foo ^[when='%c' virtuals=c] gcc",
+            "foo ^[when='%c'] c=gcc",
+        ),
+        (
+            "foo ^[when='%c'] c=gcc",
+            [
+                Token(SpecTokens.UNQUALIFIED_PACKAGE_NAME, "foo"),
+                Token(SpecTokens.START_EDGE_PROPERTIES, "^["),
+                Token(SpecTokens.KEY_VALUE_PAIR, "when='%c'"),
+                Token(SpecTokens.END_EDGE_PROPERTIES, "] c=gcc", virtuals="c", substitute="gcc"),
+            ],
+            "foo ^[when='%c'] c=gcc",
         ),
     ],
 )
@@ -902,17 +1069,28 @@ def test_cli_spec_roundtrip(args, expected):
         (
             "foo%my_toolchain",
             {"my_toolchain": "%[when='%c' virtuals=c]gcc"},
-            ["foo %[when='%c' virtuals=c] gcc"],
+            ["foo %[when='%c'] c=gcc"],
         ),
+        ("foo%my_toolchain", {"my_toolchain": "%[when='%c'] c=gcc"}, ["foo %[when='%c'] c=gcc"]),
         (
             "foo%my_toolchain",
             {"my_toolchain": "+bar cflags=baz %[when='%c' virtuals=c]gcc"},
-            ["foo cflags=baz +bar %[when='%c' virtuals=c] gcc"],
+            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
+        ),
+        (
+            "foo%my_toolchain",
+            {"my_toolchain": "+bar cflags=baz %[when='%c']c=gcc"},
+            ["foo cflags=baz +bar %[when='%c'] c=gcc"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich"},
-            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
+            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+        ),
+        (
+            "foo%my_toolchain2",
+            {"my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"},
+            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
         ),
         (
             "foo%my_toolchain bar%my_toolchain2",
@@ -920,10 +1098,15 @@ def test_cli_spec_roundtrip(args, expected):
                 "my_toolchain": "%[when='%c' virtuals=c]gcc",
                 "my_toolchain2": "%[when='%c' virtuals=c]gcc %[when='+mpi' virtuals=mpi]mpich",
             },
-            [
-                "foo %[when='%c' virtuals=c] gcc",
-                "bar %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich",
-            ],
+            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+        ),
+        (
+            "foo%my_toolchain bar%my_toolchain2",
+            {
+                "my_toolchain": "%[when='%c'] c=gcc",
+                "my_toolchain2": "%[when='%c'] c=gcc %[when='+mpi']mpi=mpich",
+            },
+            ["foo %[when='%c'] c=gcc", "bar %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
@@ -933,12 +1116,27 @@ def test_cli_spec_roundtrip(args, expected):
                     {"spec": "%[virtuals=mpi]mpich", "when": "+mpi"},
                 ]
             },
-            ["foo %[when='%c' virtuals=c] gcc %[when='+mpi' virtuals=mpi] mpich"],
+            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
+        ),
+        (
+            "foo%my_toolchain2",
+            {
+                "my_toolchain2": [
+                    {"spec": "%c=gcc", "when": "%c"},
+                    {"spec": "%mpi=mpich", "when": "+mpi"},
+                ]
+            },
+            ["foo %[when='%c'] c=gcc %[when='+mpi'] mpi=mpich"],
         ),
         (
             "foo%my_toolchain2",
             {"my_toolchain2": [{"spec": "%[virtuals=c]gcc %[virtuals=mpi]mpich", "when": "%c"}]},
-            ["foo %[when='%c' virtuals=c] gcc %[when='%c' virtuals=mpi] mpich"],
+            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
+        ),
+        (
+            "foo%my_toolchain2",
+            {"my_toolchain2": [{"spec": "%c=gcc %mpi=mpich", "when": "%c"}]},
+            ["foo %[when='%c'] c=gcc %[when='%c'] mpi=mpich"],
         ),
         # Test that we don't get caching wrong in the parser
         (
@@ -950,8 +1148,21 @@ def test_cli_spec_roundtrip(args, expected):
                 ]
             },
             [
-                "foo %[when='%c' virtuals=c] gcc %[when='%mpi' virtuals=mpi] mpich "
-                "^bar %[when='%c' virtuals=c] gcc %[when='%mpi' virtuals=mpi] mpich"
+                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
+                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
+            ],
+        ),
+        (
+            "foo %gcc-mpich ^bar%gcc-mpich",
+            {
+                "gcc-mpich": [
+                    {"spec": "%c=gcc", "when": "%c"},
+                    {"spec": "%mpi=mpich", "when": "%mpi"},
+                ]
+            },
+            [
+                "foo %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich "
+                "^bar %[when='%c'] c=gcc %[when='%mpi'] mpi=mpich"
             ],
         ),
     ],

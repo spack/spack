@@ -133,7 +133,7 @@ SPEC_FORMAT_RE = re.compile(
     r"|"  # or
     # OPTION 2: an actual format string
     r"{"  # non-escaped open brace {
-    r"([%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
+    r"( ?[%@/]|[\w ][\w -]*=)?"  # optional sigil (or identifier or space) to print sigil in color
     r"(?:\^([^}\.]+)\.)?"  # optional ^depname. (to get attr from dependency)
     # after the sigil or depname, we can have a hash expression or another attribute
     r"(?:"  # one of
@@ -173,6 +173,7 @@ DEFAULT_FORMAT = (
 DISPLAY_FORMAT = (
     "{name}{@version}{compiler_flags}"
     "{variants}{ namespace=namespace_if_anonymous}{ arch=architecture}{/abstract_hash}"
+    "{compilers}"
 )
 
 #: Regular expression to pull spec contents out of clearsigned signature
@@ -1447,6 +1448,37 @@ class SpecAnnotations:
         return result
 
 
+def _anonymous_star(dep, dep_format):
+    """Determine if a spec needs a star to disambiguate it from an anonymous spec w/variants.
+
+    Returns:
+        "*" if a star is needed, "" otherwise
+    """
+    # named spec never needs star
+    if dep.spec.name:
+        return ""
+
+    # virtuals without a name always need *: %c=* @4.0 foo=bar
+    if dep.virtuals:
+        return "*"
+
+    # versions are first so checking for @ is faster than != VersionList(':')
+    if dep_format.startswith("@"):
+        return ""
+
+    # compiler flags are key-value pairs and can be ambiguous with virtual assignment
+    if dep.spec.compiler_flags:
+        return "*"
+
+    # booleans come first, and they don't need a star. key-value pairs do. If there are
+    # no key value pairs, we're left with either an empty spec, which needs * as in
+    # '^*', or we're left with arch, which is a key value pair, and needs a star.
+    if not any(v.type == spack.variant.VariantType.BOOL for v in dep.spec.variants.values()):
+        return "*"
+
+    return "*" if dep.spec.architecture else ""
+
+
 @lang.lazy_lexicographic_ordering(set_hash=False)
 class Spec:
     compiler = DeprecatedCompilerSpec()
@@ -1640,7 +1672,7 @@ class Spec:
 
     @property
     def edge_attributes(self) -> str:
-        """Helper method to print edge attributes in spec literals"""
+        """Helper method to print edge attributes in spec strings."""
         edges = self.edges_from_dependents()
         if not edges:
             return ""
@@ -2095,30 +2127,108 @@ class Spec:
             visited=visited,
         )
 
-    @property
-    def long_spec(self):
-        """Returns a string of the spec with the dependencies completely
-        enumerated."""
-        parts = [self.format()]
+    def _format_edge_attributes(self, dep: DependencySpec, deptypes=True, virtuals=True):
+        deptypes_str = (
+            f"deptypes={','.join(dt.flag_to_tuple(dep.depflag))}"
+            if deptypes and dep.depflag
+            else ""
+        )
+        when_str = f"when='{(dep.when)}'" if dep.when != Spec() else ""
+        virtuals_str = f"virtuals={','.join(dep.virtuals)}" if virtuals and dep.virtuals else ""
+
+        attrs = " ".join(s for s in (when_str, deptypes_str, virtuals_str) if s)
+        if attrs:
+            attrs = f"[{attrs}] "
+
+        return attrs
+
+    def _format_dependencies(
+        self,
+        format_string: str = DEFAULT_FORMAT,
+        include: Optional[Callable[[DependencySpec], bool]] = None,
+        deptypes=True,
+        _force_direct=False,
+    ):
+        """Helper for formatting dependencies on specs.
+
+        Arguments:
+            format_string: format string to use for each dependency
+            include: predicate to select which dependencies to include
+            deptypes: whether to format deptypes
+            _force_direct: if True, print all dependencies as direct dependencies
+                (to be removed when we have this metadata on concrete edges)
+        """
+        include = include or (lambda dep: True)
+        parts = []
         direct, transitive = lang.stable_partition(
             self.edges_to_dependencies(), predicate_fn=lambda x: x.direct
         )
-        for item in sorted(direct, key=lambda x: x.spec.name):
-            current_name = item.spec.name
-            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(current_name, current_name)
-            # note: depflag not allowed, currently, on "direct" edges
-            edge_attributes = ""
-            if item.virtuals or item.when != Spec():
-                edge_attributes = item.spec.format("{edge_attributes}") + " "
 
-            parts.append(f"%{edge_attributes}{item.spec.format()}".replace(current_name, new_name))
-        for item in sorted(transitive, key=lambda x: x.spec.name):
-            # Recurse to attach build deps in order
-            edge_attributes = ""
-            if item.virtuals or item.depflag or item.when != Spec():
-                edge_attributes = item.spec.format("{edge_attributes}") + " "
-            parts.append(f"^{edge_attributes}{str(item.spec)}")
+        # helper for direct and transitive loops below
+        def format_edge(edge, sigil, dep_spec=None):
+            dep_spec = dep_spec or edge.spec
+            dep_format = dep_spec.format(format_string)
+
+            edge_attributes = (
+                self._format_edge_attributes(edge, deptypes=deptypes, virtuals=False)
+                if edge.depflag or edge.when != Spec()
+                else ""
+            )
+            virtuals = f"{','.join(edge.virtuals)}=" if edge.virtuals else ""
+            star = _anonymous_star(edge, dep_format)
+
+            return f"{sigil}{edge_attributes}{star}{virtuals}{dep_format}"
+
+        # direct dependencies
+        for edge in sorted(direct, key=lambda x: x.spec.name):
+            if not include(edge):
+                continue
+
+            # replace legacy compiler names
+            old_name = edge.spec.name
+            new_name = spack.aliases.BUILTIN_TO_LEGACY_COMPILER.get(old_name)
+            try:
+                # this is ugly but copies can be expensive
+                if new_name:
+                    edge.spec.name = new_name
+                parts.append(format_edge(edge, "%", edge.spec))
+            finally:
+                edge.spec.name = old_name
+
+        # transitive dependencies (with any direct dependencies)
+        for edge in sorted(transitive, key=lambda x: x.spec.name):
+            if not include(edge):
+                continue
+            sigil = "%" if _force_direct else "^"  # hack til direct deps represented better
+            parts.append(format_edge(edge, sigil, edge.spec))
+
+            # also recursively add any direct dependencies of transitive dependencies
+            if edge.spec._dependencies:
+                parts.append(
+                    edge.spec._format_dependencies(
+                        format_string=format_string,
+                        include=include,
+                        deptypes=deptypes,
+                        _force_direct=_force_direct,
+                    )
+                )
+
         return " ".join(parts).strip()
+
+    @property
+    def compilers(self):
+        # TODO: get rid of the space here and make formatting smarter
+        return " " + self._format_dependencies(
+            "{name}{@version}",
+            include=lambda dep: any(lang in dep.virtuals for lang in ("c", "cxx", "fortran")),
+            deptypes=False,
+            _force_direct=True,
+        )
+
+    @property
+    def long_spec(self):
+        """Returns a string of the spec with the dependencies completely enumerated."""
+        return f"{self.format()} {self._format_dependencies()}".strip()
 
     @property
     def short_spec(self):
@@ -3967,6 +4077,7 @@ class Spec:
             name
             version
             compiler_flags
+            compilers
             variants
             architecture
             architecture.platform
@@ -4133,7 +4244,7 @@ class Spec:
                 color = ARCHITECTURE_COLOR
             elif "variants" in parts or sig.endswith("="):
                 color = VARIANT_COLOR
-            elif "compiler" in parts or "compiler_flags" in parts:
+            elif any(c in parts for c in ("compiler", "compilers", "compiler_flags")):
                 color = COMPILER_COLOR
             elif "version" in parts or "versions" in parts:
                 color = VERSION_COLOR

@@ -28,32 +28,79 @@ class TokenBase(enum.Enum):
 class Token:
     """Represents tokens; generated from input by lexer and fed to parse()."""
 
-    __slots__ = "kind", "value", "start", "end"
+    __slots__ = "kind", "value", "start", "end", "subvalues"
 
-    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0):
+    def __init__(self, kind: TokenBase, value: str, start: int = 0, end: int = 0, **kwargs):
         self.kind = kind
         self.value = value
         self.start = start
         self.end = end
+        self.subvalues = kwargs if kwargs else None
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return f"({self.kind}, {self.value})"
+        parts = [self.kind, self.value]
+        if self.subvalues:
+            parts += [self.subvalues]
+        return f"({', '.join(f'`{p}`' for p in parts)})"
 
     def __eq__(self, other):
-        return (self.kind == other.kind) and (self.value == other.value)
+        return (
+            self.kind == other.kind
+            and self.value == other.value
+            and self.subvalues == other.subvalues
+        )
+
+
+def token_match_regex(token: TokenBase):
+    """Generate a regular expression that matches the provided token and its subvalues.
+
+    This will extract named capture groups from the provided regex and prefix them with
+    token name, so they can coexist together in a larger, joined regular expression.
+
+    Returns:
+        A regex with a capture group for the token and rewritten capture groups for any subvalues.
+
+    """
+    pairs = []
+
+    def replace(m):
+        subvalue_name = m.group(1)
+        token_prefixed_subvalue_name = f"{token.name}_{subvalue_name}"
+        pairs.append((subvalue_name, token_prefixed_subvalue_name))
+        return f"(?P<{token_prefixed_subvalue_name}>"
+
+    # rewrite all subvalue capture groups so they're prefixed with the token name
+    rewritten_token_regex = re.sub(r"\(\?P<([^>]+)>", replace, token.regex)
+
+    # construct a regex that matches the token as a whole *and* the subvalue capture groups
+    token_regex = f"(?P<{token}>{rewritten_token_regex})"
+    return token_regex, pairs
 
 
 class Tokenizer:
     def __init__(self, tokens: Type[TokenBase]):
         self.tokens = tokens
-        self.regex = re.compile("|".join(f"(?P<{token}>{token.regex})" for token in tokens))
+
+        # tokens can have named subexpressions, if their regexes define named capture groups.
+        # record this so we can associate them with the token
+        self.token_subvalues = {}
+
+        parts = []
+        for token in tokens:
+            token_regex, pairs = token_match_regex(token)
+            parts.append(token_regex)
+            if pairs:
+                self.token_subvalues[token.name] = pairs
+
+        self.regex = re.compile("|".join(parts))
 
     def tokenize(self, text: str) -> Generator[Token, None, None]:
         if not text:
             return
+
         scanner = self.regex.scanner(text)  # type: ignore[attr-defined]
         m: Optional[Match] = None
         for m in iter(scanner.match, None):
@@ -64,4 +111,15 @@ class Tokenizer:
             )
             assert m is not None, msg
             assert m.lastgroup is not None, msg
-            yield Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
+
+            token = Token(self.tokens.__members__[m.lastgroup], m.group(), m.start(), m.end())
+
+            # add any subvalues to the token
+            subvalues = self.token_subvalues.get(m.lastgroup)
+            if subvalues:
+                if any(m.group(rewritten) for subval, rewritten in subvalues):
+                    token.subvalues = {
+                        subval: m.group(rewritten) for subval, rewritten in subvalues
+                    }
+
+            yield token

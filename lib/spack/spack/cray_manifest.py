@@ -88,7 +88,7 @@ def compiler_spec_from_paths(*, pkg_name: str, compiler_paths: Iterable[str]) ->
     """Returns the external spec associated with a series of compilers, if any."""
     pkg_cls = spack.repo.PATH.get_pkg_class(pkg_name)
     finder = ExecutablesFinder()
-    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths)
+    specs = finder.detect_specs(pkg=pkg_cls, paths=compiler_paths, repo_path=spack.repo.PATH)
 
     if not specs or len(specs) > 1:
         raise CrayCompilerDetectionError(
