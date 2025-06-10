@@ -14,6 +14,7 @@ import spack.compilers.config
 import spack.config
 import spack.environment
 import spack.modules
+import spack.repo
 import spack.paths
 import spack.platforms
 import spack.spec
@@ -142,6 +143,7 @@ def _add_compilers_if_missing() -> None:
 
 @contextlib.contextmanager
 def _ensure_bootstrap_configuration() -> Generator:
+    spack.repo.PATH.repos  # ensure this is instantiated from current config.
     spack.store.ensure_singleton_created()
     bootstrap_store_path = store_path()
     user_configuration = _read_and_sanitize_configuration()
