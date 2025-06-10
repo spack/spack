@@ -67,7 +67,7 @@ def init_git_repo(repository: str, destination: str, remote: str = "origin"):
     """
     git_exe = git(required=True)
 
-    git_exe("init", destination, output=str)
+    git_exe("init", "--quiet", destination, output=str)
     git_exe("remote", "add", remote, repository)
     # versions of git prior to v2.24 may not have the manyFiles feature
     # so we should ignore errors here on older versions of git
