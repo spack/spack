@@ -584,7 +584,7 @@ def test_repo_update(tmp_path: pathlib.Path):
     config = {"repos": [existing_root, nonexisting_root]}
     assert spack.schema.repos.update(config)
     assert config["repos"] == {
-        "foo": existing_root
+        "foo": existing_root,
         # non-existing root is removed for simplicity; would be a warning otherwise.
     }
 
@@ -656,9 +656,6 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
                 name="foo",
                 repository=str(tmp_path / "foo.git"),
                 destination=str(tmp_path / "foo_destination"),
-                branch="main",
-                tag="",
-                commit="",
                 relative_paths=None,
                 lock=lock,
             )
