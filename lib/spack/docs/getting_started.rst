@@ -13,7 +13,7 @@ Getting Spack is easy.  You can clone it from the `GitHub repository
 
 .. code-block:: console
 
-   $ git clone -c feature.manyFiles=true --depth=2 https://github.com/spack/spack.git
+   $ git clone --depth=2 https://github.com/spack/spack.git
 
 This will create a directory called ``spack``. Once you have cloned Spack, we recommend sourcing the appropriate script for your shell:
 
@@ -40,8 +40,6 @@ This will create a directory called ``spack``. Once you have cloned Spack, we re
 That's it! You're ready to use Spack.
 
 .. note::
-   ``-c feature.manyFiles=true`` improves Git's performance on repositories with 1,000+ files.
-
    ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
 
 -------------
