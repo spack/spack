@@ -1656,23 +1656,23 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
     def _init_git_repo(self, git: spack.util.executable.Executable, remote: str):
         git("init", self.destination, output=str)
-        git("-C", self.destination, "remote", "add", "origin", self.repository)
-        git("-C", self.destination, "config", "feature.manyFiles", "true")
+        git("remote", "add", "origin", self.repository)
+        git("config", "feature.manyFiles", "true")
 
-    def _pull_checkout_commit(self, git: spack.util.executable.Executable, commit: str):
-        git("-C", self.destination, "fetch", "--all")
-        git("-C", self.destination, "checkout", commit)
+    def _pull_checkout_commit(self, git: spack.util.executable.Executable):
+        git("fetch", "--all")
+        git("checkout", self.commit)
 
     def _pull_checkout_tag(self, git: spack.util.executable.Executable, remote: str, depth: int):
-        git("-C", self.destination, "fetch", f"--depth={depth}", "--force", "--tags", remote)
-        git("-C", self.destination, "checkout", self.tag)
+        git("fetch", f"--depth={depth}", "--force", "--tags", remote)
+        git("checkout", self.tag)
 
     def _pull_checkout_branch(
         self, git: spack.util.executable.Executable, remote: str, depth: int
     ):
-        git("-C", self.destination, "fetch", f"--depth={depth}", remote, self.branch)
-        git("-C", self.destination, "checkout", self.branch)
-        git("-C", self.destination, "rebase", f"{remote}/{self.branch}")
+        git("fetch", f"--depth={depth}", remote, self.branch)
+        git("checkout", self.branch)
+        git("rebase", f"{remote}/{self.branch}")
 
     def _clone_or_pull(
         self,
@@ -1683,34 +1683,31 @@ class RemoteRepoDescriptor(RepoDescriptor):
     ) -> None:
         with self.write_transaction:
             try:
-                # do not fetch if the package repository was fetched by another
-                # process while we were waiting for the lock
-                fetched = self._fetched()
-                if not fetched:
-                    self._init_git_repo(git, remote)
+                with fs.working_dir(self.destination):
+                    # do not fetch if the package repository was fetched by another
+                    # process while we were waiting for the lock
+                    fetched = self._fetched()
+                    if not fetched:
+                        self._init_git_repo(git, remote)
 
-                    refs = git(
-                        "-C", self.destination, "ls-remote", "--symref", remote, "HEAD", output=str
-                    )
-                    ref_match = re.search(r"refs/heads/(\S+)", refs)
-                    self.branch = ref_match.group(1)
+                        refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
+                        ref_match = re.search(r"refs/heads/(\S+)", refs)
+                        self.branch = ref_match.group(1)
 
-                elif update and not (self.commit or self.tag or self.branch):
-                    # need to add logic here to see if we're on a branch, tag, or commit
-                    self.branch = git(
-                        "-C", self.destination, "rev-parse", "--abbrev-ref", "HEAD", output=str
-                    )
-                    remote = git("-C", self.destination, "config", f"branch.{self.branch}.remote")
+                    elif update and not (self.commit or self.tag or self.branch):
+                        # need to add logic here to see if we're on a branch, tag, or commit
+                        self.branch = git("rev-parse", "--abbrev-ref", "HEAD", output=str)
+                        remote = git("config", f"branch.{self.branch}.remote")
 
-                if update or not fetched:
-                    if self.commit:
-                        self._pull_checkout_commit(git, remote)
+                    if update or not fetched:
+                        if self.commit:
+                            self._pull_checkout_commit(git)
 
-                    elif self.tag:
-                        self._pull_checkout_tag(git, remote, depth)
+                        elif self.tag:
+                            self._pull_checkout_tag(git, remote, depth)
 
-                    else:
-                        self._pull_checkout_branch(git, remote, depth)
+                        else:
+                            self._pull_checkout_branch(git, remote, depth)
 
             except spack.util.executable.ProcessError as e:
                 self.error = f"Failed to {'update' if update else 'clone'} repository {self.repository}: {e}"
@@ -1718,8 +1715,8 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
             self.read_index_file()
 
-    def update(self, git: MaybeExecutable = None) -> None:
-        self._clone_or_pull(git, update=True)
+    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
+        self._clone_or_pull(git, update=True, remote=remote)
 
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         """Clone the remote repository if it has not been fetched yet and read the index file
