@@ -53,12 +53,11 @@ import sys
 import tempfile
 import traceback
 from contextlib import contextmanager
-from multiprocessing import Process, Queue
+from multiprocessing import Barrier, Process, Queue
 
 import pytest
 
 import llnl.util.lock as lk
-import llnl.util.multiproc as mp
 from llnl.util.filesystem import getuid, touch
 
 if sys.platform != "win32":
@@ -229,7 +228,7 @@ def test_poll_interval_generator():
 
 def local_multiproc_test(*functions, **kwargs):
     """Order some processes using simple barrier synchronization."""
-    b = mp.Barrier(len(functions), timeout=barrier_timeout)
+    b = Barrier(len(functions), timeout=barrier_timeout)
 
     args = (b,) + tuple(kwargs.get("extra_args", ()))
     procs = [Process(target=f, args=args, name=f.__name__) for f in functions]

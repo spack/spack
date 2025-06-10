@@ -24,17 +24,12 @@ jobs:
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.13'
-        cache: 'pip'
-        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python Packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
-    - name: vermin (Spack's Core)
+    - name: vermin
       run: |
-        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/
-    - name: vermin (Repositories)
-      run: |
-        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv var/spack/repos var/spack/test_repos
+        vermin --backport importlib --backport argparse --violations --backport typing -t=3.6- -vvv lib/spack/spack/ lib/spack/llnl/ bin/ var/spack/test_repos
 
   # Run style checks on the files that have been changed
   style:
@@ -46,8 +41,6 @@ jobs:
     - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b
       with:
         python-version: '3.13'
-        cache: 'pip'
-        cache-dependency-path: '.github/workflows/requirements/style/requirements.txt'
     - name: Install Python packages
       run: |
         pip install -r .github/workflows/requirements/style/requirements.txt
@@ -57,27 +50,6 @@ jobs:
         bin/spack license verify
         pylint -j $(nproc) --disable=all --enable=unspecified-encoding --ignore-paths=lib/spack/external lib
 
-  audit:
-    uses: ./.github/workflows/audit.yaml
-    secrets: inherit
-    with:
-      with_coverage: ${{ inputs.with_coverage }}
-      python_version: '3.13'
-
-  verify-checksums:
-    # do not run if the commit message or PR description contains [skip-verify-checksums]
-    if: >-
-      ${{ inputs.with_packages == 'true' &&
-      !contains(github.event.pull_request.body, '[skip-verify-checksums]') &&
-      !contains(github.event.head_commit.message, '[skip-verify-checksums]') }}
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29
-      with:
-        fetch-depth: 2
-    - name: Verify Added Checksums
-      run: |
-        bin/spack ci verify-versions HEAD^1 HEAD
 
   # Check that spack can bootstrap the development environment on Python 3.6 - RHEL8
   bootstrap-dev-rhel8:

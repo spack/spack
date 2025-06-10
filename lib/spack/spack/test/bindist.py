@@ -105,7 +105,7 @@ def config_directory(tmp_path_factory):
 
 
 @pytest.fixture(scope="function")
-def default_config(tmp_path, config_directory, mock_repo_path, install_mockery):
+def default_config(tmp_path, config_directory, mock_packages_repo, install_mockery):
     # This fixture depends on install_mockery to ensure
     # there is a clear order of initialization. The substitution of the
     # config scopes here is done on top of the substitution that comes with
@@ -137,10 +137,11 @@ def default_config(tmp_path, config_directory, mock_repo_path, install_mockery):
             spack.config.set(
                 "config:build_stage", [str(mutable_dir / "build_stage")], scope="user"
             )
+        spack.config.set("config:misc_cache:", str(mutable_dir / "misc_cache"), scope="user")
         timeout = spack.config.get("config:connect_timeout")
         if not timeout:
             spack.config.set("config:connect_timeout", 10, scope="user")
-        with spack.repo.use_repositories(mock_repo_path):
+        with spack.repo.use_repositories(mock_packages_repo):
             yield spack.config.CONFIG
 
 
@@ -325,6 +326,11 @@ def test_relative_rpaths_install_nondefault(temporary_mirror_dir):
     into the non-default directory layout scheme.
     """
     cspec = spack.concretize.concretize_one("corge")
+    # Install 'corge' without using a cache
+    install_cmd("--no-cache", cspec.name)
+    buildcache_cmd("push", "-u", temporary_mirror_dir, cspec.name)
+    buildcache_cmd("update-index", temporary_mirror_dir)
+    uninstall_cmd("-y", "--dependents", cspec.name)
 
     # Test install in non-default install path scheme and relative path
     buildcache_cmd("install", "-ufo", cspec.name)
@@ -1168,7 +1174,7 @@ def test_url_buildcache_entry_v3(monkeypatch, tmpdir):
     mirror_dir = tmpdir.join("mirror_dir")
     mirror_url = url_util.path_to_file_url(mirror_dir.strpath)
 
-    s = Spec("libdwarf").concretized()
+    s = spack.concretize.concretize_one("libdwarf")
 
     # Install libdwarf
     install_cmd("--fake", s.name)

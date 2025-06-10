@@ -15,13 +15,13 @@ build system.
 Phases
 ^^^^^^
 
-The ``PerlBuilder`` and ``PerlPackage`` base classes come with 3 phases that can be overridden:
+The ``PerlBuilder`` and ``PerlPackage`` base classes come with three phases that can be overridden:
 
 #. ``configure`` - configure the package
 #. ``build`` - build the package
 #. ``install`` - install the package
 
-Perl packages have 2 common modules used for module installation:
+Perl packages have two common modules used for module installation:
 
 """""""""""""""""""""""
 ``ExtUtils::MakeMaker``
@@ -68,7 +68,7 @@ working.
 Finding Perl packages
 ^^^^^^^^^^^^^^^^^^^^^
 
-Most Perl modules are hosted on CPAN - The Comprehensive Perl Archive
+Most Perl modules are hosted on CPAN, the Comprehensive Perl Archive
 Network. If you need to find a package for ``XML::Parser``, for example,
 you should search for "CPAN XML::Parser".
 
@@ -177,14 +177,14 @@ Testing
 ^^^^^^^
 
 ``PerlPackage`` provides a simple stand-alone test of the successfully
-installed package to confirm that installed perl module(s) can be used.
+installed package to confirm that installed Perl module(s) can be used.
 These tests can be performed any time after the installation using
 ``spack -v test run``. (For more information on the command, see 
 :ref:`cmd-spack-test-run`.)
 
-The base class automatically detects perl modules based on the presence
+The base class automatically detects Perl modules based on the presence
 of ``*.pm`` files under the package's library directory. For example,
-the files under ``perl-bignum``'s perl library are:
+the files under ``perl-bignum``'s Perl library are:
 
 .. code-block:: console
 

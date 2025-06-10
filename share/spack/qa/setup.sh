@@ -15,6 +15,9 @@ export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
+# Ensure that clingo is bootstrapped
+spack spec zlib > /dev/null
+
 # by default coverage is off.
 coverage=""
 coverage_run=""

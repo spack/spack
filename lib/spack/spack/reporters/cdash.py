@@ -278,6 +278,8 @@ class CDash(Reporter):
         self.multiple_packages = False
         num_packages = 0
         for spec in specs:
+            spec.summarize()
+
             # Do not generate reports for packages that were installed
             # from the binary cache.
             spec["packages"] = [
@@ -362,6 +364,8 @@ class CDash(Reporter):
         """Generate reports for each package in each spec."""
         tty.debug("Processing test report")
         for spec in specs:
+            spec.summarize()
+
             duration = 0
             if "time" in spec:
                 duration = int(spec["time"])
