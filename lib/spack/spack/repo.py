@@ -1664,6 +1664,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
     ) -> None:
         with self.write_transaction:
             try:
+                fs.mkdirp(self.destination)
                 with fs.working_dir(self.destination):
                     # do not fetch if the package repository was fetched by another
                     # process while we were waiting for the lock
@@ -1955,9 +1956,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
 
 # Add the finder to sys.meta_path
 REPOS_FINDER = ReposFinder()
