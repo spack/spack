@@ -1707,10 +1707,8 @@ class RemoteRepoDescriptor(RepoDescriptor):
                             self.branch, remote=remote, depth=depth
                         )
 
-            except spack.util.executable.ProcessError as e:
-                self.error = (
-                    f"Failed to {'update' if update else 'clone'} repository {self.name}: {e}"
-                )
+            except spack.util.executable.ProcessError:
+                self.error = f"Failed to {'update' if update else 'clone'} repository {self.name}"
                 return
 
             self.read_index_file()

@@ -95,12 +95,12 @@ def pull_checkout_branch(branch: str, remote: str = "origin", depth: int = 20):
     git_exe = git(required=True)
 
     git_exe("fetch", f"--depth={depth}", remote, branch)
-    git_exe("checkout", branch)
+    git_exe("checkout", "--quiet", branch)
 
     try:
-        git_exe("rebase", f"{remote}/{branch}")
+        git_exe("rebase", "--quiet", f"{remote}/{branch}")
     except exe.ProcessError as e:
-        git_exe("rebase", "--abort", ignore_errors=True)
+        git_exe("rebase", "--quiet", "--abort", ignore_errors=True)
         raise e
 
 
