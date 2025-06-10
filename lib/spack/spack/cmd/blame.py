@@ -129,8 +129,11 @@ def blame(parser, args):
         pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
         blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
 
-    # get git blame for the package
-    with working_dir(spack.paths.prefix):
+    # get git blame for the package EVEN IF it is located in a different
+    # repository (e.g., spack/spack-packages)
+    in_spack_repo = blame_file.startswith(spack.paths.prefix)
+    work_dir = spack.paths.prefix if in_spack_repo else os.path.dirname(blame_file)
+    with working_dir(work_dir):
         # ignore the great black reformatting of 2022
         ignore_file = os.path.join(spack.paths.prefix, ".git-blame-ignore-revs")
 
@@ -138,6 +141,8 @@ def blame(parser, args):
             git("blame", "--ignore-revs-file", ignore_file, blame_file)
             return
         else:
+            if not in_spack_repo:
+                tty.debug(f"Processing blame for {blame_file}")
             output = git(
                 "blame",
                 "--line-porcelain",
