@@ -6,6 +6,8 @@ import pathlib
 
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack
 import spack.environment
 import spack.package_base
@@ -13,8 +15,8 @@ import spack.paths
 import spack.repo
 import spack.schema.repos
 import spack.spec
-import spack.util.executable
 import spack.util.file_cache
+import spack.util.git
 import spack.util.lock
 import spack.util.naming
 from spack.util.naming import valid_module_name
@@ -649,6 +651,23 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
+    git = spack.util.git.git()
+
+    git("init", os.path.join(tmp_path, "foo.git"))
+
+    with open(tmp_path / "foo.git" / "spack-repo-index.yaml", "w", encoding="utf-8") as f:
+        f.write(
+            """\
+repo_index:
+  paths:
+  - spack_repo/foo
+"""
+        )
+
+    with fs.working_dir(os.path.join(tmp_path, "foo.git")):
+        git("add", "-A")
+        git("commit", "--no-gpg-sign", "-m", "add index to repo")
+
     # Construct 3 identical descriptors
     descriptors_1, descriptors_2, descriptors_3 = [
         {
@@ -670,52 +689,18 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
     repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
 
-    git_clone_calls = 0
-
-    class MockGit(spack.util.executable.Executable):
-        def __init__(self):
-            pass
-
-        def __call__(self, *args, **kwargs) -> str:  # type: ignore
-            nonlocal git_clone_calls
-            git_clone_calls += 1
-
-            action, flag, repo, dest = args
-
-            assert action == "clone"
-            assert flag == "--depth=100"
-            assert "foo.git" in repo
-            assert "foo_destination" in dest
-
-            # The git repo needs a .git subdir
-            os.makedirs(os.path.join(dest, ".git"))
-
-            # The spack-repo-index.yaml is optional; we test Spack reads from it.
-            with open(os.path.join(dest, "spack-repo-index.yaml"), "w", encoding="utf-8") as f:
-                f.write(
-                    """\
-repo_index:
-  paths:
-  - spack_repo/foo
-"""
-                )
-
-            return ""
-
-    repo_path_1, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
+    repo_path_1, errors_1 = repos_1.construct(cache=cache)
 
     # Verify it cannot construct a Repo instance, and that this does *not* throw, since that would
     # break Spack very early on. Instead, an error is returned. Also verify that
     # relative_paths is read from spack-repo-index.yaml.
-    assert git_clone_calls == 1
     assert len(repo_path_1.repos) == 0
     assert len(errors_1) == 1
     assert all("No repo.yaml" in str(err) for err in errors_1.values()), errors_1
     assert descriptors_1["foo"].relative_paths == ["spack_repo/foo"]
 
     # Do the same test with another instance: it should *not* clone a second time.
-    repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
-    assert git_clone_calls == 1
+    repo_path_2, errors_2 = repos_2.construct(cache=cache)
     assert len(repo_path_2.repos) == 0
     assert len(errors_2) == 1
     assert all("No repo.yaml" in str(err) for err in errors_2.values()), errors_2
@@ -723,8 +708,7 @@ repo_index:
 
     # Finally fill the repo with an actual repo and check that the repo can be constructed.
     spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
-    repo_path_3, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
-    assert git_clone_calls == 1
+    repo_path_3, errors_3 = repos_3.construct(cache=cache)
     assert not errors_3
     assert len(repo_path_3.repos) == 1
     assert repo_path_3.repos[0].namespace == "foo"
