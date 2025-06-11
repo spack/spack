@@ -4,8 +4,10 @@
 
 import argparse
 import os
+import pathlib
 import re
 import sys
+from typing import Optional, Union
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -113,7 +115,18 @@ def dump_json(rows, last_mod, total_lines, emails):
     sjson.dump(result, sys.stdout)
 
 
-def repo_prefix(path):
+def repo_prefix(path: str) -> Optional[Union[str, pathlib.Path]]:
+    """Find the root directory of a spack repository containing the file.
+
+    Args:
+      path: path to an arbitrary file presumably in one of the spack repos
+
+    Returns: path to the repository prefix or None
+    """
+
+    def find_root(p):
+        return p if os.path.exists(p / ".git") else find_root(p.parent)
+
     if path.startswith(spack.paths.prefix):
         return spack.paths.prefix
 
@@ -121,10 +134,10 @@ def repo_prefix(path):
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
     )
     for _, desc in descriptors.items():
-        index = desc.path.find("repos/spack_repo")
+        index = desc.path.find("spack_repo")
         if index > -1:
-            prefix = desc.path[: index - 1]
-            if path.startswith(prefix):
+            prefix = find_root(pathlib.Path(desc.path[: index - 1]))
+            if prefix and path.startswith(str(prefix)):
                 return prefix
 
     return None
@@ -136,7 +149,8 @@ def blame(parser, args):
         tty.die("This spack is not a git clone. Can't use 'spack blame'")
     git = spack.util.git.git(required=True)
 
-    # Get name of file to blame
+    # Get the name of the file to blame and its repository prefix
+    # so we can honor any .git-blame-ignore-revs that may be present.
     blame_file = None
     prefix = None
     if os.path.isfile(args.package_or_file):
@@ -150,15 +164,15 @@ def blame(parser, args):
         try:
             pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
             blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
-            prefix = repo_prefix(blame_file)
+            prefix = repo_prefix(spack.repo.PATH.repo_for_pkg(args.package_or_file).root)
         except spack.repo.UnknownNamespaceError:
             pass
 
     if prefix is None:
-        tty.die(f"The file ({path}) is not within a spack repo. Can't use 'spack blame'.")
+        tty.die(f"'{args.package_or_file}' is not within a spack repo. Can't use 'spack blame'.")
 
-    # get git blame for the package EVEN when it is located in a different spack
-    # repository (e.g., spack/spack-packages)
+    # Get git blame for the path EVEN when it is located in a different
+    # spack repository (e.g., spack/spack-packages).
     with working_dir(prefix):
         options = ["blame"]
         # ignore the great black reformatting of 2022
