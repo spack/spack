@@ -16,7 +16,6 @@ import spack.repo
 import spack.schema.repos
 import spack.spec
 import spack.util.file_cache
-import spack.util.git
 import spack.util.lock
 import spack.util.naming
 from spack.util.naming import valid_module_name
@@ -643,15 +642,13 @@ def test_parse_config_descriptor_no_git(tmp_path: pathlib.Path):
         )
 
 
-def test_repo_descriptors_construct(tmp_path: pathlib.Path):
+def test_repo_descriptors_construct(tmp_path: pathlib.Path, git):
     """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
     construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
     spack-repo-index.yaml file both when newly initialized and when already cloned."""
 
     lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
-
-    git = spack.util.git.git()
 
     git("init", os.path.join(tmp_path, "foo.git"))
 
