@@ -165,7 +165,7 @@ def blame(parser, args):
         try:
             pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
             blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
-            prefix = repo_prefix(spack.repo.PATH.repo_for_pkg(args.package_or_file).root)
+            prefix = repo_prefix(blame_file)
         except spack.repo.UnknownNamespaceError:
             pass
 
