@@ -1,13 +1,14 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from llnl.util.filesystem import working_dir
+from typing import Optional
 
-import spack.util.git
-import spack.util.executable as exe
 import pytest
 
-from typing import Optional
+from llnl.util.filesystem import working_dir
+
+import spack.util.executable as exe
+import spack.util.git
 
 
 def test_git_not_found(monkeypatch):
