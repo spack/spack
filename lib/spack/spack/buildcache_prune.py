@@ -49,6 +49,7 @@ def _prune_orphans(
     manifests: List[str],
     read_fn: Callable[[str], URLBuildcacheEntry],
     blobs: List[str],
+    dry_run: bool,
 ) -> int:
     """
     Prune orphaned manifests and blobs from the buildcache.
@@ -132,6 +133,9 @@ def _prune_orphans(
     pruned_objects = 0
 
     def remove_manifest(url: str) -> int:
+        if dry_run:
+            tty.info(f"Dry run: would remove manifest {url}")
+            return 1
         try:
             web_util.remove_url(url=url)
             # Remove the manifest file from the local list of manifests.
@@ -147,6 +151,9 @@ def _prune_orphans(
 
     def remove_blob(url: str) -> int:
         try:
+            if dry_run:
+                tty.info(f"Dry run: would remove blob {url}")
+                return 1
             web_util.remove_url(url=url)
             del blob_to_manifest_mapping[url]
             tty.debug(f"Removed {url}")
@@ -165,23 +172,31 @@ def _prune_orphans(
     return pruned_objects
 
 
-def prune(mirror: Mirror) -> None:
+def prune(mirror: Mirror, dry_run: bool) -> None:
     """
     Execute the pruning process for a given mirror.
 
     Currently, this function only performs the pruning of orphaned manifests and blobs.
     """
-    tty.debug(f"Pruning mirror: {mirror.fetch_url}")
+    tty.debug(f"Pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
     total_pruned = 0
     with _fetch_manifests(mirror) as (manifest_list, read_fn, blob_list):
         while True:
             # Continue pruning until no more orphaned objects are found
             pruned = _prune_orphans(
-                mirror=mirror, manifests=manifest_list, read_fn=read_fn, blobs=blob_list
+                mirror=mirror,
+                manifests=manifest_list,
+                read_fn=read_fn,
+                blobs=blob_list,
+                dry_run=dry_run,
             )
             if pruned == 0:
                 break
             total_pruned += pruned
 
-    tty.debug(f"Pruned {total_pruned} orphaned objects from mirror: {mirror.fetch_url}")
+    tty.debug(
+        "Would have pruned"
+        if dry_run
+        else "Pruned" + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
+    )

@@ -216,6 +216,11 @@ def setup_parser(subparser: argparse.ArgumentParser):
     prune.add_argument(
         "mirror", type=arguments.mirror_name_or_url, help="mirror name, path, or URL"
     )
+    prune.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="do not actually delete anything from the buildcache, but log what would be deleted",
+    )
     prune.set_defaults(func=prune_fn)
 
     # Given the root spec, save the yaml of the dependent spec to a file
@@ -830,9 +835,10 @@ def migrate_fn(args):
 def prune_fn(args):
     """prune stale buildcache entries from the mirror"""
     mirror: spack.mirrors.mirror.Mirror = args.mirror
+    dry_run: bool = args.dry_run
     assert isinstance(mirror, spack.mirrors.mirror.Mirror)
 
-    prune(mirror)
+    prune(mirror, dry_run)
 
 
 def buildcache(parser, args):

@@ -752,18 +752,25 @@ def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):
     assert error.value.message == "Buildcache migration requires a buildcache index"
 
 
-def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gnupghome):
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gnupghome, dry_run):
     with capsys.disabled():
         mirror("add", "--unsigned", "my-mirror", str(tmp_path))
         spec = mutable_database.query_local("libelf", installed=True)[0]
         buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
-    output = buildcache("prune", "my-mirror")
+    cmd_args = ["prune", "my-mirror"]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
 
     assert "No orphaned manifest(s) or blob(s) found" in output
 
 
-def test_buildcache_prune_orphaned_blobs(capsys, tmp_path, mutable_database, mock_gnupghome):
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_orphaned_blobs(
+    capsys, tmp_path, mutable_database, mock_gnupghome, dry_run
+):
     # Create a mirror and push a package to it
     mirror_directory = str(tmp_path)
 
@@ -791,17 +798,23 @@ def test_buildcache_prune_orphaned_blobs(capsys, tmp_path, mutable_database, moc
     # Ensure the blobs are still there before pruning
     assert all(web_util.url_exists(blob_url) for blob_url in blob_urls)
 
-    output = buildcache("prune", "my-mirror")
+    cmd_args = ["prune", "my-mirror"]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
 
-    # Ensure the blobs are gone after pruning
-    assert all(not web_util.url_exists(blob_url) for blob_url in blob_urls)
+    # Ensure the blobs are gone after pruning (or not if dry_run is True)
+    assert all(web_util.url_exists(blob_url) == dry_run for blob_url in blob_urls)
 
     assert "Found 2 blob(s) with no manifest" in output
 
     cache_entry.destroy()
 
 
-def test_buildcache_prune_orphaned_manifest(capsys, tmp_path, mutable_database, mock_gnupghome):
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_buildcache_prune_orphaned_manifest(
+    capsys, tmp_path, mutable_database, mock_gnupghome, dry_run
+):
     # Create a mirror and push a package to it
     mirror_directory = str(tmp_path)
 
@@ -822,13 +835,20 @@ def test_buildcache_prune_orphaned_manifest(capsys, tmp_path, mutable_database, 
         blob_url = cache_entry.get_blob_url(mirror_url=mirror_directory, record=blob_file)
         web_util.remove_url(url=f"file://{blob_url}")
 
-    output = buildcache("prune", "my-mirror")
+    cmd_args = ["prune", "my-mirror"]
+    if dry_run:
+        cmd_args.append("--dry-run")
+    output = buildcache(*cmd_args)
 
-    # Clear the local cache entry's manifest and try to read it again, which
-    # should raise an error because it has been pruned
-    with pytest.raises(BuildcacheEntryError):
-        cache_entry.manifest = None
-        cache_entry.read_manifest()
+    # Ensure the manifest is gone after pruning (or not if dry_run is True)
+    assert web_util.url_exists(cache_entry.mirror_url) == dry_run
+
+    if not dry_run:
+        # Clear the local cache entry's manifest and try to read it again, which
+        # should raise an error because it has been pruned
+        with pytest.raises(BuildcacheEntryError):
+            cache_entry.manifest = None
+            cache_entry.read_manifest()
 
     assert "Found 1 manifest(s) that are missing blobs" in output
 
