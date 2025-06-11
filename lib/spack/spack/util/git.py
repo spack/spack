@@ -47,27 +47,11 @@ def git(required: bool = False) -> Optional[exe.Executable]:
     return git
 
 
-def init_git_repo(repository: str, destination: str, remote: str = "origin"):
-    """Initialize a new Git repository and configure it with a remote.
-
-    Creates a new Git repository at the specified destination directory,
-    adds a remote repository URL, and optimizes configuration for repositories
-    with many files.
-
-    Args:
-        repository: The URL of the remote repository to add.
-        destination: The local directory path where the Git repository will be initialized.
-        remote: The name for the remote repository. Defaults to "origin".
-
-    Raises:
-        RuntimeError: If git executable is not found or git init/remote add commands fail.
-
-    Note:
-        The manyFiles configuration may fail silently on Git versions prior to v2.24.
-    """
+def init_git_repo(repository: str, remote: str = "origin"):
+    """Initialize a new Git repository and configure it with a remote."""
     git_exe = git(required=True)
 
-    git_exe("init", "--quiet", destination, output=str)
+    git_exe("init", "--quiet", output=str)
     git_exe("remote", "add", remote, repository)
     # versions of git prior to v2.24 may not have the manyFiles feature
     # so we should ignore errors here on older versions of git
