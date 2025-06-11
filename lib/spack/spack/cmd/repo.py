@@ -138,9 +138,7 @@ def setup_parser(subparser: argparse.ArgumentParser):
 
     # Update
     update_parser = sp.add_parser("update", help=repo_update.__doc__)
-    update_parser.add_argument(
-        "namespaces", nargs="*", default=[], help="repository namespaces to update"
-    )
+    update_parser.add_argument("names", nargs="*", default=[], help="repositories to update")
     update_parser.add_argument(
         "--remote",
         "-r",

@@ -1855,7 +1855,7 @@ _spack_repo_update() {
     then
         SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
     else
-        _repos
+        SPACK_COMPREPLY=""
     fi
 }
 
