@@ -134,11 +134,12 @@ def repo_prefix(path: str) -> Optional[Union[str, pathlib.Path]]:
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
     )
     for _, desc in descriptors.items():
-        index = desc.path.find("spack_repo")
-        if index > -1:
-            prefix = find_root(pathlib.Path(desc.path[: index - 1]))
-            if prefix and path.startswith(str(prefix)):
-                return prefix
+        if hasattr(desc, "path"):
+            index = desc.path.find("spack_repo")
+            if index > -1:
+                prefix = find_root(pathlib.Path(desc.path[: index - 1]))
+                if prefix and path.startswith(str(prefix)):
+                    return prefix
 
     return None
 
