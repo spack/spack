@@ -1674,7 +1674,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                     # setup the repository if it does not exist
                     if not fetched:
-                        spack.util.git.init_git_repo(self.repository, self.destination, remote)
+                        spack.util.git.init_git_repo(self.repository, remote=remote)
 
                         # determine the default branch from ls-remote
                         refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
@@ -1953,9 +1953,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
 
 
 # Add the finder to sys.meta_path
