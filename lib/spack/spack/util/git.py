@@ -83,9 +83,9 @@ def pull_checkout_branch(branch: str, remote: str = "origin", depth: int = 20):
 
     try:
         git_exe("rebase", "--quiet", f"{remote}/{branch}")
-    except exe.ProcessError as e:
+    except exe.ProcessError:
         git_exe("rebase", "--abort", fail_on_error=False, error=str, output=str)
-        raise e
+        raise
 
 
 def get_modified_files(from_ref: str = "HEAD~1", to_ref: str = "HEAD") -> List[str]:

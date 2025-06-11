@@ -74,3 +74,9 @@ def test_pull_checkout_branch(git, tmp_path, mock_git_version_info):
         spack.util.git.pull_checkout_branch("1.x")
 
         "1.x" in git("rev-parse", "--abbrev-ref", "HEAD", output=str)
+
+        with open("file.txt", "w", encoding="utf-8") as f:
+            f.write("hi harmen")
+
+        with pytest.raises(exe.ProcessError):
+            spack.util.git.pull_checkout_branch("main")
