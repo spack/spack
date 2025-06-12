@@ -94,7 +94,8 @@ or refer to the full manual below.
    :caption: Contributing
 
    contribution_guide
-   packaging_guide
+   packaging_guide_1
+   packaging_guide_2
    build_systems
    developer_guide
 
