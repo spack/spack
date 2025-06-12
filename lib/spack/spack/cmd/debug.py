@@ -25,7 +25,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp.add_parser("report", help="print information useful for bug reports")
 
 
-def _get_builtin_repo_commit() -> Optional[str]:
+def _get_builtin_repo_info() -> Optional[str]:
     """Get the builtin package repository git commit sha."""
     # Get builtin from config
     descriptors = spack.repo.RepoDescriptors.from_config(
@@ -36,10 +36,13 @@ def _get_builtin_repo_commit() -> Optional[str]:
 
     builtin = descriptors["builtin"]
 
+    source = None
     if isinstance(builtin, spack.repo.RemoteRepoDescriptor) and builtin.fetched():
         destination = builtin.destination
+        source = builtin.repository
     elif isinstance(builtin, spack.repo.LocalRepoDescriptor):
         destination = builtin.path
+        source = builtin.path
     else:
         return None  # no git info
 
@@ -54,10 +57,7 @@ def _get_builtin_repo_commit() -> Optional[str]:
         return None
 
     match = re.match(r"[a-f\d]{7,}$", rev)
-    extra = (
-        f" (source: {builtin.path})" if isinstance(builtin, spack.repo.LocalRepoDescriptor) else ""
-    )
-    return f"{match.group(0)}{extra}" if match else None
+    return f"{source} ({match.group(0)})" if match else None
 
 
 def report(args):
@@ -66,7 +66,7 @@ def report(args):
     host_target = host_platform.default_target()
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
     print("* **Spack:**", spack.get_version())
-    print("* **Builtin repo:**", _get_builtin_repo_commit() or "not available")
+    print("* **Builtin repo:**", _get_builtin_repo_info() or "not available")
     print("* **Python:**", platform.python_version())
     print("* **Platform:**", architecture)
 
