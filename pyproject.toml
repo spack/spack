@@ -89,9 +89,7 @@ issues = "https://github.com/spack/spack/issues"
 
 [tool.hatch.build.targets.wheel]
 # https://hatch.pypa.io/latest/config/build/
-packages = ["lib/spack"]
-include = ["etc/spack/defaults"]
-exclude = ["lib/spack/docs"]
+packages = ["lib/spack/spack", "lib/spack/spack_installable", "etc/spack/defaults"]
 
 [tool.hatch.build.targets.wheel.sources]
 "etc/spack/defaults" = "spack/etc"
