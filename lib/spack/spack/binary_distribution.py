@@ -266,6 +266,10 @@ class BinaryCacheIndex:
                         # recreate index if it is missing
                         cache_entry = self._local_index_cache[str(url_and_version)]
                         self._fetch_and_cache_index(url_and_version, cache_entry)
+                    if os.path.getsize(cache_file_path) == 0:
+                        tty.warn(f"The buildcache index is empty for mirror '{url_and_version}'")
+                        return
+
                     db._read_from_file(cache_file_path)
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
