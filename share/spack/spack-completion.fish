@@ -359,7 +359,6 @@ complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a change -d 'change
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a checksum -d 'checksum available versions of a package'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a ci -d 'manage continuous integration pipelines'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a clean -d 'remove temporary build files and/or downloaded archives'
-complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a clone -d 'create a new installation of spack in another prefix'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a commands -d 'list available spack commands'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compiler -d 'manage compilers'
 complete -c spack -n '__fish_spack_using_command_pos 0 ' -f -a compilers -d 'list available compilers'
@@ -1035,14 +1034,6 @@ complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -f -a 
 complete -c spack -n '__fish_spack_using_command clean' -s b -l bootstrap -d 'remove software and configuration needed to bootstrap Spack'
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -f -a all
 complete -c spack -n '__fish_spack_using_command clean' -s a -l all -d 'equivalent to -sdfmp (does not include --bootstrap)'
-
-# spack clone
-set -g __fish_spack_optspecs_spack_clone h/help r/remote=
-complete -c spack -n '__fish_spack_using_command_pos 0 clone' -f -a '(__fish_complete_directories)'
-complete -c spack -n '__fish_spack_using_command clone' -s h -l help -f -a help
-complete -c spack -n '__fish_spack_using_command clone' -s h -l help -d 'show this help message and exit'
-complete -c spack -n '__fish_spack_using_command clone' -s r -l remote -r -f -a remote
-complete -c spack -n '__fish_spack_using_command clone' -s r -l remote -r -d 'name of the remote to clone from'
 
 # spack commands
 set -g __fish_spack_optspecs_spack_commands h/help update-completion a/aliases format= header= update=
