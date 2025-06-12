@@ -9,6 +9,7 @@ import itertools
 import os
 import pathlib
 import re
+import sys
 import time
 
 import pytest
@@ -1121,15 +1122,24 @@ def test_report_filename_for_cdash(install_mockery, mock_fetch):
     assert filename != "https://blahblah/submit.php?project=debugging"
 
 
-def test_setting_concurrent_packages_flag():
+def test_setting_concurrent_packages_flag(mutable_config):
     """Ensure that the number of concurrent packages is properly set from the command-line flag"""
     install = SpackCommand("install")
     install("--concurrent-packages", "8", fail_on_error=False)
     assert spack.config.get("config:concurrent_packages", scope="command_line") == 8
 
 
-def test_invalid_concurrent_packages_flag():
+def test_invalid_concurrent_packages_flag(mutable_config):
     """Test that an invalid value for --concurrent-packages CLI flag raises a ValueError"""
     install = SpackCommand("install")
     with pytest.raises(ValueError, match="expected a positive integer"):
         install("--concurrent-packages", "-2", fail_on_error=False)
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Feature disabled on windows due to locking")
+def test_concurrent_packages_set_in_config(mutable_config, mock_packages):
+    """Ensure that the number of concurrent packages is properly set from adding to config"""
+    spack.config.set("config:concurrent_packages", 3)
+    spec = spack.concretize.concretize_one("pkg-a")
+    installer = spack.installer.PackageInstaller([spec.package])
+    assert installer.concurrent_packages == 3

@@ -916,7 +916,7 @@ def test_single_file_scope(config, env_yaml):
         assert spack.config.get("packages:externalmodule:buildable") is False
         assert spack.config.get("repos") == {
             "z": "/x/y/z",
-            "builtin": "$spack/var/spack/repos/spack_repo/builtin",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
         }
 
 
@@ -955,7 +955,7 @@ spack:
         assert not spack.config.get("packages:externalmodule")
         assert spack.config.get("repos") == {
             "z": "/x/y/z",
-            "builtin": "$spack/var/spack/repos/spack_repo/builtin",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
         }
 
 
@@ -1351,8 +1351,8 @@ def test_env_activation_preserves_config_scopes(mutable_mock_env_path):
     custom_scope = spack.config.InternalConfigScope("custom_scope")
     spack.config.CONFIG.push_scope(custom_scope, priority=ConfigScopePriority.CUSTOM)
     expected_scopes_without_env = ["custom_scope", "command_line"]
-    expected_scopes_with_first_env = ["custom_scope", "env:test", "command_line"]
-    expected_scopes_with_second_env = ["custom_scope", "env:test-2", "command_line"]
+    expected_scopes_with_first_env = ["env:test", "custom_scope", "command_line"]
+    expected_scopes_with_second_env = ["env:test-2", "custom_scope", "command_line"]
 
     def highest_priority_scopes(config, *, nscopes):
         return list(config.scopes)[-nscopes:]

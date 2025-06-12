@@ -62,10 +62,11 @@ import re
 import sys
 import traceback
 import warnings
-from typing import Iterator, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from llnl.util.tty import color
 
+import spack.config
 import spack.deptypes
 import spack.error
 import spack.paths
@@ -85,12 +86,23 @@ GIT_HASH = r"(?:[A-Fa-f0-9]{40})"
 GIT_REF = r"(?:[a-zA-Z_0-9][a-zA-Z_0-9./\-]*)"
 GIT_VERSION_PATTERN = rf"(?:(?:git\.(?:{GIT_REF}))|(?:{GIT_HASH}))"
 
+#: Substitute a package for a virtual, e.g., c,cxx=gcc.
+#: NOTE: Overlaps w/KVP; this should be first if matched in sequence.
+VIRTUAL_ASSIGNMENT = (
+    r"(?:"
+    rf"(?P<virtuals>{IDENTIFIER}(?:,{IDENTIFIER})*)"  # comma-separated virtuals
+    rf"=(?P<substitute>{DOTTED_IDENTIFIER}|{IDENTIFIER})"  # package to substitute
+    r")"
+)
+
+STAR = r"\*"
+
 NAME = r"[a-zA-Z_0-9][a-zA-Z_0-9\-.]*"
 
 HASH = r"[a-zA-Z_0-9]+"
 
 #: These are legal values that *can* be parsed bare, without quotes on the command line.
-VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=\~\/\\]+)"
+VALUE = r"(?:[a-zA-Z_0-9\-+\*.,:=%^\~\/\\]+)"
 
 #: Quoted values can be *anything* in between quotes, including escaped quotes.
 QUOTED_VALUE = r"(?:'(?:[^']|(?<=\\)')*'|\"(?:[^\"]|(?<=\\)\")*\")"
@@ -115,33 +127,41 @@ NO_QUOTES_NEEDED = re.compile(r"^[a-zA-Z0-9,/_.\-\[\]]+$")
 
 
 class SpecTokens(TokenBase):
-    """Enumeration of the different token kinds in the spec grammar.
+    """Enumeration of the different token kinds of tokens in the spec grammar.
+
     Order of declaration is extremely important, since text containing specs is parsed with a
     single regex obtained by ``"|".join(...)`` of all the regex in the order of declaration.
     """
 
-    # Dependency
+    # Dependency, with optional virtual assignment specifier
     START_EDGE_PROPERTIES = r"(?:[\^%]\[)"
-    END_EDGE_PROPERTIES = r"(?:\])"
-    DEPENDENCY = r"(?:[\^\%])"
+    END_EDGE_PROPERTIES = rf"(?:\](?:\s*{VIRTUAL_ASSIGNMENT})?)"
+    DEPENDENCY = rf"(?:[\^\%](?:\s*{VIRTUAL_ASSIGNMENT})?)"
+
     # Version
     VERSION_HASH_PAIR = rf"(?:@(?:{GIT_VERSION_PATTERN})=(?:{VERSION}))"
     GIT_VERSION = rf"@(?:{GIT_VERSION_PATTERN})"
     VERSION = rf"(?:@\s*(?:{VERSION_LIST}))"
+
     # Variants
     PROPAGATED_BOOL_VARIANT = rf"(?:(?:\+\+|~~|--)\s*{NAME})"
     BOOL_VARIANT = rf"(?:[~+-]\s*{NAME})"
     PROPAGATED_KEY_VALUE_PAIR = rf"(?:{NAME}:?==(?:{VALUE}|{QUOTED_VALUE}))"
     KEY_VALUE_PAIR = rf"(?:{NAME}:?=(?:{VALUE}|{QUOTED_VALUE}))"
+
     # FILENAME
     FILENAME = rf"(?:{FILENAME})"
+
     # Package name
     FULLY_QUALIFIED_PACKAGE_NAME = rf"(?:{DOTTED_IDENTIFIER})"
-    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER})"
+    UNQUALIFIED_PACKAGE_NAME = rf"(?:{IDENTIFIER}|{STAR})"
+
     # DAG hash
     DAG_HASH = rf"(?:/(?:{HASH}))"
+
     # White spaces
     WS = r"(?:\s+)"
+
     # Unexpected character(s)
     UNEXPECTED = r"(?:.[\s]*)"
 
@@ -162,20 +182,37 @@ def tokenize(text: str) -> Iterator[Token]:
         yield token
 
 
+def parseable_tokens(text: str) -> Iterator[Token]:
+    """Return non-whitespace tokens from the text passed as input
+
+    Raises:
+        SpecTokenizationError: when unexpected characters are found in the text
+    """
+    return filter(lambda x: x.kind != SpecTokens.WS, tokenize(text))
+
+
 class TokenContext:
     """Token context passed around by parsers"""
 
-    __slots__ = "token_stream", "current_token", "next_token"
+    __slots__ = "token_stream", "current_token", "next_token", "pushed_tokens"
 
     def __init__(self, token_stream: Iterator[Token]):
         self.token_stream = token_stream
         self.current_token = None
-        self.next_token = None
+        self.next_token = None  # the next token to be read
+
+        # if not empty, back of list is front of stream, and we pop from here instead.
+        self.pushed_tokens: List[Token] = []
+
         self.advance()
 
     def advance(self):
         """Advance one token"""
-        self.current_token, self.next_token = self.next_token, next(self.token_stream, None)
+        self.current_token = self.next_token
+        if self.pushed_tokens:
+            self.next_token = self.pushed_tokens.pop()
+        else:
+            self.next_token = next(self.token_stream, None)
 
     def accept(self, kind: SpecTokens):
         """If the next token is of the specified kind, advance the stream and return True.
@@ -185,6 +222,11 @@ class TokenContext:
             self.advance()
             return True
         return False
+
+    def push_front(self, token=Token):
+        """Push a token onto the front of the stream. Enables a bit of lookahead."""
+        self.pushed_tokens.append(self.next_token)  # back of list is front of stream
+        self.next_token = token
 
     def expect(self, *kinds: SpecTokens):
         return self.next_token and self.next_token.kind in kinds
@@ -231,14 +273,61 @@ def _warn_about_variant_after_compiler(literal_str: str, issues: List[str]):
             return
 
 
+def parse_virtual_assignment(context: TokenContext) -> Tuple[str]:
+    """Look at subvalues and, if present, extract virtual and a push a substitute token.
+
+    This handles things like:
+        * ^c=gcc
+        * ^c,cxx=gcc
+        * %[when=+bar] c=gcc
+        * %[when=+bar] c,cxx=gcc
+
+    Virtual assignment can happen anywhere a dependency node can appear. It is
+    shorthand for %[virtuals=c,cxx] gcc.
+
+    The virtuals=substitute key value pair appears in the subvalues of DEPENDENCY
+    and END_EDGE_PROPERTIES tokens. We extract the virutals and create a token from
+    the substitute, which is then pushed back on the parser stream so that the head
+    of the stream can be parsed like a regular node.
+
+    Returns:
+        the virtuals assigned, or None if there aren't any
+
+    """
+    assert context.current_token is not None
+
+    subvalues = context.current_token.subvalues
+    if not subvalues:
+        return ()
+
+    # build a token for the substitute that we can put back on the stream
+    pkg = subvalues["substitute"]
+    token_type = SpecTokens.UNQUALIFIED_PACKAGE_NAME
+    if "." in pkg:
+        token_type = SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME
+    start = context.current_token.value.index(pkg)
+
+    token = Token(token_type, pkg, start, start + len(pkg))
+    context.push_front(token)
+
+    return tuple(subvalues["virtuals"].split(","))
+
+
 class SpecParser:
     """Parse text into specs"""
 
-    __slots__ = "literal_str", "ctx"
+    __slots__ = "literal_str", "ctx", "toolchains", "parsed_toolchains"
 
     def __init__(self, literal_str: str):
         self.literal_str = literal_str
-        self.ctx = TokenContext(filter(lambda x: x.kind != SpecTokens.WS, tokenize(literal_str)))
+        self.ctx = TokenContext(parseable_tokens(literal_str))
+
+        # TODO: Move toolchains out of the parser, and expand them as a separate step
+        self.toolchains = {}
+        configuration = getattr(spack.config, "CONFIG", None)
+        if configuration is not None:
+            self.toolchains = configuration.get("toolchains", {})
+        self.parsed_toolchains: Dict[str, "spack.spec.Spec"] = {}
 
     def tokens(self) -> List[Token]:
         """Return the entire list of token from the initial text. White spaces are
@@ -295,11 +384,20 @@ class SpecParser:
 
             elif self.ctx.accept(SpecTokens.DEPENDENCY):
                 is_direct = self.ctx.current_token.value[0] == "%"
+                virtuals = parse_virtual_assignment(self.ctx)
+
+                # if no virtual assignment, check for a toolchain - look ahead to find the
+                # toolchain and substitute it
+                if not virtuals and is_direct and self.ctx.next_token.value in self.toolchains:
+                    assert self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME)
+                    try:
+                        self._apply_toolchain(current_spec, self.ctx.current_token.value)
+                    except spack.error.SpecError as e:
+                        raise SpecParsingError(str(e), self.ctx.current_token, self.literal_str)
+                    continue
+
+                edge_properties = {"direct": is_direct, "virtuals": virtuals, "depflag": 0}
                 dependency, warnings = self._parse_node(root_spec)
-                edge_properties = {}
-                edge_properties["direct"] = is_direct
-                edge_properties["virtuals"] = tuple()
-                edge_properties.setdefault("depflag", 0)
 
                 if is_direct:
                     target_spec = current_spec
@@ -320,8 +418,8 @@ class SpecParser:
 
         return root_spec
 
-    def _parse_node(self, root_spec):
-        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse()
+    def _parse_node(self, root_spec: "spack.spec.Spec", root: bool = True):
+        dependency, parser_warnings = SpecNodeParser(self.ctx, self.literal_str).parse(root=root)
         if dependency is None:
             msg = (
                 "the dependency sigil and any optional edge attributes must be followed by a "
@@ -329,8 +427,42 @@ class SpecParser:
             )
             raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
         if root_spec.concrete:
-            raise spack.spec.RedundantSpecError(root_spec, "^" + str(dependency))
+            raise spack.error.SpecError(root_spec, "^" + str(dependency))
         return dependency, parser_warnings
+
+    def _apply_toolchain(self, spec: "spack.spec.Spec", name: str) -> None:
+        if name not in self.parsed_toolchains:
+            toolchain = self._parse_toolchain(name)
+            self.parsed_toolchains[name] = toolchain
+
+        toolchain = self.parsed_toolchains[name]
+        spec.constrain(toolchain)
+
+    def _parse_toolchain(self, name: str) -> "spack.spec.Spec":
+        toolchain_config = self.toolchains[name]
+        if isinstance(toolchain_config, str):
+            toolchain = parse_one_or_raise(toolchain_config)
+            self._ensure_all_direct_edges(toolchain)
+        else:
+            toolchain = spack.spec.Spec()
+            for entry in toolchain_config:
+                toolchain_part = parse_one_or_raise(entry["spec"])
+                when = entry.get("when", "")
+                self._ensure_all_direct_edges(toolchain_part)
+
+                # Conditions are applied to every edge in the constraint
+                for edge in toolchain_part.traverse_edges():
+                    edge.when.constrain(when)
+                toolchain.constrain(toolchain_part)
+        return toolchain
+
+    def _ensure_all_direct_edges(self, constraint: "spack.spec.Spec") -> None:
+        for edge in constraint.traverse_edges(root=False):
+            if not edge.direct:
+                raise spack.error.SpecError(
+                    f"cannot use '^' in toolchain definitions, and the current "
+                    f"toolchain contains '{edge.format()}'"
+                )
 
     def all_specs(self) -> List["spack.spec.Spec"]:
         """Return all the specs that remain to be parsed"""
@@ -348,12 +480,13 @@ class SpecNodeParser:
         self.has_version = False
 
     def parse(
-        self, initial_spec: Optional["spack.spec.Spec"] = None
+        self, initial_spec: Optional["spack.spec.Spec"] = None, root: bool = True
     ) -> Tuple["spack.spec.Spec", List[str]]:
         """Parse a single spec node from a stream of tokens
 
         Args:
             initial_spec: object to be constructed
+            root: True if we're parsing a root, False if dependency after ^ or %
 
         Return
             The object passed as argument
@@ -370,7 +503,9 @@ class SpecNodeParser:
         # If we start with a package name we have a named spec, we cannot
         # accept another package name afterwards in a node
         if self.ctx.accept(SpecTokens.UNQUALIFIED_PACKAGE_NAME):
-            initial_spec.name = self.ctx.current_token.value
+            # if name is '*', this is an anonymous spec
+            if self.ctx.current_token.value != "*":
+                initial_spec.name = self.ctx.current_token.value
 
         elif self.ctx.accept(SpecTokens.FULLY_QUALIFIED_PACKAGE_NAME):
             parts = self.ctx.current_token.value.split(".")
@@ -506,14 +641,17 @@ class EdgeAttributeParser:
                     name = name[:-1]
                 value = value.strip("'\" ").split(",")
                 attributes[name] = value
-                if name not in ("deptypes", "virtuals"):
+                if name not in ("deptypes", "virtuals", "when"):
                     msg = (
                         "the only edge attributes that are currently accepted "
-                        'are "deptypes" and "virtuals"'
+                        'are "deptypes", "virtuals", and "when"'
                     )
                     raise SpecParsingError(msg, self.ctx.current_token, self.literal_str)
             # TODO: Add code to accept bool variants here as soon as use variants are implemented
             elif self.ctx.accept(SpecTokens.END_EDGE_PROPERTIES):
+                virtuals = attributes.get("virtuals", ())
+                virtuals += parse_virtual_assignment(self.ctx)
+                attributes["virtuals"] = virtuals
                 break
             else:
                 msg = "unexpected token in edge attributes"
@@ -523,6 +661,11 @@ class EdgeAttributeParser:
         if "deptypes" in attributes:
             deptype_string = attributes.pop("deptypes")
             attributes["depflag"] = spack.deptypes.canonicalize(deptype_string)
+
+        # Turn "when" into a spec
+        if "when" in attributes:
+            attributes["when"] = parse_one_or_raise(attributes["when"][0])
+
         return attributes
 
 
@@ -568,8 +711,9 @@ class SpecParsingError(spack.error.SpecSyntaxError):
 
     def __init__(self, message, token, text):
         message += f"\n{text}"
-        underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
-        message += color.colorize(f"@*r{{{underline}}}")
+        if token:
+            underline = f"\n{' '*token.start}{'^'*(token.end - token.start)}"
+            message += color.colorize(f"@*r{{{underline}}}")
         super().__init__(message)
 
 

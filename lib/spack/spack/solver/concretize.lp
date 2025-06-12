@@ -344,9 +344,26 @@ attr("node_version_satisfies", node(ID, Package), Constraint)
   :- attr("version", node(ID, Package), Version),
      pkg_fact(Package, version_satisfies(Constraint, Version)).
 
+% if a version needs a commit or has one it can use the commit variant
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_needs_commit(Version)).
+can_accept_commit(Package, Version) :- pkg_fact(Package, version_has_commit(Version, _)).
+
+% Specs with a commit variant can't use versions that don't need commits
+error(10, "Cannot use commit variant with '{0}@={1}'", Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     not can_accept_commit(Package, Version),
+     attr("variant_value", node(ID, Package), "commit", _).
+
+error(10, "Commit '{0}' must match package.py value '{1}' for '{2}@={3}'", Vsha, Psha, Package, Version)
+  :- attr("version", node(ID, Package), Version),
+     attr("variant_value", node(ID, Package), "commit", Vsha),
+     pkg_fact(Package, version_has_commit(Version, Psha)),
+     Vsha != Psha.
+
 #defined version_satisfies/3.
 #defined deprecated_versions_not_allowed/0.
 #defined deprecated_version/2.
+#defined can_accept_commit/2.
 
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
@@ -430,8 +447,24 @@ trigger_and_effect(Package, TriggerID, EffectID)
 
 % condition_holds(ID, node(ID, Package)) implies all imposed_constraints, unless do_not_impose(ID, node(ID, Package))
 % is derived. This allows imposed constraints to be canceled in special cases.
+
+% Effects of direct conditions hold if the trigger holds
 impose(EffectID, node(X, Package))
-  :- trigger_and_effect(Package, TriggerID, EffectID),
+  :- pkg_fact(Package, condition_effect(ConditionID, EffectID)),
+     not subcondition(ConditionID, _),
+     trigger_and_effect(Package, TriggerID, EffectID),
+     trigger_node(TriggerID, _, node(X, Package)),
+     trigger_condition_holds(TriggerID, node(X, Package)),
+     not do_not_impose(EffectID, node(X, Package)).
+
+% Effects of subconditions hold if the trigger holds and the
+% primary condition holds
+impose(EffectID, node(X, Package))
+  :- pkg_fact(Package, condition_effect(SubconditionId, EffectID)),
+     subcondition(SubconditionID, ConditionID),
+     condition_holds(ConditionID, ConditionNode),
+     condition_set(ConditionNode, node(X, Package)),
+     trigger_and_effect(Package, TriggerID, EffectID),
      trigger_node(TriggerID, _, node(X, Package)),
      trigger_condition_holds(TriggerID, node(X, Package)),
      not do_not_impose(EffectID, node(X, Package)).
@@ -649,6 +682,16 @@ virtual_condition_holds(node(Y, A2), Virtual)
      attr("virtual_on_edge", node(X, A1), node(Y, A2), Virtual),
      not build(node(X, A1)).
 
+% Simplified virtual information for conditionl requirements in
+% conditional dependencies
+% Most specs track virtuals on edges
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_edge", PackageNode, _, Virtual).
+
+% Reused specs don't track a real edge to build-only deps
+attr("uses_virtual", PackageNode, Virtual) :-
+  attr("virtual_on_build_edge", PackageNode, _, Virtual).
+
 % we cannot have additional variant values when we are working with concrete specs
 :- attr("node", node(ID, Package)),
    attr("hash", node(ID, Package), Hash),
@@ -664,6 +707,7 @@ virtual_condition_holds(node(Y, A2), Virtual)
    internal_error("imposed hash without imposing all flag values").
 
 #defined condition/2.
+#defined subcondition/2.
 #defined condition_requirement/3.
 #defined condition_requirement/4.
 #defined condition_requirement/5.
@@ -1004,11 +1048,11 @@ activate_requirement(node(ID, Package), X) :-
   condition_holds(Y, node(ID, Package)),
   requirement_conditional(Package, X, Y).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } 1,
-  requirement_policy(Package, X, "one_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } 1,
+  requirement_policy(Package, GroupID, "one_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
 
 requirement_weight(node(ID, Package), Group, W) :-
   condition_holds(Y, node(ID, Package)),
@@ -1023,11 +1067,29 @@ requirement_weight(node(ID, Package), Group, W) :-
   activate_requirement(node(ID, Package), Group),
   requirement_group(Package, Group).
 
-requirement_group_satisfied(node(ID, Package), X) :-
-  1 { condition_holds(Y, node(ID, Package)) : requirement_group_member(Y, Package, X) } ,
-  requirement_policy(Package, X, "any_of"),
-  activate_requirement(node(ID, Package), X),
-  requirement_group(Package, X).
+requirement_group_satisfied(node(ID, Package), GroupID) :-
+  1 { requirement_is_met(GroupID, ConditionID, node(ID, Package)) } ,
+  requirement_policy(Package, GroupID, "any_of"),
+  activate_requirement(node(ID, Package), GroupID),
+  requirement_group(Package, GroupID).
+
+% Derive a fact to represent that the entire requirement, including possible subconditions, is met
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  not subcondition(_, ConditionID).
+
+requirement_is_met(GroupID, ConditionID, node(X, Package)) :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  impose(EffectID, node(X, Package)) : subcondition(SubconditionID, ConditionID), pkg_fact(Package, condition_effect(SubconditionID, EffectID)), condition_holds(SubconditionID, node(X, Package));
+  subcondition(_, ConditionID).
+
+{ do_not_impose(EffectID, node(X, Package)) } :-
+  requirement_group_member(ConditionID, Package, GroupID),
+  condition_holds(ConditionID, node(X, Package)),
+  subcondition(SubconditionID, ConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)).
 
 % Do not impose requirements, if the conditional requirement is not active
 do_not_impose(EffectID, node(ID, Package)) :-

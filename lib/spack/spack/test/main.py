@@ -107,6 +107,11 @@ exit 1
     assert spack.spack_version == spack.get_version()
 
 
+def fail_if_add_env(env):
+    """Pass to add_command_line_scopes. Will raise if called"""
+    assert False, "Should not add env from scope test."
+
+
 def test_bad_command_line_scopes(tmp_path, config):
     cfg = spack.config.Configuration()
     file_path = tmp_path / "file_instead_of_dir"
@@ -115,10 +120,10 @@ def test_bad_command_line_scopes(tmp_path, config):
     file_path.write_text("")
 
     with pytest.raises(spack.error.ConfigError):
-        spack.main.add_command_line_scopes(cfg, [str(file_path)])
+        spack.main.add_command_line_scopes(cfg, [str(file_path)], fail_if_add_env)
 
     with pytest.raises(spack.error.ConfigError):
-        spack.main.add_command_line_scopes(cfg, [str(non_existing_path)])
+        spack.main.add_command_line_scopes(cfg, [str(non_existing_path)], fail_if_add_env)
 
 
 def test_add_command_line_scopes(tmpdir, mutable_config):
@@ -132,7 +137,7 @@ config:
 """
         )
 
-    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)])
+    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)], fail_if_add_env)
     assert mutable_config.get("config:verify_ssl") is False
     assert mutable_config.get("config:dirty") is False
 
@@ -162,12 +167,12 @@ spack:
         )
 
     config = spack.config.Configuration()
-    spack.main.add_command_line_scopes(config, ["example", str(tmp_path)])
+    spack.main.add_command_line_scopes(config, ["example", str(tmp_path)], fail_if_add_env)
     assert len(config.scopes) == 2
     assert config.get("config:install_tree:root") == "/tmp/second"
 
     config = spack.config.Configuration()
-    spack.main.add_command_line_scopes(config, [str(tmp_path), "example"])
+    spack.main.add_command_line_scopes(config, [str(tmp_path), "example"], fail_if_add_env)
     assert len(config.scopes) == 2
     assert config.get("config:install_tree:root") == "/tmp/first"
 
@@ -235,7 +240,9 @@ packages:
 
     assert not spack.config.get("config:dirty")
 
-    spack.main.add_command_line_scopes(mock_low_high_config, [os.path.dirname(filename)])
+    spack.main.add_command_line_scopes(
+        mock_low_high_config, [os.path.dirname(filename)], fail_if_add_env
+    )
 
     assert spack.config.get("config:dirty")
     python_reqs = spack.config.get("packages")["python"]["require"]
@@ -262,11 +269,15 @@ def test_include_duplicate_source(tmpdir, mutable_config):
 
     system_config = {"config": {"debug": False}}
     write_configs(system_filename, system_config)
-    spack.main.add_command_line_scopes(mutable_config, [os.path.dirname(system_filename)])
+    spack.main.add_command_line_scopes(
+        mutable_config, [os.path.dirname(system_filename)], fail_if_add_env
+    )
 
     site_config = {"config": {"debug": True}}
     write_configs(site_filename, site_config)
-    spack.main.add_command_line_scopes(mutable_config, [os.path.dirname(site_filename)])
+    spack.main.add_command_line_scopes(
+        mutable_config, [os.path.dirname(site_filename)], fail_if_add_env
+    )
 
     # Ensure takes the last value of the option pushed onto the stack
     assert mutable_config.get("config:debug") == site_config["config"]["debug"]
@@ -282,7 +293,9 @@ def test_include_recurse_limit(tmpdir, mutable_config):
         syaml.dump_config(include_list, f)
 
     with pytest.raises(spack.config.RecursiveIncludeError, match="recursion exceeded"):
-        spack.main.add_command_line_scopes(mutable_config, [os.path.dirname(include_path)])
+        spack.main.add_command_line_scopes(
+            mutable_config, [os.path.dirname(include_path)], fail_if_add_env
+        )
 
 
 # TODO: Fix this once recursive includes are processed in the expected order.
@@ -326,7 +339,7 @@ include:
     write(b_yaml, include_contents([debug_yaml, d_yaml] if child == "b" else [d_yaml]))
     write(c_yaml, include_contents([debug_yaml, d_yaml] if child == "c" else [d_yaml]))
 
-    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)])
+    spack.main.add_command_line_scopes(mutable_config, [str(tmpdir)], fail_if_add_env)
 
     try:
         assert mutable_config.get("config:debug") is expected

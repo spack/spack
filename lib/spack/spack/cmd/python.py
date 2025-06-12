@@ -12,6 +12,7 @@ import sys
 import llnl.util.tty as tty
 
 import spack
+import spack.repo
 
 description = "launch an interpreter as spack would launch a command"
 section = "developer"
@@ -74,6 +75,9 @@ def python(parser, args, unknown_args):
     # Unexpected behavior from supplying both
     if args.python_command and args.python_args:
         tty.die("You can only specify a command OR script, but not both.")
+
+    # Ensure that spack.repo.PATH is initialized
+    spack.repo.PATH.repos
 
     # Run user choice of interpreter
     if args.python_interpreter == "ipython":

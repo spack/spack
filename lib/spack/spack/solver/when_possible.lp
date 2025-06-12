@@ -18,6 +18,17 @@ literal_not_solved(ID) :- not solve_literal(ID), literal(ID).
 % in better reporting for users. See #30669 for details.
 1 { solve_literal(ID) : literal(ID) }.
 
+
+% If a literal is not solved, and has subconditions, then the subconditions
+% should not be imposed even if their trigger condition holds
+do_not_impose(EffectID, node(X, Package)) :-
+  literal_not_solved(LiteralID),
+  pkg_fact(Package, condition_trigger(ParentConditionID, LiteralID)),
+  subcondition(SubconditionID, ParentConditionID),
+  pkg_fact(Package, condition_effect(SubconditionID, EffectID)),
+  trigger_and_effect(_, TriggerID, EffectID),
+  trigger_node(TriggerID, _, node(X, Package)).
+
 opt_criterion(300, "number of input specs not concretized").
 #minimize{ 0@300: #true }.
 #minimize { 1@300,ID : literal_not_solved(ID) }.

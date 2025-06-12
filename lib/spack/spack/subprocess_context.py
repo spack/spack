@@ -73,24 +73,27 @@ class PackageInstallContext:
         if self.serialize:
             self.serialized_pkg = serialize(pkg)
             self.global_state = GlobalStateMarshaler()
+            self.test_patches = store_patches()
             self.serialized_env = serialize(spack.environment.active_environment())
         else:
             self.pkg = pkg
             self.global_state = None
+            self.test_patches = None
             self.env = spack.environment.active_environment()
         self.spack_working_dir = spack.paths.spack_working_dir
 
     def restore(self):
         spack.paths.spack_working_dir = self.spack_working_dir
-        env = pickle.load(self.serialized_env) if self.serialize else self.env
         # Activating the environment modifies the global configuration, so globals have to
         # be restored afterward, in case other modifications were applied on top (e.g. from
         # command line)
-        if env:
-            spack.environment.activate(env)
-
         if self.serialize:
             self.global_state.restore()
+            self.test_patches.restore()
+
+        env = pickle.load(self.serialized_env) if self.serialize else self.env
+        if env:
+            spack.environment.activate(env)
 
         # Order of operation is important, since the package might be retrieved
         # from a repo defined within the environment configuration
@@ -107,7 +110,6 @@ class GlobalStateMarshaler:
     def __init__(self):
         self.config = spack.config.CONFIG.ensure_unwrapped()
         self.platform = spack.platforms.host
-        self.test_patches = store_patches()
         self.store = spack.store.STORE
 
     def restore(self):
@@ -115,7 +117,6 @@ class GlobalStateMarshaler:
         spack.repo.enable_repo(spack.repo.RepoPath.from_config(self.config))
         spack.platforms.host = self.platform
         spack.store.STORE = self.store
-        self.test_patches.restore()
 
 
 class TestPatches:

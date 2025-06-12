@@ -45,8 +45,10 @@ import spack.repo
 import spack.spec
 import spack.store
 import spack.url
+import spack.util.archive
 import spack.util.environment
 import spack.util.executable
+import spack.util.git
 import spack.util.naming
 import spack.util.path
 import spack.util.web
@@ -59,7 +61,7 @@ from spack.solver.version_order import concretization_version_order
 from spack.stage import DevelopStage, ResourceStage, Stage, StageComposite, compute_stage_name
 from spack.util.package_hash import package_hash
 from spack.util.typing import SupportsRichComparison
-from spack.version import GitVersion, StandardVersion
+from spack.version import GitVersion, StandardVersion, VersionError, is_git_version
 
 FLAG_HANDLER_RETURN_TYPE = Tuple[
     Optional[Iterable[str]], Optional[Iterable[str]], Optional[Iterable[str]]
@@ -80,6 +82,8 @@ _spack_configure_argsfile = "spack-configure-args.txt"
 
 #: Filename of json with total build and phase times (seconds)
 spack_times_log = "install_times.json"
+
+NO_DEFAULT = object()
 
 
 class WindowsRPath:
@@ -1002,6 +1006,85 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
         _, record = spack.store.STORE.db.query_by_spec_hash(self.spec.dag_hash())
         assert dev_path_var and record, "dev_path variant and record must be present"
         return fsys.recursive_mtime_greater_than(dev_path_var.value, record.installation_time)
+
+    @classmethod
+    def version_or_package_attr(cls, attr, version, default=NO_DEFAULT):
+        """
+        Get an attribute that could be on the version or package with preference to the version
+        """
+        version_attrs = cls.versions.get(version)
+        if version_attrs and attr in version_attrs:
+            return version_attrs.get(attr)
+        if default is NO_DEFAULT and not hasattr(cls, attr):
+            raise PackageError(f"{attr} attribute not defined on {cls.name}")
+        return getattr(cls, attr, default)
+
+    @classmethod
+    def needs_commit(cls, version) -> bool:
+        """
+        Method for checking if the package instance needs a commit sha to be found
+        """
+        if isinstance(version, GitVersion):
+            return True
+
+        ver_attrs = cls.versions.get(version)
+        if ver_attrs:
+            return bool(ver_attrs.get("commit") or ver_attrs.get("tag") or ver_attrs.get("branch"))
+
+        return False
+
+    def resolve_binary_provenance(self) -> None:
+        """
+        Method to ensure concrete spec has binary provenance.
+        Base implementation will look up git commits when appropriate.
+        Packages may override this implementation for custom implementations
+        """
+        # early return cases, don't overwrite user intention
+        # commit pre-assigned or develop specs don't need commits changed
+        # since this would create un-necessary churn
+        if "commit" in self.spec.variants or self.spec.is_develop:
+            return
+
+        if is_git_version(str(self.spec.version)):
+            ref = self.spec.version.ref
+        else:
+            v_attrs = self.versions.get(self.spec.version, {})
+            if "commit" in v_attrs:
+                self.spec.variants["commit"] = spack.variant.SingleValuedVariant(
+                    "commit", v_attrs["commit"]
+                )
+                return
+            ref = v_attrs.get("tag") or v_attrs.get("branch")
+
+        if not ref:
+            raise VersionError(
+                f"{self.name}'s version {str(self.spec.version)} "
+                "is missing a git ref (commit, tag or branch)"
+            )
+
+        # Look for commits in the following places:
+        # 1) stage,                (cheap, local, static)
+        # 2) mirror archive file,  (cheapish, local, staticish)
+        # 3) URL                   (cheap, remote, dynamic)
+        # If users pre-stage, or use a mirror they can expect consistent commit resolution
+        sha = None
+        if self.stage.expanded:
+            sha = spack.util.git.get_commit_sha(self.stage.source_path, ref)
+
+        if not sha:
+            try:
+                self.do_fetch(mirror_only=True)
+            except spack.error.FetchError:
+                pass
+            if self.stage.archive_file:
+                sha = spack.util.archive.retrieve_commit_from_archive(self.stage.archive_file, ref)
+
+        if not sha:
+            url = self.version_or_package_attr("git", self.spec.version)
+            sha = spack.util.git.get_commit_sha(url, ref)
+
+        if sha:
+            self.spec.variants["commit"] = spack.variant.SingleValuedVariant("commit", sha)
 
     def all_urls_for_version(self, version: StandardVersion) -> List[str]:
         """Return all URLs derived from version_urls(), url, urls, and

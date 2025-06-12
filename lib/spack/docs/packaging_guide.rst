@@ -98,6 +98,37 @@ using the ``spack info`` command:
 An extensive list of available build systems and phases is provided in :ref:`installation_process`.
 
 
+.. _setting-up-for-package-development:
+
+
+----------------------------------
+Setting up for package development
+----------------------------------
+
+For developing new packages or working with existing ones, it's often helpful to have the ``spack/spack-packages`` repository in a custom location.
+By default, Spack will download the builtin package repository to ``~/.spack/package_repos/<hash>/``, which can be inconvenient for development purposes.
+
+The best approach is to configure Spack to use a custom repository location, such as ``~/spack-packages``:
+
+.. code-block:: console
+
+   $ spack repo set --destination ~/spack-packages builtin
+
+and then verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
+
+.. code-block:: console
+
+   $ spack location --package-dir zlib
+   /home/your-username/spack-packages/repos/spack_repo/builtin/packages/zlib
+
+This gives you direct access to the package files and makes it much easier to:
+
+* Edit existing packages
+* Create new packages
+* Submit pull requests to the ``spack/spack-packages`` repository
+* Track your changes with version control
+* Work with your own fork of the repository
+
 ------------------------
 Writing a package recipe
 ------------------------
@@ -369,9 +400,9 @@ If you have a collection of software expected to work well together with
 no source code of its own, you can create a :ref:`BundlePackage <bundlepackage>`.
 Examples where bundle packages can be useful include defining suites of
 applications (e.g., `EcpProxyApps
-<https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_), commonly used libraries
-(e.g., `AmdAocl <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_),
-and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/ecp_data_vis_sdk/package.py>`_).
+<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_), commonly used libraries
+(e.g., `AmdAocl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_),
+and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_data_vis_sdk/package.py>`_).
 
 These versioned packages primarily consist of dependencies on the associated
 software packages. They can include :ref:`variants <variants>` to ensure
@@ -428,71 +459,50 @@ A complete list of available build system templates can be found by running
 Editing existing packages
 -------------------------
 
-One of the easiest ways to learn how to write packages is to look at
-existing ones.  You can edit a package file by name with the ``spack
-edit`` command:
+One of the easiest ways to learn how to write packages is to look at existing ones.
+You can open an existing package in your editor using the ``spack edit`` command:
 
 .. code-block:: console
 
    $ spack edit gmp
 
-If you used ``spack create`` to create a package, you can get back to
-it later with ``spack edit``. For instance, the ``gmp`` package actually
-lives in:
+If you used ``spack create`` to create a package, you can get back to it later with ``spack edit``.
+The ``spack edit`` command saves you the trouble of figuring out the package location and navigating to it.
+If needed, you can still find the package location using the ``spack location`` command:
 
 .. code-block:: console
 
-   $ spack location -p gmp
-   ${SPACK_ROOT}/var/spack/repos/spack_repo/builtin/packages/gmp/package.py
+   $ spack location --package-dir gmp
+   ~/spack-packages/repos/spack_repo/builtin/packages/gmp/
 
-but ``spack edit`` provides a much simpler shortcut and saves you the
-trouble of typing the full path.
+and with shell support enabled, you can also enter to the package directory:
 
-----------------------------
-Naming & directory structure
-----------------------------
+.. code-block:: console
 
-This section describes how packages need to be named, and where they
-live in Spack's directory structure.  In general, :ref:`cmd-spack-create`
-handles creating package files for you, so you can skip most of the
-details here.
+   $ spack cd --package-dir gmp
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-``var/spack/repos/spack_repo/builtin/packages``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+If you want to edit multiple packages at once, you can run
 
-A Spack installation directory is structured like a standard UNIX
-install prefix (``bin``, ``lib``, ``include``, ``var``, ``opt``,
-etc.).  Most of the code for Spack lives in ``$SPACK_ROOT/lib/spack``.
-Packages themselves live in ``$SPACK_ROOT/var/spack/repos/spack_repo/builtin/packages``.
+.. code-block:: console
 
-If you ``cd`` to that directory, you will see directories for each
-package:
+   $ spack edit
 
-.. command-output:: cd $SPACK_ROOT/var/spack/repos/spack_repo/builtin/packages && ls
-   :shell:
-   :ellipsis: 10
+without specifying a package name, which will open the directory containing all the packages in your editor.
 
-Each directory contains a file called ``package.py``, which is where
-all the Python code for the package goes.  For example, the ``libelf``
-package lives in:
+Finally, the commands ``spack location --repo`` and ``spack cd --repo`` help you navigate to the root of the package repository.
 
-.. code-block:: none
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package Names and the Package Directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-   $SPACK_ROOT/var/spack/repos/spack_repo/builtin/packages/libelf/package.py
-
-Alongside the ``package.py`` file, a package may contain extra
-directories or files (like patches) that it needs to build.
-
-^^^^^^^^^^^^^
-Package Names
-^^^^^^^^^^^^^
-
-Packages are named after the directory containing ``package.py``. So,
-``libelf``'s ``package.py`` lives in a directory called ``libelf``.
-The ``package.py`` file defines a class called ``Libelf``, which
-extends Spack's ``Package`` class.  For example, here is
-``$SPACK_ROOT/var/spack/repos/spack_repo/builtin/packages/libelf/package.py``:
+**Package names** can contain lowercase letters, numbers, and dashes.
+These names are used in Spack commands and package recipes to refer to packages.
+Every package lives as a ``package.py`` file in a **package directory**.
+The package directory is in fact the authoritative source of the package name.
+Usually the package name coincides with the directory name on the filesystem: the ``libelf`` package corresponds to the ``libelf/package.py`` file.
+Every ``package.py`` file defines a package class, derived from the package name.
+For ``libelf`` the corresponding package class is ``Libelf``, which extends Spack's ``Package`` class.
+For example, here is ``spack_repo/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -509,9 +519,7 @@ extends Spack's ``Package`` class.  For example, here is
        def install():
            ...
 
-The **directory name** (``libelf``) determines the package name that
-users should provide on the command line. e.g., if you type any of
-these:
+If you run any of the following commands
 
 .. code-block:: console
 
@@ -519,29 +527,33 @@ these:
    $ spack versions libelf
    $ spack install libelf@0.8.13
 
-Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``var/spack/repos/spack_repo/builtin/packages``.
-Likewise, if you run ``spack install py-numpy``, Spack looks for
-``py-numpy/package.py``.
+Spack sees the package name ``libelf`` and looks for ``libelf/package.py`` in ``spack_repo/builtin/packages``.
 
-Spack uses the directory name as the package name in order to give
-packagers more freedom in naming their packages. Package names can
-contain letters, numbers, and dashes. Using a Python identifier
-(e.g., a class name or a module name) would make it difficult to
-support these options.  So, you can name a package ``3proxy`` or
-``foo-bar`` and Spack won't care. It just needs to see that name
-in the packages directory.
+.. note::
+
+   **Package name to directory mapping**.
+   There is a one to one mapping between package names and package directories.
+   Usually the mapping is trivial: the package name is the same as the directory name.
+   However, there are a few exceptions to this rule:
+
+   1. Hyphens in package names are replaced by underscores in directory names.
+      For example, the package name ``py-numpy`` maps to ``py_numpy/package.py``.
+   2. Names starting with numbers get an underscore prefix.
+      For example, the package name ``7zip`` maps to ``_7zip/package.py``.
+   3. Package names that are reserved keywords in Python are also prefixed with an underscore.
+      For example, the package name ``pass`` maps to ``_pass/package.py``.
+
+   This ensures that every package directory is a valid Python module name.
+
 
 ^^^^^^^^^^^^^^^^^^^
 Package class names
 ^^^^^^^^^^^^^^^^^^^
 
-Spack loads ``package.py`` files dynamically, and it needs to find a
-special class name in the file for the load to succeed.  The **class
-name** (``Libelf`` in our example) is formed by converting words
-separated by ``-`` in the file name to CamelCase. If the name
-starts with a number, we prefix the class name with ``_``. Here are
-some examples:
+Spack loads ``package.py`` files dynamically, and it needs to find a special class name in the file for the load to succeed.
+The **package class** (``Libelf`` in our example) is formed by converting words separated by ``-`` in the file name to CamelCase.
+If the name starts with a number, we prefix the class name with ``_``.
+Here are some examples:
 
 =================  =================
  Module Name         Class Name
@@ -550,8 +562,7 @@ some examples:
  ``3proxy``          ``_3proxy``
 =================  =================
 
-In general, you won't have to remember this naming convention because
-:ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
+In general, you won't have to remember this naming convention because :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
 .. _package_maintainers:
 
@@ -686,7 +697,7 @@ https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 In order to handle this, you can define a ``url_for_version()`` function
 like so:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/openmpi/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.url_for_version
 
 With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
@@ -787,7 +798,7 @@ of GNU. For that, Spack goes a step further and defines a mixin class that
 takes care of all of the plumbing and requires packagers to just define a proper
 ``gnu_mirror_path`` attribute:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/autoconf/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/autoconf/package.py
    :lines: 9-18
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1267,7 +1278,11 @@ Git fetching supports the following parameters to ``version``:
   If paths provided are directories then all the subdirectories and associated files
   will also be cloned.
 
-Only one of ``tag``, ``branch``, or ``commit`` can be used at a time.
+``tag`` and ``branch`` should not be combined in the version parameters. We strongly
+recommend that all ``tag`` entries be paired with ``commit``. Providing the full 
+``commit`` SHA hash allows for Spack to preserve binary provenance for all binaries. 
+This is due to the fact that git tags and branches are mutable references to commits, 
+but git commits are guaranteed to be unique points in the git history.
 
 The destination directory for the clone is the standard stage source path.
 
@@ -1995,7 +2010,7 @@ structure like this:
 
 .. code-block:: none
 
-   $SPACK_ROOT/var/spack/repos/spack_repo/builtin/packages/
+   spack_repo/builtin/packages/
        mvapich2/
            package.py
            ad_lustre_rwcontig_open_source.patch
@@ -2133,7 +2148,7 @@ handles ``RPATH``:
 
 .. _pyside-patch:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/py_pyside/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/py_pyside/package.py
    :pyobject: PyPyside.patch
    :linenos:
 
@@ -2201,7 +2216,7 @@ using the ``spack resource show`` command::
 
   $ spack resource show 3877ab54
   3877ab548f88597ab2327a2230ee048d2d07ace1062efe81fc92e91b7f39cd00
-      path:       /home/spackuser/src/spack/var/spack/repos/spack_repo/builtin/packages/m4/gnulib-pgi.patch
+      path:       .../spack_repo/builtin/packages/m4/gnulib-pgi.patch
       applies to: builtin.m4
 
 ``spack resource show`` looks up downloadable resources from package
@@ -2219,7 +2234,7 @@ wonder where the extra boost patches are coming from::
           ^boost@1.68.0%apple-clang@9.0.0+atomic+chrono~clanglibcpp cxxstd=default +date_time~debug+exception+filesystem+graph~icu+iostreams+locale+log+math~mpi+multithreaded~numpy patches=2ab6c72d03dec6a4ae20220a9dfd5c8c572c5294252155b85c6874d97c323199,b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f ~pic+program_options~python+random+regex+serialization+shared+signals~singlethreaded+system~taggedlayout+test+thread+timer~versionedlayout+wave arch=darwin-highsierra-x86_64
   $ spack resource show b37164268
   b37164268f34f7133cbc9a4066ae98fda08adf51e1172223f6a969909216870f
-      path:       /home/spackuser/src/spack/var/spack/repos/spack_repo/builtin/packages/dealii/boost_1.68.0.patch
+      path:       .../spack_repo/builtin/packages/dealii/boost_1.68.0.patch
       applies to: builtin.boost
       patched by: builtin.dealii
 
@@ -2912,7 +2927,7 @@ this, Spack provides four different methods that can be overridden in a package:
 
 The Qt package, for instance, uses this call:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/qt/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/qt/package.py
    :pyobject: Qt.setup_dependent_build_environment
    :linenos:
 
@@ -2940,7 +2955,7 @@ variables to be used by the dependent. This is done by implementing
 :meth:`setup_dependent_package <spack.package_base.PackageBase.setup_dependent_package>`. An
 example of this can be found in the ``Python`` package:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/python/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/python/package.py
    :pyobject: Python.setup_dependent_package
    :linenos:
 
@@ -3756,7 +3771,7 @@ Overriding builder methods
 
 Build-system "phases" have default implementations that fit most of the common cases:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/build_systems/autotools.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/build_systems/autotools.py
     :pyobject: AutotoolsBuilder.configure
     :linenos:
 
@@ -3764,7 +3779,7 @@ It is usually sufficient for a packager to override a few
 build system specific helper methods or attributes to provide, for instance,
 configure arguments:
 
-.. literalinclude::  _spack_root/var/spack/repos/spack_repo/builtin/packages/m4/package.py
+.. literalinclude::  .spack/spack-packages/repos/spack_repo/builtin/packages/m4/package.py
     :pyobject: M4.configure_args
     :linenos:
 
@@ -4090,7 +4105,7 @@ Shell command functions
 
 Recall the install method from ``libelf``:
 
-.. literalinclude::  _spack_root/var/spack/repos/spack_repo/builtin/packages/libelf/package.py
+.. literalinclude::  .spack/spack-packages/repos/spack_repo/builtin/packages/libelf/package.py
    :pyobject: Libelf.install
    :linenos:
 
@@ -4881,7 +4896,7 @@ the one passed to install, only the MPI implementations all set some
 additional properties on it to help you out.  E.g., in openmpi, you'll
 find this:
 
-.. literalinclude:: _spack_root/var/spack/repos/spack_repo/builtin/packages/openmpi/package.py
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.setup_dependent_package
 
 That code allows the ``openmpi`` package to associate an ``mpicc`` property
@@ -5981,16 +5996,16 @@ with those implemented in the package itself.
    * - Parent/Provider Package
      - Stand-alone Tests
    * - `C
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/c>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/c>`_
      - Compiles ``hello.c`` and runs it
    * - `Cxx
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/cxx>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/cxx>`_
      - Compiles and runs several ``hello`` programs
    * - `Fortran
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/fortran>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/fortran>`_
      - Compiles and runs ``hello`` programs (``F`` and ``f90``)
    * - `Mpi
-       <https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/mpi>`_
+       <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
    * - :ref:`PythonPackage <pythonpackage>`
      - Imports modules listed in the ``self.import_modules`` property with defaults derived from the tarball
@@ -6011,7 +6026,7 @@ maintainers provide additional stand-alone tests customized to the package.
 One example of a package that adds its own stand-alone tests to those
 "inherited" by the virtual package it provides an implementation for is
 the `OpenMPI package
-<https://github.com/spack/spack/blob/develop/var/spack/repos/spack_repo/builtin/packages/openmpi/package.py>`_.
+<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/openmpi/package.py>`_.
 
 Below are snippets from running and viewing the stand-alone test results
 for ``openmpi``:

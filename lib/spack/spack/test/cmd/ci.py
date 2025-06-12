@@ -1501,6 +1501,7 @@ def test_cmd_first_line():
     assert spack.cmd.first_line(doc) == first
 
 
+@pytest.mark.skip(reason="Gitlab CI was removed from Spack")
 def test_gitlab_config_scopes(ci_generate_test, tmp_path):
     """Test pipeline generation with real configs included"""
     configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")
@@ -1898,15 +1899,14 @@ def test_ci_validate_git_versions_valid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
         spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
     }
-
-    pkg_class = spec.package_class
 
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
@@ -1923,15 +1923,14 @@ def test_ci_validate_git_versions_bad_tag(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
     version_commit_dict = {
         spack.version.Version(v): {"tag": f"v{v}", "commit": commits[c]} for v, c in versions
     }
-
-    pkg_class = spec.package_class
 
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
@@ -1948,7 +1947,8 @@ def test_ci_validate_git_versions_invalid(
     capfd, monkeypatch, mock_packages, mock_git_version_info, versions
 ):
     spec = spack.spec.Spec("diff-test")
-    pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+    pkg_class = spack.repo.PATH.get_pkg_class(spec.name)
+    pkg = pkg_class(spec)
     version_list = [spack.version.Version(v) for v, _ in versions]
 
     repo_path, filename, commits = mock_git_version_info
@@ -1959,8 +1959,6 @@ def test_ci_validate_git_versions_invalid(
         }
         for v, c in versions
     }
-
-    pkg_class = spec.package_class
 
     monkeypatch.setattr(pkg_class, "git", repo_path)
     monkeypatch.setattr(pkg_class, "versions", version_commit_dict)
@@ -2057,7 +2055,7 @@ def test_ci_verify_versions_manual_package(monkeypatch, mock_packages, mock_git_
     with spack.repo.use_repositories(repo):
         monkeypatch.setattr(spack.repo, "builtin_repo", lambda: repo)
 
-        pkg_class = spack.spec.Spec("diff-test").package_class
+        pkg_class = spack.repo.PATH.get_pkg_class("diff-test")
         monkeypatch.setattr(pkg_class, "manual_download", True)
 
         out = ci_cmd("verify-versions", commits[-1], commits[-2])

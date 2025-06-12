@@ -1464,7 +1464,7 @@ class PackageInstaller:
         unsigned: Optional[bool] = None,
         use_cache: bool = False,
         verbose: bool = False,
-        concurrent_packages: int = 4,
+        concurrent_packages: Optional[int] = None,
     ) -> None:
         """
         Arguments:
@@ -1490,8 +1490,18 @@ class PackageInstaller:
             verbose: Display verbose build output (by default, suppresses it)
             concurrent_packages: Max packages to be built concurrently
         """
+        if sys.platform == "win32":
+            # No locks on Windows, we should always use 1 process
+            # TODO: perhaps raise an error instead and update cmd-line interface
+            # to omit this option on Windows for nwo
+            concurrent_packages = 1
+
         if isinstance(explicit, bool):
             explicit = {pkg.spec.dag_hash() for pkg in packages} if explicit else set()
+
+        if concurrent_packages is None:
+            concurrent_packages = spack.config.get("config:concurrent_packages", default=4)
+        self.concurrent_packages = concurrent_packages
 
         install_args = {
             "cache_only": cache_only,
@@ -1518,7 +1528,7 @@ class PackageInstaller:
             "unsigned": unsigned,
             "use_cache": use_cache,
             "verbose": verbose,
-            "concurrent_packages": concurrent_packages,
+            "concurrent_packages": self.concurrent_packages,
         }
 
         # List of build requests
@@ -1553,7 +1563,7 @@ class PackageInstaller:
         self.all_dependencies: Dict[str, Set[str]] = {}
 
         # Maximum number of concurrent packages to build
-        self.max_active_tasks = concurrent_packages
+        self.max_active_tasks = self.concurrent_packages
 
         # Reports on install success/failure
         self.reports: Dict[str, spack.report.RequestRecord] = {}

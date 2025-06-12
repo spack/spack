@@ -1399,12 +1399,17 @@ class ConstraintOrigin(enum.Enum):
     result.
     """
 
+    CONDITIONAL_SPEC = 0
     DEPENDS_ON = 1
     REQUIRE = 2
 
     @staticmethod
     def _SUFFIXES() -> Dict["ConstraintOrigin", str]:
-        return {ConstraintOrigin.DEPENDS_ON: "_dep", ConstraintOrigin.REQUIRE: "_req"}
+        return {
+            ConstraintOrigin.CONDITIONAL_SPEC: "_cond",
+            ConstraintOrigin.DEPENDS_ON: "_dep",
+            ConstraintOrigin.REQUIRE: "_req",
+        }
 
     @staticmethod
     def append_type_suffix(pkg_id: str, kind: "ConstraintOrigin") -> str:
@@ -1510,6 +1515,9 @@ class SpackSolverSetup:
         self.assumptions: List[Tuple["clingo.Symbol", bool]] = []  # type: ignore[name-defined]
         self.declared_versions: Dict[str, List[DeclaredVersion]] = collections.defaultdict(list)
         self.possible_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(set)
+        self.git_commit_versions: Dict[str, Dict[GitOrStandardVersion, str]] = (
+            collections.defaultdict(dict)
+        )
         self.deprecated_versions: Dict[str, Set[GitOrStandardVersion]] = collections.defaultdict(
             set
         )
@@ -1582,6 +1590,11 @@ class SpackSolverSetup:
                     ),
                 )
             )
+
+        for v in self.possible_versions[pkg.name]:
+            if pkg.needs_commit(v):
+                commit = pkg.version_or_package_attr("commit", v, "")
+                self.git_commit_versions[pkg.name][v] = commit
 
         # Declare deprecated versions for this package, if any
         deprecated = self.deprecated_versions[pkg.name]
@@ -2228,6 +2241,10 @@ class SpackSolverSetup:
                         msg=f"{input_spec} is a requirement for package {pkg_name}",
                         context=context,
                     )
+
+                    # Conditions don't handle conditional dependencies directly
+                    # Those are handled separately here
+                    self.generate_conditional_dep_conditions(spec, member_id)
                 except Exception as e:
                     # Do not raise if the rule comes from the 'all' subsection, since usability
                     # would be impaired. If a rule does not apply for a specific package, just
@@ -2594,6 +2611,10 @@ class SpackSolverSetup:
         # Dependencies
         edge_clauses = []
         for dspec in spec.edges_to_dependencies():
+            # Ignore conditional dependencies, they are handled by caller
+            if dspec.when != spack.spec.Spec():
+                continue
+
             dep = dspec.spec
 
             if spec.concrete:
@@ -2723,6 +2744,8 @@ class SpackSolverSetup:
             if pkg_name not in packages_yaml or "version" not in packages_yaml[pkg_name]:
                 continue
 
+            # TODO(psakiev) Need facts about versions
+            # - requires_commit (associated with tag or branch)
             version_defs: List[GitOrStandardVersion] = []
 
             for vstr in packages_yaml[pkg_name]["version"]:
@@ -2914,12 +2937,22 @@ class SpackSolverSetup:
 
     def define_version_constraints(self):
         """Define what version_satisfies(...) means in ASP logic."""
+
+        for pkg_name, versions in sorted(self.possible_versions.items()):
+            for v in versions:
+                if v in self.git_commit_versions[pkg_name]:
+                    sha = self.git_commit_versions[pkg_name].get(v)
+                    if sha:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_has_commit(v, sha)))
+                    else:
+                        self.gen.fact(fn.pkg_fact(pkg_name, fn.version_needs_commit(v)))
+        self.gen.newline()
+
         for pkg_name, versions in sorted(self.version_constraints):
             # generate facts for each package constraint and the version
             # that satisfies it
             for v in sorted(v for v in self.possible_versions[pkg_name] if v.satisfies(versions)):
                 self.gen.fact(fn.pkg_fact(pkg_name, fn.version_satisfies(versions, v)))
-
             self.gen.newline()
 
     def collect_virtual_constraints(self):
@@ -3121,20 +3154,6 @@ class SpackSolverSetup:
         self.pkgs = node_counter.possible_dependencies()
         self.libcs = sorted(all_libcs())  # type: ignore[type-var]
 
-        # Fail if we already know an unreachable node is requested
-        for spec in specs:
-            # concrete roots don't need their dependencies verified
-            if spec.concrete:
-                continue
-
-            missing_deps = [
-                str(d)
-                for d in spec.traverse()
-                if d.name not in self.pkgs and not spack.repo.PATH.is_virtual(d.name)
-            ]
-            if missing_deps:
-                raise spack.spec.InvalidDependencyError(spec.name, missing_deps)
-
         for node in traverse.traverse_nodes(specs):
             if node.namespace is not None:
                 self.explicitly_required_namespaces[node.name] = node.namespace
@@ -3222,6 +3241,7 @@ class SpackSolverSetup:
 
         self.gen.h1("Special variants")
         self.define_auto_variant("dev_path", multi=False)
+        self.define_auto_variant("commit", multi=False)
         self.define_auto_variant("patches", multi=True)
 
         self.gen.h1("Develop specs")
@@ -3368,10 +3388,60 @@ class SpackSolverSetup:
             cache[imposed_spec_key] = (effect_id, requirements)
             self.gen.fact(fn.pkg_fact(spec.name, fn.condition_effect(condition_id, effect_id)))
 
+            # Create subcondition with any conditional dependencies
+            # self.spec_clauses does not do anything with conditional
+            # dependencies
+            self.generate_conditional_dep_conditions(spec, condition_id)
+
             if self.concretize_everything:
                 self.gen.fact(fn.solve_literal(trigger_id))
 
+        # Trigger rules are needed to allow conditional specs
+        self.trigger_rules()
         self.effect_rules()
+
+    def generate_conditional_dep_conditions(self, spec: spack.spec.Spec, condition_id: int):
+        """Generate a subcondition in the trigger for any conditional dependencies.
+
+        Dependencies are always modeled by a condition. For conditional dependencies,
+        the when-spec is added as a subcondition of the trigger to ensure the dependency
+        is only activated when the subcondition holds.
+        """
+        for dspec in spec.traverse_edges():
+            # Ignore unconditional deps
+            if dspec.when == spack.spec.Spec():
+                continue
+
+            # Cannot use "virtual_node" attr as key for condition
+            # because reused specs do not track virtual nodes.
+            # Instead, track whether the parent uses the virtual
+            def virtual_handler(input_spec, requirements):
+                ret = remove_facts("virtual_node")(input_spec, requirements)
+                for edge in input_spec.traverse_edges(root=False, cover="edges"):
+                    if spack.repo.PATH.is_virtual(edge.spec.name):
+                        ret.append(fn.attr("uses_virtual", edge.parent.name, edge.spec.name))
+                return ret
+
+            context = ConditionContext()
+            context.source = ConstraintOrigin.append_type_suffix(
+                dspec.parent.name, ConstraintOrigin.CONDITIONAL_SPEC
+            )
+            # Default is to remove node-like attrs, override here
+            context.transform_required = virtual_handler
+            context.transform_imposed = lambda x, y: y
+
+            try:
+                subcondition_id = self.condition(
+                    dspec.when,
+                    spack.spec.Spec(dspec.format(unconditional=True)),
+                    required_name=dspec.parent.name,
+                    context=context,
+                    msg=f"Conditional dependency in ^[when={dspec.when}]{dspec.spec}",
+                )
+                self.gen.fact(fn.subcondition(subcondition_id, condition_id))
+            except vt.UnknownVariantError as e:
+                # A variant in the 'when=' condition can't apply to the parent of the edge
+                tty.debug(f"[{__name__}] cannot emit subcondition for {dspec.format()}: {e}")
 
     def validate_and_define_versions_from_requirements(
         self, *, allow_deprecated: bool, require_checksum: bool
@@ -3820,6 +3890,7 @@ class SpecBuilder:
                 r"^package_hash$",
                 r"^root$",
                 r"^track_dependencies$",
+                r"^uses_virtual$",
                 r"^variant_default_value_from_cli$",
                 r"^virtual_node$",
                 r"^virtual_on_incoming_edges$",
@@ -3933,7 +4004,7 @@ class SpecBuilder:
             # More-general criteria like "depends on Python" pulls in things
             # we don't want to apply this logic to (in particular LLVM, which
             # is now a common external because that's how we detect Clang)
-            and any([c.__name__ == "PythonPackage" for c in package.__class__.__mro__])
+            and any([c.__name__ == "PythonExtension" for c in package.__class__.__mro__])
         ):
             candidate_python_to_attach = self._specs.get(SpecBuilder.make_node(pkg="python"))
             _attach_python_to_external(package, extendee_spec=candidate_python_to_attach)
@@ -4188,6 +4259,10 @@ class SpecBuilder:
                         spack.version.git_ref_lookup.GitRefLookup(spec.fullname)
                     )
 
+        # check for commits must happen after all version adaptations are complete
+        for s in self._specs.values():
+            _specs_with_commits(s)
+
         specs = self.execute_explicit_splices()
         return specs
 
@@ -4226,6 +4301,31 @@ class SpecBuilder:
             specs[new_key] = current_spec
 
         return specs
+
+
+def _specs_with_commits(spec):
+    if not spec.package.needs_commit(spec.version):
+        return
+
+    if isinstance(spec.version, spack.version.GitVersion):
+        if "commit" not in spec.variants and spec.version.commit_sha:
+            spec.variants["commit"] = vt.SingleValuedVariant("commit", spec.version.commit_sha)
+
+    spec.package.resolve_binary_provenance()
+
+    if "commit" not in spec.variants:
+        tty.warn(
+            f"Unable to resolve the git commit for {spec.name}. "
+            "An installation of this binary won't have complete binary provenance."
+        )
+        return
+
+    # check integrity of user specified commit shas
+    invalid_commit_msg = (
+        f"Internal Error: {spec.name}'s assigned commit {spec.variants['commit'].value}"
+        " does not meet commit syntax requirements."
+    )
+    assert vn.is_git_commit_sha(spec.variants["commit"].value), invalid_commit_msg
 
 
 def _attach_python_to_external(
@@ -4739,7 +4839,11 @@ class Solver:
                     if spack.repo.PATH.is_virtual(s.name):
                         continue
                     # Error if direct dependencies cannot be satisfied
-                    deps = {edge.spec.name for edge in s.edges_to_dependencies() if edge.direct}
+                    deps = {
+                        edge.spec.name
+                        for edge in s.edges_to_dependencies()
+                        if edge.direct and edge.when == spack.spec.Spec()
+                    }
                     if deps:
                         graph = analyzer.possible_dependencies(
                             s, allowed_deps=dt.ALL, transitive=False
