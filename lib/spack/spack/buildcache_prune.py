@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import tempfile
-from concurrent.futures import as_completed
+from concurrent.futures import Future, as_completed
 from contextlib import contextmanager
 from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
 
@@ -42,6 +42,19 @@ def _fetch_manifests(
         if not blobs:
             tty.warn(f"Unable to list blobs in {url_to_list}")
         yield file_list, read_fn, blobs
+
+
+def _delete_object(url: str, dry_run: bool) -> int:
+    if dry_run:
+        tty.info(f"Dry run: would remove object {url}")
+        return 1
+    try:
+        web_util.remove_url(url=url)
+        tty.info(f"Removed object {url}")
+        return 1
+    except Exception as e:
+        tty.warn(f"Unable to remove object {url} due to: {e}")
+        return 0
 
 
 def _prune_orphans(
@@ -127,42 +140,28 @@ def _prune_orphans(
         tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
 
     pruned_objects = 0
-
-    def remove_manifest(url: str) -> int:
-        if dry_run:
-            tty.info(f"Dry run: would remove manifest {url}")
-            return 1
-        try:
-            web_util.remove_url(url=url)
-            # Remove the manifest file from the local list of manifests.
-            # It may not be present in the local list if it was already removed
-            # during the pruning of another orphaned blob.
-            if url in manifests:
-                manifests.remove(url)
-            tty.info(f"Removed manifest {url}")
-            return 1
-        except Exception as e:
-            tty.warn(f"Unable to prune manifest {url} due to: {e}")
-            return 0
-
-    def remove_blob(url: str) -> int:
-        try:
-            if dry_run:
-                tty.info(f"Dry run: would remove blob {url}")
-                return 1
-            web_util.remove_url(url=url)
-            del blob_to_manifest_mapping[url]
-            tty.debug(f"Removed {url}")
-            return 1
-        except Exception as e:
-            tty.warn(f"Unable to prune blob {url} due to: {e}")
-            return 0
+    futures: List[Future] = []
 
     with spack.util.parallel.make_concurrent_executor() as executor:
-        manifest_futures = [executor.submit(remove_manifest, url) for url in orphaned_manifests]
-        blob_futures = [executor.submit(remove_blob, url) for url in orphaned_blobs]
+        for manifest in orphaned_manifests:
+            futures.append(executor.submit(_delete_object, manifest, dry_run))
+            try:
+                manifests.remove(manifest)
+            except ValueError:
+                # If the manifest was already removed during the pruning of another orphaned blob,
+                # it will not be in the list, so we can safely ignore this error.
+                pass
 
-        for manifest_or_blob_future in as_completed(manifest_futures + blob_futures):
+        for blob in orphaned_blobs:
+            futures.append(executor.submit(_delete_object, blob, dry_run))
+            try:
+                del blob_to_manifest_mapping[blob]
+            except KeyError:
+                # If the blob was already removed during the pruning of another orphaned manifest,
+                # it will not be in the list, so we can safely ignore this error.
+                pass
+
+        for manifest_or_blob_future in as_completed(futures):
             pruned_objects += manifest_or_blob_future.result()
 
     return pruned_objects
