@@ -76,27 +76,23 @@ def _prune_orphans(
     # we will need to know which manifest to prune.
     blob_to_manifest_mapping: Dict[str, str] = {}
 
-    def process_manifest(blob_name: str) -> Dict[str, str]:
+    for manifest in manifests:
         cache_entry: Optional[URLBuildcacheEntry] = None
         try:
-            cache_entry = cast(URLBuildcacheEntry, read_fn(blob_name))
+            cache_entry = cast(URLBuildcacheEntry, read_fn(manifest))
             assert cache_entry.manifest is not None  # to satisfy type checker
-            return {
-                cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): blob_name
-                for data in cache_entry.manifest.data
-            }
+            blob_to_manifest_mapping.update(
+                {
+                    cache_entry.get_blob_url(mirror_url=mirror.fetch_url, record=data): manifest
+                    for data in cache_entry.manifest.data
+                }
+            )
         except Exception as e:
-            tty.warn(f"Unable to fetch spec for manifest {blob_name} due to: {e}")
-            return {}
+            tty.warn(f"Unable to fetch spec for manifest {manifest} due to: {e}")
+            continue
         finally:
             if cache_entry:
                 cache_entry.destroy()
-
-    with spack.util.parallel.make_concurrent_executor() as executor:
-        futures = {executor.submit(process_manifest, blob): blob for blob in manifests}
-        for future in as_completed(futures):
-            result = future.result()
-            blob_to_manifest_mapping.update(result)
 
     # Blobs that are referenced in a manifest file (but not necessarily present in the cache)
     blob_hashes_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
