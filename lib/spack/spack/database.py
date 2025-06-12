@@ -802,7 +802,7 @@ class Database:
             # In the future we may use a stream of JSON objects, hence `raw_decode` for compat.
             fdata, _ = JSONDecoder().raw_decode(filename.read_text(encoding="utf-8"))
         except Exception as e:
-            raise CorruptDatabaseError("error parsing database:", str(e)) from e
+            raise CorruptDatabaseError(f"error parsing database at {filename}:", str(e)) from e
 
         if fdata is None:
             return

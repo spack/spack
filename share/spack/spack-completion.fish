@@ -242,7 +242,7 @@ function __fish_spack_providers
 end
 
 function __fish_spack_repos
-    spack repo list | awk {'printf ("%s\t%s", $1, $2)'}
+    spack repo list --names
 end
 
 function __fish_spack_scopes
@@ -2783,18 +2783,26 @@ complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirecto
 complete -c spack -n '__fish_spack_using_command repo create' -s d -l subdirectory -r -d 'subdirectory to store packages in the repository'
 
 # spack repo list
-set -g __fish_spack_optspecs_spack_repo_list h/help scope=
+set -g __fish_spack_optspecs_spack_repo_list h/help scope= names namespaces
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo list' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command repo list' -l names -f -a names
+complete -c spack -n '__fish_spack_using_command repo list' -l names -d 'show configuration names only'
+complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command repo list' -l namespaces -d 'show repository namespaces only'
 
 # spack repo ls
-set -g __fish_spack_optspecs_spack_repo_ls h/help scope=
+set -g __fish_spack_optspecs_spack_repo_ls h/help scope= names namespaces
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command repo ls' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command repo ls' -l scope -r -d 'configuration scope to read from'
+complete -c spack -n '__fish_spack_using_command repo ls' -l names -f -a names
+complete -c spack -n '__fish_spack_using_command repo ls' -l names -d 'show configuration names only'
+complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -f -a namespaces
+complete -c spack -n '__fish_spack_using_command repo ls' -l namespaces -d 'show repository namespaces only'
 
 # spack repo add
 set -g __fish_spack_optspecs_spack_repo_add h/help name= path= scope=

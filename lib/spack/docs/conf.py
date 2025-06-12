@@ -141,9 +141,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
+
+copybutton_exclude = ".linenos, .gp, .go"
 
 # Set default graphviz options
 graphviz_dot_args = [

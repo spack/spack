@@ -2952,11 +2952,11 @@ class EnvironmentManifestFile(collections.abc.Mapping):
             ensure_no_disallowed_env_config_mods(self._env_config_scope)
         return self._env_config_scope
 
-    def prepare_config_scope(self) -> None:
+    def prepare_config_scope(
+        self, priority: ConfigScopePriority = ConfigScopePriority.ENVIRONMENT
+    ) -> None:
         """Add the manifest's scope to the global configuration search path."""
-        spack.config.CONFIG.push_scope(
-            self.env_config_scope, priority=ConfigScopePriority.ENVIRONMENT
-        )
+        spack.config.CONFIG.push_scope(self.env_config_scope, priority)
 
     def deactivate_config_scope(self) -> None:
         """Remove the manifest's scope from the global config path."""

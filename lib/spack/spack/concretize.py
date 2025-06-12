@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+import importlib
 import sys
 import time
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
@@ -111,9 +112,12 @@ def concretize_separately(
         if not abstract.concrete
     ]
     ret = [(i, abstract) for i, abstract in enumerate(to_concretize) if abstract.concrete]
-    # Ensure we don't try to bootstrap clingo in parallel
-    with ensure_bootstrap_configuration():
-        ensure_clingo_importable_or_raise()
+    try:
+        # Ensure we don't try to bootstrap clingo in parallel
+        importlib.import_module("clingo")
+    except ImportError:
+        with ensure_bootstrap_configuration():
+            ensure_clingo_importable_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting

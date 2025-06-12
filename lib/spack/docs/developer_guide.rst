@@ -65,8 +65,15 @@ or another), then we say it is **abstract**.
 
 Spack's job is to take an *abstract* spec from the user, find a
 *concrete* spec that satisfies the constraints, and hand the task of
-building the software off to the package object. The rest of this
-document describes all the pieces that come together to make that
+building the software off to the package object. 
+
+Packages are managed through Spack's **package repositories**, which allow
+packages to be stored in multiple repositories with different namespaces.
+The built-in packages are hosted in a separate Git repository and 
+automatically managed by Spack, while custom repositories can be added 
+for organization-specific or experimental packages.
+
+The rest of this document describes all the pieces that come together to make that
 happen.
 
 -------------------
@@ -87,11 +94,8 @@ with a high-level view of Spack's directory structure:
                               Can be overridden by files in ~/.spack.
 
       var/
-         spack/            <- build & stage directories
-             repos/            <- contains package repositories
-                builtin/       <- pkg repository that comes with Spack
-                   repo.yaml   <- descriptor for the builtin repository
-                   packages/   <- directories under here contain packages
+         spack/
+             test_repos/   <- contains package repositories for tests
              cache/        <- saves resources downloaded during installs
 
       opt/
@@ -100,7 +104,6 @@ with a high-level view of Spack's directory structure:
       lib/
          spack/
             docs/          <- source for this documentation
-            env/           <- compiler wrappers for build environment
 
             external/      <- external libs included in Spack distribution
             llnl/          <- some general-use libraries
@@ -125,6 +128,14 @@ directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``,
 ``var``, and ``opt`` all contain a ``spack`` subdirectory in case
 Spack is installed alongside other software. Most of the interesting
 parts of Spack live in ``lib/spack``.
+
+.. note::
+
+   **Package Repositories**: Built-in packages are hosted 
+   in a separate Git repository at `spack/spack-packages <https://github.com/spack/spack-packages>`_
+   and are automatically cloned to ``~/.spack/package_repos/`` when needed.
+   The ``var/spack/test_repos/`` directory is used for unit tests only.
+   See :ref:`repositories` for details on package repositories.
 
 Spack has *one* directory layout, and there is no installation process.
 Most Python programs do not look like this (they use ``distutils``, ``setup.py``,
@@ -253,6 +264,33 @@ Other Modules
   In this package are a number of utility modules for the rest of
   Spack.
 
+.. _package-repositories:
+
+^^^^^^^^^^^^^^^^^^^^
+Package Repositories
+^^^^^^^^^^^^^^^^^^^^
+
+Spack's package repositories allow developers to manage packages from multiple sources.
+Understanding this system is important for developing Spack itself.
+
+:mod:`spack.repo`
+  The core module for managing package repositories. Contains the ``Repo`` and ``RepoPath``
+  classes that handle loading and searching packages from multiple repositories.
+
+Built-in packages are stored in a separate Git repository (`spack/spack-packages 
+<https://github.com/spack/spack-packages>`_) rather than being included directly in 
+the Spack source tree. This repository is automatically cloned to ``~/.spack/package_repos/`` 
+when needed.
+
+Key concepts:
+
+* **Repository namespaces**: Each repository has a unique namespace (e.g., ``builtin``)
+* **Repository search order**: Packages are found by searching repositories in order
+* **Git-based repositories**: Remote repositories can be automatically cloned and managed
+* **Repository configuration**: Managed through ``repos.yaml`` configuration files
+
+See :ref:`repositories` for complete details on configuring and managing package repositories.
+
 ------------
 Spec objects
 ------------
@@ -317,7 +355,7 @@ prevent this from happening.
 
 Whenever you add/remove/rename a command or flags for an existing command,
 make sure to update Spack's `Bash tab completion script
-<https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
+<https://github.com/spack/spack/blob/develop/share/spack/spack-completion.bash>`_.
 
 
 -------------
@@ -565,8 +603,9 @@ just like you would with the normal Python command.
 ^^^^^^^^^^^^^^^
 
 ``spack blame`` is a way to quickly see contributors to packages or files
-in the Spack repository. You should provide a target package name or
-file name to the command. Here is an example asking to see contributions
+in Spack's source tree. For built-in packages, this shows contributors to the package 
+files in the separate ``spack/spack-packages`` repository. You should provide a target 
+package name or file name to the command. Here is an example asking to see contributions
 for the package "python":
 
 .. code-block:: console

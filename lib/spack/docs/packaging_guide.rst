@@ -98,6 +98,37 @@ using the ``spack info`` command:
 An extensive list of available build systems and phases is provided in :ref:`installation_process`.
 
 
+.. _setting-up-for-package-development:
+
+
+----------------------------------
+Setting up for package development
+----------------------------------
+
+For developing new packages or working with existing ones, it's often helpful to have the ``spack/spack-packages`` repository in a custom location.
+By default, Spack will download the builtin package repository to ``~/.spack/package_repos/<hash>/``, which can be inconvenient for development purposes.
+
+The best approach is to configure Spack to use a custom repository location, such as ``~/spack-packages``:
+
+.. code-block:: console
+
+   $ spack repo set --destination ~/spack-packages builtin
+
+and then verify that Spack is picking up the right repository by checking the location of a known package, like ``zlib``:
+
+.. code-block:: console
+
+   $ spack location --package-dir zlib
+   /home/your-username/spack-packages/repos/spack_repo/builtin/packages/zlib
+
+This gives you direct access to the package files and makes it much easier to:
+
+* Edit existing packages
+* Create new packages
+* Submit pull requests to the ``spack/spack-packages`` repository
+* Track your changes with version control
+* Work with your own fork of the repository
+
 ------------------------
 Writing a package recipe
 ------------------------
@@ -428,35 +459,50 @@ A complete list of available build system templates can be found by running
 Editing existing packages
 -------------------------
 
-One of the easiest ways to learn how to write packages is to look at
-existing ones.  You can edit a package file by name with the ``spack
-edit`` command:
+One of the easiest ways to learn how to write packages is to look at existing ones.
+You can open an existing package in your editor using the ``spack edit`` command:
 
 .. code-block:: console
 
    $ spack edit gmp
 
-If you used ``spack create`` to create a package, you can get back to
-it later with ``spack edit``. For instance, the ``gmp`` package actually
-lives in:
+If you used ``spack create`` to create a package, you can get back to it later with ``spack edit``.
+The ``spack edit`` command saves you the trouble of figuring out the package location and navigating to it.
+If needed, you can still find the package location using the ``spack location`` command:
 
 .. code-block:: console
 
-   $ spack location -p gmp
-   [...]/spack_repo/builtin/packages/gmp/package.py
+   $ spack location --package-dir gmp
+   ~/spack-packages/repos/spack_repo/builtin/packages/gmp/
 
-but ``spack edit`` provides a much simpler shortcut and saves you the
-trouble of typing the full path.
+and with shell support enabled, you can also enter to the package directory:
 
-^^^^^^^^^^^^^
-Package Names
-^^^^^^^^^^^^^
+.. code-block:: console
 
-Packages are named after the directory containing ``package.py``. So,
-``libelf``'s ``package.py`` lives in a directory called ``libelf``.
-The ``package.py`` file defines a class called ``Libelf``, which
-extends Spack's ``Package`` class.  For example, here is
-``spack_repo/builtin/packages/libelf/package.py``:
+   $ spack cd --package-dir gmp
+
+If you want to edit multiple packages at once, you can run
+
+.. code-block:: console
+
+   $ spack edit
+
+without specifying a package name, which will open the directory containing all the packages in your editor.
+
+Finally, the commands ``spack location --repo`` and ``spack cd --repo`` help you navigate to the root of the package repository.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package Names and the Package Directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**Package names** can contain lowercase letters, numbers, and dashes.
+These names are used in Spack commands and package recipes to refer to packages.
+Every package lives as a ``package.py`` file in a **package directory**.
+The package directory is in fact the authoritative source of the package name.
+Usually the package name coincides with the directory name on the filesystem: the ``libelf`` package corresponds to the ``libelf/package.py`` file.
+Every ``package.py`` file defines a package class, derived from the package name.
+For ``libelf`` the corresponding package class is ``Libelf``, which extends Spack's ``Package`` class.
+For example, here is ``spack_repo/builtin/packages/libelf/package.py``:
 
 .. code-block:: python
    :linenos:
@@ -473,9 +519,7 @@ extends Spack's ``Package`` class.  For example, here is
        def install():
            ...
 
-The **directory name** (``libelf``) determines the package name that
-users should provide on the command line. e.g., if you type any of
-these:
+If you run any of the following commands
 
 .. code-block:: console
 
@@ -483,29 +527,33 @@ these:
    $ spack versions libelf
    $ spack install libelf@0.8.13
 
-Spack sees the package name in the spec and looks for
-``libelf/package.py`` in ``spack_repo/builtin/packages``.
-Likewise, if you run ``spack install py-numpy``, Spack looks for
-``py-numpy/package.py``.
+Spack sees the package name ``libelf`` and looks for ``libelf/package.py`` in ``spack_repo/builtin/packages``.
 
-Spack uses the directory name as the package name in order to give
-packagers more freedom in naming their packages. Package names can
-contain letters, numbers, and dashes. Using a Python identifier
-(e.g., a class name or a module name) would make it difficult to
-support these options.  So, you can name a package ``3proxy`` or
-``foo-bar`` and Spack won't care. It just needs to see that name
-in the packages directory.
+.. note::
+
+   **Package name to directory mapping**.
+   There is a one to one mapping between package names and package directories.
+   Usually the mapping is trivial: the package name is the same as the directory name.
+   However, there are a few exceptions to this rule:
+
+   1. Hyphens in package names are replaced by underscores in directory names.
+      For example, the package name ``py-numpy`` maps to ``py_numpy/package.py``.
+   2. Names starting with numbers get an underscore prefix.
+      For example, the package name ``7zip`` maps to ``_7zip/package.py``.
+   3. Package names that are reserved keywords in Python are also prefixed with an underscore.
+      For example, the package name ``pass`` maps to ``_pass/package.py``.
+
+   This ensures that every package directory is a valid Python module name.
+
 
 ^^^^^^^^^^^^^^^^^^^
 Package class names
 ^^^^^^^^^^^^^^^^^^^
 
-Spack loads ``package.py`` files dynamically, and it needs to find a
-special class name in the file for the load to succeed.  The **class
-name** (``Libelf`` in our example) is formed by converting words
-separated by ``-`` in the file name to CamelCase. If the name
-starts with a number, we prefix the class name with ``_``. Here are
-some examples:
+Spack loads ``package.py`` files dynamically, and it needs to find a special class name in the file for the load to succeed.
+The **package class** (``Libelf`` in our example) is formed by converting words separated by ``-`` in the file name to CamelCase.
+If the name starts with a number, we prefix the class name with ``_``.
+Here are some examples:
 
 =================  =================
  Module Name         Class Name
@@ -514,8 +562,7 @@ some examples:
  ``3proxy``          ``_3proxy``
 =================  =================
 
-In general, you won't have to remember this naming convention because
-:ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
+In general, you won't have to remember this naming convention because :ref:`cmd-spack-create` and :ref:`cmd-spack-edit` handle the details for you.
 
 .. _package_maintainers:
 

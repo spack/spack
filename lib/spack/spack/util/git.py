@@ -5,7 +5,9 @@
 
 import os
 import sys
-from typing import List, Optional
+from typing import List, Optional, overload
+
+from _vendoring.typing_extensions import Literal
 
 import llnl.util.lang
 
@@ -13,13 +15,29 @@ import spack.util.executable as exe
 
 
 @llnl.util.lang.memoized
-def git(required: bool = False):
-    """Get a git executable.
+def _find_git() -> Optional[str]:
+    """Find the git executable in the system path."""
+    return exe.which_string("git", required=False)
 
-    Arguments:
-        required: if ``True``, fail if ``git`` is not found. By default return ``None``.
-    """
-    git: Optional[exe.Executable] = exe.which("git", required=required)
+
+@overload
+def git(required: Literal[True]) -> exe.Executable: ...
+
+
+@overload
+def git(required: bool = ...) -> Optional[exe.Executable]: ...
+
+
+def git(required: bool = False) -> Optional[exe.Executable]:
+    """Get a git executable. Raises CommandNotFoundError if `required` and git is not found."""
+    git_path = _find_git()
+
+    if not git_path:
+        if required:
+            raise exe.CommandNotFoundError("spack requires 'git'. Make sure it is in your path.")
+        return None
+
+    git = exe.Executable(git_path)
 
     # If we're running under pytest, add this to ignore the fix for CVE-2022-39253 in
     # git 2.38.1+. Do this in one place; we need git to do this in all parts of Spack.

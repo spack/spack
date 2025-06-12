@@ -727,3 +727,49 @@ def test_add_repo_prepends_instead_of_appends(monkeypatch, tmp_path):
     assert repo_names == ["new_repo", "existing_repo"]
     assert repos_config["new_repo"] == new_path
     assert repos_config["existing_repo"] == existing_path
+
+
+def test_repo_list_format_flags(
+    mutable_config: spack.config.Configuration, tmp_path: pathlib.Path
+):
+    """Test the --config-names and --namespaces flags for repo list command"""
+    # Fake a git monorepo with two package repositories
+    (tmp_path / "monorepo" / ".git").mkdir(parents=True)
+    repo("create", str(tmp_path / "monorepo"), "repo_one")
+    repo("create", str(tmp_path / "monorepo"), "repo_two")
+
+    mutable_config.set(
+        "repos",
+        {
+            # git repo that provides two package repositories
+            "monorepo": {
+                "git": "https://example.com/monorepo.git",
+                "destination": str(tmp_path / "monorepo"),
+                "paths": ["spack_repo/repo_one", "spack_repo/repo_two"],
+            },
+            # git repo that is not yet cloned
+            "uninitialized": {
+                "git": "https://example.com/uninitialized.git",
+                "destination": str(tmp_path / "uninitialized"),
+            },
+            # invalid local repository
+            "misconfigured": str(tmp_path / "misconfigured"),
+        },
+        scope="site",
+    )
+
+    # Test default table format, which shows one line per package repository
+    table_output = repo("list", output=str)
+    assert "[+] repo_one" in table_output
+    assert "[+] repo_two" in table_output
+    assert " -  uninitialized" in table_output
+    assert "[-] misconfigured" in table_output
+
+    # Test --namespaces flag
+    namespaces_output = repo("list", "--namespaces", output=str)
+    assert namespaces_output.strip().split("\n") == ["repo_one", "repo_two"]
+
+    # Test --names flag
+    config_names_output = repo("list", "--names", output=str)
+    config_names_lines = config_names_output.strip().split("\n")
+    assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
