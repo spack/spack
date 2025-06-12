@@ -31,13 +31,16 @@ def _get_builtin_repo_commit() -> Optional[str]:
     descriptors = spack.repo.RepoDescriptors.from_config(
         spack.repo.package_repository_lock(), spack.config.CONFIG
     )
-
     if "builtin" not in descriptors:
         return None
 
     builtin = descriptors["builtin"]
 
-    if not isinstance(builtin, spack.repo.RemoteRepoDescriptor) or not builtin.fetched():
+    if isinstance(builtin, spack.repo.RemoteRepoDescriptor) and builtin.fetched():
+        destination = builtin.destination
+    elif isinstance(builtin, spack.repo.LocalRepoDescriptor):
+        destination = builtin.path
+    else:
         return None  # no git info
 
     git = spack.util.git.git(required=False)
@@ -45,19 +48,16 @@ def _get_builtin_repo_commit() -> Optional[str]:
         return None
 
     rev = git(
-        "-C",
-        builtin.destination,
-        "rev-parse",
-        "HEAD",
-        output=str,
-        error=os.devnull,
-        fail_on_error=False,
+        "-C", destination, "rev-parse", "HEAD", output=str, error=os.devnull, fail_on_error=False
     )
     if git.returncode != 0:
         return None
 
     match = re.match(r"[a-f\d]{7,}$", rev)
-    return match.group(0) if match else None
+    extra = (
+        f" (source: {builtin.path})" if isinstance(builtin, spack.repo.LocalRepoDescriptor) else ""
+    )
+    return f"{match.group(0)}{extra}" if match else None
 
 
 def report(args):
