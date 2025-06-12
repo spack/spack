@@ -72,22 +72,29 @@ urlopen = web_util.urlopen  # alias for mocking in tests
 
 
 @functools.lru_cache(maxsize=32)
-def get_change_revisions(path):
-    """If this is a git repo get the revisions to use when checking
-    for changed packages and spack core modules."""
+def get_git_root(path) -> Optional[str]:
     git_exe = spack.util.git.git(required=True)
     try:
         with fs.working_dir(path):
             # Raises SpackError on command failure
             git_dir = git_exe("rev-parse", "--show-toplevel", fail_on_error=True)
             tty.debug(f"{path} git toplevel at {git_dir}")
+            return git_dir
+    except SpackError:
+        return None
 
+
+def get_change_revisions(path):
+    """If this is a git repo get the revisions to use when checking
+    for changed packages and spack core modules."""
+
+    if get_git_root(path):
         # TODO: This will only find changed packages from the last
         # TODO: commit.  While this may work for single merge commits
         # TODO: when merging the topic branch into the base, it will
         # TODO: require more thought outside of that narrow case.
         return "HEAD^", "HEAD"
-    except SpackError:
+    else:
         return None, None
 
 
@@ -138,25 +145,20 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     # git returns posix paths always, normalize input to be comptaible
     # with that
     env_path = llnl.path.convert_to_posix_path(env_path)
+    git_dir = get_git_root(env_path)
     git = spack.util.git.git()
-    if git:
-        with fs.working_dir(spack.paths.prefix):
-            git_log = git(
-                "diff",
-                "--name-only",
-                rev1,
-                rev2,
-                output=str,
-                error=os.devnull,
-                fail_on_error=False,
-            ).strip()
-            lines = [] if not git_log else re.split(r"\s+", git_log)
 
-            for path in lines:
-                if ".gitlab-ci.yml" in path or path in env_path:
-                    tty.debug(f"env represented by {env_path} changed")
-                    tty.debug(f"touched file: {path}")
-                    return True
+    with fs.working_dir(git_dir):
+        git_log = git(
+            "diff", "--name-only", rev1, rev2, output=str, error=os.devnull, fail_on_error=False
+        ).strip()
+        lines = [] if not git_log else re.split(r"\s+", git_log)
+
+        for path in lines:
+            if ".gitlab-ci.yml" in path or path in env_path:
+                tty.debug(f"env represented by {env_path} changed")
+                tty.debug(f"touched file: {path}")
+                return True
     return False
 
 
