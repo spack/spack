@@ -51,7 +51,16 @@ classifiers = [
     "Topic :: System :: Software Distribution",
     "Topic :: System :: Systems Administration",
 ]
-dependencies = ["clingo"]
+dependencies = [
+    "archspec",
+    "clingo",
+    "distro",
+    "jsonschema",
+    "jinja2",
+    "macholib",
+    "ruamel.yaml",
+    "typing_extensions",
+]
 dynamic = ["version"]
 
 [project.scripts]
