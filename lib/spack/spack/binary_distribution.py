@@ -1737,9 +1737,9 @@ def download_tarball(
         (if required), and its checksum validated. Otherwise, return the stage
         containing the downloaded tarball.
     """
-    configured_mirrors: Iterable[
-        spack.mirrors.mirror.Mirror
-    ] = spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    configured_mirrors: Iterable[spack.mirrors.mirror.Mirror] = (
+        spack.mirrors.mirror.MirrorCollection(binary=True).values()
+    )
     if not configured_mirrors:
         tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
