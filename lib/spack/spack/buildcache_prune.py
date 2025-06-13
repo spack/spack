@@ -41,6 +41,10 @@ def _fetch_manifests(
         blobs = web_util.list_url(url_to_list, recursive=True) or []
         if not blobs:
             tty.warn(f"Unable to list blobs in {url_to_list}")
+        blobs = [
+            url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
+            for blob_name in blobs
+        ]
         yield file_list, read_fn, blobs
 
 
@@ -111,10 +115,7 @@ def _prune_orphans(
     blob_hashes_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
 
     # Blobs that are actually present in the cache (but not necessarily referenced in any manifest)
-    blob_hashes_present_in_cache: Set[str] = {
-        url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
-        for blob_name in blobs
-    }
+    blob_hashes_present_in_cache: Set[str] = set(blobs)
 
     # Compute set of blobs that are present in the cache but not referenced in any manifest
     orphaned_blobs = blob_hashes_present_in_cache - blob_hashes_referenced_by_manifest
@@ -131,7 +132,6 @@ def _prune_orphans(
     }
 
     if not orphaned_blobs and not orphaned_manifests:
-        tty.info("No orphaned manifest(s) or blob(s) found")
         return 0
 
     if orphaned_blobs:
@@ -155,8 +155,9 @@ def _prune_orphans(
         for blob in orphaned_blobs:
             futures.append(executor.submit(_delete_object, blob, dry_run))
             try:
+                blobs.remove(blob)
                 del blob_to_manifest_mapping[blob]
-            except KeyError:
+            except (KeyError, ValueError):
                 # If the blob was already removed during the pruning of another orphaned manifest,
                 # it will not be in the list, so we can safely ignore this error.
                 pass
@@ -190,8 +191,7 @@ def prune(mirror: Mirror, dry_run: bool) -> None:
                 break
             total_pruned += pruned
 
-    tty.debug(
-        "Would have pruned"
-        if dry_run
-        else "Pruned" + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
+    tty.info(
+        ("Would have pruned" if dry_run else "Pruned")
+        + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
     )
