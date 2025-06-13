@@ -753,11 +753,10 @@ def test_migrate_requires_index(capsys, v2_buildcache_layout, mutable_config):
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
-def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gnupghome, dry_run):
-    with capsys.disabled():
-        mirror("add", "--unsigned", "my-mirror", str(tmp_path))
-        spec = mutable_database.query_local("libelf", installed=True)[0]
-        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+def test_buildcache_prune_no_orphans(tmp_path, mutable_database, mock_gnupghome, dry_run):
+    mirror("add", "--unsigned", "my-mirror", str(tmp_path))
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
     cmd_args = ["prune", "my-mirror"]
     if dry_run:
@@ -768,16 +767,13 @@ def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gn
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
-def test_buildcache_prune_orphaned_blobs(
-    capsys, tmp_path, mutable_database, mock_gnupghome, dry_run
-):
+def test_buildcache_prune_orphaned_blobs(tmp_path, mutable_database, mock_gnupghome, dry_run):
     # Create a mirror and push a package to it
     mirror_directory = str(tmp_path)
 
-    with capsys.disabled():
-        mirror("add", "--unsigned", "my-mirror", mirror_directory)
-        spec = mutable_database.query_local("libelf", installed=True)[0]
-        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
     cache_entry = URLBuildcacheEntry(
         mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
@@ -812,16 +808,13 @@ def test_buildcache_prune_orphaned_blobs(
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
-def test_buildcache_prune_orphaned_manifest(
-    capsys, tmp_path, mutable_database, mock_gnupghome, dry_run
-):
+def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnupghome, dry_run):
     # Create a mirror and push a package to it
     mirror_directory = str(tmp_path)
 
-    with capsys.disabled():
-        mirror("add", "--unsigned", "my-mirror", mirror_directory)
-        spec = mutable_database.query_local("libelf", installed=True)[0]
-        buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
+    mirror("add", "--unsigned", "my-mirror", mirror_directory)
+    spec = mutable_database.query_local("libelf", installed=True)[0]
+    buildcache("push", "--update-index", "my-mirror", f"/{spec.dag_hash()}")
 
     # Create a cache entry and read the manifest, which should succeed
     # as we haven't pruned anything yet
