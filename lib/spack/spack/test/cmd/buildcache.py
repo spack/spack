@@ -764,7 +764,7 @@ def test_buildcache_prune_no_orphans(capsys, tmp_path, mutable_database, mock_gn
         cmd_args.append("--dry-run")
     output = buildcache(*cmd_args)
 
-    assert "No orphaned manifest(s) or blob(s) found" in output
+    assert "0 orphaned objects from mirror:" in output
 
 
 @pytest.mark.parametrize("dry_run", [False, True])
@@ -830,6 +830,8 @@ def test_buildcache_prune_orphaned_manifest(
     )
     cache_entry.read_manifest()
 
+    manifest_url = f"file://{cache_entry.get_manifest_url(spec=spec, mirror_url=mirror_directory)}"
+
     # Remove the blobs from the cache, orphaning the manifest
     for blob_file in cache_entry.read_manifest().data:
         blob_url = cache_entry.get_blob_url(mirror_url=mirror_directory, record=blob_file)
@@ -841,7 +843,7 @@ def test_buildcache_prune_orphaned_manifest(
     output = buildcache(*cmd_args)
 
     # Ensure the manifest is gone after pruning (or not if dry_run is True)
-    assert web_util.url_exists(cache_entry.mirror_url) == dry_run
+    assert web_util.url_exists(manifest_url) == dry_run
 
     if not dry_run:
         # Clear the local cache entry's manifest and try to read it again, which
