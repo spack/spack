@@ -117,8 +117,11 @@ def _read_and_sanitize_configuration() -> Dict[str, Any]:
     # to have it in the configuration).
     config_yaml = spack.config.get("config")
     config_yaml.pop("install_tree", None)
-    user_configuration = {"bootstrap": spack.config.get("bootstrap"), "config": config_yaml}
-    return user_configuration
+    return {
+        "bootstrap": spack.config.get("bootstrap"),
+        "config": config_yaml,
+        "repos": spack.config.get("repos"),
+    }
 
 
 def _bootstrap_config_scopes() -> Sequence["spack.config.ConfigScope"]:
@@ -155,10 +158,11 @@ def _ensure_bootstrap_configuration() -> Generator:
     ), spack.store.use_store(
         bootstrap_store_path, extra_data={"padded_length": 0}
     ):
+        spack.config.set("bootstrap", user_configuration["bootstrap"])
+        spack.config.set("config", user_configuration["config"])
+        spack.config.set("repos", user_configuration["repos"])
         # We may need to compile code from sources, so ensure we
         # have compilers for the current platform
         _add_compilers_if_missing()
-        spack.config.set("bootstrap", user_configuration["bootstrap"])
-        spack.config.set("config", user_configuration["config"])
         with spack.modules.disable_modules(), spack_python_interpreter():
             yield
