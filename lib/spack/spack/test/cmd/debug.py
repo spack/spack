@@ -19,6 +19,7 @@ def test_report():
     host_target = host_platform.default_target()
     architecture = spack.spec.ArchSpec((str(host_platform), str(host_os), str(host_target)))
 
-    assert spack.get_version() in out
+    assert spack.spack_version in out
+    assert spack.get_spack_commit() in out
     assert platform.python_version() in out
     assert str(architecture) in out
