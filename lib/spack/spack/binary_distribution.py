@@ -266,8 +266,16 @@ class BinaryCacheIndex:
                         # recreate index if it is missing
                         cache_entry = self._local_index_cache[str(url_and_version)]
                         self._fetch_and_cache_index(url_and_version, cache_entry)
+
                     if os.path.getsize(cache_file_path) == 0:
-                        tty.warn(f"The buildcache index is empty for mirror '{url_and_version}'")
+                        tty.warn(
+                            f"Buildcache index for the '{mirror_url}' v{layout_version} mirror \n"
+                            "    is empty. If the mirror layout is deprecated and you are only \n"
+                            "    using it, consider running: \n"
+                            "      'spack mirror list' \n"
+                            "      'spack mirror remove <name>' \n"
+                            "    with the <name> for the mirror url shown in the list. \n"
+                        )
                         return
 
                     db._read_from_file(cache_file_path)
@@ -683,8 +691,11 @@ def warn_v2_layout(mirror_url: str, action: str) -> bool:
     tty.warn(
         f"{action} from a v2 binary mirror layout, located at \n"
         f"    {mirror_url} is deprecated. Support for this will be \n"
-        "    removed in a future version of spack. Please consider running `spack \n"
-        "    buildcache migrate' or rebuilding the specs in this mirror."
+        "    removed in a future version of spack. \n\n"
+        "    If you manage the buildcache please consider running \n"
+        "      'spack buildcache migrate' \n"
+        "    or rebuilding the specs in this mirror. If you are only using \n"
+        "    it, consider running 'spack mirror remove <name>'. \n"
     )
     return True
 
@@ -1726,9 +1737,9 @@ def download_tarball(
         (if required), and its checksum validated. Otherwise, return the stage
         containing the downloaded tarball.
     """
-    configured_mirrors: Iterable[spack.mirrors.mirror.Mirror] = (
-        spack.mirrors.mirror.MirrorCollection(binary=True).values()
-    )
+    configured_mirrors: Iterable[
+        spack.mirrors.mirror.Mirror
+    ] = spack.mirrors.mirror.MirrorCollection(binary=True).values()
     if not configured_mirrors:
         tty.die("Please add a spack mirror to allow download of pre-compiled packages.")
 
