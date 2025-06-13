@@ -156,8 +156,7 @@ def _prune_orphans(
             futures.append(executor.submit(_delete_object, blob, dry_run))
             try:
                 blobs.remove(blob)
-                del blob_to_manifest_mapping[blob]
-            except (KeyError, ValueError):
+            except ValueError:
                 # If the blob was already removed during the pruning of another orphaned manifest,
                 # it will not be in the list, so we can safely ignore this error.
                 pass
