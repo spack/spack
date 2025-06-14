@@ -253,7 +253,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str]
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -268,8 +268,6 @@ class Finder:
                 f" of the package."
             )
             return []
-
-        from spack.repo import PATH as repo_path
 
         result = []
         for candidate_path, items_in_prefix in _group_by_prefix(
@@ -355,8 +353,7 @@ class Finder:
             initial_guess = self.default_path_hints()
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
-        result = self.detect_specs(pkg=pkg_cls, paths=candidates)
-        return result
+        return self.detect_specs(pkg=pkg_cls, paths=candidates, repo_path=repository)
 
 
 class ExecutablesFinder(Finder):

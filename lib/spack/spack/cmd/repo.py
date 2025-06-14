@@ -5,9 +5,8 @@
 import argparse
 import os
 import shlex
-import sys
 import tempfile
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import llnl.util.tty as tty
 from llnl.util.tty import color
@@ -18,6 +17,7 @@ import spack.config
 import spack.repo
 import spack.util.executable
 import spack.util.path
+import spack.util.spack_yaml
 from spack.cmd.common import arguments
 from spack.error import SpackError
 
@@ -46,9 +46,14 @@ def setup_parser(subparser: argparse.ArgumentParser):
     )
 
     # List
-    list_parser = sp.add_parser("list", help=repo_list.__doc__)
+    list_parser = sp.add_parser("list", aliases=["ls"], help=repo_list.__doc__)
     list_parser.add_argument(
         "--scope", action=arguments.ConfigScope, help="configuration scope to read from"
+    )
+    output_group = list_parser.add_mutually_exclusive_group()
+    output_group.add_argument("--names", action="store_true", help="show configuration names only")
+    output_group.add_argument(
+        "--namespaces", action="store_true", help="show repository namespaces only"
     )
 
     # Add
@@ -203,8 +208,8 @@ def _add_repo(
     if key in existing:
         raise SpackError(f"A repository with the name '{key}' already exists.")
 
-    existing[key] = entry
-    config.set("repos", existing, scope)
+    # Prepend the new repository
+    config.set("repos", spack.util.spack_yaml.syaml_dict({key: entry, **existing}), scope)
     return key
 
 
@@ -260,30 +265,31 @@ def repo_list(args):
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG, scope=args.scope
     )
 
-    if not sys.stdout.isatty():
+    # --names: just print config names
+    if args.names:
         for name in descriptors:
             print(name)
         return
 
-    # Collect all repository information for aligned output
+    # --namespaces: print all repo namespaces
+    if args.namespaces:
+        for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
+            if isinstance(maybe_repo, spack.repo.Repo):
+                print(maybe_repo.namespace)
+        return
+
+    # Default table format: collect all repository information for aligned output
     repo_info = []
 
-    for name, descriptor in descriptors.items():
-        descriptor.initialize(fetch=False)
-        repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
-
-        # Register all repos and errors for this descriptor
-        for path, maybe_repo in repos_for_descriptor.items():
-            if isinstance(maybe_repo, spack.repo.Repo):
-                repo_info.append(
-                    ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
-                )
-            else:  # exception
-                repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
-
-        # If there are no repos, it means it's not yet cloned; then we status + git repository
-        if not repos_for_descriptor and isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
-            repo_info.append(("@K{ - }", name, "", descriptor.repository))
+    for name, path, maybe_repo in _iter_repos_from_descriptors(descriptors):
+        if isinstance(maybe_repo, spack.repo.Repo):
+            repo_info.append(
+                ("@g{[+]}", maybe_repo.namespace, maybe_repo.package_api_str, maybe_repo.root)
+            )
+        elif maybe_repo is None:  # Uninitialized Git-based repo case
+            repo_info.append(("@K{ - }", name, "", path))
+        else:  # Exception/error case
+            repo_info.append(("@r{[-]}", name, "", f"{path}: {maybe_repo}"))
 
     if repo_info:
         max_namespace_width = max(len(namespace) for _, namespace, _, _ in repo_info) + 3
@@ -419,10 +425,33 @@ def repo_set(args):
     tty.msg(f"Updated repo '{namespace}'")
 
 
+def _iter_repos_from_descriptors(
+    descriptors: spack.repo.RepoDescriptors,
+) -> Generator[Tuple[str, str, Union[spack.repo.Repo, Exception, None]], None, None]:
+    """Iterate through repository descriptors and yield (name, path, maybe_repo) tuples.
+
+    Yields:
+        Tuple of (config_name, path, maybe_repo) where maybe_repo is a Repo instance if it could
+        be instantiated, an Exception if it could not be instantiated, or None if it was not
+        initialized yet.
+    """
+    for name, descriptor in descriptors.items():
+        descriptor.initialize(fetch=False)
+        repos_for_descriptor = descriptor.construct(cache=spack.caches.MISC_CACHE)
+
+        for path, maybe_repo in repos_for_descriptor.items():
+            yield name, path, maybe_repo
+
+        # If there are no repos, it means it's not yet cloned; yield descriptor info
+        if not repos_for_descriptor and isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
+            yield name, descriptor.repository, None  # None indicates remote descriptor
+
+
 def repo(parser, args):
     return {
         "create": repo_create,
         "list": repo_list,
+        "ls": repo_list,
         "add": repo_add,
         "set": repo_set,
         "remove": repo_remove,

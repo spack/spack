@@ -1130,9 +1130,6 @@ class GitFetchStrategy(VCSFetchStrategy):
                     args.insert(1, "--quiet")
                 git(*args)
 
-    def archive(self, destination):
-        super().archive(destination, exclude=".git")
-
     @_needs_stage
     def reset(self):
         with working_dir(self.stage.source_path):

@@ -193,10 +193,16 @@ class BinaryCacheIndex:
         self._mirrors_for_spec: Dict[str, List[MirrorForSpec]] = {}
 
     def _init_local_index_cache(self):
+        # seems logical but fails bootstrapping
+        # cache_key = self._index_contents_key
+        # exists = self._index_file_cache.init_entry(cache_key)
+        # cache_path = self._index_file_cache.cache_path(cache_key)
+        # if not exists and self._index_file_cache_initialized:
+        # raise FileNotFoundError(f"Missing {cache_path}")
+
         if not self._index_file_cache_initialized:
             cache_key = self._index_contents_key
             self._index_file_cache.init_entry(cache_key)
-
             cache_path = self._index_file_cache.cache_path(cache_key)
 
             self._local_index_cache = {}
@@ -211,6 +217,7 @@ class BinaryCacheIndex:
         clear associated data structures."""
         if self._index_file_cache:
             self._index_file_cache.destroy()
+            self._index_file_cache_initialized = False
             self._index_file_cache = file_cache.FileCache(self._index_cache_root)
         self._local_index_cache = {}
         self._specs_already_associated = set()
@@ -252,10 +259,14 @@ class BinaryCacheIndex:
             db = BuildCacheDatabase(tmpdir)
 
             try:
-                self._index_file_cache.init_entry(cache_key)
-                cache_path = self._index_file_cache.cache_path(cache_key)
-                with self._index_file_cache.read_transaction(cache_key):
-                    db._read_from_file(pathlib.Path(cache_path))
+                cache_file_exists = self._index_file_cache.init_entry(cache_key)
+                with self._index_file_cache.write_transaction(cache_key):
+                    cache_file_path = self._index_file_cache.cache_path(cache_key)
+                    if not cache_file_exists:
+                        # recreate index if it is missing
+                        cache_entry = self._local_index_cache[str(url_and_version)]
+                        self._fetch_and_cache_index(url_and_version, cache_entry)
+                    db._read_from_file(cache_file_path)
             except spack_db.InvalidDatabaseVersionError as e:
                 tty.warn(
                     "you need a newer Spack version to read the buildcache index "
@@ -552,7 +563,7 @@ class BinaryCacheIndex:
 
         # clean up the old cache_key if necessary
         old_cache_key = cache_entry.get("index_path", None)
-        if old_cache_key:
+        if old_cache_key and old_cache_key != cache_key:
             self._index_file_cache.remove(old_cache_key)
 
         # We fetched an index and updated the local index cache, we should

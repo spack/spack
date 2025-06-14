@@ -339,7 +339,9 @@ class CompilerFactory:
             pattern = re.compile(r"|".join(finder.search_patterns(pkg=pkg_cls)))
             filtered_paths = [x for x in candidate_paths if pattern.search(os.path.basename(x))]
             try:
-                detected = finder.detect_specs(pkg=pkg_cls, paths=filtered_paths)
+                detected = finder.detect_specs(
+                    pkg=pkg_cls, paths=filtered_paths, repo_path=spack.repo.PATH
+                )
             except Exception:
                 warnings.warn(
                     f"[{__name__}] cannot detect {pkg_name} from the "

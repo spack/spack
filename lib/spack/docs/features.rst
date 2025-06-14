@@ -27,46 +27,50 @@ Custom versions & configurations
 --------------------------------
 
 Spack allows installation to be customized.  Users can specify the
-version, build compiler, compile-time options, and cross-compile
-platform, all on the command line.
+version, compile-time options, and cross-compile platform, all on the command line.
 
 .. code-block:: console
 
    # Install a particular version by appending @
-   $ spack install mpileaks@1.1.2
-
-   # Specify a compiler (and its version), with %
-   $ spack install mpileaks@1.1.2 %gcc@4.7.3
+   $ spack install hdf5@1.14.6
 
    # Add special compile-time options by name
-   $ spack install mpileaks@1.1.2 %gcc@4.7.3 debug=True
+   $ spack install hdf5@1.14.6 api=v110
 
    # Add special boolean compile-time options with +
-   $ spack install mpileaks@1.1.2 %gcc@4.7.3 +debug
+   $ spack install hdf5@1.14.6 +hl
 
    # Add compiler flags using the conventional names
-   $ spack install mpileaks@1.1.2 %gcc@4.7.3 cppflags="-O3 -floop-block"
+   $ spack install hdf5@1.14.6 cflags="-O3 -floop-block"
 
    # Cross-compile for a different micro-architecture with target=
-   $ spack install mpileaks@1.1.2 target=icelake
+   $ spack install hdf5@1.14.6 target=icelake
 
 Users can specify as many or as few options as they care about. Spack
-will fill in the unspecified values with sensible defaults. The two listed
-syntaxes for variants are identical when the value is a boolean.
+will fill in the unspecified values with sensible defaults.
 
 ----------------------
 Customize dependencies
 ----------------------
 
-Spack allows *dependencies* of a particular installation to be
-customized extensively.  Suppose that ``hdf5`` depends
-on ``openmpi`` and indirectly on ``hwloc``.  Using ``^``, users can add custom
-configurations for the dependencies:
+Spack allows *dependencies* of a particular installation to be customized extensively.
+Users can specify both *direct* dependencies of a node, using the ``%`` sigil, or *transitive*
+dependencies, using the ``^`` sigil:
 
 .. code-block:: console
 
-   # Install hdf5 and link it with specific versions of openmpi and hwloc
-   $ spack install hdf5@1.10.1 %gcc@4.7.3 +debug ^openmpi+cuda fabrics=auto ^hwloc+gl
+   # Install hdf5 using gcc@15.1.0 as a compiler (direct dependency of hdf5)
+   $ spack install hdf5@1.14.6 %gcc@15.1.0
+
+   # Install hdf5 using hwloc with CUDA enabled (transitive dependency)
+   $ spack install hdf5@1.14.6 ^hwloc+cuda
+
+The expression on the command line can be as simple, or as complicated, as the user need:
+
+.. code-block:: console
+
+   # Install hdf5 compiled with gcc@15, linked to mpich compiled with gcc@14
+   $ spack install hdf5@1.14.6 %gcc@15 ^mpich %gcc@14
 
 ------------------------
 Non-destructive installs

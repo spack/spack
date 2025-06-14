@@ -73,11 +73,16 @@ def imap_unordered(
     Raises:
         RuntimeError: if any error occurred in the worker processes
     """
+    from spack.subprocess_context import GlobalStateMarshaler
+
     if sys.platform in ("darwin", "win32") or len(list_of_args) == 1:
         yield from map(f, list_of_args)
         return
 
-    with multiprocessing.Pool(processes, maxtasksperchild=maxtaskperchild) as p:
+    marshaler = GlobalStateMarshaler()
+    with multiprocessing.Pool(
+        processes, initializer=marshaler.restore, maxtasksperchild=maxtaskperchild
+    ) as p:
         for result in p.imap_unordered(Task(f), list_of_args):
             if isinstance(result, ErrorFromWorker):
                 raise RuntimeError(result.stacktrace if debug else str(result))
@@ -104,7 +109,14 @@ def make_concurrent_executor(
     if the platform does not enable forking as the default start method. Effectively
     require_fork=True makes the executor sequential in the current process on Windows, macOS, and
     Linux from Python 3.14+ (which changes defaults)"""
+    from spack.subprocess_context import GlobalStateMarshaler
+
     if require_fork and multiprocessing.get_start_method() != "fork":
         return SequentialExecutor()
+
+    if sys.version_info[:2] == (3, 6):
+        return SequentialExecutor()
+
     jobs = jobs or spack.config.determine_number_of_jobs(parallel=True)
-    return concurrent.futures.ProcessPoolExecutor(jobs)
+    marshaler = GlobalStateMarshaler()
+    return concurrent.futures.ProcessPoolExecutor(jobs, initializer=marshaler.restore)  # novermin
