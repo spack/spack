@@ -8,7 +8,7 @@ import pathlib
 import sys
 from typing import Iterable, List
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 from llnl.util import tty
 
@@ -51,7 +51,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         """Environment root directory"""
         bootstrap_root_path = root_path()
         python_part = spec_for_current_python().replace("@", "")
-        arch_part = archspec.cpu.host().family
+        arch_part = _vendoring.archspec.cpu.host().family
         interpreter_part = hashlib.md5(sys.exec_prefix.encode()).hexdigest()[:5]
         environment_dir = f"{python_part}-{arch_part}-{interpreter_part}"
         return pathlib.Path(
@@ -92,7 +92,7 @@ class BootstrapEnvironment(spack.environment.Environment):
             tty.msg(f"[BOOTSTRAPPING] Installing dependencies ({', '.join(colorized_specs)})")
             self.write(regenerate=False)
             with tty.SuppressOutput(msg_enabled=log_enabled, warn_enabled=log_enabled):
-                self.install_all()
+                self.install_all(fail_fast=True)
                 self.write(regenerate=True)
 
     def load(self) -> None:
@@ -112,7 +112,7 @@ class BootstrapEnvironment(spack.environment.Environment):
         context = {
             "python_spec": spec_for_current_python(),
             "python_prefix": sys.exec_prefix,
-            "architecture": archspec.cpu.host().family,
+            "architecture": _vendoring.archspec.cpu.host().family,
             "environment_path": self.environment_root(),
             "environment_specs": self.spack_dev_requirements(),
             "store_path": store_path(),

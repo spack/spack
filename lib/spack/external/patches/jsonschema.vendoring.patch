@@ -1,0 +1,13 @@
+diff --git a/lib/spack/external/_vendoring/jsonschema/_utils.py b/lib/spack/external/_vendoring/jsonschema/_utils.py
+index eeab638f22..452eecc96f 100644
+--- a/lib/spack/external/_vendoring/jsonschema/_utils.py
++++ b/lib/spack/external/_vendoring/jsonschema/_utils.py
+@@ -51,7 +51,7 @@ def load_schema(name):
+     Load a schema from ./schemas/``name``.json and return it.
+     """
+ 
+-    data = pkgutil.get_data("jsonschema", "schemas/{0}.json".format(name))
++    data = pkgutil.get_data("_vendoring.jsonschema", "schemas/{0}.json".format(name))
+     return json.loads(data.decode("utf-8"))
+ 
+ 

@@ -1,7 +1,8 @@
-command_index.rst
-spack*.rst
-llnl*.rst
-_build
+.spack
 .spack-env
-spack.lock
+_build
 _spack_root
+command_index.rst
+llnl*.rst
+spack*.rst
+spack.lock

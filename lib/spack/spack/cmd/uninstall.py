@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 from typing import Dict, List, Optional
 
@@ -33,7 +34,7 @@ error_message = """You can either:
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     epilog_msg = (
         "Specs to be uninstalled are specified using the spec syntax"
         " (`spack help --spec`) and can be identified by their "

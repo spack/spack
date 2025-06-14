@@ -5,12 +5,12 @@
 .. _sourceforgepackage:
 
 -----------
-Sourceforge
+SourceForge
 -----------
 
 ``SourceforgePackage`` is a
 `mixin-class <https://en.wikipedia.org/wiki/Mixin>`_. It automatically
-sets the URL based on a list of Sourceforge mirrors listed in
+sets the URL based on a list of SourceForge mirrors listed in
 `sourceforge_mirror_path`, which defaults to a half dozen known mirrors.
 Refer to the package source
 (`<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/sourceforge.py>`__) for the current list of mirrors used by Spack.
@@ -49,6 +49,6 @@ file for one version of your software.
         sourceforge_mirror_path = "my-package/mypackage.1.0.0.tar.gz"
         ...
 
-Over 40 packages are using ``SourceforcePackage`` this mix-in as of
+Over 40 packages are using ``SourceforgePackage`` this mix-in as of
 July 2022 so there are multiple packages to choose from if you want
 to see a real example.
