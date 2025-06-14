@@ -282,8 +282,6 @@ class MockDirectiveBase(ABC):
             spack.spec.Spec(when): self.create_directives(spec_names)
             for when, spec_names in data.items()
         }
-        print(f"expected: {expected}")
-        print(f"actual: {getattr(self.pkg, self.directive_name)}")
         assert getattr(self.pkg, self.directive_name) == expected
 
     @abstractmethod
@@ -295,7 +293,7 @@ class MockDirectiveBase(ABC):
         return spack.directives.DropDirectiveBase
 
     def remove(self, spec, when):
-        self.removal_class().remove(spec, when)(self.pkg)
+        self.removal_class(spec, when).remove()(self.pkg)
 
 
 class MockConflicts(MockDirectiveBase):
@@ -541,3 +539,34 @@ def test_drop_requires(test_repo):
     assert cls.requirements == {
         spack.spec.Spec("@1.0"): [((spack.spec.Spec("mpi"),), "one_of", None)]
     }
+
+
+_pkgx = (
+    "x",
+    """\
+from spack.package import *
+
+class X(Package):
+    version("1.0")
+    patch(
+        "https://myrepo.com/patch1.patch",
+        sha256="abc",
+        when="@4.1.8,5.0.7",
+    )
+    drop_patch(
+        "https://myrepo.com/patch1.patch",
+        sha256="abc",
+        when="@4.1.8,5.0.7",
+    )
+    # patch("https://some-url.org/patch1.patch", sha256="abc")
+    # patch("patch2.patch", when="@1")
+    # drop_patch("https://some-url.org/patch1.patch", sha256="abc")
+    #drop_patch("netcdf-c", when="@1.0")
+""",
+)
+
+
+@pytest.mark.parametrize("_create_test_repo", [(_pkgx,)], indirect=True)
+def test_drop_patch(test_repo):
+    cls = spack.repo.PATH.get_pkg_class(_pkgx[0])
+    assert cls.patches == {}

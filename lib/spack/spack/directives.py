@@ -34,6 +34,7 @@ The available directives are:
   * ``drop_all_versions``
   * ``drop_conflict``
   * ``drop_depends_on``
+  * ``drop_patch``
   * ``drop_requires``
   * ``drop_version``
 
@@ -91,6 +92,7 @@ __all__ = [
     "drop_all_versions",
     "drop_conflict",
     "drop_depends_on",
+    "drop_patch",
     "drop_requires",
     "drop_version",
 ]
@@ -555,6 +557,10 @@ def can_splice(
     return _execute_can_splice
 
 
+def _get_package_reference(pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency]):
+    return pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
+
+
 @directive("patches")
 def patch(
     url_or_filename: str,
@@ -581,10 +587,11 @@ def patch(
             compressed URL patches)
     """
 
+    # return lambda pkg: _execute_patch(pkg, url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256)
     def _execute_patch(
         pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
     ) -> None:
-        pkg = pkg_or_dep.pkg if isinstance(pkg_or_dep, Dependency) else pkg_or_dep
+        pkg = _get_package_reference(pkg_or_dep)
 
         if hasattr(pkg, "has_code") and not pkg.has_code:
             raise UnsupportedPackageDirective(
@@ -598,34 +605,72 @@ def patch(
         # If this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-
         global _patch_order_index
-        ordering_key = (pkg.name, _patch_order_index)
+        ordering_key = (pkg_or_dep.name, _patch_order_index)
         _patch_order_index += 1
 
-        patch: spack.patch.Patch
-        if "://" in url_or_filename:
-            if sha256 is None:
-                raise ValueError("patch() with a url requires a sha256")
-
-            patch = spack.patch.UrlPatch(
-                pkg,
-                url_or_filename,
-                level,
-                working_dir=working_dir,
-                reverse=reverse,
-                ordering_key=ordering_key,
-                sha256=sha256,
-                archive_sha256=archive_sha256,
-            )
-        else:
-            patch = spack.patch.FilePatch(
-                pkg, url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
-            )
+        patch = _create_patch(
+            pkg_or_dep,
+            url_or_filename,
+            level,
+            working_dir,
+            reverse,
+            sha256,
+            archive_sha256,
+            ordering_key,
+        )
 
         cur_patches.append(patch)
 
     return _execute_patch
+
+
+def _create_patch(
+    pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
+    patch_url_or_filename: str,
+    level: int,
+    working_dir: str = ".",
+    reverse: bool = False,
+    sha256: Optional[str] = None,
+    archive_sha256: Optional[str] = None,
+    ordering_key: Optional[Tuple[str, int]] = None,
+) -> spack.patch.Patch:
+    """Creates a patch object based on the given parameters.
+
+    Args:
+        patch_url_or_filename: url or relative filename of the patch
+        level: patch level (as in the patch shell command)
+        when: optional anonymous spec that specifies when to apply the patch
+        working_dir: dir to change to before applying
+        reverse: reverse the patch
+        sha256: sha256 sum of the patch, used to verify the patch (only required for URL patches)
+        archive_sha256: sha256 sum of the *archive*, if the patch is compressed (only required for
+            compressed URL patches)
+    """
+    patch: spack.patch.Patch
+    if "://" in patch_url_or_filename:
+        if sha256 is None:
+            raise ValueError("patch() with a url requires a sha256")
+        patch = spack.patch.UrlPatch(
+            pkg_or_dep,
+            patch_url_or_filename,
+            level,
+            working_dir=working_dir,
+            reverse=reverse,
+            ordering_key=ordering_key,
+            sha256=sha256,
+            archive_sha256=archive_sha256,
+        )
+    else:
+        patch = spack.patch.FilePatch(
+            pkg_or_dep,
+            patch_url_or_filename,
+            level,
+            working_dir,
+            reverse,
+            ordering_key=ordering_key,
+        )
+    return patch
 
 
 def conditional(*values: Union[str, bool], when: Optional[WhenType] = None):
@@ -998,45 +1043,43 @@ def drop_all_versions():
 
 
 class DropDirectiveBase(ABC):
-    @property
-    @abstractmethod
-    def name(self):
-        return ""
+    name = ""
+
+    def __init__(self, when):
+        self.removal_when = _make_when_spec(when)
 
     @abstractmethod
     def add_to_filtered(self, filtered, when, directive_entry):
         pass
 
     @abstractmethod
-    def get_spec(self, directive_entry):
+    def get_directive(self, directive_entry):
         pass
 
-    @staticmethod
-    def sanitize_input(spec, when):
-        return spack.spec.Spec(spec), _make_when_spec(when)
-
-    def remove(self, spec: SpecType, when: WhenType = None):
-        removal_spec, removal_when = self.sanitize_input(spec, when)
+    def remove(self):
+        removal_when = self.removal_when
         if not removal_when:
             return
         complement_versions = removal_when.versions.complement()
 
         def _remove(pkg):
+            removal_directive = self.make_directive(pkg)
             directive_dict = getattr(pkg, self.name)
             filtered = self.filter_directives(
-                complement_versions, directive_dict, removal_spec, removal_when
+                complement_versions, directive_dict, removal_directive, removal_when
             )
             directive_dict.clear()
             directive_dict.update(filtered)
 
         return _remove
 
-    def filter_directives(self, complement_versions, directive_dict, removal_spec, removal_when):
+    def filter_directives(
+        self, complement_versions, directive_dict, removal_directive, removal_when
+    ):
         filtered = {}
         for when, directives in directive_dict.items():
             for directive_entry in self.iterate_directives(directives):
-                spec = self.get_spec(directive_entry)
-                if spec == removal_spec:
+                if self.get_directive(directive_entry) == removal_directive:
                     if when == removal_when:
                         continue
                     elif when.versions.intersects(removal_when.versions):
@@ -1060,21 +1103,21 @@ class DropDirectiveBase(ABC):
 
 
 class DropConflicts(DropDirectiveBase):
-    @property
-    def name(self):
-        return "conflicts"
+    name = "conflicts"
+
+    def __init__(self, spec, when):
+        DropDirectiveBase.__init__(self, when)
+        self.make_directive = lambda pkg: spack.spec.Spec(spec)
 
     def add_to_filtered(self, filtered, when, directive_entry):
         filtered.setdefault(when, []).append(directive_entry)
 
-    def get_spec(self, directive_entry):
+    def get_directive(self, directive_entry):
         return directive_entry[0]
 
 
-class DropDependsOn(DropDirectiveBase):
-    @property
-    def name(self):
-        return "dependencies"
+class DropDependsOn(DropConflicts):
+    name = "dependencies"
 
     def add_to_filtered(self, filtered, when, directive_entry):
         name, directive = directive_entry
@@ -1083,16 +1126,34 @@ class DropDependsOn(DropDirectiveBase):
     def iterate_directives(self, directives):
         return directives.items()
 
-    def get_spec(self, directive_entry):
+    def get_directive(self, directive_entry):
         return directive_entry[1].spec
 
 
-class DropRequires(DropConflicts):
-    @property
-    def name(self):
-        return "requirements"
+class DropPatch(DropConflicts):
+    name = "patches"
 
-    def get_spec(self, directive_entry):
+    def __init__(self, url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256):
+        DropDirectiveBase.__init__(self, when)
+        self.make_directive = lambda pkg: _create_patch(
+            pkg,
+            url_or_filename,
+            level,
+            working_dir,
+            reverse,
+            sha256,
+            archive_sha256,
+            ordering_key=None,
+        )
+
+    def get_directive(self, directive_entry):
+        return directive_entry
+
+
+class DropRequires(DropConflicts):
+    name = "requirements"
+
+    def get_directive(self, directive_entry):
         return directive_entry[0][0]
 
 
@@ -1106,7 +1167,7 @@ def drop_conflict(conflict_spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a conflict to delete
     that does not exist.
     """
-    return DropConflicts().remove(conflict_spec, when)
+    return DropConflicts(conflict_spec, when).remove()
 
 
 @directive("dependencies")
@@ -1119,7 +1180,30 @@ def drop_depends_on(spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    return DropDependsOn().remove(spec, when)
+    return DropDependsOn(spec, when).remove()
+
+
+@directive("patches")
+def drop_patch(
+    url_or_filename: str,
+    level: int = 1,
+    when: WhenType = None,
+    working_dir: str = ".",
+    reverse: bool = False,
+    sha256: Optional[str] = None,
+    archive_sha256: Optional[str] = None,
+):
+    """Remove a patch from a package.
+
+    This is typically used when inheriting from another package if the author
+    desires to keep some of the dependencies in the parent package but delete others.
+
+    This code will not throw an error if the user inputs a dependency to delete
+    that does not exist.
+    """
+    return DropPatch(
+        url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256
+    ).remove()
 
 
 @directive("requirements")
@@ -1132,7 +1216,7 @@ def drop_requires(spec: SpecType, when: WhenType = None):
     This code will not throw an error if the user inputs a dependency to delete
     that does not exist.
     """
-    return DropRequires().remove(spec, when)
+    return DropRequires(spec, when).remove()
 
 
 @directive("versions")
