@@ -2488,15 +2488,18 @@ class PackageInstaller:
         # or were not installed when should have been.
         missing = []
         for request in self.build_requests:
-            miss_package = (
+            if (
                 request.install_args.get("install_package")
                 and request.pkg_id not in self.installed
-            )
-            miss_deps = request.install_args.get(
-                "install_deps"
-            ) and not request.dependencies.issubset(self.installed)
-            if miss_package or miss_deps:
+            ):
                 missing.append((request.pkg, request.pkg_id))
+            if request.install_args.get("install_deps"):
+                # Associate requested package with its failed dependency
+                missing.extend(
+                    (request.pkg, dep_id)
+                    for dep_id in request.dependencies
+                    if dep_id not in self.installed
+                )
 
         if failed_build_requests or missing:
             for _, pkg_id, err in failed_build_requests:
