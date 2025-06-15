@@ -1715,9 +1715,12 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
     def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
         if git is None:
-            self.error = "Git executable not found"
-            return
+            raise RepoError("Git executable not found")
+
         self._clone_or_pull(git, update=True, remote=remote)
+
+        if self.error:
+            raise RepoError(self.error)
 
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         """Clone the remote repository if it has not been fetched yet and read the index file
@@ -1953,9 +1956,7 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(
-    lambda: create_and_enable(spack.config.CONFIG)
-)  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
 
 
 # Add the finder to sys.meta_path

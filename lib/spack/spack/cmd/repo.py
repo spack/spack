@@ -483,28 +483,23 @@ def repo_update(args: Any) -> int:
     # Get the repos for the specific scope we're modifying
     scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
 
-    namespace_flags = ["commit", "tag", "branch"]
-    active_flag = next((attr for attr in namespace_flags if getattr(args, attr)), None)
-    if active_flag and len(args.namespaces) != 1:
+    git_flags = ["commit", "tag", "branch"]
+    active_flag = next((attr for attr in git_flags if getattr(args, attr)), None)
+    if active_flag and len(args.names) != 1:
         error_msg = (
             f"Unable to set --{active_flag} because more than one namespace was given."
-            if len(args.namespaces) > 1
+            if len(args.names) > 1
             else f"Unable to apply --{active_flag} without a namespace"
         )
         raise SpackError(error_msg)
 
-    if args.namespaces:
-        for namespace in args.namespaces:
-            if namespace not in descriptors:
-                raise SpackError(f"{namespace} is not a known repository namespace.")
+    for name in args.names:
+        if name not in descriptors:
+            raise SpackError(f"{name} is not a known repository name.")
 
         # filter descriptors when namespaces are provided as arguments
         descriptors = spack.repo.RepoDescriptors(
-            {
-                name: descriptor
-                for name, descriptor in descriptors.items()
-                if name in args.namespaces
-            }
+            {name: descriptor for name, descriptor in descriptors.items() if name in args.names}
         )
 
     for name, descriptor in descriptors.items():
@@ -518,13 +513,11 @@ def repo_update(args: Any) -> int:
             # prune previous values of git fields
             for entry in {"commit", "tag", "branch"} - {active_flag}:
                 setattr(descriptor, entry, None)
-                scope_repos[namespace].pop(entry, None)
+                scope_repos[name].pop(entry, None)
 
-            scope_repos[namespace][active_flag] = args.commit or args.tag or args.branch
+            scope_repos[name][active_flag] = args.commit or args.tag or args.branch
 
         descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
-        if descriptor.error:  # need to fix this / find a better way
-            raise SpackError(descriptor.error)
 
     if active_flag:
         spack.config.set("repos", scope_repos, args.scope)
