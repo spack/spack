@@ -1595,7 +1595,7 @@ class RepoDescriptor:
     def initialize(self, fetch: bool = True, git: MaybeExecutable = None) -> None:
         return None
 
-    def update(self, git: MaybeExecutable = None) -> None:
+    def update(self, git: MaybeExecutable = None, remote: str = "origin") -> None:
         return None
 
     def construct(
@@ -1956,7 +1956,9 @@ def create_and_enable(config: spack.config.Configuration) -> RepoPath:
 
 
 #: Global package repository instance.
-PATH: RepoPath = llnl.util.lang.Singleton(lambda: create_and_enable(spack.config.CONFIG))  # type: ignore[assignment]
+PATH: RepoPath = llnl.util.lang.Singleton(
+    lambda: create_and_enable(spack.config.CONFIG)
+)  # type: ignore[assignment]
 
 
 # Add the finder to sys.meta_path
