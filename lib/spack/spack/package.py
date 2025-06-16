@@ -188,6 +188,7 @@ __all__ = [
     "drop_all_versions",
     "drop_conflict",
     "drop_depends_on",
+    "drop_patch",
     "drop_requires",
     "drop_version",
     "extends",

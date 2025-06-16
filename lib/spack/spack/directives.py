@@ -587,7 +587,6 @@ def patch(
             compressed URL patches)
     """
 
-    # return lambda pkg: _execute_patch(pkg, url_or_filename, level, when, working_dir, reverse, sha256, archive_sha256)
     def _execute_patch(
         pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
     ) -> None:
@@ -606,18 +605,11 @@ def patch(
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
         global _patch_order_index
-        ordering_key = (pkg_or_dep.name, _patch_order_index)
+        ordering_key = (pkg.name, _patch_order_index)
         _patch_order_index += 1
 
         patch = _create_patch(
-            pkg_or_dep,
-            url_or_filename,
-            level,
-            working_dir,
-            reverse,
-            sha256,
-            archive_sha256,
-            ordering_key,
+            pkg, url_or_filename, level, working_dir, reverse, sha256, archive_sha256, ordering_key
         )
 
         cur_patches.append(patch)
@@ -626,7 +618,7 @@ def patch(
 
 
 def _create_patch(
-    pkg_or_dep: Union[Type[spack.package_base.PackageBase], Dependency],
+    pkg: Type[spack.package_base.PackageBase],
     patch_url_or_filename: str,
     level: int,
     working_dir: str = ".",
@@ -652,7 +644,7 @@ def _create_patch(
         if sha256 is None:
             raise ValueError("patch() with a url requires a sha256")
         patch = spack.patch.UrlPatch(
-            pkg_or_dep,
+            pkg,
             patch_url_or_filename,
             level,
             working_dir=working_dir,
@@ -663,12 +655,7 @@ def _create_patch(
         )
     else:
         patch = spack.patch.FilePatch(
-            pkg_or_dep,
-            patch_url_or_filename,
-            level,
-            working_dir,
-            reverse,
-            ordering_key=ordering_key,
+            pkg, patch_url_or_filename, level, working_dir, reverse, ordering_key=ordering_key
         )
     return patch
 
