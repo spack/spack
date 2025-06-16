@@ -275,7 +275,7 @@ def canonicalize_path(path: str, default_wd: Optional[str] = None) -> str:
     if url.scheme:
         if url.scheme != "file":
             # Have a remote URL so simply return it with substitutions
-            return os.path.normpath(path)
+            return path
 
         # Drop the URL scheme from the local path
         path = url_path
