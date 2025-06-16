@@ -1195,6 +1195,10 @@ def fail(*args, **kwargs):
     assert False
 
 
+def overwrite(*args, **kwargs):
+    return inst.InstallAction.OVERWRITE
+
+
 def test_overwrite_install_backup_success(
     monkeypatch, temporary_store, config, mock_packages, tmpdir
 ):
@@ -1204,7 +1208,7 @@ def test_overwrite_install_backup_success(
     """
     # Get a build task. TODO: Refactor this to avoid calling internal methods.
     # This task relies on installing something with no dependencies
-    installer = create_installer(["pkg-c"])
+    installer = create_installer(["pkg-c"], {"overwrite": ["pkg-c"]})
     installer.progress = MockInstallerProgress()
     installer._init_queue()
     task = installer._pop_task()
@@ -1218,14 +1222,14 @@ def test_overwrite_install_backup_success(
 
     # Make sure the package is not marked uninstalled
     monkeypatch.setattr(spack.store.STORE.db, "remove", fail)
-    # Make sure that the installer does an overwrite install
-    monkeypatch.setattr(task, "_install_action", inst.InstallAction.OVERWRITE)
+
+    # Make sure the task will do an overwrite install
+    monkeypatch.setattr(inst.Task, "get_install_action", overwrite)
 
     # Installation should throw the installation exception, not the backup
     # failure.
-    installer.start_task(task, term_status)
     with pytest.raises(Exception, match="Some fatal install error"):
-        installer.complete_task(task)
+        installer.install()
 
     # Check that the original file is back.
     assert os.path.exists(installed_file)
@@ -1260,15 +1264,14 @@ def test_overwrite_install_backup_failure(
     fs.touchp(installed_file)
     monkeypatch.setattr(inst, "build_process", remove_backup)
 
-    # Make sure that the installer does an overwrite install
-    monkeypatch.setattr(task, "_install_action", inst.InstallAction.OVERWRITE)
+    # Make sure the task will do an overwrite install
+    monkeypatch.setattr(inst.Task, "get_install_action", overwrite)
 
     # Make sure that `remove` was called on the database after an unsuccessful
     # attempt to restore the backup.
     # This error is raised while handling the original install error
-    installer.start_task(task, term_status)
     with pytest.raises(Exception, match="No such spec in database"):
-        installer.complete_task(task)
+        installer.install()
 
 
 def test_term_status_line():

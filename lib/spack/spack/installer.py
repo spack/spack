@@ -1315,14 +1315,7 @@ class BuildTask(Task):
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def fail(self, inner_exception):
-        self.record.fail(inner_exception)
-
-        if self.install_action != InstallAction.OVERWRITE:
-            raise inner_exception
-
-        # restore the overwrite directory from backup
-        # see llnl.util.filesystem.restore_directory_transaction
+    def _restore_backup(self, inner_exception):
         try:
             if os.path.exists(self.pkg.prefix):
                 shutil.rmtree(self.pkg.prefix)
@@ -1330,6 +1323,13 @@ class BuildTask(Task):
         except Exception as outer_exception:
             raise fs.CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
+    def fail(self, inner_exception):
+        self.record.fail(inner_exception)
+
+        if self.install_action != InstallAction.OVERWRITE:
+            raise inner_exception
+
+        self._restore_backup(inner_exception)
         raise inner_exception
 
     def complete(self):
@@ -1400,7 +1400,10 @@ class InstallTask(Task):
 
     def start(self):
         # TODO: Make this happen in parallel
-        pass
+        self.record.start()
+
+        self.started = True
+        self.start_time = self.start_time or time.time()
 
     def poll(self) -> bool:
         return True
@@ -1413,12 +1416,7 @@ class InstallTask(Task):
         if self.install_action == InstallAction.OVERWRITE:
             shutil.rmtree(self.tmpdir, ignore_errors=True)
 
-    def fail(self, inner_exception):
-        self.record.fail(inner_exception)
-
-        if self.install_action != InstallAction.OVERWRITE:
-            raise inner_exception
-
+    def _restore_backup(self, inner_exception):
         # restore the overwrite directory from backup
         # see llnl.util.filesystem.restore_directory_transaction
         try:
@@ -1428,6 +1426,13 @@ class InstallTask(Task):
         except Exception as outer_exception:
             raise fs.CouldNotRestoreDirectoryBackup(inner_exception, outer_exception)
 
+    def fail(self, inner_exception):
+        self.record.fail(inner_exception)
+
+        if self.install_action != InstallAction.OVERWRITE:
+            raise inner_exception
+
+        self._restore_backup(inner_exception)
         raise inner_exception
 
     def complete(self):
@@ -1440,16 +1445,26 @@ class InstallTask(Task):
 
         Returns: execution result
         """
-        self.record.start()
+        assert self.started or self.no_op or self.error_result or self.success_result
 
-        if self.install_action == InstallAction.OVERWRITE:
-            self.tmpdir = tempfile.mkdtemp(dir=os.path.dirname(self.pkg.prefix), prefix=".backup")
-            self.backup_dir = os.path.join(self.tmpdir, "backup")
-            os.rename(self.pkg.prefix, self.backup_dir)
+        # If task has been identified as a no operation,
+        # return ExecuteResult.NOOP
+        if self.no_op:
+            # This is one exit point that does not need to call
+            # self.succeed/fail. Job is either a no_op (external, upstream)
+            # or requeued.
+            return ExecuteResult.NO_OP
 
-        assert not self.started, "Cannot start a task that has already been started."
-        self.started = True
-        self.start_time = self.start_time or time.time()
+        # If installing a package from binary cache is successful,
+        # return ExecuteResult.SUCCESS
+        if self.success_result is not None:
+            self.succeed()
+            return self.success_result
+
+        # If an error arises from installing a package,
+        # raise spack.error.InstallError
+        if self.error_result is not None:
+            self.fail(self.error_result)
 
         # no-op and requeue to build if not allowed to use cache
         if not self.use_cache:
@@ -1464,6 +1479,11 @@ class InstallTask(Task):
         self.start_time = self.start_time or time.time()
         self.status = BuildStatus.INSTALLING
 
+        if self.install_action == InstallAction.OVERWRITE:
+            self.tmpdir = tempfile.mkdtemp(dir=os.path.dirname(self.pkg.prefix), prefix=".backup")
+            self.backup_dir = os.path.join(self.tmpdir, "backup")
+            os.rename(self.pkg.prefix, self.backup_dir)
+
         try:
             if _install_from_cache(pkg, self.progress, self.explicit, unsigned):
                 self.succeed()
@@ -1476,6 +1496,10 @@ class InstallTask(Task):
                 )
             else:
                 tty.msg(f"No binary for {pkg_id} found: installing from source")
+                if self.backup_dir:
+                    self._restore_backup(
+                        Requeue
+                    )  # Need to restore backup so BuildTask can control it
                 return ExecuteResult.MISSING_BINARY
         except spack.error.NoChecksumException as exc:
             if self.cache_only:
@@ -1497,6 +1521,10 @@ class InstallTask(Task):
             status=BuildStatus.QUEUED,
             installed=installed,
         )
+
+        # Pass backup dir in case overwriting
+        build_task.backup_dir = self.backup_dir
+        build_task.tmpdir = self.tmpdir
 
         # Fixup dependents in case it was changed by `add_dependent`
         # This would be the case of a `build_spec` for a spliced spec
@@ -2147,6 +2175,7 @@ class PackageInstaller:
             raise
         if rc == ExecuteResult.MISSING_BUILD_SPEC:
             self._requeue_with_build_spec_tasks(task)
+
         elif rc == ExecuteResult.NO_OP:
             pass
         elif rc == ExecuteResult.MISSING_BINARY:
@@ -2452,6 +2481,7 @@ class PackageInstaller:
 
             if self.fail_fast:
                 task.error_result = spack.error.InstallError(_FAIL_FAST_ERR, pkg=pkg)
+            return
 
         # Attempt to get a write lock.  If we can't get the lock then
         # another process is likely (un)installing the spec or has
@@ -2539,7 +2569,6 @@ class PackageInstaller:
         action = task.install_action
         try:
             self._complete_task(task)
-
             # If we installed then we should keep the prefix
             stop_before_phase = getattr(pkg, "stop_before_phase", None)
             last_phase = getattr(pkg, "last_phase", None)
@@ -2611,7 +2640,11 @@ class PackageInstaller:
 
         # Perform basic task cleanup for the installed spec to
         # include downgrading the write to a read lock
-        if pkg.spec.installed:
+        # Check for whether the package is an overwrite that hasn't happened yet
+        # in case it got requeued. We avoid the cached action attribute to recheck
+        # the installation time.
+        awaiting_overwrite = task.get_install_action() == InstallAction.OVERWRITE
+        if pkg.spec.installed and not awaiting_overwrite:
             self._cleanup_task(pkg)
 
         return None
