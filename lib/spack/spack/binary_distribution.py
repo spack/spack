@@ -19,6 +19,7 @@ import shutil
 import sys
 import tarfile
 import tempfile
+import textwrap
 import time
 import urllib.error
 import urllib.parse
@@ -268,13 +269,22 @@ class BinaryCacheIndex:
                         self._fetch_and_cache_index(url_and_version, cache_entry)
 
                     if os.path.getsize(cache_file_path) == 0:
-                        tty.warn(
-                            f"Buildcache index for the '{mirror_url}' v{layout_version} mirror \n"
-                            "    is empty. If the mirror layout is deprecated and you cannot migrate it to the new format, consider removing it via: \n"
-                            "      'spack mirror list' \n"
-                            "      'spack mirror remove <name>' \n"
-                            "    with the <name> for the mirror url shown in the list. \n"
+                        lines = textwrap.wrap(
+                            f"Buildcache index for the v{layout_version} mirror "
+                            f"at '{mirror_url}' is empty. "
+                            "If the mirror layout is deprecated and you cannot migrate "
+                            "it to the new format, consider removing it using:",
+                            width=72,
+                            subsequent_indent="  ",
                         )
+                        lines.extend(
+                            [
+                                "    'spack mirror list'",
+                                "    'spack mirror remove <name>'",
+                                "  with the <name> for the mirror url shown in the list.",
+                            ]
+                        )
+                        tty.warn("\n".join(lines))
                         return
 
                     db._read_from_file(cache_file_path)
@@ -687,15 +697,24 @@ def buildcache_relative_index_url(layout_version: int = CURRENT_BUILD_CACHE_LAYO
 
 @llnl.util.lang.memoized
 def warn_v2_layout(mirror_url: str, action: str) -> bool:
-    tty.warn(
-        f"{action} from a v2 binary mirror layout, located at \n"
-        f"    {mirror_url} is deprecated. Support for this will be \n"
-        "    removed in a future version of spack. \n\n"
-        "    If you manage the buildcache please consider running \n"
-        "      'spack buildcache migrate' \n"
-        "    or rebuilding the specs in this mirror. If you are not the mirror \n"
-        "    owner, consider running 'spack mirror remove <name>'. \n"
+    lines = textwrap.wrap(
+        f"{action} from a v2 binary mirror layout, located at "
+        f"{mirror_url} is deprecated. Support for this will be "
+        "removed in a future version of spack. "
+        "If you manage the buildcache please consider running:",
+        width=72,
+        subsequent_indent="  ",
     )
+    lines.extend(
+        [
+            "    'spack buildcache migrate'",
+            "  or rebuilding the specs in this mirror. Otherwise, consider running:",
+            "    'spack mirror list'",
+            "    'spack mirror remove <name>'",
+            "  with the <name> for the mirror url shown in the list.",
+        ]
+    )
+    tty.warn("\n".join(lines))
     return True
 
 
