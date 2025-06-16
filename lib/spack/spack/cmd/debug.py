@@ -26,8 +26,8 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
 
 
 def _format_repo_info(source, commit):
-    if ".git" in source:
-        return f"{source.replace('.git', '')}/commit/{commit}"
+    if source.endswith(".git"):
+        return f"{source[:-4]}/commit/{commit}"
 
     return f"{source} ({commit[:7]})"
 
