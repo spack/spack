@@ -103,9 +103,12 @@ The typical structure of a package is as follows:
 The package class is named after the package, and can roughly be divided into two parts:
 
 * **metadata and directives**: attributes and directives that describe the package, such as its homepage, versions, maintainers, dependencies, and variants.
+  This is the declarative part of the package.
 * **build instructions**: methods that define how to build and install the package, such as `cmake_args()`.
+  This is the imperative part of the package.
 
-In this part of the packaging guide we will cover the **metadata and directives** in detail. In the :ref:`second part <packaging-guide-part-2>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
+In this part of the packaging guide we will cover the **metadata and directives** in detail.
+In the :ref:`second part <packaging-guide-part-2>`, we will cover the **build instructions**, including how to write custom build logic for different build systems.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Package Names and the Package Directory
@@ -1865,32 +1868,21 @@ appear in the package file (or in this case, in the list).
 Virtual dependencies
 --------------------
 
-In some cases, more than one package can satisfy another package's
-dependency.  One way this can happen is if a package depends on a
-particular *interface*, but there are multiple *implementations* of
-the interface, and the package could be built with any of them.  A
-*very* common interface in HPC is the `Message Passing Interface (MPI)
-<http://www.mcs.anl.gov/research/projects/mpi/>`_, which is used in
-many large-scale parallel applications.
+In some cases, more than one package can satisfy another package's dependency.
+One way this can happen is if a package depends on a particular *interface*, but there are multiple *implementations* of the interface, and the package could be built with any of them.
+A *very* common interface in HPC is the `Message Passing Interface (MPI) <http://www.mcs.anl.gov/research/projects/mpi/>`_, which is used in many large-scale parallel applications.
 
-MPI has several different implementations (e.g., `MPICH
-<http://www.mpich.org>`_, `OpenMPI <http://www.open-mpi.org>`_, and
-`MVAPICH <http://mvapich.cse.ohio-state.edu>`_) and scientific
-applications can be built with any one of them.  Complicating matters,
-MPI does not have a standardized ABI, so a package built with one
-implementation cannot simply be relinked with another implementation.
-Many package managers handle interfaces like this by requiring many
-similar package files, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``,
-but Spack avoids this explosion of package files by providing support
-for *virtual dependencies*.
+MPI has several different implementations (e.g., `MPICH <http://www.mpich.org>`_, `OpenMPI <http://www.open-mpi.org>`_, and `MVAPICH <http://mvapich.cse.ohio-state.edu>`_) and scientific applications can be built with any one of them.
+Many package managers handle interfaces like this by requiring many variations of the package recipe for each implementation of MPI, e.g., ``foo``, ``foo-mvapich``, ``foo-mpich``.
+In Spack every package is defined in a single ``package.py`` file, and avoids the combinatorial explosion through *virtual dependencies*.
 
 ^^^^^^^^^^^^
 ``provides``
 ^^^^^^^^^^^^
 
-In Spack, ``mpi`` is handled as a *virtual package*.  A package like
-``mpileaks`` can depend on it just like any other package, by
-supplying a ``depends_on`` call in the package definition.  For example:
+In Spack, ``mpi`` is handled as a *virtual package*.
+A package like ``mpileaks`` can depend on the virtual ``mpi`` just like any other package, by supplying a ``depends_on`` call in the package definition.
+For example:
 
 .. code-block:: python
    :linenos:
@@ -1906,11 +1898,9 @@ supplying a ``depends_on`` call in the package definition.  For example:
        depends_on("adept-utils")
        depends_on("callpath")
 
-Here, ``callpath`` and ``adept-utils`` are concrete packages, but
-there is no actual package file for ``mpi``, so we say it is a
-*virtual* package.  The syntax of ``depends_on`` is the same for
-both.  If we look inside the package file of an MPI implementation,
-say MPICH, we'll see something like this:
+Here, ``callpath`` and ``adept-utils`` are concrete packages, but there is no actual package file for ``mpi``, so we say it is a *virtual* package.
+The syntax of ``depends_on`` is the same for both.
+If we look inside the package file of an MPI implementation, say MPICH, we'll see something like this:
 
 .. code-block:: python
 
@@ -1918,20 +1908,18 @@ say MPICH, we'll see something like this:
        provides("mpi")
        ...
 
-The ``provides("mpi")`` call tells Spack that the ``mpich`` package
-can be used to satisfy the dependency of any package that
-``depends_on("mpi")``.
+The ``provides("mpi")`` call tells Spack that the ``mpich`` package can be used to satisfy the dependency of any package that ``depends_on("mpi")``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Providing multiple virtuals simultaneously
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Packages can provide more than one virtual dependency. Sometimes, due to implementation details,
-there are subsets of those virtuals that need to be provided together by the same package.
+Packages can provide more than one virtual dependency.
+Sometimes, due to implementation details, there are subsets of those virtuals that need to be provided together by the same package.
 
-A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas``
-library. A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use
-``openblas`` at all. It cannot pick one or the other.
+A well-known example is ``openblas``, which provides both the ``lapack`` and ``blas`` API in a single ``libopenblas`` library.
+A package that needs ``lapack`` and ``blas`` must either use ``openblas`` to provide both, or not use ``openblas`` at all.
+It cannot pick one or the other.
 
 To express this constraint in a package, the two virtual dependencies must be listed in the same ``provides`` directive:
 
@@ -1939,8 +1927,8 @@ To express this constraint in a package, the two virtual dependencies must be li
 
    provides('blas', 'lapack')
 
-This makes it impossible to select ``openblas`` as a provider for one of the two
-virtual dependencies and not for the other. If you try to, Spack will report an error:
+This makes it impossible to select ``openblas`` as a provider for one of the two virtual dependencies and not for the other.
+If you try to, Spack will report an error:
 
 .. code-block:: console
 
@@ -1953,52 +1941,41 @@ virtual dependencies and not for the other. If you try to, Spack will report an 
 Versioned Interfaces
 ^^^^^^^^^^^^^^^^^^^^
 
-Just as you can pass a spec to ``depends_on``, so can you pass a spec
-to ``provides`` to add constraints.  This allows Spack to support the
-notion of *versioned interfaces*.  The MPI standard has gone through
-many revisions, each with new functions added, and each revision of
-the standard has a version number.  Some packages may require a recent
-implementation that supports MPI-3 functions, but some MPI versions may
-only provide up to MPI-2.  Others may need MPI 2.1 or higher.  You can
-indicate this by adding a version constraint to the spec passed to
-``provides``:
+Just as you can pass a spec to ``depends_on``, so can you pass a spec to ``provides`` to add constraints.
+This allows Spack to support the notion of *versioned interfaces*.
+The MPI standard has gone through many revisions, each with new functions added, and each revision of the standard has a version number.
+Some packages may require a recent implementation that supports MPI-3 functions, but some MPI versions may only provide up to MPI-2.
+Others may need MPI 2.1 or higher.  
+You can indicate this by adding a version constraint to the spec passed to ``provides``:
 
 .. code-block:: python
 
    provides("mpi@:2")
 
 Suppose that the above ``provides`` call is in the ``mpich2`` package.
-This says that ``mpich2`` provides MPI support *up to* version 2, but
-if a package ``depends_on("mpi@3")``, then Spack will *not* build that
-package with ``mpich2``.
+This says that ``mpich2`` provides MPI support *up to* version 2, but if a package ``depends_on("mpi@3")``, then Spack will *not* build that package with ``mpich2``.
 
 ^^^^^^^^^^^^^^^^^
 ``provides when``
 ^^^^^^^^^^^^^^^^^
 
-The same package may provide different versions of an interface
-depending on *its* version.  Above, we simplified the ``provides``
-call in ``mpich`` to make the explanation easier.  In reality, this is
-how ``mpich`` calls ``provides``:
+The same package may provide different versions of an interface depending on *its* version.
+Above, we simplified the ``provides`` call in ``mpich`` to make the explanation easier.
+In reality, this is how ``mpich`` calls ``provides``:
 
 .. code-block:: python
 
    provides("mpi@:3", when="@3:")
    provides("mpi@:1", when="@1:")
 
-The ``when`` argument to ``provides`` allows you to specify optional
-constraints on the *providing* package, or the *provider*.  The
-provider only provides the declared virtual spec when *it* matches
-the constraints in the ``when`` clause.  Here, when ``mpich`` is at
-version 3 or higher, it provides MPI up to version 3.  When ``mpich``
-is at version 1 or higher, it provides the MPI virtual package at
-version 1.
+The ``when`` argument to ``provides`` allows you to specify optional constraints on the *providing* package, or the *provider*.
+The provider only provides the declared virtual spec when *it* matches the constraints in the ``when`` clause.
+Here, when ``mpich`` is at version 3 or higher, it provides MPI up to version 3.
+When ``mpich`` is at version 1 or higher, it provides the MPI virtual package at version 1.
 
-The ``when`` qualifier ensures that Spack selects a suitably high
-version of ``mpich`` to satisfy some other package that ``depends_on``
-a particular version of MPI.  It will also prevent a user from
-building with too low a version of ``mpich``.  For example, suppose
-the package ``foo`` declares this:
+The ``when`` qualifier ensures that Spack selects a suitably high version of ``mpich`` to satisfy some other package that ``depends_on`` a particular version of MPI.
+It will also prevent a user from building with too low a version of ``mpich``.
+For example, suppose the package ``foo`` declares this:
 
 .. code-block:: python
 
@@ -2012,8 +1989,30 @@ Suppose a user invokes ``spack install`` like this:
 
    $ spack install foo ^mpich@1.0
 
-Spack will fail with a constraint violation, because the version of
-MPICH requested is too low for the ``mpi`` requirement in ``foo``.
+Spack will fail with a constraint violation, because the version of MPICH requested is too low for the ``mpi`` requirement in ``foo``.
+
+.. _language-dependencies:
+
+----------------------------------
+Language and compiler dependencies
+----------------------------------
+
+Whenever you use ``spack create`` to create a new package, Spack scans the package's source code and heuristically adds *language dependencies*, which look like this:
+
+.. code-block:: python
+
+   depends_on("c", type="build")
+   depends_on("cxx", type="build")
+   depends_on("fortran", type="build")
+
+The languages ``c``, ``cxx`` and ``fortran`` are **virtuals provided by compiler packages**, such as ``gcc``, ``llvm``, or ``intel-oneapi-compilers``.
+
+When you concretize a package that depends on ``c``, Spack will select a compiler for it that provides the ``c`` virtual package.
+
+Typically one compiler will be used to provide all languages, but Spack is allowed to create a mixed toolchain.
+For example, the ``c`` compiler could be ``clang`` from the ``llvm`` package, whereas the ``fortran`` compiler could be ``gfortran`` from the ``gcc``.
+This means that language dependencies translate to one or more compiler packages as build dependencies.
+
 
 .. _packaging_conflicts:
 
@@ -2021,59 +2020,52 @@ MPICH requested is too low for the ``mpi`` requirement in ``foo``.
 Conflicts and requirements
 --------------------------
 
-Sometimes packages have known bugs, or limitations, that would prevent them
-from building e.g. against other dependencies or with certain compilers. Spack
-makes it possible to express such constraints with the ``conflicts`` directive.
+Sometimes packages have known bugs, or limitations, that would prevent them from building e.g. against other dependencies or with certain compilers.
+Spack makes it possible to express such constraints with the ``conflicts`` directive.
 
 Adding the following to a package:
 
 .. code-block:: python
 
     conflicts(
-        "%intel",
+        "%intel-oneapi-compilers",
          when="@:1.2",
-         msg="<myNicePackage> <= v1.2 cannot be built with Intel ICC, "
-             "please use a newer release."
+         msg="known bug with Intel oneAPI compilers"
     )
 
-we express the fact that the current package *cannot be built* with the Intel
-compiler when we are trying to install a version "<=1.2".
+we express the fact that the current package *cannot be built* with the Intel oneAPI compilers up to version ``1.2``.
 
 The ``when`` argument can be omitted, in which case the conflict will always be active.
 
-An optional custom error message can be added via the ``msg=`` parameter, and will be printed
-by Spack in case the conflict cannot be avoided and leads to a concretization error.
+An optional custom error message can be added via the ``msg=`` parameter, and may be printed by Spack in case the conflict cannot be avoided and leads to a concretization error.
 
-Sometimes, packages allow only very specific choices and they can't use the rest. In those cases
-the ``requires`` directive can be used:
+Sometimes, packages allow only very specific choices and they can't use the rest.
+In those cases the ``requires`` directive can be used:
 
 .. code-block:: python
 
     requires(
         "%apple-clang",
         when="platform=darwin",
-        msg="<myNicePackage> builds only with Apple-Clang on Darwin"
+        msg="builds only with Apple Clang compiler on Darwin"
     )
 
-In the example above, our package can only be built with Apple-Clang on Darwin.
-The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes
-the same optional ``when`` and ``msg`` arguments.
+In the example above, our package can only be built with Apple Clang on Darwin.
+The ``requires`` directive is effectively the opposite of the ``conflicts`` directive, and takes the same optional ``when`` and ``msg`` arguments.
 
-If a package needs to express more complex requirements, involving more than a single spec,
-that can also be done using the ``requires`` directive. To express that a package can be built
-either with GCC or with Clang we can write:
+If a package needs to express more complex requirements, involving more than a single spec, that can also be done using the ``requires`` directive.
+To express that a package can be built either with GCC or with Clang we can write:
 
 .. code-block:: python
 
     requires(
         "%gcc", "%clang",
         policy="one_of"
-        msg="<myNicePackage> builds only with GCC or Clang"
+        msg="builds only with GCC or Clang"
     )
 
-When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=``
-argument explicitly. That argument can take either the value ``any_of`` or the value ``one_of``,
-and the semantic is the same as for :ref:`package-requirements`.
+When using multiple specs in a ``requires`` directive, it is advised to set the ``policy=`` argument explicitly.
+That argument can take either the value ``any_of`` or the value ``one_of``, and the semantic is the same as for :ref:`package-requirements`.
 
 .. _patching:
 
@@ -2422,6 +2414,53 @@ variant(s) are selected.  This may be accomplished with conditional
        variant("python", default=True, description="Build the Python extension Module")
        extends("python", when="+python")
        ...
+
+--------------------------
+Mixins for common metadata
+--------------------------
+
+Spack's package repository contains a number of mixin classes that can be used to simplify package definitions and to share common metadata and behavior across multiple packages.
+
+For instance, packages that depend on ``cuda`` typically need variants such as ``+cuda`` and ``cuda_arch``, and conflicts to specify compatibility between architectures, compilers and CUDA versions.
+To avoid duplicating this metadata in every package that requires CUDA, Spack provides a mixin class called ``CudaPackage`` that can be used to inherit this common metadata and behavior.
+
+Other mixin classes such as ``GNUMirrorPackage`` do not add variants or conflicts, but configure the usual GNU mirror URLs for downloading source code.
+
+The following table lists the full list of mixin classes available in Spack's builtin package repository.
+
++----------------------------------------------------------------------------+----------------------------------+
+|     **API docs**                                                           |           **Description**        |
++============================================================================+==================================+
+| :class:`~spack_repo.builtin.build_systems.cuda.CudaPackage`                | A helper class for packages that |
+|                                                                            | use CUDA                         |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
+|                                                                            | use ROCm                         |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
+|                                                                            |                                  |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.python.PythonExtension`          | A helper class for Python        |
+|                                                                            | extensions                       |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
+|                                                                            | from sourceforge.org             |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
+|                                                                            | from sourceware.org              |
++----------------------------------------------------------------------------+----------------------------------+
+| :class:`~spack_repo.builtin.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
+|                                                                            | packages                         |
++----------------------------------------------------------------------------+----------------------------------+
+
+These mixins should be used as additional base classes for your package, in addition to the base class that you would normally use (e.g. ``MakefilePackage``, ``AutotoolsPackage``, etc.):
+
+.. code-block:: python
+
+   class Cp2k(MakefilePackage, CudaPackage):
+       pass
+
+In the example above ``Cp2k`` inherits the variants and conflicts defined by ``CudaPackage``.
 
 .. _package_maintainers:
 

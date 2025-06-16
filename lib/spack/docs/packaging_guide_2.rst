@@ -8,7 +8,8 @@
 Packaging Guide: customizing the build
 ======================================
 
-In the second part of the packaging guide, we will cover the installation procedure and customizing the build process.
+In the first part of the packaging guide, we covered the basic structure of a package, how to specify dependencies, and how to define variants.
+In the second part, we will cover the installation procedure, build systems, and how to customize the build process.
 
 .. _installation_procedure:
 
@@ -58,163 +59,98 @@ In general, the name and order in which the phases will be executed can be obtai
 
 An extensive list of available build systems and phases is provided in :ref:`installation_process`.
 
-.. _handling_rpaths:
+-----------------------------
+Influencing the build process
+-----------------------------
 
----------------
-Handling RPATHs
----------------
+As we have seen in the first part of the packaging guide, the usual workflow for creating a package is to start with ``spack create <url>``, which generates a ``package.py`` file for you with a boilerplate package class.
+This typically includes a package base class (e.g. ``AutotoolsPackage`` or ``CMakePackage``), a URL, and one or more versions.
+After you have added required dependencies and variants, you can start customizing the build process.
+There are various ways to do this, depending on the build system and the package itself.
 
-Spack installs each package in a way that ensures that all of its
-dependencies are found when it runs.  It does this using `RPATHs
-<http://en.wikipedia.org/wiki/Rpath>`_.  An RPATH is a search
-path, stored in a binary (an executable or library), that tells the
-dynamic loader where to find its dependencies at runtime. You may be
-familiar with `LD_LIBRARY_PATH
-<http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
-on Linux or `DYLD_LIBRARY_PATH
-<https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dyld.3.html>`_
-on Mac OS X.  RPATH is similar to these paths, in that it tells
-the loader where to find libraries.  Unlike them, it is embedded in
-the binary and not set in each user's environment.
+From simplest to most complex, the following are the most common ways to customize the build process:
 
-RPATHs in Spack are handled in one of three ways:
+1. **Implementing build system helper methods and properties**.
+   Most build systems provide a set of helper methods that can be overridden to customize the build process without overriding entire phases.
+   For example, for ``AutotoolsPackage`` you can specify the command line arguments for ``./configure`` by implementing ``configure_args``:
 
-#. For most packages, RPATHs are handled automatically using Spack's
-   :ref:`compiler wrappers <compiler-wrappers>`.  These wrappers are
-   set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
-   so most build systems (autotools and many gmake systems) pick them
-   up and use them.
-#. CMake has its own RPATH handling, and distinguishes between build and
-   install RPATHs. By default, during the build it registers RPATHs to
-   all libraries it links to, so that just-built executables can be run
-   during the build itself. Upon installation, these RPATHs are cleared,
-   unless the user defines the install RPATHs. When inheriting from
-   ``CMakePackage``, Spack handles this automatically, and sets
-   ``CMAKE_INSTALL_RPATH_USE_LINK_PATH`` and ``CMAKE_INSTALL_RPATH``,
-   so that libraries of dependencies and the package's own libraries
-   can be found at runtime.
-#. If you need to modify the build to add your own RPATHs, you can
-   use the ``self.rpath`` property of your package, which will
-   return a list of all the RPATHs that Spack will use when it
-   links.  You can see this how this is used in the :ref:`PySide
-   example <pyside-patch>` above.
+   .. code-block:: python
+   
+      def configure_args(self):
+          # FIXME: Add arguments other than --prefix
+          # FIXME: If not needed delete this function
+          args = []
+          return args
 
-.. _attribute_parallel:
+   Similarly for ``CMakePackage`` you can influence how ``cmake`` is invoked by implementing ``cmake_args``:
 
----------------
-Parallel builds
----------------
+   .. code-block:: python
+   
+      def cmake_args(self):
+          # FIXME: Add arguments other than
+          # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+          # FIXME: If not needed delete this function
+          args = []
+          return args
 
-Spack supports parallel builds on an individual package and at the
-installation level.  Package-level parallelism is established by the
-``--jobs`` option and its configuration and package recipe equivalents.
-Installation-level parallelism is driven by the DAG(s) of the requested
-package or packages.
+   See :ref:`installation_process` for a list of available build systems and their helper methods.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Package-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2. **Setting environment variables**.
+   Some build systems require specific environment variables to be set before the build starts.
+   You can set these variables by overriding the ``setup_build_environment`` method in your package class:
 
-By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so those builds run in parallel.
-The parallelism is determined by the value of the ``build_jobs`` entry
-in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
-how this value is computed).
+   .. code-block:: python
+   
+      def setup_build_environment(self, env):
+          env.set("MY_ENV_VAR", "value")
 
-If a package does not build properly in parallel, you can override
-this setting by adding ``parallel = False`` to your package.  For
-example, OpenSSL's build does not work in parallel, so its package
-looks like this:
+   This is useful for setting paths or other variables that the build system needs to find dependencies or configure itself correctly.
 
-.. code-block:: python
-   :emphasize-lines: 8
-   :linenos:
+   See :ref:`setup-environment` for more details on how to set up environment variables.
 
-   class Openssl(Package):
-       homepage = "http://www.openssl.org"
-       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+3. **Complementing the build system with pre- or post-build steps**.
+   In some cases, you may need to run additional commands before or after the build system phases.
+   This is useful for installing additional files missed by the build system, or for running custom scripts.
 
-       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib-api")
+   .. code-block:: python
+   
+      @run_after("install")
+      def install_missing_files(self):
+          install_tree("extra_files", self.prefix.bin)
 
-       parallel = False
+4. **Overriding entire build phases**.
+   If the default implementation of a build phase does not fit your needs, you can override the entire phase.
+   This is done by implementing a method with the same name as the phase, such as ``install()`` for ``MakefilePackage`` or ``CMakePackage``.
 
-You can also disable parallel builds only for specific make
-invocation:
-
-.. code-block:: python
-   :emphasize-lines: 5
-   :linenos:
-
-   class Libelf(Package):
-       ...
-
-       def install(self, spec, prefix):
-           make("install", parallel=False)
-
-Note that the ``--jobs`` option works out of the box for all standard
-build systems. If you are using a non-standard build system instead, you
-can use the variable ``make_jobs`` to extract the number of jobs specified
-by the ``--jobs`` option:
-
-.. code-block:: python
-   :emphasize-lines: 7, 11
-   :linenos:
-
-   class Xios(Package):
-      ...
+   .. code-block:: python
+   
       def install(self, spec, prefix):
+          # Custom install logic
+          make("install")
+          install_tree("my_files", prefix.bin)
+
+   In this case, you have full control over what happens during the install phase.
+
+In any of the functions above, you can
+
+1. **Make instructions dynamic**. Flags passed to build systems often depend on the package's variants, dependencies and other properties.
+   For example, you can use 
+   
+   .. code-block:: python
+
+      if self.spec.satisfies("+variant_name"):
          ...
-         options = [
-            ...
-            '--jobs', str(make_jobs),
-        ]
-        ...
-        make_xios = Executable("./make_xios")
-        make_xios(*options)
+   
+   to check if a variant is enabled, or
+   
+   .. code-block:: python
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      self.spec["dependency_name"].prefix
 
-Spack supports the concurrent installation of packages within a Spack
-instance across multiple processes using file system locks.  This
-parallelism is separate from the package-level achieved through build
-systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
-processes coordinate the installation of the dependencies of specs
-provided on the command line and as part of an environment build with
-only **one process** being allowed to install a given package at a time.
-Refer to :ref:`Dependencies` for more information on dependencies and
-:ref:`installing-environment` for how to install an environment.
-
-Concurrent processes may be any combination of interactive sessions and
-batch jobs.  This means a ``spack install`` can be running in a terminal
-window while a batch job is running ``spack install`` on the same or
-overlapping dependencies without any process trying to re-do the work of
-another.
-
-For example, if you are using Slurm, you could launch an installation
-of ``mpich`` using the following command:
-
-.. code-block:: console
-
-   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
-
-This will create eight concurrent, four-job installs on two different
-nodes.
-
-Alternatively, you could run the same installs on one node by entering
-the following at the command line of a bash shell:
-
-.. code-block:: console
-
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
-
-.. note::
-
-   The effective parallelism is based on the maximum number of packages
-   that can be installed at the same time, which is limited by the
-   number of packages with no (remaining) uninstalled dependencies.
+   to get the prefix of a dependency.
+   See :ref:`spec-objects` for more details on how to use specs in your package.
+2. **Use Spack's Python Package API**. The ``from spack.package import *`` statement allows you to access Spack's utilities and helper functions, such as ``which``, ``install_tree``, ``filter_file`` and others.
+   See :ref:`python-package-api` for more details.
 
 
 .. _setup-environment:
@@ -579,53 +515,6 @@ If the ``package.py`` has build instructions in a separate
 
 In this case the package is passed as the second argument, and ``self`` is the builder instance.
 
-^^^^^^^^^^^^^^^^^^
-Mixin base classes
-^^^^^^^^^^^^^^^^^^
-
-Besides build systems, there are other cases where common metadata and behavior can be extracted
-and reused by many packages. For instance, packages that depend on ``Cuda`` or ``Rocm``, share
-common dependencies and constraints. To factor these attributes into a single place, Spack provides
-a few mixin classes in the ``spack_repo.builtin.build_systems`` module:
-
-+----------------------------------------------------------------------------+----------------------------------+
-|     **API docs**                                                           |           **Description**        |
-+============================================================================+==================================+
-| :class:`~spack_repo.builtin.build_systems.cuda.CudaPackage`                | A helper class for packages that |
-|                                                                            | use CUDA                         |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.rocm.ROCmPackage`                | A helper class for packages that |
-|                                                                            | use ROCm                         |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.gnu.GNUMirrorPackage`            | A helper class for GNU packages  |
-|                                                                            |                                  |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.python.PythonExtension`          | A helper class for Python        |
-|                                                                            | extensions                       |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.sourceforge.SourceforgePackage`  | A helper class for packages      |
-|                                                                            | from sourceforge.org             |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.sourceware.SourcewarePackage`    | A helper class for packages      |
-|                                                                            | from sourceware.org              |
-+----------------------------------------------------------------------------+----------------------------------+
-| :class:`~spack_repo.builtin.build_systems.xorg.XorgPackage`                | A helper class for x.org         |
-|                                                                            | packages                         |
-+----------------------------------------------------------------------------+----------------------------------+
-
-These classes should be used by adding them to the inheritance tree of the package that needs them,
-for instance:
-
-.. code-block:: python
-
-   class Cp2k(MakefilePackage, CudaPackage):
-       """CP2K is a quantum chemistry and solid state physics software package
-       that can perform atomistic simulations of solid state, liquid, molecular,
-       periodic, material, crystal, and biological systems
-       """
-
-In the example above ``Cp2k`` inherits all the conflicts and variants that ``CudaPackage`` defines.
-
 .. _multiple_build_systems:
 
 ----------------------
@@ -795,7 +684,7 @@ from the environment, then you can simply pass them on the command
 line or use a patch as part of your build process to get the correct
 compilers into the project's build system.  There are also some file
 editing commands you can use -- these are described later in the
-`section on file manipulation <file-manipulation_>`_.
+`section on file manipulation <python-package-api_>`_.
 
 In addition to the compiler variables, these variables are set before
 entering ``install()`` so that packages can locate dependencies
@@ -2903,31 +2792,26 @@ For more information, refer to `spack test remove
 <https://spack.readthedocs.io/en/latest/command_index.html#spack-test-remove>`_.
 
 
-.. _file-manipulation:
+.. _python-package-api:
 
----------------------------
-File manipulation functions
----------------------------
+--------------------------
+Spack's Python Package API
+--------------------------
 
-Many builds are not perfect. If a build lacks an install target, or if
-it does not use systems like CMake or autotools, which have standard
-ways of setting compilers and options, you may need to edit files or
-install some files yourself to get them working with Spack.
+Many builds are not perfect.
+If a build lacks an install target, or if it does not use systems like CMake or Autotools, which have standard ways of setting compilers and options, you may need to edit files or install some files yourself to get them working with Spack.
 
-You can do this with standard Python code, and Python has rich
-libraries with functions for file manipulation and filtering. Spack
-also provides a number of convenience functions of its own to make
-your life even easier. These functions are described in this section.
+You can do this with standard Python code, and Python has rich libraries with functions for file manipulation and filtering.
+Spack also provides a number of convenience functions of its own to make your life even easier.
+These functions are described in this section.
 
-All of the functions in this section can be included by simply
-running:
+All of the functions in this section can be included by simply running:
 
 .. code-block:: python
 
    from spack.package import *
 
-This is already part of the boilerplate for packages created with
-``spack create``.
+This is already part of the boilerplate for packages created with ``spack create``.
 
 .. _file-filtering:
 
@@ -3612,3 +3496,161 @@ package dependencies along with any other relevant customizations.
 
    Remember that bundle packages have no software of their own so there
    is nothing to download.
+
+.. _handling_rpaths:
+
+---------------
+Handling RPATHs
+---------------
+
+Spack installs each package in a way that ensures that all of its
+dependencies are found when it runs.  It does this using `RPATHs
+<http://en.wikipedia.org/wiki/Rpath>`_.  An RPATH is a search
+path, stored in a binary (an executable or library), that tells the
+dynamic loader where to find its dependencies at runtime. You may be
+familiar with `LD_LIBRARY_PATH
+<http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html>`_
+on Linux or `DYLD_LIBRARY_PATH
+<https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/dyld.3.html>`_
+on Mac OS X.  RPATH is similar to these paths, in that it tells
+the loader where to find libraries.  Unlike them, it is embedded in
+the binary and not set in each user's environment.
+
+RPATHs in Spack are handled in one of three ways:
+
+#. For most packages, RPATHs are handled automatically using Spack's
+   :ref:`compiler wrappers <compiler-wrappers>`.  These wrappers are
+   set in standard variables like ``CC``, ``CXX``, ``F77``, and ``FC``,
+   so most build systems (autotools and many gmake systems) pick them
+   up and use them.
+#. CMake has its own RPATH handling, and distinguishes between build and
+   install RPATHs. By default, during the build it registers RPATHs to
+   all libraries it links to, so that just-built executables can be run
+   during the build itself. Upon installation, these RPATHs are cleared,
+   unless the user defines the install RPATHs. When inheriting from
+   ``CMakePackage``, Spack handles this automatically, and sets
+   ``CMAKE_INSTALL_RPATH_USE_LINK_PATH`` and ``CMAKE_INSTALL_RPATH``,
+   so that libraries of dependencies and the package's own libraries
+   can be found at runtime.
+#. If you need to modify the build to add your own RPATHs, you can
+   use the ``self.rpath`` property of your package, which will
+   return a list of all the RPATHs that Spack will use when it
+   links.  You can see this how this is used in the :ref:`PySide
+   example <pyside-patch>` above.
+
+.. _attribute_parallel:
+
+---------------
+Parallel builds
+---------------
+
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Spack will invoke ``make()``, or any other similar tool,
+with a ``-j <njobs>`` argument, so those builds run in parallel.
+The parallelism is determined by the value of the ``build_jobs`` entry
+in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
+how this value is computed).
+
+If a package does not build properly in parallel, you can override
+this setting by adding ``parallel = False`` to your package.  For
+example, OpenSSL's build does not work in parallel, so its package
+looks like this:
+
+.. code-block:: python
+   :emphasize-lines: 8
+   :linenos:
+
+   class Openssl(Package):
+       homepage = "http://www.openssl.org"
+       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
+
+       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
+       depends_on("zlib-api")
+
+       parallel = False
+
+You can also disable parallel builds only for specific make
+invocation:
+
+.. code-block:: python
+   :emphasize-lines: 5
+   :linenos:
+
+   class Libelf(Package):
+       ...
+
+       def install(self, spec, prefix):
+           make("install", parallel=False)
+
+Note that the ``--jobs`` option works out of the box for all standard
+build systems. If you are using a non-standard build system instead, you
+can use the variable ``make_jobs`` to extract the number of jobs specified
+by the ``--jobs`` option:
+
+.. code-block:: python
+   :emphasize-lines: 7, 11
+   :linenos:
+
+   class Xios(Package):
+      ...
+      def install(self, spec, prefix):
+         ...
+         options = [
+            ...
+            '--jobs', str(make_jobs),
+        ]
+        ...
+        make_xios = Executable("./make_xios")
+        make_xios(*options)
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  This means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using Slurm, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent, four-job installs on two different
+nodes.
+
+Alternatively, you could run the same installs on one node by entering
+the following at the command line of a bash shell:
+
+.. code-block:: console
+
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
+
+.. note::
+
+   The effective parallelism is based on the maximum number of packages
+   that can be installed at the same time, which is limited by the
+   number of packages with no (remaining) uninstalled dependencies.
