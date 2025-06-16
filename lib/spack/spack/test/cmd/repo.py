@@ -827,5 +827,5 @@ def test_repo_update_successful_flags(monkeypatch, mutable_config, tmp_path, rep
 def test_repo_update_invalid_flags(monkeypatch, mutable_config, tmp_path, flags):
     """Test repo update with invalid flags."""
 
-    with pytest.raises(spack.error.SpackError):
+    with pytest.raises(SpackError):
         repo("update", *flags)
