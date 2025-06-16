@@ -781,7 +781,6 @@ def test_repo_list_format_flags(
 @pytest.mark.parametrize(
     "repo_name,flags",
     [
-        (None, []),
         ("new_repo", []),
         ("new_repo", ["--branch", "develop"]),
         ("new_repo", ["--branch", "develop", "--remote", "upstream"]),
@@ -789,7 +788,7 @@ def test_repo_list_format_flags(
         ("new_repo", ["--commit", "abc123"]),
     ],
 )
-def test_repo_update(monkeypatch, mutable_config, tmp_path, repo_name, flags):
+def test_repo_update_successful_flags(monkeypatch, mutable_config, tmp_path, repo_name, flags):
     """Test repo update with flags."""
 
     def mock_parse_config_descriptor(name, entry, lock):
@@ -798,7 +797,9 @@ def test_repo_update(monkeypatch, mutable_config, tmp_path, repo_name, flags):
     monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
     monkeypatch.setattr(spack.repo, "RemoteRepoDescriptor", MockDescriptor)
 
-    spack.config.set("repos", {repo_name: {"git": "https://github.com/example/repo.git"}})
+    repos_config = spack.config.get("repos")
+    repos_config[repo_name] = {"git": "https://github.com/example/repo.git"}
+    spack.config.set("repos", repos_config)
 
     repo("update", repo_name, *flags)
 
@@ -813,3 +814,18 @@ def test_repo_update(monkeypatch, mutable_config, tmp_path, repo_name, flags):
 
     if "--commit" in flags:
         assert repos_config[repo_name]["commit"] == "abc123"
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [
+        ["--branch", "develop"],
+        ["--branch", "develop", "new_repo_1", "new_repo_2"],
+        ["--branch", "develop", "unknown_repo"],
+    ],
+)
+def test_repo_update_invalid_flags(monkeypatch, mutable_config, tmp_path, flags):
+    """Test repo update with invalid flags."""
+
+    with pytest.raises(spack.error.SpackError):
+        repo("update", *flags)
