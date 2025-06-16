@@ -2237,6 +2237,8 @@ class Spec:
     @property
     def long_spec(self):
         """Returns a string of the spec with the dependencies completely enumerated."""
+        if self.concrete:
+            return self.tree(format=DISPLAY_FORMAT)
         return f"{self.format()} {self._format_dependencies()}".strip()
 
     @property
