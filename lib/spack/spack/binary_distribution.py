@@ -270,8 +270,7 @@ class BinaryCacheIndex:
                     if os.path.getsize(cache_file_path) == 0:
                         tty.warn(
                             f"Buildcache index for the '{mirror_url}' v{layout_version} mirror \n"
-                            "    is empty. If the mirror layout is deprecated and you are only \n"
-                            "    using it, consider running: \n"
+                            "    is empty. If the mirror layout is deprecated and you cannot migrate it to the new format, consider removing it via: \n"
                             "      'spack mirror list' \n"
                             "      'spack mirror remove <name>' \n"
                             "    with the <name> for the mirror url shown in the list. \n"
@@ -694,8 +693,8 @@ def warn_v2_layout(mirror_url: str, action: str) -> bool:
         "    removed in a future version of spack. \n\n"
         "    If you manage the buildcache please consider running \n"
         "      'spack buildcache migrate' \n"
-        "    or rebuilding the specs in this mirror. If you are only using \n"
-        "    it, consider running 'spack mirror remove <name>'. \n"
+        "    or rebuilding the specs in this mirror. If you are not the mirror \n"
+        "    owner, consider running 'spack mirror remove <name>'. \n"
     )
     return True
 
