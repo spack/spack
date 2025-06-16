@@ -1674,7 +1674,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
 
                     # setup the repository if it does not exist
                     if not fetched:
-                        spack.util.git.init_git_repo(self.repository, remote=remote)
+                        spack.util.git.init_git_repo(self.repository, remote=remote, git_exe=git)
 
                         # determine the default branch from ls-remote
                         refs = git("ls-remote", "--symref", remote, "HEAD", output=str)
@@ -1690,10 +1690,10 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
                     if self.commit:
-                        spack.util.git.pull_checkout_commit(self.commit)
+                        spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
 
                     elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, depth)
+                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
 
                     elif self.branch:
                         # if the branch already exists we should use the
@@ -1704,7 +1704,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         except spack.util.executable.ProcessError:
                             pass
                         spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, depth=depth
+                            self.branch, remote=remote, depth=depth, git_exe=git
                         )
 
             except spack.util.executable.ProcessError:
@@ -1732,7 +1732,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
         if not fetch:
             return
 
-        if git is None:
+        if not git:
             self.error = "Git executable not found"
             return
 
@@ -1847,7 +1847,7 @@ class RepoDescriptors(Mapping[str, RepoDescriptor]):
         self,
         cache: spack.util.file_cache.FileCache,
         fetch: bool = True,
-        find_git: Callable[[], MaybeExecutable] = lambda: spack.util.executable.which("git"),
+        find_git: Callable[[], MaybeExecutable] = lambda: spack.util.git.git(required=True),
         overrides: Optional[Dict[str, Any]] = None,
     ) -> Tuple[RepoPath, Dict[str, Exception]]:
         """Construct a RepoPath from the descriptors.

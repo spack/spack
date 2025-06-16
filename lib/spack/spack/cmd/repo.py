@@ -473,15 +473,9 @@ def _iter_repos_from_descriptors(
 
 
 def repo_update(args: Any) -> int:
-    config = spack.config.CONFIG
-    scope = args.scope
-
     descriptors = spack.repo.RepoDescriptors.from_config(
-        spack.repo.package_repository_lock(), config, scope=scope
+        spack.repo.package_repository_lock(), spack.config.CONFIG
     )
-
-    # Get the repos for the specific scope we're modifying
-    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
 
     git_flags = ["commit", "tag", "branch"]
     active_flag = next((attr for attr in git_flags if getattr(args, attr)), None)
@@ -502,6 +496,9 @@ def repo_update(args: Any) -> int:
             {name: descriptor for name, descriptor in descriptors.items() if name in args.names}
         )
 
+    # Get the repos for the specific scope we're modifying
+    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+
     for name, descriptor in descriptors.items():
         if not isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
             continue
@@ -510,12 +507,15 @@ def repo_update(args: Any) -> int:
             # update the git commit, tag, or branch of the descriptor
             setattr(descriptor, active_flag, getattr(args, active_flag))
 
+            updated_entry = scope_repos[name] if name in scope_repos else {}
+
             # prune previous values of git fields
             for entry in {"commit", "tag", "branch"} - {active_flag}:
                 setattr(descriptor, entry, None)
-                scope_repos[name].pop(entry, None)
+                updated_entry.pop(entry, None)
 
-            scope_repos[name][active_flag] = args.commit or args.tag or args.branch
+            updated_entry[active_flag] = args.commit or args.tag or args.branch
+            scope_repos[name] = updated_entry
 
         descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
 
