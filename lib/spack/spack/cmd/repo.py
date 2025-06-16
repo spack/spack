@@ -480,12 +480,11 @@ def repo_update(args: Any) -> int:
     git_flags = ["commit", "tag", "branch"]
     active_flag = next((attr for attr in git_flags if getattr(args, attr)), None)
     if active_flag and len(args.names) != 1:
-        error_msg = (
+        raise SpackError(
             f"Unable to set --{active_flag} because more than one namespace was given."
             if len(args.names) > 1
             else f"Unable to apply --{active_flag} without a namespace"
         )
-        raise SpackError(error_msg)
 
     for name in args.names:
         if name not in descriptors:

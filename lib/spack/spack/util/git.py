@@ -47,8 +47,12 @@ def git(required: bool = False) -> Optional[exe.Executable]:
     return git
 
 
-def init_git_repo(repository: str, remote: str = "origin", git_exe=lambda: git(required=True)):
+def init_git_repo(
+    repository: str, remote: str = "origin", git_exe: Optional[exe.Executable] = None
+):
     """Initialize a new Git repository and configure it with a remote."""
+    git_exe = git_exe or git(required=True)
+
     git_exe("init", "--quiet", output=str)
     git_exe("remote", "add", remote, repository)
     # versions of git prior to v2.24 may not have the manyFiles feature
@@ -56,24 +60,30 @@ def init_git_repo(repository: str, remote: str = "origin", git_exe=lambda: git(r
     git_exe("config", "feature.manyFiles", "true", ignore_errors=True)
 
 
-def pull_checkout_commit(commit: str, git_exe=lambda: git(required=True)):
+def pull_checkout_commit(commit: str, git_exe: Optional[exe.Executable] = None):
     """Fetch all remotes and checkout the specified commit."""
+    git_exe = git_exe or git(required=True)
+
     git_exe("fetch", "--all")
     git_exe("checkout", commit)
 
 
 def pull_checkout_tag(
-    tag: str, remote: str = "origin", depth: int = 20, git_exe=lambda: git(required=True)
+    tag: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
 ):
     """Fetch tags with specified depth and checkout the given tag."""
+    git_exe = git_exe or git(required=True)
+
     git_exe("fetch", f"--depth={depth}", "--force", "--tags", remote)
     git_exe("checkout", tag)
 
 
 def pull_checkout_branch(
-    branch: str, remote: str = "origin", depth: int = 20, git_exe=lambda: git(required=True)
+    branch: str, remote: str = "origin", depth: int = 20, git_exe: Optional[exe.Executable] = None
 ):
     """Fetch and checkout branch, then rebase with remote tracking branch."""
+    git_exe = git_exe or git(required=True)
+
     git_exe("fetch", f"--depth={depth}", remote, branch)
     git_exe("checkout", "--quiet", branch)
 
@@ -85,7 +95,7 @@ def pull_checkout_branch(
 
 
 def get_modified_files(
-    from_ref: str = "HEAD~1", to_ref: str = "HEAD", git_exe=lambda: git(required=True)
+    from_ref: str = "HEAD~1", to_ref: str = "HEAD", git_exe: Optional[exe.Executable] = None
 ) -> List[str]:
     """Get a list of files modified between `from_ref` and `to_ref`
     Args:
@@ -93,6 +103,8 @@ def get_modified_files(
        to_ref (str): newer git ref, defaults to `HEAD`
     Returns: list of file paths
     """
+    git_exe = git_exe or git(required=True)
+
     stdout = git_exe("diff", "--name-only", from_ref, to_ref, output=str)
 
     return stdout.split()
