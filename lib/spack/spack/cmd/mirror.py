@@ -662,8 +662,6 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
             for candidate in mirror_specs
         ]
         for mirror_future in as_completed(futures):
-            #TODO: AQ remove debug statement below. 
-            print("PROCESSING MIRROR FUTURE\n")
             ext_mirror_stats = mirror_future.result()
             mirror_stats.merge(ext_mirror_stats)
 
