@@ -520,9 +520,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     # Use all unpruned specs to populate the build group for this set
     cdash_config = cfg.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
-        options.cdash_handler.populate_buildgroup(
-            [options.cdash_handler.build_name(s) for s in pipeline_specs]
-        )
+        options.cdash_handler.create_buildgroup()
     elif cdash_config:
         # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")

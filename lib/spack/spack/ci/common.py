@@ -284,56 +284,33 @@ class CDashHandler:
         reports = fs.join_path(source, "*_Test*.xml")
         copy_files_to_artifacts(reports, dest)
 
-    def create_buildgroup(self, headers, url, group_name, group_type):
-        data = {"newbuildgroup": group_name, "project": self.project, "type": group_type}
-
+    def create_buildgroup(self):
+        """Create the CDash buildgroup if it does not already exist."""
+        headers = {
+            "Authorization": f"Bearer {self.auth_token}",
+            "Content-Type": "application/json",
+        }
+        data = {"newbuildgroup": self.build_group, "project": self.project, "type": "Daily"}
         enc_data = json.dumps(data).encode("utf-8")
+        request = Request(f"{self.url}/api/v1/buildgroup.php", data=enc_data, headers=headers)
 
-        request = Request(url, data=enc_data, headers=headers)
+        response_text = None
+        group_id = None
 
         try:
             response_text = _urlopen(request, timeout=SPACK_CDASH_TIMEOUT).read()
         except OSError as e:
             tty.warn(f"Failed to create CDash buildgroup: {e}")
-            return None
 
-        try:
-            response_json = json.loads(response_text)
-            return response_json["id"]
-        except (json.JSONDecodeError, KeyError) as e:
-            tty.warn(f"Failed to parse CDash response: {e}")
-            return None
+        if response_text:
+            try:
+                response_json = json.loads(response_text)
+                group_id = response_json["id"]
+            except (json.JSONDecodeError, KeyError) as e:
+                tty.warn(f"Failed to parse CDash response: {e}")
 
-    def populate_buildgroup(self, job_names):
-        url = f"{self.url}/api/v1/buildgroup.php"
-
-        headers = {
-            "Authorization": f"Bearer {self.auth_token}",
-            "Content-Type": "application/json",
-        }
-
-        parent_group_id = self.create_buildgroup(headers, url, self.build_group, "Daily")
-        group_id = self.create_buildgroup(headers, url, f"Latest {self.build_group}", "Latest")
-
-        if not parent_group_id or not group_id:
-            tty.warn(f"Failed to create or retrieve buildgroups for {self.build_group}")
-            return
-
-        data = {
-            "dynamiclist": [
-                {"match": name, "parentgroupid": parent_group_id, "site": self.site}
-                for name in job_names
-            ]
-        }
-
-        enc_data = json.dumps(data).encode("utf-8")
-
-        request = Request(url, data=enc_data, headers=headers, method="PUT")
-
-        try:
-            _urlopen(request, timeout=SPACK_CDASH_TIMEOUT)
-        except OSError as e:
-            tty.warn(f"Failed to populate CDash buildgroup: {e}")
+        if not group_id:
+            tty.warn(f"Failed to create or retrieve buildgroup for {self.build_group}")
 
     def report_skipped(self, spec: spack.spec.Spec, report_dir: str, reason: Optional[str]):
         """Explicitly report skipping testing of a spec (e.g., it's CI
