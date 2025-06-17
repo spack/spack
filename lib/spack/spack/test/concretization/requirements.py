@@ -1339,7 +1339,7 @@ def test_preferring_compilers_can_be_overridden(mutable_config, mock_packages):
     """Tests that we can override preferences for languages, without triggering an error."""
     mutable_config.set("packages:c", {"prefer": ["llvm"]})
 
-    s = spack.spec.Spec("pkg-a %gcc ^pkg-b% llvm")
+    s = spack.spec.Spec("pkg-a %gcc ^pkg-b %llvm")
     concrete = spack.concretize.concretize_one(s)
 
     assert concrete.satisfies("%c=gcc")
