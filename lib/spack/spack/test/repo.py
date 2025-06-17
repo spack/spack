@@ -83,9 +83,9 @@ def test_repo_last_mtime(mock_packages):
         modified_after = "\n    ".join(
             f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
         )
-        assert (
-            max_mtime <= repo_mtime
-        ), f"the following files were modified while running tests:\n    {modified_after}"
+        assert max_mtime <= repo_mtime, (
+            f"the following files were modified while running tests:\n    {modified_after}"
+        )
     assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 
@@ -827,26 +827,33 @@ repo_index:
 
     spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
 
+    # branch develop
     _, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
     assert not errors_1
     for descriptor in repos_1.values():
         descriptor.update(git=MockGit())
 
+    # tag v1.0
     _, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
     assert not errors_2
     for descriptor in repos_2.values():
         descriptor.update(git=MockGit())
 
+    # commit abc123
     _, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
     assert not errors_3
     for descriptor in repos_3.values():
         descriptor.update(git=MockGit())
 
+    # default branch
     _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
     assert not errors_4
     for descriptor in repos_4.values():
         descriptor.update(git=MockGit())
-        descriptor.update(git=MockGit())
+
+    # Rerun construction after initialization to test early exit logic
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
 
 
 def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
