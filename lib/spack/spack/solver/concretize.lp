@@ -1109,10 +1109,9 @@ required_provider(Provider, Virtual)
      pkg_fact(Virtual, condition_effect(ConditionID, EffectID)),
      imposed_constraint(EffectID, "node", Provider).
 
-error(1, "Trying to use {0} as a provider for {1}, but {2} is required", Package, Virtual, Provider) :-
-   provider(node(Y, Package), node(X, Virtual)),
+error(1, "Cannot use {1} for the {0} virtual, but that is required", Virtual, Provider) :-
    required_provider(Provider, Virtual),
-   Package != Provider.
+   not provider(node(_, Provider), node(_, Virtual)).
 
 % TODO: the following choice rule allows the solver to add compiler
 % flags if their only source is from a requirement. This is overly-specific
