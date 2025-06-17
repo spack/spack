@@ -229,6 +229,7 @@ class MirrorStats:
 
         self.added_resources.update(ext_mirror_stat.added_resources)
         self.existing_resources.update(ext_mirror_stat.existing_resources)
+        return self
 
 
 def create_mirror_from_package_object(
