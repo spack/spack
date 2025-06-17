@@ -209,7 +209,6 @@ class MirrorStats:
     def error(self):
         self.errors.add(self.current_spec)
 
-    # TODO: AQ, Merge a given MirrorStats object to this one. Return just one MirrorStats
     def merge(self, ext_mirror_stat: "MirrorStats") -> "MirrorStats":
         # For the sake of parallelism we need a way to reduce/merge different
         # MirrorStats objects.
