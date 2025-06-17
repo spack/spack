@@ -19,7 +19,7 @@ def test_list():
 
 def test_list_with_pytest_arg():
     output = spack_test("--list", cmd_test_py)
-    assert output.strip() == cmd_test_py
+    assert cmd_test_py in output.strip()
 
 
 def test_list_with_keywords():
@@ -27,7 +27,7 @@ def test_list_with_keywords():
     # since the behavior is inconsistent across different pytest
     # versions, see https://stackoverflow.com/a/48814787/771663
     output = spack_test("--list", "-k", "unit_test.py")
-    assert output.strip() == cmd_test_py
+    assert cmd_test_py in output.strip()
 
 
 def test_list_long(capsys):

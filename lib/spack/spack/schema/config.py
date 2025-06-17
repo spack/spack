@@ -92,6 +92,7 @@ properties: Dict[str, Any] = {
             "dirty": {"type": "boolean"},
             "build_language": {"type": "string"},
             "build_jobs": {"type": "integer", "minimum": 1},
+            "concurrent_packages": {"type": "integer", "minimum:": 1},
             "ccache": {"type": "boolean"},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
             "package_lock_timeout": {
@@ -100,7 +101,7 @@ properties: Dict[str, Any] = {
             "allow_sgid": {"type": "boolean"},
             "install_status": {"type": "boolean"},
             "binary_index_root": {"type": "string"},
-            "url_fetch_method": {"type": "string", "enum": ["urllib", "curl"]},
+            "url_fetch_method": {"type": "string", "pattern": r"^urllib$|^curl( .*)*"},
             "additional_external_search_paths": {"type": "array", "items": {"type": "string"}},
             "binary_index_ttl": {"type": "integer", "minimum": 0},
             "aliases": {"type": "object", "patternProperties": {r"\w[\w-]*": {"type": "string"}}},
@@ -157,6 +158,8 @@ def update(data):
     #                         projections: <projections_dict}
     # root replaces install_tree, projections replace install_path_scheme
     changed = False
+
+    data = data["config"]
 
     install_tree = data.get("install_tree", None)
     if isinstance(install_tree, str):

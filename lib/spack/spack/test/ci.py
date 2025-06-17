@@ -18,6 +18,7 @@ import spack.paths as spack_paths
 import spack.repo as repo
 import spack.util.git
 from spack.test.conftest import MockHTTPResponse
+from spack.version import Version
 
 pytestmark = [pytest.mark.usefixtures("mock_packages")]
 
@@ -28,6 +29,43 @@ def repro_dir(tmp_path):
     result.mkdir()
     with fs.working_dir(str(tmp_path)):
         yield result
+
+
+def test_get_added_versions_new_checksum(mock_git_package_changes):
+    repo, filename, commits = mock_git_package_changes
+
+    checksum_versions = {
+        "3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04": Version("2.1.5"),
+        "a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a": Version("2.1.4"),
+        "6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200": Version("2.0.7"),
+        "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
+    }
+
+    with fs.working_dir(repo.packages_path):
+        added_versions = ci.get_added_versions(
+            checksum_versions, filename, from_ref=commits[-1], to_ref=commits[-2]
+        )
+        assert len(added_versions) == 1
+        assert added_versions[0] == Version("2.1.5")
+
+
+def test_get_added_versions_new_commit(mock_git_package_changes):
+    repo, filename, commits = mock_git_package_changes
+
+    checksum_versions = {
+        "74253725f884e2424a0dd8ae3f69896d5377f325": Version("2.1.6"),
+        "3f6576971397b379d4205ae5451ff5a68edf6c103b2f03c4188ed7075fbb5f04": Version("2.1.5"),
+        "a0293475e6a44a3f6c045229fe50f69dc0eebc62a42405a51f19d46a5541e77a": Version("2.1.4"),
+        "6c0853bb27738b811f2b4d4af095323c3d5ce36ceed6b50e5f773204fb8f7200": Version("2.0.7"),
+        "86993903527d9b12fc543335c19c1d33a93797b3d4d37648b5addae83679ecd8": Version("2.0.0"),
+    }
+
+    with fs.working_dir(repo.packages_path):
+        added_versions = ci.get_added_versions(
+            checksum_versions, filename, from_ref=commits[-2], to_ref=commits[-3]
+        )
+        assert len(added_versions) == 1
+        assert added_versions[0] == Version("2.1.6")
 
 
 def test_pipeline_dag(config, tmpdir):
@@ -301,21 +339,28 @@ def test_setup_spack_repro_version(tmpdir, capfd, last_two_git_commits, monkeypa
 
 
 def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
-    """Test that given an active environment and list of touched pkgs,
-    we get the right list of possibly-changed env specs"""
+    """Tests that, given an active environment and list of touched pkgs, we get the right
+    list of possibly-changed env specs.
+
+    The test concretizes the following environment:
+
+    [    ]  hypre@=0.2.15+shared build_system=generic
+    [bl  ]      ^openblas-with-lapack@=0.2.15 build_system=generic
+    [    ]  mpileaks@=2.3~debug~opt+shared+static build_system=generic
+    [bl  ]      ^callpath@=1.0 build_system=generic
+    [bl  ]          ^dyninst@=8.2 build_system=generic
+    [bl  ]              ^libdwarf@=20130729 build_system=generic
+    [bl  ]              ^libelf@=0.8.13 build_system=generic
+    [b   ]      ^gcc@=10.2.1 build_system=generic languages='c,c++,fortran'
+    [ l  ]      ^gcc-runtime@=10.2.1 build_system=generic
+    [bl  ]      ^mpich@=3.0.4~debug build_system=generic
+
+    and simulates a change in libdwarf.
+    """
     e1 = ev.create("test")
     e1.add("mpileaks")
     e1.add("hypre")
     e1.concretize()
-
-    # Concretizing the above environment results in the following graphs:
-
-    # mpileaks -> mpich (provides mpi virtual dep of mpileaks)
-    #          -> callpath -> dyninst -> libelf
-    #                                 -> libdwarf -> libelf
-    #                      -> mpich (provides mpi dep of callpath)
-
-    # hypre -> openblas-with-lapack (provides lapack and blas virtual deps of hypre)
 
     touched = ["libdwarf"]
 
@@ -328,17 +373,35 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
     # no spec traversals.  Passing any other number yields differing
     # numbers of possibly affected specs.
 
-    full_set = set(["mpileaks", "mpich", "callpath", "dyninst", "libdwarf", "libelf"])
-    empty_set = set([])
-    depth_2_set = set(["mpich", "callpath", "dyninst", "libdwarf", "libelf"])
-    depth_1_set = set(["dyninst", "libdwarf", "libelf"])
-    depth_0_set = set(["libdwarf", "libelf"])
+    full_set = {
+        "mpileaks",
+        "mpich",
+        "callpath",
+        "dyninst",
+        "libdwarf",
+        "libelf",
+        "gcc",
+        "gcc-runtime",
+        "compiler-wrapper",
+    }
+    depth_2_set = {
+        "mpich",
+        "callpath",
+        "dyninst",
+        "libdwarf",
+        "libelf",
+        "gcc",
+        "gcc-runtime",
+        "compiler-wrapper",
+    }
+    depth_1_set = {"dyninst", "libdwarf", "libelf", "gcc", "gcc-runtime", "compiler-wrapper"}
+    depth_0_set = {"libdwarf", "libelf", "gcc", "gcc-runtime", "compiler-wrapper"}
 
     expectations = {
         None: full_set,
         3: full_set,
         100: full_set,
-        -1: empty_set,
+        -1: set(),
         0: depth_0_set,
         1: depth_1_set,
         2: depth_2_set,
@@ -346,12 +409,12 @@ def test_get_spec_filter_list(mutable_mock_env_path, mutable_mock_repo):
 
     for key, val in expectations.items():
         affected_specs = ci.get_spec_filter_list(e1, touched, dependent_traverse_depth=key)
-        affected_pkg_names = set([s.name for s in affected_specs])
+        affected_pkg_names = {s.name for s in affected_specs}
         assert affected_pkg_names == val
 
 
 @pytest.mark.regression("29947")
-def test_affected_specs_on_first_concretization(mutable_mock_env_path, mock_packages):
+def test_affected_specs_on_first_concretization(mutable_mock_env_path):
     e = ev.create("first_concretization")
     e.add("mpileaks~shared")
     e.add("mpileaks+shared")
@@ -381,7 +444,7 @@ def test_ci_process_command_fail(repro_dir, monkeypatch):
         ci.process_command("help", [], str(repro_dir))
 
 
-def test_ci_create_buildcache(tmpdir, working_env, config, mock_packages, monkeypatch):
+def test_ci_create_buildcache(tmpdir, working_env, config, monkeypatch):
     """Test that create_buildcache returns a list of objects with the correct
     keys and types."""
     monkeypatch.setattr(ci, "push_to_build_cache", lambda a, b, c: True)
@@ -420,7 +483,7 @@ def test_ci_run_standalone_tests_missing_requirements(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_junit(
-    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd
 ):
     log_file = tmp_path / "junit.xml"
     args = {
@@ -438,7 +501,7 @@ def test_ci_run_standalone_tests_not_installed_junit(
 
 @pytest.mark.not_on_windows("Reliance on bash script not supported on Windows")
 def test_ci_run_standalone_tests_not_installed_cdash(
-    tmp_path, repro_dir, working_env, mock_test_stage, capfd, mock_packages
+    tmp_path, repro_dir, working_env, mock_test_stage, capfd
 ):
     """Test run_standalone_tests with cdash and related options."""
     log_file = tmp_path / "junit.xml"
@@ -474,7 +537,7 @@ def test_ci_run_standalone_tests_not_installed_cdash(
     assert "No such file or directory" in err
 
 
-def test_ci_skipped_report(tmpdir, mock_packages, config):
+def test_ci_skipped_report(tmpdir, config):
     """Test explicit skipping of report as well as CI's 'package' arg."""
     pkg = "trivial-smoke-test"
     spec = spack.concretize.concretize_one(pkg)

@@ -13,7 +13,7 @@
           "820b8013b0b918ad85caa953740497e6c31c09d812bd34d087fc57128bfbdacb"
         ]
       ],
-      "spec": "patchelf@0.17.2%gcc platform=linux target=aarch64"
+      "spec": "patchelf@0.17.2 platform=linux target=aarch64 %gcc"
     },
     {
       "binaries": [
@@ -28,7 +28,7 @@
           "1569df037ea1ea316a50e89f5a0cafa0ce8e20629bbd07fcc3846d9fecd2451c"
         ]
       ],
-      "spec": "patchelf@0.17.2%gcc platform=linux target=ppc64le"
+      "spec": "patchelf@0.17.2 platform=linux target=ppc64le %gcc"
     },
     {
       "binaries": [
@@ -43,7 +43,7 @@
           "79dfb7064e7993a97474c5f6b7560254fe19465a6c4cfc44569852e5a6ab542b"
         ]
       ],
-      "spec": "patchelf@0.17.2%gcc platform=linux target=x86_64"
+      "spec": "patchelf@0.17.2 platform=linux target=x86_64 %gcc"
     }
   ]
 }

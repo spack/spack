@@ -5,6 +5,7 @@
 import argparse
 import json
 import os
+import pathlib
 import sys
 from textwrap import dedent
 
@@ -14,12 +15,13 @@ import spack.cmd as cmd
 import spack.cmd.find
 import spack.concretize
 import spack.environment as ev
+import spack.package_base
+import spack.paths
 import spack.repo
 import spack.store
 import spack.user_environment as uenv
 from spack.enums import InstallRecordStatus
 from spack.main import SpackCommand
-from spack.test.conftest import create_test_repo
 from spack.test.utilities import SpackCommandArgs
 from spack.util.pattern import Bunch
 
@@ -129,7 +131,7 @@ def test_tag2_tag3(parser, specs):
 @pytest.mark.db
 def test_namespaces_shown_correctly(args, with_namespace, database):
     """Test that --namespace(s) works. Old syntax is --namespace"""
-    assert ("builtin.mock.zmpi" in find(*args)) == with_namespace
+    assert ("builtin_mock.zmpi" in find(*args)) == with_namespace
 
 
 @pytest.mark.db
@@ -170,7 +172,7 @@ def _check_json_output(spec_list):
 
 
 def _check_json_output_deps(spec_list):
-    assert len(spec_list) == 13
+    assert len(spec_list) == 16
 
     names = [spec["name"] for spec in spec_list]
     assert names.count("mpileaks") == 3
@@ -272,6 +274,9 @@ mpileaks-2.3
         dyninst-8.2
             libdwarf-20130729
             libelf-0.8.13
+    compiler-wrapper-1.0
+    gcc-10.2.1
+    gcc-runtime-10.2.1
     zmpi-1.0
         fake-1.0
 
@@ -282,24 +287,22 @@ mpileaks-2.3
 @pytest.mark.db
 def test_find_format_deps_paths(database, config):
     output = find("-dp", "--format", "{name}-{version}", "mpileaks", "^zmpi")
-
-    spec = spack.concretize.concretize_one("mpileaks ^zmpi")
-    prefixes = [s.prefix for s in spec.traverse()]
-
+    mpileaks = spack.concretize.concretize_one("mpileaks ^zmpi")
     assert (
         output
-        == """\
-mpileaks-2.3                   {0}
-    callpath-1.0               {1}
-        dyninst-8.2            {2}
-            libdwarf-20130729  {3}
-            libelf-0.8.13      {4}
-    zmpi-1.0                   {5}
-        fake-1.0               {6}
+        == f"""\
+mpileaks-2.3                   {mpileaks.prefix}
+    callpath-1.0               {mpileaks['callpath'].prefix}
+        dyninst-8.2            {mpileaks['dyninst'].prefix}
+            libdwarf-20130729  {mpileaks['libdwarf'].prefix}
+            libelf-0.8.13      {mpileaks['libelf'].prefix}
+    compiler-wrapper-1.0       {mpileaks['compiler-wrapper'].prefix}
+    gcc-10.2.1                 {mpileaks['gcc'].prefix}
+    gcc-runtime-10.2.1         {mpileaks['gcc-runtime'].prefix}
+    zmpi-1.0                   {mpileaks['zmpi'].prefix}
+        fake-1.0               {mpileaks['fake'].prefix}
 
-""".format(
-            *prefixes
-        )
+"""
     )
 
 
@@ -315,12 +318,6 @@ def test_find_very_long(database, config):
     assert set(output.strip().split("\n")) == set(
         [("%s mpileaks@2.3" % s.dag_hash()) for s in specs]
     )
-
-
-@pytest.mark.db
-def test_find_show_compiler(database, config):
-    output = find("--no-groups", "--show-full-compiler", "mpileaks")
-    assert "mpileaks@2.3%gcc@10.2.1" in output
 
 
 @pytest.mark.db
@@ -453,7 +450,7 @@ def test_find_loaded(database, working_env):
 
 
 @pytest.mark.regression("37712")
-def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
+def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path, mock_packages):
     """Tests that having an active environment with a root spec containing a compiler constrained
     by a version range (i.e. @X.Y rather the single version than @=X.Y) doesn't result in an error
     when invoking "spack find".
@@ -464,93 +461,20 @@ def test_environment_with_version_range_in_compiler_doesnt_fail(tmp_path):
 
     with test_environment:
         output = find()
-    assert "zlib%gcc@12.1.0" in output
+    assert "zlib" in output
 
 
-_pkga = (
-    "a0",
-    """\
-from spack.package import *
-
-class A0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("b0")
-    depends_on("c0")
-""",
-)
-
-
-_pkgb = (
-    "b0",
-    """\
-from spack.package import *
-
-class B0(Package):
-    version("1.2")
-    version("1.1")
-""",
-)
-
-
-_pkgc = (
-    "c0",
-    """\
-from spack.package import *
-
-class C0(Package):
-    version("1.2")
-    version("1.1")
-
-    tags = ["tag0", "tag1"]
-""",
-)
-
-
-_pkgd = (
-    "d0",
-    """\
-from spack.package import *
-
-class D0(Package):
-    version("1.2")
-    version("1.1")
-
-    depends_on("c0")
-    depends_on("e0")
-""",
-)
-
-
-_pkge = (
-    "e0",
-    """\
-from spack.package import *
-
-class E0(Package):
-    tags = ["tag1", "tag2"]
-
-    version("1.2")
-    version("1.1")
-""",
-)
+#   a0  d0
+#  / \ / \
+# b0  c0  e0
 
 
 @pytest.fixture
-def _create_test_repo(tmpdir, mutable_config):
-    r"""
-      a0  d0
-     / \ / \
-    b0  c0  e0
-    """
-    yield create_test_repo(tmpdir, [_pkga, _pkgb, _pkgc, _pkgd, _pkge])
-
-
-@pytest.fixture
-def test_repo(_create_test_repo, monkeypatch, mock_stage):
-    with spack.repo.use_repositories(_create_test_repo) as mock_repo_path:
-        yield mock_repo_path
+def test_repo(mock_stage):
+    with spack.repo.use_repositories(
+        os.path.join(spack.paths.test_repos_path, "spack_repo", "find")
+    ) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 def test_find_concretized_not_installed(
@@ -612,3 +536,15 @@ def test_find_concretized_not_installed(
         assert _nresults(_query(e, "--tag=tag0")) == (1, 0)
         assert _nresults(_query(e, "--tag=tag1")) == (1, 1)
         assert _nresults(_query(e, "--tag=tag2")) == (0, 1)
+
+
+@pytest.mark.usefixtures("install_mockery", "mock_fetch")
+def test_find_based_on_commit_sha(mock_git_version_info, monkeypatch):
+    repo_path, filename, commits = mock_git_version_info
+    file_url = pathlib.Path(repo_path).as_uri()
+
+    monkeypatch.setattr(spack.package_base.PackageBase, "git", file_url, raising=False)
+
+    install("--fake", f"git-test-commit commit={commits[0]}")
+    output = find(f"commit={commits[0]}")
+    assert "git-test-commit" in output

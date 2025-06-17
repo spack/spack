@@ -20,11 +20,12 @@ import shlex
 import signal
 import subprocess as sp
 import sys
+import tempfile
 import traceback
 import warnings
-from typing import List, Tuple
+from typing import Any, Callable, List, Tuple
 
-import archspec.cpu
+import _vendoring.archspec.cpu
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -35,12 +36,13 @@ from llnl.util.tty.log import log_output
 import spack
 import spack.cmd
 import spack.config
+import spack.environment
 import spack.environment as ev
+import spack.environment.environment
 import spack.error
-import spack.modules
 import spack.paths
 import spack.platforms
-import spack.repo
+import spack.solver.asp
 import spack.spec
 import spack.store
 import spack.util.debug
@@ -405,7 +407,7 @@ def make_argument_parser(**kwargs):
         "--env",
         dest="env",
         metavar="ENV",
-        action="store",
+        action=SetEnvironmentAction,
         help="run with a specific environment (see spack env)",
     )
     env_group.add_argument(
@@ -413,7 +415,7 @@ def make_argument_parser(**kwargs):
         "--env-dir",
         dest="env_dir",
         metavar="DIR",
-        action="store",
+        action=SetEnvironmentAction,
         help="run with an environment directory (ignore managed environments)",
     )
     env_group.add_argument(
@@ -548,7 +550,6 @@ def setup_main_options(args):
         spack.config.CONFIG.scopes["command_line"].sections["repos"] = syaml.syaml_dict(
             [(key, [spack.paths.mock_packages_path])]
         )
-        spack.repo.PATH = spack.repo.create(spack.config.CONFIG)
 
     # If the user asked for it, don't check ssl certs.
     if args.insecure:
@@ -731,7 +732,7 @@ def _compatible_sys_types():
     """
     host_platform = spack.platforms.host()
     host_os = str(host_platform.default_operating_system())
-    host_target = archspec.cpu.host()
+    host_target = _vendoring.archspec.cpu.host()
     compatible_targets = [host_target] + host_target.ancestors
 
     compatible_archs = [
@@ -791,7 +792,7 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if "modules" in info:
-        generic_arch = archspec.cpu.host().family
+        generic_arch = _vendoring.archspec.cpu.host().family
         module_spec = "environment-modules target={0}".format(generic_arch)
         specs = spack.store.STORE.db.query(module_spec)
         if specs:
@@ -857,36 +858,67 @@ def resolve_alias(cmd_name: str, cmd: List[str]) -> Tuple[str, List[str]]:
     return cmd_name, cmd
 
 
+# sentinel scope marker for enviroments passed on the command line
+_ENV = object()
+
+
+class SetEnvironmentAction(argparse.Action):
+    """Records an environment both in the ``env`` attribute and in the ``config_scopes`` list.
+
+    We need to know where the environment appeared on the CLI set scope precedence.
+
+    """
+
+    def __call__(self, parser, namespace, name_or_dir, option_string):
+        setattr(namespace, self.dest, name_or_dir)
+
+        scopes = getattr(namespace, "config_scopes", None)
+        if scopes is None:
+            scopes = []
+        scopes.append(_ENV)
+        namespace.config_scopes = scopes
+
+
 def add_command_line_scopes(
-    cfg: spack.config.Configuration, command_line_scopes: List[str]
+    cfg: spack.config.Configuration,
+    command_line_scopes: List[Any],  # str or _ENV but mypy can't type sentinels
+    add_environment: Callable[[ConfigScopePriority], None],
 ) -> None:
     """Add additional scopes from the --config-scope argument, either envs or dirs.
 
     Args:
         cfg: configuration instance
         command_line_scopes: list of configuration scope paths
+        add_environment: method to add an environment scope if encountered
 
     Raises:
         spack.error.ConfigError: if the path is an invalid configuration scope
     """
+    # remove all but the last _ENV from CLI scopes, because we can only
+    # have a single environment active.
+    for _ in range(command_line_scopes.count(_ENV) - 1):
+        command_line_scopes.remove(_ENV)
+
     for i, path in enumerate(command_line_scopes):
+        # If an environment is set on the CLI, add its scope in the order it appears there.
+        # Subsequent custom scopes will override it, and it will override prior custom scopes.
+        if path is _ENV:
+            add_environment(ConfigScopePriority.CUSTOM)
+            continue
+
         name = f"cmd_scope_{i}"
-        scopes = ev.environment_path_scopes(name, path)
-        if scopes is None:
+        scope = ev.environment_path_scope(name, path)
+        if scope is None:
             if os.path.isdir(path):  # directory with config files
                 cfg.push_scope(
                     spack.config.DirectoryConfigScope(name, path, writable=False),
                     priority=ConfigScopePriority.CUSTOM,
                 )
-                spack.config._add_platform_scope(
-                    cfg, name, path, priority=ConfigScopePriority.CUSTOM, writable=False
-                )
                 continue
             else:
                 raise spack.error.ConfigError(f"Invalid configuration scope: {path}")
 
-        for scope in scopes:
-            cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
+        cfg.push_scope(scope, priority=ConfigScopePriority.CUSTOM)
 
 
 def _main(argv=None):
@@ -943,22 +975,33 @@ def _main(argv=None):
     # Make spack load / env activate work on macOS
     restore_macos_dyld_vars()
 
-    # activate an environment if one was specified on the command line
+    # store any error that occurred loading an env
     env_format_error = None
+    env = None
+
+    # try to find an active environment here, so that we can activate it later
     if not args.no_env:
         try:
             env = spack.cmd.find_environment(args)
-            if env:
-                ev.activate(env, args.use_env_repo)
         except spack.config.ConfigFormatError as e:
             # print the context but delay this exception so that commands like
             # `spack config edit` can still work with a bad environment.
             e.print_context()
             env_format_error = e
 
+    def add_environment_scope(priority):
+        # do not call activate here, as it has a lot of expensive function calls to deal
+        # with mutation of spack.config.CONFIG -- but we are still building the config.
+        env.manifest.prepare_config_scope(priority)
+        spack.environment.environment._active_environment = env
+
+    # add the environment *first*, if it is coming from an environment variable
+    if env and _ENV not in (args.config_scopes or []):
+        add_environment_scope(priority=ConfigScopePriority.ENVIRONMENT)
+
     # Push scopes from the command line last
     if args.config_scopes:
-        add_command_line_scopes(spack.config.CONFIG, args.config_scopes)
+        add_command_line_scopes(spack.config.CONFIG, args.config_scopes, add_environment_scope)
     spack.config.CONFIG.push_scope(
         spack.config.InternalConfigScope("command_line"), priority=ConfigScopePriority.COMMAND_LINE
     )
@@ -1047,6 +1090,10 @@ def main(argv=None):
     try:
         return _main(argv)
 
+    except spack.solver.asp.OutputDoesNotSatisfyInputError as e:
+        _handle_solver_bug(e)
+        return 1
+
     except spack.error.SpackError as e:
         tty.debug(e)
         e.die()  # gracefully die on any SpackErrors
@@ -1068,6 +1115,47 @@ def main(argv=None):
             raise
         tty.error(e)
         return 3
+
+
+def _handle_solver_bug(
+    e: spack.solver.asp.OutputDoesNotSatisfyInputError, out=sys.stderr, root=None
+) -> None:
+    # when the solver outputs specs that do not satisfy the input and spack is used as a command
+    # line tool, we dump the incorrect output specs to json so users can upload them in bug reports
+    wrong_output = [(input, output) for input, output in e.input_to_output if output is not None]
+    no_output = [input for input, output in e.input_to_output if output is None]
+    if no_output:
+        tty.error(
+            "internal solver error: the following specs were not solved:\n    - "
+            + "\n    - ".join(str(s) for s in no_output),
+            stream=out,
+        )
+    if wrong_output:
+        msg = "internal solver error: the following specs were concretized, but do not satisfy "
+        msg += "the input:\n"
+        for in_spec, out_spec in wrong_output:
+            msg += f"    - input: {in_spec}\n"
+            msg += f"      output: {out_spec.long_spec}\n"
+        msg += "\n    Please report a bug at https://github.com/spack/spack/issues"
+
+        # try to write the input/output specs to a temporary directory for bug reports
+        try:
+            tmpdir = tempfile.mkdtemp(prefix="spack-asp-", dir=root)
+            files = []
+            for i, (input, output) in enumerate(wrong_output, start=1):
+                in_file = os.path.join(tmpdir, f"input-{i}.json")
+                out_file = os.path.join(tmpdir, f"output-{i}.json")
+                files.append(in_file)
+                files.append(out_file)
+                with open(in_file, "w", encoding="utf-8") as f:
+                    input.to_json(f)
+                with open(out_file, "w", encoding="utf-8") as f:
+                    output.to_json(f)
+
+            msg += " and attach the following files:\n    - " + "\n    - ".join(files)
+        except Exception:
+            msg += "."
+        tty.error(msg, stream=out)
 
 
 class SpackCommandError(Exception):

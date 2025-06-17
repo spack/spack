@@ -14,7 +14,7 @@ from .exceptions import TemplateSyntaxError
 from .utils import LRUCache
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
     from .environment import Environment
 
 # cache for the lexers. Exists in order to be able to have multiple
@@ -400,7 +400,7 @@ class TokenStream:
 
     def expect(self, expr: str) -> Token:
         """Expect a given token type and return it.  This accepts the same
-        argument as :meth:`jinja2.lexer.Token.test`.
+        argument as :meth:`_vendoring.jinja2.lexer.Token.test`.
         """
         if not self.current.test(expr):
             expr = describe_token_expr(expr)

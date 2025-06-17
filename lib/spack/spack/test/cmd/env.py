@@ -886,12 +886,12 @@ def test_env_activate_broken_view(
     with spack.repo.use_repositories(mock_custom_repository):
         wrong_repo = env("activate", "--sh", "test")
         assert "Warning: could not load runtime environment" in wrong_repo
-        assert "Unknown namespace: builtin.mock" in wrong_repo
+        assert "Unknown namespace: builtin_mock" in wrong_repo
 
     # test replacing repo fixes it
     normal_repo = env("activate", "--sh", "test")
     assert "Warning: could not load runtime environment" not in normal_repo
-    assert "Unknown namespace: builtin.mock" not in normal_repo
+    assert "Unknown namespace: builtin_mock" not in normal_repo
 
 
 def test_to_lockfile_dict():
@@ -916,7 +916,7 @@ def test_env_repo():
 
     pkg_cls = e.repo.get_pkg_class("mpileaks")
     assert pkg_cls.name == "mpileaks"
-    assert pkg_cls.namespace == "builtin.mock"
+    assert pkg_cls.namespace == "builtin_mock"
 
 
 def test_user_removed_spec(environment_from_manifest):
@@ -1779,7 +1779,7 @@ def test_roots_display_with_variants():
     with ev.read("test"):
         out = find(output=str)
 
-    assert "boost +shared" in out
+    assert "boost+shared" in out
 
 
 def test_uninstall_keeps_in_env(mock_stage, mock_fetch, install_mockery):
@@ -1829,7 +1829,7 @@ def test_indirect_build_dep(tmp_path):
     build-only dep. Make sure this concrete DAG is preserved when writing the
     environment out and reading it back.
     """
-    builder = spack.repo.MockRepositoryBuilder(tmp_path / "repo")
+    builder = spack.repo.MockRepositoryBuilder(tmp_path)
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None)])
@@ -1862,7 +1862,7 @@ def test_store_different_build_deps(tmp_path):
               z1
 
     """
-    builder = spack.repo.MockRepositoryBuilder(tmp_path / "mirror")
+    builder = spack.repo.MockRepositoryBuilder(tmp_path)
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None), ("z", "build", None)])
@@ -3065,14 +3065,26 @@ def test_stack_view_activate_from_default(
 
 def test_envvar_set_in_activate(tmp_path, mock_packages, install_mockery):
     spack_yaml = tmp_path / "spack.yaml"
+    env_vars_yaml = tmp_path / "env_vars.yaml"
+
+    env_vars_yaml.write_text(
+        """
+env_vars:
+  set:
+    CONFIG_ENVAR_SET_IN_ENV_LOAD: "True"
+"""
+    )
+
     spack_yaml.write_text(
         """
 spack:
+  include:
+  - env_vars.yaml
   specs:
     - cmake%gcc
   env_vars:
     set:
-      ENVAR_SET_IN_ENV_LOAD: "True"
+      SPACK_ENVAR_SET_IN_ENV_LOAD: "True"
 """
     )
 
@@ -3083,12 +3095,16 @@ spack:
     test_env = ev.read("test")
     output = env("activate", "--sh", "test")
 
-    assert "ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "SPACK_ENVAR_SET_IN_ENV_LOAD=True" in output
+    assert "CONFIG_ENVAR_SET_IN_ENV_LOAD=True" in output
 
     with test_env:
-        with spack.util.environment.set_env(ENVAR_SET_IN_ENV_LOAD="True"):
+        with spack.util.environment.set_env(
+            SPACK_ENVAR_SET_IN_ENV_LOAD="True", CONFIG_ENVAR_SET_IN_ENV_LOAD="True"
+        ):
             output = env("deactivate", "--sh")
-            assert "unset ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset SPACK_ENVAR_SET_IN_ENV_LOAD" in output
+            assert "unset CONFIG_ENVAR_SET_IN_ENV_LOAD" in output
 
 
 def test_stack_view_no_activate_without_default(
@@ -4270,7 +4286,7 @@ def test_env_include_packages_url(
     """Test inclusion of a (GitHub) URL."""
     develop_url = "https://github.com/fake/fake/blob/develop/"
     default_packages = develop_url + "etc/fake/defaults/packages.yaml"
-    sha256 = "a422e35b3a18869d0611a4137b37314131749ecdc070a7cd7183f488da81201a"
+    sha256 = "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
     spack_yaml = tmpdir.join("spack.yaml")
     with spack_yaml.open("w") as f:
         f.write(

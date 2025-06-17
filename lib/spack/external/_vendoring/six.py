@@ -513,7 +513,7 @@ def add_move(move):
 
 
 def remove_move(name):
-    """Remove item from six.moves."""
+    """Remove item from _vendoring.six.moves."""
     try:
         delattr(_MovedItems, name)
     except AttributeError:

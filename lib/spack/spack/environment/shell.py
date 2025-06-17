@@ -8,6 +8,7 @@ from typing import Optional
 import llnl.util.tty as tty
 from llnl.util.tty.color import colorize
 
+import spack.config
 import spack.environment as ev
 import spack.repo
 import spack.schema.environment
@@ -48,10 +49,23 @@ def activate_header(env, shell, prompt=None, view: Optional[str] = None):
         cmds += 'set "SPACK_ENV=%s"\n' % env.path
         if view:
             cmds += 'set "SPACK_ENV_VIEW=%s"\n' % view
+        if prompt:
+            old_prompt = os.environ.get("SPACK_OLD_PROMPT")
+            if not old_prompt:
+                old_prompt = os.environ.get("PROMPT")
+            cmds += f'set "SPACK_OLD_PROMPT={old_prompt}"\n'
+            cmds += f'set "PROMPT={prompt} $P$G"\n'
     elif shell == "pwsh":
         cmds += "$Env:SPACK_ENV='%s'\n" % env.path
         if view:
             cmds += "$Env:SPACK_ENV_VIEW='%s'\n" % view
+        if prompt:
+            cmds += (
+                "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
+                ' | Split-Path -leaf; if(!"$Env:SPACK_OLD_PROMPT") '
+                '{$Env:SPACK_OLD_PROMPT="[spack] PS $pth>"}; '
+                '"%s PS $pth>"}\n' % prompt
+            )
     else:
         bash_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=True)
         zsh_color_prompt = colorize(f"@G{{{prompt}}}", color=True, enclose=False, zsh=True)
@@ -106,10 +120,19 @@ def deactivate_header(shell):
         cmds += 'set "SPACK_ENV="\n'
         cmds += 'set "SPACK_ENV_VIEW="\n'
         # TODO: despacktivate
-        # TODO: prompt
+        old_prompt = os.environ.get("SPACK_OLD_PROMPT")
+        if old_prompt:
+            cmds += f'set "PROMPT={old_prompt}"\n'
+            cmds += 'set "SPACK_OLD_PROMPT="\n'
     elif shell == "pwsh":
         cmds += "Set-Item -Path Env:SPACK_ENV\n"
         cmds += "Set-Item -Path Env:SPACK_ENV_VIEW\n"
+        cmds += (
+            "function global:prompt { $pth = $(Convert-Path $(Get-Location))"
+            ' | Split-Path -leaf; $spack_prompt = "[spack] $pth >"; '
+            'if("$Env:SPACK_OLD_PROMPT") {$spack_prompt=$Env:SPACK_OLD_PROMPT};'
+            " $spack_prompt}\n"
+        )
     else:
         cmds += "if [ ! -z ${SPACK_ENV+x} ]; then\n"
         cmds += "unset SPACK_ENV; export SPACK_ENV;\n"
@@ -158,7 +181,7 @@ def activate(
     # become PATH variables.
     #
 
-    env_vars_yaml = env.manifest.configuration.get("env_vars", None)
+    env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml))
 
@@ -195,7 +218,8 @@ def deactivate() -> EnvironmentModifications:
     if active is None:
         return env_mods
 
-    env_vars_yaml = active.manifest.configuration.get("env_vars", None)
+    with active.manifest.use_config():
+        env_vars_yaml = spack.config.get("env_vars", None)
     if env_vars_yaml:
         env_mods.extend(spack.schema.environment.parse(env_vars_yaml).reversed())
 

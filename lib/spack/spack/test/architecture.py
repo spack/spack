@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import platform
 
+import _vendoring.archspec.cpu
 import pytest
-
-import archspec.cpu
 
 import spack.concretize
 import spack.operating_systems
@@ -125,12 +124,11 @@ def test_satisfy_strict_constraint_when_not_concrete(architecture_tuple, constra
 )
 @pytest.mark.usefixtures("mock_packages", "config")
 @pytest.mark.skipif(
-    str(archspec.cpu.host().family) != "x86_64", reason="tests are for x86_64 uarch ranges"
+    str(_vendoring.archspec.cpu.host().family) != "x86_64",
+    reason="tests are for x86_64 uarch ranges",
 )
 def test_concretize_target_ranges(root_target_range, dep_target_range, result, monkeypatch):
-    spec = Spec(
-        f"pkg-a %gcc@10 foobar=bar target={root_target_range} ^pkg-b target={dep_target_range}"
+    spec = spack.concretize.concretize_one(
+        f"pkg-a foobar=bar target={root_target_range} %gcc@10 ^pkg-b target={dep_target_range}"
     )
-    with spack.concretize.disable_compiler_existence_check():
-        spec = spack.concretize.concretize_one(spec)
     assert spec.target == spec["pkg-b"].target == result

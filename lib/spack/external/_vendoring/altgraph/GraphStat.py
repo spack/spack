@@ -1,5 +1,5 @@
 """
-altgraph.GraphStat - Functions providing various graph statistics
+_vendoring.altgraph.GraphStat - Functions providing various graph statistics
 =================================================================
 """
 

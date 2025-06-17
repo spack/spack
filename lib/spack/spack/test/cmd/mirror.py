@@ -6,13 +6,16 @@ import os
 
 import pytest
 
+import spack.binary_distribution as bindist
 import spack.cmd.mirror
 import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.error
 import spack.mirrors.utils
+import spack.package_base
 import spack.spec
+import spack.util.git
 import spack.util.url as url_util
 import spack.version
 from spack.main import SpackCommand, SpackCommandError
@@ -58,6 +61,26 @@ def test_mirror_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fe
         mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
+
+
+# Test for command line-specified spec in concretized environment
+def test_mirror_spec_from_env(mutable_mock_env_path, tmp_path, mock_packages, mock_fetch):
+    mirror_dir = str(tmp_path / "mirror-B")
+    env_name = "test"
+
+    env("create", env_name)
+    with ev.read(env_name):
+        add("simple-standalone-test@0.9")
+        concretize()
+        with spack.config.override("config:checksum", False):
+            mirror("create", "-d", mirror_dir, "simple-standalone-test")
+
+    e = ev.read(env_name)
+    assert set(os.listdir(mirror_dir)) == set([s.name for s in e.user_specs])
+    spec = e.concrete_roots()[0]
+    mirror_res = os.listdir(os.path.join(mirror_dir, spec.name))
+    expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
+    assert mirror_res == expected
 
 
 @pytest.fixture
@@ -362,11 +385,13 @@ def test_mirror_destroy(
     spec_name = "libdwarf"
 
     # Put a binary package in a buildcache
-    install("--no-cache", spec_name)
+    install("--fake", "--no-cache", spec_name)
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
+    blobs_path = bindist.buildcache_relative_blobs_path()
+
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by name
     mirror("destroy", "-m", "atest")
@@ -376,7 +401,7 @@ def test_mirror_destroy(
     buildcache("push", "-u", "-f", mirror_dir.strpath, spec_name)
 
     contents = os.listdir(mirror_dir.strpath)
-    assert "build_cache" in contents
+    assert blobs_path in contents
 
     # Destroy mirror by url
     mirror("destroy", "--mirror-url", mirror_url)
@@ -398,8 +423,7 @@ class TestMirrorCreate:
     @pytest.mark.parametrize(
         "cli_args,error_str",
         [
-            # Passed more than one among -f --all and specs
-            ({"specs": "hdf5", "file": None, "all": True}, "cannot specify specs on command line"),
+            # Passed more than one among -f --all
             (
                 {"specs": None, "file": "input.txt", "all": True},
                 "cannot specify specs with a file if",
@@ -558,3 +582,71 @@ def test_mirror_add_set_autopush(mutable_config):
     mirror("set", "--autopush", "example")
     assert spack.config.get("mirrors:example") == {"url": "http://example.com", "autopush": True}
     mirror("remove", "example")
+
+
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+@pytest.mark.parametrize("mirror_knows_commit", (True, False))
+def test_binary_provenance_url_fails_mirror_resolves_commit(
+    git,
+    mock_git_repository,
+    mock_packages,
+    monkeypatch,
+    tmpdir,
+    mutable_config,
+    mirror_knows_commit,
+):
+    """Extract git commit from a source mirror since other methods failed"""
+    repo_path = mock_git_repository.path
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+    monkeypatch.setattr(spack.util.git, "get_commit_sha", lambda x, y: None, raising=False)
+
+    gold_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
+    # create a fake mirror
+    mirror_path = str(tmpdir.join("test-mirror"))
+    if mirror_knows_commit:
+        mirror("create", "-d", mirror_path, f"git-test-commit@main commit={gold_commit}")
+    else:
+        mirror("create", "-d", mirror_path, "git-test-commit@main")
+    mirror("add", "--type", "source", "test-mirror", mirror_path)
+
+    spec = spack.concretize.concretize_one("git-test-commit@main")
+    assert spec.package.stage.archive_file
+    assert "commit" in spec.variants
+    assert spec.variants["commit"].value == gold_commit
+
+
+@pytest.mark.require_provenance
+@pytest.mark.disable_clean_stage_check
+def test_binary_provenance_relative_to_mirror(
+    git, mock_git_version_info, mock_packages, monkeypatch, tmpdir, mutable_config
+):
+    """Integration test to evaluate how commit resolution should behave with a mirror
+
+    We want to confirm that the mirror doesn't break users ability to get a more recent commit
+    Use `mock_git_version_info` repo because it has function scope and we can mess with the git
+    history.
+    """
+    repo_path, _, _ = mock_git_version_info
+    monkeypatch.setattr(
+        spack.package_base.PackageBase, "git", f"file://{repo_path}", raising=False
+    )
+
+    # create a fake mirror
+    mirror_path = str(tmpdir.join("test-mirror"))
+    mirror("create", "-d", mirror_path, "git-test-commit@main")
+    mirror("add", "--type", "source", "test-mirror", mirror_path)
+    mirror_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
+
+    # push the commit past mirror
+    git("-C", repo_path, "checkout", "main", output=str)
+    git("-C", repo_path, "commit", "--allow-empty", "-m", "bump sha")
+    head_commit = git("-C", repo_path, "rev-parse", "main", output=str).strip()
+
+    spec_mirror = spack.concretize.concretize_one("git-test-commit@main")
+    assert spec_mirror.variants["commit"].value == mirror_commit
+
+    spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
+    assert spec_head.variants["commit"].value == head_commit

@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import sys
 
 import llnl.util.lang as lang
@@ -26,7 +27,7 @@ section = "config"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     arguments.add_common_arguments(subparser, ["no_checksum"])
 
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="mirror_command")
@@ -514,18 +515,18 @@ def extend_with_dependencies(specs):
 
 
 def concrete_specs_from_cli_or_file(args):
-    tty.msg("Concretizing input specs")
-    with spack.concretize.disable_compiler_existence_check():
-        if args.specs:
-            specs = spack.cmd.parse_specs(args.specs, concretize=True)
-            if not specs:
-                raise SpackError("unable to parse specs from command line")
+    if args.specs:
+        specs = spack.cmd.parse_specs(args.specs, concretize=False)
+        if not specs:
+            raise SpackError("unable to parse specs from command line")
 
-        if args.file:
-            specs = specs_from_text_file(args.file, concretize=True)
-            if not specs:
-                raise SpackError("unable to parse specs from file '{}'".format(args.file))
-    return specs
+    if args.file:
+        specs = specs_from_text_file(args.file, concretize=False)
+        if not specs:
+            raise SpackError("unable to parse specs from file '{}'".format(args.file))
+
+    concrete_specs = spack.cmd.matching_specs_from_env(specs)
+    return concrete_specs
 
 
 class IncludeFilter:
@@ -608,11 +609,6 @@ def process_mirror_stats(present, mirrored, error):
 
 def mirror_create(args):
     """create a directory to be used as a spack mirror, and fill it with package archives"""
-    if args.specs and args.all:
-        raise SpackError(
-            "cannot specify specs on command line if you chose to mirror all specs with '--all'"
-        )
-
     if args.file and args.all:
         raise SpackError(
             "cannot specify specs with a file if you chose to mirror all specs with '--all'"

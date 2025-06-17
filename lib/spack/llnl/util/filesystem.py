@@ -764,7 +764,7 @@ def copy_tree(
 
     files = glob.glob(src)
     if not files:
-        raise OSError("No such file or directory: '{0}'".format(src))
+        raise OSError("No such file or directory: '{0}'".format(src), errno.ENOENT)
 
     # For Windows hard-links and junctions, the source path must exist to make a symlink. Add
     # all symlinks to this list while traversing the tree, then when finished, make all
@@ -1030,6 +1030,7 @@ def replace_directory_transaction(directory_name):
     Returns:
         temporary directory where ``directory_name`` has been moved
     """
+
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     directory_name = os.path.abspath(directory_name)
@@ -1434,7 +1435,7 @@ def visit_directory_tree(
         try:
             isdir = f.is_dir()
         except OSError as e:
-            if sys.platform == "win32" and hasattr(e, "winerror") and e.winerror == 5 and islink:
+            if sys.platform == "win32" and e.errno == errno.EACCES and islink:
                 # if path is a symlink, determine destination and evaluate file vs directory
                 link_target = resolve_link_target_relative_to_the_link(f)
                 # link_target might be relative but resolve_link_target_relative_to_the_link
@@ -2599,7 +2600,7 @@ class WindowsSimulatedRPath:
             # associate with trying to create a file that already exists (winerror 183)
             # Catch OSErrors missed by the SymlinkError checks
             except OSError as e:
-                if sys.platform == "win32" and (e.winerror == 183 or e.errno == errno.EEXIST):
+                if sys.platform == "win32" and e.errno == errno.EEXIST:
                     report_already_linked()
                 else:
                     raise e

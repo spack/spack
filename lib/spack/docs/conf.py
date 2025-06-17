@@ -17,7 +17,6 @@
 # serve to show the default.
 
 import os
-import re
 import subprocess
 import sys
 from glob import glob
@@ -34,20 +33,26 @@ from sphinx.parsers import RSTParser
 link_name = os.path.abspath("_spack_root")
 if not os.path.exists(link_name):
     os.symlink(os.path.abspath("../../.."), link_name, target_is_directory=True)
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external"))
-sys.path.insert(0, os.path.abspath("_spack_root/lib/spack/external/_vendoring"))
-sys.path.append(os.path.abspath("_spack_root/lib/spack/"))
 
 # Add the Spack bin directory to the path so that we can use its output in docs.
 os.environ["SPACK_ROOT"] = os.path.abspath("_spack_root")
-os.environ["PATH"] += "%s%s" % (os.pathsep, os.path.abspath("_spack_root/bin"))
+os.environ["SPACK_USER_CONFIG_PATH"] = os.path.abspath(".spack")
+os.environ["PATH"] += os.pathsep + os.path.abspath("_spack_root/bin")
 
 # Set an environment variable so that colify will print output like it would to
 # a terminal.
 os.environ["COLIFY_SIZE"] = "25x120"
 os.environ["COLUMNS"] = "120"
 
-# Generate a command index if an update is needed
+sys.path[0:0] = [
+    os.path.abspath("_spack_root/lib/spack/external"),
+    os.path.abspath("_spack_root/lib/spack/"),
+    os.path.abspath(".spack/spack-packages/repos"),
+]
+
+subprocess.call(["spack", "list"])
+
+# Generate a command index if an update is needed -- this also clones the package repository.
 subprocess.call(
     [
         "spack",
@@ -55,8 +60,8 @@ subprocess.call(
         "--format=rst",
         "--header=command_index.in",
         "--update=command_index.rst",
+        *glob("*rst"),
     ]
-    + glob("*rst")
 )
 
 #
@@ -76,11 +81,20 @@ sphinx_apidoc(
     apidoc_args
     + [
         "_spack_root/lib/spack/spack",
+        "_spack_root/lib/spack/spack/package.py",  # sphinx struggles with os.chdir re-export.
         "_spack_root/lib/spack/spack/test/*.py",
         "_spack_root/lib/spack/spack/test/cmd/*.py",
     ]
 )
 sphinx_apidoc(apidoc_args + ["_spack_root/lib/spack/llnl"])
+sphinx_apidoc(
+    apidoc_args
+    + [
+        "--implicit-namespaces",
+        ".spack/spack-packages/repos/spack_repo",
+        ".spack/spack-packages/repos/spack_repo/builtin/packages",
+    ]
+)
 
 # Enable todo items
 todo_include_todos = True
@@ -127,9 +141,12 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.todo",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "sphinx_design",
     "sphinxcontrib.programoutput",
 ]
+
+copybutton_exclude = ".linenos, .gp, .go"
 
 # Set default graphviz options
 graphviz_dot_args = [
@@ -206,10 +223,11 @@ nitpick_ignore = [
     ("py:class", "TextIO"),
     ("py:class", "hashlib._Hash"),
     ("py:class", "concurrent.futures._base.Executor"),
+    ("py:class", "multiprocessing.context.Process"),
     # Spack classes that are private and we don't want to expose
     ("py:class", "spack.provider_index._IndexBase"),
     ("py:class", "spack.repo._PrependFileLoader"),
-    ("py:class", "spack.build_systems._checks.BuilderWithDefaults"),
+    ("py:class", "spack_repo.builtin.build_systems._checks.BuilderWithDefaults"),
     # Spack classes that intersphinx is unable to resolve
     ("py:class", "spack.version.StandardVersion"),
     ("py:class", "spack.spec.DependencySpec"),
@@ -219,14 +237,20 @@ nitpick_ignore = [
     ("py:class", "spack.install_test.Pb"),
     ("py:class", "spack.filesystem_view.SimpleFilesystemView"),
     ("py:class", "spack.traverse.EdgeAndDepth"),
-    ("py:class", "archspec.cpu.microarchitecture.Microarchitecture"),
+    ("py:class", "_vendoring.archspec.cpu.microarchitecture.Microarchitecture"),
     ("py:class", "spack.compiler.CompilerCache"),
     # TypeVar that is not handled correctly
     ("py:class", "llnl.util.lang.T"),
     ("py:class", "llnl.util.lang.KT"),
     ("py:class", "llnl.util.lang.VT"),
+    ("py:class", "llnl.util.lang.K"),
+    ("py:class", "llnl.util.lang.V"),
+    ("py:class", "llnl.util.lang.ClassPropertyType"),
     ("py:obj", "llnl.util.lang.KT"),
     ("py:obj", "llnl.util.lang.VT"),
+    ("py:obj", "llnl.util.lang.ClassPropertyType"),
+    ("py:obj", "llnl.util.lang.K"),
+    ("py:obj", "llnl.util.lang.V"),
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.

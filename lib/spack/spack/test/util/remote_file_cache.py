@@ -29,11 +29,20 @@ def test_rfc_local_path_bad_scheme(path, err):
 
 
 @pytest.mark.parametrize(
-    "path", ["/a/b/c/d/e/config.py", "file:///this/is/a/file/url/include.yaml"]
+    "path,expected",
+    [
+        ("/a/b/c/d/e/config.py", "/a/b/c/d/e/config.py"),
+        ("file:///this/is/a/file/url/include.yaml", "/this/is/a/file/url/include.yaml"),
+        (
+            "relative/packages.txt",
+            os.path.join(os.environ["SPACK_ROOT"], "relative", "packages.txt"),
+        ),
+        (r"C:\Files (x86)\Windows\10", r"C:\Files (x86)\Windows\10"),
+        (r"D:/spack stage", "D:\\spack stage"),
+    ],
 )
-def test_rfc_local_path_file(path):
-    actual = path.split("://")[1] if ":" in path else path
-    assert rfc_util.local_path(path, "") == os.path.normpath(actual)
+def test_rfc_local_file(path, expected):
+    assert rfc_util.local_path(path, "") == os.path.normpath(expected)
 
 
 def test_rfc_remote_local_path_no_dest():
@@ -42,10 +51,10 @@ def test_rfc_remote_local_path_no_dest():
         _ = rfc_util.local_path(path, "")
 
 
-compilers_sha256 = (
-    "381732677538143a8f900406c0654f2730e2919a11740bdeaf35757ab3e1ef3e"
-    if sys.platform == "win32"
-    else "e91148ed5a0da7844e9f3f9cfce0fa60cce509461886bc3b006ee9eb711f69df"
+packages_yaml_sha256 = (
+    "6a1b26c857ca7e5bcd7342092e2f218da43d64b78bd72771f603027ea3c8b4af"
+    if sys.platform != "win32"
+    else "ae3239d769f9e6dc137a998489b0d44c70b03e21de4ecd6a623a3463a1a5c3f4"
 )
 
 
@@ -58,7 +67,8 @@ compilers_sha256 = (
             ValueError,
             "Requires sha256",
         ),
-        (f"{gitlab_url}/compilers.yaml", compilers_sha256, None, ""),
+        # This is the packages.yaml in lib/spack/spack/test/data/config
+        (f"{gitlab_url}/packages.yaml", packages_yaml_sha256, None, ""),
         (f"{gitlab_url}/packages.yaml", "abcdef", ValueError, "does not match"),
         (f"{github_url.format('blob')}/README.md", "", OSError, "No such"),
         (github_url.format("tree"), "", OSError, "No such"),

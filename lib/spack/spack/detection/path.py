@@ -7,6 +7,7 @@ and running executables.
 import collections
 import concurrent.futures
 import os
+import pathlib
 import re
 import sys
 import traceback
@@ -15,6 +16,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple, Type
 
 import llnl.util.filesystem
 import llnl.util.lang
+import llnl.util.symlink
 import llnl.util.tty
 
 import spack.error
@@ -70,13 +72,21 @@ def dedupe_paths(paths: List[str]) -> List[str]:
     """Deduplicate paths based on inode and device number. In case the list contains first a
     symlink and then the directory it points to, the symlink is replaced with the directory path.
     This ensures that we pick for example ``/usr/bin`` over ``/bin`` if the latter is a symlink to
-    the former`."""
+    the former."""
     seen: Dict[Tuple[int, int], str] = {}
+
+    linked_parent_check = lambda x: any(
+        [llnl.util.symlink.islink(str(y)) for y in pathlib.Path(x).parents]
+    )
+
     for path in paths:
         identifier = file_identifier(path)
         if identifier not in seen:
             seen[identifier] = path
-        elif not os.path.islink(path):
+        # we also want to deprioritize paths if they contain a symlink in any parent
+        # (not just the basedir): e.g. oneapi has "latest/bin",
+        # where "latest" is a symlink to 2025.0"
+        elif not (llnl.util.symlink.islink(path) or linked_parent_check(path)):
             seen[identifier] = path
     return list(seen.values())
 
@@ -243,7 +253,7 @@ class Finder:
         raise NotImplementedError("must be implemented by derived classes")
 
     def detect_specs(
-        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str]
+        self, *, pkg: Type["spack.package_base.PackageBase"], paths: Iterable[str], repo_path
     ) -> List["spack.spec.Spec"]:
         """Given a list of files matching the search patterns, returns a list of detected specs.
 
@@ -258,8 +268,6 @@ class Finder:
                 f" of the package."
             )
             return []
-
-        from spack.repo import PATH as repo_path
 
         result = []
         for candidate_path, items_in_prefix in _group_by_prefix(
@@ -345,8 +353,7 @@ class Finder:
             initial_guess = self.default_path_hints()
             initial_guess.extend(common_windows_package_paths(pkg_cls))
         candidates = self.candidate_files(patterns=patterns, paths=initial_guess)
-        result = self.detect_specs(pkg=pkg_cls, paths=candidates)
-        return result
+        return self.detect_specs(pkg=pkg_cls, paths=candidates, repo_path=repository)
 
 
 class ExecutablesFinder(Finder):
@@ -431,7 +438,13 @@ def by_path(
 
     result = collections.defaultdict(list)
     repository = spack.repo.PATH.ensure_unwrapped()
-    with spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False) as executor:
+
+    executor: concurrent.futures.Executor
+    if max_workers == 1:
+        executor = spack.util.parallel.SequentialExecutor()
+    else:
+        executor = spack.util.parallel.make_concurrent_executor(max_workers, require_fork=False)
+    with executor:
         for pkg in packages_to_search:
             executable_future = executor.submit(
                 executables_finder.find,

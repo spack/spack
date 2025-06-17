@@ -318,7 +318,7 @@ class Mfem(Package, CudaPackage, ROCmPackage):
     patch('mfem-4.0.0-makefile-syntax-fix.patch', when='@4.0.0')
     phases = ['configure', 'build', 'install']
 
-    def setup_build_environment(self, env):
+    def setup_build_environment(self, env: EnvironmentModifications) -> None:
         env.unset('MFEM_DIR')
         env.unset('MFEM_BUILD_DIR')
 

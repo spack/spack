@@ -9,7 +9,7 @@ import os
 import re
 import sys
 from collections import Counter
-from typing import List, Optional, Union
+from typing import Generator, List, Optional, Sequence, Union
 
 import llnl.string
 import llnl.util.tty as tty
@@ -330,7 +330,7 @@ def ensure_single_spec_or_die(spec, matching_specs):
     if len(matching_specs) <= 1:
         return
 
-    format_string = "{name}{@version}{%compiler.name}{@compiler.version}{ arch=architecture}"
+    format_string = "{name}{@version}{ arch=architecture} {%compiler.name}{@compiler.version}"
     args = ["%s matches multiple packages." % spec, "Matching packages:"]
     args += [
         colorize("  @K{%s} " % s.dag_hash(7)) + s.cformat(format_string) for s in matching_specs
@@ -375,8 +375,13 @@ def iter_groups(specs, indent, all_headers):
     index = index_by(specs, ("architecture", "compiler"))
     ispace = indent * " "
 
+    def _key(item):
+        if item is None:
+            return ""
+        return str(item)
+
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index)):
+    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
@@ -431,7 +436,7 @@ def display_specs(specs, args=None, **kwargs):
         all_headers (bool): show headers even when arch/compiler aren't defined
         status_fn (typing.Callable): if provided, prepend install-status info
         output (typing.IO): A file object to write to. Default is ``sys.stdout``
-
+        specfile_format (bool): specfile format of the current spec
     """
 
     def get_arg(name, default=None):
@@ -448,12 +453,12 @@ def display_specs(specs, args=None, **kwargs):
     hashes = get_arg("long", False)
     namespaces = get_arg("namespaces", False)
     flags = get_arg("show_flags", False)
-    full_compiler = get_arg("show_full_compiler", False)
     variants = get_arg("variants", False)
     groups = get_arg("groups", True)
     all_headers = get_arg("all_headers", False)
     output = get_arg("output", sys.stdout)
     status_fn = get_arg("status_fn", None)
+    specfile_format = get_arg("specfile_format", False)
 
     decorator = get_arg("decorator", None)
     if decorator is None:
@@ -470,13 +475,13 @@ def display_specs(specs, args=None, **kwargs):
     if format_string is None:
         nfmt = "{fullname}" if namespaces else "{name}"
         ffmt = ""
-        if full_compiler or flags:
-            ffmt += "{%compiler.name}"
-            if full_compiler:
-                ffmt += "{@compiler.version}"
+        if flags:
             ffmt += " {compiler_flags}"
         vfmt = "{variants}" if variants else ""
-        format_string = nfmt + "{@version}" + ffmt + vfmt
+        format_string = nfmt + "{@version}" + vfmt + ffmt
+
+    if specfile_format:
+        format_string = "[{specfile_version}] " + format_string
 
     def fmt(s, depth=0):
         """Formatter function for all output specs"""
@@ -697,6 +702,67 @@ def find_environment(args):
 def first_line(docstring):
     """Return the first line of the docstring."""
     return docstring.split("\n")[0]
+
+
+def group_arguments(
+    args: Sequence[str],
+    *,
+    max_group_size: int = 500,
+    prefix_length: int = 0,
+    max_group_length: Optional[int] = None,
+) -> Generator[List[str], None, None]:
+    """Splits the supplied list of arguments into groups for passing to CLI tools.
+
+    When passing CLI arguments, we need to ensure that argument lists are no longer than
+    the system command line size limit, and we may also need to ensure that groups are
+    no more than some number of arguments long.
+
+    This returns an iterator over lists of arguments that meet these constraints.
+    Arguments are in the same order they appeared in the original argument list.
+
+    If any argument's length is greater than the max_group_length, this will raise a
+    ``ValueError``.
+
+    Arguments:
+        args: list of arguments to split into groups
+        max_group_size: max number of elements in any group (default 500)
+        prefix_length: length of any additional arguments (including spaces) to be passed before
+            the groups from args; default is 0 characters
+        max_group_length: max length of characters that if a group of args is joined by " "
+            On unix, ths defaults to SC_ARG_MAX from sysconf. On Windows the default is
+            the max usable for CreateProcess (32,768 chars)
+
+    """
+    if max_group_length is None:
+        max_group_length = 32768  # default to the Windows limit
+        if hasattr(os, "sysconf"):  # sysconf is only on unix
+            try:
+                # returns -1 if an option isn't present (soem older POSIXes)
+                sysconf_max = os.sysconf("SC_ARG_MAX")
+                max_group_length = sysconf_max if sysconf_max != -1 else max_group_length
+            except (ValueError, OSError):
+                pass  # keep windows default if SC_ARG_MAX isn't in sysconf_names
+
+    group: List[str] = []
+    grouplen, space = prefix_length, 0
+    for arg in args:
+        arglen = len(arg)
+        if arglen > max_group_length:
+            raise ValueError(f"Argument is longer than max command line size: '{arg}'")
+        if arglen + prefix_length > max_group_length:
+            raise ValueError(f"Argument with prefix is longer than max command line size: '{arg}'")
+
+        next_grouplen = grouplen + arglen + space
+        if len(group) == max_group_size or next_grouplen > max_group_length:
+            yield group
+            group, grouplen, space = [], prefix_length, 0
+
+        group.append(arg)
+        grouplen += arglen + space
+        space = 1  # add a space for elements 1, 2, etc. but not 0
+
+    if group:
+        yield group
 
 
 class CommandNotFoundError(spack.error.SpackError):

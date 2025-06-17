@@ -18,8 +18,7 @@ import io
 import re
 from typing import IO, Any, Callable, Dict, List, Optional, Union
 
-import ruamel.yaml
-from ruamel.yaml import comments, constructor, emitter, error, representer
+from _vendoring.ruamel.yaml import YAML, comments, constructor, emitter, error, representer
 
 from llnl.util.tty.color import cextra, clen, colorize
 
@@ -332,7 +331,7 @@ class ConfigYAML:
     """Handles the loading and dumping of Spack's YAML files."""
 
     def __init__(self, yaml_type: YAMLType) -> None:
-        self.yaml = ruamel.yaml.YAML(typ="rt", pure=True)
+        self.yaml = YAML(typ="rt", pure=True)
         if yaml_type == YAMLType.GENERIC_YAML:
             self.yaml.Representer = SafeRepresenter
         elif yaml_type == YAMLType.ANNOTATED_SPACK_CONFIG_FILE:
@@ -495,3 +494,25 @@ class SpackYAMLError(spack.error.SpackError):
 
     def __init__(self, msg, yaml_error):
         super().__init__(msg, str(yaml_error))
+
+
+def get_mark_from_yaml_data(obj):
+    """Try to get ``spack.util.spack_yaml`` mark from YAML data.
+
+    We try the object, and if that fails we try its first member (if it's a container).
+
+    Returns:
+        mark if one is found, otherwise None.
+    """
+    # mark of object itelf
+    mark = getattr(obj, "_start_mark", None)
+    if mark:
+        return mark
+
+    # mark of first member if it is a container
+    if isinstance(obj, (list, dict)):
+        first_member = next(iter(obj), None)
+        if first_member:
+            mark = getattr(first_member, "_start_mark", None)
+
+    return mark

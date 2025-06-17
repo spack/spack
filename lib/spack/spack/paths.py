@@ -31,13 +31,11 @@ sbang_script = os.path.join(bin_path, "sbang")
 # spack directory hierarchy
 lib_path = os.path.join(prefix, "lib", "spack")
 external_path = os.path.join(lib_path, "external")
-build_env_path = os.path.join(lib_path, "env")
 module_path = os.path.join(lib_path, "spack")
 command_path = os.path.join(module_path, "cmd")
 analyzers_path = os.path.join(module_path, "analyzers")
 platform_path = os.path.join(module_path, "platforms")
 compilers_path = os.path.join(module_path, "compilers")
-build_systems_path = os.path.join(module_path, "build_systems")
 operating_system_path = os.path.join(module_path, "operating_systems")
 test_path = os.path.join(module_path, "test")
 hooks_path = os.path.join(module_path, "hooks")
@@ -57,8 +55,8 @@ var_path = os.path.join(prefix, "var", "spack")
 
 # read-only things in $spack/var/spack
 repos_path = os.path.join(var_path, "repos")
-packages_path = os.path.join(repos_path, "builtin")
-mock_packages_path = os.path.join(repos_path, "builtin.mock")
+test_repos_path = os.path.join(var_path, "test_repos")
+mock_packages_path = os.path.join(test_repos_path, "spack_repo", "builtin_mock")
 
 #
 # Writable things in $spack/var/spack
@@ -101,6 +99,9 @@ default_monitor_path = os.path.join(reports_path, "monitor")
 
 #: git repositories fetched to compare commits to versions
 user_repos_cache_path = os.path.join(user_cache_path, "git_repos")
+
+#: default location where remote package repositories are cloned
+package_repos_path = os.path.join(user_cache_path, "package_repos")
 
 #: bootstrap store for bootstrapping clingo and other tools
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")

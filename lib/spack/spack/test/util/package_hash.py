@@ -334,20 +334,20 @@ def test_remove_complex_package_logic_filtered():
     "package_spec,expected_hash",
     [
         ("amdfftw", "tivb752zddjgvfkogfs7cnnvp5olj6co"),
-        ("grads", "rrlmwml3f2frdnqavmro3ias66h5b2ce"),
-        ("llvm", "nufffum5dabmaf4l5tpfcblnbfjknvd3"),
+        ("grads", "lomrsppasfxegyamz4r33zgwiqkveftv"),
+        ("llvm", "paicamlvy5jkgxw4xnacaxahrixe3f3i"),
         # has @when("@4.1.0") and raw unicode literals
-        ("mfem", "whwftpqbjvzncmb52oz6izkanbha2uji"),
-        ("mfem@4.0.0", "whwftpqbjvzncmb52oz6izkanbha2uji"),
-        ("mfem@4.1.0", "bpi7of3xelo7fr3ta2lm6bmiruijnxcg"),
+        ("mfem", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
+        ("mfem@4.0.0", "slf5qyyyhuj66mo5lpuhkrs35akh2zck"),
+        ("mfem@4.1.0", "yo3ymaulytctas67zjn663ixw5cfyh5u"),
         # has @when("@1.5.0:")
-        ("py-torch", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-        ("py-torch@1.0", "qs7djgqn7dy7r3ps4g7hv2pjvjk4qkhd"),
-        ("py-torch@1.6", "p4ine4hc6f2ik2f2wyuwieslqbozll5w"),
+        ("py-torch", "m3ucsddqr7hjevtgx4cad34nrtqgyjfg"),
+        ("py-torch@1.0", "m3ucsddqr7hjevtgx4cad34nrtqgyjfg"),
+        ("py-torch@1.6", "insaxs6bq34rvyhajdbyr4wddqeqb2t3"),
         # has a print with multiple arguments
         ("legion", "bq2etsik5l6pbryxmbhfhzynci56ruy4"),
         # has nested `with when()` blocks and loops
-        ("trilinos", "vqrgscjrla4hi7bllink7v6v6dwxgc2p"),
+        ("trilinos", "ojbtbu3p6gpa42sbilblo2ioanvhouxu"),
     ],
 )
 def test_package_hash_consistency(package_spec, expected_hash):

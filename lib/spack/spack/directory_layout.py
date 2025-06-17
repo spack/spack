@@ -21,7 +21,7 @@ import spack.util.spack_json as sjson
 from spack.error import SpackError
 
 default_projections = {
-    "all": "{architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}"
+    "all": "{architecture.platform}-{architecture.target}/{name}-{version}-{hash}"
 }
 
 
@@ -284,7 +284,9 @@ class DirectoryLayout:
         Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
-        assert path.startswith(self.root)
+        assert path.startswith(
+            self.root
+        ), f"Attempted to remove dir outside Spack's install tree. PATH: {path}, ROOT: {self.root}"
 
         if deprecated:
             if os.path.exists(path):

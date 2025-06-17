@@ -27,7 +27,7 @@ section = "config"
 level = "short"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="external_command")
 
     find_parser = sp.add_parser("find", help="add external packages to packages.yaml")
@@ -62,7 +62,7 @@ def setup_parser(subparser):
         "package Spack knows how to find."
     )
 
-    sp.add_parser("list", help="list detectable packages, by repository and name")
+    sp.add_parser("list", aliases=["ls"], help="list detectable packages, by repository and name")
 
     read_cray_manifest = sp.add_parser(
         "read-cray-manifest",
@@ -259,6 +259,7 @@ def external(parser, args):
     action = {
         "find": external_find,
         "list": external_list,
+        "ls": external_list,
         "read-cray-manifest": external_read_cray_manifest,
     }
     action[args.external_command](args)

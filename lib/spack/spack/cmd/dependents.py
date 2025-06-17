@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import collections
 import sys
 
@@ -19,7 +20,7 @@ section = "basic"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "-i",
         "--installed",
@@ -93,7 +94,7 @@ def dependents(parser, args):
         env = ev.active_environment()
         spec = spack.cmd.disambiguate_spec(specs[0], env)
 
-        format_string = "{name}{@version}{%compiler}{/hash:7}"
+        format_string = "{name}{@version}{/hash:7}{%compiler}"
         if sys.stdout.isatty():
             tty.msg("Dependents of %s" % spec.cformat(format_string))
         deps = spack.store.STORE.db.installed_relatives(spec, "parents", args.transitive)

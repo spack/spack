@@ -1,11 +1,11 @@
 from functools import wraps
-from pyrsistent._pmap import PMap, pmap
-from pyrsistent._pset import PSet, pset
-from pyrsistent._pvector import PVector, pvector
+from _vendoring.pyrsistent._pmap import PMap, pmap
+from _vendoring.pyrsistent._pset import PSet, pset
+from _vendoring.pyrsistent._pvector import PVector, pvector
 
 def freeze(o, strict=True):
     """
-    Recursively convert simple Python containers into pyrsistent versions
+    Recursively convert simple Python containers into _vendoring.pyrsistent versions
     of those containers.
 
     - list is converted to pvector, recursively
@@ -47,7 +47,7 @@ def freeze(o, strict=True):
 
 def thaw(o, strict=True):
     """
-    Recursively convert pyrsistent containers into simple Python containers.
+    Recursively convert _vendoring.pyrsistent containers into simple Python containers.
 
     - pvector is converted to list, recursively
     - pmap is converted to dict, recursively on values (but not keys)
@@ -59,7 +59,7 @@ def thaw(o, strict=True):
     - thaw is called on elements of lists
     - thaw is called on values in dicts
 
-    >>> from pyrsistent import s, m, v
+    >>> from _vendoring.pyrsistent import s, m, v
     >>> thaw(s(1, 2))
     {1, 2}
     >>> thaw(v(1, m(a=3)))

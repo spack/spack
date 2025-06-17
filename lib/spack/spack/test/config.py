@@ -32,8 +32,7 @@ import spack.spec
 import spack.store
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
-
-from ..enums import ConfigScopePriority
+from spack.enums import ConfigScopePriority
 
 # sample config data
 config_low = {
@@ -71,7 +70,7 @@ spack:
         all:
             compiler: [ 'gcc@4.5.3' ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
     return env_yaml
@@ -248,8 +247,8 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
 #
 # Sample repo data and tests
 #
-repos_low = {"repos": ["/some/path"]}
-repos_high = {"repos": ["/some/other/path"]}
+repos_low = {"repos": {"low": "/some/path"}}
+repos_high = {"repos": {"high": "/some/other/path"}}
 
 # Test setting config values via path in filename
 
@@ -262,10 +261,10 @@ def test_add_config_path(mutable_config):
     assert set_value == "/path/to/config.yaml"
 
     # Now a package:all setting
-    path = "packages:all:compiler:[gcc]"
+    path = "packages:all:target:[x86_64]"
     spack.config.add(path)
-    compilers = spack.config.get("packages")["all"]["compiler"]
-    assert "gcc" in compilers
+    targets = spack.config.get("packages")["all"]["target"]
+    assert "x86_64" in targets
 
     # Try quotes to escape brackets
     path = (
@@ -327,7 +326,7 @@ def test_write_list_in_memory(mock_low_high_config):
     spack.config.set("repos", repos_high["repos"], scope="high")
 
     config = spack.config.get("repos")
-    assert config == repos_high["repos"] + repos_low["repos"]
+    assert config == {**repos_high["repos"], **repos_low["repos"]}
 
 
 class MockEnv:
@@ -785,14 +784,15 @@ def test_config_parse_dict_in_list(tmpdir):
             spack.schema.repos.schema,
             """\
 repos:
-- https://foobar.com/foo
-- https://foobar.com/bar
-- error:
-  - abcdef
-- https://foobar.com/baz
+  a: https://foobar.com/foo
+  b: https://foobar.com/bar
+  c:
+    error:
+    - abcdef
+  d: https://foobar.com/baz
 """,
         )
-        assert "repos.yaml:4" in str(e)
+        assert "repos.yaml:2" in str(e)
 
 
 def test_config_parse_str_not_bool(tmpdir):
@@ -909,13 +909,15 @@ def test_single_file_scope(config, env_yaml):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
         assert spack.config.get("config:dirty") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3", "gcc", "clang"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("config:checksum") is True
         assert spack.config.get("packages:externalmodule:buildable") is False
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
 def test_single_file_scope_section_override(tmpdir, config):
@@ -933,9 +935,9 @@ spack:
         verify_ssl: False
     packages::
         all:
-            compiler: [ 'gcc@4.5.3' ]
+            target: [ x86_64 ]
     repos:
-        - /x/y/z
+        z: /x/y/z
 """
         )
 
@@ -946,12 +948,15 @@ spack:
     with spack.config.override(scope):
         # from the single-file config
         assert spack.config.get("config:verify_ssl") is False
-        assert spack.config.get("packages:all:compiler") == ["gcc@4.5.3"]
+        assert spack.config.get("packages:all:target") == ["x86_64"]
 
         # from the lower config scopes
         assert spack.config.get("config:checksum") is True
         assert not spack.config.get("packages:externalmodule")
-        assert spack.config.get("repos") == ["/x/y/z", "$spack/var/spack/repos/builtin"]
+        assert spack.config.get("repos") == {
+            "z": "/x/y/z",
+            "builtin_mock": "$spack/var/spack/test_repos/spack_repo/builtin_mock",
+        }
 
 
 def test_write_empty_single_file_scope(tmpdir):
@@ -1221,10 +1226,10 @@ def test_user_config_path_is_default_when_env_var_is_empty(working_env):
 
 
 def test_default_install_tree(monkeypatch, default_config):
-    s = spack.spec.Spec("nonexistent@x.y.z %none@a.b.c arch=foo-bar-baz")
+    s = spack.spec.Spec("nonexistent@x.y.z arch=foo-bar-baz")
     monkeypatch.setattr(s, "dag_hash", lambda length: "abc123")
     _, _, projections = spack.store.parse_install_tree(spack.config.get("config"))
-    assert s.format(projections["all"]) == "foo-bar-baz/none-a.b.c/nonexistent-x.y.z-abc123"
+    assert s.format(projections["all"]) == "foo-baz/nonexistent-x.y.z-abc123"
 
 
 def test_local_config_can_be_disabled(working_env):
@@ -1346,8 +1351,8 @@ def test_env_activation_preserves_config_scopes(mutable_mock_env_path):
     custom_scope = spack.config.InternalConfigScope("custom_scope")
     spack.config.CONFIG.push_scope(custom_scope, priority=ConfigScopePriority.CUSTOM)
     expected_scopes_without_env = ["custom_scope", "command_line"]
-    expected_scopes_with_first_env = ["custom_scope", "env:test", "command_line"]
-    expected_scopes_with_second_env = ["custom_scope", "env:test-2", "command_line"]
+    expected_scopes_with_first_env = ["env:test", "custom_scope", "command_line"]
+    expected_scopes_with_second_env = ["env:test-2", "custom_scope", "command_line"]
 
     def highest_priority_scopes(config, *, nscopes):
         return list(config.scopes)[-nscopes:]

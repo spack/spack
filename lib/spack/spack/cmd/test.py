@@ -10,7 +10,7 @@ import shutil
 import sys
 from collections import Counter
 
-from llnl.util import lang, tty
+from llnl.util import tty
 from llnl.util.tty import colify
 
 import spack.cmd
@@ -18,7 +18,6 @@ import spack.config
 import spack.environment as ev
 import spack.install_test
 import spack.repo
-import spack.report
 import spack.store
 from spack.cmd.common import arguments
 
@@ -27,7 +26,7 @@ section = "admin"
 level = "long"
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(metavar="SUBCOMMAND", dest="test_command")
 
     # Run
@@ -64,6 +63,12 @@ def setup_parser(subparser):
     arguments.add_cdash_args(run_parser, False)
     run_parser.add_argument(
         "--help-cdash", action="store_true", help="show usage instructions for CDash reporting"
+    )
+    run_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
     )
 
     cd_group = run_parser.add_mutually_exclusive_group()
@@ -176,7 +181,7 @@ def test_run(args):
     for spec in specs:
         matching = spack.store.STORE.db.query_local(spec, hashes=hashes, explicit=explicit)
         if spec and not matching:
-            tty.warn("No {0}installed packages match spec {1}".format(explicit_str, spec))
+            tty.warn(f"No {explicit_str}installed packages match spec {spec}")
 
             # TODO: Need to write out a log message and/or CDASH Testing
             #   output that package not installed IF continue to process
@@ -192,37 +197,26 @@ def test_run(args):
     # test_stage_dir
     test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
     test_suite.ensure_stage()
-    tty.msg("Spack test %s" % test_suite.name)
+    tty.msg(f"Spack test {test_suite.name}")
 
     # Set up reporter
-    setattr(args, "package", [s.format() for s in test_suite.specs])
-    reporter = create_reporter(args, specs_to_test, test_suite) or lang.nullcontext()
-
-    with reporter:
+    reporter = args.reporter() if args.log_format else None
+    try:
         test_suite(
             remove_directory=not args.keep_stage,
             dirty=args.dirty,
             fail_first=args.fail_first,
             externals=args.externals,
+            timeout=args.timeout,
         )
+    finally:
+        if reporter:
+            report_file = report_filename(args, test_suite)
+            reporter.test_report(report_file, test_suite.reports)
 
 
 def report_filename(args, test_suite):
     return os.path.abspath(args.log_file or "test-{}".format(test_suite.name))
-
-
-def create_reporter(args, specs_to_test, test_suite):
-    if args.log_format is None:
-        return None
-
-    filename = report_filename(args, test_suite)
-    context_manager = spack.report.test_context_manager(
-        reporter=args.reporter(),
-        filename=filename,
-        specs=specs_to_test,
-        raw_logs_dir=test_suite.stage,
-    )
-    return context_manager
 
 
 def test_list(args):

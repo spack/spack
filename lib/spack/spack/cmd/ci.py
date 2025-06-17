@@ -2,14 +2,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
 import json
 import os
 import shutil
+import sys
+from typing import Dict
 from urllib.parse import urlparse, urlunparse
 
 import llnl.util.filesystem as fs
-import llnl.util.tty as tty
 import llnl.util.tty.color as clr
+from llnl.util import tty
 
 import spack.binary_distribution as bindist
 import spack.ci as spack_ci
@@ -18,12 +21,20 @@ import spack.cmd.buildcache as buildcache
 import spack.cmd.common.arguments
 import spack.config as cfg
 import spack.environment as ev
+import spack.error
+import spack.fetch_strategy
 import spack.hash_types as ht
 import spack.mirrors.mirror
+import spack.package_base
+import spack.repo
+import spack.spec
+import spack.stage
+import spack.util.executable
 import spack.util.gpg as gpg_util
 import spack.util.timer as timer
 import spack.util.url as url_util
 import spack.util.web as web_util
+import spack.version
 
 description = "manage continuous integration pipelines"
 section = "build"
@@ -44,8 +55,8 @@ def unicode_escape(path: str) -> str:
     return path.encode("unicode-escape").decode("utf-8")
 
 
-def setup_parser(subparser):
-    setup_parser.parser = subparser
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
+    setattr(setup_parser, "parser", subparser)
     subparsers = subparser.add_subparsers(help="CI sub-commands")
 
     # Dynamic generation of the jobs yaml from a spack environment
@@ -150,6 +161,12 @@ def setup_parser(subparser):
         default=False,
         help="stop stand-alone tests after the first failure",
     )
+    rebuild.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="maximum time (in seconds) that tests are allowed to run",
+    )
     rebuild.set_defaults(func=ci_rebuild)
     spack.cmd.common.arguments.add_common_arguments(rebuild, ["jobs"])
 
@@ -190,6 +207,16 @@ def setup_parser(subparser):
     )
 
     reproduce.set_defaults(func=ci_reproduce)
+
+    # Verify checksums inside of ci workflows
+    verify_versions = subparsers.add_parser(
+        "verify-versions",
+        description=deindent(ci_verify_versions.__doc__),
+        help=spack.cmd.first_line(ci_verify_versions.__doc__),
+    )
+    verify_versions.add_argument("from_ref", help="git ref from which start looking at changes")
+    verify_versions.add_argument("to_ref", help="git ref to end looking at changes")
+    verify_versions.set_defaults(func=ci_verify_versions)
 
 
 def ci_generate(args):
@@ -397,7 +424,7 @@ def ci_rebuild(args):
         # jobs in subsequent stages.
         tty.msg("No need to rebuild {0}, found hash match at: ".format(job_spec_pkg_name))
         for match in matches:
-            tty.msg("    {0}".format(match["mirror_url"]))
+            tty.msg("    {0}".format(match.url_and_version.url))
 
         # Now we are done and successful
         return 0
@@ -464,9 +491,11 @@ def ci_rebuild(args):
                 job_spec.to_dict(hash=ht.dag_hash),
             )
 
-    # We generated the "spack install ..." command to "--keep-stage", copy
-    # any logs from the staging directory to artifacts now
+    # Copy logs and archived files from the install metadata (.spack) directory to artifacts now
     spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
+
+    # Clear the stage directory
+    spack.stage.purge()
 
     # If the installation succeeded and we're running stand-alone tests for
     # the package, run them and copy the output. Failures of any kind should
@@ -502,6 +531,7 @@ def ci_rebuild(args):
                     fail_fast=args.fail_fast,
                     log_file=log_file,
                     repro_dir=repro_dir,
+                    timeout=args.timeout,
                 )
 
             except Exception as err:
@@ -658,6 +688,158 @@ def _gitlab_artifacts_url(url: str) -> str:
 
     # Don't allow fragments / queries
     return urlunparse(parsed._replace(path="/".join(parts), fragment="", query=""))
+
+
+def validate_standard_versions(
+    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+) -> bool:
+    """Get and test the checksum of a package version based on a tarball.
+    Args:
+      pkg spack.package_base.PackageBase: Spack package for which to validate a version checksum
+      versions spack.version.VersionList: list of package versions to validate
+    Returns: bool: result of the validation. True is valid and false is failed.
+    """
+    url_dict: Dict[spack.version.StandardVersion, str] = {}
+
+    for version in versions:
+        url = pkg.find_valid_url_for_version(version)
+        url_dict[version] = url
+
+    version_hashes = spack.stage.get_checksums_for_versions(
+        url_dict, pkg.name, fetch_options=pkg.fetch_options
+    )
+
+    valid_checksums = True
+    for version, sha in version_hashes.items():
+        if sha != pkg.versions[version]["sha256"]:
+            tty.error(
+                f"Invalid checksum found {pkg.name}@{version}\n"
+                f"    [package.py] {pkg.versions[version]['sha256']}\n"
+                f"    [Downloaded] {sha}"
+            )
+            valid_checksums = False
+            continue
+
+        tty.info(f"Validated {pkg.name}@{version} --> {sha}")
+
+    return valid_checksums
+
+
+def validate_git_versions(
+    pkg: spack.package_base.PackageBase, versions: spack.version.VersionList
+) -> bool:
+    """Get and test the commit and tag of a package version based on a git repository.
+    Args:
+      pkg spack.package_base.PackageBase: Spack package for which to validate a version
+      versions spack.version.VersionList: list of package versions to validate
+    Returns: bool: result of the validation. True is valid and false is failed.
+    """
+    valid_commit = True
+    for version in versions:
+        fetcher = spack.fetch_strategy.for_package_version(pkg, version)
+        with spack.stage.Stage(fetcher) as stage:
+            known_commit = pkg.versions[version]["commit"]
+            try:
+                stage.fetch()
+            except spack.error.FetchError:
+                tty.error(
+                    f"Invalid commit for {pkg.name}@{version}\n"
+                    f"    {known_commit} could not be checked out in the git repository."
+                )
+                valid_commit = False
+                continue
+
+            # Test if the specified tag matches the commit in the package.py
+            # We retrieve the commit associated with a tag and compare it to the
+            # commit that is located in the package.py file.
+            if "tag" in pkg.versions[version]:
+                tag = pkg.versions[version]["tag"]
+                try:
+                    with fs.working_dir(stage.source_path):
+                        found_commit = fetcher.git(
+                            "rev-list", "-n", "1", tag, output=str, error=str
+                        ).strip()
+                except spack.util.executable.ProcessError:
+                    tty.error(
+                        f"Invalid tag for {pkg.name}@{version}\n"
+                        f"    {tag} could not be found in the git repository."
+                    )
+                    valid_commit = False
+                    continue
+
+                if found_commit != known_commit:
+                    tty.error(
+                        f"Mismatched tag <-> commit found for {pkg.name}@{version}\n"
+                        f"    [package.py] {known_commit}\n"
+                        f"    [Downloaded] {found_commit}"
+                    )
+                    valid_commit = False
+                    continue
+
+            # If we have downloaded the repository, found the commit, and compared
+            # the tag (if specified) we can conclude that the version is pointing
+            # at what we would expect.
+            tty.info(f"Validated {pkg.name}@{version} --> {known_commit}")
+
+    return valid_commit
+
+
+def ci_verify_versions(args):
+    """validate version checksum & commits between git refs
+    This command takes a from_ref and to_ref arguments and
+    then parses the git diff between the two to determine which packages
+    have been modified verifies the new checksums inside of them.
+    """
+    # Get a list of all packages that have been changed or added
+    # between from_ref and to_ref
+    pkgs = spack.repo.get_all_package_diffs(
+        "AC", spack.repo.builtin_repo(), args.from_ref, args.to_ref
+    )
+
+    failed_version = False
+    for pkg_name in pkgs:
+        spec = spack.spec.Spec(pkg_name)
+        pkg = spack.repo.PATH.get_pkg_class(spec.name)(spec)
+        path = spack.repo.PATH.package_path(pkg_name)
+
+        # Skip checking manual download packages and trust the maintainers
+        if pkg.manual_download:
+            tty.warn(f"Skipping manual download package: {pkg_name}")
+            continue
+
+        # Store versions checksums / commits for future loop
+        checksums_version_dict = {}
+        commits_version_dict = {}
+        for version in pkg.versions:
+            # If the package version defines a sha256 we'll use that as the high entropy
+            # string to detect which versions have been added between from_ref and to_ref
+            if "sha256" in pkg.versions[version]:
+                checksums_version_dict[pkg.versions[version]["sha256"]] = version
+
+            # If a package version instead defines a commit we'll use that as a
+            # high entropy string to detect new versions.
+            elif "commit" in pkg.versions[version]:
+                commits_version_dict[pkg.versions[version]["commit"]] = version
+
+            # TODO: enforce every version have a commit or a sha256 defined if not
+            # an infinite version (there are a lot of package's where this doesn't work yet.)
+
+        with fs.working_dir(os.path.dirname(path)):
+            added_checksums = spack_ci.get_added_versions(
+                checksums_version_dict, path, from_ref=args.from_ref, to_ref=args.to_ref
+            )
+            added_commits = spack_ci.get_added_versions(
+                commits_version_dict, path, from_ref=args.from_ref, to_ref=args.to_ref
+            )
+
+        if added_checksums:
+            failed_version = not validate_standard_versions(pkg, added_checksums) or failed_version
+
+        if added_commits:
+            failed_version = not validate_git_versions(pkg, added_commits) or failed_version
+
+    if failed_version:
+        sys.exit(1)
 
 
 def ci(parser, args):

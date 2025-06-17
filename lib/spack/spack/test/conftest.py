@@ -20,12 +20,11 @@ import sys
 import tempfile
 import xml.etree.ElementTree
 
+import _vendoring.archspec.cpu
+import _vendoring.archspec.cpu.microarchitecture
+import _vendoring.archspec.cpu.schema
 import py
 import pytest
-
-import archspec.cpu
-import archspec.cpu.microarchitecture
-import archspec.cpu.schema
 
 import llnl.util.lang
 import llnl.util.lock
@@ -43,8 +42,8 @@ from llnl.util.filesystem import (
 import spack.binary_distribution
 import spack.bootstrap.core
 import spack.caches
-import spack.compiler
-import spack.compilers
+import spack.compilers.config
+import spack.compilers.libraries
 import spack.concretize
 import spack.config
 import spack.directives_meta
@@ -69,13 +68,12 @@ import spack.util.spack_yaml as syaml
 import spack.util.url as url_util
 import spack.util.web
 import spack.version
+from spack.enums import ConfigScopePriority
 from spack.fetch_strategy import URLFetchStrategy
 from spack.installer import PackageInstaller
 from spack.main import SpackCommand
 from spack.util.pattern import Bunch
 from spack.util.remote_file_cache import raw_github_gitlab_url
-
-from ..enums import ConfigScopePriority
 
 mirror_cmd = SpackCommand("mirror")
 
@@ -154,14 +152,14 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
        o second commit (v1.0)
        o first commit
 
-    The repo consists of a single file, in which the GitVersion._ref_version representation
+    The repo consists of a single file, in which the GitVersion.std_version representation
     of each commit is expressed as a string.
 
     Important attributes of the repo for test coverage are: multiple branches,
     version tags on multiple branches, and version order is not equal to time
     order or topological order.
     """
-    repo_path = str(tmpdir.mkdir("git_repo"))
+    repo_path = str(tmpdir.mkdir("git_version_info_repo"))
     filename = "file.txt"
 
     def commit(message):
@@ -181,6 +179,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
 
         commits = []
 
@@ -188,15 +187,11 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
             return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
 
         # Add two commits on main branch
-
         # A commit without a previous version counts as "0"
         write_file(filename, "[0]")
         git("add", filename)
         commit("first commit")
         commits.append(latest_commit())
-
-        # Get name of default branch (differs by git version)
-        main = git("rev-parse", "--abbrev-ref", "HEAD", output=str, error=str).strip()
 
         # Tag second commit as v1.0
         write_file(filename, "[1, 0]")
@@ -216,7 +211,7 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
         git("tag", "v1.1")
 
         # Add two commits and a tag on main branch
-        git("checkout", main)
+        git("checkout", "main")
         write_file(filename, "[1, 0, 'git', 1]")
         commit("third main commit")
         commits.append(latest_commit())
@@ -240,6 +235,80 @@ def mock_git_version_info(git, tmpdir, override_git_repos_cache_path):
 
     # Return the git directory to install, the filename used, and the commits
     yield repo_path, filename, commits
+
+
+@pytest.fixture
+def mock_git_package_changes(git, tmpdir, override_git_repos_cache_path, monkeypatch):
+    """Create a mock git repo with known structure of package edits
+
+    The structure of commits in this repo is as follows::
+
+       o diff-test: add v1.2 (from a git ref)
+       |
+       o diff-test: add v1.1 (from source tarball)
+       |
+       o diff-test: new package (testing multiple added versions)
+
+    The repo consists of a single package.py file for DiffTest.
+
+    Important attributes of the repo for test coverage are: multiple package
+    versions are added with some coming from a tarball and some from git refs.
+    """
+    filename = "diff_test/package.py"
+
+    repo_path, _ = spack.repo.create_repo(str(tmpdir), namespace="myrepo")
+    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.mkdir("cache")))
+
+    repo = spack.repo.Repo(repo_path, cache=repo_cache)
+
+    def commit(message):
+        global commit_counter
+        git(
+            "commit",
+            "--no-gpg-sign",
+            "--date",
+            "2020-01-%02d 12:0:00 +0300" % commit_counter,
+            "-am",
+            message,
+        )
+        commit_counter += 1
+
+    with working_dir(repo.packages_path):
+        git("init")
+
+        git("config", "user.name", "Spack")
+        git("config", "user.email", "spack@spack.io")
+
+        commits = []
+
+        def latest_commit():
+            return git("rev-list", "-n1", "HEAD", output=str, error=str).strip()
+
+        os.makedirs(os.path.dirname(filename))
+
+        # add pkg-a as a new package to the repository
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-0.txt", filename)
+        git("add", filename)
+        commit("diff-test: new package")
+        commits.append(latest_commit())
+
+        # add v2.1.5 to pkg-a
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-1.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.5")
+        commits.append(latest_commit())
+
+        # add v2.1.6 to pkg-a
+        shutil.copy2(f"{spack.paths.test_path}/data/conftest/diff-test/package-2.txt", filename)
+        git("add", filename)
+        commit("diff-test: add v2.1.6")
+        commits.append(latest_commit())
+
+        # The commits are ordered with the last commit first in the list
+        commits = list(reversed(commits))
+
+    # Return the git directory to install, the filename used, and the commits
+    yield repo, filename, commits
 
 
 @pytest.fixture(autouse=True)
@@ -298,29 +367,12 @@ def clean_test_environment():
 def _host():
     """Mock archspec host so there is no inconsistency on the Windows platform
     This function cannot be local as it needs to be pickleable"""
-    return archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
+    return _vendoring.archspec.cpu.Microarchitecture("x86_64", [], "generic", [], {}, 0)
 
 
 @pytest.fixture(scope="function")
 def archspec_host_is_spack_test_host(monkeypatch):
-    monkeypatch.setattr(archspec.cpu, "host", _host)
-
-
-#
-# Disable checks on compiler executable existence
-#
-@pytest.fixture(scope="function", autouse=True)
-def mock_compiler_executable_verification(request, monkeypatch):
-    """Mock the compiler executable verification to allow missing executables.
-
-    This fixture can be disabled for tests of the compiler verification
-    functionality by::
-
-        @pytest.mark.enable_compiler_verification
-
-    If a test is marked in that way this is a no-op."""
-    if "enable_compiler_verification" not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler, "verify_executables", _return_none)
+    monkeypatch.setattr(_vendoring.archspec.cpu, "host", _host)
 
 
 # Hooks to add command line options or set other custom behaviors.
@@ -380,18 +432,6 @@ def no_chdir():
     yield
     if os.path.isdir(original_wd):
         assert os.getcwd() == original_wd
-
-
-@pytest.fixture(scope="function", autouse=True)
-def reset_compiler_cache():
-    """Ensure that the compiler cache is not shared across Spack tests
-
-    This cache can cause later tests to fail if left in a state incompatible
-    with the new configuration. Since tests can make almost unlimited changes
-    to their setup, default to not use the compiler cache across tests."""
-    spack.compilers._compiler_cache = {}
-    yield
-    spack.compilers._compiler_cache = {}
 
 
 def onerror(func, path, error_info):
@@ -534,22 +574,20 @@ def mock_binary_index(monkeypatch, tmpdir_factory):
 
 
 @pytest.fixture(autouse=True)
-def _skip_if_missing_executables(request):
+def _skip_if_missing_executables(request, monkeypatch):
     """Permits to mark tests with 'require_executables' and skip the
     tests if the executables passed as arguments are not found.
     """
-    if hasattr(request.node, "get_marker"):
-        # TODO: Remove the deprecated API as soon as we drop support for Python 2.6
-        marker = request.node.get_marker("requires_executables")
-    else:
-        marker = request.node.get_closest_marker("requires_executables")
-
+    marker = request.node.get_closest_marker("requires_executables")
     if marker:
         required_execs = marker.args
         missing_execs = [x for x in required_execs if spack.util.executable.which(x) is None]
         if missing_execs:
             msg = "could not find executables: {0}"
             pytest.skip(msg.format(", ".join(missing_execs)))
+
+        # In case we require a compiler, clear the caches used to speed-up detection
+        monkeypatch.setattr(spack.compilers.libraries.DefaultDynamicLinkerFilter, "_CACHE", {})
 
 
 @pytest.fixture(scope="session")
@@ -593,7 +631,7 @@ def _use_test_platform(test_platform):
 # Test-specific fixtures
 #
 @pytest.fixture(scope="session")
-def mock_repo_path():
+def mock_packages_repo():
     yield spack.repo.from_path(spack.paths.mock_packages_path)
 
 
@@ -610,20 +648,20 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def mock_packages(mock_repo_path, mock_pkg_install, request):
-    """Use the 'builtin.mock' repository instead of 'builtin'"""
+def mock_packages(mock_packages_repo, mock_pkg_install, request):
+    """Use the 'builtin_mock' repository instead of 'builtin'"""
     ensure_configuration_fixture_run_before(request)
-    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+    with spack.repo.use_repositories(mock_packages_repo) as mock_repo:
         yield mock_repo
 
 
 @pytest.fixture(scope="function")
-def mutable_mock_repo(mock_repo_path, request):
+def mutable_mock_repo(mock_packages_repo, request):
     """Function-scoped mock packages, for tests that need to modify them."""
     ensure_configuration_fixture_run_before(request)
     mock_repo = spack.repo.from_path(spack.paths.mock_packages_path)
-    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo) as mock_packages_repo:
+        yield mock_packages_repo
 
 
 @pytest.fixture()
@@ -685,14 +723,14 @@ def mock_uarch_json(tmpdir_factory):
 
 @pytest.fixture(scope="session")
 def mock_uarch_configuration(mock_uarch_json):
-    """Create mock dictionaries for the archspec.cpu."""
+    """Create mock dictionaries for the _vendoring.archspec.cpu."""
 
     def load_json():
         with open(mock_uarch_json, encoding="utf-8") as f:
             return json.load(f)
 
     targets_json = load_json()
-    targets = archspec.cpu.microarchitecture._known_microarchitectures()
+    targets = _vendoring.archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -701,8 +739,8 @@ def mock_uarch_configuration(mock_uarch_json):
 def mock_targets(mock_uarch_configuration, monkeypatch):
     """Use this fixture to enable mock uarch targets for testing."""
     targets_json, targets = mock_uarch_configuration
-    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
-    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+    monkeypatch.setattr(_vendoring.archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(_vendoring.archspec.cpu.microarchitecture, "TARGETS", targets)
 
 
 @pytest.fixture(scope="session")
@@ -730,9 +768,9 @@ def configuration_dir(tmpdir_factory, linux_os):
     config_template = test_config / "config.yaml"
     config.write(config_template.read_text().format(install_tree_root, locks))
 
-    target = str(archspec.cpu.host().family)
-    compilers = tmpdir.join("site", "compilers.yaml")
-    compilers_template = test_config / "compilers.yaml"
+    target = str(_vendoring.archspec.cpu.host().family)
+    compilers = tmpdir.join("site", "packages.yaml")
+    compilers_template = test_config / "packages.yaml"
     compilers.write(compilers_template.read_text().format(linux_os=linux_os, target=target))
 
     modules = tmpdir.join("site", "modules.yaml")
@@ -836,14 +874,15 @@ def concretize_scope(mutable_config, tmpdir):
 
 
 @pytest.fixture
-def no_compilers_yaml(mutable_config):
+def no_packages_yaml(mutable_config):
     """Creates a temporary configuration without compilers.yaml"""
     for local_config in mutable_config.scopes.values():
         if not isinstance(local_config, spack.config.DirectoryConfigScope):
             continue
-        compilers_yaml = local_config.get_section_filename("compilers")
+        compilers_yaml = local_config.get_section_filename("packages")
         if os.path.exists(compilers_yaml):
             os.remove(compilers_yaml)
+    mutable_config.clear_caches()
     return mutable_config
 
 
@@ -905,7 +944,7 @@ def _store_dir_and_cache(tmpdir_factory):
 def mock_store(
     tmpdir_factory,
     mock_wsdk_externals,
-    mock_repo_path,
+    mock_packages_repo,
     mock_configuration_scopes,
     _store_dir_and_cache,
 ):
@@ -927,7 +966,7 @@ def mock_store(
     if not os.path.exists(str(store_cache.join(".spack-db"))):
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
+                with spack.repo.use_repositories(mock_packages_repo):
                     # make the DB filesystem writable only while we populate it
                     store_path.chmod(mode=0o755, rec=1)
                     _populate(store.db)
@@ -1004,26 +1043,11 @@ def _return_none(*args):
     return None
 
 
-def _compiler_output(self):
-    return ""
-
-
-def _get_real_version(self):
-    return str(self.version)
-
-
-@pytest.fixture(scope="function", autouse=True)
-def disable_compiler_execution(monkeypatch, request):
-    """Disable compiler execution to determine implicit link paths and libc flavor and version.
-    To re-enable use `@pytest.mark.enable_compiler_execution`"""
-    if "enable_compiler_execution" not in request.keywords:
-        monkeypatch.setattr(spack.compiler.Compiler, "_compile_dummy_c_source", _compiler_output)
-        monkeypatch.setattr(spack.compiler.Compiler, "get_real_version", _get_real_version)
-
-
 @pytest.fixture(autouse=True)
 def disable_compiler_output_cache(monkeypatch):
-    monkeypatch.setattr(spack.compiler, "COMPILER_CACHE", spack.compiler.CompilerCache())
+    monkeypatch.setattr(
+        spack.compilers.libraries, "COMPILER_CACHE", spack.compilers.libraries.CompilerCache()
+    )
 
 
 @pytest.fixture(scope="function")
@@ -1040,9 +1064,7 @@ def install_mockery(temporary_store: spack.store.Store, mutable_config, mock_pac
 @pytest.fixture(scope="module")
 def temporary_mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
     yield str(dir)
-    dir.join("build_cache").remove()
 
 
 @pytest.fixture(scope="function")
@@ -1056,9 +1078,7 @@ def temporary_mirror(temporary_mirror_dir):
 @pytest.fixture(scope="function")
 def mutable_temporary_mirror_dir(tmpdir_factory):
     dir = tmpdir_factory.mktemp("mirror")
-    dir.ensure("build_cache", dir=True)
     yield str(dir)
-    dir.join("build_cache").remove()
 
 
 @pytest.fixture(scope="function")
@@ -1397,9 +1417,7 @@ def mock_git_repository(git, tmpdir_factory):
         |______/_____________________/
        c0 (r0)
 
-    We used to test with 'master', but git has since developed the ability to
-    have differently named default branches, so now we query the user's config to
-    determine what the default branch should be.
+    We force the default branch to be "main" to ensure that it behaves with package class tests.
 
     There are two branches aside from 'default': 'test-branch' and 'tag-branch';
     each has one commit; the tag-branch has a tag referring to its commit
@@ -1409,7 +1427,7 @@ def mock_git_repository(git, tmpdir_factory):
     of these refers to a repository with a single commit.
 
     c0, c1, and c2 include information to define explicit versions in the
-    associated builtin.mock package 'git-test'. c3 is a commit in the
+    associated builtin_mock package 'git-test'. c3 is a commit in the
     repository but does not have an associated explicit package version.
     """
     suburls = []
@@ -1447,6 +1465,7 @@ def mock_git_repository(git, tmpdir_factory):
         git("init")
         git("config", "user.name", "Spack")
         git("config", "user.email", "spack@spack.io")
+        git("checkout", "-b", "main")
         url = url_util.path_to_file_url(str(repodir))
         for number, suburl in suburls:
             git("submodule", "add", suburl, "third_party/submodule{0}".format(number))
@@ -1480,10 +1499,7 @@ def mock_git_repository(git, tmpdir_factory):
         tag = "test-tag"
         git("tag", tag)
 
-        try:
-            default_branch = git("config", "--get", "init.defaultBranch", output=str).strip()
-        except Exception:
-            default_branch = "master"
+        default_branch = "main"
         git("checkout", default_branch)
 
         r2_file = "r2_file"
@@ -1700,7 +1716,7 @@ def installation_dir_with_headers(tmpdir_factory):
 ##########
 
 
-@pytest.fixture(params=["conflict%clang+foo", "conflict-parent@0.9^conflict~foo"])
+@pytest.fixture(params=["conflict+foo%clang", "conflict-parent@0.9^conflict~foo"])
 def conflict_spec(request):
     """Specs which violate constraints specified with the "conflicts"
     directive in the "conflict" package.
@@ -2070,48 +2086,15 @@ def mock_modules_root(tmp_path, monkeypatch):
     monkeypatch.setattr(spack.modules.common, "root_path", fn)
 
 
-_repo_name_id = 0
-
-
-def create_test_repo(tmpdir, pkg_name_content_tuples):
-    global _repo_name_id
-
-    repo_path = str(tmpdir)
-    repo_yaml = tmpdir.join("repo.yaml")
-    with open(str(repo_yaml), "w", encoding="utf-8") as f:
-        f.write(
-            f"""\
-repo:
-  namespace: testrepo{str(_repo_name_id)}
-"""
-        )
-
-    _repo_name_id += 1
-
-    packages_dir = tmpdir.join("packages")
-    for pkg_name, pkg_str in pkg_name_content_tuples:
-        pkg_dir = packages_dir.ensure(pkg_name, dir=True)
-        pkg_file = pkg_dir.join("package.py")
-        with open(str(pkg_file), "w", encoding="utf-8") as f:
-            f.write(pkg_str)
-
-    repo_cache = spack.util.file_cache.FileCache(str(tmpdir.join("cache")))
-    return spack.repo.Repo(repo_path, cache=repo_cache)
-
-
 @pytest.fixture()
 def compiler_factory():
     """Factory for a compiler dict, taking a spec and an OS as arguments."""
 
-    def _factory(*, spec, operating_system):
+    def _factory(*, spec):
         return {
-            "compiler": {
-                "spec": spec,
-                "operating_system": operating_system,
-                "paths": {"cc": "/path/to/cc", "cxx": "/path/to/cxx", "f77": None, "fc": None},
-                "modules": [],
-                "target": str(archspec.cpu.host().family),
-            }
+            "spec": f"{spec}",
+            "prefix": "/path",
+            "extra_attributes": {"compilers": {"c": "/path/bin/cc", "cxx": "/path/bin/cxx"}},
         }
 
     return _factory
@@ -2120,11 +2103,15 @@ def compiler_factory():
 @pytest.fixture()
 def host_architecture_str():
     """Returns the broad architecture family (x86_64, aarch64, etc.)"""
-    return str(archspec.cpu.host().family)
+    return str(_vendoring.archspec.cpu.host().family)
 
 
 def _true(x):
     return True
+
+
+def _libc_from_python(self):
+    return spack.spec.Spec("glibc@=2.28")
 
 
 @pytest.fixture()
@@ -2136,8 +2123,11 @@ def do_not_check_runtimes_on_reuse(monkeypatch):
 def _c_compiler_always_exists():
     fn = spack.solver.asp.c_compiler_runs
     spack.solver.asp.c_compiler_runs = _true
+    mthd = spack.compilers.libraries.CompilerPropertyDetector.default_libc
+    spack.compilers.libraries.CompilerPropertyDetector.default_libc = _libc_from_python
     yield
     spack.solver.asp.c_compiler_runs = fn
+    spack.compilers.libraries.CompilerPropertyDetector.default_libc = mthd
 
 
 @pytest.fixture(scope="session")
@@ -2216,3 +2206,58 @@ def _include_cache_root():
 def mock_include_cache(monkeypatch):
     """Override the include cache directory so tests don't pollute user cache."""
     monkeypatch.setattr(spack.config, "_include_cache_location", _include_cache_root)
+
+
+@pytest.fixture()
+def wrapper_dir(install_mockery):
+    """Installs the compiler wrapper and returns the prefix where the script is installed."""
+    wrapper = spack.concretize.concretize_one("compiler-wrapper")
+    wrapper_pkg = wrapper.package
+    PackageInstaller([wrapper_pkg], explicit=True).install()
+    return wrapper_pkg.bin_dir()
+
+
+def _noop(*args, **kwargs):
+    pass
+
+
+@pytest.fixture(autouse=True)
+def no_compilers_init(monkeypatch):
+    """Disables automatic compiler initialization"""
+    monkeypatch.setattr(spack.compilers.config, "_init_packages_yaml", _noop)
+
+
+@pytest.fixture(autouse=True)
+def skip_provenance_check(monkeypatch, request):
+    """Skip binary provenance check for git versions
+
+    Binary provenance checks require querying git repositories and mirrors.
+    The infrastructure for this is complex and a heavy lift for simple things like spec syntax
+    checks. This fixture defaults to skipping this check, but can be overridden with the
+    @pytest.mark.require_provenance decorator
+    """
+    if "require_provenance" not in request.keywords:
+        monkeypatch.setattr(spack.package_base.PackageBase, "resolve_binary_provenance", _noop)
+
+
+@pytest.fixture(scope="function")
+def config_two_gccs(mutable_config):
+    # Configure two gcc compilers that could be concretized to
+    extra_attributes_block = {
+        "compilers": {"c": "/path/to/gcc", "cxx": "/path/to/g++", "fortran": "/path/to/fortran"}
+    }
+    mutable_config.set(
+        "packages:gcc:externals::",
+        [
+            {
+                "spec": "gcc@12.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+            {
+                "spec": "gcc@10.3.1 languages=c,c++,fortran",
+                "prefix": "/path",
+                "extra_attributes": extra_attributes_block,
+            },
+        ],
+    )

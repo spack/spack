@@ -22,7 +22,7 @@ level = "long"
 display_args = {"long": True, "show_flags": False, "variants": False, "indent": 4}
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     subparser.add_argument(
         "--root", action="store_true", help="deconcretize only specific environment roots"
     )

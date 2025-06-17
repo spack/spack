@@ -6,6 +6,7 @@ import base64
 import codecs
 import json
 import os
+import pathlib
 import re
 import shutil
 import stat
@@ -13,7 +14,7 @@ import subprocess
 import tempfile
 import zipfile
 from collections import namedtuple
-from typing import Callable, Dict, List, Set
+from typing import Callable, Dict, List, Optional, Set, Union
 from urllib.request import Request
 
 import llnl.path
@@ -24,7 +25,6 @@ from llnl.util.tty.color import cescape, colorize
 import spack
 import spack.binary_distribution as bindist
 import spack.builder
-import spack.concretize
 import spack.config as cfg
 import spack.environment as ev
 import spack.error
@@ -33,6 +33,8 @@ import spack.mirrors.mirror
 import spack.paths
 import spack.repo
 import spack.spec
+import spack.stage
+import spack.store
 import spack.util.git
 import spack.util.gpg as gpg_util
 import spack.util.spack_yaml as syaml
@@ -41,6 +43,7 @@ import spack.util.web as web_util
 from spack import traverse
 from spack.error import SpackError
 from spack.reporters.cdash import SPACK_CDASH_TIMEOUT
+from spack.version import GitVersion, StandardVersion
 
 from .common import (
     IS_WINDOWS,
@@ -79,6 +82,45 @@ def get_change_revisions():
     return None, None
 
 
+def get_added_versions(
+    checksums_version_dict: Dict[str, Union[StandardVersion, GitVersion]],
+    path: str,
+    from_ref: str = "HEAD~1",
+    to_ref: str = "HEAD",
+) -> List[Union[StandardVersion, GitVersion]]:
+    """Get a list of the versions added between `from_ref` and `to_ref`.
+    Args:
+       checksums_version_dict (Dict): all package versions keyed by known checksums.
+       path (str): path to the package.py
+       from_ref (str): oldest git ref, defaults to `HEAD~1`
+       to_ref (str): newer git ref, defaults to `HEAD`
+    Returns: list of versions added between refs
+    """
+    git_exe = spack.util.git.git(required=True)
+
+    # Gather git diff
+    diff_lines = git_exe("diff", from_ref, to_ref, "--", path, output=str).split("\n")
+
+    # Store added and removed versions
+    # Removed versions are tracked here to determine when versions are moved in a file
+    # and show up as both added and removed in a git diff.
+    added_checksums = set()
+    removed_checksums = set()
+
+    # Scrape diff for modified versions and prune added versions if they show up
+    # as also removed (which means they've actually just moved in the file and
+    # we shouldn't need to rechecksum them)
+    for checksum in checksums_version_dict.keys():
+        for line in diff_lines:
+            if checksum in line:
+                if line.startswith("+"):
+                    added_checksums.add(checksum)
+                if line.startswith("-"):
+                    removed_checksums.add(checksum)
+
+    return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
+
+
 def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     """Given an environment manifest path and two revisions to compare, return
     whether or not the stack was changed.  Returns True if the environment
@@ -109,10 +151,10 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     return False
 
 
-def compute_affected_packages(rev1="HEAD^", rev2="HEAD"):
+def compute_affected_packages(rev1: str = "HEAD^", rev2: str = "HEAD") -> Set[str]:
     """Determine which packages were added, removed or changed
     between rev1 and rev2, and return the names as a set"""
-    return spack.repo.get_all_package_diffs("ARC", rev1=rev1, rev2=rev2)
+    return spack.repo.get_all_package_diffs("ARC", spack.repo.builtin_repo(), rev1=rev1, rev2=rev2)
 
 
 def get_spec_filter_list(env, affected_pkgs, dependent_traverse_depth=None):
@@ -204,7 +246,9 @@ def create_already_built_pruner(
         if not spec_locations:
             return RebuildDecision(True, "not found anywhere")
 
-        urls = ",".join([loc["mirror_url"] for loc in spec_locations])
+        urls = ",".join(
+            [f"{loc.url_and_version.url}@v{loc.url_and_version.version}" for loc in spec_locations]
+        )
         message = f"up-to-date [{urls}]"
         return RebuildDecision(False, message)
 
@@ -224,7 +268,7 @@ def create_external_pruner() -> Callable[[spack.spec.Spec], RebuildDecision]:
 
 def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[str]) -> str:
     reason_msg = ", ".join(reasons)
-    spec_fmt = "{name}{@version}{%compiler}{/hash:7}"
+    spec_fmt = "{name}{@version}{/hash:7}{%compiler}"
 
     if not prune:
         status = colorize("@*g{[x]}  ")
@@ -380,10 +424,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         args: (spack.main.SpackArgumentParser): Parsed arguments from the command
             line.
     """
-    with spack.concretize.disable_compiler_existence_check():
-        with env.write_transaction():
-            env.concretize()
-            env.write()
+    with env.write_transaction():
+        env.concretize()
+        env.write()
 
     options = collect_pipeline_options(env, args)
 
@@ -477,9 +520,7 @@ def generate_pipeline(env: ev.Environment, args) -> None:
     # Use all unpruned specs to populate the build group for this set
     cdash_config = cfg.get("cdash")
     if options.cdash_handler and options.cdash_handler.auth_token:
-        options.cdash_handler.populate_buildgroup(
-            [options.cdash_handler.build_name(s) for s in pipeline_specs]
-        )
+        options.cdash_handler.create_buildgroup()
     elif cdash_config:
         # warn only if there was actually a CDash configuration.
         tty.warn("Unable to populate buildgroup without CDash credentials")
@@ -574,29 +615,40 @@ def copy_stage_logs_to_artifacts(job_spec: spack.spec.Spec, job_log_dir: str) ->
     job_spec, and attempts to copy the files into the directory given
     by job_log_dir.
 
-    Args:
+    Parameters:
         job_spec: spec associated with spack install log
         job_log_dir: path into which build log should be copied
     """
     tty.debug(f"job spec: {job_spec}")
-
-    try:
-        pkg_cls = spack.repo.PATH.get_pkg_class(job_spec.name)
-        job_pkg = pkg_cls(job_spec)
-        tty.debug(f"job package: {job_pkg}")
-    except AssertionError:
-        msg = f"Cannot copy stage logs: job spec ({job_spec}) must be concrete"
-        tty.error(msg)
+    if not job_spec.concrete:
+        tty.warn("Cannot copy artifacts for non-concrete specs")
         return
 
-    stage_dir = job_pkg.stage.path
-    tty.debug(f"stage dir: {stage_dir}")
-    for file in [
-        job_pkg.log_path,
-        job_pkg.env_mods_path,
-        *spack.builder.create(job_pkg).archive_files,
-    ]:
-        copy_files_to_artifacts(file, job_log_dir)
+    package_metadata_root = pathlib.Path(spack.store.STORE.layout.metadata_path(job_spec))
+    if not os.path.isdir(package_metadata_root):
+        # Fallback to using the stage directory
+        job_pkg = job_spec.package
+
+        package_metadata_root = pathlib.Path(job_pkg.stage.path)
+        archive_files = spack.builder.create(job_pkg).archive_files
+        tty.warn("Package not installed, falling back to use stage dir")
+        tty.debug(f"stage dir: {package_metadata_root}")
+    else:
+        # Get the package's archived files
+        archive_files = []
+        archive_root = package_metadata_root / "archived-files"
+        if os.path.isdir(archive_root):
+            archive_files = [str(f) for f in archive_root.rglob("*") if os.path.isfile(f)]
+        else:
+            tty.debug(f"No archived files detected at {archive_root}")
+
+    # Try zipped and unzipped versions of the build log
+    build_log_zipped = package_metadata_root / "spack-build-out.txt.gz"
+    build_log = package_metadata_root / "spack-build-out.txt"
+    build_env_mods = package_metadata_root / "spack-build-env.txt"
+
+    for f in [build_log_zipped, build_log, build_env_mods, *archive_files]:
+        copy_files_to_artifacts(str(f), job_log_dir, compress_artifacts=True)
 
 
 def copy_test_logs_to_artifacts(test_stage, job_test_dir):
@@ -609,11 +661,12 @@ def copy_test_logs_to_artifacts(test_stage, job_test_dir):
     """
     tty.debug(f"test stage: {test_stage}")
     if not os.path.exists(test_stage):
-        msg = f"Cannot copy test logs: job test stage ({test_stage}) does not exist"
-        tty.error(msg)
+        tty.error(f"Cannot copy test logs: job test stage ({test_stage}) does not exist")
         return
 
-    copy_files_to_artifacts(os.path.join(test_stage, "*", "*.txt"), job_test_dir)
+    copy_files_to_artifacts(
+        os.path.join(test_stage, "*", "*.txt"), job_test_dir, compress_artifacts=True
+    )
 
 
 def download_and_extract_artifacts(url, work_dir) -> str:
@@ -1190,33 +1243,31 @@ def write_broken_spec(url, pkg_name, stack_name, job_url, pipeline_url, spec_dic
     """Given a url to write to and the details of the failed job, write an entry
     in the broken specs list.
     """
-    tmpdir = tempfile.mkdtemp()
-    file_path = os.path.join(tmpdir, "broken.txt")
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpdir:
+        file_path = os.path.join(tmpdir, "broken.txt")
 
-    broken_spec_details = {
-        "broken-spec": {
-            "job-name": pkg_name,
-            "job-stack": stack_name,
-            "job-url": job_url,
-            "pipeline-url": pipeline_url,
-            "concrete-spec-dict": spec_dict,
+        broken_spec_details = {
+            "broken-spec": {
+                "job-name": pkg_name,
+                "job-stack": stack_name,
+                "job-url": job_url,
+                "pipeline-url": pipeline_url,
+                "concrete-spec-dict": spec_dict,
+            }
         }
-    }
 
-    try:
-        with open(file_path, "w", encoding="utf-8") as fd:
-            syaml.dump(broken_spec_details, fd)
-        web_util.push_to_url(
-            file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
-        )
-    except Exception as err:
-        # If there is an S3 error (e.g., access denied or connection
-        # error), the first non boto-specific class in the exception
-        # hierarchy is Exception.  Just print a warning and return
-        msg = f"Error writing to broken specs list {url}: {err}"
-        tty.warn(msg)
-    finally:
-        shutil.rmtree(tmpdir)
+        try:
+            with open(file_path, "w", encoding="utf-8") as fd:
+                syaml.dump(broken_spec_details, fd)
+            web_util.push_to_url(
+                file_path, url, keep_original=False, extra_args={"ContentType": "text/plain"}
+            )
+        except Exception as err:
+            # If there is an S3 error (e.g., access denied or connection
+            # error), the first non boto-specific class in the exception
+            # hierarchy is Exception.  Just print a warning and return
+            msg = f"Error writing to broken specs list {url}: {err}"
+            tty.warn(msg)
 
 
 def read_broken_spec(broken_spec_url):
@@ -1252,35 +1303,34 @@ def display_broken_spec_messages(base_url, hashes):
         tty.msg(msg)
 
 
-def run_standalone_tests(**kwargs):
+def run_standalone_tests(
+    *,
+    cdash: Optional[CDashHandler] = None,
+    fail_fast: bool = False,
+    log_file: Optional[str] = None,
+    job_spec: Optional[spack.spec.Spec] = None,
+    repro_dir: Optional[str] = None,
+    timeout: Optional[int] = None,
+):
     """Run stand-alone tests on the current spec.
 
-    Arguments:
-       kwargs (dict): dictionary of arguments used to run the tests
-
-    List of recognized keys:
-
-    * "cdash" (CDashHandler): (optional) cdash handler instance
-    * "fail_fast" (bool): (optional) terminate tests after the first failure
-    * "log_file" (str): (optional) test log file name if NOT CDash reporting
-    * "job_spec" (Spec): spec that was built
-    * "repro_dir" (str): reproduction directory
+    Args:
+        cdash: cdash handler instance
+        fail_fast: terminate tests after the first failure
+        log_file: test log file name if NOT CDash reporting
+        job_spec: spec that was built
+        repro_dir: reproduction directory
+        timeout: maximum time (in seconds) that tests are allowed to run
     """
-    cdash = kwargs.get("cdash")
-    fail_fast = kwargs.get("fail_fast")
-    log_file = kwargs.get("log_file")
-
     if cdash and log_file:
         tty.msg(f"The test log file {log_file} option is ignored with CDash reporting")
         log_file = None
 
     # Error out but do NOT terminate if there are missing required arguments.
-    job_spec = kwargs.get("job_spec")
     if not job_spec:
         tty.error("Job spec is required to run stand-alone tests")
         return
 
-    repro_dir = kwargs.get("repro_dir")
     if not repro_dir:
         tty.error("Reproduction directory is required for stand-alone tests")
         return
@@ -1288,6 +1338,9 @@ def run_standalone_tests(**kwargs):
     test_args = ["spack", "--color=always", "--backtrace", "--verbose", "test", "run"]
     if fail_fast:
         test_args.append("--fail-fast")
+
+    if timeout is not None:
+        test_args.extend(["--timeout", str(timeout)])
 
     if cdash:
         test_args.extend(cdash.args())

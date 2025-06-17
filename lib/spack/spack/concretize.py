@@ -2,38 +2,20 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """High-level functions to concretize list of specs"""
+import importlib
 import sys
 import time
-from contextlib import contextmanager
 from typing import Iterable, List, Optional, Sequence, Tuple, Union
 
 import llnl.util.tty as tty
 
 import spack.compilers
+import spack.compilers.config
 import spack.config
 import spack.error
 import spack.repo
 import spack.util.parallel
 from spack.spec import ArchSpec, CompilerSpec, Spec
-
-CHECK_COMPILER_EXISTENCE = True
-
-
-@contextmanager
-def disable_compiler_existence_check():
-    global CHECK_COMPILER_EXISTENCE
-    CHECK_COMPILER_EXISTENCE, saved = False, CHECK_COMPILER_EXISTENCE
-    yield
-    CHECK_COMPILER_EXISTENCE = saved
-
-
-@contextmanager
-def enable_compiler_existence_check():
-    global CHECK_COMPILER_EXISTENCE
-    CHECK_COMPILER_EXISTENCE, saved = True, CHECK_COMPILER_EXISTENCE
-    yield
-    CHECK_COMPILER_EXISTENCE = saved
-
 
 SpecPairInput = Tuple[Spec, Optional[Spec]]
 SpecPair = Tuple[Spec, Spec]
@@ -130,9 +112,12 @@ def concretize_separately(
         if not abstract.concrete
     ]
     ret = [(i, abstract) for i, abstract in enumerate(to_concretize) if abstract.concrete]
-    # Ensure we don't try to bootstrap clingo in parallel
-    with ensure_bootstrap_configuration():
-        ensure_clingo_importable_or_raise()
+    try:
+        # Ensure we don't try to bootstrap clingo in parallel
+        importlib.import_module("clingo")
+    except ImportError:
+        with ensure_bootstrap_configuration():
+            ensure_clingo_importable_or_raise()
 
     # Ensure all the indexes have been built or updated, since
     # otherwise the processes in the pool may timeout on waiting
@@ -141,9 +126,9 @@ def concretize_separately(
     # all the indexes if there's any need for that.
     _ = spack.repo.PATH.provider_index
 
-    # Ensure we have compilers in compilers.yaml to avoid that
+    # Ensure we have compilers in packages.yaml to avoid that
     # processes try to write the config file in parallel
-    _ = spack.compilers.all_compilers_config(spack.config.CONFIG)
+    _ = spack.compilers.config.all_compilers()
 
     # Early return if there is nothing to do
     if len(args) == 0:

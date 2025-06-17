@@ -38,9 +38,9 @@ from spack.spec import Spec
             {"optional-dep-test@1.1%intel": {"pkg-b": None, "pkg-c": None}},
         ),
         (
-            "optional-dep-test@1.1%intel@64.1.2+a",
+            "optional-dep-test@1.1+a%intel@64.1.2",
             {
-                "optional-dep-test@1.1%intel@64.1.2+a": {
+                "optional-dep-test@1.1+a%intel@64.1.2": {
                     "pkg-a": None,
                     "pkg-b": None,
                     "pkg-c": None,
@@ -49,8 +49,8 @@ from spack.spec import Spec
             },
         ),
         (
-            "optional-dep-test@1.1%clang@36.5+a",
-            {"optional-dep-test@1.1%clang@36.5+a": {"pkg-b": None, "pkg-a": None, "pkg-e": None}},
+            "optional-dep-test@1.1+a%clang@36.5",
+            {"optional-dep-test@1.1+a%clang@36.5": {"pkg-b": None, "pkg-a": None, "pkg-e": None}},
         ),
         # Chained MPI
         (

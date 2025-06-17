@@ -8,7 +8,7 @@ from .utils import Joiner
 from .utils import Namespace
 
 if t.TYPE_CHECKING:
-    import typing_extensions as te
+    import _vendoring.typing_extensions as te
 
 # defaults for the parser / lexer
 BLOCK_START_STRING = "{%"

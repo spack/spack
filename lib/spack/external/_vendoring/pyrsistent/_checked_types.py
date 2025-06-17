@@ -3,9 +3,9 @@ from enum import Enum
 from abc import abstractmethod, ABCMeta
 from collections.abc import Iterable
 
-from pyrsistent._pmap import PMap, pmap
-from pyrsistent._pset import PSet, pset
-from pyrsistent._pvector import PythonPVector, python_pvector
+from _vendoring.pyrsistent._pmap import PMap, pmap
+from _vendoring.pyrsistent._pset import PSet, pset
+from _vendoring.pyrsistent._pvector import PythonPVector, python_pvector
 
 
 class CheckedType(object):

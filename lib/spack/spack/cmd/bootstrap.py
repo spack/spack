@@ -1,7 +1,9 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import argparse
 import os
+import pathlib
 import shutil
 import sys
 import tempfile
@@ -28,7 +30,7 @@ level = "long"
 
 
 # Tarball to be downloaded if binary packages are requested in a local mirror
-BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache.tar.gz"
+BINARY_TARBALL = "https://github.com/spack/spack-bootstrap-mirrors/releases/download/v0.6/bootstrap-buildcache-v3.tar.gz"
 
 #: Subdirectory where to create the mirror
 LOCAL_MIRROR_DIR = "bootstrap_cache"
@@ -72,7 +74,7 @@ def _add_scope_option(parser):
     )
 
 
-def setup_parser(subparser):
+def setup_parser(subparser: argparse.ArgumentParser) -> None:
     sp = subparser.add_subparsers(dest="subcommand")
 
     now = sp.add_parser("now", help="Spack ready, right now!")
@@ -410,8 +412,9 @@ def _mirror(args):
         stage.create()
         stage.fetch()
         stage.expand_archive()
-        build_cache_dir = os.path.join(stage.source_path, "build_cache")
-        shutil.move(build_cache_dir, mirror_dir)
+        stage_dir = pathlib.Path(stage.source_path)
+        for entry in stage_dir.iterdir():
+            shutil.move(str(entry), mirror_dir)
         llnl.util.tty.set_msg_enabled(True)
 
     def write_metadata(subdir, metadata):
@@ -436,7 +439,6 @@ def _mirror(args):
         shutil.copy(spack.util.path.canonicalize_path(GNUPG_JSON), abs_directory)
         shutil.copy(spack.util.path.canonicalize_path(PATCHELF_JSON), abs_directory)
         instructions += cmd.format("local-binaries", rel_directory)
-        instructions += "  % spack buildcache update-index <final-path>/bootstrap_cache\n"
     print(instructions)
 
 
