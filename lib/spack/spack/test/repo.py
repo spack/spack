@@ -83,9 +83,9 @@ def test_repo_last_mtime(mock_packages):
         modified_after = "\n    ".join(
             f"{path} ({mtime})" for mtime, path in mtime_with_package_py if mtime > repo_mtime
         )
-        assert (
-            max_mtime <= repo_mtime
-        ), f"the following files were modified while running tests:\n    {modified_after}"
+        assert max_mtime <= repo_mtime, (
+            f"the following files were modified while running tests:\n    {modified_after}"
+        )
     assert max_mtime == repo_mtime, f"last_mtime incorrect for {max_file}"
 
 
@@ -771,7 +771,7 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
     cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
 
     # Construct 3 identical descriptors
-    descriptors_1, descriptors_2, descriptors_3 = [
+    descriptors_1, descriptors_2, descriptors_3, descriptors_4 = [
         {
             "foo": spack.repo.RemoteRepoDescriptor(
                 name="foo",
@@ -784,12 +784,13 @@ def test_repo_descriptors_update(tmp_path: pathlib.Path):
                 lock=lock,
             )
         }
-        for i in range(3)
+        for i in range(4)
     ]
 
     repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
     repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
     repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
+    repos_4 = spack.repo.RepoDescriptors(descriptors_4)  # type: ignore
 
     class MockGit(spack.util.executable.Executable):
         def __init__(self):
@@ -840,3 +841,61 @@ repo_index:
     assert not errors_3
     for descriptor in repos_3.values():
         descriptor.update(git=MockGit())
+
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
+    for descriptor in repos_4.values():
+        descriptor.update(git=MockGit())
+        descriptor.update(git=MockGit())
+
+
+def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1 = {
+        "foo": spack.repo.RemoteRepoDescriptor(
+            name="foo",
+            repository=str(tmp_path / "foo.git"),
+            destination=str(tmp_path / "foo_destination"),
+            branch=None,
+            tag=None,
+            commit=None,
+            relative_paths=None,
+            lock=lock,
+        )
+    }
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+
+    class MockGitInvalidRemote(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "bad string"
+
+    class MockGitFailed(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("failed")
+
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+
+    _, errors_1 = repos_1.construct(cache=cache, find_git=MockGitFailed)
+    assert len(errors_1) == 1
+    assert all("Failed to clone repository" in str(err) for err in errors_1.values()), errors_1
+
+    with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
+        for descriptor in repos_1.values():
+            descriptor.update(git=MockGitInvalidRemote())
