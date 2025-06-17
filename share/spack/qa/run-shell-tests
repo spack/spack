@@ -36,13 +36,15 @@ cd "$SPACK_ROOT"
 
 # Run bash tests with coverage enabled, but pipe output to /dev/null
 # because it seems that kcov undoes the script's redirection
-if [ "$COVERAGE" = true ]; then
-    kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
-    kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
-else
-    bash "$QA_DIR/setup-env-test.sh"
-    bash "$QA_DIR/completion-test.sh"
-fi
+#if [ "$COVERAGE" = true ]; then
+#    kcov "$SPACK_ROOT/coverage" "$QA_DIR/setup-env-test.sh" &> /dev/null
+#    kcov "$SPACK_ROOT/coverage" "$QA_DIR/completion-test.sh" &> /dev/null
+#else
+#    bash "$QA_DIR/setup-env-test.sh"
+#    bash "$QA_DIR/completion-test.sh"
+#fi
+bash "$QA_DIR/setup-env-test.sh"
+bash "$QA_DIR/completion-test.sh"
 
 # Run the test scripts for their output (these will print nicely)
 zsh  "$QA_DIR/setup-env-test.sh"
