@@ -611,7 +611,8 @@ def test_install_v2_layout(
     assert "Extracting libdwarf" in output
     assert "libdwarf: Successfully installed" in output
     assert "Installing a spec from a v2 binary mirror layout" in output
-    assert "is deprecated" in output
+    assert "Fetching an index from a v2 binary mirror layout" in output
+    assert "deprecated" in output
 
 
 def test_basic_migrate_unsigned(capsys, v2_buildcache_layout, mutable_config):
