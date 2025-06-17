@@ -1280,8 +1280,7 @@ class BuildTask(Task):
             os.rename(self.pkg.prefix, self.backup_dir)
 
         install_args = self.request.install_args
-        unsigned = install_args.get("unsigned")
-        pkg, pkg_id = self.pkg, self.pkg_id
+        pkg = self.pkg
 
         tests = install_args.get("tests")
         pkg.run_tests = tests is True or tests and pkg.name in tests
@@ -2184,39 +2183,6 @@ class PackageInstaller:
             self._update_installed(task)
             self.reports[task.request.pkg_id].append_record(task.record)
         return rc
-
-    def _overwrite_install_task(self, task: Task):
-        """
-        Try to run the install task overwriting the package prefix.
-        If this fails, try to recover the original install prefix. If that fails
-        too, mark the spec as uninstalled.
-        """
-        try:
-            with fs.replace_directory_transaction(task.pkg.prefix):
-                rc = self._install_task(task)
-                if rc in requeue_results:
-                    raise Requeue  # raise to trigger transactional replacement of directory
-
-        except Requeue:
-            pass  # This task is requeueing, not failing
-        except fs.CouldNotRestoreDirectoryBackup as e:
-            spack.store.STORE.db.remove(task.pkg.spec)
-            if isinstance(e.inner_exception, Requeue):
-                message_fn = tty.warn
-            else:
-                message_fn = tty.error
-
-            message_fn(
-                f"Recovery of install dir of {task.pkg.name} failed due to "
-                f"{e.outer_exception.__class__.__name__}: {str(e.outer_exception)}. "
-                "The spec is now uninstalled."
-            )
-
-            # Unwrap the actuall installation exception
-            if isinstance(e.inner_exception, Requeue):
-                tty.warn("Task will be requeued to build from source")
-            else:
-                raise e.inner_exception
 
     def _next_is_pri0(self) -> bool:
         """

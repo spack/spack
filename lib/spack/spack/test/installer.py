@@ -52,6 +52,7 @@ repo:
 
 def _noop(*args, **kwargs):
     """Generic monkeypatch no-op routine."""
+    pass
 
 
 def _none(*args, **kwargs):
@@ -75,7 +76,7 @@ def create_build_task(
 ) -> inst.BuildTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
     return inst.BuildTask(
-        pkg, request=request, progress=MockInstallerProgress, status=inst.BuildStatus.QUEUED
+        pkg, request=request, progress=MockInstallerProgress(), status=inst.BuildStatus.QUEUED
     )
 
 
@@ -84,7 +85,7 @@ def create_install_task(
 ) -> inst.InstallTask:
     request = inst.BuildRequest(pkg, {} if install_args is None else install_args)
     return inst.InstallTask(
-        pkg, request=request, progress=MockInstallerProgress, status=inst.BuildStatus.QUEUED
+        pkg, request=request, progress=MockInstallerProgress(), status=inst.BuildStatus.QUEUED
     )
 
 
@@ -685,7 +686,10 @@ def test_install_splice_root_from_binary(
     assert len(spack.store.STORE.db.query()) == len(list(out.traverse()))
 
 
-class MockInstallerProgress:
+class MockInstallerProgress(inst.InstallerProgress):
+    def __init__(self, *args, **kwargs):
+        pass
+
     def set_installed(self, *args, **kwargs):
         pass
 
@@ -711,7 +715,7 @@ def test_installing_task_use_cache(install_mockery, monkeypatch):
     term_status = MockTermStatusLine()
 
     monkeypatch.setattr(inst, "_install_from_cache", _true)
-    installer.progress = MockInstallerProgress
+    installer.progress = MockInstallerProgress()
     installer.start_task(task, term_status)
     installer.complete_task(task)
     assert request.pkg_id in installer.installed
@@ -1212,7 +1216,6 @@ def test_overwrite_install_backup_success(
     installer.progress = MockInstallerProgress()
     installer._init_queue()
     task = installer._pop_task()
-    term_status = MockTermStatusLine()
 
     # Make sure the install prefix exists with some trivial file
     installed_file = os.path.join(task.pkg.prefix, "some_file")
@@ -1254,10 +1257,9 @@ def test_overwrite_install_backup_failure(
     """
     # Get a build task. TODO: refactor this to avoid calling internal methods
     installer = create_installer(["pkg-c"])
-    installer.progress = MockInstallerProgress
+    installer.progress = MockInstallerProgress()
     installer._init_queue()
     task = installer._pop_task()
-    term_status = MockTermStatusLine()
 
     # Make sure the install prefix exists
     installed_file = os.path.join(task.pkg.prefix, "some_file")
