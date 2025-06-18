@@ -37,10 +37,10 @@ def _fetch_manifests(
     each manifest.
 
     :param mirror: The mirror from which to fetch the manifests.
-    :return: A list of tuples, each containing a list of file names and a callable to read
-             the manifest entries.
+    :return: A tuple with three elements - a list of manifest files in the mirror, a
+             callable to read each manifest, and a list of blobs in the mirror.
     """
-    file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
+    manifests, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
     url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
     tty.debug(f"Listing blobs in {url_to_list}")
     blobs = web_util.list_url(url_to_list, recursive=True) or []
@@ -50,7 +50,7 @@ def _fetch_manifests(
         url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
         for blob_name in blobs
     ]
-    return file_list, read_fn, blobs
+    return manifests, read_fn, blobs
 
 
 def _delete_manifests_from_cache_aws(
