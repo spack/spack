@@ -821,12 +821,12 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
     cache_entry = URLBuildcacheEntry(
         mirror_url=f"file://{mirror_directory}", spec=spec, allow_unsigned=True
     )
-    cache_entry.read_manifest()
+    manifest = cache_entry.read_manifest()
 
     manifest_url = f"file://{cache_entry.get_manifest_url(spec=spec, mirror_url=mirror_directory)}"
 
     # Remove the blobs from the cache, orphaning the manifest
-    for blob_file in cache_entry.read_manifest().data:
+    for blob_file in manifest.data:
         blob_url = cache_entry.get_blob_url(mirror_url=mirror_directory, record=blob_file)
         web_util.remove_url(url=f"file://{blob_url}")
 
