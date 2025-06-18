@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+import pathlib
 import tempfile
 from concurrent.futures import Future, as_completed
-from contextlib import contextmanager
-from typing import Callable, Dict, Generator, List, Optional, Set, Tuple, cast
+from typing import Callable, Dict, List, Optional, Set, Tuple, cast
 
 import llnl.util.tty as tty
 
@@ -14,15 +15,20 @@ import spack.stage
 import spack.util.parallel
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.util.executable import which
 
 from .mirrors.mirror import Mirror
-from .url_buildcache import URLBuildcacheEntry, get_entries_from_cache
+from .url_buildcache import (
+    CURRENT_BUILD_CACHE_LAYOUT_VERSION,
+    URLBuildcacheEntry,
+    get_entries_from_cache,
+    get_url_buildcache_class,
+)
 
 
-@contextmanager
 def _fetch_manifests(
-    mirror: Mirror,
-) -> Generator[Tuple[List[str], Callable[[str], URLBuildcacheEntry], List[str]], None, None]:
+    mirror: Mirror, tmpspecsdir: str
+) -> Tuple[List[str], Callable[[str], URLBuildcacheEntry], List[str]]:
     """
     Fetch all manifests from the buildcache for a given mirror.
 
@@ -34,24 +40,82 @@ def _fetch_manifests(
     :return: A list of tuples, each containing a list of file names and a callable to read
              the manifest entries.
     """
-    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
-        file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
-        url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
-        tty.debug(f"Listing blobs in {url_to_list}")
-        blobs = web_util.list_url(url_to_list, recursive=True) or []
-        if not blobs:
-            tty.warn(f"Unable to list blobs in {url_to_list}")
-        blobs = [
-            url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
-            for blob_name in blobs
-        ]
-        yield file_list, read_fn, blobs
+    file_list, read_fn = get_entries_from_cache(url=mirror.fetch_url, tmpspecsdir=tmpspecsdir)
+    url_to_list = url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path())
+    tty.debug(f"Listing blobs in {url_to_list}")
+    blobs = web_util.list_url(url_to_list, recursive=True) or []
+    if not blobs:
+        tty.warn(f"Unable to list blobs in {url_to_list}")
+    blobs = [
+        url_util.join(mirror.fetch_url, bindist.buildcache_relative_blobs_path(), blob_name)
+        for blob_name in blobs
+    ]
+    return file_list, read_fn, blobs
 
 
-def _delete_object(url: str, dry_run: bool) -> int:
-    if dry_run:
-        tty.info(f"Dry run: would remove object {url}")
-        return 1
+def _delete_manifests_from_cache_aws(
+    url: str, tmpspecsdir: str, urls_to_delete: Set[str]
+) -> Optional[int]:
+    aws = which("aws")
+
+    if not aws:
+        tty.warn("AWS CLI not found, skipping deletion of cache entries.")
+        return None
+
+    cache_class = get_url_buildcache_class(layout_version=CURRENT_BUILD_CACHE_LAYOUT_VERSION)
+
+    include_pattern = cache_class.get_buildcache_component_include_pattern()
+
+    file_count_before_deletion = len(list(pathlib.Path(tmpspecsdir).rglob(include_pattern)))
+
+    # Add file:// prefix to URLs so that they are deleted properly by web_util.remove_url
+    urls_to_delete = {url_util.path_to_file_url(url) for url in urls_to_delete}
+
+    tty.debug(f"Deleting {len(urls_to_delete)} entries from cache at {url}")
+    deleted = _delete_entries_from_cache_manual(tmpspecsdir, urls_to_delete)
+    tty.debug(f"Deleted {deleted} entries from cache at {url}")
+
+    sync_command_args = [
+        "s3",
+        "sync",
+        "--delete",
+        "--exclude",
+        "*",
+        "--include",
+        include_pattern,
+        tmpspecsdir,
+        url,
+    ]
+
+    try:
+        aws(*sync_command_args, output=os.devnull, error=os.devnull)
+        # `aws s3 sync` doesn't return the number of deleted files,
+        # but we can calculate it based on the local file count from
+        # before and after the deletion.
+        return file_count_before_deletion - len(
+            list(pathlib.Path(tmpspecsdir).rglob(include_pattern))
+        )
+    except Exception:
+        tty.warn("Failed to use aws s3 sync to delete specs, falling back to parallel deletion.")
+
+    return None
+
+
+def _delete_entries_from_cache_manual(url: str, urls_to_delete: Set[str]) -> int:
+    pruned_objects = 0
+    futures: List[Future] = []
+
+    with spack.util.parallel.make_concurrent_executor() as executor:
+        for url in urls_to_delete:
+            futures.append(executor.submit(_delete_object, url))
+
+        for manifest_or_blob_future in as_completed(futures):
+            pruned_objects += manifest_or_blob_future.result()
+
+    return pruned_objects
+
+
+def _delete_object(url: str) -> int:
     try:
         web_util.remove_url(url=url)
         tty.info(f"Removed object {url}")
@@ -66,6 +130,7 @@ def _prune_orphans(
     manifests: List[str],
     read_fn: Callable[[str], URLBuildcacheEntry],
     blobs: List[str],
+    tmpspecsdir: str,
     dry_run: bool,
 ) -> int:
     """
@@ -139,32 +204,43 @@ def _prune_orphans(
     if orphaned_manifests:
         tty.info(f"Found {len(orphaned_manifests)} manifest(s) that are missing blobs")
 
-    pruned_objects = 0
-    futures: List[Future] = []
-
-    with spack.util.parallel.make_concurrent_executor() as executor:
+    if dry_run:
+        pruned_object_count = len(orphaned_blobs) + len(orphaned_manifests)
         for manifest in orphaned_manifests:
-            futures.append(executor.submit(_delete_object, manifest, dry_run))
-            try:
-                manifests.remove(manifest)
-            except ValueError:
-                # If the manifest was already removed during the pruning of another orphaned blob,
-                # it will not be in the list, so we can safely ignore this error.
-                pass
-
+            manifests.remove(manifest)
         for blob in orphaned_blobs:
-            futures.append(executor.submit(_delete_object, blob, dry_run))
-            try:
-                blobs.remove(blob)
-            except ValueError:
-                # If the blob was already removed during the pruning of another orphaned manifest,
-                # it will not be in the list, so we can safely ignore this error.
-                pass
+            blobs.remove(blob)
+        return pruned_object_count
 
-        for manifest_or_blob_future in as_completed(futures):
-            pruned_objects += manifest_or_blob_future.result()
+    # Try to delete the orphaned manifests using the AWS CLI,
+    # if possible.
+    pruned_manifests: Optional[int] = None
+    if mirror.fetch_url.startswith("s3://"):
+        pruned_manifests = _delete_manifests_from_cache_aws(
+            url=mirror.fetch_url, tmpspecsdir=tmpspecsdir, urls_to_delete=orphaned_manifests
+        )
 
-    return pruned_objects
+    if pruned_manifests is None:
+        # If the AWS CLI deletion failed, we fall back to deleting both manifests
+        # and blobs with the fallback method.
+        orphans_to_delete = orphaned_blobs.union(orphaned_manifests)
+        pruned_object_count = 0
+    else:
+        # If the AWS CLI deletion succeeded, we only need to worry about
+        # deleting the blobs, since the manifests have already been deleted.
+        orphans_to_delete = orphaned_blobs
+        pruned_object_count = pruned_manifests
+
+    pruned_object_count += _delete_entries_from_cache_manual(
+        url=mirror.fetch_url, urls_to_delete=orphans_to_delete
+    )
+
+    for manifest in orphaned_manifests:
+        manifests.remove(manifest)
+    for blob in orphaned_blobs:
+        blobs.remove(blob)
+
+    return pruned_object_count
 
 
 def prune(mirror: Mirror, dry_run: bool) -> None:
@@ -176,7 +252,8 @@ def prune(mirror: Mirror, dry_run: bool) -> None:
     tty.debug(f"Pruning mirror: {mirror.fetch_url}" + (" (dry run)" if dry_run else ""))
 
     total_pruned = 0
-    with _fetch_manifests(mirror) as (manifest_list, read_fn, blob_list):
+    with tempfile.TemporaryDirectory(dir=spack.stage.get_stage_root()) as tmpspecsdir:
+        manifest_list, read_fn, blob_list = _fetch_manifests(mirror, tmpspecsdir)
         while True:
             # Continue pruning until no more orphaned objects are found
             pruned = _prune_orphans(
@@ -184,13 +261,14 @@ def prune(mirror: Mirror, dry_run: bool) -> None:
                 manifests=manifest_list,
                 read_fn=read_fn,
                 blobs=blob_list,
+                tmpspecsdir=tmpspecsdir,
                 dry_run=dry_run,
             )
             if pruned == 0:
                 break
             total_pruned += pruned
 
-    tty.info(
-        ("Would have pruned" if dry_run else "Pruned")
-        + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
-    )
+        tty.info(
+            ("Would have pruned" if dry_run else "Pruned")
+            + f" {total_pruned} orphaned objects from mirror: {mirror.fetch_url}"
+        )
