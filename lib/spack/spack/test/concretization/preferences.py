@@ -91,6 +91,7 @@ class TestConcretizePreferences:
                 {"foo": ("bar", "baz"), "fee": "bar"},
             ),
             ("singlevalue-variant", ["fum=why"], {"fum": "why"}),
+            ("git-ref-package", [f"commit={'b' * 40}"], {"commit": "b" * 40}),
         ],
     )
     def test_preferred_variants(self, package_name, variant_value, expected_results):
