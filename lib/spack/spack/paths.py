@@ -92,15 +92,7 @@ spack_instance_id = hash.b32_hash(spack_root)[:7]
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-
-    # support multiple spack instances: pick a subdirectory based on spack root
-    h = hashlib.new("sha256")
-    h.update(spack_root.encode())
-    subdir = h.hexdigest()[:8]
-
-    return os.path.expanduser(
-        os.getenv("SPACK_USER_CACHE_PATH") or os.path.join("~%s.spack" % os.sep, subdir)
-    )
+    return os.getenv("SPACK_USER_CACHE_PATH") or os.path.join("~%s.spack" % os.sep, subdir)
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
