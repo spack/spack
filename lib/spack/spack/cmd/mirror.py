@@ -662,7 +662,7 @@ def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_version
     )
     tty.msg("Summary for mirror in {}".format(path))
     process_mirror_stats(present, mirrored, error)
-    
+
 
 def mirror_destroy(args):
     """given a url, recursively delete everything under it"""
