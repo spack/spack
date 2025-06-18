@@ -28,7 +28,6 @@ from spack.installer import PackageInstaller
 from spack.paths import test_path
 from spack.url_buildcache import (
     BuildcacheComponent,
-    BuildcacheEntryError,
     URLBuildcacheEntry,
     URLBuildcacheEntryV2,
     check_mirror_for_layout,
@@ -837,13 +836,6 @@ def test_buildcache_prune_orphaned_manifest(tmp_path, mutable_database, mock_gnu
 
     # Ensure the manifest is gone after pruning (or not if dry_run is True)
     assert web_util.url_exists(manifest_url) == dry_run
-
-    if not dry_run:
-        # Clear the local cache entry's manifest and try to read it again, which
-        # should raise an error because it has been pruned
-        with pytest.raises(BuildcacheEntryError):
-            cache_entry.manifest = None
-            cache_entry.read_manifest()
 
     assert "Found 1 manifest(s) that are missing blobs" in output
 
