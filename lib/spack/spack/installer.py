@@ -2445,6 +2445,8 @@ class PackageInstaller:
     def setup_fifo_jobserver(self) -> Tuple[Optional[str],Optional[int]]:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
+        self.fifo_read_fd = None
+        self.fifo_write_fd = None
 
         #mflags = os.environ.get("MAKEFLAGS")
         #if mflags and "--jobserver" in mflags:
@@ -2463,13 +2465,10 @@ class PackageInstaller:
             num_jobs = spack.config.determine_number_of_jobs(parallel=True)
             js_tokens = b"+" * num_jobs
             
-            fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-            fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
+            self.fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
+            self.fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
             
-            os.write(fifo_write_fd, js_tokens)
-
-            os.close(fifo_read_fd)
-            os.close(fifo_write_fd)
+            os.write(self.fifo_write_fd, js_tokens)
 
             # set MAKEFLAGS environment variable for make jobserver
             os.environ["MAKEFLAGS"] = (
@@ -2477,8 +2476,8 @@ class PackageInstaller:
             )
             print("MAKEFLAGS",os.environ.get("MAKEFLAGS"))
 
-            return fifo_directory, 0
-        return None
+            return fifo_directory, self.fifo_write_fd
+        return None, None
         # TODO: Implement Windows support.
 
     # test if it's reading and writing bytes
@@ -2488,20 +2487,20 @@ class PackageInstaller:
         fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
         return bytes_available[0]
 
-    def cleanup_jobserver(self, fifo_directory, fifo_fd) -> None:
+    def cleanup_jobserver(self, fifo_directory) -> None:
         """Cleanup the file descriptors and/or directory for make jobserver"""
         
         # FIFO cleanup
-      #  if fifo_path and os.path.exists(fifo_path):
-       #     os.remove(fifo_path)
-        if fifo_fd is not None:
-            os.close(fifo_fd)
+        if self.fifo_read_fd is not None:
+            os.close(self.fifo_read_fd)
+        if self.fifo_write_fd is not None:
+            os.close(self.fifo_write_fd)
         if fifo_directory is not None:
             print("\nare we removing the dir\n")
             shutil.rmtree(fifo_directory)
         
         # fds cleanup
-      #  if read_fd is not None:
+      #  if self.fifo_read_fd is not None:
       #     os.close(read_fd)
       #  if write_fd is not None:
       #     os.close(write_fd)
@@ -2525,7 +2524,7 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            # print("tokens available: ",self.get_available_bytes(fifo_fd))
+            print("tokens available: ",self.get_available_bytes(self.fifo_read_fd))
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
@@ -2561,7 +2560,7 @@ class PackageInstaller:
                 raise
 
         # Close and cleanup the jobserver FIFO
-        self.cleanup_jobserver(fifo_directory, fifo_fd)
+        self.cleanup_jobserver(fifo_directory)
 
         self._clear_removed_tasks()
         if self.build_pq:
