@@ -2462,10 +2462,12 @@ class PackageInstaller:
             num_jobs = spack.config.determine_number_of_jobs(parallel=True)
             js_tokens = b"+" * num_jobs
             
-            # Open as WRONLY, write tokens, and immediately close.
-            # This ensures your process doesn't hold the FIFO open in a conflicting way.
+            fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
             fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
+            
             os.write(fifo_write_fd, js_tokens)
+
+            os.close(fifo_read_fd)
             os.close(fifo_write_fd)
 
             # set MAKEFLAGS environment variable for make jobserver
@@ -2491,9 +2493,8 @@ class PackageInstaller:
         # FIFO cleanup
       #  if fifo_path and os.path.exists(fifo_path):
        #     os.remove(fifo_path)
-      #  if fifo_fd is not None:
-        #    print("\nare we closing the FD\n")
-      #      os.close(fifo_fd)
+        if fifo_fd is not None:
+            os.close(fifo_fd)
         if fifo_directory is not None:
             print("\nare we removing the dir\n")
             shutil.rmtree(fifo_directory)
