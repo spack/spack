@@ -370,9 +370,9 @@ def display_specs_as_json(specs, deps=False):
 
 
 def iter_groups(specs, indent, all_headers):
-    """Break a list of specs into groups indexed by arch/compiler."""
-    # Make a dict with specs keyed by architecture and compiler.
-    index = index_by(specs, ("architecture", "compiler"))
+    """Break a list of specs into groups indexed by arch/compilers."""
+    # Make a dict with specs keyed by architecture and compilers.
+    index = index_by(specs, ("architecture", "compilers"))
     ispace = indent * " "
 
     def _key(item):
@@ -381,25 +381,27 @@ def iter_groups(specs, indent, all_headers):
         return str(item)
 
     # Traverse the index and print out each package
-    for i, (architecture, compiler) in enumerate(sorted(index, key=_key)):
+    for i, (architecture, compilers) in enumerate(sorted(index, key=_key)):
         if i > 0:
             print()
 
+        # Drop the leading space from compilers to clean up output and aid checks.
+        compilers_info = compilers[1:] if compilers.startswith(" ") else compilers
         header = "%s{%s} / %s{%s}" % (
             spack.spec.ARCHITECTURE_COLOR,
             architecture if architecture else "no arch",
             spack.spec.COMPILER_COLOR,
-            f"{compiler.display_str}" if compiler else "no compiler",
+            compilers_info if compilers_info else "no compilers",
         )
 
         # Sometimes we want to display specs that are not yet concretized.
-        # If they don't have a compiler / architecture attached to them,
+        # If they don't have a compilers / architecture attached to them,
         # then skip the header
-        if all_headers or (architecture is not None or compiler is not None):
+        if all_headers or (architecture is not None or compilers_info):
             sys.stdout.write(ispace)
             tty.hline(colorize(header), char="-")
 
-        specs = index[(architecture, compiler)]
+        specs = index[(architecture, compilers)]
         specs.sort()
         yield specs
 
