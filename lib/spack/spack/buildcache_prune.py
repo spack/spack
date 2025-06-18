@@ -96,7 +96,9 @@ def _delete_manifests_from_cache_aws(
             list(pathlib.Path(tmpspecsdir).rglob(include_pattern))
         )
     except Exception:
-        tty.warn("Failed to use aws s3 sync to delete specs, falling back to parallel deletion.")
+        tty.warn(
+            "Failed to use aws s3 sync to delete manifests, falling back to parallel deletion."
+        )
 
     return None
 
@@ -170,7 +172,7 @@ def _prune_orphans(
                 }
             )
         except Exception as e:
-            tty.warn(f"Unable to fetch spec for manifest {manifest} due to: {e}")
+            tty.warn(f"Unable to fetch manifest {manifest} due to: {e}")
             continue
         finally:
             if cache_entry:
