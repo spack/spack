@@ -92,7 +92,7 @@ spack_instance_id = hash.b32_hash(spack_root)[:7]
 # setting `SPACK_USER_CACHE_PATH`. Otherwise it defaults to ~/.spack.
 #
 def _get_user_cache_path():
-    return os.getenv("SPACK_USER_CACHE_PATH") or os.path.join("~%s.spack" % os.sep, subdir)
+    return os.path.expanduser(os.getenv("SPACK_USER_CACHE_PATH") or "~%s.spack" % os.sep)
 
 
 user_cache_path = str(PurePath(_get_user_cache_path()))
