@@ -177,18 +177,16 @@ def _prune_orphans(
                 cache_entry.destroy()
 
     # Blobs that are referenced in a manifest file (but not necessarily present in the cache)
-    blob_hashes_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
+    blob_urls_referenced_by_manifest = set(blob_to_manifest_mapping.keys())
 
     # Blobs that are actually present in the cache (but not necessarily referenced in any manifest)
-    blob_hashes_present_in_cache: Set[str] = set(blobs)
+    blob_urls_present_in_cache: Set[str] = set(blobs)
 
     # Compute set of blobs that are present in the cache but not referenced in any manifest
-    orphaned_blobs = blob_hashes_present_in_cache - blob_hashes_referenced_by_manifest
+    orphaned_blobs = blob_urls_present_in_cache - blob_urls_referenced_by_manifest
 
     # Compute set of blobs that are referenced in a manifest but not present in the cache
-    nonexisting_referenced_blobs = (
-        blob_hashes_referenced_by_manifest - blob_hashes_present_in_cache
-    )
+    nonexisting_referenced_blobs = blob_urls_referenced_by_manifest - blob_urls_present_in_cache
 
     # Compute set of manifests that are orphaned (i.e., they reference blobs that are not
     # present in the cache)
