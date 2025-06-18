@@ -268,7 +268,7 @@ def create_external_pruner() -> Callable[[spack.spec.Spec], RebuildDecision]:
 
 def _format_pruning_message(spec: spack.spec.Spec, prune: bool, reasons: List[str]) -> str:
     reason_msg = ", ".join(reasons)
-    spec_fmt = "{name}{@version}{/hash:7}{%compiler}"
+    spec_fmt = "{name}{@version}{/hash:7}{compilers}"
 
     if not prune:
         status = colorize("@*g{[x]}  ")
