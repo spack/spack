@@ -1328,7 +1328,6 @@ def start_build_process(
         )
 
         p.start()
-        print("MAKEFLAGS after starting the process", mflags)
         # We close the writable end of the pipe now to be sure that p is the
         # only process which owns a handle for it. This ensures that when p
         # closes its handle for the writable end, read_pipe.recv() will

@@ -25,8 +25,11 @@ installations of packages in a Spack instance.
 
 """
 
+# tester imports
+import array
 import copy
 import enum
+import fcntl
 import glob
 import heapq
 import io
@@ -35,6 +38,7 @@ import os
 import shutil
 import sys
 import tempfile
+import termios
 import time
 from collections import defaultdict
 from gzip import GzipFile
@@ -70,11 +74,6 @@ import spack.util.timer as timer
 from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
-
-#tester imports
-import array
-import fcntl
-import termios
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -2411,45 +2410,14 @@ class PackageInstaller:
 
         return None
 
-    def setup_fds_jobserver(self) -> Tuple[Optional[int], Optional[int]]:
-        """Setup fds implementation of make jobserver."""
-        read_fd, write_fd = None
-        
-        mflags = os.environ.get("MAKEFLAGS")
-        if mflags and "--jobserver" in mflags:
-            # Jobserver already set up by Make (through env depfile)
-            return None, None
-
-        if sys.platform != "win32":
-            # Create a pipe for the jobserver
-            read_fd, write_fd = os.pipe()
-
-            # Initialize pipe with tokens (one per job, dediced by -j)
-            num_jobs = spack.config.determine_number_of_jobs(parallel=True)
-            os.write(write_fd, b"+" * num_jobs)
-
-            # Set the makeflag env
-            os.environ["MAKEFLAGS"] = (
-                f"--jobserver-auth=fds={read_fd},{write_fd} --jobserver-style=pipe -j {num_jobs}"
-            )
-
-            # Set MAKELEVEL to 1 to make Make think it is recursive
-            # (necessary for fd implementation)
-            os.environ["MAKELEVEL"] = "1"
-
-        return read_fd, write_fd
-        
-        # TODO: Implement Windows support.
-            
-            
-    def setup_fifo_jobserver(self) -> Tuple[Optional[str],Optional[int]]:
+    def setup_fifo_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
         self.fifo_read_fd = None
         self.fifo_write_fd = None
 
-        #mflags = os.environ.get("MAKEFLAGS")
-        #if mflags and "--jobserver" in mflags:
+        # mflags = os.environ.get("MAKEFLAGS")
+        # if mflags and "--jobserver" in mflags:
         #    # Jobserver already set up by Make (through env depfile)
         #    return None, None
 
@@ -2461,20 +2429,19 @@ class PackageInstaller:
             # create the FIFO
             os.mkfifo(fifo_path)
 
-            # open the FIFO for reading/writing and initialize with job tokens, decided by -j
+            # determine number of tokens for FIFO by -j value
             num_jobs = spack.config.determine_number_of_jobs(parallel=True)
             js_tokens = b"+" * num_jobs
-            
+
+            # open the FIFO for both reading and writing
             self.fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
             self.fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
-            
+
+            # initialize FIFO with job tokens
             os.write(self.fifo_write_fd, js_tokens)
 
             # set MAKEFLAGS environment variable for make jobserver
-            os.environ["MAKEFLAGS"] = (
-                f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
-            )
-            print("MAKEFLAGS",os.environ.get("MAKEFLAGS"))
+            os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
 
             return fifo_directory, self.fifo_write_fd
         return None, None
@@ -2483,27 +2450,18 @@ class PackageInstaller:
     # test if it's reading and writing bytes
     def get_available_bytes(self, fd):
         """Gets the number of bytes available for reading from a file descriptor."""
-        bytes_available = array.array('i', [0])
+        bytes_available = array.array("i", [0])
         fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
         return bytes_available[0]
 
     def cleanup_jobserver(self, fifo_directory) -> None:
-        """Cleanup the file descriptors and/or directory for make jobserver"""
-        
-        # FIFO cleanup
+        """Clean up file descriptors and remove the FIFO directory used by the make jobserver."""
         if self.fifo_read_fd is not None:
             os.close(self.fifo_read_fd)
         if self.fifo_write_fd is not None:
             os.close(self.fifo_write_fd)
         if fifo_directory is not None:
-            print("\nare we removing the dir\n")
             shutil.rmtree(fifo_directory)
-        
-        # fds cleanup
-      #  if self.fifo_read_fd is not None:
-      #     os.close(read_fd)
-      #  if write_fd is not None:
-      #     os.close(write_fd)
 
     def install(self) -> None:
         """Install the requested package(s) and or associated dependencies."""
@@ -2524,7 +2482,7 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ",self.get_available_bytes(self.fifo_read_fd))
+            print("tokens available: ", self.get_available_bytes(self.fifo_read_fd))
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
