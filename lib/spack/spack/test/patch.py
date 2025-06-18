@@ -121,11 +121,14 @@ third line
                 )
         # apply the patch and compare files
         patch = spack.patch.UrlPatch(s.package, url, sha256=sha256, archive_sha256=archive_sha256)
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-expected.txt")
@@ -134,11 +137,14 @@ third line
         patch = spack.patch.UrlPatch(
             s.package, url, sha256=sha256, archive_sha256=archive_sha256, reverse=True
         )
-        with patch.stage:
-            patch.stage.create()
-            patch.stage.fetch()
-            patch.stage.expand_archive()
-            patch.apply(stage)
+        patch_stage = Stage(patch.fetcher())
+        with patch_stage:
+            patch_stage.create()
+            patch_stage.fetch()
+            patch_stage.expand_archive()
+            spack.patch.apply_patch(
+                stage, patch_stage.single_file, patch.level, patch.working_dir, patch.reverse
+            )
 
         with working_dir(stage.source_path):
             assert filecmp.cmp("foo.txt", "foo-original.txt")
@@ -431,7 +437,7 @@ def test_patch_no_file():
     patch = spack.patch.Patch(fp, "nonexistent_file", 0, "")
     patch.path = "test"
     with pytest.raises(spack.error.NoSuchPatchError, match="No such patch:"):
-        patch.apply("")
+        spack.patch.apply_patch(Stage("https://example.com/foo.patch"), patch.path)
 
 
 def test_patch_no_sha256():

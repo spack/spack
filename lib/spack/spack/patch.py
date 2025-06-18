@@ -37,6 +37,9 @@ def apply_patch(
         working_dir: relative path *within* the stage to change to
         reverse: reverse the patch
     """
+    if not patch_path or not os.path.isfile(patch_path):
+        raise spack.error.NoSuchPatchError(f"No such patch: {patch_path}")
+
     git_utils_path = os.environ.get("PATH", "")
     if sys.platform == "win32":
         git = which_string("git")

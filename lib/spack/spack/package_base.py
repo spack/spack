@@ -1693,14 +1693,9 @@ class PackageBase(WindowsRPath, PackageViewMixin, metaclass=PackageMeta):
                     # get the path either from the stage where it was fetched, or from the Patch
                     if isinstance(patch, spack.patch.UrlPatch):
                         patch_stage = next(patch_stages)
-                        files = os.listdir(patch_stage.source_path)
-                        assert len(files) == 1, f"Expected one file in stage, found {files}"
-                        patch_path = os.path.join(patch_stage.source_path, files[0])
-
+                        patch_path = patch_stage.single_file
                     else:
                         patch_path = patch.path
-                        if not patch_path or not os.path.isfile(patch_path):
-                            raise spack.error.NoSuchPatchError(f"No such patch: {patch.path}")
 
                     spack.patch.apply_patch(
                         self.stage, patch_path, patch.level, patch.working_dir, patch.reverse
