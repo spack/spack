@@ -70,6 +70,11 @@ from spack.url_buildcache import BuildcacheEntryError
 from spack.util.environment import EnvironmentModifications, dump_environment
 from spack.util.executable import which
 
+#tester imports
+import array
+import fcntl
+import termios
+
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
 #: were added (see https://docs.python.org/2/library/heapq.html).
@@ -2436,15 +2441,14 @@ class PackageInstaller:
         # TODO: Implement Windows support.
             
             
-    def setup_fifo_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
+    def setup_fifo_jobserver(self) -> Tuple[Optional[str],Optional[int]]:
         """Setup FIFO implementation of make jobserver."""
         fifo_directory = None
-        fifo_fd = None
 
-        mflags = os.environ.get("MAKEFLAGS")
-        if mflags and "--jobserver" in mflags:
-            # Jobserver already set up by Make (through env depfile)
-            return None, None
+        #mflags = os.environ.get("MAKEFLAGS")
+        #if mflags and "--jobserver" in mflags:
+        #    # Jobserver already set up by Make (through env depfile)
+        #    return None, None
 
         if sys.platform != "win32":
             # create a named FIFO pipe for make jobserver
@@ -2457,20 +2461,25 @@ class PackageInstaller:
             # open the FIFO for reading/writing and initialize with job tokens, decided by -j
             num_jobs = spack.config.determine_number_of_jobs(parallel=True)
             js_tokens = b"+" * num_jobs
-            fifo_fd = os.open(fifo_path, os.O_RDWR | os.O_NONBLOCK)
-            os.write(fifo_fd, js_tokens)
+            
+            # Open as WRONLY, write tokens, and immediately close.
+            # This ensures your process doesn't hold the FIFO open in a conflicting way.
+            fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
+            os.write(fifo_write_fd, js_tokens)
+            os.close(fifo_write_fd)
 
             # set MAKEFLAGS environment variable for make jobserver
             os.environ["MAKEFLAGS"] = (
-                f"--jobserver-auth=fds={read_fd}, {write_fd} --jobserver-style=pipe -j {num_jobs}"
+                f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
             )
+            print("MAKEFLAGS",os.environ.get("MAKEFLAGS"))
 
-        return fifo_directory, fifo_fd
-
+            return fifo_directory, 0
+        return None
         # TODO: Implement Windows support.
 
     # test if it's reading and writing bytes
-    def get_available_bytes(fd):
+    def get_available_bytes(self, fd):
         """Gets the number of bytes available for reading from a file descriptor."""
         bytes_available = array.array('i', [0])
         fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
@@ -2480,16 +2489,20 @@ class PackageInstaller:
         """Cleanup the file descriptors and/or directory for make jobserver"""
         
         # FIFO cleanup
-        if fifo_fd is not None:
-            os.close(fifo_fd)
+      #  if fifo_path and os.path.exists(fifo_path):
+       #     os.remove(fifo_path)
+      #  if fifo_fd is not None:
+        #    print("\nare we closing the FD\n")
+      #      os.close(fifo_fd)
         if fifo_directory is not None:
+            print("\nare we removing the dir\n")
             shutil.rmtree(fifo_directory)
         
         # fds cleanup
-        if read_fd is not None:
-           os.close(read_fd)
-        if write_fd is not None:
-           os.close(write_fd)
+      #  if read_fd is not None:
+      #     os.close(read_fd)
+      #  if write_fd is not None:
+      #     os.close(write_fd)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
@@ -2511,9 +2524,7 @@ class PackageInstaller:
         active_tasks: List[Task] = []
 
         # Setup FIFO jobserver for builds
-        # fifo_directory, fifo_fd = self.setup_fifo_jobserver()
-        # Setup fds jobserver for builds 
-        read_fd, write_fd = self.setup_fds_jobserver()
+        fifo_directory, fifo_fd = self.setup_fifo_jobserver()
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -2523,7 +2534,7 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ",get_available_bytes(read_fd))
+            # print("tokens available: ",self.get_available_bytes(fifo_fd))
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
