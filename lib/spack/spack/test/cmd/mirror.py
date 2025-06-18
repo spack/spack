@@ -83,6 +83,7 @@ def test_mirror_from_env_parallel(tmp_path, mock_packages, mock_fetch, mutable_m
         expected = ["%s.tar.gz" % spec.format("{name}-{version}")]
         assert mirror_res == expected
 
+
 # Test for command line-specified spec in concretized environment
 def test_mirror_spec_from_env(
     mutable_mock_env_path, tmp_path: pathlib.Path, mock_packages, mock_fetch
