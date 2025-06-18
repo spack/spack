@@ -8,7 +8,7 @@ config:
   build_stage:
   - $tempdir/$user/spack-stage
   source_cache: $user_cache_path/source
-  misc_cache: $user_cache_path/cache
+  misc_cache: $user_cache_path/$spack_instance_id/cache
   verify_ssl: true
   ssl_certs: $SSL_CERT_FILE
   checksum: true
