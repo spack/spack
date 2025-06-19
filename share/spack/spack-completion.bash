@@ -1448,7 +1448,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum"
     else
-        SPACK_COMPREPLY="create destroy add remove rm set-url set list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url set list ls"
     fi
 }
 
@@ -1511,6 +1511,10 @@ _spack_mirror_set() {
 }
 
 _spack_mirror_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_mirror_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 

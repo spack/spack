@@ -2277,6 +2277,7 @@ complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a rm -d 'remo
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a set-url -d 'change the URL of a mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a set -d 'configure the connection details of a mirror'
 complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a list -d 'print out available mirrors to the console'
+complete -c spack -n '__fish_spack_using_command_pos 0 mirror' -f -a ls -d 'print out available mirrors to the console'
 complete -c spack -n '__fish_spack_using_command mirror' -s h -l help -f -a help
 complete -c spack -n '__fish_spack_using_command mirror' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror' -s n -l no-checksum -f -a no_checksum
@@ -2469,6 +2470,13 @@ complete -c spack -n '__fish_spack_using_command mirror list' -s h -l help -f -a
 complete -c spack -n '__fish_spack_using_command mirror list' -s h -l help -d 'show this help message and exit'
 complete -c spack -n '__fish_spack_using_command mirror list' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
 complete -c spack -n '__fish_spack_using_command mirror list' -l scope -r -d 'configuration scope to read from'
+
+# spack mirror ls
+set -g __fish_spack_optspecs_spack_mirror_ls h/help scope=
+complete -c spack -n '__fish_spack_using_command mirror ls' -s h -l help -f -a help
+complete -c spack -n '__fish_spack_using_command mirror ls' -s h -l help -d 'show this help message and exit'
+complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -f -a '_builtin defaults:base defaults system site user command_line'
+complete -c spack -n '__fish_spack_using_command mirror ls' -l scope -r -d 'configuration scope to read from'
 
 # spack module
 set -g __fish_spack_optspecs_spack_module h/help
