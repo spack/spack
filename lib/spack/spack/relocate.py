@@ -12,9 +12,13 @@ import spack.vendor.macholib.mach_o
 import spack.vendor.macholib.MachO
 
 import spack.store
+import spack.util.elf as elf
+import spack.util.executable as executable
 import spack.util.filesystem as fs
+import spack.util.filesystem as sfs
 import spack.util.lang
 from spack.util import elf, executable, tty
+from spack.util.environment import EnvironmentModifications
 from spack.util.filesystem import readlink, symlink
 from spack.util.lang import memoized
 
@@ -33,8 +37,80 @@ def _patchelf() -> Optional[executable.Executable]:
         return spack.bootstrap.ensure_patchelf_in_path_or_raise()
 
 
+@memoized
+def _msvc_relocate() -> Optional[executable.Executable]:
+    """Returns the full path to the Windows compiler wrapper if installed"""
+
+    # TODO: Should we query the Spack store instead?
+    # is it worth bootstrapping here?
+    import spack.bootstrap
+
+    if sys.platform != "win32":
+        return None
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        return spack.bootstrap.ensure_msvc_relocate_or_raise()  # type: ignore
+
+
 def _decode_macho_data(bytestring):
     return bytestring.rstrip(b"\x00").decode("ascii")
+
+
+def generizize_msvc_link_references(target):
+    _msvc_relocate()("--pe", target, "--deploy", "--full")
+
+
+def relocate_msvc_pe_files(targets, prefixes: dict):
+
+    dirs_to_relocate = list(prefixes.values())
+    for search_dir in dirs_to_relocate:
+        for entry in os.scandir(search_dir):
+            if not (entry.is_symlink() or entry.is_junction()) and entry.is_dir():
+                dirs_to_relocate.append(entry.path)
+
+    ev = EnvironmentModifications()
+    ev.set_path("SPACK_RELOCATE_PATH", dirs_to_relocate)
+    dll_lib_map = {}
+    for target in targets:
+        # we relocate exes and dlls, libs are regenerated from the
+        # dlls if they're import libraries, if static, no op
+        # Dlls have no references to their import libraries
+        # but import libraries reference dlls, so although
+        # the DLLs are our "relocation targets" we drive that
+        # via the libs to determine the proper association
+        if target.endswith(".exe"):
+            _msvc_relocate()("--pe", target, "--export", "--full", extra_env=ev)
+        elif target.endswith(".lib"):
+            if sfs.verify_import_lib(target):
+                regex = re.compile("|".join(re.escape(p) for p in prefixes.keys()))
+                dll_path = sfs.get_importlib_target(target)
+                match = regex.match(dll_path)
+                if match:
+                    old_root = match.group()
+                    new_root = prefixes[old_root]
+                    dll_name = os.path.relpath(dll_path, old_root)
+                    dll_lib_map[dll_name] = os.path.join(new_root, os.path.basename(target))
+                else:
+                    tty.debug(
+                        f"Import lib: {target} does not reference a DLL"
+                        "in this prefix, skipping relocation..."
+                    )
+    for target in targets:
+        # now we process the DLLs, now that we've mapped all our libs
+        if target.endswith(".dll"):
+            regex = re.compile("|".join(re.escape(p) for p in prefixes.values()))
+            match = regex.match(target)
+            if match:
+                new_root = match.group()
+                dll_name = os.path.relpath(target, new_root)
+                _msvc_relocate()(
+                    "--pe",
+                    target,
+                    "--coff",
+                    dll_lib_map[dll_name],
+                    "--export",
+                    "--full",
+                    extra_env=ev,
+                )
 
 
 def _macho_find_paths(orig_rpaths, deps, idpath, prefix_to_prefix):
@@ -295,6 +371,10 @@ def is_macho_magic(magic: bytes) -> bool:
 
 def is_elf_magic(magic: bytes) -> bool:
     return magic.startswith(b"\x7fELF")
+
+
+def is_msvc_magic(magic: bytes) -> bool:
+    return magic.startswith(b"!<arch>\n") or magic.startswith(b"MZ")
 
 
 def is_binary(filename: str) -> bool:
