@@ -2169,7 +2169,7 @@ EMPTY_FLG = Spec().compiler_flags
                     ("a", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("b", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False),),
+                ((0, 1, 0, (), False, Spec()),),
             ),
         ],
         # root with multiple deps
@@ -2182,7 +2182,11 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), False), (0, 2, 0, (), False), (0, 3, 0, (), False)),
+                (
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (0, 3, 0, (), False, Spec()),
+                ),
             ),
         ],
         # root with multiple build deps
@@ -2195,7 +2199,11 @@ EMPTY_FLG = Spec().compiler_flags
                     ("c", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                     ("d", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
-                ((0, 1, 0, (), True), (0, 2, 0, (), True), (0, 3, 0, (), True)),
+                (
+                    (0, 1, 0, (), True, Spec()),
+                    (0, 2, 0, (), True, Spec()),
+                    (0, 3, 0, (), True, Spec()),
+                ),
             ),
         ],
         # dependencies with dependencies
@@ -2212,12 +2220,12 @@ EMPTY_FLG = Spec().compiler_flags
                     ("g", None, EMPTY_VER, EMPTY_VAR, EMPTY_FLG, None, None, None),
                 ),
                 (
-                    (0, 1, 0, (), False),
-                    (0, 2, 0, (), False),
-                    (1, 3, 0, (), True),
-                    (1, 4, 0, (), True),
-                    (2, 5, 0, (), True),
-                    (2, 6, 0, (), True),
+                    (0, 1, 0, (), False, Spec()),
+                    (0, 2, 0, (), False, Spec()),
+                    (1, 3, 0, (), True, Spec()),
+                    (1, 4, 0, (), True, Spec()),
+                    (2, 5, 0, (), True, Spec()),
+                    (2, 6, 0, (), True, Spec()),
                 ),
             ),
         ],
@@ -2324,3 +2332,11 @@ def test_specs_equality(lhs, rhs, expected):
     """Tests the semantic of == for abstract specs"""
     lhs, rhs = Spec(lhs), Spec(rhs)
     assert (lhs == rhs) is expected
+
+
+def test_edge_equality_accounts_for_when_condition():
+    """Tests that edges can be distinguished by their 'when' condition."""
+    parent, child = Spec("parent"), Spec("child")
+    edge1 = DependencySpec(parent, child, depflag=0, virtuals=(), when=Spec("%c"))
+    edge2 = DependencySpec(parent, child, depflag=0, virtuals=())
+    assert edge1 != edge2
