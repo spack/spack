@@ -21,17 +21,6 @@ mock_hashes = (
         "bf07a7fbb825fc0aae7bf4a1177b2b31fcf8a3feeaf7092761e18c859ee52a9c",
         "7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730",
     ]
-    if sys.platform != "win32"
-    else [
-        "abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
-        "1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd",
-        "d0df7988457ec999c148a4a2af25ce831bfaad13954ba18a4446374cb0aef55e",
-        "aeb16c4dec1087e39f2330542d59d9b456dd26d791338ae6d80b6ffd10c89dfa",
-        "mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234",
-        "ff34cb21271d16dbf928374f610bb5dd593d293d311036ddae86c4846ff79070",
-        "bf874c7dd3a83cf370fdc17e496e341de06cd596b5c66dbf3c9bb7f6c139e3ee",
-        "3c5b65abcd6a3b2c714dbf7c31ff65fe3748a1adc371f030c283007ca5534f11",
-    ]
 )
 
 
