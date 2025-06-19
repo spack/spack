@@ -28,6 +28,7 @@ installations of packages in a Spack instance.
 # tester imports
 import array
 import copy
+import ctypes
 import enum
 import fcntl
 import glob
@@ -81,6 +82,8 @@ from spack.util.executable import which
 _counter = itertools.count(0)
 
 _FAIL_FAST_ERR = "Terminating after first install failure"
+
+INVALID_HANDLE_VALUE = 0
 
 
 class BuildStatus(enum.Enum):
@@ -2445,16 +2448,87 @@ class PackageInstaller:
 
             return fifo_directory, self.fifo_write_fd
         return None, None
-        # TODO: Implement Windows support.
+
+    def setup_sem_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
+        if sys.platform == "win32":
+            from ctypes import Structure, wintypes
+            # Get the win32 API w/ proper error handling
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+
+            # Neccesary for child processes to inherit semaphore handle
+            class SecurityAttributes(Structure):
+                _fields_ = [
+                    ("nLength", wintypes.DWORD),
+                    ("lpSecurityDescriptor", wintypes.LPVOID),
+                    ("bInheritHandle", ctypes.c_bool)
+                ]
+            lpsec = SecurityAttributes(
+                ctypes.sizeof(SecurityAttributes),
+                None, # This should not be defined by users, allow inheritance from Spack process
+                True # allow for handle inheritance
+            )
+
+            def _err_check(result, func, args):
+                if result == INVALID_HANDLE_VALUE:
+                    raise ctypes.WinError(ctypes.get_last_error())
+                # result is the handle
+                return result
+            create_semaphore = k32.CreateSemaphoreA
+            create_semaphore.argtypes = (
+                ctypes.POINTER(SecurityAttributes),  # Pointer to security attributes struct
+                ctypes.c_long,  # numer of initial connections (should be # of available jobs),
+                ctypes.c_long, # numberof available connections (should be # of available jobs)
+                wintypes.LPCSTR, # name of the named semaphore, should be the same as NAME in --jobserver-auth=NAME
+            )
+            create_semaphore.errcheck = _err_check
+            create_semaphore.restype = wintypes.HANDLE
+            semaphore_name = "SPACK_JOBSERVER"
+            # no locking on Windows right now, so parallel is a no go
+            num_jobs = spack.config.determine_number_of_jobs(parallel=False)
+            # create semaphore
+            try:
+                semaphore_handle = create_semaphore(ctypes.byref(lpsec), num_jobs, num_jobs, semaphore_name)
+                if ctypes.get_last_error() == 183:
+                    # File exists error, this semaphore already exists
+                    # Another spack instance may already be running a build
+
+                    # TODO: Fail here, or we can just share a job server
+                    # so just remove the branch
+                    # or we can give each spack instance its own sem name based on PID or something
+                    raise RuntimeError("Spack job server semaphore already exists")
+                else:
+                    os.environ["MAKEFLAGS"] = f"--jobserver-auth={semaphore_name}"
+            except OSError as e:
+                semaphore_handle = None
+                # No jobserver
+            return semaphore_name, semaphore_handle
+        return None, None
+        
+    def setup_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
+        if sys.platform == "win32":
+            return self.setup_sem_jobserver()
+        else:
+            return self.setup_fifo_jobserver()
 
     # test if it's reading and writing bytes
     def get_available_bytes(self, fd):
         """Gets the number of bytes available for reading from a file descriptor."""
-        bytes_available = array.array("i", [0])
-        fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
-        return bytes_available[0]
+        if sys.platform != "win32":
+            # fcntl can be imported by is empty on Windows
+            bytes_available = array.array("i", [0])
+            fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
+            return bytes_available[0]
 
-    def cleanup_jobserver(self, fifo_directory) -> None:
+    def check_sem_available(self, handle):
+        from ctypes import wintypes
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        wait_sem = k32.WaitForSingleObject
+        wait_sem.restype = wintypes.DWORD
+        if wait_sem(handle, 0) == 0:
+            return True
+        return False
+
+    def cleanup_fifo_jobserver(self, fifo_directory) -> None:
         """Clean up file descriptors and remove the FIFO directory used by the make jobserver."""
         if self.fifo_read_fd is not None:
             os.close(self.fifo_read_fd)
@@ -2462,6 +2536,18 @@ class PackageInstaller:
             os.close(self.fifo_write_fd)
         if fifo_directory is not None:
             shutil.rmtree(fifo_directory)
+
+    def cleanup_sem_jobserver(self, handle) -> None:
+        """Clean up semaphore used in Windows Make jobserver"""
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        k32.CloseHandle(handle)
+
+    def cleanup_jobserver(self, name, handle) -> None:
+        """Dispatch for correct Windows vs Unix jobserver cleanup"""
+        if sys.platform == "win32":
+            self.cleanup_sem_jobserver(handle)
+        else:
+            self.cleanup_fifo_jobserver(name)
 
     def install(self) -> None:
         """Install the requested package(s) and or associated dependencies."""
@@ -2472,7 +2558,7 @@ class PackageInstaller:
         active_tasks: List[Task] = []
 
         # Setup FIFO jobserver for builds
-        fifo_directory, fifo_fd = self.setup_fifo_jobserver()
+        jobserver_loc, jobserver_handle = self.setup_jobserver()
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -2482,7 +2568,11 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ", self.get_available_bytes(self.fifo_read_fd))
+            if sys.platform == "win32":
+                status = "is" if self.check_sem_available(jobserver_handle) else "is not"
+                print(f"Jobserver {status} available")
+            else:
+                print("tokens available: ", self.get_available_bytes(self.fifo_read_fd))
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
@@ -2518,7 +2608,7 @@ class PackageInstaller:
                 raise
 
         # Close and cleanup the jobserver FIFO
-        self.cleanup_jobserver(fifo_directory)
+        self.cleanup_jobserver(jobserver_loc, jobserver_handle)
 
         self._clear_removed_tasks()
         if self.build_pq:
