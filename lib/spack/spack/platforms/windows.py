@@ -12,6 +12,8 @@ from ._platform import Platform
 class Windows(Platform):
     priority = 101
 
+    binary_formats = ["pe"]
+
     def __init__(self):
         super().__init__("windows")
         windows_os = WindowsOs()
