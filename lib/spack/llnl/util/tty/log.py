@@ -24,13 +24,6 @@ from typing import Callable, Optional
 import llnl.util.tty as tty
 
 termios: Optional[ModuleType] = None
-try:
-    import termios as term_mod
-
-    termios = term_mod
-except ImportError:
-    pass
-
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
 # Ansi Control Sequence Introducers (CSI) are a well-defined format
