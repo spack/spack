@@ -279,7 +279,7 @@ class UrlPatch(Patch):
             raise spack.error.PatchDirectiveError("URL patches require a sha256 checksum")
         self.sha256 = sha256
 
-    def fetcher(self) -> spack.fetch_strategy.FetchStrategy:
+    def fetcher(self) -> "spack.fetch_strategy.FetchStrategy":
         """Construct a fetcher that can download (and unpack) this patch."""
         # Two checksums, one for compressed file, one for its contents
         if self.archive_sha256 and self.sha256:
