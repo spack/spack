@@ -4460,11 +4460,11 @@ def _inject_patches_variant(root: spack.spec.Spec) -> None:
 
         edge_patches: List[spack.patch.Patch] = []
         for cond, deps_by_name in pkg_deps.items():
-            if not dspec.parent.satisfies(cond):
-                continue
-
             dependency = deps_by_name.get(dspec.spec.name)
             if not dependency:
+                continue
+
+            if not dspec.parent.satisfies(cond):
                 continue
 
             for pcond, patch_list in dependency.patches.items():
