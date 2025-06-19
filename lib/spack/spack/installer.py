@@ -46,7 +46,7 @@ import llnl.util.tty as tty
 from llnl.string import ordinal
 from llnl.util.lang import pretty_seconds
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, preserve_terminal_settings
 
 import spack.binary_distribution as binary_distribution
 import spack.build_environment
@@ -2407,7 +2407,18 @@ class PackageInstaller:
         return None
 
     def install(self) -> None:
-        """Install the requested package(s) and or associated dependencies."""
+        """Install the requested package(s) and/or associated dependencies."""
+        # ensure that build processes do not permanently bork terminal settings
+        with preserve_terminal_settings(sys.stdin):
+            self._install()
+
+    def _install(self) -> None:
+        """Helper with main implmentation of ``install()``.
+
+        We need to wrap the installation routine with a context manager for preserving
+        keyboard sanity. Wrappers go in ``install()``. This does the real work.
+
+        """
 
         self._init_queue()
         failed_build_requests = []

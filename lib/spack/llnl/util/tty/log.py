@@ -79,7 +79,55 @@ def _strip(line):
     return _escape.sub("", line)
 
 
-class keyboard_input:
+class preserve_terminal_settings:
+    """Context manager to preserve terminal settings on a stream.
+
+    Stores terminal settings before the context and ensures they are restored after.
+    Ensures that things like echo and canonical line mode are not left disabled if
+    terminal settings in the context are not properly restored.
+    """
+
+    def __init__(self, stream):
+        """Create a context manager that preserves terminal settings on a stream.
+
+        Args:
+            stream (file-like): stream to manage.
+        """
+        self.stream = stream
+
+    def _restore_default_terminal_settings(self):
+        """Restore the original input configuration on ``self.stream``."""
+        # _restore_default_terminal_settings Can be called in foreground
+        # or background. When called in the background, tcsetattr triggers
+        # SIGTTOU, which we must ignore, or the process will be stopped.
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
+
+    def __enter__(self):
+        """Store terminal settings."""
+        self.old_cfg = None
+
+        # Ignore all this if the input stream is not a tty.
+        if not self.stream or not self.stream.isatty():
+            return self
+
+        if termios:
+            # save old termios settings to restore later
+            self.old_cfg = termios.tcgetattr(self.stream)
+
+            # add an atexit handler to ensure the terminal is restored
+            atexit.register(self._restore_default_terminal_settings)
+
+        return self
+
+    def __exit__(self, exc_type, exception, traceback):
+        """If termios was available, restore old settings."""
+        if self.old_cfg:
+            self._restore_default_terminal_settings()
+            atexit.unregister(self._restore_default_terminal_settings)
+
+
+class keyboard_input(preserve_terminal_settings):
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
@@ -186,14 +234,6 @@ class keyboard_input:
         with ignore_signal(signal.SIGTTOU):
             termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
 
-    def _restore_default_terminal_settings(self):
-        """Restore the original input configuration on ``self.stream``."""
-        # _restore_default_terminal_settings Can be called in foreground
-        # or background. When called in the background, tcsetattr triggers
-        # SIGTTOU, which we must ignore, or the process will be stopped.
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
-
     def _tstp_handler(self, signum, frame):
         self._restore_default_terminal_settings()
         os.kill(os.getpid(), signal.SIGSTOP)
@@ -220,7 +260,7 @@ class keyboard_input:
         If the stream is not a TTY or the system doesn't support termios,
         do nothing.
         """
-        self.old_cfg = None
+        super().__enter__()
         self.old_handlers = {}
 
         # Ignore all this if the input stream is not a tty.
@@ -228,15 +268,9 @@ class keyboard_input:
             return self
 
         if termios:
-            # save old termios settings to restore later
-            self.old_cfg = termios.tcgetattr(self.stream)
-
             # Install a signal handler to disable/enable keyboard input
             # when the process moves between foreground and background.
             self.old_handlers[signal.SIGTSTP] = signal.signal(signal.SIGTSTP, self._tstp_handler)
-
-            # add an atexit handler to ensure the terminal is restored
-            atexit.register(self._restore_default_terminal_settings)
 
             # enable keyboard input initially (if foreground)
             if not self._is_background():
@@ -246,9 +280,7 @@ class keyboard_input:
 
     def __exit__(self, exc_type, exception, traceback):
         """If termios was available, restore old settings."""
-        if self.old_cfg:
-            self._restore_default_terminal_settings()
-            atexit.unregister(self._restore_default_terminal_settings)
+        super().__exit__(exc_type, exception, traceback)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:
