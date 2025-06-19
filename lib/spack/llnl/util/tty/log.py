@@ -18,18 +18,14 @@ import traceback
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
 from threading import Thread
-from types import ModuleType
-from typing import Callable, Optional
+from typing import Callable, Generator, Optional, Tuple
 
 import llnl.util.tty as tty
 
-termios: Optional[ModuleType] = None
 try:
-    import termios as term_mod
-
-    termios = term_mod
+    import termios
 except ImportError:
-    pass
+    termios = None  # type: ignore[assignment]
 
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
@@ -60,7 +56,7 @@ control = re.compile("(\x11\n|\x13\n)")
 
 
 @contextmanager
-def ignore_signal(signum):
+def ignore_signal(signum: int) -> Generator[None, None, None]:
     """Context manager to temporarily ignore a signal."""
     old_handler = signal.signal(signum, signal.SIG_IGN)
     try:
@@ -69,12 +65,12 @@ def ignore_signal(signum):
         signal.signal(signum, old_handler)
 
 
-def _is_background_tty(stream):
+def _is_background_tty(stream: io.TextIOWrapper) -> bool:
     """True if the stream is a tty and calling process is in the background."""
     return stream.isatty() and os.getpgrp() != os.tcgetpgrp(stream.fileno())
 
 
-def _strip(line):
+def _strip(line: str) -> str:
     """Strip color and control characters from a line."""
     return _escape.sub("", line)
 
@@ -155,7 +151,7 @@ class keyboard_input:
 
     """
 
-    def __init__(self, stream):
+    def __init__(self, stream: Optional[io.TextIOWrapper]):
         """Create a context manager that will enable keyboard input on stream.
 
         Args:
@@ -166,17 +162,22 @@ class keyboard_input:
         """
         self.stream = stream
 
-    def _is_background(self):
+    def _is_background(self) -> bool:
         """True iff calling process is in the background."""
+        assert self.stream is not None, "stream should be set when this method is called"
         return _is_background_tty(self.stream)
 
-    def _get_canon_echo_flags(self):
+    def _get_canon_echo_flags(self) -> Tuple[bool, bool]:
         """Get current termios canonical and echo settings."""
+        assert termios is not None, "termios should be available when this method is called"
+        assert self.stream is not None, "stream should be set when this method is called"
         cfg = termios.tcgetattr(self.stream)
         return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
-    def _enable_keyboard_input(self):
+    def _enable_keyboard_input(self) -> None:
         """Disable canonical input and echoing on ``self.stream``."""
+        assert termios is not None, "termios should be available when this method is called"
+        assert self.stream is not None, "stream should be set when this method is called"
         # "enable" input by disabling canonical mode and echo
         new_cfg = termios.tcgetattr(self.stream)
         new_cfg[3] &= ~termios.ICANON
@@ -188,6 +189,9 @@ class keyboard_input:
 
     def _restore_default_terminal_settings(self):
         """Restore the original input configuration on ``self.stream``."""
+        assert termios is not None, "termios should be available when this method is called"
+        assert self.stream is not None, "stream should be set when this method is called"
+        assert self.old_cfg is not None, "old_cfg should be set when this method is called"
         # _restore_default_terminal_settings Can be called in foreground
         # or background. When called in the background, tcsetattr triggers
         # SIGTTOU, which we must ignore, or the process will be stopped.
@@ -198,7 +202,7 @@ class keyboard_input:
         self._restore_default_terminal_settings()
         os.kill(os.getpid(), signal.SIGSTOP)
 
-    def check_fg_bg(self):
+    def check_fg_bg(self) -> None:
         # old_cfg is set up in __enter__ and indicates that we have
         # termios and a valid stream.
         if not self.old_cfg:
@@ -227,7 +231,7 @@ class keyboard_input:
         if not self.stream or not self.stream.isatty():
             return self
 
-        if termios:
+        if termios is not None:
             # save old termios settings to restore later
             self.old_cfg = termios.tcgetattr(self.stream)
 
