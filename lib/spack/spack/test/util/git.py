@@ -40,7 +40,7 @@ def test_init_git_repo(git, tmp_path):
     with working_dir(destination, create=True):
         spack.util.git.init_git_repo(repo_url)
 
-        "No commits yet" in git("status", output=str)
+        assert "No commits yet" in git("status", output=str)
 
 
 def test_pull_checkout_commit(git, tmp_path, mock_git_version_info):
@@ -51,7 +51,7 @@ def test_pull_checkout_commit(git, tmp_path, mock_git_version_info):
         spack.util.git.init_git_repo(repo)
         spack.util.git.pull_checkout_commit(commits[0])
 
-        commits[0] in git("rev-parse", "HEAD", output=str)
+        assert commits[0] in git("rev-parse", "HEAD", output=str)
 
 
 def test_pull_checkout_tag(git, tmp_path, mock_git_version_info):
@@ -62,7 +62,7 @@ def test_pull_checkout_tag(git, tmp_path, mock_git_version_info):
         spack.util.git.init_git_repo(repo)
         spack.util.git.pull_checkout_tag("v1.1")
 
-        "v1.1" in git("describe", "--exact-match", "--tags", output=str)
+        assert "v1.1" in git("describe", "--exact-match", "--tags", output=str)
 
 
 def test_pull_checkout_branch(git, tmp_path, mock_git_version_info):
