@@ -75,9 +75,12 @@ urlopen = web_util.urlopen  # alias for mocking in tests
 def get_git_root(path) -> Optional[str]:
     git_exe = spack.util.git.git(required=True)
     try:
+        print(path)
         with fs.working_dir(path):
             # Raises SpackError on command failure
-            git_dir = git_exe("rev-parse", "--show-toplevel", fail_on_error=True)
+            git_dir = git_exe(
+                "rev-parse", "--show-toplevel", fail_on_error=True, output=str
+            ).strip()
             tty.debug(f"{path} git toplevel at {git_dir}")
             return git_dir
     except SpackError:

@@ -69,8 +69,29 @@ def mock_git_repo(git, tmpdir):
     with working_dir(repo_path):
         git("init")
 
+        git("config", "--local", "user.email", "testing@spack.io")
+        git("config", "--local", "user.name", "Spack Testing")
+
+        # This path is used to satisfy git root detection and detection of environment changed
+        path_to_env = os.path.sep.join(("no", "such", "env", "path", "spack.yaml"))
+        os.makedirs(os.path.dirname(path_to_env))
+        with open(path_to_env, "w", encoding="utf-8") as f:
+            f.write(
+                """
+spack:
+    specs:
+    - a
+"""
+            )
+
+        git("add", path_to_env)
+
         with open("README.md", "w", encoding="utf-8") as f:
             f.write("# Introduction")
+
+        # initial commit with README
+        git("add", "README.md")
+        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
 
         with open(".gitlab-ci.yml", "w", encoding="utf-8") as f:
             f.write(
@@ -80,13 +101,6 @@ testjob:
         - echo "success"
             """
             )
-
-        git("config", "--local", "user.email", "testing@spack.io")
-        git("config", "--local", "user.name", "Spack Testing")
-
-        # initial commit with README
-        git("add", "README.md")
-        git("-c", "commit.gpgsign=false", "commit", "-m", "initial commit")
 
         # second commit, adding a .gitlab-ci.yml
         git("add", ".gitlab-ci.yml")
@@ -1081,7 +1095,10 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     """Test that we can detect the change to .gitlab-ci.yml in a
     mock spack git repo."""
     monkeypatch.setattr(spack.paths, "prefix", mock_git_repo)
-    assert ci.get_stack_changed("/no/such/env/path") is True
+    fake_env_path = os.path.join(
+        spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
+    )
+    assert ci.get_stack_changed(fake_env_path) is True
 
 
 def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, monkeypatch):
