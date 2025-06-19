@@ -2413,7 +2413,7 @@ class PackageInstaller:
             self._install()
 
     def _install(self) -> None:
-        """Helper with main implmentation of ``install()``.
+        """Helper with main implementation of ``install()``.
 
         We need to wrap the installation routine with a context manager for preserving
         keyboard sanity. Wrappers go in ``install()``. This does the real work.
