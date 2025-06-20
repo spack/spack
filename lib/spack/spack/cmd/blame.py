@@ -200,13 +200,9 @@ def blame(parser, args):
     # Get path to what we assume is a package (including to a cached version
     # of a remote package repository.)
     if not blame_file:
-        try:
-            blame_file = spack.repo.PATH.filename_for_package_name(args.package_or_file)
-            if os.path.isfile(blame_file):
-                prefix = package_repo_root(blame_file)
-        except spack.repo.UnknownNamespaceError:
-            # The file or path being checked is not a package
-            pass
+        blame_file = spack.repo.PATH.filename_for_package_name(args.package_or_file)
+        if os.path.isfile(blame_file):
+            prefix = package_repo_root(blame_file)
 
     if prefix is None:
         tty.debug(f"'{args.package_or_file}' is not within a spack package repository")
