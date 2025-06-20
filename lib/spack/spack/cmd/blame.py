@@ -7,6 +7,7 @@ import os
 import pathlib
 import re
 import sys
+import textwrap
 from typing import Optional, Union
 
 import llnl.util.tty as tty
@@ -15,15 +16,17 @@ from llnl.util.lang import pretty_date
 from llnl.util.tty.colify import colify_table
 
 import spack.config
-import spack.paths
 import spack.repo
 import spack.util.git
 import spack.util.spack_json as sjson
 from spack.cmd import spack_is_git_repo
+from spack.util.executable import ProcessError
 
 description = "show contributors to packages"
 section = "developer"
 level = "long"
+
+git = spack.util.git.git(required=True)
 
 
 def setup_parser(subparser: argparse.ArgumentParser) -> None:
@@ -115,30 +118,67 @@ def dump_json(rows, last_mod, total_lines, emails):
     sjson.dump(result, sys.stdout)
 
 
-def repo_prefix(path: str) -> Optional[Union[str, pathlib.Path]]:
-    """Find the root directory of a spack repository containing the file.
+def git_prefix(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
+    """Return the top level directory if path is under a git repository.
 
     Args:
-      path: path to an arbitrary file presumably in one of the spack repos
+      path: path of the item presumably under a git repository
 
-    Returns: path to the repository prefix or None
+    Returns: path to the root of the git repository
     """
+    if not os.path.exists(path):
+        return None
 
-    def find_root(p):
-        return p if os.path.exists(p / ".git") else find_root(p.parent)
+    work_dir = path if os.path.isdir(path) else os.path.dirname(path)
+    with working_dir(work_dir):
+        try:
+            result = git("rev-parse", "--show-toplevel", output=str, error=str)
+            return pathlib.Path(result.split("\n")[0])
+        except ProcessError:
+            tty.die(f"'{path}' is not in a git repository.")
 
-    if path.startswith(spack.paths.prefix):
-        return spack.paths.prefix
+    return None
 
+
+def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
+    """Find the appropriate package repository's git root directory.
+
+    Provides a warning for a remote package repository since there is a risk that
+    the blame results are inaccurate.
+
+    Args:
+      path: path to an arbitrary file presumably in one of the spack package repos
+
+    Returns: path to the package repository's git root directory or None
+    """
     descriptors = spack.repo.RepoDescriptors.from_config(
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
     )
+    path = pathlib.Path(path)
     for _, desc in descriptors.items():
+        # Handle the remote case, whose destination is by definition the git root
+        if hasattr(desc, "destination"):
+            repo_dest = pathlib.Path(desc.destination)
+            if (repo_dest / ".git").exists():
+                prefix = repo_dest
+                if prefix and path.is_relative_to(prefix):
+                    lines = textwrap.wrap(
+                        "Using the cached version of the remote repository "
+                        "may result in an inaccurate attribution of blame. "
+                        "Configure your 'builtin' package repository to a "
+                        "local clone of the remote repository if you want "
+                        "accurate results for packages.",
+                        subsequent_indent="  ",
+                    )
+                    tty.warn("\n".join(lines))
+                    return prefix
+
+        # Handle the local repository case, making sure it's a spack repository.
         if hasattr(desc, "path"):
-            index = desc.path.find("spack_repo")
-            if index > -1:
-                prefix = find_root(pathlib.Path(desc.path[: index - 1]))
-                if prefix and path.startswith(str(prefix)):
+            repo_path = pathlib.Path(desc.path)
+            if "spack_repo" in repo_path.parts:
+                prefix = git_prefix(repo_path)
+                if prefix and path.is_relative_to(prefix):
                     return prefix
 
     return None
@@ -147,48 +187,63 @@ def repo_prefix(path: str) -> Optional[Union[str, pathlib.Path]]:
 def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
-        tty.die("This spack is not a git clone. Can't use 'spack blame'")
-    git = spack.util.git.git(required=True)
+        tty.die("This spack is not a git clone. You cannot use 'spack blame'.")
 
-    # Get the name of the file to blame and its repository prefix
+    # Get the name of the path to blame and its repository prefix
     # so we can honor any .git-blame-ignore-revs that may be present.
     blame_file = None
     prefix = None
-    if os.path.isfile(args.package_or_file):
-        path = os.path.realpath(args.package_or_file)
-        prefix = repo_prefix(path)
-        if prefix is not None:
-            blame_file = path
+    if os.path.exists(args.package_or_file):
+        blame_file = os.path.realpath(args.package_or_file)
+        prefix = package_repo_root(blame_file)
 
-    # get path to what we assume is a package
+    # Get path to what we assume is a package though (including
+    # to a cached version of a remote package repository.)
     if not blame_file:
         try:
-            pkg_cls = spack.repo.PATH.get_pkg_class(args.package_or_file)
-            blame_file = pkg_cls.module.__file__.rstrip("c")  # .pyc -> .py
-            prefix = repo_prefix(blame_file)
+            blame_file = spack.repo.PATH.filename_for_package_name(args.package_or_file)
+            if os.path.isfile(blame_file):
+                prefix = package_repo_root(blame_file)
         except spack.repo.UnknownNamespaceError:
+            # The file or path being checked is not a package
             pass
 
     if prefix is None:
-        tty.die(f"'{args.package_or_file}' is not within a spack repo. Can't use 'spack blame'.")
+        tty.debug(f"'{args.package_or_file}' is not within a spack package repository")
 
-    # Get git blame for the path EVEN when it is located in a different
-    # spack repository (e.g., spack/spack-packages).
-    with working_dir(prefix):
+    if not blame_file:
+        tty.die(f"'{args.package_or_file}' does not exist.")
+
+    path_prefix = git_prefix(blame_file)
+    if path_prefix != prefix:
+        # You are attempting to get 'blame' for a path outside of a configured
+        # package repository (e.g., within a spack/spack clone). We'll use the
+        # path's prefix instead to ensure working under the proper git
+        # repository.
+        prefix = path_prefix
+
+    # Get blame information for the path EVEN when it is located in a different
+    # spack repository (e.g., spack/spack-packages) or a different git
+    # repository.
+    with working_dir(path_prefix):
         options = ["blame"]
-        # ignore the great black reformatting of 2022
-        ignore_file = os.path.join(prefix, ".git-blame-ignore-revs")
-        if os.path.exists(ignore_file):
-            options.extend(["--ignore-revs-file", ignore_file])
 
-        if args.view == "git":
-            options.append(blame_file)
-            git(*options)
-            return
-        else:
-            options.extend(["--line-porcelain", blame_file])
-            output = git(*options, output=str)
-            lines = output.split("\n")
+        # ignore the great black reformatting of 2022
+        ignore_file = prefix / ".git-blame-ignore-revs"
+        if ignore_file.exists():
+            options.extend(["--ignore-revs-file", str(ignore_file)])
+
+        try:
+            if args.view == "git":
+                options.append(str(blame_file))
+                git(*options)
+                return
+            else:
+                options.extend(["--line-porcelain", str(blame_file)])
+                output = git(*options, output=str, error=str)
+                lines = output.split("\n")
+        except ProcessError as err:
+            tty.die(f"Blame information is not tracked for '{blame_file}':\n{err.long_message}")
 
     # Histogram authors
     counts = {}

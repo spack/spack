@@ -4,6 +4,7 @@
 
 import collections
 import os
+from pathlib import Path
 
 import pytest
 
@@ -11,7 +12,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.paths
 import spack.util.spack_json as sjson
-from spack.cmd.blame import repo_prefix
+from spack.cmd.blame import package_repo_root
 from spack.main import SpackCommand, SpackCommandError
 from spack.repo import RepoDescriptors
 
@@ -94,26 +95,57 @@ def test_blame_by_git(mock_packages, capfd):
     assert '    homepage = "http://www.mpich.org"' in out
 
 
-def test_repo_prefix_using_repo_descriptor(tmp_path, monkeypatch):
-    """Sanity check blame's repo_prefix using a repo descriptor."""
-    # set up a mock repository
-    paths = [tmp_path / p for p in ["spack_repo", ".git", os.path.join("spack_repo", "builtin")]]
-    for p in paths:
-        p.mkdir()
+def test_repo_root_local_descriptor(mock_git_version_info, monkeypatch):
+    """Sanity check blame's package repository root using a local repo descriptor."""
 
-    # create a mock descriptor for the mock repository
-    MockDescriptor = collections.namedtuple("MockDescriptor", ["path"])
-    repo_descriptor = MockDescriptor(str(paths[0]))
+    # create a mock descriptor for the mock local repository
+    MockLocalDescriptor = collections.namedtuple("MockLocalDescriptor", ["path"])
+    repo_path, filename, _ = mock_git_version_info
+    git_repo_path = Path(repo_path)
+    spack_repo_path = git_repo_path / "spack_repo"
+    spack_repo_path.mkdir()
+
+    repo_descriptor = MockLocalDescriptor(spack_repo_path)
 
     def _from_config(*args, **kwargs):
         return {"mock": repo_descriptor}
 
     monkeypatch.setattr(RepoDescriptors, "from_config", _from_config)
 
-    # first a case that falls through to not find a match
-    prefix = repo_prefix(os.path.realpath(os.path.join(str(tmp_path), "..")))
+    # The parent of the git repository is outside the package repo root
+    path = (git_repo_path / "..").resolve()
+    prefix = package_repo_root((path / "..").resolve())
     assert prefix is None
 
-    # now the case where the non-spack prefix path is returned
-    prefix = repo_prefix(str(paths[-1]))
-    assert prefix == tmp_path
+    # The base repository directory is the git root of the package repo
+    prefix = package_repo_root(git_repo_path)
+    assert prefix == git_repo_path
+
+    # The file under the base repository directory also has the package git root
+    prefix = package_repo_root(git_repo_path / filename)
+    assert prefix == git_repo_path
+
+
+def test_repo_root_remote_descriptor(mock_git_version_info, monkeypatch):
+    """Sanity check blame's package repository root using a remote repo descriptor."""
+
+    # create a mock descriptor for the mock local repository
+    MockRemoteDescriptor = collections.namedtuple("MockRemoteDescriptor", ["destination"])
+    repo_path, filename, _ = mock_git_version_info
+    git_repo_path = Path(repo_path)
+
+    repo_descriptor = MockRemoteDescriptor(git_repo_path)
+
+    def _from_config(*args, **kwargs):
+        return {"mock": repo_descriptor}
+
+    monkeypatch.setattr(RepoDescriptors, "from_config", _from_config)
+
+    # The parent of the git repository is outside the package repo root
+    path = (git_repo_path / "..").resolve()
+    prefix = package_repo_root((path / "..").resolve())
+    assert prefix is None
+
+    # The base repository directory is the git root of the package repo
+    prefix = package_repo_root(git_repo_path)
+    assert prefix == git_repo_path
