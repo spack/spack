@@ -1448,7 +1448,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum"
     else
-        SPACK_COMPREPLY="create destroy add remove rm set-url set list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url set list ls"
     fi
 }
 
@@ -1511,6 +1511,10 @@ _spack_mirror_set() {
 }
 
 _spack_mirror_list() {
+    SPACK_COMPREPLY="-h --help --scope"
+}
+
+_spack_mirror_ls() {
     SPACK_COMPREPLY="-h --help --scope"
 }
 
@@ -1784,7 +1788,7 @@ _spack_repo() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="create list ls add set remove rm migrate"
+        SPACK_COMPREPLY="create list ls add set remove rm migrate update"
     fi
 }
 
@@ -1847,6 +1851,15 @@ _spack_repo_migrate() {
         SPACK_COMPREPLY="-h --help --dry-run --fix"
     else
         _repos
+    fi
+}
+
+_spack_repo_update() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --remote -r --scope --branch -b --tag -t --commit -c"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 

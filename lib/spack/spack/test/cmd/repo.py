@@ -263,6 +263,9 @@ class MockDescriptor(spack.repo.RepoDescriptor):
     def initialize(self, fetch=True, git=None) -> None:
         self.initialized = True
 
+    def update(self, git: Optional[Executable] = None, remote: Optional[str] = "origin") -> None:
+        pass
+
     def construct(self, cache, overrides=None):
         assert self.initialized, "MockDescriptor must be initialized before construction"
         return self.to_construct
@@ -773,3 +776,56 @@ def test_repo_list_format_flags(
     config_names_output = repo("list", "--names", output=str)
     config_names_lines = config_names_output.strip().split("\n")
     assert config_names_lines == ["monorepo", "uninitialized", "misconfigured"]
+
+
+@pytest.mark.parametrize(
+    "repo_name,flags",
+    [
+        ("new_repo", []),
+        ("new_repo", ["--branch", "develop"]),
+        ("new_repo", ["--branch", "develop", "--remote", "upstream"]),
+        ("new_repo", ["--tag", "v1.0"]),
+        ("new_repo", ["--commit", "abc123"]),
+    ],
+)
+def test_repo_update_successful_flags(monkeypatch, mutable_config, tmp_path, repo_name, flags):
+    """Test repo update with flags."""
+
+    def mock_parse_config_descriptor(name, entry, lock):
+        return MockDescriptor({"/path": MockRepo("new_repo")})
+
+    monkeypatch.setattr(spack.repo, "parse_config_descriptor", mock_parse_config_descriptor)
+    monkeypatch.setattr(spack.repo, "RemoteRepoDescriptor", MockDescriptor)
+
+    repos_config = spack.config.get("repos")
+    repos_config[repo_name] = {"git": "https://github.com/example/repo.git"}
+    spack.config.set("repos", repos_config)
+
+    repo("update", repo_name, *flags)
+
+    # check that the branch,tag,commit was updated in the configuration
+    repos_config = spack.config.get("repos")
+
+    if "--branch" in flags:
+        assert repos_config[repo_name]["branch"] == "develop"
+
+    if "--tag" in flags:
+        assert repos_config[repo_name]["tag"] == "v1.0"
+
+    if "--commit" in flags:
+        assert repos_config[repo_name]["commit"] == "abc123"
+
+
+@pytest.mark.parametrize(
+    "flags",
+    [
+        ["--branch", "develop"],
+        ["--branch", "develop", "new_repo_1", "new_repo_2"],
+        ["--branch", "develop", "unknown_repo"],
+    ],
+)
+def test_repo_update_invalid_flags(monkeypatch, mutable_config, tmp_path, flags):
+    """Test repo update with invalid flags."""
+
+    with pytest.raises(SpackError):
+        repo("update", *flags)

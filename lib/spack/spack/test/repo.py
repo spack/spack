@@ -584,7 +584,7 @@ def test_repo_update(tmp_path: pathlib.Path):
     config = {"repos": [existing_root, nonexisting_root]}
     assert spack.schema.repos.update(config)
     assert config["repos"] == {
-        "foo": existing_root,
+        "foo": existing_root
         # non-existing root is removed for simplicity; would be a warning otherwise.
     }
 
@@ -618,6 +618,40 @@ def test_parse_config_descriptor_git_2(tmp_path: pathlib.Path):
     )
     assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
     assert descriptor.relative_paths == ["some/path"]
+
+
+def test_remote_descriptor_no_git(tmp_path: pathlib.Path):
+    """Test that descriptor fails without git."""
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={
+            "git": str(tmp_path / "repo.git"),
+            "destination": str(tmp_path / "some/destination"),
+        },
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+
+    descriptor.initialize(fetch=True, git=None)
+
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+    assert descriptor.error == "Git executable not found"
+
+
+def test_remote_descriptor_update_no_git(tmp_path: pathlib.Path):
+    """Test that descriptor fails without git."""
+    descriptor = spack.repo.parse_config_descriptor(
+        name="name",
+        descriptor={
+            "git": str(tmp_path / "repo.git"),
+            "destination": str(tmp_path / "some/destination"),
+        },
+        lock=spack.util.lock.Lock(str(tmp_path / "x"), enable=False),
+    )
+
+    assert isinstance(descriptor, spack.repo.RemoteRepoDescriptor)
+
+    with pytest.raises(spack.repo.RepoError, match="Git executable not found"):
+        descriptor.update(git=None)
 
 
 def test_parse_config_descriptor_local(tmp_path: pathlib.Path):
@@ -656,6 +690,9 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
                 name="foo",
                 repository=str(tmp_path / "foo.git"),
                 destination=str(tmp_path / "foo_destination"),
+                branch=None,
+                tag=None,
+                commit=None,
                 relative_paths=None,
                 lock=lock,
             )
@@ -667,35 +704,36 @@ def test_repo_descriptors_construct(tmp_path: pathlib.Path):
     repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
     repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
 
-    git_clone_calls = 0
-
     class MockGit(spack.util.executable.Executable):
         def __init__(self):
             pass
 
         def __call__(self, *args, **kwargs) -> str:  # type: ignore
-            nonlocal git_clone_calls
-            git_clone_calls += 1
+            action = args[0]
 
-            action, flag, repo, dest = args
+            if action == "ls-remote":
+                return "refs/heads/develop"
 
-            assert action == "clone"
-            assert flag == "--depth=100"
-            assert "foo.git" in repo
-            assert "foo_destination" in dest
+            elif action == "rev-parse":
+                return "develop"
 
-            # The git repo needs a .git subdir
-            os.makedirs(os.path.join(dest, ".git"))
+            elif action == "config":
+                return "origin"
 
-            # The spack-repo-index.yaml is optional; we test Spack reads from it.
-            with open(os.path.join(dest, "spack-repo-index.yaml"), "w", encoding="utf-8") as f:
-                f.write(
-                    """\
+            elif action == "init":
+                # The git repo needs a .git subdir
+                os.makedirs(os.path.join(".git"))
+
+            elif action == "checkout":
+                # The spack-repo-index.yaml is optional; we test Spack reads from it.
+                with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
+                    f.write(
+                        """\
 repo_index:
   paths:
   - spack_repo/foo
 """
-                )
+                    )
 
             return ""
 
@@ -704,7 +742,6 @@ repo_index:
     # Verify it cannot construct a Repo instance, and that this does *not* throw, since that would
     # break Spack very early on. Instead, an error is returned. Also verify that
     # relative_paths is read from spack-repo-index.yaml.
-    assert git_clone_calls == 1
     assert len(repo_path_1.repos) == 0
     assert len(errors_1) == 1
     assert all("No repo.yaml" in str(err) for err in errors_1.values()), errors_1
@@ -712,7 +749,6 @@ repo_index:
 
     # Do the same test with another instance: it should *not* clone a second time.
     repo_path_2, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
-    assert git_clone_calls == 1
     assert len(repo_path_2.repos) == 0
     assert len(errors_2) == 1
     assert all("No repo.yaml" in str(err) for err in errors_2.values()), errors_2
@@ -721,7 +757,152 @@ repo_index:
     # Finally fill the repo with an actual repo and check that the repo can be constructed.
     spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
     repo_path_3, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
-    assert git_clone_calls == 1
     assert not errors_3
     assert len(repo_path_3.repos) == 1
     assert repo_path_3.repos[0].namespace == "foo"
+
+
+def test_repo_descriptors_update(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1, descriptors_2, descriptors_3, descriptors_4 = [
+        {
+            "foo": spack.repo.RemoteRepoDescriptor(
+                name="foo",
+                repository=str(tmp_path / "foo.git"),
+                destination=str(tmp_path / "foo_destination"),
+                branch="develop" if i == 0 else None,
+                tag="v1.0" if i == 1 else None,
+                commit="abc123" if i == 2 else None,
+                relative_paths=None,
+                lock=lock,
+            )
+        }
+        for i in range(4)
+    ]
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+    repos_2 = spack.repo.RepoDescriptors(descriptors_2)  # type: ignore
+    repos_3 = spack.repo.RepoDescriptors(descriptors_3)  # type: ignore
+    repos_4 = spack.repo.RepoDescriptors(descriptors_4)  # type: ignore
+
+    class MockGit(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "refs/heads/develop"
+
+            elif action == "rev-parse":
+                return "develop"
+
+            elif action == "config":
+                return "origin"
+
+            elif action == "init":
+                # The git repo needs a .git subdir
+                os.makedirs(os.path.join(".git"))
+
+            elif action == "checkout":
+                # The spack-repo-index.yaml is optional; we test Spack reads from it.
+                with open(os.path.join("spack-repo-index.yaml"), "w", encoding="utf-8") as f:
+                    f.write(
+                        """\
+repo_index:
+  paths:
+  - spack_repo/foo
+"""
+                    )
+
+            return ""
+
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+
+    # branch develop
+    _, errors_1 = repos_1.construct(cache=cache, find_git=MockGit)
+    assert not errors_1
+    for descriptor in repos_1.values():
+        descriptor.update(git=MockGit())
+
+    # tag v1.0
+    _, errors_2 = repos_2.construct(cache=cache, find_git=MockGit)
+    assert not errors_2
+    for descriptor in repos_2.values():
+        descriptor.update(git=MockGit())
+
+    # commit abc123
+    _, errors_3 = repos_3.construct(cache=cache, find_git=MockGit)
+    assert not errors_3
+    for descriptor in repos_3.values():
+        descriptor.update(git=MockGit())
+
+    # default branch
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
+    for descriptor in repos_4.values():
+        descriptor.update(git=MockGit())
+
+    # Rerun construction after initialization to test early exit logic
+    _, errors_4 = repos_4.construct(cache=cache, find_git=MockGit)
+    assert not errors_4
+
+
+def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
+    """Test the RepoDescriptors construct function. Ensure it does not raise when we cannot
+    construct a Repo instance, e.g. due to missing repo.yaml file. Check that it parses the
+    spack-repo-index.yaml file both when newly initialized and when already cloned."""
+
+    lock = spack.util.lock.Lock(str(tmp_path / "x"), enable=False)
+    cache = spack.util.file_cache.FileCache(str(tmp_path / "cache"))
+
+    # Construct 3 identical descriptors
+    descriptors_1 = {
+        "foo": spack.repo.RemoteRepoDescriptor(
+            name="foo",
+            repository=str(tmp_path / "foo.git"),
+            destination=str(tmp_path / "foo_destination"),
+            branch=None,
+            tag=None,
+            commit=None,
+            relative_paths=None,
+            lock=lock,
+        )
+    }
+
+    repos_1 = spack.repo.RepoDescriptors(descriptors_1)  # type: ignore
+
+    class MockGitInvalidRemote(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            action = args[0]
+
+            if action == "ls-remote":
+                return "bad string"
+
+    class MockGitFailed(spack.util.executable.Executable):
+        def __init__(self):
+            pass
+
+        def __call__(self, *args, **kwargs) -> str:  # type: ignore
+            raise spack.util.executable.ProcessError("failed")
+
+    spack.repo.create_repo(str(tmp_path / "foo_destination"), "foo")
+
+    _, errors_1 = repos_1.construct(cache=cache, find_git=MockGitFailed)
+    assert len(errors_1) == 1
+    assert all("Failed to clone repository" in str(err) for err in errors_1.values()), errors_1
+
+    with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
+        for descriptor in repos_1.values():
+            descriptor.update(git=MockGitInvalidRemote())

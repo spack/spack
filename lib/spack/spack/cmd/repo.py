@@ -136,6 +136,31 @@ def setup_parser(subparser: argparse.ArgumentParser):
         help="automatically migrate the repository to the latest Package API",
     )
 
+    # Update
+    update_parser = sp.add_parser("update", help=repo_update.__doc__)
+    update_parser.add_argument("names", nargs="*", default=[], help="repositories to update")
+    update_parser.add_argument(
+        "--remote",
+        "-r",
+        default="origin",
+        nargs="?",
+        help="name of remote to check for branches, tags, or commits",
+    )
+    update_parser.add_argument(
+        "--scope",
+        action=arguments.ConfigScope,
+        default=lambda: spack.config.default_modify_scope(),
+        help="configuration scope to modify",
+    )
+    refspec = update_parser.add_mutually_exclusive_group(required=False)
+    refspec.add_argument(
+        "--branch", "-b", nargs="?", default=None, help="name of a branch to change to"
+    )
+    refspec.add_argument("--tag", "-t", nargs="?", default=None, help="name of a tag to change to")
+    refspec.add_argument(
+        "--commit", "-c", nargs="?", default=None, help="name of a commit to change to"
+    )
+
 
 def repo_create(args):
     """create a new package repository"""
@@ -447,6 +472,58 @@ def _iter_repos_from_descriptors(
             yield name, descriptor.repository, None  # None indicates remote descriptor
 
 
+def repo_update(args: Any) -> int:
+    descriptors = spack.repo.RepoDescriptors.from_config(
+        spack.repo.package_repository_lock(), spack.config.CONFIG
+    )
+
+    git_flags = ["commit", "tag", "branch"]
+    active_flag = next((attr for attr in git_flags if getattr(args, attr)), None)
+    if active_flag and len(args.names) != 1:
+        raise SpackError(
+            f"Unable to set --{active_flag} because more than one namespace was given."
+            if len(args.names) > 1
+            else f"Unable to apply --{active_flag} without a namespace"
+        )
+
+    for name in args.names:
+        if name not in descriptors:
+            raise SpackError(f"{name} is not a known repository name.")
+
+        # filter descriptors when namespaces are provided as arguments
+        descriptors = spack.repo.RepoDescriptors(
+            {name: descriptor for name, descriptor in descriptors.items() if name in args.names}
+        )
+
+    # Get the repos for the specific scope we're modifying
+    scope_repos: Dict[str, Any] = spack.config.get("repos", default={}, scope=args.scope)
+
+    for name, descriptor in descriptors.items():
+        if not isinstance(descriptor, spack.repo.RemoteRepoDescriptor):
+            continue
+
+        if active_flag:
+            # update the git commit, tag, or branch of the descriptor
+            setattr(descriptor, active_flag, getattr(args, active_flag))
+
+            updated_entry = scope_repos[name] if name in scope_repos else {}
+
+            # prune previous values of git fields
+            for entry in {"commit", "tag", "branch"} - {active_flag}:
+                setattr(descriptor, entry, None)
+                updated_entry.pop(entry, None)
+
+            updated_entry[active_flag] = args.commit or args.tag or args.branch
+            scope_repos[name] = updated_entry
+
+        descriptor.update(git=spack.util.executable.which("git"), remote=args.remote)
+
+    if active_flag:
+        spack.config.set("repos", scope_repos, args.scope)
+
+    return 0
+
+
 def repo(parser, args):
     return {
         "create": repo_create,
@@ -457,4 +534,5 @@ def repo(parser, args):
         "remove": repo_remove,
         "rm": repo_remove,
         "migrate": repo_migrate,
+        "update": repo_update,
     }[args.repo_command](args)

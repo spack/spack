@@ -135,6 +135,11 @@ Temporary directory to store long-lived cache files, such as indices of
 packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
 be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
+Temporary directory to store long-lived cache files, such as indices
+of packages available in repositories.  Defaults to
+``~/.spack/$spack_instance_id/cache``.  Can be purged with
+:ref:`spack clean --misc-cache <cmd-spack-clean>`.
+
 --------------------
 ``verify_ssl``
 --------------------

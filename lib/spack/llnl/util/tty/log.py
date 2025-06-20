@@ -18,18 +18,14 @@ import traceback
 from contextlib import contextmanager
 from multiprocessing.connection import Connection
 from threading import Thread
-from types import ModuleType
-from typing import Callable, Optional
+from typing import IO, Callable, Optional, Tuple
 
 import llnl.util.tty as tty
 
-termios: Optional[ModuleType] = None
 try:
-    import termios as term_mod
-
-    termios = term_mod
+    import termios
 except ImportError:
-    pass
+    termios = None  # type: ignore[assignment]
 
 
 esc, bell, lbracket, bslash, newline = r"\x1b", r"\x07", r"\[", r"\\", r"\n"
@@ -69,17 +65,64 @@ def ignore_signal(signum):
         signal.signal(signum, old_handler)
 
 
-def _is_background_tty(stream):
+def _is_background_tty(stdin: IO[str]) -> bool:
     """True if the stream is a tty and calling process is in the background."""
-    return stream.isatty() and os.getpgrp() != os.tcgetpgrp(stream.fileno())
+    return stdin.isatty() and os.getpgrp() != os.tcgetpgrp(stdin.fileno())
 
 
-def _strip(line):
+def _strip(line: str) -> str:
     """Strip color and control characters from a line."""
     return _escape.sub("", line)
 
 
-class keyboard_input:
+class preserve_terminal_settings:
+    """Context manager to preserve terminal settings on a stream.
+
+    Stores terminal settings before the context and ensures they are restored after.
+    Ensures that things like echo and canonical line mode are not left disabled if
+    terminal settings in the context are not properly restored.
+    """
+
+    def __init__(self, stdin: Optional[IO[str]]) -> None:
+        """Create a context manager that preserves terminal settings on a stream.
+
+        Args:
+            stream: keyboard input stream, typically sys.stdin
+        """
+        self.stdin = stdin
+
+    def _restore_default_terminal_settings(self) -> None:
+        """Restore the original input configuration on ``self.stdin``."""
+        # Can be called in foreground or background. When called in the background, tcsetattr
+        # triggers SIGTTOU, which we must ignore, or the process will be stopped.
+        assert self.stdin is not None and self.old_cfg is not None and termios is not None
+        with ignore_signal(signal.SIGTTOU):
+            termios.tcsetattr(self.stdin, termios.TCSANOW, self.old_cfg)
+
+    def __enter__(self) -> "preserve_terminal_settings":
+        """Store terminal settings."""
+        self.old_cfg = None
+
+        # Ignore all this if the input stream is not a tty.
+        if not self.stdin or not self.stdin.isatty() or not termios:
+            return self
+
+        # save old termios settings to restore later
+        self.old_cfg = termios.tcgetattr(self.stdin)
+
+        # add an atexit handler to ensure the terminal is restored
+        atexit.register(self._restore_default_terminal_settings)
+
+        return self
+
+    def __exit__(self, exc_type, exception, traceback):
+        """If termios was available, restore old settings."""
+        if self.old_cfg:
+            self._restore_default_terminal_settings()
+            atexit.unregister(self._restore_default_terminal_settings)
+
+
+class keyboard_input(preserve_terminal_settings):
     """Context manager to disable line editing and echoing.
 
     Use this with ``sys.stdin`` for keyboard input, e.g.::
@@ -155,50 +198,44 @@ class keyboard_input:
 
     """
 
-    def __init__(self, stream):
+    def __init__(self, stdin: Optional[IO[str]]) -> None:
         """Create a context manager that will enable keyboard input on stream.
 
         Args:
-            stream (file-like): stream on which to accept keyboard input
+            stdin: text io wrapper of stdin (keyboard input)
 
-        Note that stream can be None, in which case ``keyboard_input``
-        will do nothing.
+        Note that stdin can be None, in which case ``keyboard_input`` will do nothing.
         """
-        self.stream = stream
+        super().__init__(stdin)
 
-    def _is_background(self):
+    def _is_background(self) -> bool:
         """True iff calling process is in the background."""
-        return _is_background_tty(self.stream)
+        assert self.stdin is not None, "stdin should be available"
+        return _is_background_tty(self.stdin)
 
-    def _get_canon_echo_flags(self):
+    def _get_canon_echo_flags(self) -> Tuple[bool, bool]:
         """Get current termios canonical and echo settings."""
-        cfg = termios.tcgetattr(self.stream)
+        assert termios is not None and self.stdin is not None
+        cfg = termios.tcgetattr(self.stdin)
         return (bool(cfg[3] & termios.ICANON), bool(cfg[3] & termios.ECHO))
 
-    def _enable_keyboard_input(self):
-        """Disable canonical input and echoing on ``self.stream``."""
+    def _enable_keyboard_input(self) -> None:
+        """Disable canonical input and echoing on ``self.stdin``."""
         # "enable" input by disabling canonical mode and echo
-        new_cfg = termios.tcgetattr(self.stream)
+        assert termios is not None and self.stdin is not None
+        new_cfg = termios.tcgetattr(self.stdin)
         new_cfg[3] &= ~termios.ICANON
         new_cfg[3] &= ~termios.ECHO
 
         # Apply new settings for terminal
         with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(self.stream, termios.TCSANOW, new_cfg)
-
-    def _restore_default_terminal_settings(self):
-        """Restore the original input configuration on ``self.stream``."""
-        # _restore_default_terminal_settings Can be called in foreground
-        # or background. When called in the background, tcsetattr triggers
-        # SIGTTOU, which we must ignore, or the process will be stopped.
-        with ignore_signal(signal.SIGTTOU):
-            termios.tcsetattr(self.stream, termios.TCSANOW, self.old_cfg)
+            termios.tcsetattr(self.stdin, termios.TCSANOW, new_cfg)
 
     def _tstp_handler(self, signum, frame):
         self._restore_default_terminal_settings()
         os.kill(os.getpid(), signal.SIGSTOP)
 
-    def check_fg_bg(self):
+    def check_fg_bg(self) -> None:
         # old_cfg is set up in __enter__ and indicates that we have
         # termios and a valid stream.
         if not self.old_cfg:
@@ -214,29 +251,23 @@ class keyboard_input:
         elif bg and not all(flags):  # bg, but input enabled
             self._restore_default_terminal_settings()
 
-    def __enter__(self):
+    def __enter__(self) -> "keyboard_input":
         """Enable immediate keypress input, while this process is foreground.
 
         If the stream is not a TTY or the system doesn't support termios,
         do nothing.
         """
-        self.old_cfg = None
+        super().__enter__()
         self.old_handlers = {}
 
         # Ignore all this if the input stream is not a tty.
-        if not self.stream or not self.stream.isatty():
+        if not self.stdin or not self.stdin.isatty():
             return self
 
         if termios:
-            # save old termios settings to restore later
-            self.old_cfg = termios.tcgetattr(self.stream)
-
             # Install a signal handler to disable/enable keyboard input
             # when the process moves between foreground and background.
             self.old_handlers[signal.SIGTSTP] = signal.signal(signal.SIGTSTP, self._tstp_handler)
-
-            # add an atexit handler to ensure the terminal is restored
-            atexit.register(self._restore_default_terminal_settings)
 
             # enable keyboard input initially (if foreground)
             if not self._is_background():
@@ -246,9 +277,7 @@ class keyboard_input:
 
     def __exit__(self, exc_type, exception, traceback):
         """If termios was available, restore old settings."""
-        if self.old_cfg:
-            self._restore_default_terminal_settings()
-            atexit.unregister(self._restore_default_terminal_settings)
+        super().__exit__(exc_type, exception, traceback)
 
         # restore SIGSTP and SIGCONT handlers
         if self.old_handlers:

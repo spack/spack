@@ -13,6 +13,8 @@ from pathlib import PurePath
 
 import llnl.util.filesystem
 
+import spack.util.hash as hash
+
 #: This file lives in $prefix/lib/spack/spack/__file__
 prefix = str(PurePath(llnl.util.filesystem.ancestor(__file__, 4)))
 
@@ -73,6 +75,12 @@ mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 gpg_path = os.path.join(opt_path, "spack", "gpg")
 
 
+#: Not a location itself, but used for when Spack instances
+#: share the same cache base directory for caches that should
+#: not be shared between those instances.
+spack_instance_id = hash.b32_hash(spack_root)[:7]
+
+
 # Below paths are where Spack can write information for the user.
 # Some are caches, some are not exactly caches.
 #
@@ -107,7 +115,7 @@ package_repos_path = os.path.join(user_cache_path, "package_repos")
 default_user_bootstrap_path = os.path.join(user_cache_path, "bootstrap")
 
 #: transient caches for Spack data (virtual cache, patch sha256 lookup, etc.)
-default_misc_cache_path = os.path.join(user_cache_path, "cache")
+default_misc_cache_path = os.path.join(user_cache_path, spack_instance_id, "cache")
 
 #: concretization cache for Spack concretizations
 default_conc_cache_path = os.path.join(default_misc_cache_path, "concretization")
