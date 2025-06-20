@@ -233,7 +233,7 @@ class MirrorStats:
 
 
 def create_mirror_from_package_object(
-    pkg_obj, mirror_cache: "spack.caches.MirrorCache", mirror_stats: MirrorStats
+    pkg_obj, mirror_cache: "spack.caches.MirrorCache", stats: MirrorStats
 ) -> bool:
     """Add a single package object to a mirror.
 
@@ -243,7 +243,7 @@ def create_mirror_from_package_object(
     Args:
         pkg_obj (spack.package_base.PackageBase): package object with to be added.
         mirror_cache: mirror where to add the spec.
-        mirror_stats: statistics on the current mirror
+        stats: statistics on the current mirror
 
     Return:
         True if the spec was added successfully, False otherwise
@@ -280,7 +280,7 @@ def cache_single_package(pkg_obj, mirror_cache: "spack.caches.MirrorCache") -> M
         mirror_cache: mirror where to add the spec.
 
     Return:
-        mirror_stats: statistics on the current mirror
+        statistics on the current mirror
     """
     # Create an empty MirrorStats object we will later combine with others
     mirror_stats = MirrorStats()
