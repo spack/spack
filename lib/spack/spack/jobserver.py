@@ -9,16 +9,15 @@ If a jobserver is enabled, make jobs will be dyamically allocated
 to package builds during the installation process.
 """
 
-from enum import IntEnum
+import array
+import fcntl
 import os
 import shutil
 import sys
 import tempfile
-from typing import List, Optional, Tuple, Type
-import array
-import fcntl
 import termios
-
+from enum import IntEnum
+from typing import List, Optional, Tuple, Type
 
 import spack.config
 
@@ -69,7 +68,7 @@ class NoopJobserver(Jobserver):
 
     def cleanup(self):
         return None
-    
+
     # test if it's reading and writing bytes
     def get_available_bytes(self, fd):
         """Gets the number of bytes available for reading from a file descriptor."""
@@ -116,7 +115,7 @@ class FifoJobserver(Jobserver):
 
             return self.fifo_directory, self.fifo_write_fd
         return None, None
-     
+
     # test if it's reading and writing bytes
     def get_available_bytes(self, fd):
         """Gets the number of bytes available for reading from a file descriptor."""

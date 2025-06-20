@@ -26,10 +26,8 @@ installations of packages in a Spack instance.
 """
 
 # tester imports
-import array
 import copy
 import enum
-import fcntl
 import glob
 import heapq
 import io
@@ -38,7 +36,6 @@ import os
 import shutil
 import sys
 import tempfile
-import termios
 import time
 from collections import defaultdict
 from gzip import GzipFile
@@ -2406,7 +2403,6 @@ class PackageInstaller:
             self._cleanup_task(pkg)
 
         return None
-
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
