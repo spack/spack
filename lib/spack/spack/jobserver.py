@@ -17,7 +17,7 @@ import sys
 import tempfile
 import termios
 from enum import IntEnum
-from typing import List, Optional, Tuple, Type
+from typing import Dict, List, Optional, Tuple, Type
 
 import spack.config
 
@@ -136,7 +136,7 @@ class FifoJobserver(Jobserver):
 
 
 # Table mapping JobserverType to Jobserver class
-jobserver_class_table: dict[JobserverType, Type[Jobserver]] = {
+jobserver_class_table: Dict[JobserverType, Type[Jobserver]] = {
     JobserverType.NONE: NoopJobserver,
     JobserverType.FIFO: FifoJobserver,
 }
