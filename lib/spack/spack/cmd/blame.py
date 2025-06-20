@@ -197,8 +197,8 @@ def blame(parser, args):
         blame_file = os.path.realpath(args.package_or_file)
         prefix = package_repo_root(blame_file)
 
-    # Get path to what we assume is a package though (including
-    # to a cached version of a remote package repository.)
+    # Get path to what we assume is a package (including to a cached version
+    # of a remote package repository.)
     if not blame_file:
         try:
             blame_file = spack.repo.PATH.filename_for_package_name(args.package_or_file)
