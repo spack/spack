@@ -52,9 +52,7 @@ import spack.database
 import spack.deptypes as dt
 import spack.error
 import spack.hooks
-import spack.llnl.util.filesystem as fs
-import spack.llnl.util.lock as lk
-import spack.llnl.util.tty as tty
+import spack.jobserver
 import spack.mirrors.mirror
 import spack.package_base
 import spack.package_prefs as prefs
@@ -2409,58 +2407,6 @@ class PackageInstaller:
 
         return None
 
-    def setup_fifo_jobserver(self) -> Tuple[Optional[str], Optional[int]]:
-        """Setup FIFO implementation of make jobserver."""
-        fifo_directory = None
-        self.fifo_read_fd = None
-        self.fifo_write_fd = None
-
-        # mflags = os.environ.get("MAKEFLAGS")
-        # if mflags and "--jobserver" in mflags:
-        #    # Jobserver already set up by Make (through env depfile)
-        #    return None, None
-
-        if sys.platform != "win32":
-            # create a named FIFO pipe for make jobserver
-            fifo_directory = tempfile.mkdtemp(prefix="jobserver_fifo")
-            fifo_path = os.path.join(fifo_directory, "jobserver")
-
-            # create the FIFO
-            os.mkfifo(fifo_path)
-
-            # determine number of tokens for FIFO by -j value
-            num_jobs = spack.config.determine_number_of_jobs(parallel=True)
-            js_tokens = b"+" * num_jobs
-
-            # open the FIFO for both reading and writing
-            self.fifo_read_fd = os.open(fifo_path, os.O_RDONLY | os.O_NONBLOCK)
-            self.fifo_write_fd = os.open(fifo_path, os.O_WRONLY | os.O_NONBLOCK)
-
-            # initialize FIFO with job tokens
-            os.write(self.fifo_write_fd, js_tokens)
-
-            # set MAKEFLAGS environment variable for make jobserver
-            os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
-
-            return fifo_directory, self.fifo_write_fd
-        return None, None
-        # TODO: Implement Windows support.
-
-    # test if it's reading and writing bytes
-    def get_available_bytes(self, fd):
-        """Gets the number of bytes available for reading from a file descriptor."""
-        bytes_available = array.array("i", [0])
-        fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
-        return bytes_available[0]
-
-    def cleanup_jobserver(self, fifo_directory) -> None:
-        """Clean up file descriptors and remove the FIFO directory used by the make jobserver."""
-        if self.fifo_read_fd is not None:
-            os.close(self.fifo_read_fd)
-        if self.fifo_write_fd is not None:
-            os.close(self.fifo_write_fd)
-        if fifo_directory is not None:
-            shutil.rmtree(fifo_directory)
 
     def install(self) -> None:
         """Install the requested package(s) and/or associated dependencies."""
@@ -2481,8 +2427,12 @@ class PackageInstaller:
         install_status = InstallStatus(len(self.build_pq))
         active_tasks: List[Task] = []
 
-        # Setup FIFO jobserver for builds
-        fifo_directory, fifo_fd = self.setup_fifo_jobserver()
+        # Determine which type of jobserver to set up and then enable it
+        packages = [task.pkg for _, task in self.build_pq]
+        jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
+        jobserver = jobserver_class()
+        jobserver.enable()
+        available = jobserver.get_available_bytes(jobserver.fifo_read_fd)
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -2492,7 +2442,7 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ", self.get_available_bytes(self.fifo_read_fd))
+            print("tokens available: ", available)
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
@@ -2527,8 +2477,8 @@ class PackageInstaller:
                 active_tasks.clear()  # they're all done now
                 raise
 
-        # Close and cleanup the jobserver FIFO
-        self.cleanup_jobserver(fifo_directory)
+        # Close and cleanup the jobserver
+        jobserver.cleanup()
 
         self._clear_removed_tasks()
         if self.build_pq:
