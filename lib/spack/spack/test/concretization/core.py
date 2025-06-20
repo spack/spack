@@ -3211,6 +3211,19 @@ def test_commit_variant_can_be_reused(installed_commit, incoming_commit, reusabl
         assert (spec1.dag_hash() == spec2.dag_hash()) == reusable
 
 
+@pytest.mark.parametrize("config_type", ("require", "prefer", "variants"))
+@pytest.mark.usefixtures("mock_packages", "do_not_check_runtimes_on_reuse")
+def test_commit_variant_populates_from_config(mutable_config, config_type):
+    commit_value = "b" * 40
+    key = f"{config_type}"
+    value = f"commit={commit_value}"
+    if config_type == "prefer":
+        value = [value]
+    mutable_config.set("packages:git-ref-package", {key: value})
+    spec = spack.concretize.concretize_one("git-ref-package@develop")
+    assert spec.variants["commit"].value == commit_value
+
+
 def test_concretization_cache_roundtrip(
     mock_packages, use_concretization_cache, monkeypatch, mutable_config
 ):
