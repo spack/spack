@@ -61,6 +61,11 @@ class Jobserver:
         """Clean up and close the specified type of jobserver."""
         raise NotImplementedError("TODO")
 
+    # test if it's reading and writing bytes
+    def get_available_bytes(self):
+        """Gets the number of bytes available for reading from a file descriptor."""
+        raise NotImplementedError("TODO")
+
 
 class NoopJobserver(Jobserver):
     def enable(self):
@@ -69,12 +74,8 @@ class NoopJobserver(Jobserver):
     def cleanup(self):
         return None
 
-    # test if it's reading and writing bytes
     def get_available_bytes(self, fd):
-        """Gets the number of bytes available for reading from a file descriptor."""
-        bytes_available = array.array("i", [0])
-        fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
-        return bytes_available[0]
+        pass
 
 
 class FifoJobserver(Jobserver):
@@ -116,13 +117,6 @@ class FifoJobserver(Jobserver):
             return self.fifo_directory, self.fifo_write_fd
         return None, None
 
-    # test if it's reading and writing bytes
-    def get_available_bytes(self, fd):
-        """Gets the number of bytes available for reading from a file descriptor."""
-        bytes_available = array.array("i", [0])
-        fcntl.ioctl(fd, termios.FIONREAD, bytes_available)
-        return bytes_available[0]
-
     # TODO: Implement Windows support.
 
     def cleanup(self) -> None:
@@ -133,6 +127,12 @@ class FifoJobserver(Jobserver):
             os.close(self.fifo_write_fd)
         if self.fifo_directory is not None:
             shutil.rmtree(self.fifo_directory)
+
+    def get_available_bytes(self):
+        """Gets the number of bytes available for reading from a file descriptor."""
+        bytes_available = array.array("i", [0])
+        fcntl.ioctl(self.fifo_read_fd, termios.FIONREAD, bytes_available)
+        return bytes_available[0]
 
 
 # Table mapping JobserverType to Jobserver class

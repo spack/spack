@@ -2428,7 +2428,6 @@ class PackageInstaller:
         jobserver_class = spack.jobserver.Jobserver.determine_type(packages)
         jobserver = jobserver_class()
         jobserver.enable()
-        available = jobserver.get_available_bytes(jobserver.fifo_read_fd)
 
         # Only enable the terminal status line when we're in a tty without debug info
         # enabled, so that the output does not get cluttered.
@@ -2438,7 +2437,7 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ", available)
+            print("tokens available: ", jobserver.get_available_bytes())
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()
