@@ -155,6 +155,7 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
         lock=spack.repo.package_repository_lock(), config=spack.config.CONFIG
     )
     path = pathlib.Path(path)
+    prefix: Optional[pathlib.Path] = None
     for _, desc in descriptors.items():
         # Handle the remote case, whose destination is by definition the git root
         if hasattr(desc, "destination"):
