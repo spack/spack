@@ -13,7 +13,6 @@ from llnl.string import plural
 from llnl.util import tty
 
 import spack.cmd
-import spack.concretize
 import spack.config
 import spack.environment as ev
 import spack.paths
