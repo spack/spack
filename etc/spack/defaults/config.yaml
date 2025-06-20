@@ -87,7 +87,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: $user_cache_path/$spack_instance_id/cache
+  misc_cache: $user_cache_path/cache
 
 
   # Abort downloads after this many seconds if not data is received.
