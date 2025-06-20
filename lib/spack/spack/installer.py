@@ -2437,7 +2437,6 @@ class PackageInstaller:
 
         # While a task is ready or tasks are running
         while self._peek_ready_task() or active_tasks:
-            print("tokens available: ", jobserver.get_available_bytes())
             # While there's space for more active tasks to start
             while len(active_tasks) < self.max_active_tasks:
                 task = self._pop_ready_task()

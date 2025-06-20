@@ -112,8 +112,6 @@ class FifoJobserver(Jobserver):
             # set MAKEFLAGS environment variable for make jobserver
             os.environ["MAKEFLAGS"] = f"--jobserver-auth=fifo:{fifo_path} -j {num_jobs}"
 
-            print("mflags: ", os.environ["MAKEFLAGS"])
-
             return self.fifo_directory, self.fifo_write_fd
         return None, None
 
