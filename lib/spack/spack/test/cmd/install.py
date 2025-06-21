@@ -449,6 +449,11 @@ def test_junit_output_with_errors(
     assert f'error message="{msg}"' in content
 
 
+@pytest.fixture(params=["yaml", "json"])
+def spec_format(request):
+    return request.param
+
+
 @pytest.mark.usefixtures("noop_install", "mock_packages", "config")
 @pytest.mark.parametrize(
     "clispecs,filespecs",
@@ -460,15 +465,15 @@ def test_junit_output_with_errors(
         [["cmake", "libelf"], ["mpi", "boost"]],
     ],
 )
-def test_install_mix_cli_and_files(clispecs, filespecs, tmpdir):
+def test_install_mix_cli_and_files(spec_format, clispecs, filespecs, tmpdir):
     args = clispecs
 
     for spec in filespecs:
-        filepath = tmpdir.join(spec + ".yaml")
-        args = ["-f", str(filepath)] + args
+        filepath = tmpdir.join(spec + f".{spec_format}")
+        args = [str(filepath)] + args
         s = spack.concretize.concretize_one(spec)
         with filepath.open("w") as f:
-            s.to_yaml(f)
+            s.to_yaml(f) if spec_format == "yaml" else s.to_json(f)
 
     install(*args, fail_on_error=False)
     assert install.returncode == 0
