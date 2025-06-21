@@ -1424,7 +1424,7 @@ class Environment:
 
     def concretize(
         self, force: Optional[bool] = None, tests: Union[bool, Sequence] = False
-    ) -> None:
+    ) -> Sequence[SpecPair]:
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1529,7 +1529,9 @@ class Environment:
         ]
         return new_user_specs, kept_user_specs, specs_to_concretize
 
-    def _concretize_together_where_possible(self, tests: bool = False) -> Sequence[SpecPair]:
+    def _concretize_together_where_possible(
+        self, tests: Union[bool, Sequence] = False
+    ) -> Sequence[SpecPair]:
         # Exit early if the set of concretized specs is the set of user specs
         new_user_specs, _, specs_to_concretize = self._get_specs_to_concretize()
         if not new_user_specs:
@@ -1554,7 +1556,7 @@ class Environment:
 
         return ret
 
-    def _concretize_together(self, tests: bool = False) -> Sequence[SpecPair]:
+    def _concretize_together(self, tests: Union[bool, Sequence] = False) -> Sequence[SpecPair]:
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1595,7 +1597,7 @@ class Environment:
         # Return the portion of the return value that is new
         return concretized_specs[: len(new_user_specs)]
 
-    def _concretize_separately(self, tests=False):
+    def _concretize_separately(self, tests: Union[bool, Sequence] = False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
