@@ -175,6 +175,8 @@ def _cdash_reporter(namespace):
 
     def _factory():
         def installed_specs(args):
+            packages = []
+
             if getattr(args, "spec", ""):
                 packages = args.spec
             elif getattr(args, "specs", ""):
@@ -182,13 +184,8 @@ def _cdash_reporter(namespace):
             elif getattr(args, "package", ""):
                 # Ensure CI 'spack test run' can output CDash results
                 packages = args.package
-            else:
-                packages = []
-                for file in args.specfiles:
-                    with open(file, "r", encoding="utf-8") as f:
-                        s = spack.spec.Spec.from_yaml(f)
-                        packages.append(s.format())
-            return packages
+
+            return [str(spack.spec.Spec(s)) for s in packages]
 
         configuration = spack.reporters.CDashConfiguration(
             upload_url=namespace.cdash_upload_url,
@@ -198,6 +195,7 @@ def _cdash_reporter(namespace):
             buildstamp=namespace.cdash_buildstamp,
             track=namespace.cdash_track,
         )
+
         return spack.reporters.CDash(configuration=configuration)
 
     return _factory

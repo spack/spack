@@ -604,7 +604,6 @@ def test_cdash_install_from_spec_json(
             "--cdash-build=my_custom_build",
             "--cdash-site=my_custom_site",
             "--cdash-track=my_custom_track",
-            "-f",
             spec_json_path,
         )
 
