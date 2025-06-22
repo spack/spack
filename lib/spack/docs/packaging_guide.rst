@@ -3919,7 +3919,7 @@ Additional build instructions are split into separate builder classes:
        def configure_args(self):
            return self.with_or_without("my-feature", variant="my_feature")
 
-In this example, ``spack install example +feature build_sytem=cmake``  will
+In this example, ``spack install example +feature build_system=cmake``  will
 pick the ``CMakeBuilder`` and invoke ``cmake -DMY_FEATURE:BOOL=ON``.
 
 Similarly, ``spack install example +feature build_system=autotools`` will pick

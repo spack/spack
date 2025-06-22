@@ -66,7 +66,7 @@ class ArgparseWriter(argparse.HelpFormatter, abc.ABC):
         self.aliases = aliases
 
     def parse(self, parser: ArgumentParser, prog: str) -> Command:
-        """Parse the parser object and return the relavent components.
+        """Parse the parser object and return the relevant components.
 
         Args:
             parser: Command parser.

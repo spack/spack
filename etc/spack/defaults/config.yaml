@@ -96,7 +96,7 @@ config:
 
 
   # If this is false, tools like curl that use SSL will not verify
-  # certifiates. (e.g., curl will use use the -k option)
+  # certificates. (e.g., curl will use use the -k option)
   verify_ssl: true
 
 
@@ -164,7 +164,7 @@ config:
   # when the `-p` / `--concurrent-packages`  flag is not given on the command line.
   # Defaults to 4 when not set.
   # Generally, big builds like LLVM are going to perform better with a higher -j, and
-  # builds with lots of dependencies may build better wtih higher -p. It is currently
+  # builds with lots of dependencies may build better with higher -p. It is currently
   # up to the user to balance between -j (build_jobs) and -p (concurrent_packages)
   # on `spack install`, but this will be less of an issue in the future when we
   # introduce support for the gmake job server and allow more dynamic parallelism.

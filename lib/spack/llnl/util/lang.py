@@ -339,7 +339,7 @@ def lazy_lexicographic_ordering(cls, set_hash=True):
 
     Python would compare ``Widgets`` lexicographically based on their
     tuples. The issue there for simple comparators is that we have to
-    bulid the tuples *and* we have to generate all the values in them up
+    build the tuples *and* we have to generate all the values in them up
     front. When implementing comparisons for large data structures, this
     can be costly.
 

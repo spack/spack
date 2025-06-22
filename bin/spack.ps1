@@ -5,7 +5,7 @@
 
 function Compare-CommonArgs {
     $CMDArgs = $args[0]
-    # These aruments take precedence and call for no futher parsing of arguments
+    # These arguments take precedence and call for no further parsing of arguments
     # invoke actual Spack entrypoint with that context and exit after
     "--help", "-h", "--version", "-V" | ForEach-Object {
         $arg_opt = $_
