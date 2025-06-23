@@ -162,7 +162,9 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             repo_dest = pathlib.Path(desc.destination)
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
-                if prefix and path.is_relative_to(prefix):
+
+                # TODO: replace check with `is_relative_to` once rhel8 can handle
+                if prefix and str(path).startswith(str(prefix)):
                     lines = textwrap.wrap(
                         "Using the cached version of the remote repository "
                         "may result in an inaccurate attribution of blame. "
@@ -179,7 +181,9 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             repo_path = pathlib.Path(desc.path)
             if "spack_repo" in repo_path.parts:
                 prefix = git_prefix(repo_path)
-                if prefix and path.is_relative_to(prefix):
+
+                # TODO: replace check with `is_relative_to` once supported
+                if prefix and str(path).startswith(str(prefix)):
                     return prefix
 
     return None
