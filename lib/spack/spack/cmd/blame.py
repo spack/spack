@@ -7,7 +7,6 @@ import os
 import pathlib
 import re
 import sys
-import textwrap
 from typing import Optional, Union
 
 import llnl.util.tty as tty
@@ -163,17 +162,8 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
             if (repo_dest / ".git").exists():
                 prefix = repo_dest
 
-                # TODO: replace check with `is_relative_to` once rhel8 can handle
+                # TODO: replace check with `is_relative_to` once supported
                 if prefix and str(path).startswith(str(prefix)):
-                    lines = textwrap.wrap(
-                        "Using the cached version of the remote repository "
-                        "may result in an inaccurate attribution of blame. "
-                        "Configure your 'builtin' package repository to a "
-                        "local clone of the remote repository if you want "
-                        "accurate results for packages.",
-                        subsequent_indent="  ",
-                    )
-                    tty.warn("\n".join(lines))
                     return prefix
 
         # Handle the local repository case, making sure it's a spack repository.
@@ -232,6 +222,17 @@ def blame(parser, args):
     # spack repository (e.g., spack/spack-packages) or a different git
     # repository.
     with working_dir(path_prefix):
+        # Make sure we can get the full/known blame even when the packages
+        # repository is remote.
+        try:
+            # Capture the error output (e.g., irrelevant for full repo) to
+            # ensure the output is clean.
+            git("fetch", "--unshallow", error=str)
+        except ProcessError:
+            # Ignore full repo complaint
+            pass
+
+        # Now we can get the blame results.
         options = ["blame"]
 
         # ignore the great black reformatting of 2022
