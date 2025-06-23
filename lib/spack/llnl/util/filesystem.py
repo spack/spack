@@ -2614,7 +2614,7 @@ class WindowsSimulatedRPath:
         Windows heuristics
         """
         # from build_environment.py:463
-        # The top-level package is always RPATHead. It hasn't been installed yet
+        # The top-level package is always RPATHed. It hasn't been installed yet
         # so the RPATHs are added unconditionally
 
         # for each binary install dir in self.pkg (i.e. pkg.prefix.bin, pkg.prefix.lib)
