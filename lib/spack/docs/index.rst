@@ -96,6 +96,7 @@ or refer to the full manual below.
    contribution_guide
    packaging_guide_1
    packaging_guide_2
+   packaging_guide_3
    build_systems
    developer_guide
 

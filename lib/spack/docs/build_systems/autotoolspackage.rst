@@ -321,6 +321,8 @@ are a problem.
    so Spack automatically adds ``--prefix=/path/to/installation/prefix``
    to your list of ``configure_args``. You don't need to add this yourself.
 
+.. _autotools_helper_functions:
+
 ^^^^^^^^^^^^^^^^
 Helper functions
 ^^^^^^^^^^^^^^^^

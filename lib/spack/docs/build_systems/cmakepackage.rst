@@ -122,6 +122,8 @@ unless CMake found the dependency it was looking for. You may need to
 manually specify certain flags to explore the full depth of supported
 build flags, or check the ``CMakeLists.txt`` yourself.
 
+.. _cmake_args:
+
 ^^^^^^^^^^^^^^^^^^^^^
 Adding flags to cmake
 ^^^^^^^^^^^^^^^^^^^^^
