@@ -12,7 +12,7 @@ from llnl.util.filesystem import working_dir
 
 import spack.paths
 import spack.util.spack_json as sjson
-from spack.cmd.blame import package_repo_root
+from spack.cmd.blame import git_prefix, package_repo_root
 from spack.main import SpackCommand, SpackCommandError
 from spack.repo import RepoDescriptors
 
@@ -49,18 +49,34 @@ def test_blame_file():
 def test_blame_file_missing():
     """Ensure attempt to get blame for missing file fails."""
     with pytest.raises(SpackCommandError):
-        with working_dir(spack.paths.prefix):
-            out = blame(os.path.join("no", "such", "file.txt"))
-            assert "not within a spack repo" in out
+        out = blame(os.path.join("missing", "file.txt"))
+        assert "does not exist" in out
 
 
-def test_blame_file_outside_spack_repo():
-    """Trigger the UnknownNamespaceError path by and failure when attempting
-    to get blame outside spack."""
+def test_blame_directory():
+    """Ensure attempt to get blame for path that is a directory fails."""
     with pytest.raises(SpackCommandError):
-        with working_dir(os.path.join(spack.paths.prefix, "..")):
-            out = blame("help.txt")
-            assert "not within a spack repo" in out
+        out = blame(".")
+        assert "not tracked" in out
+
+
+def test_blame_file_outside_spack_repo(tmp_path):
+    """Ensure attempts to get blame outside a package repository are flagged."""
+    test_file = tmp_path / "test"
+    test_file.write_text("This is a test")
+    with pytest.raises(SpackCommandError):
+        out = blame(str(test_file))
+        assert "not within a spack repo" in out
+
+
+def test_blame_spack_not_git_clone(monkeypatch):
+    """Ensure attempt to get blame when spack not a git clone fails."""
+    non_git_dir = os.path.join(spack.paths.prefix, "..")
+    monkeypatch.setattr(spack.paths, "prefix", non_git_dir)
+
+    with pytest.raises(SpackCommandError):
+        out = blame(".")
+        assert "not in a git clone" in out
 
 
 def test_blame_json(mock_packages):
@@ -149,3 +165,12 @@ def test_repo_root_remote_descriptor(mock_git_version_info, monkeypatch):
     # The base repository directory is the git root of the package repo
     prefix = package_repo_root(git_repo_path)
     assert prefix == git_repo_path
+
+
+def test_git_prefix_bad(tmp_path):
+    """Exercise git_prefix paths with arguments that will not return success."""
+    assert git_prefix("no/such/file.txt") is None
+
+    with pytest.raises(SystemExit):
+        out = git_prefix(tmp_path)
+        assert "not in a git repository" in out

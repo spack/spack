@@ -136,8 +136,6 @@ def git_prefix(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
         except ProcessError:
             tty.die(f"'{path}' is not in a git repository.")
 
-    return None
-
 
 def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
     """Find the appropriate package repository's git root directory.
@@ -204,11 +202,11 @@ def blame(parser, args):
         if blame_file and os.path.isfile(blame_file):
             prefix = package_repo_root(blame_file)
 
-    if prefix is None:
-        tty.debug(f"'{args.package_or_file}' is not within a spack package repository")
-
     if not blame_file or not os.path.exists(blame_file):
         tty.die(f"'{args.package_or_file}' does not exist.")
+
+    if prefix is None:
+        tty.msg(f"'{args.package_or_file}' is not within a spack package repository")
 
     path_prefix = git_prefix(blame_file)
     if path_prefix != prefix:
@@ -250,6 +248,7 @@ def blame(parser, args):
                 output = git(*options, output=str, error=str)
                 lines = output.split("\n")
         except ProcessError as err:
+            # e.g., blame information is not tracked if the path is a directory
             tty.die(f"Blame information is not tracked for '{blame_file}':\n{err.long_message}")
 
     # Histogram authors
