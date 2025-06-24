@@ -1,0 +1,3 @@
+.rst-content div[class^="highlight"] pre {
+    max-height: 300px;
+}
