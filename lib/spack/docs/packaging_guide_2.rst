@@ -169,6 +169,7 @@ Build systems have the following responsibilities:
    All build systems also define a special variant ``build_system``, which is useful in case of :ref:`multiple_build_systems`.
 3. **Provide helper methods**.
    Build systems often provide helper functions and properties that the package author can use to customize the build process.
+   For example ``CMakePackage`` provides the ``cmake_args`` method to specify additional arguments for the ``cmake`` command, and the ``build_targets`` property is used in ``MakefilePackage`` to specify what make targets to build (e.g., ``make lib``).
 
 Here is a table of the most common build systems available in Spack:
 
@@ -205,43 +206,124 @@ To use a particular build system, you need to import it in your ``package.py`` f
 
 For a complete list of build systems and their specific helper functions and properties, see the :doc:`build_systems` documentation.
 
-.. _setup-environment:
 
---------------------------------------------
-Runtime and build time environment variables
---------------------------------------------
+.. _spec-objects:
 
-Spack provides a few methods to help package authors set up the required environment variables for
-their package. Environment variables typically depend on how the package is used: variables that
-make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
-it makes sense to let a dependency set the environment variables for its dependents. To allow all
-this, Spack provides four different methods that can be overridden in a package:
+---------------------------------------
+Configuring the build with spec objects
+---------------------------------------
 
-1. :meth:`setup_build_environment <spack.builder.BaseBuilder.setup_build_environment>`
-2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
-3. :meth:`setup_dependent_build_environment <spack.builder.BaseBuilder.setup_dependent_build_environment>`
-4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+Whenever you implement helper functions of a build system or complement or override its build phases, you will often need to make decisions based on the package's configuration.
+Spack is unique in that it allows you to write a *single* ``package.py`` for all configurations of a package.
 
-The Qt package, for instance, uses this call:
+Spack makes this easy by providing the ``self.spec`` object, which encodes the current package's configuration.
+Together with Spack's **spec language**, you can easily specify conditional build instructions.
 
-.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``self.spec.satisfies``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
-installation will find it.
+**Variants and versions**.
+If you want to pass a flag to the configure script only if the package is built with a specific variant, you can do so like this:
 
-The following diagram will give you an idea when each of these methods is called in a build
-context:
+.. code-block:: python
 
-.. image:: images/setup_env.png
-   :align: center
+   def configure_args(self):
+       args = []
+       if self.spec.satisfies("+foo"):  # 'foo' is enabled
+           args.append("--enable-foo")
+       else:
+           args.append("--disable-foo")
 
-Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
-dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
-This means that the former should only be used if the environment variables depend on the dependent
-package, whereas the latter should be used if the environment variables depend only on the package
-itself.
+       if self.spec.satisfies("@1.2:"):  # version 1.2 or higher
+           args.append("--enable-bar")
+       else:
+           args.append("--disable-bar")
+
+       return args
+
+Notice that many build systems provide helper functions to make the above code more concise.
+See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake docs <cmake_args>`.
+
+**Dependencies**.
+You can also use the ``self.spec.satisfies`` method to test whether a dependency is present or not, and whether it is built with a specific variant or version.
+
+The ``%`` character is used to refer to direct dependencies, which is often useful when you want to test the compiler used to build the package.
+
+.. code-block:: python
+
+   if self.spec.satisfies("%gcc@8:"):
+       args.append("--enable-profile-guided-optimization")
+
+The ``^`` character is used to refer to runtime and build dependencies.
+
+.. code-block:: python
+
+   if self.spec.satisfies("^python@3.8:"):
+       args.append("--min-python-version=3.8")
+
+
+**Target specific configuration**.
+Spack always makes the special ``platform``, ``os`` and ``target`` variants available in the spec.
+These variants can be used to test the target platform, operating system and CPU microarchitecture the package.
+
+The following example shows how we can add a configure option only if the package is built for Apple Silicon:
+
+.. code-block:: python
+
+   if self.spec.satisfies("platform=darwin target=aarch64:"):
+       args.append("--enable-apple-silicon")
+
+Notice that ``target=aarch64:`` is a range which matches the whole family of ``aarch64`` microarchitectures, including ``m1``, ``m2``, and so on.
+
+You can use ranges starting at a specific microarchitecture as well, for example:
+
+.. code-block:: python
+
+   if self.spec.satisfies("target=haswell:"):
+       args.append("--enable-haswell")
+
+.. note::
+
+   The ``spec`` object encodes the *target* platform, os and architecture the package is being built for.
+   This is different from the *host* platform (typically accessed via ``sys.platform``) which is the platform where Spack is running.
+   When writing package recipes, you should always use the ``spec`` object to query the target platform, os and architecture.
+
+To see what targets are available in your Spack installation, you can use the following command:
+
+.. command-output:: spack arch --known-targets
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Referring to a dependency's prefix, libraries, and headers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Very often you need to inform the build system about the location of a dependency.
+The most common way to do this is to pass the dependency's prefix as a configure argument.
+
+By sub-scripting the spec, you get another ``Spec`` object that represents the dependency:
+
+.. code-block:: python
+
+   libxml2 = self.spec["libxml2"]
+
+The value in the brackets needs to be a package name on which the package depends.
+What is returned is itself just another ``Spec`` object, so you can do all the same things you would do with the package's own spec:
+
+.. code-block:: python
+
+   def configure_args(self):
+       return [
+           f"--with-libxml2={self.spec['libxml2'].prefix}",
+       ]
+
+Most build systems have their own logic to locate libraries and headers of dependencies, so often it is sufficient to pass the dependency's prefix to the build system.
+
+To be more precise, you can also refer to :ref:`custom-attributes` from the dependency.
+In other cases, you can be more specific and use the dependency's attributes such as ``libs`` or ``headers``.
+
+Apart from the :ref:`prefix <prefix-objects>`, you can also access other attributes of the dependency, such as ``libs`` or ``headers``.
+
+
 
 
 .. _before_after_build_phases:
@@ -309,9 +391,47 @@ The signature of every build phase function is the same, and has the following a
 
 ``prefix``
     This is where your package should install its files.
-    It acts like a string, but it's actually its own special type, :py:class:`Prefix <spack.util.prefix.Prefix>`.
+    It acts like a string, but it's actually its :ref:`own special type <prefix-objects>`.
 
 The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
+
+.. _setup-environment:
+
+--------------------------------------------
+Runtime and build time environment variables
+--------------------------------------------
+
+Spack provides a few methods to help package authors set up the required environment variables for
+their package. Environment variables typically depend on how the package is used: variables that
+make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
+it makes sense to let a dependency set the environment variables for its dependents. To allow all
+this, Spack provides four different methods that can be overridden in a package:
+
+1. :meth:`setup_build_environment <spack.builder.BaseBuilder.setup_build_environment>`
+2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
+3. :meth:`setup_dependent_build_environment <spack.builder.BaseBuilder.setup_dependent_build_environment>`
+4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+The Qt package, for instance, uses this call:
+
+.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/qt/package.py
+   :pyobject: Qt.setup_dependent_build_environment
+   :linenos:
+
+to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
+installation will find it.
+
+The following diagram will give you an idea when each of these methods is called in a build
+context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
+dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent
+package, whereas the latter should be used if the environment variables depend only on the package
+itself.
 
 
 .. _multiple_build_systems:
@@ -413,42 +533,12 @@ of the build system in the dependent:
 
        depends_on("example build_system=cmake")
 
+.. _environment-variables:
 
-.. _install-environment:
 
------------------------
-The build environment
------------------------
-
-In general, you should not have to do much differently in your install
-method than you would when installing a package on the command line.
-In fact, you may need to do *less* than you would on the command line.
-
-Spack tries to set environment variables and modify compiler calls so
-that it *appears* to the build system that you're building with a
-standard system install of everything.  Obviously that's not going to
-cover *all* build systems, but it should make it easy to port packages
-to Spack if they use a standard build system.  Usually with autotools
-or cmake, building and installing is easy.  With builds that use
-custom Makefiles, you may need to add logic to modify the makefiles.
-
-The remainder of the section covers the way Spack's build environment
-works.
-
-^^^^^^^^^^^^^^^^^^^^^
-Forking ``install()``
-^^^^^^^^^^^^^^^^^^^^^
-
-To give packagers free rein over their install environment, Spack forks
-a new process each time it invokes a package's ``install()`` method.
-This allows packages to have a sandboxed build environment, without
-impacting the environments of other jobs that the main Spack process runs.
-Packages are free to change the environment or to modify Spack internals,
-because each ``install()`` call has its own dedicated process.
-
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 Environment variables
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Spack sets a number of standard environment variables that serve two
 purposes:
@@ -518,9 +608,9 @@ if you want to run commands in that environment to test them out, you
 can use the :ref:`cmd-spack-build-env` command, documented
 below.
 
-^^^^^^^^^^^^^^^^^^^^^
+-----------------
 Failing the build
-^^^^^^^^^^^^^^^^^^^^^
+-----------------
 
 Sometimes you don't want a package to successfully install unless some
 condition is true.  You can explicitly cause the build to fail from
@@ -533,9 +623,9 @@ condition is true.  You can explicitly cause the build to fail from
 
 .. _shell-wrappers:
 
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 Shell command functions
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 Recall the install method from ``libelf``:
 
@@ -575,9 +665,9 @@ to the ``make`` wrapper to disable parallel make.  In the ``libelf``
 package, this allows us to avoid race conditions in the library's
 build system.
 
-^^^^^^^^^^^^^^
+--------------
 Compiler flags
-^^^^^^^^^^^^^^
+--------------
 
 Compiler flags set by the user through the Spec object can be passed
 to the build in one of three ways. By default, the build environment
@@ -693,9 +783,9 @@ is handy when a package supports additional variants like
 
 .. _blas_lapack_scalapack:
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 Blas, Lapack and ScaLapack libraries
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------------------
 
 Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
 routines.  The names of the resulting static and/or shared libraries
@@ -743,40 +833,15 @@ class.
 
 .. _prefix-objects:
 
-^^^^^^^^^^^^^^^^^^^^^
+--------------
 Prefix objects
-^^^^^^^^^^^^^^^^^^^^^
+--------------
 
-Spack passes the ``prefix`` parameter to the install method so that
-you can pass it to ``configure``, ``cmake``, or some other installer,
-e.g.:
+You can find the installation directory of package in Spack by using the ``self.prefix`` attribute of the package object.
+In :ref:`overriding-phases`, we saw that the ``install()`` method has a ``prefix`` argument, which is the same as ``self.prefix``.
+This variable behaves like a string, but it is actually an instance of the :py:class:`Prefix <spack.util.prefix.Prefix>` class, which provides some additional functionality to make it easier to work with file paths in Spack.
 
-.. code-block:: python
-
-   configure("--prefix={0}".format(prefix))
-
-For the most part, prefix objects behave exactly like strings.  For
-packages that do not have their own install target, or for those that
-implement it poorly (like ``libdwarf``), you may need to manually copy
-things into particular directories under the prefix.  For this, you
-can refer to standard subdirectories without having to construct paths
-yourself, e.g.:
-
-.. code-block:: python
-
-   def install(self, spec, prefix):
-       mkdirp(prefix.bin)
-       install("foo-tool", prefix.bin)
-
-       mkdirp(prefix.include)
-       install("foo.h", prefix.include)
-
-       mkdirp(prefix.lib)
-       install("libfoo.a", prefix.lib)
-
-
-Attributes of this object are created on the fly when you request them,
-so any of the following will work:
+In particular, you can use the ``.`` operator to join paths together, creating nested directory structures:
 
 ======================  =======================
 Prefix Attribute        Location
@@ -787,14 +852,12 @@ Prefix Attribute        Location
 ``prefix.foo.bar.baz``  ``$prefix/foo/bar/baz``
 ======================  =======================
 
-Of course, this only works if your file or directory is a valid Python
-variable name. If your file or directory contains dashes or dots, use
-``join`` instead:
+Of course, this only works if your file or directory is a valid Python variable name.
+If your file or directory contains dashes or dots, use ``join`` instead:
 
 .. code-block:: python
 
    prefix.lib.join("libz.a")
-
 
 --------------------------------
 Setting package module variables
@@ -822,116 +885,6 @@ This allows Python packages to directly use these variables:
    We recommend using ``setup_dependent_package`` sparingly, as it is not always clear where
    global variables are coming from when editing a ``package.py`` file.
 
-.. _spec-objects:
-
------------------------------
-Dynamic package configuration
------------------------------
-
-Many builds need to be configured differently depending on the variants, versions, architecture of itself or its dependencies.
-For example, a package may need ``--with-libelf=/path/to/libelf`` if it is built with the ``+libelf`` variant, or it may need to pass ``-DWITH_FEATURE=ON`` if the package is built with a specific version.
-
-In Spack, you write a single ``package.py`` for all configurations of the package, and you can use the ``self.spec.satisfies`` method to make decisions based on the current spec.
-
-You can use Spack's **spec syntax** to test complex conditions in just one line of code.
-
-**Variants and versions**.
-If you want to pass a flag to the configure script only if the package is built with a specific variant, you can do so like this:
-
-.. code-block:: python
-
-   def configure_args(self):
-       args = []
-       if self.spec.satisfies("+foo"):  # 'foo' is enabled
-           args.append("--enable-foo")
-       else:
-           args.append("--disable-foo")
-
-       if self.spec.satisfies("@1.2:"):  # version 1.2 or higher
-           args.append("--enable-bar")
-       else:
-           args.append("--disable-bar")
-
-       return args
-
-Notice that many build systems provide helper functions to make the above code more concise.
-See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake docs <cmake_args>`.
-
-**Dependencies**.
-You can also use the ``self.spec.satisfies`` method to test whether a dependency is present or not, and whether it is built with a specific variant or version.
-
-The ``%`` character is used to refer to direct dependencies, which is often useful when you want to test the compiler used to build the package.
-
-.. code-block:: python
-
-   if self.spec.satisfies("%gcc@8:"):
-       args.append("--enable-profile-guided-optimization")
-
-The ``^`` character is used to refer to runtime and build dependencies.
-
-.. code-block:: python
-
-   if self.spec.satisfies("^python@3.8:"):
-       args.append("--min-python-version=3.8")
-
-
-**Target specific configuration**.
-Spack always makes the special ``platform``, ``os`` and ``target`` variants available in the spec.
-These variants can be used to test the target platform, operating system and CPU microarchitecture the package.
-
-The following example shows how we can add a configure option only if the package is built for Apple Silicon:
-
-.. code-block:: python
-
-   if self.spec.satisfies("platform=darwin target=aarch64:"):
-       args.append("--enable-apple-silicon")
-
-Notice that ``target=aarch64:`` is a range which matches the whole family of ``aarch64`` microarchitectures, including ``m1``, ``m2``, and so on.
-
-You can use ranges starting at a specific microarchitecture as well, for example:
-
-.. code-block:: python
-
-   if self.spec.satisfies("target=haswell:"):
-       args.append("--enable-haswell")
-
-.. note::
-
-   The ``spec`` object encodes the *target* platform, os and architecture the package is being built for.
-   This is different from the *host* platform (typically accessed via ``sys.platform``) which is the platform where Spack is running.
-   When writing package recipes, you should always use the ``spec`` object to query the target platform, os and architecture.
-
-To see what targets are available in your Spack installation, you can use the following command:
-
-.. command-output:: spack arch --known-targets
-
-.. admonition:: Using Spack on unknown microarchitectures
-
-   If Spack is used on an unknown microarchitecture it will try to perform a best match
-   of the features it detects and will select the closest microarchitecture it has
-   information for. In case nothing matches, it will create on the fly a new generic
-   architecture. This is done to allow users to still be able to use Spack
-   for their work. The software built probably won't be as optimized as it could be, but just as
-   you need a newer compiler to build for newer architectures, you may need newer
-   versions of Spack for new architectures to be correctly labeled.
-
-**Referring to dependencies**.
-You may need to get at some directory or file that's in the installation prefix of one of your dependencies.
-You can do that by sub-scripting the spec:
-
-.. code-block:: python
-
-   self.spec["libxml2"]
-
-The value in the brackets needs to be a package name on which the package depends.
-What is returned is itself just another ``Spec`` object, so you can do all the same things you would do with the package's own spec:
-
-.. code-block:: python
-
-   def configure_args(self):
-       return [
-           f"--with-libxml2={self.spec['libxml2'].prefix}",
-       ]
 
 .. _multimethods:
 
