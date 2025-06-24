@@ -315,49 +315,6 @@ to add the following to ``packages.yaml``:
    from other dependencies. This ensures that binaries in Spack dependencies
    are preferred over system binaries.
 
-^^^^^^
-Git
-^^^^^^
-
-Some Spack packages use ``git`` to download, which might not work on
-some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia@master``:
-
-.. code-block:: console
-
-   ==> Cloning git repository:
-     https://github.com/JuliaLang/julia.git
-     on branch master
-   Cloning into 'julia'...
-   fatal: unable to access 'https://github.com/JuliaLang/julia.git/':
-       SSL certificate problem: unable to get local issuer certificate
-
-This problem is related to OpenSSL, and in some cases might be solved
-by installing a new version of ``git`` and ``openssl``:
-
-#. Run ``spack install git``
-#. Add the output of ``spack module tcl loads git`` to your ``.bashrc``.
-
-If this doesn't work, it is also possible to disable checking of SSL
-certificates by using:
-
-.. code-block:: console
-
-   $ spack --insecure install
-
-Using ``--insecure`` makes Spack disable SSL checking when fetching
-   from websites and from Git.
-
-.. warning::
-
-   This workaround should be used ONLY as a last resort!  Without SSL
-   certificate verification, Spack and Git will download from sites you
-   wouldn't normally trust.  The code you download and run may then be
-   compromised!  While this is not a major issue for archives that will
-   be checksummed, it is especially problematic when downloading from
-   named Git branches or tags, which relies entirely on trusting a
-   certificate for security (no verification).
-
 -----------------------
 Utilities Configuration
 -----------------------
