@@ -411,7 +411,7 @@ Stand-alone tests run in an environment that provides access to information
 on the installed software, such as build options, dependencies, and compilers.
 Build options and dependencies are accessed using the same spec checks used
 by build recipes. Examples of checking :ref:`variant settings <variants>` and
-:ref:`spec constraints <testing-specs>` can be found at the provided links.
+:ref:`spec constraints <spec-objects>` can be found at the provided links.
 
 .. admonition:: Spack automatically sets up the test stage directory and environment.
 
