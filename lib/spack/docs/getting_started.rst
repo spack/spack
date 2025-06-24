@@ -39,76 +39,77 @@ This will create a directory called ``spack``. Once you have cloned Spack, we re
 
 That's it! You're ready to use Spack.
 
-.. note::
-   ``--depth=2`` prunes the git history to reduce the size of the Spack installation.
+---------------------
+Verify prerequisites
+---------------------
 
--------------
-Prerequisites
--------------
-
-To check that the prerequisites for running Spack are met on your system you can use:
+To verify if Spack prerequisites are met on your system, you can use the following command [#]_:
 
 .. code-block:: console
 
    $ spack bootstrap status --optional
-   Spack v1.0.0 - python@3.13
 
-   [PASS] Core Functionalities
+If Spack is ready to be used, with all of its features, the output will show only ``[PASS]`` tests, and the exit code of the command will be ``0``.
+
+When a prerequisite is missing, Spack shows which test failed, and the exit code of the command will be  ``1``.
+For instance, if you started from a clean checkout of Spack, it's likely you see an output similar to:
+
+.. code-block:: console
+
+   $ spack bootstrap status --optional
+   Spack v1.0.0.dev0 - python@3.13
+
+   [FAIL] Core Functionalities
+     [B] MISSING "clingo": required to concretize specs
 
    [PASS] Binary packages
-
-   [PASS] Optional Features
-
-If all pre-requisites are met, the output should look similar to the one shown above. When a prerequisite is missing,
-Spack will point it out, and show whether it can be bootstrapped, or it is user's responsibility to make it available:
-
-.. code-block:: console
-
-   $ spack bootstrap status --optional
-   Spack v1.0.0 - python@3.13
-
-   [PASS] Core Functionalities
-
-   [FAIL] Binary packages
-     [B] MISSING "gpg2": required to sign/verify buildcaches
 
    [PASS] Optional Features
 
 
    Spack will take care of bootstrapping any missing dependency marked as [B]. Dependencies marked as [-] are instead required to be found on the system.
 
-In the case above, the system is missing ``gpg2``, and thus Spack can't verify the signature on binary packages.
+Bootstrappable dependencies can be installed explicitly, with the following command:
 
-In general, Spack's requirements can be easily installed on most modern Linux systems;
-on macOS, the Command Line Tools package is required, and a full Xcode suite
-may be necessary for some packages such as Qt and apple-gl. Spack is designed
-to run on HPC platforms like Cray.
+.. code-block:: console
 
-A build matrix showing which packages are working on which systems is shown below.
+   $ spack bootstrap now
 
-.. tab-set::
+Alternatively, Spack will try to bootstrap them lazily, the first time they are needed.
 
-   .. tab-item:: Debian/Ubuntu
+.. admonition:: Installing prerequisites system-wide on Linux
+   :class: tip
+   :collapsible:
 
-      .. code-block:: console
+   Spack's requirements can be easily installed on most modern Linux systems
+   A build matrix showing which packages are working on which systems is shown below.
 
-         apt update
-         apt install bzip2 ca-certificates g++ gcc gfortran git gzip lsb-release patch python3 tar unzip xz-utils zstd
+   .. tab-set::
 
-   .. tab-item:: RHEL
+      .. tab-item:: Debian/Ubuntu
 
-      .. code-block:: console
+         .. code-block:: console
 
-         dnf install epel-release
-         dnf group install "Development Tools"
-         dnf install gcc-gfortran redhat-lsb-core python3 unzip
+            apt update
+            apt install bzip2 ca-certificates g++ gcc gfortran git gzip lsb-release patch python3 tar unzip xz-utils zstd
 
-   .. tab-item:: macOS Brew
+      .. tab-item:: RHEL
 
-      .. code-block:: console
+         .. code-block:: console
 
-         brew update
-         brew install gcc git zip
+            dnf install epel-release
+            dnf group install "Development Tools"
+            dnf install gcc-gfortran redhat-lsb-core python3 unzip
+
+.. admonition:: Installing prerequisites on macOS
+   :class: tip
+   :collapsible:
+
+   On macOS, the Command Line Tools package is required, and a full Xcode suite may be necessary for some packages such as Qt and apple-gl.
+
+.. [#] The very first time Spack is run, it needs to setup a few cache files, and the command will take a while to execute.
+   This is only a one-off slowdown, and execution will be much faster on subsequent commands.
+
 
 .. _shell-support:
 
