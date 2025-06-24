@@ -509,12 +509,18 @@ Spack makes some of these executables available as global functions, making it e
            make()
            make("install")
 
-The ``python()`` and ``make()`` functions in this example invoke the ``python`` and ``make`` executables, respectively.
-Naturally, you may wonder where these executables come from, since they are not imported from anywhere --- your editor may even underline them in red because they are not defined in the package module.
+The ``python()`` and ``make()`` functions in this example invoke the ``python3`` and ``make`` executables, respectively.
+Naturally, you may wonder where these variables come from, since they are not imported from anywhere --- your editor may even underline them in red because they are not defined in the package module.
 
-The answer lies in the fact that the package depends on ``python`` and ``make``, and these packages in turn implement the :meth:`~spack.package_base.PackageBase.setup_dependent_package` method, which sets up Python variables that can be used in the package class of packages that depend on them.
+The answer lies in the ``python`` and ``make`` dependencies, which implement the :meth:`~spack.package_base.PackageBase.setup_dependent_package` method in their package classes.
+This sets up Python variables that can be used in the package class of dependents.
 
-Not all dependencies set up such variables, in which case you have two further options:
+There is a good reason that it's the *dependency* that sets up these variables, rather than the package itself.
+For example, the ``make`` package ensures sensible default arguments for the ``make`` executable, such as the ``-j`` flag to enable parallel builds.
+This means that you do not have to worry about these technical details in your package class; you can just use ``make("my_target")`` and Spack will take care of the rest.
+See the section about :ref:`parallel builds <attribute_parallel>` for more details.
+
+Not all dependencies set up such variables for dependent packages, in which case you have two further options:
 
 1. Use the ``command`` attribute of the dependency.
    This is a good option, since it refers to an executable provided by a specific dependency.
@@ -534,45 +540,9 @@ Not all dependencies set up such variables, in which case you have two further o
           cython = which("cython", required=True)
           cython("setup.py", "build_ext", "--inplace")
 
-See also the documentation of :class:`~spack.util.executable.Executable`, which is the class used by Spack to represent executables.
+All executables in Spack are instances of :class:`~spack.util.executable.Executable`, see its API docs for more details.
 
-.. _setup-environment:
 
---------------------------------------------
-Runtime and build time environment variables
---------------------------------------------
-
-Spack provides a few methods to help package authors set up the required environment variables for their package.
-Environment variables typically depend on how the package is used: variables that
-make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
-it makes sense to let a dependency set the environment variables for its dependents. To allow all
-this, Spack provides four different methods that can be overridden in a package:
-
-1. :meth:`setup_build_environment <spack.builder.BaseBuilder.setup_build_environment>`
-2. :meth:`setup_run_environment <spack.package_base.PackageBase.setup_run_environment>`
-3. :meth:`setup_dependent_build_environment <spack.builder.BaseBuilder.setup_dependent_build_environment>`
-4. :meth:`setup_dependent_run_environment <spack.package_base.PackageBase.setup_dependent_run_environment>`
-
-The Qt package, for instance, uses this call:
-
-.. literalinclude:: .spack/spack-packages/repos/spack_repo/builtin/packages/qt/package.py
-   :pyobject: Qt.setup_dependent_build_environment
-   :linenos:
-
-to set the ``QTDIR`` environment variable so that packages that depend on a particular Qt
-installation will find it.
-
-The following diagram will give you an idea when each of these methods is called in a build
-context:
-
-.. image:: images/setup_env.png
-   :align: center
-
-Notice that ``setup_dependent_run_environment`` can be called multiple times, once for each
-dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
-This means that the former should only be used if the environment variables depend on the dependent
-package, whereas the latter should be used if the environment variables depend only on the package
-itself.
 
 
 .. _multiple_build_systems:
@@ -678,76 +648,99 @@ of the build system in the dependent:
 
 
 ---------------------
-Environment variables
+The build environment
 ---------------------
 
-Spack sets a number of standard environment variables that serve two
-purposes:
+In Spack the term **build environment** is used somewhat interchangeably to refer to two things:
 
-#. Make build systems use Spack's compiler wrappers for their builds.
-#. Allow build systems to find dependencies more easily
+1. The set of *environment variables* during the build process
+2. The *process* in which the build is executed
 
-The Compiler environment variables that Spack sets are:
+Spack creates a separate process for each package build, and every build has its own environment variables.
+Changes in the build environment do not affect the Spack process itself, and they are not visible to other builds.
 
-  ============  ===============================
-    Variable     Purpose
-  ============  ===============================
-    ``CC``       C compiler
-    ``CXX``      C++ compiler
-    ``F77``      Fortran 77 compiler
-    ``FC``       Fortran 90 and above compiler
-  ============  ===============================
+Spack manages the build environment in the following ways:
 
-Spack sets these variables so that they point to *compiler
-wrappers*. These are covered in :ref:`their own section
-<compiler-wrappers>` below.
+1. It cleans the environment variables that may interfere with the build process (e.g. ``CFLAGS``, ``LD_LIBRARY_PATH``, etc.).
+2. It sets a couple of variables for its own use, prefixed with ``SPACK_*``.
+3. It sets a number of standard environment variables like ``PATH`` to make dependencies available during the build.
+4. It sets custom, package specific environment variables defined in the package class of dependencies.
 
-All of these are standard variables respected by most build systems.
-If your project uses ``Autotools`` or ``CMake``, then it should pick
-them up automatically when you run ``configure`` or ``cmake`` in the
-``install()`` function.  Many traditional builds using GNU Make and
-BSD make also respect these variables, so they may work with these
-systems.
+For this guide, all that matters is to have a rough understanding of which environments you are supposed to set in your package, and which ones are set by Spack automatically.
 
-If your build system does *not* automatically pick these variables up
-from the environment, then you can simply pass them on the command
-line or use a patch as part of your build process to get the correct
-compilers into the project's build system.  There are also some file
-editing commands you can use -- these are described later in the
-`section on file manipulation <python-package-api_>`_.
-
-In addition to the compiler variables, these variables are set before
-entering ``install()`` so that packages can locate dependencies
-easily:
+The following variables are considered "standard" and are managed by Spack:
 
 =====================  ====================================================
 ``PATH``               Set to point to ``/bin`` directories of dependencies
 ``CMAKE_PREFIX_PATH``  Path to dependency prefixes for CMake
 ``PKG_CONFIG_PATH``    Path to any pkgconfig directories for dependencies
-``PYTHONPATH``         Path to site-packages dir of any python dependencies
 =====================  ====================================================
 
-``PATH`` is set up to point to dependencies ``/bin`` directories so
-that you can use tools installed by dependency packages at build time.
-For example, ``$MPICH_ROOT/bin/mpicc`` is frequently used by dependencies of
-``mpich``.
+Other typical environment variables such as ``CC``, ``CXX`` and ``FC`` are set by the ``compiler-wrapper`` package.
+In your package, all you need to specify is language dependencies:
 
-``CMAKE_PREFIX_PATH`` contains a colon-separated list of prefixes
-where ``cmake`` will search for dependency libraries and headers.
-This causes all standard CMake find commands to look in the paths of
-your dependencies, so you *do not* have to manually specify arguments
-like ``-DDEPENDENCY_DIR=/path/to/dependency`` to ``cmake``.  More on
-this is `in the CMake documentation <http://www.cmake.org/cmake/help/v3.0/variable/CMAKE_PREFIX_PATH.html>`_.
+.. code-block:: python
 
-``PKG_CONFIG_PATH`` is for packages that attempt to discover
-dependencies using the GNU ``pkg-config`` tool.  It is similar to
-``CMAKE_PREFIX_PATH`` in that it allows a build to automatically
-discover its dependencies.
+   class MyPackage(Package):
+       depends_on("c", type="build")  # ensures CC is set
+       depends_on("cxx", type="build")  # ensures CXX is set
+       depends_on("fortran", type="build")  # ensures FC is set
 
-If you want to see the environment that a package will build with, or
-if you want to run commands in that environment to test them out, you
-can use the :ref:`cmd-spack-build-env` command, documented
-below.
+The ``compiler-wrapper`` package is an "injected" dependency by the compiler package (which provides the ``c``, ``cxx``, and ``fortran`` virtuals).
+It takes care of setting the ``CC``, ``CXX``, and ``FC`` environment variables to the appropriate compiler executables, so you do not need to set them manually in your package.
+
+For other compiler related environment variables such as ``CFLAGS`` and ``CXXFLAGS``, see :ref:`compiler flags <compiler_flags>`.
+This requires a section of its own, because there are multiple ways to deal with compiler flags, and they can come from different sources.
+
+.. _setup-environment:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package specific environment variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack provides a few methods to help package authors set environment variables programmatically.
+In total there are four such methods, distinguishing between the build and run environments, and between the package itself and its dependents:
+
+1. :meth:`setup_build_environment(env, spec) <spack.builder.BaseBuilder.setup_build_environment>`
+2. :meth:`setup_dependent_build_environment(env, dependent_spec) <spack.builder.BaseBuilder.setup_dependent_build_environment>`
+3. :meth:`setup_run_environment(env) <spack.package_base.PackageBase.setup_run_environment>`
+4. :meth:`setup_dependent_run_environment(env, dependent_spec) <spack.package_base.PackageBase.setup_dependent_run_environment>`
+
+All these methods take an ``env`` argument, which is an instance of the :class:`EnvironmentModifications <spack.util.environment.EnvironmentModifications>` class.
+
+The ``setup_build_environment`` method is for certain build systems (e.g. ``PythonPackage``) roughly equivalent to the ``configure_args`` or ``cmake_args`` methods.
+It allows you to set environment variables that are needed during the build of the package itself, and can be used to inform the build system about the package's configuration and where to find dependencies:
+
+.. code-block:: python
+
+   class MyPackage(PythonPackage):
+       def setup_build_environment(self, env: EnvironmentModifications) -> None:
+           env.set("ENABLE_MY_FEATURE", self.spec.satisfies("+my_feature"))
+           env.set("HDF5_DIR", self.spec["hdf5"].prefix)
+
+The ``setup_dependent_build_environment`` method is similar, but it is called for packages that depend on this package.
+This is often helpful to avoid repetitive configuration in dependent packages.
+As an example, a package like ``qt`` may want ``QTDIR`` to be set in the build environment of packages that depend on it.
+This can be done by overriding the ``setup_dependent_build_environment`` method:
+
+.. code-block:: python
+
+   class Qt(Package):
+       def setup_dependent_build_environment(
+           self, env: EnvironmentModifications, dependent_spec: Spec
+       ) -> None:
+           env.set("QTDIR", self.prefix)
+
+The ``setup_run_environment`` and ``setup_dependent_run_environment`` are the counterparts for the run environment, primarily used in commands like ``spack load`` and ``spack env activate``.
+Do note however that these runtime environment variables are *also* relevant during the build process, since Spack effectively creates the runtime environment of build dependencies as part of the build process.
+For example, if a package ``my-pkg`` depends on ``autoconf`` as a build dependency, and ``autoconf`` needs ``perl`` at runtime, then ``perl``'s runtime environment will be set up during the build of ``my-pkg``.
+The following diagram will give you an idea when each of these methods is called in a build context:
+
+.. image:: images/setup_env.png
+   :align: center
+
+Notice that ``setup_dependent_run_environment`` is called once for each dependent package, whereas ``setup_run_environment`` is called only once for the package itself.
+This means that the former should only be used if the environment variables depend on the dependent package, whereas the latter should be used if the environment variables depend only on the package itself.
 
 -----------------
 Failing the build
@@ -762,62 +755,39 @@ condition is true.  You can explicitly cause the build to fail from
    if spec.architecture.startswith("darwin"):
        raise InstallError("This package does not build on Mac OS X!")
 
-.. _shell-wrappers:
-
------------------------
-Shell command functions
------------------------
-
-Recall the install method from ``libelf``:
-
-.. literalinclude::  .spack/spack-packages/repos/spack_repo/builtin/packages/libelf/package.py
-   :pyobject: Libelf.install
-   :linenos:
-
-Normally in Python, you'd have to write something like this in order
-to execute shell commands:
-
-.. code-block:: python
-
-   import subprocess
-   subprocess.check_call("configure", "--prefix={0}".format(prefix))
-
-We've tried to make this a bit easier by providing callable wrapper
-objects for some shell commands.  By default, ``configure``,
-``cmake``, and ``make`` wrappers are provided, so you can call
-them more naturally in your package files.
-
-If you need other commands, you can use ``which`` to get them:
-
-.. code-block:: python
-
-   sed = which("sed")
-   sed("s/foo/bar/", filename)
-
-The ``which`` function will search the ``PATH`` for the application.
-
-Callable wrappers also allow Spack to provide some special features.
-For example, in Spack, ``make`` is parallel by default, and Spack
-figures out the number of cores on your machine and passes an
-appropriate value for ``-j<numjobs>`` when it calls ``make`` (see the
-``parallel`` `package attribute <attribute_parallel>`).  In
-a package file, you can supply a keyword argument, ``parallel=False``,
-to the ``make`` wrapper to disable parallel make.  In the ``libelf``
-package, this allows us to avoid race conditions in the library's
-build system.
+.. _compiler_flags:
 
 --------------
 Compiler flags
 --------------
 
-Compiler flags set by the user through the Spec object can be passed
-to the build in one of three ways. By default, the build environment
-injects these flags directly into the compiler commands using Spack's
-compiler wrappers. In cases where the build system requires knowledge
-of the compiler flags, they can be registered with the build system by
-alternatively passing them through environment variables or as build
-system arguments. The flag_handler method can be used to change this
-behavior.
+Setting compiler flags is a common task, but there are some pitfalls to be aware of.
+
+Compiler flags come from multiple sources:
+
+1. The end user, who can set flags directly from the command line with ``cflags=-O3`` variants or :doc:`compiler configuration <packages_yaml>`.
+2. The package author, who defines flags in the package class.
+3. The build system itself, which typically has defaults like ``CFLAGS ?= -O2 -g`` or presets like ``CMAKE_BUILD_TYPE=Release``.
+
+It is important to understand how these sources interact, in particular when it comes to composing versus overriding flags.
+
+One possible pitfall is that the end user may require say ``cflags=-Wextra`` for an Autotools package, but its configure script defaults to ``CFLAGS=-O2 -g``.
+If we would simply set ``CFLAGS=-Wextra`` as an environment variable in our package, then the user-specified flags would *override* the build system defaults, and the build would not be optimized (the ``-O2`` flag would be lost).
+
+This is one of the reasons we generally do not recommend package authors to set environment variables (or equivalent command line arguments) like ``CFLAGS`` or ``CXXFLAGS`` directly in the package class.
+
+Instead, Spack provides a mechanism to handle compiler flags in a more flexible way, using the :meth:`flag_handler <spack.package_base.PackageBase.flag_handler>` method.
+It allows you to control how compiler flags are used in the build process:
+
+   * Injected directly into the compiler commands using Spack's compiler wrappers (the build system does not need to know about them).
+   * Passed through environment variables that the build system uses implicitly (e.g. ``CFLAGS``, ``CXXFLAGS``, etc.).
+   * Passed as arguments to the build system (e.g. ``configure`` or ``cmake``).
+
+The default strategy is to inject the flags directly into the compiler commands using Spack's compiler wrappers.
+This means that the flags are applied to the compiler commands without the build system needing to know about them, and solves the problem of accidentally overriding build system defaults.
+
+
+
 
 Packages can override the flag_handler method with one of three
 built-in flag_handlers. The built-in flag_handlers are named
