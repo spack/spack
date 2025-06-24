@@ -1393,14 +1393,15 @@ class Repo:
 
         class_name = nm.pkg_name_to_class_name(pkg_name)
 
+        if not self.exists(pkg_name):
+            raise UnknownPackageError(fullname, self)
+
         try:
             if self.python_path:
                 sys.path.insert(0, self.python_path)
             module = importlib.import_module(fullname)
-        except ImportError as e:
-            raise UnknownPackageError(fullname) from e
         except Exception as e:
-            msg = f"cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
+            msg = f"Cannot load package '{pkg_name}' from the '{self.namespace}' repository: {e}"
             raise RepoError(msg) from e
         finally:
             if self.python_path:
@@ -2034,15 +2035,16 @@ class UnknownEntityError(RepoError):
 class UnknownPackageError(UnknownEntityError):
     """Raised when we encounter a package spack doesn't have."""
 
-    def __init__(self, name, repo=None):
+    def __init__(self, name, repo: Optional[Union[Repo, RepoPath, str]] = None):
         msg = "Attempting to retrieve anonymous package."
         long_msg = None
         if name:
+            msg = f"Package '{name}' not found"
             if repo:
-                msg = "Package '{0}' not found in repository '{1.root}'"
-                msg = msg.format(name, repo)
-            else:
-                msg = "Package '{0}' not found.".format(name)
+                if isinstance(repo, Repo):
+                    msg += f" in repository '{repo.root}'"
+                elif isinstance(repo, str):
+                    msg += f" in repository '{repo}'"
 
             # Special handling for specs that may have been intended as
             # filenames: prompt the user to ask whether they intended to write
@@ -2054,14 +2056,16 @@ class UnknownPackageError(UnknownEntityError):
                 long_msg = "Use 'spack create' to create a new package."
 
                 if not repo:
-                    repo = PATH
+                    repo = PATH.ensure_unwrapped()
 
                 # We need to compare the base package name
                 pkg_name = name.rsplit(".", 1)[-1]
-                try:
-                    similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
-                except Exception:
-                    similar = []
+                similar = []
+                if isinstance(repo, RepoPath):
+                    try:
+                        similar = difflib.get_close_matches(pkg_name, repo.all_package_names())
+                    except Exception:
+                        pass
 
                 if 1 <= len(similar) <= 5:
                     long_msg += "\n\nDid you mean one of the following packages?\n  "
