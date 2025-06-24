@@ -153,6 +153,44 @@ The output of this command should look similar to the following:
 
 Congratulations! You just installed your first package with Spack!
 
+-----------------------------------
+Use the software you just installed
+-----------------------------------
+
+Once you installed ``tcl`` you can immediately use it starting the ``tcsh`` with its absolute path:
+
+.. code-block:: console
+
+   $ /home/spack/.local/spack/opt/linux-icelake/tcl-8.6.12-6vo5hxeqw5plzd6gvzm74wlfz5stnzcv/bin/tclsh
+   >% echo "Hello world!"
+   Hello world!
+
+This works because of how Spack builds packages, setting the ``RPATH`` of their dependencies, but using such a long absolute path is not the most ergonomic way to refer to an executable.
+
+The simplest way to have ``tcsh`` directory added to your ``PATH`` is to:
+
+.. code-block:: console
+
+   $ spack load tcl
+
+Now the environment of the current shell has been modified, and you can use:
+
+.. code-block:: console
+
+   $ tcsh
+
+directly. To undo these modifications, you can:
+
+.. code-block:: console
+
+   $ spack unload tcl
+
+.. admonition:: Environments and views
+   :class: tip
+
+   A better way to install and load a set of packages that are frequently used are Spack Environments with views.
+   The discussion of this topic is outside of the boundary of this "Getting Started" guide, and we refer to :ref:`environments` for more information.
+
 ----------
 Next steps
 ----------
