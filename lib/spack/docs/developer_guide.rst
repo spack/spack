@@ -291,24 +291,64 @@ Key concepts:
 
 See :ref:`repositories` for complete details on configuring and managing package repositories.
 
-------------
-Spec objects
-------------
+.. _package_class_structure:
 
----------------
-Package objects
----------------
+--------------------------
+Package class architecture
+--------------------------
 
-Most Spack commands look something like this:
+.. note::
 
-#. Parse an abstract spec (or specs) from the command line,
-#. *Normalize* the spec based on information in package files,
-#. *Concretize* the spec according to some customizable policies,
-#. Instantiate a package based on the spec, and
-#. Call methods (e.g., ``install()``) on the package object.
+   This section aims to provide a high-level knowledge of how the package class architecture evolved
+   in Spack, and provides some insights on the current design.
 
-The information in package files is used at all stages in this
-process.
+Packages in Spack were originally designed to support only a single build system. The overall
+class structure for a package looked like:
+
+.. image:: images/original_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this architecture the base class ``AutotoolsPackage`` was responsible for both the metadata
+related to the ``autotools`` build system (e.g. dependencies or variants common to all packages
+using it), and for encoding the default installation procedure.
+
+In reality, a non-negligible number of packages are either changing their build system during the evolution of the
+project, or using different build systems for different platforms. An architecture based on a single class
+requires hacks or other workarounds to deal with these cases.
+
+To support a model more adherent to reality, Spack v0.19 changed its internal design by extracting
+the attributes and methods related to building a software into a separate hierarchy:
+
+.. image:: images/builder_package_architecture.png
+   :scale: 60 %
+   :align: center
+
+In this new format each ``package.py`` contains one ``*Package`` class that gathers all the metadata,
+and one or more ``*Builder`` classes that encode the installation procedure. A specific builder object
+is created just before the software is built, so at a time where Spack knows which build system needs
+to be used for the current installation, and receives a ``package`` object during initialization.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Compatibility with single-class format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Internally, Spack always uses builders to perform operations related to the installation of a specific software.
+The builders are created in the ``spack.builder.create`` function.
+
+.. literalinclude:: _spack_root/lib/spack/spack/builder.py
+   :pyobject: create
+
+To achieve backward compatibility with the single-class format Spack creates in this function a special
+"adapter builder", if no custom builder is detected in the recipe:
+
+.. image:: images/adapter.png
+   :scale: 60 %
+   :align: center
+
+Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
+hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
+the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
 
 
 .. _writing-commands:

@@ -76,24 +76,27 @@ From simplest to most complex, the following are the most common ways to customi
 
    .. code-block:: python
    
-      def configure_args(self):
-          # FIXME: Add arguments other than --prefix
-          # FIXME: If not needed delete this function
-          args = []
-          return args
+      class MyPkg(AutotoolsPackage):
+          def configure_args(self):
+              # FIXME: Add arguments other than --prefix
+              # FIXME: If not needed delete this function
+              args = []
+              return args
 
    Similarly for ``CMakePackage`` you can influence how ``cmake`` is invoked by implementing ``cmake_args``:
 
    .. code-block:: python
    
-      def cmake_args(self):
-          # FIXME: Add arguments other than
-          # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-          # FIXME: If not needed delete this function
-          args = []
-          return args
+      class MyPkg(CMakePackage):
+          def cmake_args(self):
+              # FIXME: Add arguments other than
+              # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
+              # FIXME: If not needed delete this function
+              args = []
+              return args
 
    The exact methods and properties available depend on the build system you are using.
+   See :doc:`build_systems` for a complete list of available build systems and their specific helper functions and properties.
 
 2. **Setting environment variables**.
    Some build systems require specific environment variables to be set before the build starts.
@@ -150,9 +153,9 @@ In any of the functions above, you can
 
 .. _installation_process:
 
--------------
-Build systems
--------------
+-----------------------
+What are build systems?
+-----------------------
 
 Every package in Spack has an associated build system.
 For most packages, this will be a well-known system for which Spack provides a base class, like ``CMakePackage`` or ``AutotoolsPackage``.
@@ -166,10 +169,18 @@ Build systems have the following responsibilities:
 2. **Add dependencies and variants**.
    Build systems can define dependencies and variants that are specific to the build system.
    For example, ``CMakePackage`` adds a ``cmake`` as a build dependency, and defines ``build_type`` as a variant (which maps to the ``CMAKE_BUILD_TYPE`` CMake variable).
-   All build systems also define a special variant ``build_system``, which is useful in case of :ref:`multiple_build_systems`.
+   All build systems also define a special variant ``build_system``, which is useful in case of :ref:`multiple build systems <multiple_build_systems>`.
 3. **Provide helper methods**.
-   Build systems often provide helper functions and properties that the package author can use to customize the build process.
-   For example ``CMakePackage`` provides the ``cmake_args`` method to specify additional arguments for the ``cmake`` command, and the ``build_targets`` property is used in ``MakefilePackage`` to specify what make targets to build (e.g., ``make lib``).
+   Build systems often provide helper functions and properties that the package author can use to customize the build configuration, without having to override entire phases.
+   For example:
+
+   * The ``CMakePackage`` lets users implement the ``cmake_args`` method to specify additional arguments for the ``cmake`` command
+   * The ``MakefilePackage`` lets users set  ``build_targets`` and ``install_targets`` properties to specify the targets to build and install.
+
+   There are typically also helper functions to map variants to CMake or Autotools options:
+
+   * The ``CMakePackage`` provides the ``self.define_from_variant("VAR_NAME", "variant_name")`` method to generate the appropriate ``-DVAR_NAME:BOOL=ON/OFF`` arguments for the ``cmake`` command.
+   * The ``AutotoolsPackage`` provides helper functions like ``self.with_or_without("foo")`` to generate the appropriate ``--with-foo`` or ``--without-foo`` arguments for the ``./configure`` script.
 
 Here is a table of the most common build systems available in Spack:
 
@@ -213,11 +224,15 @@ For a complete list of build systems and their specific helper functions and pro
 Configuring the build with spec objects
 ---------------------------------------
 
-Whenever you implement helper functions of a build system or complement or override its build phases, you will often need to make decisions based on the package's configuration.
+Configuring a build is typically the first step in the build process.
+In many build systems it involves passing the right command line arguments to the configure script, and in some build systems it is a matter of setting the right environment variables.
+In this section we will use an Autotools package as an example, where we just need to implement the ``configure_args`` helper function.
+
+In general, whenever you implement helper functions of a build system or complement or override its build phases, you often need to make decisions based on the package's configuration.
 Spack is unique in that it allows you to write a *single* ``package.py`` for all configurations of a package.
 
-Spack makes this easy by providing the ``self.spec`` object, which encodes the current package's configuration.
-Together with Spack's **spec language**, you can easily specify conditional build instructions.
+The central object in Spack that encodes the package's configuration is the **concrete spec**, which is available as ``self.spec`` in the package class.
+This is the object you need to query to make decisions about how to configure the build.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Using ``self.spec.satisfies``
@@ -248,19 +263,31 @@ See :ref:`the Autotools docs <autotools_helper_functions>` and :ref:`the CMake d
 **Dependencies**.
 You can also use the ``self.spec.satisfies`` method to test whether a dependency is present or not, and whether it is built with a specific variant or version.
 
-The ``%`` character is used to refer to direct dependencies, which is often useful when you want to test the compiler used to build the package.
-
-.. code-block:: python
-
-   if self.spec.satisfies("%gcc@8:"):
-       args.append("--enable-profile-guided-optimization")
-
-The ``^`` character is used to refer to runtime and build dependencies.
+The ``^`` character is used to refer to packages that are required at runtime as well as build dependencies.
+More precisely, it includes all direct dependencies of ``build`` type and transitive dependencies of ``link`` or ``run`` type.
 
 .. code-block:: python
 
    if self.spec.satisfies("^python@3.8:"):
        args.append("--min-python-version=3.8")
+
+Here we test whether the package has a (possibly transitive) dependency on Python version 3.8 or higher.
+
+The ``%`` character is used to refer to direct dependencies only.
+A typical use case is when you want to test the compiler used to build the package.
+
+.. code-block:: python
+
+   if self.spec.satisfies("%c=gcc@8:"):
+       args.append("--enable-profile-guided-optimization")
+
+This example adds a flag when the C compiler is from GCC version 8 or higher.
+The ``%c=gcc`` syntax technically means that ``gcc`` is the provider for the ``c`` language virtual.
+
+.. tip::
+   
+    Historically, many packages have been written using ``^dep`` to refer to a dependency.
+    Modern Spack packages should consider using ``%dep`` instead, which is more precise: it can only match direct dependencies, which are listed in the ``depends_on`` statements.
 
 
 **Target specific configuration**.
@@ -298,16 +325,15 @@ Referring to a dependency's prefix, libraries, and headers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Very often you need to inform the build system about the location of a dependency.
-The most common way to do this is to pass the dependency's prefix as a configure argument.
+The most common way to do this is to pass the dependency's prefix as a configure argument and let the build system detect the libraries and headers from there.
 
-By sub-scripting the spec, you get another ``Spec`` object that represents the dependency:
+To do this, you can obtain the **dependency's spec** by name:
 
 .. code-block:: python
 
    libxml2 = self.spec["libxml2"]
 
-The value in the brackets needs to be a package name on which the package depends.
-What is returned is itself just another ``Spec`` object, so you can do all the same things you would do with the package's own spec:
+The ``libxml2`` variable is itself a spec object, and we can refer to its properties:
 
 .. code-block:: python
 
@@ -316,14 +342,69 @@ What is returned is itself just another ``Spec`` object, so you can do all the s
            f"--with-libxml2={self.spec['libxml2'].prefix}",
        ]
 
-Most build systems have their own logic to locate libraries and headers of dependencies, so often it is sufficient to pass the dependency's prefix to the build system.
-
-To be more precise, you can also refer to :ref:`custom-attributes` from the dependency.
-In other cases, you can be more specific and use the dependency's attributes such as ``libs`` or ``headers``.
-
 Apart from the :ref:`prefix <prefix-objects>`, you can also access other attributes of the dependency, such as ``libs`` or ``headers``.
+See :ref:`custom-attributes` for how dependencies define these attributes.
+These attributes are typically only required if the package is unable to locate the libraries and headers itself, or if you want to be more specific about which libraries or headers to use.
 
+A more advanced example where we explicitly pass libraries and headers to the configure script is shown below.
 
+.. code-block:: python
+
+   def configure_args(self):
+       return [
+           f"--with-libxml2={self.spec['libxml2'].prefix}",
+           f"--with-libxml2-libs={self.spec['libxml2'].libs.ld_flags}",
+           f"--with-libxml2-include={self.spec['libxml2'].headers.include_flags}",
+       ]
+
+The ``libs`` attribute is a :class:`LibraryList <llnl.util.filesystem.LibraryList>` object that can be used to get a list of libraries by path, but also to get the appropriate linker flags.
+Similarly, the ``headers`` attribute is a :class:`HeaderList <llnl.util.filesystem.HeaderList>`, which also has methods to get the relevant include flags.
+
+.. _blas_lapack_scalapack:
+
+**Virtual dependencies**.
+You can also refer to the prefix, libraries and headers of :ref:`virtual dependencies <virtual-dependencies>`.
+For example, suppose we have a package that depends on ``blas`` and ``lapack``.
+We can get the provider's (e.g. OpenBLAS or Intel MKL) prefixes like this:
+
+.. code-block:: python
+
+    class MyPkg(AutotoolPackage):
+        depends_on("blas")
+        depends_on("lapack")
+
+        def configure_args(self):
+            return [
+                f"--with-blas={self.spec['blas'].prefix}",
+                f"--with-lapack={self.spec['lapack'].prefix}",
+            ]
+
+Many build systems struggle to locate the ``blas`` and ``lapack`` libraries during configure, either because they do not know the exact names of the libraries, or because the libraries are not in typical locations --- they may not even know whether blas and lapack are a single or separate libraries.
+In those cases, the build system could use some help, for which we give a few examples below:
+
+1. Space separated list of full paths
+
+   .. code-block:: python
+   
+      lapack_blas = spec["lapack"].libs + spec["blas"].libs
+      args.append(f"--with-blas-lapack-lib={lapack_blas.joined()}")
+
+2. Names of libraries and directories which contain them
+
+   .. code-block:: python
+   
+      lapack_blas = spec["lapack"].libs + spec["blas"].libs
+      args.extend([
+        f"-DMATH_LIBRARY_NAMES={';'.join(lapack_blas.names)}",
+        f"-DMATH_LIBRARY_DIRS={';'.join(lapack_blas.directories)}"
+      ])
+
+3. Search and link flags
+
+   .. code-block:: python
+   
+      lapack_blas = spec["lapack"].libs + spec["blas"].libs
+      args.append(f"-DMATH_LIBS={lapack_blas.ld_flags}")
 
 
 .. _before_after_build_phases:
@@ -333,7 +414,8 @@ Before and after build phases
 -----------------------------
 
 Typically the default implementation of the build system's phases is sufficient for most packages.
-However, in some cases you may need to complement th default implementation with some custom instructions.
+However, in some cases you may need to complement the default implementation with some custom instructions.
+For example, some packages do not install all the files they should, and you want to fix this by simply copying the missing files after the normal install phase is done.
 Instead of overriding the entire phase, you can use ``@run_before`` and ``@run_after`` to run custom code before or after a specific phase:
 
 .. code-block:: python
@@ -344,12 +426,12 @@ Instead of overriding the entire phase, you can use ``@run_before`` and ``@run_a
        variant("extras", default=False, description="Install extra files")
 
        @run_before("cmake")
-       def run_before_cmake_is_invoked(self):
+       def run_before_cmake_is_invoked(self) -> None:
            with open("custom_file.txt", "w") as f:
                f.write("This file is created before cmake is invoked.")
 
        @run_after("install", when="+extras")
-       def custom_post_install_phase(self):
+       def custom_post_install_phase(self) -> None:
            # install missing files not covered by the build system
            install_tree("extras", self.prefix.share.extras)
 
@@ -362,8 +444,9 @@ Then ``when="+extras"`` will ensure that the custom post-install phase is only r
 Overriding a build phase
 ------------------------
 
-In rare cases it is necessary to override a build phase.
-The most common instance is when the package does not have a well-defined build system.
+If a build phase does not do what you need, and you cannot achieve your goal either by implementing the helper methods of the build system, or by using the ``@run_before`` or ``@run_after`` decorators (see :ref:`before_after_build_phases`), you can override the entire build phase.
+
+The most common scenario is when a package simply does not have a well-defined build system.
 For example, the installation procedure may just be copying files or running a shell script.
 In that case, you can use the generic ``Package`` class, which defines only a single ``install()`` phase, to be overridden by the package author:
 
@@ -373,11 +456,13 @@ In that case, you can use the generic ``Package`` class, which defines only a si
    from spack_repo.builtin.build_systems.generic import Package
 
    class MyPkg(Package):
-       def install(self, spec: Spec, prefix: Prefix):
-           # Custom install logic
+
+       # Override the install phase
+       def install(self, spec: Spec, prefix: Prefix) -> None:
            install_tree("my_files", prefix.bin)
 
-The signature of every build phase function is the same, and has the following arguments:
+Whichever build system is used, **every build phase function has the same set of arguments**.
+The arguments are:
 
 ``self``
     This is the package object, which extends ``CMakePackage``.
@@ -393,7 +478,63 @@ The signature of every build phase function is the same, and has the following a
     This is where your package should install its files.
     It acts like a string, but it's actually its :ref:`own special type <prefix-objects>`.
 
-The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always correspond to ``self.spec`` and ``self.spec.prefix`` respectively.
+The arguments ``spec`` and ``prefix`` are passed only for convenience, as they always correspond to ``self.spec`` and ``self.spec.prefix`` respectively, as we have already seen in :ref:`the previous section <spec-objects>`.
+
+.. warning::
+
+   When working with :ref:`multiple build systems <multiple_build_systems>` in a single package, the arguments for build phase functions are slightly different.
+
+.. _running_build_executables:
+
+-------------------------
+Running build executables
+-------------------------
+
+When you :ref:`override a build phase <overriding-phases>`, or when you write a :ref:`build phase hook <before_after_build_phases>`, you typically need to invoke executables like ``make``, ``cmake``, or ``python`` to kick off the build process.
+
+Spack makes some of these executables available as global functions, making it easy to run them in your package class:
+
+.. code-block:: python
+
+   from spack.package import *
+   from spack_repo.builtin.build_systems.generic import Package
+
+   class MyPkg(Package):
+
+       depends_on("make", type="build")
+       depends_on("python", type="build")
+
+       def install(self, spec: Spec, prefix: Prefix) -> None:
+           python("generate-makefile.py", "--output=Makefile")
+           make()
+           make("install")
+
+The ``python()`` and ``make()`` functions in this example invoke the ``python`` and ``make`` executables, respectively.
+Naturally, you may wonder where these executables come from, since they are not imported from anywhere --- your editor may even underline them in red because they are not defined in the package module.
+
+The answer lies in the fact that the package depends on ``python`` and ``make``, and these packages in turn implement the :meth:`~spack.package_base.PackageBase.setup_dependent_package` method, which sets up Python variables that can be used in the package class of packages that depend on them.
+
+Not all dependencies set up such variables, in which case you have two further options:
+
+1. Use the ``command`` attribute of the dependency.
+   This is a good option, since it refers to an executable provided by a specific dependency.
+   
+   .. code-block:: python
+
+      def install(self, spec: Spec, prefix: Prefix) -> None:
+          cython = self.spec["py-cython"].command
+          cython("setup.py", "build_ext", "--inplace")
+
+2. Use the ``which`` function (from the ``spack.package`` module).
+   Do note that this function relies on the order of the ``PATH`` environment variable, which may be less reliable than the first option.
+   
+   .. code-block:: python
+
+      def install(self, spec: Spec, prefix: Prefix) -> None:
+          cython = which("cython", required=True)
+          cython("setup.py", "build_ext", "--inplace")
+
+See also the documentation of :class:`~spack.util.executable.Executable`, which is the class used by Spack to represent executables.
 
 .. _setup-environment:
 
@@ -401,8 +542,8 @@ The arguments ``spec`` and ``prefix`` are passed only for convenience, as they a
 Runtime and build time environment variables
 --------------------------------------------
 
-Spack provides a few methods to help package authors set up the required environment variables for
-their package. Environment variables typically depend on how the package is used: variables that
+Spack provides a few methods to help package authors set up the required environment variables for their package.
+Environment variables typically depend on how the package is used: variables that
 make sense during the build phase may not be needed at runtime, and vice versa. Further, sometimes
 it makes sense to let a dependency set the environment variables for its dependents. To allow all
 this, Spack provides four different methods that can be overridden in a package:
@@ -781,56 +922,6 @@ is handy when a package supports additional variants like
 
    variant("openmp", default=True, description="Enable OpenMP support.")
 
-.. _blas_lapack_scalapack:
-
-------------------------------------
-Blas, Lapack and ScaLapack libraries
-------------------------------------
-
-Multiple packages provide implementations of ``Blas``, ``Lapack`` and ``ScaLapack``
-routines.  The names of the resulting static and/or shared libraries
-differ from package to package. In order to make the ``install()`` method
-independent of the choice of ``Blas`` implementation, each package which
-provides it implements ``@property def blas_libs(self):`` to return an object
-`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
-type which simplifies usage of a set of libraries.
-The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
-Package developers are requested to use this interface. Common usage cases are:
-
-1. Space separated list of full paths
-
-.. code-block:: python
-
-   lapack_blas = spec["lapack"].libs + spec["blas"].libs
-   options.append(
-      "--with-blas-lapack-lib={0}".format(lapack_blas.joined())
-   )
-
-2. Names of libraries and directories which contain them
-
-.. code-block:: python
-
-   blas = spec["blas"].libs
-   options.extend([
-     "-DBLAS_LIBRARY_NAMES={0}".format(";".join(blas.names)),
-     "-DBLAS_LIBRARY_DIRS={0}".format(";".join(blas.directories))
-   ])
-
-3. Search and link flags
-
-.. code-block:: python
-
-   math_libs = spec["scalapack"].libs + spec["lapack"].libs + spec["blas"].libs
-   options.append(
-     "-DMATH_LIBS:STRING={0}".format(math_libs.ld_flags)
-   )
-
-
-For more information, see documentation of
-`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
-class.
-
-
 .. _prefix-objects:
 
 --------------
@@ -858,6 +949,8 @@ If your file or directory contains dashes or dots, use ``join`` instead:
 .. code-block:: python
 
    prefix.lib.join("libz.a")
+
+.. _setting-package-module-variables:
 
 --------------------------------
 Setting package module variables
@@ -1755,84 +1848,6 @@ splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
 
    The ``can_splice`` directive is experimental, and may be replaced
    by a higher-level interface in future versions of Spack.
-
-.. _package_class_structure:
-
---------------------------
-Package class architecture
---------------------------
-
-.. note::
-
-   This section aims to provide a high-level knowledge of how the package class architecture evolved
-   in Spack, and provides some insights on the current design.
-
-Packages in Spack were originally designed to support only a single build system. The overall
-class structure for a package looked like:
-
-.. image:: images/original_package_architecture.png
-   :scale: 60 %
-   :align: center
-
-In this architecture the base class ``AutotoolsPackage`` was responsible for both the metadata
-related to the ``autotools`` build system (e.g. dependencies or variants common to all packages
-using it), and for encoding the default installation procedure.
-
-In reality, a non-negligible number of packages are either changing their build system during the evolution of the
-project, or using different build systems for different platforms. An architecture based on a single class
-requires hacks or other workarounds to deal with these cases.
-
-To support a model more adherent to reality, Spack v0.19 changed its internal design by extracting
-the attributes and methods related to building a software into a separate hierarchy:
-
-.. image:: images/builder_package_architecture.png
-   :scale: 60 %
-   :align: center
-
-In this new format each ``package.py`` contains one ``*Package`` class that gathers all the metadata,
-and one or more ``*Builder`` classes that encode the installation procedure. A specific builder object
-is created just before the software is built, so at a time where Spack knows which build system needs
-to be used for the current installation, and receives a ``package`` object during initialization.
-
-^^^^^^^^^^^^^^^^^^^^^^^^
-``build_system`` variant
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-To allow imposing conditions based on the build system, each package must have a ``build_system`` variant,
-which is usually inherited from base classes. This variant allows for writing metadata that is conditional
-on the build system:
-
-.. code-block:: python
-
-   with when("build_system=cmake"):
-       depends_on("cmake", type="build")
-
-and also for selecting a specific build system from a spec literal, like in the following command:
-
-.. code-block:: console
-
-   $ spack install arpack-ng build_system=autotools
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Compatibility with single-class format
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Internally, Spack always uses builders to perform operations related to the installation of a specific software.
-The builders are created in the ``spack.builder.create`` function.
-
-.. literalinclude:: _spack_root/lib/spack/spack/builder.py
-   :pyobject: create
-
-To achieve backward compatibility with the single-class format Spack creates in this function a special
-"adapter builder", if no custom builder is detected in the recipe:
-
-.. image:: images/adapter.png
-   :scale: 60 %
-   :align: center
-
-Overall the role of the adapter is to route access to attributes of methods first through the ``*Package``
-hierarchy, and then back to the base class builder. This is schematically shown in the diagram above, where
-the adapter role is to "emulate" a method resolution order like the one represented by the red arrows.
 
 -----------------
 Customizing Views
