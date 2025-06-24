@@ -198,5 +198,6 @@ Next steps
 This section just helped you getting Spack installed, and running, quickly.
 There are further resources in the documentation, for more advanced use cases:
 
-1. **Getting information on packages**: see :ref:`basic-list-and-info-packages`
-2. **Verify Spack prerequisites on a given system**: see :ref:`verify-spack-prerequisites`
+1. **Get information on available packages**: see :ref:`basic-list-and-info-packages`
+2. **Configure compilers to be used with Spack**: see :ref:`compiler-config`
+3. **Verify Spack prerequisites on a given system**: see :ref:`verify-spack-prerequisites`

@@ -97,15 +97,18 @@ able to find remote versions.
 
 .. _compiler-config:
 
-----------------------
-Configure Compilers
-----------------------
+---------------------
+Configuring Compilers
+---------------------
 
 Spack has the ability to build packages with multiple compilers and compiler versions.
-Compilers can be made available to Spack by specifying them manually in ``packages.yaml``,
-or automatically by running ``spack compiler find``.
-For convenience, Spack will automatically detect compilers the first time it needs them,
-if no compiler is available.
+Compilers can be made available to Spack by:
+
+1. Specifying them as externals in ``packages.yaml``, or
+2. Having them installed in the current Spack store, or
+3. Having them available as binaries in some buildcache
+
+For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
 
 .. _cmd-spack-compilers:
 
@@ -113,21 +116,28 @@ if no compiler is available.
 ``spack compilers``
 ^^^^^^^^^^^^^^^^^^^
 
-You can see which compilers are available to Spack by running ``spack
-compilers`` or ``spack compiler list``:
+You can see which compilers are available to Spack by running ``spack compiler list``:
 
 .. code-block:: console
 
-   $ spack compilers
+   $ spack compiler list
    ==> Available compilers
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
-   -- intel-oneapi-compilers ubuntu20.04-x86_64 --------------------
-   [+]  intel-oneapi-compilers@2025.1.1
+Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]`` are installed in the local Spack's store.
+Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
+To see them you need a specific option:
 
-Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]``
-are installed in the local Spack's store.
+.. code-block:: console
+
+   $ spack compiler list --remote
+   ==> Available compilers
+   -- gcc ubuntu20.04-x86_64 ---------------------------------------
+   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
+
+   -- gcc ubuntu20.04-x86_64 ---------------------------------------
+    -   gcc@12.4.0
 
 Any of these compilers can be used to build Spack packages.  More on how this is done is in :ref:`sec-specs`.
 
@@ -221,13 +231,18 @@ This shows the details of the compilers that were detected by Spack.
 Notice also that we didn't have to be too specific about the version. We just said ``gcc``, and we got information
 about all the matching compilers.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Manual compiler configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Manual configuration of external compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If auto-detection fails, you can manually configure a compiler by editing your ``~/.spack/packages.yaml`` file.
-You can do this by running ``spack config edit packages``, which will open the file in
-:ref:`your favorite editor <controlling-the-editor>`.
+If auto-detection fails, you can manually configure a compiler by editing your ``packages`` configuration.
+You can do this by running:
+
+.. code-block:: console
+
+   $ spack config edit packages
+
+which will open the file in :ref:`your favorite editor <controlling-the-editor>`.
 
 Each compiler has an "external" entry in the file with some ``extra_attributes``:
 
@@ -301,25 +316,6 @@ specification. The operations available to modify the environment are ``set``, `
              prepend_path: # Similar for append|remove_path
                LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Build Your Own Compiler
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you are particular about which compiler/version you use, you might wish to have Spack build it for you.
-For example:
-
-.. code-block:: console
-
-   $ spack install gcc@14+binutils
-
-Once the compiler is installed, you can start using it without additional configuration:
-
-.. code-block:: console
-
-   $ spack install hdf5~mpi %gcc@14
-
-The same holds true for compilers that are made available from build caches, when reusing them is allowed.
-
 .. _compilers-requiring-modules:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -327,8 +323,7 @@ Compilers Requiring Modules
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Many installed compilers will work regardless of the environment they are called with.
-However, some installed compilers require environment variables to be set in order to run;
-this is typical for Intel and other proprietary compilers.
+However, some installed compilers require environment variables to be set in order to run.
 
 On typical HPC clusters, these environment modifications are usually delegated to some "module" system.
 In such a case, you should tell Spack which module(s) to load in order to run the chosen compiler:
@@ -359,24 +354,24 @@ cleaning the environment before building.  If this interferes with your
 compiler settings, you CAN use ``spack install --dirty`` as a workaround.
 Note that this MAY interfere with package builds.
 
-.. _licensed-compilers:
+^^^^^^^^^^^^^^^^^^^^^^^
+Build Your Own Compiler
+^^^^^^^^^^^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^^^^^
-Licensed Compilers
-^^^^^^^^^^^^^^^^^^
+If you are particular about which compiler/version you use, you might wish to have Spack build it for you.
+For example:
 
-Some proprietary compilers require licensing to use.  If you need to
-use a licensed compiler, the process is similar to a mix of
-build your own, plus modules:
+.. code-block:: console
 
-#. Create a Spack package (if it doesn't exist already) to install
-   your compiler.  Follow instructions on installing :ref:`license`.
+   $ spack install gcc@14+binutils
 
-#. Once the compiler is installed, you should be able to test it by
-   using Spack to load the module it just created, and running simple
-   builds (e.g., ``cc helloWorld.c && ./a.out``)
+Once the compiler is installed, you can start using it without additional configuration:
 
-#. Add the newly-installed compiler to ``packages.yaml`` as shown above.
+.. code-block:: console
+
+   $ spack install hdf5~mpi %gcc@14
+
+The same holds true for compilers that are made available from build caches, when reusing them is allowed.
 
 .. _mixed-toolchains:
 
@@ -452,17 +447,6 @@ GNU ``gfortran`` for Fortran.
 
 Since languages in Spack are modeled as virtual packages, ``apple-clang`` will be used to provide
 C and C++, while GCC will be used for Fortran.
-
-^^^^^^^^^^^^^^^^^^^^^
-Compiler Verification
-^^^^^^^^^^^^^^^^^^^^^
-
-You can verify that your compilers are configured properly by installing a simple package. For example:
-
-.. code-block:: console
-
-   $ spack install zlib-ng%gcc@5.3.0
-
 
 .. _vendor-specific-compiler-configuration:
 
