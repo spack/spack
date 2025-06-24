@@ -8,35 +8,7 @@
 Basic Usage
 ===========
 
-The ``spack`` command has many *subcommands*.  You'll only need a
-small subset of them for typical usage.
-
-Note that Spack colorizes output.  ``less -R`` should be used with
-Spack to maintain this colorization.  E.g.:
-
-.. code-block:: console
-
-    $ spack find | less -R
-
-It is recommended that the following be put in your ``.bashrc`` file:
-
-.. code-block:: sh
-
-    alias less='less -R'
-
-If you do not see colorized output when using ``less -R``, it is because color
-is being disabled in the piped output. In this case, tell Spack to force
-colorized output with a flag
-
-.. code-block:: console
-
-    $ spack --color always find | less -R
-
-or an environment variable
-
-.. code-block:: console
-
-   $ SPACK_COLOR=always spack find | less -R
+The ``spack`` command has many *subcommands*, but you'll only need a small subset of them for typical usage.
 
 .. _basic-list-and-info-packages:
 
@@ -44,10 +16,8 @@ or an environment variable
 Listing Available Packages
 --------------------------
 
-To install software with Spack, you need to know what software is
-available.  You can see a list of available package names at the
-`packages.spack.io <https://packages.spack.io>`_ website, or
-using the ``spack list`` command.
+To install software with Spack, you need to know what software is available.
+You can search the available packages at the `packages.spack.io <https://packages.spack.io>`_ website, or using the ``spack list`` command.
 
 .. _cmd-spack-list:
 
@@ -58,25 +28,30 @@ using the ``spack list`` command.
 The ``spack list`` command prints out a list of all of the packages Spack
 can install:
 
-.. command-output:: spack list
-   :ellipsis: 10
+.. code-block:: console
 
-There are thousands of them, so we've truncated the output above, but you
-can find a `full list here <https://packages.spack.io>`_.
+   $ spack list
+
 Packages are listed by name in alphabetical order.
-A pattern to match with no wildcards, ``*`` or ``?``,
-will be treated as though it started and ended with
-``*``, so ``util`` is equivalent to ``*util*``. All patterns will be treated
-as case-insensitive. You can also add the ``-d`` to search the description of
-the package in addition to the name. Some examples:
+A pattern can be used to narrow the list, and the following rules apply:
 
-All packages whose names contain "sql":
+* A pattern to match with no wildcards, ``*`` or ``?``, will be treated as it started and ended with ``*``
+* All patterns will be treated as case-insensitive
 
-.. command-output:: spack list sql
+To search for all packages whose names contain the word ``sql`` you can run the following command:
 
-All packages whose names or descriptions contain documentation:
+.. code-block:: console
 
-.. command-output:: spack list --search-description documentation
+   $ spack list sql
+
+A few options are also provided for more specific searches.
+For instance, it is possible to search the description of packages for a match.
+A way to list all the package whose names or description contain the word ``quantum`` is the following:
+
+.. code-block:: console
+
+   $ spack list -d quantum
+
 
 .. _cmd-spack-info:
 
@@ -87,7 +62,8 @@ All packages whose names or descriptions contain documentation:
 To get more information on a particular package from `spack list`, use
 `spack info`.  Just supply the name of a package:
 
-.. command-output:: spack info --all mpich
+.. command-output:: spack info mpich
+   :language: console
 
 Most of the information is self-explanatory.  The *safe versions* are
 versions that Spack knows the checksum for, and it will use the
@@ -107,6 +83,7 @@ To see *more* available versions of a package, run ``spack versions``.
 For example:
 
 .. command-output:: spack versions libelf
+   :language: console
 
 There are two sections in the output.  *Safe versions* are versions
 for which Spack has a checksum on file.  It can verify that these
@@ -2695,6 +2672,178 @@ In case it's needed, the bootstrap store can also be cleaned with:
 
    $ spack clean -b
    ==> Removing bootstrapped software and configuration in "/home/spack/.spack/bootstrap"
+
+-----------
+GPG Signing
+-----------
+
+.. _cmd-spack-gpg:
+
+^^^^^^^^^^^^^
+``spack gpg``
+^^^^^^^^^^^^^
+
+Spack has support for signing and verifying packages using GPG keys. A
+separate keyring is used for Spack, so any keys available in the user's home
+directory are not used.
+
+^^^^^^^^^^^^^^^^^^
+``spack gpg init``
+^^^^^^^^^^^^^^^^^^
+
+When Spack is first installed, its keyring is empty. Keys stored in
+:file:`var/spack/gpg` are the default keys for a Spack installation. These
+keys may be imported by running ``spack gpg init``. This will import the
+default keys into the keyring as trusted keys.
+
+^^^^^^^^^^^^^
+Trusting keys
+^^^^^^^^^^^^^
+
+Additional keys may be added to the keyring using
+``spack gpg trust <keyfile>``. Once a key is trusted, packages signed by the
+owner of the key may be installed.
+
+^^^^^^^^^^^^^
+Creating keys
+^^^^^^^^^^^^^
+
+You may also create your own key so that you may sign your own packages using
+``spack gpg create <name> <email>``. By default, the key has no expiration,
+but it may be set with the ``--expires <date>`` flag (see the ``gnupg2``
+documentation for accepted date formats). It is also recommended to add a
+comment as to the use of the key using the ``--comment <comment>`` flag. The
+public half of the key can also be exported for sharing with others so that
+they may use packages you have signed using the ``--export <keyfile>`` flag.
+Secret keys may also be later exported using the
+``spack gpg export <location> [<key>...]`` command.
+
+.. note::
+
+   Key creation speed
+      The creation of a new GPG key requires generating a lot of random numbers.
+      Depending on the entropy produced on your system, the entire process may
+      take a long time (*even appearing to hang*). Virtual machines and cloud
+      instances are particularly likely to display this behavior.
+
+      To speed it up, you may install tools like ``rngd``, which is
+      usually available as a package in the host OS.  For example, on an
+      Ubuntu machine you need to give the following commands:
+
+      .. code-block:: console
+
+         $ sudo apt-get install rng-tools
+         $ sudo rngd -r /dev/urandom
+
+      before generating the keys.
+
+      Another alternative is ``haveged``, which can be installed on
+      RHEL/CentOS machines as follows:
+
+      .. code-block:: console
+
+         $ sudo yum install haveged
+         $ sudo chkconfig haveged on
+
+      `This Digital Ocean tutorial
+      <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
+      provides a good overview of sources of randomness.
+
+Here is an example of creating a key. Note that we provide a name for the key first
+(which we can use to reference the key later) and an email address:
+
+.. code-block:: console
+
+    $ spack gpg create dinosaur dinosaur@thedinosaurthings.com
+
+
+If you want to export the key as you create it:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export key.pub dinosaur dinosaur@thedinosaurthings.com
+
+Or the private key:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export-secret key.priv dinosaur dinosaur@thedinosaurthings.com
+
+
+You can include both ``--export`` and ``--export-secret``, each with
+an output file of choice, to export both.
+
+
+^^^^^^^^^^^^
+Listing keys
+^^^^^^^^^^^^
+
+In order to list the keys available in the keyring, the
+``spack gpg list`` command will list trusted keys with the ``--trusted`` flag
+and keys available for signing using ``--signing``. If you would like to
+remove keys from your keyring, use ``spack gpg untrust <keyid>``. Key IDs can be
+email addresses, names, or (best) fingerprints. Here is an example of listing
+the key that we just created:
+
+.. code-block:: console
+
+    gpgconf: socketdir is '/run/user/1000/gnupg'
+    /home/spackuser/spack/opt/spack/gpg/pubring.kbx
+    ----------------------------------------------------------
+    pub   rsa4096 2021-03-25 [SC]
+          60D2685DAB647AD4DB54125961E09BB6F2A0ADCB
+    uid           [ultimate] dinosaur (GPG created for Spack) <dinosaur@thedinosaurthings.com>
+
+
+Note that the name "dinosaur" can be seen under the uid, which is the unique
+id. We might need this reference if we want to export or otherwise reference the key.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Signing and Verifying Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In order to sign a package, ``spack gpg sign <file>`` should be used. By
+default, the signature will be written to ``<file>.asc``, but that may be
+changed by using the ``--output <file>`` flag. If there is only one signing
+key available, it will be used, but if there is more than one, the key to use
+must be specified using the ``--key <keyid>`` flag. The ``--clearsign`` flag
+may also be used to create a signed file which contains the contents, but it
+is not recommended. Signed packages may be verified by using
+``spack gpg verify <file>``.
+
+
+^^^^^^^^^^^^^^
+Exporting Keys
+^^^^^^^^^^^^^^
+
+You might want to export a public key, and that looks like this. Let's
+use the previous example and ask Spack to export the key with uid "dinosaur."
+We will provide an output location (typically a `*.pub` file) and the name of
+the key.
+
+.. code-block:: console
+
+    $ spack gpg export dinosaur.pub dinosaur
+
+You can then look at the created file, `dinosaur.pub`, to see the exported key.
+If you want to include the private key, then just add `--secret`:
+
+.. code-block:: console
+
+    $ spack gpg export --secret dinosaur.priv dinosaur
+
+This will write the private key to the file `dinosaur.priv`.
+
+.. warning::
+
+    You should be very careful about exporting private keys. You likely would
+    only want to do this in the context of moving your Spack installation to
+    a different server, and wanting to preserve keys for a build cache. If you
+    are unsure about exporting, you can ask your local system administrator
+    or for help on an issue or the Spack Slack.
 
 
 
