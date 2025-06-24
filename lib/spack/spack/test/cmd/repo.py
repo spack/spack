@@ -676,10 +676,29 @@ def test_repo_set_git_config(mutable_config):
     repo("set", "--scope=user", "--destination", "/custom/path", "test-repo")
     repo("set", "--scope=user", "--path", "subdir1", "--path", "subdir2", "test-repo")
 
+    repo("set", "--scope=user", "--commit", "c702f5b89", "test-repo")
+
     # Check that the user config has the updated entry
     user_repos = spack.config.get("repos", scope="user")
     assert user_repos["test-repo"]["paths"] == ["subdir1", "subdir2"]
     assert user_repos["test-repo"]["destination"] == "/custom/path"
+    assert user_repos["test-repo"].get("commit") == "c702f5b89"
+    assert user_repos["test-repo"].get("branch") is None
+    assert user_repos["test-repo"].get("tag") is None
+
+    repo("set", "--scope=user", "--branch", "develop", "test-repo")
+
+    user_repos = spack.config.get("repos", scope="user")
+    assert user_repos["test-repo"].get("commit") is None
+    assert user_repos["test-repo"].get("branch") == "develop"
+    assert user_repos["test-repo"].get("tag") is None
+
+    repo("set", "--scope=user", "--tag", "release-tag", "test-repo")
+
+    user_repos = spack.config.get("repos", scope="user")
+    assert user_repos["test-repo"].get("commit") is None
+    assert user_repos["test-repo"].get("branch") is None
+    assert user_repos["test-repo"].get("tag") == "release-tag"
 
     # Check that site scope is unchanged
     site_repos = spack.config.get("repos", scope="site")

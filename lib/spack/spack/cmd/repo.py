@@ -100,6 +100,16 @@ def setup_parser(subparser: argparse.ArgumentParser):
         action="append",
         default=[],
     )
+    git_group = set_parser.add_mutually_exclusive_group()
+    git_group.add_argument(
+        "--branch", nargs="?", default=None, help="name of a branch to track for the repo"
+    )
+    git_group.add_argument(
+        "--tag", nargs="?", default=None, help="name of a tag to track for the repo"
+    )
+    git_group.add_argument(
+        "--commit", nargs="?", default=None, help="name of a commit to checkout for the repo"
+    )
     set_parser.add_argument(
         "--scope",
         action=arguments.ConfigScope,
@@ -444,9 +454,18 @@ def repo_set(args):
     if args.path:
         updated_entry["paths"] = args.path
 
+    # If the git checkout property is set, pop the old values
+    # and update with the new
+    if args.commit or args.tag or args.branch:
+        for label in ("commit", "tag", "branch"):
+            if label in updated_entry:
+                updated_entry.pop(label)
+            argv = getattr(args, label)
+            if argv:
+                updated_entry.update({label: argv})
+
     scope_repos[namespace] = updated_entry
     spack.config.set("repos", scope_repos, args.scope)
-
     tty.msg(f"Updated repo '{namespace}'")
 
 

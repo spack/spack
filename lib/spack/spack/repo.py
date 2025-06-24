@@ -1637,6 +1637,15 @@ class RemoteRepoDescriptor(RepoDescriptor):
     ) -> None:
         super().__init__(name)
         self.repository = repository
+
+        checkout_vars = [branch, commit, tag]
+        if any(checkout_vars):
+            itvars = iter(checkout_vars)
+            if any(itvars) and any(itvars):
+                raise spack.error.ConfigError(
+                    "repo git checkout is ambiguous, only one option should be present"
+                )
+
         self.branch = branch
         self.commit = commit
         self.tag = tag
