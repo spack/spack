@@ -145,7 +145,7 @@ def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
     # git returns posix paths always, normalize input to be comptaible
     # with that
-    env_path = llnl.path.convert_to_posix_path(env_path)
+    env_path = llnl.path.convert_to_posix_path(os.path.dirname(env_path))
     git_dir = get_git_root(env_path)
     git = spack.util.git.git()
 
