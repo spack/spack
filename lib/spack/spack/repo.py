@@ -1638,17 +1638,9 @@ class RemoteRepoDescriptor(RepoDescriptor):
         super().__init__(name)
         self.repository = repository
 
-        checkout_vars = [branch, commit, tag]
-        if any(checkout_vars):
-            itvars = iter(checkout_vars)
-            if any(itvars) and any(itvars):
-                raise spack.error.ConfigError(
-                    "repo git checkout is ambiguous, only one option should be present"
-                )
-
-        self.branch = branch
-        self.commit = commit
-        self.tag = tag
+        self.ref: Optional[spack.util.git.GitRef] = spack.util.git.ref_from_strings(
+            branch=branch, tag=tag, commit=commit
+        )
         self.destination = destination
         self.relative_paths = relative_paths
         self.error: Optional[str] = None
@@ -1695,17 +1687,17 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         self.branch = ref_match.group(1)
 
                     # determine the branch and remote if no config values exist
-                    elif not (self.commit or self.tag or self.branch):
+                    elif not self.ref:
                         self.branch = git("rev-parse", "--abbrev-ref", "HEAD", output=str).strip()
                         remote = git("config", f"branch.{self.branch}.remote", output=str).strip()
 
-                    if self.commit:
-                        spack.util.git.pull_checkout_commit(self.commit, git_exe=git)
+                    if self.ref.type == spack.util.git.GitRefType.COMMIT:
+                        spack.util.git.pull_checkout_commit(self.ref.commit, git_exe=git)
 
-                    elif self.tag:
-                        spack.util.git.pull_checkout_tag(self.tag, remote, depth, git_exe=git)
+                    elif self.ref.type == spack.util.git.GitRefType.TAG:
+                        spack.util.git.pull_checkout_tag(self.ref.ref, remote, depth, git_exe=git)
 
-                    elif self.branch:
+                    elif self.ref.type == spack.util.git.GitRefType.BRANCH:
                         # if the branch already exists we should use the
                         # previously configured remote
                         try:
@@ -1714,7 +1706,7 @@ class RemoteRepoDescriptor(RepoDescriptor):
                         except spack.util.executable.ProcessError:
                             pass
                         spack.util.git.pull_checkout_branch(
-                            self.branch, remote=remote, depth=depth, git_exe=git
+                            self.ref.ref, remote=remote, depth=depth, git_exe=git
                         )
 
             except spack.util.executable.ProcessError:

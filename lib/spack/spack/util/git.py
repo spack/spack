@@ -3,8 +3,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """Single util module where Spack should get a git executable."""
 
+import enum
 import os
 import sys
+from collections import namedtuple
 from typing import List, Optional, overload
 
 from _vendoring.typing_extensions import Literal
@@ -18,6 +20,43 @@ import spack.util.executable as exe
 def _find_git() -> Optional[str]:
     """Find the git executable in the system path."""
     return exe.which_string("git", required=False)
+
+
+class GitRefType(enum.Enum):
+    REF = enum.auto()
+    COMMIT = enum.auto()
+    TAG = enum.auto()
+    BRANCH = enum.auto()
+
+
+GitRef = namedtuple("GitRef", ["ref", "commit", "type"])
+
+
+def ref_from_strings(
+    commit: str = "", tag: str = "", branch: str = "", ref: str = ""
+) -> Optional[GitRef]:
+    if ref:
+        assert not any((commit, tag, branch))
+        return GitRef(ref, None, GitRefType.REF)
+
+    # Tag and Branch cannot both be set
+    assert not (tag and branch)
+
+    # Only one of branch or tag can be set
+    # If tag or branch is set, use that over
+    # commit for the ref type
+    ref = tag or branch or commit
+
+    t = None
+    if tag:
+        t = GitRefType.TAG
+    elif branch:
+        t = GitRefType.BRANCH
+
+    if not t and commit:
+        t = GitRefType.COMMIT
+
+    return GitRef(ref, commit, t) if t else None
 
 
 @overload
