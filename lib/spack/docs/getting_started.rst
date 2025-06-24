@@ -188,7 +188,7 @@ directly. To undo these modifications, you can:
 .. admonition:: Environments and views
    :class: tip
 
-   A better way to install and load a set of packages that are frequently used together are Spack Environments with views.
+   Spack Environments with views are a better way to install and load a set of packages that are frequently used together.
    The discussion of this topic is outside of the boundary of this ``Getting Started`` guide, and we refer to :ref:`environments` for more information.
 
 ----------
@@ -196,8 +196,15 @@ Next steps
 ----------
 
 This section just helped you getting Spack installed, and running, quickly.
-There are further resources in the documentation, for more advanced use cases:
+There are further resources in the documentation, that cover both basic and advanced topics more in details:
 
-1. **Get information on available packages**: see :ref:`basic-list-and-info-packages`
-2. **Configure compilers to be used with Spack**: see :ref:`compiler-config`
-3. **Verify Spack prerequisites on a given system**: see :ref:`verify-spack-prerequisites`
+.. tab-set::
+
+   .. tab-item:: Basic Usage
+
+      1. **Get information on available packages**: see :ref:`basic-list-and-info-packages`
+      2. **Configure compilers to be used with Spack**: see :ref:`compiler-config`
+
+   .. tab-item:: Advanced Topics
+
+      1. **Verify Spack prerequisites on a given system**: see :ref:`verify-spack-prerequisites`
