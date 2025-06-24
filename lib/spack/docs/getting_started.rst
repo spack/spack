@@ -37,7 +37,44 @@ This will create a directory called ``spack``. Once you have cloned Spack, we re
 
          $ . spack/share/spack/setup-env.fish
 
-That's it! You're ready to use Spack.
+Now you're ready to use Spack!
+
+-----------------------------
+List packages you can install
+-----------------------------
+
+Once Spack is ready you can list all the packages it knows about with the following command:
+
+.. code-block:: console
+
+   $ spack list
+
+If you want to get more information on a specific package, for instance ``hdf5``, you can use:
+
+.. code-block:: console
+
+   $ spack info hdf5
+
+This command shows information about ``hdf5``, including a brief description, the versions of the package Spack knows about, and all the options you can activate when installing.
+As you can see it's quite simple to gather basic information on packages, before you install them!
+
+.. admonition:: Slowdown on the very first command
+   :class: warning
+   :collapsible:
+
+   The very first command run with Spack will take a while to finish, as Spack has to build a few caches to speed-up further command execution.
+   This will be just a one-off slowdown though, and subsequent command execution is much faster.
+
+----------
+Next steps
+----------
+
+This section just helped you getting Spack installed, and running, quickly.
+There are further resources in the documentation, for more advanced use cases:
+
+1. **Getting information on packages**: see :ref:`basic-list-and-info-packages` in the :ref:`basic-usage` section
+
+
 
 ---------------------
 Verify prerequisites

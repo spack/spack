@@ -38,6 +38,8 @@ or an environment variable
 
    $ SPACK_COLOR=always spack find | less -R
 
+.. _basic-list-and-info-packages:
+
 --------------------------
 Listing Available Packages
 --------------------------
