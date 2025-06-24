@@ -328,7 +328,7 @@ and they can optionally have a ``when`` and a ``message`` attribute:
    packages:
      openmpi:
        require:
-       - any_of: ["@4.1.5", "%gcc"]
+       - any_of: ["@4.1.5", "%c,cxx,fortran=gcc"]
          message: "in this example only 4.1.5 can build with other compilers"
 
 ``any_of`` is a list of specs. One of those specs must be satisfied
@@ -352,7 +352,7 @@ We could express a similar requirement using the ``when`` attribute:
    packages:
      openmpi:
        require:
-       - any_of: ["%gcc"]
+       - any_of: ["%c,cxx,fortran=gcc"]
          when: "@:4.1.4"
          message: "in this example only 4.1.5 can build with other compilers"
 
@@ -365,7 +365,7 @@ constraint:
    packages:
      openmpi:
        require:
-       - spec: "%gcc"
+       - spec: "%c,cxx,fortran=gcc"
          when: "@:4.1.4"
          message: "in this example only 4.1.5 can build with other compilers"
 
@@ -407,9 +407,18 @@ like this:
 
    packages:
      all:
-       require: '%clang'
+       require: '%[when=%c]c=clang %[when=%cxx]cxx=clang'
 
-which means every spec will be required to use ``clang`` as a compiler.
+which means every spec will be required to use ``clang`` as the compiler for C and C++ code.
+
+.. warning::
+
+   The simpler config ``require: %clang`` will fail to build any
+   package that does not include compiled code, because those packages
+   cannot depend on ``clang`` (alias for ``llvm+clang``). In most
+   contexts, default requirements must use either conditional
+   dependencies or a :ref:`toolchain <toolchains>` that combines conditional
+   dependencies.
 
 Requirements on variants for all packages are possible too, but note that they
 are only enforced for those packages that define these variants, otherwise they
@@ -447,11 +456,11 @@ under ``all`` are disregarded. For example, with a configuration like this:
      all:
        require:
        - 'build_type=Debug'
-       - '%clang'
+       - '%[when=%c]c=clang %[when=%cxx]cxx=clang'
      cmake:
        require:
        - 'build_type=Debug'
-       - '%gcc'
+       - '%c,cxx=gcc'
 
 Spack requires ``cmake`` to use ``gcc`` and all other nodes (including ``cmake``
 dependencies) to use ``clang``. If enforcing ``build_type=Debug`` is needed also
@@ -469,9 +478,10 @@ This can be useful for fixing which virtual provider you want to use:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: 'mvapich2 %c,cxx,fortran=gcc'
 
-With the configuration above the only allowed ``mpi`` provider is ``mvapich2 %gcc``.
+With the configuration above the only allowed ``mpi`` provider is
+``mvapich2`` built with ``gcc``/``g++``/``gfortran``.
 
 Requirements on the virtual spec and on the specific provider are both applied, if
 present. For instance with a configuration like:
@@ -480,11 +490,11 @@ present. For instance with a configuration like:
 
    packages:
      mpi:
-       require: 'mvapich2 %gcc'
+       require: 'mvapich2 %c,cxx,fortran=gcc'
      mvapich2:
        require: '~cuda'
 
-you will use ``mvapich2~cuda %gcc`` as an ``mpi`` provider.
+you will use ``mvapich2~cuda %c,cxx,fortran=gcc`` as an ``mpi`` provider.
 
 .. _package-strong-preferences:
 
@@ -500,7 +510,7 @@ from configuration files:
    packages:
      all:
        prefer:
-       - '%clang'
+       - '%c,cxx=clang'
        conflict:
        - '+shared'
 
@@ -513,7 +523,7 @@ or a more complex object:
    packages:
      all:
        conflict:
-       - spec: '%clang'
+       - spec: '%c,cxx=clang'
          when: 'target=x86_64_v3'
          message: 'reason why clang cannot be used'
 
@@ -533,10 +543,8 @@ The ``spec`` attribute is mandatory, while both ``when`` and ``message`` are opt
           - one_of: ['%clang', '@:']
 
    Since only one of the requirements must hold, and ``@:`` is always true, the rule above is
-   equivalent to a conflict. For "strong preferences" we need to substitute the ``one_of`` policy
-   with ``any_of``.
-
-
+   equivalent to a conflict. For "strong preferences" the same construction works, with the ``any_of``
+   policy instead of the ``one_of`` policy.
 
 .. _package-preferences:
 
@@ -573,9 +581,8 @@ when looking for the best compiler, target or virtual package provider. Each
 preference takes an ordered list of spec constraints, with earlier entries in
 the list being preferred over later entries.
 
-In the example above all packages prefer to be compiled with ``gcc@12.2.0``,
-to target the ``x86_64_v3`` microarchitecture and to use ``mvapich2`` if they
-depend on ``mpi``.
+In the example above all packages prefer to target the ``x86_64_v3``
+microarchitecture and to use ``mvapich2`` if they depend on ``mpi``.
 
 The ``variants`` and ``version`` preferences can be set under
 package specific sections of the ``packages.yaml`` file:
