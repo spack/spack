@@ -53,6 +53,7 @@ or refer to the full manual below.
    getting_started
    basic_usage
    replace_conda_homebrew
+   spack_on_windows
    frequently_asked_questions
 
 .. toctree::
