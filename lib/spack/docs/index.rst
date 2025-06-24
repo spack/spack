@@ -52,6 +52,7 @@ or refer to the full manual below.
    features
    getting_started
    basic_usage
+   advanced_topics
    replace_conda_homebrew
    spack_on_windows
    frequently_asked_questions
