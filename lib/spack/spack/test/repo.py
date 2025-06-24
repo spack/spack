@@ -906,3 +906,11 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
     with pytest.raises(spack.repo.RepoError, match="Unable to locate a default branch"):
         for descriptor in repos_1.values():
             descriptor.update(git=MockGitInvalidRemote())
+
+
+def test_repo_use_import_success(config, mock_packages_repo, tmpdir, monkeypatch):
+    """Demonstrate success when attempt to get class for package in correct repo."""
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("pkg-a")
+    with spack.repo.use_repositories(builder.root, override=True):
+        spack.repo.PATH.get_pkg_class("pkg-a")
