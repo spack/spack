@@ -53,7 +53,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         default=1,
         help="Use a given number of workers to make the mirror (used in combination with -a)",
     )
-    create_parser.add_argument("-f", "--file", help="file with specs of packages to put in mirror")
+    create_parser.add_argument("--file", help="file with specs of packages to put in mirror")
     create_parser.add_argument(
         "--exclude-file",
         help="specs which Spack should not try to add to a mirror"
