@@ -908,6 +908,7 @@ def test_repo_descriptors_update_invalid(tmp_path: pathlib.Path):
             descriptor.update(git=MockGitInvalidRemote())
 
 
+@pytest.mark.regression("50934")
 def test_repo_use_import_success(config, mock_packages_repo, tmpdir, monkeypatch):
     """Demonstrate success when attempt to get class for package in correct repo."""
     builder = spack.repo.MockRepositoryBuilder(tmpdir)
