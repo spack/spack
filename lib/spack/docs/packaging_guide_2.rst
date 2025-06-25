@@ -761,136 +761,115 @@ condition is true.  You can explicitly cause the build to fail from
 Compiler flags
 --------------
 
-Setting compiler flags is a common task, but there are some pitfalls to be aware of.
+Setting compiler flags is a common task, but there are some subtleties that you should be aware of.
+Compiler flags can be set in three different places:
 
-Compiler flags come from multiple sources:
-
-1. The end user, who can set flags directly from the command line with ``cflags=-O3`` variants or :doc:`compiler configuration <packages_yaml>`.
+1. The end user, who can set flags directly from the command line with ``spack install pkg cflags=-O3`` variants or :doc:`compiler configuration <packages_yaml>`.
+   In either case, these flags become part of the :ref:`concrete spec <spec-objects>`.
 2. The package author, who defines flags in the package class.
 3. The build system itself, which typically has defaults like ``CFLAGS ?= -O2 -g`` or presets like ``CMAKE_BUILD_TYPE=Release``.
 
-It is important to understand how these sources interact, in particular when it comes to composing versus overriding flags.
-
-One possible pitfall is that the end user may require say ``cflags=-Wextra`` for an Autotools package, but its configure script defaults to ``CFLAGS=-O2 -g``.
-If we would simply set ``CFLAGS=-Wextra`` as an environment variable in our package, then the user-specified flags would *override* the build system defaults, and the build would not be optimized (the ``-O2`` flag would be lost).
-
-This is one of the reasons we generally do not recommend package authors to set environment variables (or equivalent command line arguments) like ``CFLAGS`` or ``CXXFLAGS`` directly in the package class.
-
-Instead, Spack provides a mechanism to handle compiler flags in a more flexible way, using the :meth:`flag_handler <spack.package_base.PackageBase.flag_handler>` method.
-It allows you to control how compiler flags are used in the build process:
-
-   * Injected directly into the compiler commands using Spack's compiler wrappers (the build system does not need to know about them).
-   * Passed through environment variables that the build system uses implicitly (e.g. ``CFLAGS``, ``CXXFLAGS``, etc.).
-   * Passed as arguments to the build system (e.g. ``configure`` or ``cmake``).
-
-The default strategy is to inject the flags directly into the compiler commands using Spack's compiler wrappers.
-This means that the flags are applied to the compiler commands without the build system needing to know about them, and solves the problem of accidentally overriding build system defaults.
-
-
-
-
-Packages can override the flag_handler method with one of three
-built-in flag_handlers. The built-in flag_handlers are named
-``inject_flags``, ``env_flags``, and ``build_system_flags``. The
-``inject_flags`` method is the default. The ``env_flags`` method puts
-all of the flags into the environment variables that ``make`` uses as
-implicit variables ("CFLAGS", "CXXFLAGS", etc.). The
-``build_system_flags`` method adds the flags as
-arguments to the invocation of ``configure`` or ``cmake``,
-respectively.
+The main challenge for packagers is to ensure that these flags are combined correctly.
 
 .. warning::
 
-   Passing compiler flags using build system arguments is only
-   supported for CMake and Autotools packages. Individual packages may
-   also differ in whether they properly respect these arguments.
+    A common pitfall when dealing with compiler flags in ``MakefilePackage`` and ``AutotoolsPackage`` is that the user and package author specified flags override the build system defaults. This can inadvertently lead to unoptimized builds.
+    For example, suppose a user requests ``spack install pkg cflags=-Wno-unused`` and the build system defaults to ``CFLAGS=-O2 -g``.
+    If the package takes the user request literally and sets ``CFLAGS=-Wextra`` as an environment variable, then the user-specified flags may *override* the build system defaults, and the build would not be optimized: the ``-O2`` flag would be lost.
+    Whether environment variables like ``CFLAGS`` lead to this problem depends on the build system, and may differ from package to package.
 
-Individual packages may also define their own ``flag_handler``
-methods. The ``flag_handler`` method takes the package instance
-(``self``), the name of the flag, and a list of the values of the
-flag. It will be called on each of the six compiler flags supported in
-Spack. It should return a triple of ``(injf, envf, bsf)`` where
-``injf`` is a list of flags to inject via the Spack compiler wrappers,
-``envf`` is a list of flags to set in the appropriate environment
-variables, and ``bsf`` is a list of flags to pass to the build system
-as arguments.
+Because of these subtleties, Spack tries to work around the build system and defaults to **injecting compiler flags** through the compiler wrappers.
+This means that the build system is unaware of the extra compiler flags added by Spack.
+It also means that package authors typically do not need to deal with user-specified compiler flags when writing their package classes.
 
-.. warning::
+However, there are two cases in which you may need to deal with compiler flags in your package class explicitly:
 
-   Passing a non-empty list of flags to ``bsf`` for a build system
-   that does not support build system arguments will result in an
-   error.
+1. You need to pass default compiler flags to make a build work.
+   This is typical for packages that do not have a configure phase, and requires *you* to set the appropriate flags per compiler.
+2. The build system *needs to be aware* of the user-specified compiler flags to prevent a build failure.
+   This is less common, but there are examples of packages that fail to build when ``-O3`` is used for a specific source file.
 
-Here are the definitions of the three built-in flag handlers:
+In these cases, you can implement the :meth:`flag_handler <spack.package_base.PackageBase.flag_handler>` method in your package class.
+This method has a curious return type, but once you understand it, it is quite powerful.
 
-.. code-block:: python
-
-   def inject_flags(pkg, name, flags):
-       return (flags, None, None)
-
-   def env_flags(pkg, name, flags):
-       return (None, flags, None)
-
-   def build_system_flags(pkg, name, flags):
-       return (None, None, flags)
-
-.. note::
-
-   Returning ``[]`` and ``None`` are equivalent in a ``flag_handler``
-   method.
-
-Packages can override the default behavior either by specifying one of
-the built-in flag handlers,
+Here is a simple example:
 
 .. code-block:: python
 
-   flag_handler = env_flags
+   class MyPackage(Package):
+       def flag_handler(self, name: str, flags: List[str]):
+           if name in ("cflags", "cxxflags"):
+               # Add default flag for C/C++
+               flags.append("-O3")
+           if name == "fflags" and self.spec.satisfies("%fortran=gcc@14:"):
+               # Add a specific flag for Fortran when using GCC 14 or higher
+               flags.append("-fallow-argument-mismatch")
+           # Pass these flags to the compiler wrappers
+           return (flags, None, None)
 
-or by implementing the flag_handler method. Suppose for a package
-``Foo`` we need to pass ``cflags``, ``cxxflags``, and ``cppflags``
-through the environment, the rest of the flags through compiler
-wrapper injection, and we need to add ``-lbar`` to ``ldlibs``. The
-following flag handler method accomplishes that.
+There are multiple things to unpack in this example, so let's go through them step by step.
+The ``flag_handler`` method is called by Spack once for each of the compiler flags supported in Spack.
+
+The ``name`` argument
+  The ``name`` parameter is a string that indicates which compiler flag is being processed.
+  It can be one of the following:
+
+  * ``cppflags``: C preprocessor flags
+  * ``cflags``: C compilation flags
+  * ``cxxflags``: C++ compilation flags
+  * ``fflags``: Fortran compilation flags
+  * ``ldflags``: Compiler flags for linking, e.g. ``-Wl,-Bstatic``
+  * ``ldlibs``: Libraries to link against
+
+The ``flags`` argument
+  The ``flags`` parameter is a list that already contains the user-specified flags, and you can modify it as needed.
+
+Return value
+  The return value determines *how* the flags are applied in the build process.
+  It is a triplet that contains the list of flags:
+
+  * ``(flags, None, None)``: inject the flags through the Spack **compiler wrappers**.
+    This is the default behavior, and it means that the flags are applied directly to the compiler commands without the build system needing to know about them.
+  * ``(None, flags, None)``: set these flags in **environment variables** like ``CFLAGS``,   ``CXXFLAGS``, etc.
+    This requires the build system to use these environment variables.
+  * ``(None, None, flags)``: pass these flags **"on the command line"** to the build system.
+    This requires the build system to support passing flags in this way.
+    An example of a build system that supports this is ``CMakePackage``, and Spack will invoke ``cmake -DCMAKE_C_FLAGS=...`` and similar for the other flags.
+
+Spack also allows you to refer to common compiler flags in a more generic way, using the ``self.compiler`` object.
+This includes flags to set the C and C++ standard, as well as the compiler specific OpenMP flags, etc.
 
 .. code-block:: python
 
-   def flag_handler(self, name, flags):
-       if name in ["cflags", "cxxflags", "cppflags"]:
-           return (None, flags, None)
-       elif name == "ldlibs":
-           flags.append("-lbar")
-       return (flags, None, None)
+   class MyPackage(Package):
+       def flag_handler(self, name: str, flags: List[str]):
+           if name == "cflags":
+               # Set the C standard to C11
+               flags.append(self.compiler.c11_flag)
+           elif name == "cxxflags":
+               # Set the C++ standard to C++17
+               flags.append(self.compiler.cxx17_flag)
+           return (flags, None, None)
 
-Because these methods can pass values through environment variables,
-it is important not to override these variables unnecessarily
-(E.g. setting ``env["CFLAGS"]``) in other package methods when using
-non-default flag handlers. In the ``setup_environment`` and
-``setup_dependent_environment`` methods, use the ``append_flags``
-method of the ``EnvironmentModifications`` class to append values to a
-list of flags whenever the flag handler is ``env_flags``. If the
-package passes flags through the environment or the build system
-manually (in the install method, for example), we recommend using the
-default flag handler, or removing manual references and implementing a
-custom flag handler method that adds the desired flags to export as
-environment variables or pass to the build system. Manual flag passing
-is likely to interfere with the ``env_flags`` and
-``build_system_flags`` methods.
-
-In rare circumstances such as compiling and running small unit tests, a
-package developer may need to know what are the appropriate compiler
-flags to enable features like ``OpenMP``, ``c++11``, ``c++14`` and
-the like. To that end the compiler classes in ``spack`` implement the
-following **properties**: ``openmp_flag``, ``cxx98_flag``, ``cxx11_flag``,
-``cxx14_flag``, and ``cxx17_flag``, which can be accessed in a package by
-``self.compiler.cxx11_flag`` and the like. Note that the implementation is
-such that if a given compiler version does not support this feature, an
-error will be produced. Therefore, package developers can also use these
-properties to assert that a compiler supports the requested feature. This
-is handy when a package supports additional variants like
+If you just want to influence how the flags are passed *without setting additional flags* in your package, Spack provides the following shortcut.
+To ensure that flags are always set as *environment variables*, you can use:
 
 .. code-block:: python
 
-   variant("openmp", default=True, description="Enable OpenMP support.")
+   from spack.package import *  # for env_flags
+
+   class MyPackage(Package):
+       flag_handler = env_flags  # Use environment variables for all flags
+
+To ensure that flags are always *passed to the build system*, you can use:
+
+.. code-block:: python
+
+   from spack.package import *  # for build_system_flags
+
+   class MyPackage(Package):
+       flag_handler = build_system_flags  # Pass flags to the build system
+
 
 .. _prefix-objects:
 
