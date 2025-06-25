@@ -186,7 +186,6 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         downstream_db._check_ref_counts()
 
 from spack.directory_layout import DirectoryLayoutError
-#from conftest import MockLayout
 
 def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
     upstream_db, downstream_db = upstream_and_downstream_db
@@ -194,7 +193,6 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
     def fail_for_z(spec):
         if spec.name == "z":
             raise DirectoryLayoutError("Fake layout error for z")
-    #monkeypatch.setattr(MockLayout, "ensure_installed", fail_for_z)
 
     upstream_db.layout.ensure_installed = fail_for_z
 
@@ -202,6 +200,8 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
     builder.add_package("x", dependencies=[("y", None, None)])
+
+    monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
 
     with spack.repo.use_repositories(builder.root):
         x = spack.concretize.concretize_one("x")
