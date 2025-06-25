@@ -186,7 +186,6 @@ class ReposFinder:
 #
 # These names describe how repos should be laid out in the filesystem.
 #
-build_systems_dir_name = "build_systems"  # Top-level repo directory containing build systems.
 repo_config_name = "repo.yaml"  # Top-level filename for repo config.
 repo_index_name = "index.yaml"  # Top-level filename for repository index.
 packages_dir_name = "packages"  # Top-level repo directory containing pkgs.
@@ -2029,31 +2028,13 @@ class MockRepositoryBuilder:
                 ``spack.dependency.default_deptype`` and ``spack.spec.Spec()`` are used.
         """
         dependencies = dependencies or []
-        context = {
-            "cls_name": nm.pkg_name_to_class_name(name),
-            "dependencies": dependencies,
-            "namespace": self.namespace,
-        }
+        context = {"cls_name": nm.pkg_name_to_class_name(name), "dependencies": dependencies}
         template = spack.tengine.make_environment().get_template("mock-repository/package.pyt")
         text = template.render(context)
         package_py = self.recipe_filename(name)
         fs.mkdirp(os.path.dirname(package_py))
         with open(package_py, "w", encoding="utf-8") as f:
             f.write(text)
-
-        # The only relevant build system is GenericBuilder.
-        generic_py = self.generic_buildsystem_filename
-        if not os.path.exists(generic_py):
-            dest_root = os.path.dirname(generic_py)
-            source_root = os.path.join(spack.paths.mock_packages_path, build_systems_dir_name)
-
-            # GenericBuilder
-            source_path = os.path.join(source_root, "generic.py")
-            fs.mkdirp(os.path.dirname(generic_py))
-            fs.copy(source_path, generic_py)
-
-            # Requires _checks.py too
-            fs.copy(os.path.join(source_root, "_checks.py"), os.path.join(dest_root, "_checks.py"))
 
     def remove(self, name):
         package_py = self.recipe_filename(name)
@@ -2063,10 +2044,6 @@ class MockRepositoryBuilder:
         return os.path.join(
             self.root, "packages", nm.pkg_name_to_pkg_dir(name, package_api=(2, 0)), "package.py"
         )
-
-    @property
-    def generic_buildsystem_filename(self):
-        return os.path.join(self.root, build_systems_dir_name, "generic.py")
 
 
 class RepoError(spack.error.SpackError):
