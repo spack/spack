@@ -199,13 +199,11 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
     builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
     builder.add_package("z")
     builder.add_package("y", dependencies=[("z", "build", None)])
-    builder.add_package("x", dependencies=[("y", None, None)])
 
     monkeypatch.setattr(spack.store.STORE, "db", downstream_db)
 
     with spack.repo.use_repositories(builder.root):
-        x = spack.concretize.concretize_one("x")
-        y = x["y"]
+        y = spack.concretize.concretize_one("y")
         z = y["z"]
 
         with writable(upstream_db):
