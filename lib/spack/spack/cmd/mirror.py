@@ -614,6 +614,7 @@ def mirror_create(args):
         workers=args.jobs,
     )
 
+
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
     parallel = args.jobs > 1
@@ -627,7 +628,7 @@ def _specs_and_action(args):
         mirror_specs = concrete_specs_from_user(args)
 
     if parallel:
-       mirror_fn = create_mirror_for_all_specs
+        mirror_fn = create_mirror_for_all_specs
     else:
         mirror_fn = create_mirror_for_individual_specs
 
