@@ -738,7 +738,8 @@ class Database:
                     return False, self._data[hash_key]
         for db in self.upstream_dbs:
             if hash_key in db._data:
-                return True, db._data[hash_key]
+                record = db._data[hash_key]
+                return record.installed, record
         return False, None
 
     def query_local_by_spec_hash(self, hash_key):
