@@ -550,6 +550,59 @@ Not all dependencies set up such variables for dependent packages, in which case
 All executables in Spack are instances of :class:`~spack.util.executable.Executable`, see its API docs for more details.
 
 
+.. _attribute_parallel:
+
+-------------------------
+Package-level parallelism
+-------------------------
+
+Many build tools support parallel builds, including ``make`` and ``ninja``, as well as certain Python build tools.
+
+As mentioned in :ref:`the previous section <running_build_executables>`, the ``gmake`` and ``ninja`` packages make their executables available as global functions, which you can use in your package class.
+They automatically add the ``-j <njobs>`` when invoked, where ``<njobs>`` is a sensible default for the number of jobs to run in parallel.
+This exact number :ref:`is determined <build-jobs>` depends on various factors, such as the ``spack install`` command line arguments, configuration options and available CPUs on the system.
+As a packager, you rarely need to pass the ``-j`` flag when calling ``make()`` or ``ninja()``; it is better to rely on the defaults.
+
+In certain cases however, you may need to override the default number of jobs for a specific package.
+If a package does not build properly in parallel, you can simply define ``parallel = False`` in your package class.
+For example:
+
+.. code-block:: python
+   :emphasize-lines: 3
+
+   class ExamplePackage(MakefilePackage):
+       """Example package that does not build in parallel."""
+       parallel = False
+
+This ensures that any ``make`` or ``ninja`` invocation will *not* set the ``-j <njobs>`` option, and the build will run sequentially.
+
+You can also disable parallel builds only for specific make invocation:
+
+.. code-block:: python
+   :emphasize-lines: 5
+
+   class Libelf(MakefilePackage):
+       ...
+
+       def install(self, spec: Spec, prefix: Prefix) -> None:
+           make("install", parallel=False)
+
+In this case, the ``build`` phase will still execute in parallel, but the ``install`` phase will run sequentially.
+
+For packages whose build systems do not run ``make`` or ``ninja``, but have other executables or scripts that support parallel builds, you can control parallelism using the ``make_jobs`` global.
+This global variable is an integer that specifies the number of jobs to run in parallel during the build process.
+
+.. code-block:: python
+   :emphasize-lines: 6
+
+   class Xios(Package):
+       def install(self, spec: Spec, prefix: Prefix) -> None:
+           make_xios = Executable("./make_xios")
+           make_xios(
+               "--with-feature",
+               f"--jobs={make_jobs}",
+           )
+
 .. _python-package-api:
 
 --------------------------
@@ -1104,6 +1157,59 @@ If you use the ``CMakePackage``, Spack automatically sets the ``CMAKE_INSTALL_RP
 For packages that do not fit ``CMakePackage`` but still run ``cmake`` as part of the build, it is recommended to look at :meth:`spack_repo.builtin.build_systems.cmake.CMakeBuilder.std_args` on how to set the install RPATHs correctly.
 
 
+---------------------
+MPI support in Spack
+---------------------
+
+It is common for high-performance computing software/packages to use the
+Message Passing Interface ( ``MPI``).  As a result of concretization, a
+given package can be built using different implementations of MPI such as
+``OpenMPI``, ``MPICH`` or ``IntelMPI``.  That is, when your package
+declares that it ``depends_on("mpi")``, it can be built with any of these
+``mpi`` implementations. In some scenarios, to configure a package, one
+has to provide it with appropriate MPI compiler wrappers such as
+``mpicc``, ``mpic++``.  However, different implementations of ``MPI`` may
+have different names for those wrappers.
+
+Spack provides an idiomatic way to use MPI compilers in your package.  To
+use MPI wrappers to compile your whole build, do this in your
+``install()`` method:
+
+.. code-block:: python
+
+   env["CC"] = spec["mpi"].mpicc
+   env["CXX"] = spec["mpi"].mpicxx
+   env["F77"] = spec["mpi"].mpif77
+   env["FC"] = spec["mpi"].mpifc
+
+That's all.  A longer explanation of why this works is below.
+
+We don't try to force any particular build method on packagers.  The
+decision to use MPI wrappers depends on the way the package is written,
+on common practice, and on "what works".  Loosely, there are three types
+of MPI builds:
+
+  1. Some build systems work well without the wrappers and can treat MPI
+     as an external library, where the person doing the build has to
+     supply includes/libs/etc.  This is fairly uncommon.
+
+  2. Others really want the wrappers and assume you're using an MPI
+     "compiler" – i.e., they have no mechanism to add MPI
+     includes/libraries/etc.
+
+  3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
+     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
+     regular library.
+
+Note that some CMake builds fall into case 2 because they either don't
+know about or don't like CMake's ``FindMPI`` support – they just assume
+an MPI compiler. Also, some autotools builds fall into case 3 (e.g., `here
+is an autotools version of CMake's FindMPI
+<https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
+
+Given all of this, we leave the use of the wrappers up to the packager.
+Spack will support all three ways of building MPI packages.
+
 .. _multiple_build_systems:
 
 ----------------------
@@ -1203,58 +1309,6 @@ of the build system in the dependent:
 
        depends_on("example build_system=cmake")
 
----------------------
-MPI support in Spack
----------------------
-
-It is common for high-performance computing software/packages to use the
-Message Passing Interface ( ``MPI``).  As a result of concretization, a
-given package can be built using different implementations of MPI such as
-``OpenMPI``, ``MPICH`` or ``IntelMPI``.  That is, when your package
-declares that it ``depends_on("mpi")``, it can be built with any of these
-``mpi`` implementations. In some scenarios, to configure a package, one
-has to provide it with appropriate MPI compiler wrappers such as
-``mpicc``, ``mpic++``.  However, different implementations of ``MPI`` may
-have different names for those wrappers.
-
-Spack provides an idiomatic way to use MPI compilers in your package.  To
-use MPI wrappers to compile your whole build, do this in your
-``install()`` method:
-
-.. code-block:: python
-
-   env["CC"] = spec["mpi"].mpicc
-   env["CXX"] = spec["mpi"].mpicxx
-   env["F77"] = spec["mpi"].mpif77
-   env["FC"] = spec["mpi"].mpifc
-
-That's all.  A longer explanation of why this works is below.
-
-We don't try to force any particular build method on packagers.  The
-decision to use MPI wrappers depends on the way the package is written,
-on common practice, and on "what works".  Loosely, there are three types
-of MPI builds:
-
-  1. Some build systems work well without the wrappers and can treat MPI
-     as an external library, where the person doing the build has to
-     supply includes/libs/etc.  This is fairly uncommon.
-
-  2. Others really want the wrappers and assume you're using an MPI
-     "compiler" – i.e., they have no mechanism to add MPI
-     includes/libraries/etc.
-
-  3. CMake's ``FindMPI`` needs the compiler wrappers, but it uses them to
-     extract ``–I`` / ``-L`` / ``-D`` arguments, then treats MPI like a
-     regular library.
-
-Note that some CMake builds fall into case 2 because they either don't
-know about or don't like CMake's ``FindMPI`` support – they just assume
-an MPI compiler. Also, some autotools builds fall into case 3 (e.g., `here
-is an autotools version of CMake's FindMPI
-<https://github.com/tgamblin/libra/blob/master/m4/lx_find_mpi.m4>`_).
-
-Given all of this, we leave the use of the wrappers up to the packager.
-Spack will support all three ways of building MPI packages.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Packaging Conventions
@@ -1371,433 +1425,117 @@ using MPI wrappers will work, even on a Cray:
 
 This is because on Cray, ``spec["mpi"].mpicc`` is just ``spack_cc``.
 
------------------------------
-Style guidelines for packages
------------------------------
+-------------------------------
+Packaging workflow and commands
+-------------------------------
 
-The following guidelines are provided, in the interests of making
-Spack packages work in a consistent manner:
+When you are building packages, you will likely not get things completely right the first time.
 
-^^^^^^^^^^^^^
-Variant Names
-^^^^^^^^^^^^^
-
-Spack packages with variants similar to already-existing Spack
-packages should use the same name for their variants.  Standard
-variant names are:
-
-  ======= ======== ========================
-  Name    Default   Description
-  ======= ======== ========================
-  shared   True     Build shared libraries
-  mpi      True     Use MPI
-  python   False    Build Python extension
-  ======= ======== ========================
-
-If specified in this table, the corresponding default should be used
-when declaring a variant.
-
-The semantics of the `shared` variant are important. When a package is
-built `~shared`, the package guarantees that no shared libraries are
-built. When a package is built `+shared`, the package guarantees that
-shared libraries are built, but it makes no guarantee about whether
-static libraries are built.
-
-^^^^^^^^^^^^^
-Version Lists
-^^^^^^^^^^^^^
-
-Spack packages should list supported versions with the newest first.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Using ``home`` vs ``prefix``
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-``home`` and ``prefix`` are both attributes that can be queried on a
-package's dependencies, often when passing configure arguments pointing to the
-location of a dependency.  The difference is that while ``prefix`` is the
-location on disk where a concrete package resides, ``home`` is the `logical`
-location that a package resides, which may be different than ``prefix`` in
-the case of virtual packages or other special circumstances.  For most use
-cases inside a package, its dependency locations can be accessed via either
-``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.  Specific packages
-that should be consumed by dependents via ``.home`` instead of ``.prefix``
-should be noted in their respective documentation.
-
-See :ref:`custom-attributes` for more details and an example implementing
-a custom ``home`` attribute.
-
----------------------------
-Packaging workflow commands
----------------------------
-
-When you are building packages, you will likely not get things
-completely right the first time.
-
-The ``spack install`` command performs a number of tasks before it
-finally installs each package.  It downloads an archive, expands it in
-a temporary directory, and only then gives control to the package's
-``install()`` method.  If the build doesn't go as planned, you may
-want to clean up the temporary directory, or if the package isn't
-downloading properly, you might want to run *only* the ``fetch`` stage
-of the build.
-
-Spack performs best-effort installation of package dependencies by default,
-which means it will continue to install as many dependencies as possible
-after detecting failures.  If you are trying to install a package with a
-lot of dependencies where one or more may fail to build, you might want to
-try the ``--fail-fast`` option to stop the installation process on the first
-failure.
-
-A typical package workflow might look like this:
+After having :doc:`created a package <packaging_guide_1>`, the edit-install loop is a common workflow to get the package building correctly:
 
 .. code-block:: console
 
    $ spack edit mypackage
-   $ spack install --fail-fast mypackage
-   ... build breaks! ...
-   $ spack clean mypackage
-   $ spack edit mypackage
-   $ spack install --fail-fast mypackage
-   ... repeat clean/install until install works ...
+   $ spack install --verbose mypackage
 
-Below are some commands that will allow you some finer-grained
-control over the install process.
+Whenever a build fails, Spack retains the build directory for you to inspect.
+The location of the build directory is printed in the build output, but you can also find it with the ``spack locate`` command, or navigate to it directly using ``spack cd``:
 
-.. _cmd-spack-fetch:
+.. code-block:: console
 
-^^^^^^^^^^^^^^^
-``spack fetch``
-^^^^^^^^^^^^^^^
+   $ spack locate mypackage
+   /tmp/spack-stage/spack-stage-mypackage-1-2-3-abcdef
 
-The first step of ``spack install``.  Takes a spec and determines the
-correct download URL to use for the requested package version, then
-downloads the archive, checks it against an MD5 checksum, and stores
-it in a staging directory if the check was successful.  The staging
-directory will be located under the first writable directory in the
-``build_stage`` configuration setting.
+   $ spack cd mypackage
+   $ pwd
+   /tmp/spack-stage/spack-stage-mypackage-1-2-3-abcdef
 
-When run after the archive has already been downloaded, ``spack
-fetch`` is idempotent and will not download the archive again.
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Inspecting the build environment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. _cmd-spack-stage:
+Once you have navigated to the build directory after a failed build, you may also want to manually run build commands to troubleshoot the issue.
+This requires you to have all environment variables exactly set up as they are in the :ref:`build environment <environment-variables>`.
 
-^^^^^^^^^^^^^^^
-``spack stage``
-^^^^^^^^^^^^^^^
+The command
 
-The second step in ``spack install`` after ``spack fetch``.  Expands
-the downloaded archive in its temporary directory, where it will be
-built by ``spack install``.  Similar to ``fetch``, if the archive has
-already been expanded,  ``stage`` is idempotent.
+.. code-block:: console
 
-.. _cmd-spack-patch:
+   $ spack build-env mypackage -- /bin/sh
 
-^^^^^^^^^^^^^^^
-``spack patch``
-^^^^^^^^^^^^^^^
-
-After staging, Spack applies patches to downloaded packages, if any
-have been specified in the package file.  This command will run the
-install process through the fetch, stage, and patch phases.  Spack
-keeps track of whether patches have already been applied and skips
-this step if they have been.  If Spack discovers that patches didn't
-apply cleanly on some previous run, then it will restage the entire
-package before patching.
-
-.. _cmd-spack-restage:
-
-^^^^^^^^^^^^^^^^^
-``spack restage``
-^^^^^^^^^^^^^^^^^
-
-Restores the source code to pristine state, as it was before building.
-
-Does this in one of two ways:
-
-#. If the source was fetched as a tarball, deletes the entire build
-   directory and re-expands the tarball.
-
-#. If the source was checked out from a repository, this deletes the
-   build directory and checks it out again.
-
-.. _cmd-spack-clean:
-
-^^^^^^^^^^^^^^^
-``spack clean``
-^^^^^^^^^^^^^^^
-
-Cleans up Spack's temporary and cached files.  This command can be used to
-recover disk space if temporary files from interrupted or failed installs
-accumulate.
-
-When called with ``--stage`` or without arguments this removes all staged
-files.
-
-The ``--downloads`` option removes :ref:`cached <caching>` downloads.
-
-You can force the removal of all install failure tracking markers using the
-``--failures`` option.  Note that ``spack install`` will automatically clear
-relevant failure markings prior to performing the requested installation(s).
-
-Long-lived caches, like the virtual package index, are removed using the
-``--misc-cache`` option.
-
-The ``--python-cache`` option removes `.pyc`, `.pyo`, and `__pycache__`
-folders.
-
-To remove all of the above, the command can be called with ``--all``.
-
-When called with positional arguments, this command cleans up temporary files
-only for a particular package. If ``fetch``, ``stage``, or ``install``
-are run again after this, Spack's build process will start from scratch.
-
+is a convenient way to start a subshell with the build environment variables set up.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the stage directory on success
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, ``spack install`` will delete the staging area once a
-package has been successfully built and installed.  Use
-``--keep-stage`` to leave the build directory intact:
+Sometimes a build completes successfully, but you encounter issues only when you try to run the installed package.
+In such cases, it can be useful to keep the build directory area to find out what went wrong.
+
+By default, ``spack install`` will delete the staging area once a package has been successfully built and installed.
+Use ``--keep-stage`` to leave the build directory intact:
 
 .. code-block:: console
 
    $ spack install --keep-stage <spec>
 
-This allows you to inspect the build directory and potentially debug
-the build.  You can use ``clean`` later to get rid of the
-unwanted temporary files.
+This allows you to inspect the build directory and potentially debug the build.
+
+Once done, you could remove all sources and build directories with:
+
+.. code-block:: console
+
+   $ spack clean --stage
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Keeping the install prefix on failure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, ``spack install`` will delete any partially constructed
-install prefix if anything fails during ``install()``.  If you want to
-keep the prefix anyway (e.g. to diagnose a bug), you can use
-``--keep-prefix``:
+Conversely, if a build fails but *has* installed some files, you may want to keep the install prefix to diagnose the issue.
+
+By default, ``spack install`` will delete the install directory if anything fails during build.
+
+The ``--keep-prefix`` option allows you to keep the install prefix regardless of the build outcome.
 
 .. code-block:: console
 
    $ spack install --keep-prefix <spec>
 
-Note that this may confuse Spack into thinking that the package has
-been installed properly, so you may need to use ``spack uninstall --force``
-to get rid of the install prefix before you build again:
+^^^^^^^^^^^^^^^^^^^^^
+Understanding the DAG
+^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: console
+Sometimes when you are packaging software, it is useful to have a better understanding of the dependency graph of a package.
+The ``spack spec <spec>`` command gives you a good overview of dependencies right on the command line, but the tree structure may not be entirely clear.
+The ``spack graph <spec>`` command can help you visualize the dependency graph better.
 
-   $ spack uninstall --force <spec>
+By default it generates an ASCII rendering of a spec's dependency graph, which can be complementary to the output of ``spack spec``.
 
----------------------
-Graphing dependencies
----------------------
-
-.. _cmd-spack-graph:
-
-^^^^^^^^^^^^^^^
-``spack graph``
-^^^^^^^^^^^^^^^
-
-Spack provides the ``spack graph`` command for graphing dependencies.
-The command by default generates an ASCII rendering of a spec's
-dependency graph.  For example:
-
-.. command-output:: spack graph hdf5
-
-At the top is the root package in the DAG, with dependency edges emerging
-from it.  On a color terminal, the edges are colored by which dependency
-they lead to.
-
-.. command-output:: spack graph --deptype=link hdf5
-
-The ``deptype`` argument tells Spack what types of dependencies to graph.
-By default it includes link and run dependencies but not build
-dependencies.  Supplying ``--deptype=link`` will show only link
-dependencies.  The default is ``--deptype=all``, which is equivalent to
-``--deptype=build,link,run,test``.  Options for ``deptype`` include:
-
-* Any combination of ``build``, ``link``, ``run``, and ``test`` separated
-  by commas.
-* ``all`` for all types of dependencies.
-
-You can also use ``spack graph`` to generate graphs in the widely used
-`Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.  For example:
-
-.. command-output:: spack graph --dot hdf5
-
-This graph can be provided as input to other graphing tools, such as
-those in `Graphviz <http://www.graphviz.org>`_.  If you have graphviz
-installed, you can write straight to PDF like this:
+Much more powerful is the set of flags ``spack graph --color --dot ...``, which turns the dependency graph into `Dot <http://www.graphviz.org/doc/info/lang.html>`_ format.
+Tools such as `Graphviz <http://www.graphviz.org>`_ can render this.
+For example, you can generate a PDF of the dependency graph of a package with the following command:
 
 .. code-block:: console
 
    $ spack graph --dot hdf5 | dot -Tpdf > hdf5.pdf
 
-.. _packaging-shell-support:
+There are several online tools that can render Dot files directly in your browser as well.
 
--------------------------
-Interactive shell support
--------------------------
+Another useful flag is ``spack graph --deptype=...`` which can reduce the size of the graph, by filtering out certain types of dependencies.
+For example, supplying ``--deptype=link`` will limit to link type dependencies only.
+The default is ``--deptype=all``, which is equivalent to ``--deptype=build,link,run,test``.
+Options for ``deptype`` include:
 
-Spack provides some limited shell support to make life easier for
-packagers.  You can enable these commands by sourcing a setup file in
-the ``share/spack`` directory.  For ``bash`` or ``ksh``, run:
-
-.. code-block:: sh
-
-   export SPACK_ROOT=/path/to/spack
-   . $SPACK_ROOT/share/spack/setup-env.sh
-
-For ``csh`` and ``tcsh`` run:
-
-.. code-block:: csh
-
-   setenv SPACK_ROOT /path/to/spack
-   source $SPACK_ROOT/share/spack/setup-env.csh
-
-``spack cd`` will then be available.
-
-.. _cmd-spack-cd:
-
-^^^^^^^^^^^^
-``spack cd``
-^^^^^^^^^^^^
-
-``spack cd`` allows you to quickly cd to pertinent directories in Spack.
-Suppose you've staged a package but you want to modify it before you
-build it:
-
-.. code-block:: console
-
-   $ spack stage libelf
-   ==> Trying to fetch from http://www.mr511.de/software/libelf-0.8.13.tar.gz
-   ######################################################################## 100.0%
-   ==> Staging archive: ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13.tar.gz
-   ==> Created stage in ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64.
-   $ spack cd libelf
-   $ pwd
-   ~/spack/var/spack/stage/libelf@0.8.13%gcc@4.8.3 arch=linux-debian7-x86_64/libelf-0.8.13
-
-``spack cd`` here changed the current working directory to the
-directory containing the expanded ``libelf`` source code.  There are a
-number of other places you can cd to in the spack directory hierarchy:
-
-.. command-output:: spack cd --help
-
-Some of these change directory into package-specific locations (stage
-directory, install directory, package directory) and others change to
-core spack locations.  For example, ``spack cd --module-dir`` will take you to
-the main python source directory of your spack install.
-
-.. _cmd-spack-build-env:
-
-^^^^^^^^^^^^^^^^^^^
-``spack build-env``
-^^^^^^^^^^^^^^^^^^^
-
-``spack build-env`` functions much like the standard Unix ``build-env``
-command, but it takes a spec as an argument.  You can use it to see the
-environment variables that will be set when a particular build runs,
-for example:
-
-.. code-block:: console
-
-   $ spack build-env mpileaks@1.1%intel
-
-This will display the entire environment that will be set when the
-``mpileaks@1.1%intel`` build runs.
-
-To run commands in a package's build environment, you can simply
-provide them after the spec argument to ``spack build-env``:
-
-.. code-block:: console
-
-   $ spack cd mpileaks@1.1%intel
-   $ spack build-env mpileaks@1.1%intel ./configure
-
-This will cd to the build directory and then run ``configure`` in the
-package's build environment.
-
-.. _cmd-spack-location:
-
-^^^^^^^^^^^^^^^^^^
-``spack location``
-^^^^^^^^^^^^^^^^^^
-
-``spack location`` is the same as ``spack cd`` but it does not require
-shell support.  It simply prints out the path you ask for, rather than
-cd'ing to it.  In bash, this:
-
-.. code-block:: console
-
-   $ cd $(spack location --build-dir <spec>)
-
-is the same as:
-
-.. code-block:: console
-
-   $ spack cd --build-dir <spec>
-
-``spack location`` is intended for use in scripts or makefiles that
-need to know where packages are installed.  e.g., in a makefile you
-might write:
-
-.. code-block:: makefile
-
-   DWARF_PREFIX = $(spack location --install-dir libdwarf)
-   CXXFLAGS += -I$DWARF_PREFIX/include
-   CXXFLAGS += -L$DWARF_PREFIX/lib
-
-.. _abi_compatibility:
-
-----------------------------
-Specifying ABI Compatibility
-----------------------------
-
-Packages can include ABI-compatibility information using the
-``can_splice`` directive. For example, if ``Foo`` version 1.1 can
-always replace version 1.0, then the package could have:
-
-.. code-block:: python
-
-   can_splice("foo@1.0", when="@1.1")
-
-For virtual packages, packages can also specify ABI compatibility with
-other packages providing the same virtual. For example, ``zlib-ng``
-could specify:
-
-.. code-block:: python
-
-   can_splice("zlib@1.3.1", when="@2.2+compat")
-
-Some packages have ABI-compatibility that is dependent on matching
-variant values, either for all variants or for some set of
-ABI-relevant variants. In those cases, it is not necessary to specify
-the full combinatorial explosion. The ``match_variants`` keyword can
-cover all single-value variants.
-
-.. code-block:: python
-
-   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])  # any value for bar as long as they're the same
-   can_splice("foo@1.2", when="@1.3", match_variants="*")  # any variant values if all single-value variants match
-
-The concretizer will use ABI compatibility to determine automatic
-splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
-
-.. note::
-
-   The ``can_splice`` directive is experimental, and may be replaced
-   by a higher-level interface in future versions of Spack.
+* Any combination of ``build``, ``link``, ``run``, and ``test`` separated by commas.
+* ``all`` for all types of dependencies.
 
 -----------------
 Customizing Views
 -----------------
 
-.. note::
+.. warning::
 
-   This is advanced functionality that is rarely needed to be customized.
+   This is advanced functionality documented for completeness, and rarely needs customization.
 
 Spack environments manage a view of their packages, which is a single directory
 that merges all installed packages through symlinks, so users can easily access them.
@@ -1806,155 +1544,3 @@ to views.
 Sometimes it's impossible to get an application to work just through symlinking its executables, and patching is necessary.
 For example, Python scripts in a ``bin`` directory may have a shebang that points to the Python interpreter in Python's install prefix, but it's more convenient to have the shebang point to the Python interpreter in the view, since that interpreter is aware of the Python packages in the view (the view is a virtual environment).
 As a consequence, Python extension packages (those inheriting from ``PythonPackage``) override ``add_files_to_view`` in order to rewrite shebang lines.
-
-^^^^^^^^^^^^^^^^^
-Bundling software
-^^^^^^^^^^^^^^^^^
-
-If you have a collection of software expected to work well together with
-no source code of its own, you can create a :ref:`BundlePackage <bundlepackage>`.
-Examples where bundle packages can be useful include defining suites of
-applications (e.g., `EcpProxyApps
-<https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_proxy_apps/package.py>`_), commonly used libraries
-(e.g., `AmdAocl <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/amd_aocl/package.py>`_),
-and software development kits (e.g., `EcpDataVisSdk <https://github.com/spack/spack-packages/blob/develop/repos/spack_repo/builtin/packages/ecp_data_vis_sdk/package.py>`_).
-
-These versioned packages primarily consist of dependencies on the associated
-software packages. They can include :ref:`variants <variants>` to ensure
-common build options are consistently applied to dependencies. Known build
-failures, such as not building on a platform or when certain compilers or
-variants are used, can be flagged with :ref:`conflicts <packaging_conflicts>`.
-Build requirements, such as only building with specific compilers, can similarly
-be flagged with :ref:`requires <packaging_conflicts>`.
-
-The ``spack create --template bundle`` command will create a skeleton
-``BundlePackage`` ``package.py`` for you:
-
-.. code-block:: console
-
-   $ spack create --template bundle --name coolsdk
-
-Now you can fill in the basic package documentation, version(s), and software
-package dependencies along with any other relevant customizations.
-
-.. note::
-
-   Remember that bundle packages have no software of their own so there
-   is nothing to download.
-
-.. _attribute_parallel:
-
----------------
-Parallel builds
----------------
-
-Spack supports parallel builds on an individual package and at the
-installation level.  Package-level parallelism is established by the
-``--jobs`` option and its configuration and package recipe equivalents.
-Installation-level parallelism is driven by the DAG(s) of the requested
-package or packages.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Package-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so those builds run in parallel.
-The parallelism is determined by the value of the ``build_jobs`` entry
-in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
-how this value is computed).
-
-If a package does not build properly in parallel, you can override
-this setting by adding ``parallel = False`` to your package.  For
-example, OpenSSL's build does not work in parallel, so its package
-looks like this:
-
-.. code-block:: python
-   :emphasize-lines: 8
-   :linenos:
-
-   class Openssl(Package):
-       homepage = "http://www.openssl.org"
-       url      = "http://www.openssl.org/source/openssl-1.0.1h.tar.gz"
-
-       version("1.0.1h", md5="8d6d684a9430d5cc98a62a5d8fbda8cf")
-       depends_on("zlib-api")
-
-       parallel = False
-
-You can also disable parallel builds only for specific make
-invocation:
-
-.. code-block:: python
-   :emphasize-lines: 5
-   :linenos:
-
-   class Libelf(Package):
-       ...
-
-       def install(self, spec, prefix):
-           make("install", parallel=False)
-
-Note that the ``--jobs`` option works out of the box for all standard
-build systems. If you are using a non-standard build system instead, you
-can use the variable ``make_jobs`` to extract the number of jobs specified
-by the ``--jobs`` option:
-
-.. code-block:: python
-   :emphasize-lines: 7, 11
-   :linenos:
-
-   class Xios(Package):
-      ...
-      def install(self, spec, prefix):
-         ...
-         options = [
-            ...
-            '--jobs', str(make_jobs),
-        ]
-        ...
-        make_xios = Executable("./make_xios")
-        make_xios(*options)
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Install-level build parallelism
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Spack supports the concurrent installation of packages within a Spack
-instance across multiple processes using file system locks.  This
-parallelism is separate from the package-level achieved through build
-systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
-processes coordinate the installation of the dependencies of specs
-provided on the command line and as part of an environment build with
-only **one process** being allowed to install a given package at a time.
-Refer to :ref:`Dependencies` for more information on dependencies and
-:ref:`installing-environment` for how to install an environment.
-
-Concurrent processes may be any combination of interactive sessions and
-batch jobs.  This means a ``spack install`` can be running in a terminal
-window while a batch job is running ``spack install`` on the same or
-overlapping dependencies without any process trying to re-do the work of
-another.
-
-For example, if you are using Slurm, you could launch an installation
-of ``mpich`` using the following command:
-
-.. code-block:: console
-
-   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
-
-This will create eight concurrent, four-job installs on two different
-nodes.
-
-Alternatively, you could run the same installs on one node by entering
-the following at the command line of a bash shell:
-
-.. code-block:: console
-
-   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 & done
-
-.. note::
-
-   The effective parallelism is based on the maximum number of packages
-   that can be installed at the same time, which is limited by the
-   number of packages with no (remaining) uninstalled dependencies.

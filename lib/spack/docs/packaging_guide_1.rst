@@ -3340,3 +3340,83 @@ and reuse its external tests. To do so, just write a ``detection_tests.yaml`` al
 
 This YAML file instructs Spack to run the detection tests defined in ``builtin.llvm`` in addition to
 those locally defined in the file.
+
+.. _abi_compatibility:
+
+----------------------------
+Specifying ABI Compatibility
+----------------------------
+
+.. warning::
+
+   The ``can_splice`` directive is experimental, and may be replaced by a higher-level interface in future versions of Spack.
+
+Packages can include ABI-compatibility information using the ``can_splice`` directive.
+For example, if ``Foo`` version 1.1 can always replace version 1.0, then the package could have:
+
+.. code-block:: python
+
+   can_splice("foo@1.0", when="@1.1")
+
+For virtual packages, packages can also specify ABI compatibility with other packages providing the same virtual.
+For example, ``zlib-ng`` could specify:
+
+.. code-block:: python
+
+   can_splice("zlib@1.3.1", when="@2.2+compat")
+
+Some packages have ABI-compatibility that is dependent on matching variant values, either for all variants or for some set of ABI-relevant variants.
+In those cases, it is not necessary to specify the full combinatorial explosion.
+The ``match_variants`` keyword can cover all single-value variants.
+
+.. code-block:: python
+
+   can_splice("foo@1.1", when="@1.2", match_variants=["bar"])  # any value for bar as long as they're the same
+   can_splice("foo@1.2", when="@1.3", match_variants="*")  # any variant values if all single-value variants match
+
+The concretizer will use ABI compatibility to determine automatic splices when :ref:`automatic splicing<automatic_splicing>` is enabled.
+
+
+-----------------------------
+Style guidelines for packages
+-----------------------------
+
+The following guidelines are provided, in the interests of making Spack packages work in a consistent manner:
+
+^^^^^^^^^^^^^
+Variant Names
+^^^^^^^^^^^^^
+
+Spack packages with variants similar to already-existing Spack packages should use the same name for their variants.
+Standard variant names are:
+
+  ======= ======== ========================
+  Name    Default   Description
+  ======= ======== ========================
+  shared   True     Build shared libraries
+  mpi      True     Use MPI
+  python   False    Build Python extension
+  ======= ======== ========================
+
+If specified in this table, the corresponding default is recommended.
+
+The semantics of the `shared` variant are important.
+When a package is built `~shared`, the package guarantees that no shared libraries are built.
+When a package is built `+shared`, the package guarantees that shared libraries are built, but it makes no guarantee about whether static libraries are built.
+
+^^^^^^^^^^^^^^^^^^^
+Version definitions
+^^^^^^^^^^^^^^^^^^^
+
+Spack packages should list supported versions with the newest first.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Using ``home`` vs ``prefix``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``home`` and ``prefix`` are both attributes that can be queried on a package's dependencies, often when passing configure arguments pointing to the location of a dependency.
+The difference is that while ``prefix`` is the location on disk where a concrete package resides, ``home`` is the `logical` location that a package resides, which may be different than ``prefix`` in the case of virtual packages or other special circumstances.
+For most use cases inside a package, its dependency locations can be accessed via either ``self.spec["foo"].home`` or ``self.spec["foo"].prefix``.
+Specific packages that should be consumed by dependents via ``.home`` instead of ``.prefix`` should be noted in their respective documentation.
+
+See :ref:`custom-attributes` for more details and an example implementing a custom ``home`` attribute.
