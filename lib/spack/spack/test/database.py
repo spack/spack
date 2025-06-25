@@ -16,6 +16,7 @@ import sys
 import pytest
 
 import spack.subprocess_context
+from spack.directory_layout import DirectoryLayoutError
 
 try:
     import uuid
@@ -185,7 +186,6 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         upstream_db._check_ref_counts()
         downstream_db._check_ref_counts()
 
-from spack.directory_layout import DirectoryLayoutError
 
 def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
     upstream_db, downstream_db = upstream_and_downstream_db
