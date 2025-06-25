@@ -177,6 +177,42 @@ def package_repo_root(path: Union[str, pathlib.Path]) -> Optional[pathlib.Path]:
     return None
 
 
+def git_supports_unshallow() -> bool:
+    output = git("fetch", "--help", output=str, error=str)
+    return "--unshallow" in output
+
+
+def ensure_full_history(prefix: str, path: str) -> None:
+    """Ensure the git repository at the prefix has its full history.
+
+    Args:
+        prefix: the root directory of the git repository
+        path: the package or file name under consideration (for messages)
+    """
+    assert os.path.isdir(prefix)
+
+    with working_dir(prefix):
+        shallow_dir = os.path.join(prefix, ".git", "shallow")
+        if os.path.isdir(shallow_dir):
+            if git_supports_unshallow():
+                try:
+                    # Capture the error output (e.g., irrelevant for full repo)
+                    # to ensure the output is clean.
+                    git("fetch", "--unshallow", error=str)
+                except ProcessError as e:
+                    tty.die(
+                        f"Cannot report blame for {path}.\n"
+                        "Unable to retrieve the full git history for "
+                        f'{prefix} due to "{str(e)}" error.'
+                    )
+            else:
+                tty.die(
+                    f"Cannot report blame for {path}.\n"
+                    f"Unable to retrieve the full git history for {prefix}. "
+                    "Use a newer 'git' that supports 'git fetch --unshallow'."
+                )
+
+
 def blame(parser, args):
     # make sure this is a git repo
     if not spack_is_git_repo():
@@ -216,20 +252,14 @@ def blame(parser, args):
         # repository.
         prefix = path_prefix
 
+    # Make sure we can get the full/known blame even when the repository
+    # is remote.
+    ensure_full_history(prefix, args.package_or_file)
+
     # Get blame information for the path EVEN when it is located in a different
     # spack repository (e.g., spack/spack-packages) or a different git
     # repository.
-    with working_dir(path_prefix):
-        # Make sure we can get the full/known blame even when the packages
-        # repository is remote.
-        try:
-            # Capture the error output (e.g., irrelevant for full repo) to
-            # ensure the output is clean.
-            git("fetch", "--unshallow", error=str)
-        except ProcessError:
-            # Ignore full repo complaint
-            pass
-
+    with working_dir(prefix):
         # Now we can get the blame results.
         options = ["blame"]
 

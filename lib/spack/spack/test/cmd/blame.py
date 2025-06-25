@@ -8,13 +8,15 @@ from pathlib import Path
 
 import pytest
 
-from llnl.util.filesystem import working_dir
+from llnl.util.filesystem import mkdirp, working_dir
 
+import spack.cmd.blame
 import spack.paths
 import spack.util.spack_json as sjson
-from spack.cmd.blame import git_prefix, package_repo_root
+from spack.cmd.blame import ensure_full_history, git_prefix, package_repo_root
 from spack.main import SpackCommand, SpackCommandError
 from spack.repo import RepoDescriptors
+from spack.util.executable import ProcessError
 
 pytestmark = pytest.mark.usefixtures("git")
 
@@ -174,3 +176,65 @@ def test_git_prefix_bad(tmp_path):
     with pytest.raises(SystemExit):
         out = git_prefix(tmp_path)
         assert "not in a git repository" in out
+
+
+def test_ensure_full_history_shallow_works(mock_git_version_info, monkeypatch):
+    """Ensure a git that "supports" '--unshallow' "completes" without incident."""
+
+    def _git(*args, **kwargs):
+        if "--help" in args:
+            return "--unshallow"
+        else:
+            return ""
+
+    repo_path, filename, _ = mock_git_version_info
+    shallow_dir = os.path.join(repo_path, ".git", "shallow")
+    mkdirp(shallow_dir)
+
+    # Need to patch the blame command's
+    monkeypatch.setattr(spack.cmd.blame, "git", _git)
+    ensure_full_history(repo_path, filename)
+
+
+def test_ensure_full_history_shallow_fails(mock_git_version_info, monkeypatch, capsys):
+    """Ensure a git that supports '--unshallow' but fails generates useful error."""
+    error_msg = "Mock git cannot fetch."
+
+    def _git(*args, **kwargs):
+        if "--help" in args:
+            return "--unshallow"
+        else:
+            raise ProcessError(error_msg)
+
+    repo_path, filename, _ = mock_git_version_info
+    shallow_dir = os.path.join(repo_path, ".git", "shallow")
+    mkdirp(shallow_dir)
+
+    # Need to patch the blame command's since 'git' already used by
+    # mock_git_versioninfo
+    monkeypatch.setattr(spack.cmd.blame, "git", _git)
+    with pytest.raises(SystemExit):
+        ensure_full_history(repo_path, filename)
+
+    out = capsys.readouterr()
+    assert error_msg in out[1]
+
+
+def test_ensure_full_history_shallow_old_git(mock_git_version_info, monkeypatch, capsys):
+    """Ensure a git that doesn't support '--unshallow' fails."""
+
+    def _git(*args, **kwargs):
+        return ""
+
+    repo_path, filename, _ = mock_git_version_info
+    shallow_dir = os.path.join(repo_path, ".git", "shallow")
+    mkdirp(shallow_dir)
+
+    # Need to patch the blame command's since 'git' already used by
+    # mock_git_versioninfo
+    monkeypatch.setattr(spack.cmd.blame, "git", _git)
+    with pytest.raises(SystemExit):
+        ensure_full_history(repo_path, filename)
+
+    out = capsys.readouterr()
+    assert "Use a newer" in out[1]
