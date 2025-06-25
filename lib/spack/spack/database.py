@@ -730,6 +730,10 @@ class Database:
                 the record is from an upstream. Its InstallRecord is also
                 returned if available (the record must be checked to know
                 whether the hash is installed).
+
+        If the record is available locally, this function will always have
+        a preference for returning that, even if it is not installed locally
+        and is installed upstream.
         """
         if data and hash_key in data:
             return False, data[hash_key]
