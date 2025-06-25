@@ -84,6 +84,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         help="for a private mirror, include non-redistributable packages",
     )
     arguments.add_common_arguments(create_parser, ["specs"])
+    arguments.add_common_arguments(create_parser, ["jobs"])
     arguments.add_concretizer_args(create_parser)
 
     # Destroy
@@ -611,7 +612,7 @@ def mirror_create(args):
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        threads=args.parallel,
+        threads=args.jobs,
     )
 
 
@@ -697,5 +698,7 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set("config:checksum", False, scope="command_line")
+    if not args.jobs:
+        args.jobs = spack.config.determine_number_of_jobs(parallel=True)
 
     action[args.mirror_command](args)
