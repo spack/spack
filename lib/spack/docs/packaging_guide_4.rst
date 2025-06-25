@@ -239,7 +239,7 @@ Sometimes defining the appropriate regex for the ``executables``
 attribute might prove to be difficult, especially if one has to
 deal with corner cases or exclude "red herrings". To help keep
 the regular expressions as simple as possible, each package can
-optionally implement a ``filter_executables`` method:
+optionally implement a ``filter_detected_exes`` method:
 
 .. code-block:: python
 
@@ -265,6 +265,7 @@ would be quite complicated to do using regex only. Employing the
    class Gcc(Package):
       executables = ["g++"]
 
+      @classmethod
       def filter_detected_exes(cls, prefix, exes_in_prefix):
          return [x for x in exes_in_prefix if "clang" not in x]
 
