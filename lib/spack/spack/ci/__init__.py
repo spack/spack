@@ -428,9 +428,7 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 
 def get_unaffected_pruners(
     env, untouched_pruning_dependent_depth: Optional[int]
-) -> Optional[List[PrunerCallback]]:
-    pruning_filters = []
-
+) -> Optional[PrunerCallback]:
     # Check if the environment changed
     stack_changed = False
     rev1, rev2 = get_change_revisions(os.path.dirname(env.manifest_path))
@@ -439,12 +437,14 @@ def get_unaffected_pruners(
 
     # If the stack env has changed, do not apply unaffected pruning
     if stack_changed:
+        tty.info("Skipping unaffected pruning: stack environment changed")
         return None
 
     # TODO: This should be configurable to only check for changed packages
     # in specific configured repos that are being tested with CI. For now
     # it assumes all configured repos are merge commits that contain relevant
     # changes to run CI on.
+    affected_pkgs: List[str] = []
     for repo in spack.repo.PATH.repos:
         rev1, rev2 = get_change_revisions(repo.root)
         if not (rev1 and rev2):
@@ -452,34 +452,31 @@ def get_unaffected_pruners(
 
         tty.debug(f"repo {repo.namespace}: revisions rev1={rev1}, rev2={rev2}")
 
-        affected_pkgs = compute_affected_packages(repo, rev1=rev1, rev2=rev2)
+        affected_pkgs.extend(compute_affected_packages(repo, rev1=rev1, rev2=rev2))
         tty.debug(f"repo {repo.namespace}: affected pkgs")
         for p in affected_pkgs:
             tty.debug(f"  {p}")
 
-        affected_specs = get_spec_filter_list(
-            env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
-        )
-        tty.debug(
-            f"repo {repo.namespace}: dependent_traverse_depth="
-            f"{untouched_pruning_dependent_depth}, affected specs:"
-        )
-        for s in affected_specs:
-            tty.debug(f"  {PipelineDag.key(s)}")
+    affected_specs = get_spec_filter_list(
+        env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
+    )
+    tty.debug(
+        f"repo {repo.namespace}: dependent_traverse_depth="
+        f"{untouched_pruning_dependent_depth}, affected specs:"
+    )
+    for s in affected_specs:
+        tty.debug(f"  {PipelineDag.key(s)}")
 
-        # If specs changed, but none of the packages were affected,
-        # rebuild everything that has changed.
-        if affected_specs:
-            pruning_filters.append(create_unaffected_pruner(affected_specs))
-        else:
-            tty.info(
-                f"Skipping unaffected pruning for repo {repo.namespace}:"
-                " no package changes were dectected"
-            )
+    # If specs changed, but none of the packages were affected,
+    # rebuild everything that has changed.
+    if affected_specs:
+        return create_unaffected_pruner(affected_specs)
     else:
-        tty.info("Skipping unaffected pruning: stack environment changed")
-
-    return pruning_filters or None
+        tty.info(
+            f"Skipping unaffected pruning for repo {repo.namespace}:"
+            " no package changes were dectected"
+        )
+        return None
 
 
 def generate_pipeline(env: ev.Environment, args) -> None:
@@ -534,9 +531,9 @@ def generate_pipeline(env: ev.Environment, args) -> None:
         # pruning.  Otherwise, list the names of all packages touched between
         # rev1 and rev2, and prune from the pipeline any node whose spec has a
         # packagen name not in that list.
-        unaffected_pruners = get_unaffected_pruners(env, options.untouched_pruning_dependent_depth)
-        if unaffected_pruners:
-            pruning_filters.extend(unaffected_pruners)
+        unaffected_pruner = get_unaffected_pruners(env, options.untouched_pruning_dependent_depth)
+        if unaffected_pruner:
+            pruning_filters.append(unaffected_pruner)
 
     # Possibly prune specs that are already built on some configured mirror
     if options.prune_up_to_date:

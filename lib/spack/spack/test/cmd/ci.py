@@ -1101,26 +1101,42 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     assert ci.get_stack_changed(fake_env_path) is True
 
 
-def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, monkeypatch):
+def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeypatch):
     """Test pipeline generation with pruning works to eliminate
     specs that were not affected by a change"""
     monkeypatch.setenv("SPACK_PRUNE_UNTOUCHED", "TRUE")  # enables pruning of untouched specs
 
-    def fake_compute_affected(repo=None, rev1=None, rev2=None):
-        return ["libdwarf"]
+    def fake_compute_affected(repo, rev1=None, rev2=None):
+        if "mock" in os.path.basename(repo.root):
+            return ["libdwarf"]
+        else:
+            return ["pkg-c"]
 
     def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
         return False
 
+    def fake_change_revisions(env_path, rev1="HEAD^", rev2="HEAD"):
+        return "HEAD^", "HEAD"
+
+    builder = spack.repo.MockRepositoryBuilder(tmpdir)
+    builder.add_package("pkg-a", dependencies=[("pkg-b", None, None)])
+    builder.add_package("pkg-b", dependencies=[("pkg-c", None, None)])
+    builder.add_package("pkg-c")
+    builder.add_package("pkg-d")
+
     monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
     monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+    monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
-    spack_yaml, outputfile, _ = ci_generate_test(
-        f"""\
+    with spack.repo.use_repositories(builder.root, override=False):
+        spack_yaml, outputfile, _ = ci_generate_test(
+            f"""\
 spack:
   specs:
     - archive-files
     - callpath
+    - pkg-a
+    - pkg-d
   mirrors:
     buildcache-destination: {tmp_path / 'ci-mirror'}
   ci:
@@ -1130,7 +1146,7 @@ spack:
           - donotcare
         image: donotcare
 """
-    )
+        )
 
     # Dependency graph rooted at callpath
     # callpath -> dyninst -> libelf
@@ -1150,7 +1166,17 @@ spack:
             generated_hashes.append(yaml_contents[ci_key]["variables"]["SPACK_JOB_SPEC_DAG_HASH"])
 
     assert env_hashes["archive-files"] not in generated_hashes
-    for spec_name in ["callpath", "dyninst", "mpich", "libdwarf", "libelf"]:
+    assert env_hashes["pkg-d"] not in generated_hashes
+    for spec_name in [
+        "callpath",
+        "dyninst",
+        "mpich",
+        "libdwarf",
+        "libelf",
+        "pkg-a",
+        "pkg-b",
+        "pkg-c",
+    ]:
         assert env_hashes[spec_name] in generated_hashes
 
 
@@ -1262,7 +1288,9 @@ spack:
             assert not_expected not in output
 
 
-def test_ci_generate_external_signing_job(ci_generate_test, tmp_path, monkeypatch):
+def test_ci_generate_external_signing_job(
+    install_mockery, ci_generate_test, tmp_path, monkeypatch
+):
     """Verify that in external signing mode: 1) each rebuild jobs includes
     the location where the binary hash information is written and 2) we
     properly generate a final signing job in the pipeline."""
@@ -1525,7 +1553,7 @@ def test_cmd_first_line():
 
 
 @pytest.mark.skip(reason="Gitlab CI was removed from Spack")
-def test_gitlab_config_scopes(ci_generate_test, tmp_path):
+def test_gitlab_config_scopes(install_mockery, ci_generate_test, tmp_path):
     """Test pipeline generation with real configs included"""
     configs_path = os.path.join(spack_paths.share_path, "gitlab", "cloud_pipelines", "configs")
     _, outputfile, _ = ci_generate_test(
