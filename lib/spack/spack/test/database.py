@@ -216,6 +216,9 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
         assert upstream
         assert not record.installed
 
+        assert y.installed
+        assert y.installed_upstream
+
         assert not z.installed
         assert not z.installed_upstream
 
