@@ -47,16 +47,26 @@ or refer to the full manual below.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Basics
+   :caption: Introduction
 
    features
    getting_started
    spec_syntax
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Basic Usage
+
    basic_usage
+   frequently_asked_questions
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Advanced Topics
+
    advanced_topics
    replace_conda_homebrew
-   spack_on_windows
-   frequently_asked_questions
+   windows
 
 .. toctree::
    :maxdepth: 2

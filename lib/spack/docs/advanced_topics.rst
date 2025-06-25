@@ -2,18 +2,11 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-.. _advanced-topics:
-
-===============
-Advanced Topics
-===============
-
-
 .. _verify-spack-prerequisites:
 
---------------------------
+==========================
 Verify Spack prerequisites
---------------------------
+==========================
 
 To verify if Spack prerequisites are met on your system, you can use the following command:
 
@@ -82,9 +75,9 @@ Alternatively, Spack will try to bootstrap them lazily, the first time they are 
 
 .. _mixed-toolchains:
 
---------------------------
+==========================
 Fortran compilers on macOS
---------------------------
+==========================
 
 Modern compilers typically come with related compilers for C, C++ and
 Fortran bundled together.  When possible, results are best if the same
@@ -156,9 +149,9 @@ Since languages in Spack are modeled as virtual packages, ``apple-clang`` will b
 C and C++, while GCC will be used for Fortran.
 
 
------------------------------
+=============================
 Deprecating Insecure Packages
------------------------------
+=============================
 
 ``spack deprecate`` allows for the removal of insecure packages with
 minimal impact to their dependents.
@@ -202,17 +195,17 @@ spec.
 behavior is symbolic links, but the ``-l/--link-type`` flag can take
 options ``hard`` or ``soft``.
 
------------------------
+=======================
 Verifying Installations
------------------------
+=======================
 
 The ``spack verify`` command can be used to verify the validity of
 Spack-installed packages any time after installation.
 
 
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 ``spack verify manifest``
-^^^^^^^^^^^^^^^^^^^^^^^^^
+-------------------------
 
 At installation time, Spack creates a manifest of every file in the
 installation prefix. For links, Spack tracks the mode, ownership, and
@@ -241,9 +234,9 @@ check only local packages (as opposed to those used transparently from
 ``upstream`` Spack instances) and the ``-j,--json`` option to output
 machine-readable JSON data for any errors.
 
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 ``spack verify libraries``
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
 The ``spack verify libraries`` command can be used to verify that packages
 do not have accidental system dependencies. This command scans the install
@@ -257,3 +250,157 @@ This verification can also be enabled as a post-install hook by setting
 ``config:shared_linking:missing_library_policy`` to ``error`` or ``warn``
 in :ref:`config.yaml <config-yaml>`.
 
+
+.. _toolchains:
+
+==========
+Toolchains
+==========
+
+Spack can be configured to associate certain combinations of specs for
+easy reference on the command line and in config and environment
+files. These combinations are called ``toolchains``, because their
+primary intended use is for associating compiler combinations to
+apply. Toolchains are referenced by name like a direct dependency,
+using the ``%`` sigil. There are two styles of toolchain config, one
+using conditional dependencies through the spec syntax and one with
+conditionals explicitly in the yaml:
+
+.. code-block:: yaml
+
+   toolchains:
+     gcc_all: cflags=-O3 '%[when=%c virtuals=c]gcc %[when=%cxx virtuals=cxx]gcc %[when=%fortran virtuals=fortran]gcc'
+     llvm_gfortran:
+     - spec: cflags=-O3
+     - spec: '%[virtuals=c]llvm'
+       when: '%c'
+     - spec: '%[virtuals=cxx]llvm'
+       when: '%cxx'
+     - spec: '%[virtuals=fortran]gcc'
+       when: '%fortran'
+
+The two syntaxes are equivalent. It is not necessary to use
+conditional dependencies with toolchains, but in most cases it his
+highly recommended. Similarly, while any spec constraint can be
+included, it is most useful to use compiler flags, architectures, and
+conditional dependencies. With the above config, the ``gcc_all``
+toolchain imposes conditional dependencies such that gcc is used as
+the provider for ``c``, ``cxx``, and ``fortran`` for any package using
+that toolchain that depends on each language. The conditional
+dependencies allow the toolchain to be applied to any package
+regardless of which languages it depends on. The ``llvm_gfortran``
+toolchain is the same, except it uses ``llvm`` for ``c`` and ``cxx``
+and ``gcc`` for ``fortran``.
+
+These two toolchains could be used independently or even in the same
+spec, e.g. ``spack install hdf5+fortran%llvm_gfortran ^mpich
+%gcc_all``. This will install an hdf5 compiled with ``llvm`` for the
+C/C++ components, but with the fortran components compiled with
+``gfortran``, but will build it against an MPICH installation compiled
+entirely with ``gcc`` for C, C++, and Fortran.
+
+.. note::
+
+   Toolchains are currently limited to exclude non-direct dependencies
+   (using the ``^`` syntax).
+
+=======================
+Filesystem Requirements
+=======================
+
+By default, Spack needs to be run from a filesystem that supports
+``flock`` locking semantics. Nearly all local filesystems and recent
+versions of NFS support this, but parallel filesystems or NFS volumes may
+be configured without ``flock`` support enabled. You can determine how
+your filesystems are mounted with ``mount``. The output for a Lustre
+filesystem might look like this:
+
+.. code-block:: console
+
+   $ mount | grep lscratch
+   mds1-lnet0@o2ib100:/lsd on /p/lscratchd type lustre (rw,nosuid,lazystatfs,flock)
+   mds2-lnet0@o2ib100:/lse on /p/lscratche type lustre (rw,nosuid,lazystatfs,flock)
+
+Note the ``flock`` option on both Lustre mounts.
+
+If you do not see this or a similar option for your filesystem, you have
+a few options. First, you can move your Spack installation to a
+filesystem that supports locking. Second, you could ask your system
+administrator to enable ``flock`` for your filesystem.
+
+If none of those work, you can disable locking in one of two ways:
+
+  1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
+     locks on a call-by-call basis.
+  2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
+     to ``false`` to always disable locking.
+
+.. warning::
+
+   If you disable locking, concurrent instances of Spack will have no way
+   to avoid stepping on each other. You must ensure that there is only
+   **one** instance of Spack running at a time. Otherwise, Spack may end
+   up with a corrupted database file, or you may not be able to see all
+   installed packages in commands like ``spack find``.
+
+   If you are unfortunate enough to run into this situation, you may be
+   able to fix it by running ``spack reindex``.
+
+This issue typically manifests with the error below:
+
+.. code-block:: console
+
+   $ ./spack find
+   Traceback (most recent call last):
+   File "./spack", line 176, in <module>
+     main()
+   File "./spack", line 154,' in main
+     return_val = command(parser, args)
+   File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
+     specs = set(spack.installed_db.query(\**q_args))
+   File "./spack/lib/spack/spack/database.py", line 551, in query
+     with self.read_transaction():
+   File "./spack/lib/spack/spack/database.py", line 598, in __enter__
+     if self._enter() and self._acquire_fn:
+   File "./spack/lib/spack/spack/database.py", line 608, in _enter
+     return self._db.lock.acquire_read(self._timeout)
+   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
+     self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
+   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
+     fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
+   IOError: [Errno 38] Function not implemented
+
+A nicer error message is to be determined in future versions of Spack.
+
+===============
+Troubleshooting
+===============
+
+The ``spack audit`` command:
+
+.. command-output:: spack audit -h
+
+can be used to detect a number of configuration issues. This command detects
+configuration settings that might not be strictly wrong but are not likely
+to be useful outside of special cases.
+
+It can also be used to detect dependency issues with packages -- for example,
+cases where a package constrains a dependency with a variant that doesn't
+exist (in this case, Spack could report the problem ahead of time, but
+automatically performing the check would slow down most runs of Spack).
+
+A detailed list of the checks currently implemented for each subcommand can be
+printed with:
+
+.. command-output:: spack -v audit list
+
+Depending on the use case, users might run the appropriate subcommands to obtain
+diagnostics. Issues, if found, are reported to stdout:
+
+.. code-block:: console
+
+   % spack audit packages lammps
+   PKG-DIRECTIVES: 1 issue found
+   1. lammps: wrong variant in "conflicts" directive
+       the variant 'adios' does not exist
+       in spack_repo/builtin/packages/lammps/package.py

@@ -4,11 +4,19 @@
 
 .. _basic-usage:
 
-===========
-Basic Usage
-===========
+====================
+Package Fundamentals
+====================
 
-The ``spack`` command has many *subcommands*, but you'll only need a small subset of them for typical usage.
+Spack provides a comprehensive ecosystem of software packages that you can install.
+In this section you'll learn:
+
+1. How to discover which packages are available,
+2. How to get detailed information about specific packages,
+3. How to install/uninstall packages, and
+4. How to discover, and use, software that has been installed
+
+
 
 .. _basic-list-and-info-packages:
 
@@ -94,348 +102,6 @@ on the web -- these are *remote versions*. Spack gets this information
 by scraping it directly from package web pages. Depending on the
 package and how its releases are organized, Spack may or may not be
 able to find remote versions.
-
-.. _compiler-config:
-
----------------------
-Configuring Compilers
----------------------
-
-Spack has the ability to build packages with multiple compilers and compiler versions.
-Compilers can be made available to Spack by:
-
-1. Specifying them as externals in ``packages.yaml``, or
-2. Having them installed in the current Spack store, or
-3. Having them available as binaries in some buildcache
-
-For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
-
-.. _cmd-spack-compilers:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler list``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-You can see which compilers are available to Spack by running ``spack compiler list``:
-
-.. code-block:: console
-
-   $ spack compiler list
-   ==> Available compilers
-   -- gcc ubuntu20.04-x86_64 ---------------------------------------
-   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
-
-Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]`` are installed in the local Spack's store.
-Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
-To see them you need a specific option:
-
-.. code-block:: console
-
-   $ spack compiler list --remote
-   ==> Available compilers
-   -- gcc ubuntu20.04-x86_64 ---------------------------------------
-   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
-
-   -- gcc ubuntu20.04-x86_64 ---------------------------------------
-    -   gcc@12.4.0
-
-Any of these compilers can be used to build Spack packages.  More on how this is done is in :ref:`sec-specs`.
-
-.. _cmd-spack-compiler-find:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler find``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you do not see a compiler in the list shown by:
-
-.. code-block:: console
-
-   $ spack compiler list
-
-but you want to use it with Spack, you can simply run ``spack compiler find`` with the
-path to where the compiler is installed.  For example:
-
-.. code-block:: console
-
-   $ spack compiler find /opt/intel/oneapi/compiler/2025.1/bin/
-   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
-       intel-oneapi-compilers@2025.1.0
-   ==> Compilers are defined in the following files:
-       /home/user/.spack/packages.yaml
-
-Or you can run ``spack compiler find`` with no arguments to force
-auto-detection.  This is useful if you do not know where compilers are
-installed, but you know that new compilers have been added to your
-``PATH``.  For example, you might load a module, like this:
-
-.. code-block:: console
-
-   $ module load gcc/4.9.0
-   $ spack compiler find
-   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
-       gcc@4.9.0
-
-This loads the environment module for gcc-4.9.0 to add it to
-``PATH``, and then it adds the compiler to Spack.
-
-.. note::
-
-   By default, Spack does not fill in the ``modules:`` field in the
-   ``packages.yaml`` file.  If you are using a compiler from a
-   module, then you should add this field manually.
-   See the section on :ref:`compilers-requiring-modules`.
-
-.. _cmd-spack-compiler-info:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack compiler info``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you want to see additional information of specific compilers, you can run
-``spack compiler info``:
-
-.. code-block:: console
-
-   $ spack compiler info gcc
-   gcc@=8.4.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
-     prefix: /usr
-     compilers:
-       c: /usr/bin/gcc-8
-       cxx: /usr/bin/g++-8
-       fortran: /usr/bin/gfortran-8
-
-   gcc@=9.4.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
-     prefix: /usr
-     compilers:
-       c: /usr/bin/gcc
-       cxx: /usr/bin/g++
-       fortran: /usr/bin/gfortran
-
-   gcc@=10.5.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
-     prefix: /usr
-     compilers:
-       c: /usr/bin/gcc-10
-       cxx: /usr/bin/g++-10
-       fortran: /usr/bin/gfortran-10
-
-This shows the details of the compilers that were detected by Spack.
-Notice also that we didn't have to be too specific about the version. We just said ``gcc``, and we got information
-about all the matching compilers.
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Manual configuration of external compilers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If auto-detection fails, you can manually configure a compiler by editing your ``packages`` configuration.
-You can do this by running:
-
-.. code-block:: console
-
-   $ spack config edit packages
-
-which will open the file in :ref:`your favorite editor <controlling-the-editor>`.
-
-Each compiler has an "external" entry in the file with some ``extra_attributes``:
-
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       externals:
-       - spec: gcc@10.5.0 languages='c,c++,fortran'
-         prefix: /usr
-         extra_attributes:
-           compilers:
-             c: /usr/bin/gcc-10
-             cxx: /usr/bin/g++-10
-             fortran: /usr/bin/gfortran-10
-
-The compiler executables are listed under ``extra_attributes:compilers``, and are keyed by language.
-Once you save the file, the configured compilers will show up in the list displayed by ``spack compilers``.
-
-You can also add compiler flags to manually configured compilers. These flags should be specified in the
-``flags`` section of the compiler specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
-``cppflags``, ``ldflags``, and ``ldlibs``. For example:
-
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       externals:
-       - spec: gcc@10.5.0 languages='c,c++,fortran'
-         prefix: /usr
-         extra_attributes:
-           compilers:
-             c: /usr/bin/gcc-10
-             cxx: /usr/bin/g++-10
-             fortran: /usr/bin/gfortran-10
-           flags:
-             cflags: -O3 -fPIC
-             cxxflags: -O3 -fPIC
-             cppflags: -O3 -fPIC
-
-These flags will be treated by Spack as if they were entered from
-the command line each time this compiler is used. The compiler wrappers
-then inject those flags into the compiler command. Compiler flags
-entered from the command line will be discussed in more detail in the
-following section.
-
-Some compilers also require additional environment configuration.
-Examples include Intel's oneAPI and AMD's AOCC compiler suites,
-which have custom scripts for loading environment variables and setting paths.
-These variables should be specified in the ``environment`` section of the compiler
-specification. The operations available to modify the environment are ``set``, ``unset``,
-``prepend_path``, ``append_path``, and ``remove_path``. For example:
-
-.. code-block:: yaml
-
-   packages:
-     intel-oneapi-compilers:
-       externals:
-       - spec: intel-oneapi-compilers@2025.1.0
-         prefix: /opt/intel/oneapi
-         extra_attributes:
-           compilers:
-             c: /opt/intel/oneapi/compiler/2025.1/bin/icx
-             cxx: /opt/intel/oneapi/compiler/2025.1/bin/icpx
-             fortran: /opt/intel/oneapi/compiler/2025.1/bin/ifx
-           environment:
-             set:
-               MKL_ROOT: "/path/to/mkl/root"
-             unset: # A list of environment variables to unset
-               - CC
-             prepend_path: # Similar for append|remove_path
-               LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
-
-It is also possible to specify additional ``RPATHs`` that the compiler will add to all executables generated by that compiler.
-This is useful for forcing certain compilers to RPATH their own runtime libraries so that executables will run without the need to set ``LD_LIBRARY_PATH``:
-
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       externals:
-       - spec: gcc@4.9.3
-         prefix: /opt/gcc
-         extra_attributes:
-           compilers:
-             c: /opt/gcc/bin/gcc
-             cxx: /opt/gcc/bin/g++
-             fortran: /opt/gcc/bin/gfortran
-           extra_rpaths:
-           - /path/to/some/compiler/runtime/directory
-           - /path/to/some/other/compiler/runtime/directory
-
-.. _compilers-requiring-modules:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Compilers Requiring Modules
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Many installed compilers will work regardless of the environment they are called with.
-However, some installed compilers require environment variables to be set in order to run.
-
-On typical HPC clusters, these environment modifications are usually delegated to some "module" system.
-In such a case, you should tell Spack which module(s) to load in order to run the chosen compiler:
-
-.. code-block:: yaml
-
-   packages:
-     gcc:
-       externals:
-       - spec: gcc@10.5.0 languages='c,c++,fortran'
-         prefix: /opt/compilers
-         extra_attributes:
-           compilers:
-             c: /opt/compilers/bin/gcc-10
-             cxx: /opt/compilers/bin/g++-10
-             fortran: /opt/compilers/bin/gfortran-10
-         modules: [gcc/10.5.0]
-
-Some compilers require special environment settings to be loaded not just
-to run, but also to execute the code they build, breaking packages that
-need to execute code they just compiled.  If it's not possible or
-practical to use a better compiler, you'll need to ensure that
-environment settings are preserved for compilers like this (i.e., you'll
-need to load the module or source the compiler's shell script).
-
-By default, Spack tries to ensure that builds are reproducible by
-cleaning the environment before building.  If this interferes with your
-compiler settings, you CAN use ``spack install --dirty`` as a workaround.
-Note that this MAY interfere with package builds.
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Build Your Own Compiler
-^^^^^^^^^^^^^^^^^^^^^^^
-
-If you are particular about which compiler/version you use, you might wish to have Spack build it for you.
-For example:
-
-.. code-block:: console
-
-   $ spack install gcc@14+binutils
-
-Once the compiler is installed, you can start using it without additional configuration:
-
-.. code-block:: console
-
-   $ spack install hdf5~mpi %gcc@14
-
-The same holds true for compilers that are made available from build caches, when reusing them is allowed.
-
-.. _toolchains:
-
-----------
-Toolchains
-----------
-
-Spack can be configured to associate certain combinations of specs for
-easy reference on the command line and in config and environment
-files. These combinations are called ``toolchains``, because their
-primary intended use is for associating compiler combinations to
-apply. Toolchains are referenced by name like a direct dependency,
-using the ``%`` sigil. There are two styles of toolchain config, one
-using conditional dependencies through the spec syntax and one with
-conditionals explicitly in the yaml:
-
-.. code-block:: yaml
-
-   toolchains:
-     gcc_all: cflags=-O3 '%[when=%c virtuals=c]gcc %[when=%cxx virtuals=cxx]gcc %[when=%fortran virtuals=fortran]gcc'
-     llvm_gfortran:
-     - spec: cflags=-O3
-     - spec: '%[virtuals=c]llvm'
-       when: '%c'
-     - spec: '%[virtuals=cxx]llvm'
-       when: '%cxx'
-     - spec: '%[virtuals=fortran]gcc'
-       when: '%fortran'
-
-The two syntaxes are equivalent. It is not necessary to use
-conditional dependencies with toolchains, but in most cases it his
-highly recommended. Similarly, while any spec constraint can be
-included, it is most useful to use compiler flags, architectures, and
-conditional dependencies. With the above config, the ``gcc_all``
-toolchain imposes conditional dependencies such that gcc is used as
-the provider for ``c``, ``cxx``, and ``fortran`` for any package using
-that toolchain that depends on each language. The conditional
-dependencies allow the toolchain to be applied to any package
-regardless of which languages it depends on. The ``llvm_gfortran``
-toolchain is the same, except it uses ``llvm`` for ``c`` and ``cxx``
-and ``gcc`` for ``fortran``.
-
-These two toolchains could be used independently or even in the same
-spec, e.g. ``spack install hdf5+fortran%llvm_gfortran ^mpich
-%gcc_all``. This will install an hdf5 compiled with ``llvm`` for the
-C/C++ components, but with the fortran components compiled with
-``gfortran``, but will build it against an MPICH installation compiled
-entirely with ``gcc`` for C, C++, and Fortran.
-
-.. note::
-
-   Toolchains are currently limited to exclude non-direct dependencies
-   (using the ``^`` syntax).
 
 ---------------------------
 Installing and Uninstalling
@@ -1354,116 +1020,305 @@ activation script.
 
 See :ref:`environments` for a more in-depth description of Spack environments and customizations to views.
 
+.. _compiler-config:
+
+=====================
+Configuring Compilers
+=====================
+
+Spack has the ability to build packages with multiple compilers and compiler versions.
+Compilers can be made available to Spack by:
+
+1. Specifying them as externals in ``packages.yaml``, or
+2. Having them installed in the current Spack store, or
+3. Having them available as binaries in some buildcache
+
+For convenience, Spack will automatically detect compilers as externals the first time it needs them, if no compiler is available.
+
+.. _cmd-spack-compilers:
+
 -----------------------
-Filesystem Requirements
+``spack compiler list``
 -----------------------
 
-By default, Spack needs to be run from a filesystem that supports
-``flock`` locking semantics. Nearly all local filesystems and recent
-versions of NFS support this, but parallel filesystems or NFS volumes may
-be configured without ``flock`` support enabled. You can determine how
-your filesystems are mounted with ``mount``. The output for a Lustre
-filesystem might look like this:
+You can see which compilers are available to Spack by running ``spack compiler list``:
 
 .. code-block:: console
 
-   $ mount | grep lscratch
-   mds1-lnet0@o2ib100:/lsd on /p/lscratchd type lustre (rw,nosuid,lazystatfs,flock)
-   mds2-lnet0@o2ib100:/lse on /p/lscratche type lustre (rw,nosuid,lazystatfs,flock)
+   $ spack compiler list
+   ==> Available compilers
+   -- gcc ubuntu20.04-x86_64 ---------------------------------------
+   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
-Note the ``flock`` option on both Lustre mounts.
-
-If you do not see this or a similar option for your filesystem, you have
-a few options. First, you can move your Spack installation to a
-filesystem that supports locking. Second, you could ask your system
-administrator to enable ``flock`` for your filesystem.
-
-If none of those work, you can disable locking in one of two ways:
-
-  1. Run Spack with the ``-L`` or ``--disable-locks`` option to disable
-     locks on a call-by-call basis.
-  2. Edit :ref:`config.yaml <config-yaml>` and set the ``locks`` option
-     to ``false`` to always disable locking.
-
-.. warning::
-
-   If you disable locking, concurrent instances of Spack will have no way
-   to avoid stepping on each other. You must ensure that there is only
-   **one** instance of Spack running at a time. Otherwise, Spack may end
-   up with a corrupted database file, or you may not be able to see all
-   installed packages in commands like ``spack find``.
-
-   If you are unfortunate enough to run into this situation, you may be
-   able to fix it by running ``spack reindex``.
-
-This issue typically manifests with the error below:
+Compilers marked with an ``[e]`` are available as externals, while those marked with a ``[+]`` are installed in the local Spack's store.
+Compilers from remote buildcaches are marked as ``-``, but are not shown by default.
+To see them you need a specific option:
 
 .. code-block:: console
 
-   $ ./spack find
-   Traceback (most recent call last):
-   File "./spack", line 176, in <module>
-     main()
-   File "./spack", line 154,' in main
-     return_val = command(parser, args)
-   File "./spack/lib/spack/spack/cmd/find.py", line 170, in find
-     specs = set(spack.installed_db.query(\**q_args))
-   File "./spack/lib/spack/spack/database.py", line 551, in query
-     with self.read_transaction():
-   File "./spack/lib/spack/spack/database.py", line 598, in __enter__
-     if self._enter() and self._acquire_fn:
-   File "./spack/lib/spack/spack/database.py", line 608, in _enter
-     return self._db.lock.acquire_read(self._timeout)
-   File "./spack/lib/spack/llnl/util/lock.py", line 103, in acquire_read
-     self._lock(fcntl.LOCK_SH, timeout)   # can raise LockError.
-   File "./spack/lib/spack/llnl/util/lock.py", line 64, in _lock
-     fcntl.lockf(self._fd, op | fcntl.LOCK_NB)
-   IOError: [Errno 38] Function not implemented
+   $ spack compiler list --remote
+   ==> Available compilers
+   -- gcc ubuntu20.04-x86_64 ---------------------------------------
+   [e]  gcc@10.5.0  [+]  gcc@15.1.0  [+]  gcc@14.3.0
 
-A nicer error message is to be determined in future versions of Spack.
+   -- gcc ubuntu20.04-x86_64 ---------------------------------------
+    -   gcc@12.4.0
 
----------------
-Troubleshooting
----------------
+Any of these compilers can be used to build Spack packages.  More on how this is done is in :ref:`sec-specs`.
 
-The ``spack audit`` command:
+.. _cmd-spack-compiler-find:
 
-.. command-output:: spack audit -h
+-----------------------
+``spack compiler find``
+-----------------------
 
-can be used to detect a number of configuration issues. This command detects
-configuration settings that might not be strictly wrong but are not likely
-to be useful outside of special cases.
-
-It can also be used to detect dependency issues with packages -- for example,
-cases where a package constrains a dependency with a variant that doesn't
-exist (in this case, Spack could report the problem ahead of time, but
-automatically performing the check would slow down most runs of Spack).
-
-A detailed list of the checks currently implemented for each subcommand can be
-printed with:
-
-.. command-output:: spack -v audit list
-
-Depending on the use case, users might run the appropriate subcommands to obtain
-diagnostics. Issues, if found, are reported to stdout:
+If you do not see a compiler in the list shown by:
 
 .. code-block:: console
 
-   % spack audit packages lammps
-   PKG-DIRECTIVES: 1 issue found
-   1. lammps: wrong variant in "conflicts" directive
-       the variant 'adios' does not exist
-       in spack_repo/builtin/packages/lammps/package.py
+   $ spack compiler list
 
-------------
+but you want to use it with Spack, you can simply run ``spack compiler find`` with the
+path to where the compiler is installed.  For example:
+
+.. code-block:: console
+
+   $ spack compiler find /opt/intel/oneapi/compiler/2025.1/bin/
+   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
+       intel-oneapi-compilers@2025.1.0
+   ==> Compilers are defined in the following files:
+       /home/user/.spack/packages.yaml
+
+Or you can run ``spack compiler find`` with no arguments to force
+auto-detection.  This is useful if you do not know where compilers are
+installed, but you know that new compilers have been added to your
+``PATH``.  For example, you might load a module, like this:
+
+.. code-block:: console
+
+   $ module load gcc/4.9.0
+   $ spack compiler find
+   ==> Added 1 new compiler to /home/user/.spack/packages.yaml
+       gcc@4.9.0
+
+This loads the environment module for gcc-4.9.0 to add it to
+``PATH``, and then it adds the compiler to Spack.
+
+.. note::
+
+   By default, Spack does not fill in the ``modules:`` field in the
+   ``packages.yaml`` file.  If you are using a compiler from a
+   module, then you should add this field manually.
+   See the section on :ref:`compilers-requiring-modules`.
+
+.. _cmd-spack-compiler-info:
+
+-----------------------
+``spack compiler info``
+-----------------------
+
+If you want to see additional information of specific compilers, you can run
+``spack compiler info``:
+
+.. code-block:: console
+
+   $ spack compiler info gcc
+   gcc@=8.4.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
+     prefix: /usr
+     compilers:
+       c: /usr/bin/gcc-8
+       cxx: /usr/bin/g++-8
+       fortran: /usr/bin/gfortran-8
+
+   gcc@=9.4.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
+     prefix: /usr
+     compilers:
+       c: /usr/bin/gcc
+       cxx: /usr/bin/g++
+       fortran: /usr/bin/gfortran
+
+   gcc@=10.5.0 languages='c,c++,fortran' arch=linux-ubuntu20.04-x86_64:
+     prefix: /usr
+     compilers:
+       c: /usr/bin/gcc-10
+       cxx: /usr/bin/g++-10
+       fortran: /usr/bin/gfortran-10
+
+This shows the details of the compilers that were detected by Spack.
+Notice also that we didn't have to be too specific about the version. We just said ``gcc``, and we got information
+about all the matching compilers.
+
+------------------------------------------
+Manual configuration of external compilers
+------------------------------------------
+
+If auto-detection fails, you can manually configure a compiler by editing your ``packages`` configuration.
+You can do this by running:
+
+.. code-block:: console
+
+   $ spack config edit packages
+
+which will open the file in :ref:`your favorite editor <controlling-the-editor>`.
+
+Each compiler has an "external" entry in the file with some ``extra_attributes``:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+
+The compiler executables are listed under ``extra_attributes:compilers``, and are keyed by language.
+Once you save the file, the configured compilers will show up in the list displayed by ``spack compilers``.
+
+You can also add compiler flags to manually configured compilers. These flags should be specified in the
+``flags`` section of the compiler specification. The valid flags are ``cflags``, ``cxxflags``, ``fflags``,
+``cppflags``, ``ldflags``, and ``ldlibs``. For example:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+           flags:
+             cflags: -O3 -fPIC
+             cxxflags: -O3 -fPIC
+             cppflags: -O3 -fPIC
+
+These flags will be treated by Spack as if they were entered from
+the command line each time this compiler is used. The compiler wrappers
+then inject those flags into the compiler command. Compiler flags
+entered from the command line will be discussed in more detail in the
+following section.
+
+Some compilers also require additional environment configuration.
+Examples include Intel's oneAPI and AMD's AOCC compiler suites,
+which have custom scripts for loading environment variables and setting paths.
+These variables should be specified in the ``environment`` section of the compiler
+specification. The operations available to modify the environment are ``set``, ``unset``,
+``prepend_path``, ``append_path``, and ``remove_path``. For example:
+
+.. code-block:: yaml
+
+   packages:
+     intel-oneapi-compilers:
+       externals:
+       - spec: intel-oneapi-compilers@2025.1.0
+         prefix: /opt/intel/oneapi
+         extra_attributes:
+           compilers:
+             c: /opt/intel/oneapi/compiler/2025.1/bin/icx
+             cxx: /opt/intel/oneapi/compiler/2025.1/bin/icpx
+             fortran: /opt/intel/oneapi/compiler/2025.1/bin/ifx
+           environment:
+             set:
+               MKL_ROOT: "/path/to/mkl/root"
+             unset: # A list of environment variables to unset
+               - CC
+             prepend_path: # Similar for append|remove_path
+               LD_LIBRARY_PATH: /ld/paths/added/by/setvars/sh
+
+It is also possible to specify additional ``RPATHs`` that the compiler will add to all executables generated by that compiler.
+This is useful for forcing certain compilers to RPATH their own runtime libraries so that executables will run without the need to set ``LD_LIBRARY_PATH``:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@4.9.3
+         prefix: /opt/gcc
+         extra_attributes:
+           compilers:
+             c: /opt/gcc/bin/gcc
+             cxx: /opt/gcc/bin/g++
+             fortran: /opt/gcc/bin/gfortran
+           extra_rpaths:
+           - /path/to/some/compiler/runtime/directory
+           - /path/to/some/other/compiler/runtime/directory
+
+.. _compilers-requiring-modules:
+
+---------------------------
+Compilers Requiring Modules
+---------------------------
+
+Many installed compilers will work regardless of the environment they are called with.
+However, some installed compilers require environment variables to be set in order to run.
+
+On typical HPC clusters, these environment modifications are usually delegated to some "module" system.
+In such a case, you should tell Spack which module(s) to load in order to run the chosen compiler:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /opt/compilers
+         extra_attributes:
+           compilers:
+             c: /opt/compilers/bin/gcc-10
+             cxx: /opt/compilers/bin/g++-10
+             fortran: /opt/compilers/bin/gfortran-10
+         modules: [gcc/10.5.0]
+
+Some compilers require special environment settings to be loaded not just
+to run, but also to execute the code they build, breaking packages that
+need to execute code they just compiled.  If it's not possible or
+practical to use a better compiler, you'll need to ensure that
+environment settings are preserved for compilers like this (i.e., you'll
+need to load the module or source the compiler's shell script).
+
+By default, Spack tries to ensure that builds are reproducible by
+cleaning the environment before building.  If this interferes with your
+compiler settings, you CAN use ``spack install --dirty`` as a workaround.
+Note that this MAY interfere with package builds.
+
+-----------------------
+Build Your Own Compiler
+-----------------------
+
+If you are particular about which compiler/version you use, you might wish to have Spack build it for you.
+For example:
+
+.. code-block:: console
+
+   $ spack install gcc@14+binutils
+
+Once the compiler is installed, you can start using it without additional configuration:
+
+.. code-block:: console
+
+   $ spack install hdf5~mpi %gcc@14
+
+The same holds true for compilers that are made available from build caches, when reusing them is allowed.
+
+
+============
 Getting Help
-------------
+============
 
 .. _cmd-spack-help:
 
-^^^^^^^^^^^^^^
+--------------
 ``spack help``
-^^^^^^^^^^^^^^
+--------------
 
 If you don't find what you need here, the ``help`` subcommand will
 print out a list of *all* of Spack's options and subcommands:
