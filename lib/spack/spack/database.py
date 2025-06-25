@@ -739,9 +739,6 @@ class Database:
             return False, data[hash_key]
         if not data:
             with self.read_transaction():
-                # TODO: if there is a local record but it is not installed
-                # locally, should we then check all upstreams and favor
-                # those?
                 if hash_key in self._data:
                     return False, self._data[hash_key]
         for db in self.upstream_dbs:
