@@ -6,38 +6,35 @@
 Spack for Homebrew/Conda Users
 =====================================
 
-Spack is an incredibly powerful package manager, designed for supercomputers
-where users have diverse installation needs. But Spack can also be used to
-handle simple single-user installations on your laptop. Most macOS users are
-already familiar with package managers like Homebrew and Conda, where all
-installed packages are symlinked to a single central location like ``/usr/local``.
-In this section, we will show you how to emulate the behavior of Homebrew/Conda
-using :ref:`environments`!
+Spack is an incredibly powerful package manager, designed for supercomputers where users have diverse installation needs.
+But Spack can also be used to handle simple single-user installations on your laptop.
+Most macOS users are already familiar with package managers like Homebrew and Conda, where all installed packages are symlinked to a single central location like ``/usr/local``.
+In this section, we will show you how to emulate the behavior of Homebrew/Conda using :ref:`environments`!
 
 -----
 Setup
 -----
 
-First, let's create a new environment. We'll assume that Spack is already set up
-correctly, and that you've already sourced the setup script for your shell.
+First, let's create a new environment.
+We'll assume that Spack is already set up correctly, and that you've already sourced the setup script for your shell.
 To create a new environment, simply run:
 
 .. code-block:: console
 
    $ spack env create myenv
 
-Here, *myenv* can be anything you want to name your environment. Next, we can add
-a list of packages we would like to install into our environment. Let's say we
-want a newer version of Bash than the one that comes with macOS, and we want a
-few Python libraries. We can run:
+Here, *myenv* can be anything you want to name your environment.
+Next, we can add a list of packages we would like to install into our environment.
+Let's say we want a newer version of Bash than the one that comes with macOS, and we want a few Python libraries.
+We can run:
 
 .. code-block:: console
 
    $ spack -e myenv add bash@5 python py-numpy py-scipy py-matplotlib
 
 Each package can be listed on a separate line, or combined into a single line like we did above.
-Notice that we're explicitly asking for Bash 5 here. You can use any spec
-you would normally use on the command line with other Spack commands.
+Notice that we're explicitly asking for Bash 5 here.
+You can use any spec you would normally use on the command line with other Spack commands.
 
 Next, we want to manually configure a couple of things:
 
@@ -56,14 +53,12 @@ Next, we want to manually configure a couple of things:
      specs: [bash@5, python, py-numpy, py-scipy, py-matplotlib]
      view: true
 
-You can see the packages we added earlier in the ``specs:`` section. If you
-ever want to add more packages, you can either use ``spack add`` or manually
-edit this file.
+You can see the packages we added earlier in the ``specs:`` section.
+If you ever want to add more packages, you can either use ``spack add`` or manually edit this file.
 
-We also need to change the ``concretizer:unify`` option. By default, Spack
-concretizes each spec *separately*, allowing multiple versions of the same
-package to coexist. Since we want a single consistent environment, we want to
-concretize all of the specs *together*.
+We also need to change the ``concretizer:unify`` option.
+By default, Spack concretizes each spec *separately*, allowing multiple versions of the same package to coexist.
+Since we want a single consistent environment, we want to concretize all of the specs *together*.
 
 Here is what your ``spack.yaml`` looks like with this new setting:
 
@@ -84,13 +79,11 @@ Here is what your ``spack.yaml`` looks like with this new setting:
 Symlink location
 ^^^^^^^^^^^^^^^^
 
-Spack symlinks all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``,
-which is the default when ``view: true``.
-You can actually change this to any directory you want. For example, Homebrew
-uses ``/usr/local``, while Conda uses ``/Users/me/anaconda``. In order to access
-files in these locations, you need to update ``PATH`` and other environment variables
-to point to them. Activating the Spack environment does this automatically, but
-you can also manually set them in your ``.bashrc``.
+Spack symlinks all installations to ``/Users/me/spack/var/spack/environments/myenv/.spack-env/view``, which is the default when ``view: true``.
+You can actually change this to any directory you want.
+For example, Homebrew uses ``/usr/local``, while Conda uses ``/Users/me/anaconda``.
+In order to access files in these locations, you need to update ``PATH`` and other environment variables to point to them.
+Activating the Spack environment does this automatically, but you can also manually set them in your ``.bashrc``.
 
 .. warning::
 
@@ -124,11 +117,9 @@ you can also manually set them in your ``.bashrc``.
           sudo chown $(id -un):$(id -gn) /usr/local/$directory
       done
 
-   Depending on the packages you install in your environment, the exact list of
-   directories you need to create may vary. You may also find some packages
-   like Java libraries that install a single file to the installation prefix
-   instead of in a subdirectory. In this case, the action is the same, just replace
-   ``mkdir -p`` with ``touch`` in the for-loop above.
+Depending on the packages you install in your environment, the exact list of directories you need to create may vary.
+You may also find some packages like Java libraries that install a single file to the installation prefix instead of in a subdirectory.
+In this case, the action is the same, just replace ``mkdir -p`` with ``touch`` in the for-loop above.
 
    But again, it's safer just to use the default symlink location.
 
@@ -143,11 +134,9 @@ To actually concretize the environment, run:
 
    $ spack -e myenv concretize
 
-This will tell you which packages, if any, are already installed, and alert you
-to any conflicting specs.
+This will tell you which packages, if any, are already installed, and alert you to any conflicting specs.
 
-To actually install these packages and symlink them to your ``view:``
-directory, simply run:
+To actually install these packages and symlink them to your ``view:`` directory, simply run:
 
 .. code-block:: console
 
@@ -156,8 +145,8 @@ directory, simply run:
 
 Now, when you type ``which python3``, it should find the one you just installed.
 
-In order to change the default shell to our newer Bash installation, we first
-need to add it to this list of acceptable shells. Run:
+In order to change the default shell to our newer Bash installation, we first need to add it to this list of acceptable shells.
+Run:
 
 .. code-block:: console
 
@@ -169,16 +158,24 @@ and add the absolute path to your bash executable. Then run:
 
    $ chsh -s /path/to/bash
 
-Now, when you log out and log back in, ``echo $SHELL`` should point to the
-newer version of Bash.
+Now, when you log out and log back in, ``echo $SHELL`` should point to the newer version of Bash.
+
+-----------------------------
+Updating Package Repositories
+-----------------------------
+
+Before we upgrade our installed packages, we can update our Spack package repositories that come from git repos (like Spack's default community package repository) with:
+
+.. code-block:: console
+
+    $ spack repo update
 
 ---------------------------
-Updating Installed Packages
+Upgrading Installed Packages
 ---------------------------
 
-Let's say you upgraded to a new version of macOS, or a new version of Python
-was released, and you want to rebuild your entire software stack. To do this,
-simply run the following commands:
+Let's say we upgraded to a new version of macOS, or a new version of Python was released, and we want to rebuild our entire software stack.
+To do this, we'll run the following commands:
 
 .. code-block:: console
 
@@ -186,45 +183,31 @@ simply run the following commands:
    $ spack concretize --fresh --force
    $ spack install
 
-The ``--fresh`` flag tells Spack to use the latest version of every package
-where possible instead of trying to optimize for reuse of existing installed
-packages.
+The ``--fresh`` flag tells Spack to use the latest version of every package where it can, instead of trying to reuse what we've already got installed.
 
-The ``--force`` flag in addition tells Spack to overwrite its previous
-concretization decisions, allowing you to choose a new version of Python.
-If any of the new packages like Bash are already installed, ``spack install``
-won't re-install them, it will keep the symlinks in place.
+The ``--force`` flag in addition tells Spack to overwrite its previous concretization decisions, allowing us to choose a new version of Python.
+If some of the new packages (like Bash) are already installed, ``spack install`` will skip re-installing them and reuse the existing installation.
 
------------------------------------
-Updating & Cleaning Up Old Packages
------------------------------------
+.. note::
+   We can save a lot of time rebuilding our environment if we instead run
+   ``spack concretize --force --fresh-roots`` which will still upgrade all of
+   our explicitly installed "root" packages in the enviornment, but will
+   attempt to reuse existing libraries and lower level packages when possible.
 
-If you're looking to mimic the behavior of Homebrew, you may also want to
-clean up out-of-date packages from your environment after an upgrade. To
-upgrade your entire software stack within an environment and clean up old
-package versions, simply run the following commands:
+------------------------------------
+Upgrading & Cleaning Up Old Packages
+------------------------------------
+
+If we want to mimic what Homebrew does and clean up old, out-of-date packages from our environment after an upgrade, here's how to upgrade our entire software stack and tidy up the old versions:
 
 .. code-block:: console
 
    $ spack env activate myenv
-   $ spack mark -i --all
-   $ spack concretize --fresh --force
+   $ spack concretize --force --fresh
    $ spack install
-   $ spack gc
+   $ spack gc --except-any-environment
 
-Running ``spack mark -i --all`` tells Spack to mark all of the existing
-packages within an environment as "implicitly" installed. This tells
-Spack's garbage collection system that these packages should be cleaned up.
-
-Don't worry, however, this will not remove your entire environment.
-Running ``spack install`` will re-examine your spack environment after
-a fresh concretization and will re-mark any packages that should remain
-installed as "explicitly" installed.
-
-**Note:** if you use multiple Spack environments you should re-run ``spack install``
-in each of your environments prior to running ``spack gc`` to prevent Spack
-from uninstalling any shared packages that are no longer required by the
-environment you just upgraded.
+The final step, ``spack gc --except-any-environment``, runs Spack's garbage collector and removes any packages that are no longer needed by any managed Spack environment—which will clean up those old versions that got replaced during the upgrade.
 
 --------------
 Uninstallation
