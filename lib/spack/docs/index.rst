@@ -97,6 +97,7 @@ or refer to the full manual below.
    packaging_guide_1
    packaging_guide_2
    packaging_guide_3
+   packaging_guide_4
    build_systems
    developer_guide
 
