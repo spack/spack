@@ -51,7 +51,7 @@ def setup_parser(subparser: argparse.ArgumentParser) -> None:
         "--jobs",
         type=int,
         default=1,
-        help="Use a given number of threads to make the mirror (used in combination with -a)",
+        help="Use a given number of workers to make the mirror (used in combination with -a)",
     )
     create_parser.add_argument("-f", "--file", help="file with specs of packages to put in mirror")
     create_parser.add_argument(
@@ -611,21 +611,24 @@ def mirror_create(args):
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        threads=args.parallel,
+        workers=args.parallel,
     )
-
 
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
+    parallel = args.parallel > 1
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
-        mirror_fn = create_mirror_for_all_specs
+        parallel = True
     elif args.all and ev.active_environment():
         mirror_specs = concrete_specs_from_environment()
-        mirror_fn = create_mirror_for_individual_specs
     else:
         mirror_specs = concrete_specs_from_user(args)
+
+    if parallel:
+       mirror_fn = create_mirror_for_all_specs
+    else:
         mirror_fn = create_mirror_for_individual_specs
 
     mirror_specs, _ = lang.stable_partition(mirror_specs, predicate_fn=include_fn)
@@ -639,12 +642,12 @@ def create_mirror_for_one_spec(candidate, mirror_cache):
     return mirror_stats
 
 
-def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, threads):
+def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, workers):
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
-    with spack.util.parallel.make_concurrent_executor(jobs=threads) as executor:
-        # Submit tasks to the thread pool
+    with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
+        # Submit tasks to the process pool
         futures = [
             executor.submit(create_mirror_for_one_spec, candidate, mirror_cache)
             for candidate in mirror_specs
@@ -656,7 +659,7 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, thre
     process_mirror_stats(*mirror_stats.stats())
 
 
-def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, threads):
+def create_mirror_for_individual_specs(mirror_specs, path, skip_unstable_versions, workers):
     present, mirrored, error = spack.mirrors.utils.create(
         path, mirror_specs, skip_unstable_versions
     )
