@@ -8,7 +8,7 @@
 Spec Syntax
 ===========
 
-Spack has a specific syntax to describe package constraints, that is called ``Spec Syntax``.
+Spack has a specific syntax to describe package constraints.
 Each constraint is individually referred to as a *spec*. Spack uses specs to:
 
 1. Refer to a particular build configuration of a package, or

@@ -2,9 +2,11 @@
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-=====================================
-Spack for Homebrew/Conda Users
-=====================================
+.. _spack-environments-basic-usage:
+
+==================
+Spack Environments
+==================
 
 Spack is an incredibly powerful package manager, designed for supercomputers
 where users have diverse installation needs. But Spack can also be used to

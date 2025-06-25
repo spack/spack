@@ -57,16 +57,18 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Basic Usage
 
+   installing_prerequisites
    basic_usage
+   replace_conda_homebrew
    frequently_asked_questions
+   windows
+   getting_help
 
 .. toctree::
    :maxdepth: 2
    :caption: Advanced Topics
 
    advanced_topics
-   replace_conda_homebrew
-   windows
 
 .. toctree::
    :maxdepth: 2
