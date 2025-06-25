@@ -15,7 +15,6 @@ class Externaltest(Package):
 
     depends_on("stuff")
     depends_on("externaltool")
-    depends_on("ninja")
 
     def install(self, spec, prefix):
         touch(join_path(prefix, "an_installation_file"))
