@@ -159,6 +159,79 @@ List of Popular Build Caches
 
 * `Extreme-scale Scientific Software Stack (E4S) <https://e4s-project.github.io/>`_: `build cache <https://oaciss.uoregon.edu/e4s/inventory.html>`_
 
+
+------------------------------
+Creating and Trusting GPG keys
+------------------------------
+
+.. _cmd-spack-gpg:
+
+^^^^^^^^^^^^^
+``spack gpg``
+^^^^^^^^^^^^^
+
+Spack has support for signing and verifying packages using GPG keys.
+A separate keyring is used for Spack, so any keys available in the user's home directory are not used.
+
+^^^^^^^^^^^^^^^^^^
+``spack gpg init``
+^^^^^^^^^^^^^^^^^^
+
+When Spack is first installed, its keyring is empty.
+Keys stored in :file:`var/spack/gpg` are the default keys for a Spack installation.
+These keys may be imported by running ``spack gpg init``.
+This will import the default keys into the keyring as trusted keys.
+
+^^^^^^^^^^^^^
+Trusting keys
+^^^^^^^^^^^^^
+
+Additional keys may be added to the keyring using:
+
+.. code-block:: console
+
+   $ spack gpg trust <keyfile>
+
+Once a key is trusted, packages signed by the owner of the key may be installed.
+
+If you would like to remove keys from your keyring, use instead:
+
+.. code-block:: console
+
+   $ spack gpg untrust <keyid>
+
+Key IDs can be email addresses, names, or (best) fingerprints.
+
+^^^^^^^^^^^^^
+Creating keys
+^^^^^^^^^^^^^
+
+You may also create your own key so that you may sign your own packages using
+
+.. code-block:: console
+
+   spack gpg create <name> <email>
+
+By default, the key has no expiration, but it may be set with the ``--expires <date>`` flag.
+It is also recommended to add a comment as to the use of the key using the ``--comment <comment>`` flag.
+The public half of the key can also be exported for sharing with others so that they may use packages you have signed using the ``--export <keyfile>`` flag.
+Secret keys may also be later exported using the ``spack gpg export <location> [<key>...]`` command.
+
+.. admonition:: Key creation speed
+   :class: tip
+   :collapsible:
+
+      The creation of a new GPG key requires generating a lot of random numbers.
+      Depending on the entropy produced on your system, the entire process may take a long time (*even appearing to hang*).
+      Virtual machines and cloud instances are particularly likely to display this behavior.
+
+      To speed it up, you may install tools like ``rngd``, which is usually available as a package in the host OS.
+      Another alternative is ``haveged``, which can be installed on RHEL/CentOS machines.
+
+      `This Digital Ocean tutorial
+      <https://www.digitalocean.com/community/tutorials/how-to-setup-additional-entropy-for-cloud-servers-using-haveged>`_
+      provides a good overview of sources of randomness.
+
 -------------------
 Build Cache Signing
 -------------------
