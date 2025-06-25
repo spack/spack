@@ -51,6 +51,7 @@ or refer to the full manual below.
 
    features
    getting_started
+   spec_syntax
    basic_usage
    advanced_topics
    replace_conda_homebrew
