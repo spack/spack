@@ -108,8 +108,7 @@ on ``$tempdir`` and ``$spack``.
 When Spack builds a package, it creates a temporary directory within the
 ``build_stage``. After the package is successfully installed, Spack deletes
 the temporary directory it used to build. Unsuccessful builds are not
-deleted, but you can manually purge them with :ref:`spack clean --stage
-<cmd-spack-clean>`.
+deleted, but you can manually purge them with ``spack clean --stage``.
 
 .. note::
 
@@ -122,8 +121,7 @@ deleted, but you can manually purge them with :ref:`spack clean --stage
 
 Location to cache downloaded tarballs and repositories. By default, these
 are stored in ``$spack/var/spack/cache``. These are stored indefinitely
-by default and can be purged with :ref:`spack clean --downloads
-<cmd-spack-clean>`.
+by default and can be purged with ``spack clean --downloads``.
 
 .. _Misc Cache:
 
@@ -133,7 +131,7 @@ by default and can be purged with :ref:`spack clean --downloads
 
 Temporary directory to store long-lived cache files, such as indices of
 packages available in repositories.  Defaults to ``~/.spack/cache``.  Can
-be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
+be purged with ``spack clean --misc-cache``.
 
 In some cases, e.g., if you work with many Spack instances or many different
 versions of Spack, it makes sense to have a cache per instance or per version.
@@ -141,8 +139,6 @@ You can do that by changing the value to either:
 
 * ``~/.spack/$spack_instance_id/cache`` for per-instance caches, or
 * ``~/.spack/$spack_short_version/cache`` for per-spack-version caches.
-
-Can be purged with :ref:`spack clean --misc-cache <cmd-spack-clean>`.
 
 --------------------
 ``verify_ssl``

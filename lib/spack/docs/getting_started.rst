@@ -120,7 +120,7 @@ Shell support
 
 Sourcing the shell scripts will put the ``spack`` command in your ``PATH``, set
 up your ``MODULEPATH`` to use Spack's packages, and add other useful
-shell integration for :ref:`certain commands <packaging-shell-support>`,
+shell integration for :ref:`certain commands <packaging-workflow>`,
 :ref:`environments <environments>`, and :ref:`modules <modules>`. For
 ``bash`` and ``zsh``, it also sets up tab completion.
 

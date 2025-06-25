@@ -1132,7 +1132,7 @@ For example, consider a ``libdwarf`` package that just depends on ``libelf`` and
        depends_on("c")
        depends_on("libelf")
 
-You may not even have to implement :ref:`helper methods <configure_args>` like ``configure_args`` to make it work.
+You may not even have to implement :ref:`helper methods <spec-objects>` like ``configure_args`` to make it work.
 In the ``configure`` stage Spack by default simply :ref:`runs <running_build_executables>` ``configure(f"--prefix={prefix}")``.
 The configure script picks up the compiler wrapper from the ``CC`` environment variable, and continues to run tests to find the ``libelf`` headers and libraries.
 Because the compiler wrapper is set up to automatically include the ``-I<libelf prefix>/include`` and ``-L<libelf prefix>/lib`` flags, the configure script succeeds and uses the correct ``libelf.h`` header and the ``libelf.so`` library out of the box.
@@ -1145,7 +1145,7 @@ Runtime library search paths
 Spack heavily makes use of `RPATHs <http://en.wikipedia.org/wiki/Rpath>`_ on Linux and macOS to make executables directly runnable after installation.
 Executables are able to find their needed libraries *without* any of the infamous environment variables such as ``LD_LIBRARY_PATH`` on Linux or ``DYLD_LIBRARY_PATH`` on macOS.
 
-The :ref:`compiler-wrapper` is the main component that ensures that all binaries built by Spack have the correct RPATHs set.
+The :ref:`compiler wrapper <compiler-wrappers>` is the main component that ensures that all binaries built by Spack have the correct RPATHs set.
 As a package author, you rarely need to worry about RPATHs: the relevant compiler flags are automatically injected through the compiler wrappers, and the build system is blisfully unaware of them.
 
 This works for most packages and build systems, with the notable exception of CMake, which has its own RPATH handling.
@@ -1424,6 +1424,8 @@ using MPI wrappers will work, even on a Cray:
    env["CC"] = spec["mpi"].mpicc
 
 This is because on Cray, ``spec["mpi"].mpicc`` is just ``spack_cc``.
+
+.. _packaging-workflow:
 
 -------------------------------
 Packaging workflow and commands

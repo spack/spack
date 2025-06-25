@@ -2249,8 +2249,7 @@ You could put this logic in ``install()``, but putting it in a patch
 function gives you some benefits.  First, Spack ensures that the
 ``patch()`` function is run once per code checkout.  That means that
 if you run install, hit ctrl-C, and run install again, the code in the
-patch function is only run once.  Also, you can tell Spack to run only
-the patching part of the build using the :ref:`cmd-spack-patch` command.
+patch function is only run once.
 
 .. _patch_dependency_patching:
 
