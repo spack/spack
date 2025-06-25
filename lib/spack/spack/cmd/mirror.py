@@ -617,13 +617,14 @@ def mirror_create(args):
 
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
-    parallel = args.jobs > 1
+    parallel = getattr(args, "jobs", 1) > 1
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
         parallel = True
     elif args.all and ev.active_environment():
         mirror_specs = concrete_specs_from_environment()
+        print(f"AAL DEBUG: Got {len(mirror_specs)} specs from environment")
     else:
         mirror_specs = concrete_specs_from_user(args)
 
@@ -647,6 +648,7 @@ def create_mirror_for_all_specs(mirror_specs, path, skip_unstable_versions, work
     mirror_cache, mirror_stats = spack.mirrors.utils.mirror_cache_and_stats(
         path, skip_unstable_versions=skip_unstable_versions
     )
+    print(f"AAL create_mirror_for_all_specs: Got {len(mirror_specs)} specs from environment")
     with spack.util.parallel.make_concurrent_executor(jobs=workers) as executor:
         # Submit tasks to the process pool
         futures = [
