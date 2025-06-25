@@ -185,6 +185,40 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
         upstream_db._check_ref_counts()
         downstream_db._check_ref_counts()
 
+from spack.directory_layout import DirectoryLayoutError
+#from conftest import MockLayout
+
+def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
+    upstream_db, downstream_db = upstream_and_downstream_db
+
+    def fail_for_z(spec):
+        if spec.name == "z":
+            raise DirectoryLayoutError("Fake layout error for z")
+    #monkeypatch.setattr(MockLayout, "ensure_installed", fail_for_z)
+
+    upstream_db.layout.ensure_installed = fail_for_z
+
+    builder = spack.repo.MockRepositoryBuilder(tmpdir.mkdir("mock.repo"))
+    builder.add_package("z")
+    builder.add_package("y", dependencies=[("z", "build", None)])
+    builder.add_package("x", dependencies=[("y", None, None)])
+
+    with spack.repo.use_repositories(builder.root):
+        x = spack.concretize.concretize_one("x")
+        y = x["y"]
+        z = y["z"]
+
+        with writable(upstream_db):
+            upstream_db.add(y)
+        upstream_db._read()
+
+        upstream, record = downstream_db.query_by_spec_hash(z.dag_hash())
+        assert upstream
+        assert not record.installed
+
+        assert not z.installed
+        assert not z.installed_upstream
+
 
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
     upstream_db, downstream_db = upstream_and_downstream_db
