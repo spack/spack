@@ -645,4 +645,3 @@ def test_git_provenance_relative_to_mirror(
 
     spec_head = spack.concretize.concretize_one(f"git-test-commit@main commit={head_commit}")
     assert spec_head.variants["commit"].value == head_commit
-
