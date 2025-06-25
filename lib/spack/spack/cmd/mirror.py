@@ -611,12 +611,12 @@ def mirror_create(args):
         mirror_specs,
         path=path,
         skip_unstable_versions=args.skip_unstable_versions,
-        workers=args.parallel,
+        workers=args.jobs,
     )
 
 def _specs_and_action(args):
     include_fn = IncludeFilter(args)
-    parallel = args.parallel > 1
+    parallel = args.jobs > 1
 
     if args.all and not ev.active_environment():
         mirror_specs = all_specs_with_all_versions()
