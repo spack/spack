@@ -170,9 +170,9 @@ Before we upgrade our installed packages, we can update our Spack package reposi
 
     $ spack repo update
 
----------------------------
+----------------------------
 Upgrading Installed Packages
----------------------------
+----------------------------
 
 Let's say we upgraded to a new version of macOS, or a new version of Python was released, and we want to rebuild our entire software stack.
 To do this, we'll run the following commands:
