@@ -8,22 +8,25 @@
 Spec Syntax
 ===========
 
-We know that ``spack install``, ``spack uninstall``, and other
-commands take a package name with an optional version specifier. In
-Spack, that descriptor is called a *spec*. Spack uses specs to refer
-to a particular build configuration (or configurations) of a package.
+Spack has a specific syntax to describe package constraints, that is called ``Spec Syntax``.
+Each constraint is individually referred to as a *spec*. Spack uses specs to:
+
+1. Refer to a particular build configuration of a package, or
+2. Express requirements, or preferences, on packages via configuration files, or
+3. Query installed packages, or buildcaches
+
 Specs are more than a package name and a version; you can use them to
 specify the compiler, compiler version, architecture, compile options,
 and dependency options for a build. In this section, we'll go over
 the full syntax of specs.
 
-Here is an example of a much longer spec than we've seen thus far:
+Here is an example of a moderately complex spec:
 
 .. code-block:: none
 
    mpileaks @1.2:1.4 +debug ~qt target=x86_64 %gcc@4.7.5 ^callpath @1.1 %gcc@4.7.2
 
-If provided to ``spack install``, this will install the ``mpileaks``
+If used to install a package, this will install the ``mpileaks``
 library at some version between ``1.2`` and ``1.4`` (inclusive),
 built using ``gcc`` at version 4.7.5 for a generic ``x86_64`` architecture,
 with debug options enabled, and without Qt support. Additionally, it
@@ -149,7 +152,10 @@ unspecified version, but packages can depend on other packages with
 could depend on ``mpich@1.2:`` if it can only build with version
 ``1.2`` or higher of ``mpich``.
 
-.. note:: Windows Spec Syntax Caveats
+.. admonition:: Windows Spec Syntax Caveats
+   :class: note
+   :collapsible:
+
    Windows has a few idiosyncrasies when it comes to the Spack spec syntax and the use of certain shells.
    Spack's spec dependency syntax uses the carat (``^``) character; however, this is an escape string in CMD,
    so it must be escaped with an additional carat (i.e., ``^^``).
@@ -279,26 +285,6 @@ by appending ``=`` and the Spack version to the git ref. For example:
 
 Details about how versions are compared and how Spack determines if
 one version is less than another are discussed in the developer guide.
-
-------------------
-Compiler specifier
-------------------
-
-A compiler specifier comes somewhere after a package name and starts
-with ``%``. It tells Spack what compiler(s) a particular package
-should be built with. After the ``%`` should come the name of some
-registered Spack compiler. This might include ``gcc`` or ``intel``,
-but the specific compilers available depend on the site. You can run
-``spack compilers`` to get a list; more on this below.
-
-The compiler spec can be followed by an optional *compiler version*.
-A compiler version specifier looks exactly like a package version
-specifier. Version specifiers will associate with the nearest package
-name or compiler specifier to their left in the spec.
-
-If the compiler spec is omitted, Spack will choose a default compiler
-based on site policies.
-
 
 .. _basic-variants:
 
@@ -654,8 +640,6 @@ special syntax:
 Concretizing the spec above produces the following DAG:
 
 .. figure:: images/strumpack_virtuals.svg
-   :scale: 60 %
-   :align: center
 
 where ``intel-parallel-studio`` *could* provide ``mpi``, ``lapack``, and ``blas`` but is used only for the former. The ``lapack``
 and ``blas`` dependencies are satisfied by ``openblas``.
