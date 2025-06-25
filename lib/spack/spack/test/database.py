@@ -190,8 +190,10 @@ def test_installed_upstream(upstream_and_downstream_db, tmpdir):
 def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypatch, config):
     upstream_db, downstream_db = upstream_and_downstream_db
 
+    z_y_prefix = str(tmpdir.join("z-y"))
+
     def fail_for_z(spec):
-        if spec.name == "z":
+        if spec.prefix == z_y_prefix:
             raise DirectoryLayoutError("Fake layout error for z")
 
     upstream_db.layout.ensure_installed = fail_for_z
@@ -204,21 +206,37 @@ def test_missing_upstream_build_dep(upstream_and_downstream_db, tmpdir, monkeypa
 
     with spack.repo.use_repositories(builder.root):
         y = spack.concretize.concretize_one("y")
-        z = y["z"]
+        z_y = None
+        for dep in y.traverse():
+            if dep.name == "z":
+                z_y = dep
+                break
+        assert z_y
+        z_y.set_prefix(z_y_prefix)
 
         with writable(upstream_db):
             upstream_db.add(y)
         upstream_db._read()
 
-        upstream, record = downstream_db.query_by_spec_hash(z.dag_hash())
+        upstream, record = downstream_db.query_by_spec_hash(z_y.dag_hash())
         assert upstream
         assert not record.installed
 
         assert y.installed
         assert y.installed_upstream
 
-        assert not z.installed
-        assert not z.installed_upstream
+        assert not z_y.installed
+        assert not z_y.installed_upstream
+
+        # Now add z to downstream with non-triggering prefix
+        # and make sure z *is* installed 
+
+        z_new = z_y.copy()
+        z_new.set_prefix(str(tmpdir.join("z-new")))
+        downstream_db.add(z_new)
+
+        assert z_new.installed
+        assert not z_new.installed_upstream
 
 
 def test_removed_upstream_dep(upstream_and_downstream_db, tmpdir, capsys, config):
