@@ -2019,8 +2019,8 @@ class Spec:
         if not self.concrete:
             return False
 
-        upstream, _ = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
-        return upstream
+        upstream, record = spack.store.STORE.db.query_by_spec_hash(self.dag_hash())
+        return upstream and record and record.installed
 
     @overload
     def traverse(
