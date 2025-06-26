@@ -125,6 +125,82 @@ follows:
 See :ref:`configuration_environment_variables` for more information on
 how to configure environment modifications in Spack config files.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Extra attributes for external compilers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+External package configuration allows several extra attributes for
+configuring compilers. The ``compilers`` extra attribute field is
+required to clarify which paths within the compiler prefix are used
+for which languages:
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+
+Other fields accepted by compilers under ``extra_attributes`` are ``flags``, ``environment``, ``extra_rpaths``, and ``implicit_rpaths``.
+
+.. code-block:: yaml
+
+   packages:
+     gcc:
+       externals:
+       - spec: gcc@10.5.0 languages='c,c++,fortran'
+         prefix: /usr
+         extra_attributes:
+           compilers:
+             c: /usr/bin/gcc-10
+             cxx: /usr/bin/g++-10
+             fortran: /usr/bin/gfortran-10
+           flags:
+             cflags: -O3
+             fflags: -g -O2
+           environment:
+             set:
+               GCC_ROOT: /usr
+             prepend_path:
+               PATH: /usr/unusual_path_for_ld/bin
+           implicit_rpaths:
+             - /usr/lib/gcc
+           extra_rpaths:
+             - /usr/lib/unusual_gcc_path
+
+The ``flags`` attribute specifies compiler flags to apply to every
+spec that depends on this compiler. The accepted flag types are
+``cflags``, ``cxxflags``, ``fflags``, ``cppflags``, ``ldflags``, and
+``ldlibs``. In the example above, every spec compiled with this
+compiler will pass the flags ``-g -O2`` to ``/usr/bin/gfortran-10``
+and will pass the flag ``-O3`` to ``/usr/bin/gcc-10``.
+
+The ``environment`` attribute specifies user environment modifications
+to apply before every time the compiler is invoked. The available
+operations are ``set``, ``unset``, ``prepend_path``, ``append_path``,
+and ``remove_path``. In the example above, Spack will set
+``GCC_ROOT=/usr`` and set ``PATH=/usr/unusual_path_for_ld/bin:$PATH``
+before handing control to the build system that will use this
+compiler.
+
+The ``extra_rpaths`` and ``implicit_rpaths`` fields specify additional
+paths to pass as rpaths to the linker when using this compiler. The
+``implicit_rpaths`` field is filled in automatically by Spack when
+detecting compilers, and the ``extra_rpaths`` field is available for
+users to configure necessary rpaths that have not been detected by
+Spack. In addition, paths from ``extra_rpaths`` are added as library
+search paths for the linker. In the example above, both
+``/usr/lib/gcc`` and ``/usr/lib/unusual_gcc_path`` would be added as
+rpaths to the linker, and ``-L/usr/lib/unusual_gcc_path`` would be
+added as well.
+
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Prevent packages from being built from sources
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
