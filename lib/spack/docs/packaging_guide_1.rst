@@ -472,7 +472,11 @@ If a URL cannot be derived systematically, or there is a special URL for one of 
 
 .. code-block:: python
 
-   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac", url="http://example.com/foo-8.2.1-special-version.tar.gz")
+   version(
+       "8.2.1",
+       sha256="91ee5e9f42ba3d34e414443b36a27b797a56a47aad6bb1e4c1769e69c77ce0ca",
+       url="http://example.com/foo-8.2.1-special-version.tar.gz"
+   )
 
 
 When you supply a custom URL for a version, Spack uses that URL *verbatim* and does not perform extrapolation.
@@ -556,10 +560,10 @@ It fetches the tarballs you ask for and prints out a list of ``version`` command
 .. code-block:: console
 
    ==> Checksummed new versions of libelf:
-       version("0.8.13", shas256="ec6ddbe4b1ac220244230b040fd6a5a102a96337603e703885848ff64cb582a5")
-       version("0.8.12", shas256="46db404a287b3d17210b4183cbc7055d7b8bbcb15957daeb51f2dc06002ca8a3")
-       version("0.8.11", shas256="e5be0f5d199ad11fbc74e59a8e120cc8b6fbcadaf1827c4e8e6a133ceaadbc4c")
-       version("0.8.10", shas256="f1708dd17a476a7abaf6c395723e0745ba8f6b196115513b6d8922d4b5bfbab4")
+       version("0.8.13", sha256="ec6ddbe4b1ac220244230b040fd6a5a102a96337603e703885848ff64cb582a5")
+       version("0.8.12", sha256="46db404a287b3d17210b4183cbc7055d7b8bbcb15957daeb51f2dc06002ca8a3")
+       version("0.8.11", sha256="e5be0f5d199ad11fbc74e59a8e120cc8b6fbcadaf1827c4e8e6a133ceaadbc4c")
+       version("0.8.10", sha256="f1708dd17a476a7abaf6c395723e0745ba8f6b196115513b6d8922d4b5bfbab4")
 
 .. note::
 
@@ -815,9 +819,9 @@ For example:
 
        version("develop", branch="develop")
        version("master",  branch="master")
-       version("12.12.1", md5="ecd4606fa332212433c98bf950a69cc7")
-       version("12.10.1", md5="667333dbd7c0f031d47d7c5511fd0810")
-       version("12.8.1",  md5="9f37f683ee2b427b5540db8a20ed6b15")
+       version("12.12.1", sha256="87428fc522803d31065e7bce3cf03fe475096631e5e07bbd7a0fde60c4cf25c7")
+       version("12.10.1", sha256="0263829989b6fd954f72baaf2fc64bc2e2f01d692d4de72986ea808f6e99813f")
+       version("12.8.1",  sha256="a3a5e715f0cc574a73c3f9bebb6bc24f32ffd5b67b387244c2c909da779a1478")
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
@@ -1023,7 +1027,7 @@ checksum.
 
 .. code-block:: python
 
-       version("1.9.5.1.1", md5="d035e4bc704d136db79b43ab371b27d2",
+       version("1.9.5.1.1", sha256="8d74beec1be996322ad76813bafb92d40839895d6dd7ee808b17ca201eac98be",
                url="https://www.github.com/jswhit/pyproj/tarball/0be612cc9f972e38b50a90c946a9b353e2ab140f")
 
 .. _hg-fetch:
@@ -1170,7 +1174,7 @@ executables and other custom archive types), you can add ``expand=False`` to a
 
 .. code-block:: python
 
-   version("8.2.1", md5="4136d7b4c04df68b686570afa26988ac",
+   version("8.2.1", sha256="a2bbdb2de53523b8099b37013f251546f3d65dbe7a0774fa41af0a4176992fd4",
            url="http://example.com/foo-8.2.1-special-version.sh", expand=False)
 
 When ``expand`` is set to ``False``, Spack sets the current working
@@ -1522,7 +1526,7 @@ Spack makes this relatively easy.  Let's take a look at the
        url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
        list_url = homepage
 
-       version("20130729", md5="4cc5e48693f7b93b7aa0261e63c0e21d")
+       version("20130729", sha256="092fcfbbcfca3b5be7ae1b5e58538e92c35ab273ae13664fed0d67484c8e78a6")
        ...
 
        depends_on("libelf")
@@ -1892,7 +1896,7 @@ For example:
        homepage = "https://github.com/hpc/mpileaks"
        url = "https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
-       version("1.0", md5="8838c574b39202a57d7c2d68692718aa")
+       version("1.0", sha256="768c71d785bf6bbbf8c4d6af6582041f2659027140a962cd0c55b11eddfd5e3d")
 
        depends_on("mpi")
        depends_on("adept-utils")
