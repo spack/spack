@@ -52,12 +52,12 @@ or refer to the full manual below.
    features
    getting_started
    spec_syntax
+   installing_prerequisites
 
 .. toctree::
    :maxdepth: 2
    :caption: Basic Usage
 
-   installing_prerequisites
    basic_usage
    replace_conda_homebrew
    frequently_asked_questions
