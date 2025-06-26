@@ -87,10 +87,10 @@ If the search was successful, you can now list known compilers, and get an outpu
    -- gcc ubuntu20.04-x86_64 ---------------------------------------
    [e]  gcc@9.4.0  [e]  gcc@8.4.0  [e]  gcc@10.5.0
 
-If no compiler was found, you need either:
+If no compiler was found, you need either to:
 
-* To install further prerequisites, for which we refer to :ref:`verify-spack-prerequisites`, and repeat the search above.
-* To register a buildcache that provides a compiler already available as a binary
+* Install further prerequisites, see :ref:`verify-spack-prerequisites`, and repeat the search above.
+* Register a buildcache that provides a compiler already available as a binary
 
 Once a compiler is available you can proceed installing your first package:
 
@@ -202,10 +202,9 @@ There are further resources in the documentation, that cover both basic and adva
 
    .. tab-item:: Basic Usage
 
-      1. :ref:`verify-spack-prerequisites`
-      2. :ref:`basic-usage`
-      3. :ref:`compiler-config`
-      4. :ref:`spack-environments-basic-usage`
+      1. :ref:`basic-usage`
+      2. :ref:`compiler-config`
+      3. :ref:`spack-environments-basic-usage`
 
    .. tab-item:: Advanced Topics
 
