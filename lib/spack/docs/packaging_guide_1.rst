@@ -141,12 +141,12 @@ Package class names
 ^^^^^^^^^^^^^^^^^^^
 
 Spack loads ``package.py`` files dynamically, and it needs to find a special class name in the file for the load to succeed.
-The **package class** is formed by converting words separated by ``-`` in the file name to CamelCase.
-If the name starts with a number, we prefix the class name with ``_``.
+The **package class** is formed by converting words separated by ``-`` in the package name to CamelCase.
+If the package name starts with a number, we prefix the class name with ``_``.
 Here are some examples:
 
 =================  =================
- Module Name         Class Name
+ Package Name         Class Name
 =================  =================
  ``foo-bar``         ``FooBar``
  ``3proxy``          ``_3proxy``
