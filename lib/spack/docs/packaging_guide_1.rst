@@ -190,7 +190,7 @@ If Spack finds none of these variables set, it will look for ``vim``, ``vi``, ``
 Creating new packages
 ^^^^^^^^^^^^^^^^^^^^^
 
-To create a new package Spack provides a command that generates a ``package.py`` file in an existing repository, with a boilerplate package template.
+To create a new package, Spack provides a command that generates a ``package.py`` file in an existing repository, with a boilerplate package template.
 Here's an example:
 
 .. code-block:: console
@@ -583,15 +583,15 @@ See the documentation on :ref:`attribute_list_url` and :ref:`attribute_list_dept
 """"""""""""
 
 This optional attribute can be set to tell Spack where to scan for links to other versions of the package.
-For example, ``libdwarf`` has the homepage as the ``list_url``, because that is where links to old versions are:
+For example, the following package has a ``list_url`` attribute that points to a page listing all available versions of the package:
 
 .. code-block:: python
    :linenos:
 
-   class Libdwarf(Package):
-       homepage = "http://www.prevanders.net/dwarf.html"
-       url      = "http://www.prevanders.net/libdwarf-20130729.tar.gz"
-       list_url = homepage
+   class Example(Package):
+       homepage = "http://www.example.com"
+       url      = "http://www.example.com/libexample-1.2.3.tar.gz"
+       list_url = "http://www.example.com/downloads/all-versions.html"
 
 .. _attribute_list_depth:
 
@@ -599,7 +599,7 @@ For example, ``libdwarf`` has the homepage as the ``list_url``, because that is 
 ``list_depth``
 """"""""""""""
 
-``libdwarf`` and many other packages have a listing of available versions on a single webpage, but not all do.
+Many packages have a listing of available versions on a single webpage, but not all do.
 For example, ``mpich`` has a tarball URL that looks like this:
 
 .. code-block:: python
@@ -662,6 +662,8 @@ In this case, you can mark an older version as preferred using the ``preferred=T
        version("2.0.0", sha256="...")
        version("1.2.3", sha256="...", preferred=True)
 
+See the section on :ref:`version ordering <version-comparison>` for more details and exceptions on how the latest version is computed.
+
 .. _deprecate:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -671,10 +673,10 @@ Deprecating old versions
 There are many reasons to remove old versions of software:
 
 #. Security vulnerabilities (most serious reason)
+#. No longer available for download (right to be forgotten)
+#. Maintainer/developer inability/unwillingness to support old versions
 #. Changing build systems that increase package complexity
 #. Changing dependencies/patches/resources/flags that increase package complexity
-#. Maintainer/developer inability/unwillingness to support old versions
-#. No longer available for download (right to be forgotten)
 #. Package or version rename
 
 At the same time, there are many reasons to keep old versions of software:
@@ -706,7 +708,7 @@ If you use ``spack install --deprecated``, this check can be skipped.
 This also applies to package recipes that are renamed or removed.
 You should first deprecate all versions before removing a package. If you need to rename it, you can deprecate the old package and create a new package at the same time.
 
-Version deprecations should always last at least one release of the builtin package repository cycle before the version is completely removed.
+Version deprecations should always last at least one release cycle of the builtin package repository before the version is completely removed.
 No version should be removed without such a deprecation process.
 This gives users a chance to complain about the deprecation in case the old version is needed for some application.
 If you require a deprecated version of a package, simply submit a PR to remove ``deprecated=True`` from the package.
@@ -742,13 +744,13 @@ Spack supports alpha, beta and release candidate suffixes: ``1.2alpha1 < 1.2beta
 Any suffix not recognized as a pre-release is treated as an ordinary string component, so ``1.2 < 1.2-mysuffix``.
 
 Finally, there are a few special string components that are considered "infinity versions".
-They include ``develop``, ``main``, ``master``, ``head``, ``trunk``, and ``stable``.
+They include ``develop``, ``main``, ``master``, ``head``, ``trunk``, and ``stable``, in descending order.
 For example: ``1.2 < develop``.
 These are useful for specifying the most recent development version of a package (often a moving target like a git branch), without assigning a specific version number.
 Infinity versions are not automatically used when determining the latest version of a package unless explicitly required by another package or user.
 
 More formally, the order on versions is defined as follows.
-A version string is split into a list of components based on delimiters such as ``.`` and ``-`` and string boundaries.
+A version string is split into a list of components based on delimiters such as ``.``, ``-``, ``_``, and string boundaries.
 The components are split into the **release** and a possible **pre-release** (if the last component is numeric and the second to last is a string ``alpha``, ``beta`` or ``rc``).
 The release components are ordered lexicographically, with comparison between different types of components as follows:
 
@@ -825,7 +827,7 @@ For example:
 
 If a package contains both a ``url`` and ``git`` class-level attribute,
 Spack decides which to use based on the arguments to the ``version()``
-directive. Versions containing a specific branch, tag, or revision are
+directive. Versions containing a specific branch, tag, commit or revision are
 assumed to be for VCS download methods, while versions containing a
 checksum are assumed to be for URL download methods.
 
@@ -908,9 +910,8 @@ Branches
 
      version("experimental", branch="experimental")
 
-  This download method is untrusted, and is not recommended. Branches are
-  moving targets, so the commit you get when you install the package likely
-  won't be the same commit that was used when the package was first written.
+  This download method is untrusted, and is not recommended for production installations.
+  Branches are moving targets, so the commit you get when you install the package likely won't be the same commit that was used when the package was first written.
 
 Tags
   To fetch from a particular tag, use ``tag`` instead:
@@ -919,34 +920,26 @@ Tags
 
      version("1.0.1", tag="v1.0.1")
 
-  This download method is untrusted, and is not recommended. Although tags
-  are generally more stable than branches, Git allows tags to be moved.
-  Many developers use tags to denote rolling releases, and may move the
-  tag when a bug is patched.
+  This download method is untrusted, and is not recommended.
+  Although tags are generally more stable than branches, Git allows tags to be moved.
+  Many developers use tags to denote rolling releases, and may move the tag when a bug is fixed.
+  Instead, it is recommended to combine the ``tag`` and ``commit`` options (see below).
 
 Commits
   Finally, to fetch a particular commit, use ``commit``:
 
   .. code-block:: python
 
-     version("2014-10-08", commit="9d38cd4e2c94c3cea97d0e2924814acc")
+     version("2014-10-08", commit="1e6ef73d93a28240f954513bc4c2ed46178fa32b")
+     version("1.0.4", tag="v1.0.4", commit="420136f6f1f26050d95138e27cf8bc905bc5e7f52")   
 
-  This doesn't have to be a full hash; you can abbreviate it as you'd
-  expect with git:
+  This download method *is trusted*, provided that the full commit sha is specified.
+  It is the recommended way to securely download from a Git repository.
 
-  .. code-block:: python
-
-     version("2014-10-08", commit="9d38cd")
-
-  This download method *is trusted*.  It is the recommended way to
-  securely download from a Git repository.
-
-  It may be useful to provide a saner version for commits like this,
-  e.g., you might use the date as the version, as done above. Or, if you
-  know the commit at which a release was cut, you can use the release
-  version. It's up to the package author to decide what makes the most
-  sense. Although you can use the commit hash as the version number,
-  this is not recommended, as it won't sort properly.
+  It may be useful to provide a saner version for commits like this, e.g., you might use the date as the version, as done above.
+  Or, if you know the commit at which a release was cut, you can use the release version.
+  It's up to the package author to decide what makes the most sense.
+  It is not recommended to use the commit hash as the version itself, since it won't sort properly.
 
 Submodules
   You can supply ``submodules=True`` to cause Spack to fetch submodules
@@ -1348,7 +1341,7 @@ Within a package recipe a multi-valued variant is tested using a ``key=value`` s
   .. code-block:: python
 
     if spec.satisfies("languages=jit"):
-        options.append("--enable-host-shared")
+        options.append("--enable-jit")
 
 """""""""""""""""""""""""""""""""""""""""""
 Complex validation logic for variant values
@@ -1399,7 +1392,7 @@ Conditional Possible Values
 There are cases where a variant may take multiple values, and the list of allowed values
 expands over time. Consider, for instance, the C++ standard with which we might compile
 Boost, which can take one of multiple possible values with the latest standards
-only available from a certain version on.
+only available for more recent versions.
 
 To model a similar situation we can use *conditional possible values* in the variant declaration:
 
@@ -1446,8 +1439,7 @@ values as the ``when`` argument of
 Sticky Variants
 ^^^^^^^^^^^^^^^
 
-The variant directive can be marked as ``sticky`` by setting to ``True`` the
-corresponding argument:
+The variant directive can be marked as ``sticky`` by setting the corresponding argument to ``True``:
 
 .. code-block:: python
 
@@ -1566,7 +1558,7 @@ optional features of the dependency.
 
    depends_on("libelf@0.8 +parser +pic")
 
-Both users *and* package authors can use the same spec syntax to refer
+Both users *and* package authors use the same spec syntax to refer
 to different package configurations. Users use the spec syntax on the
 command line to find installed packages or to install packages with
 particular constraints, and package authors can use specs to describe
@@ -1902,7 +1894,7 @@ For example:
        depends_on("adept-utils")
        depends_on("callpath")
 
-Here, ``callpath`` and ``adept-utils`` are concrete packages, but there is no actual package file for ``mpi``, so we say it is a *virtual* package.
+Here, ``callpath`` and ``adept-utils`` are concrete packages, but there is no actual package for ``mpi``, so we say it is a *virtual* package.
 The syntax of ``depends_on`` is the same for both.
 If we look inside the package file of an MPI implementation, say MPICH, we'll see something like this:
 
@@ -1958,6 +1950,8 @@ You can indicate this by adding a version constraint to the spec passed to ``pro
 
 Suppose that the above ``provides`` call is in the ``mpich2`` package.
 This says that ``mpich2`` provides MPI support *up to* version 2, but if a package ``depends_on("mpi@3")``, then Spack will *not* build that package with ``mpich2``.
+
+Currently, names and versions are the only spec components supported for virtual packages.
 
 ^^^^^^^^^^^^^^^^^
 ``provides when``
