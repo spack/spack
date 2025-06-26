@@ -1161,6 +1161,23 @@ For packages that do not fit ``CMakePackage`` but still run ``cmake`` as part of
 MPI support in Spack
 ---------------------
 
+.. note::
+
+   The MPI support section is somewhat outdated and will be updated in the future.
+
+.. (This is just a comment not rendered in the docs)
+   An attempt to update this section showed that Spack's handling of MPI has various issues.
+   1. MPI provider packages tend to set self.spec.mpicc in setup_dependent_package, which is wrong
+      because that function is called for every dependent, meaning that mpi's spec is mutated
+      repeatedly with possibly different values if the dependent_spec is used.
+   2. The suggestion to fix this was to make the "interface" such that a package class defines
+      properties like `mpicc`, and dependents would do `self["mpi"].mpicc` to get the package
+      attribute instead of the spec attribute.
+   3. While (2) is cleaner, it simply does not work for all MPI providers, because not all strictly
+      adhere to the interface. The `msmpi` package notably does not have mpicc wrappers, and
+      currently sets `self.spec.mpicc` in `setup_dependent_package` to the C compiler of the
+      dependent, which again is wrong because there are many dependents.
+
 It is common for high-performance computing software/packages to use the
 Message Passing Interface ( ``MPI``).  As a result of concretization, a
 given package can be built using different implementations of MPI such as
