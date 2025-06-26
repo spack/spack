@@ -14,9 +14,9 @@ installed packages are symlinked to a single central location like ``/usr/local`
 In this section, we will show you how to emulate the behavior of Homebrew/Conda
 using :ref:`environments`!
 
------
+------
 Setup
------
+------
 
 First, let's create a new environment. We'll assume that Spack is already set up
 correctly, and that you've already sourced the setup script for your shell.

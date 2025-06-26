@@ -760,9 +760,9 @@ informing the user what broken specs were encountered. This allows the pipeline
 to fail early and avoid wasting compute resources attempting to build packages
 that will not succeed.
 
-^^^^^
+^^^^^^
 CDash
-^^^^^
+^^^^^^
 
 The optional ``cdash`` section provides information that will be used by the
 ``spack ci generate`` command (invoked by ``spack ci start``) for reporting

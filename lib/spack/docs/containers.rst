@@ -755,9 +755,9 @@ to customize the generation of container recipes:
 Best Practices
 ~~~~~~~~~~~~~~
 
-"""
+""""""
 MPI
-"""
+""""""
 Due to the dependency on Fortran for OpenMPI, which is the Spack default
 implementation, consider adding ``gfortran`` to the ``apt-get install`` list.
 
@@ -768,9 +768,9 @@ For execution on HPC clusters, it can be helpful to import the Docker
 image into Singularity in order to start a program with an *external*
 MPI. Otherwise, also add ``openssh-server`` to the ``apt-get install`` list.
 
-""""
+""""""
 CUDA
-""""
+""""""
 Starting from CUDA 9.0, NVIDIA provides minimal CUDA images based on
 Ubuntu. Please see `their instructions <https://hub.docker.com/r/nvidia/cuda/>`_.
 Avoid double-installing CUDA by adding, e.g.:
