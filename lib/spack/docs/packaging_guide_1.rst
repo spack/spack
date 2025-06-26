@@ -1141,8 +1141,7 @@ Fetching a date
   revision or hash like Subversion, Git, or Mercurial do. This makes
   it impossible to specify an exact commit to check out.
 
-CVS has more features, but since CVS is rarely used these days, Spack
-does not support all of them.
+CVS has more features, but since CVS is rarely used these days, Spack does not support all of them.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Sources that are not archives
