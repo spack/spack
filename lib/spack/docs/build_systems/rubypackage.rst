@@ -4,9 +4,9 @@
 
 .. _rubypackage:
 
-----
+------
 Ruby
-----
+------
 
 Like Perl, Python, and R, Ruby has its own build system for
 installing Ruby gems.

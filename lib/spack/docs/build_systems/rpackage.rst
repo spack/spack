@@ -4,9 +4,9 @@
 
 .. _rpackage:
 
---
+------
 R
---
+------
 
 Like Python, R has its own built-in build system.
 
@@ -102,9 +102,9 @@ https://cloud.r-project.org/package=caret as the homepage instead of
 https://cloud.r-project.org/web/packages/caret/index.html. The latter may
 change without notice.
 
-^^^
+^^^^^^
 URL
-^^^
+^^^^^^
 
 As previously mentioned, the download URL for the latest release can be
 found by searching "Package source" on the homepage.

@@ -4,9 +4,9 @@
 
 .. _sconspackage:
 
------
+------
 SCons
------
+------
 
 SCons is a general-purpose build system that does not rely on
 Makefiles to build software. SCons is written in Python, and handles

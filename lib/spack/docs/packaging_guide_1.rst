@@ -842,9 +842,9 @@ than the default repo, it can be overridden with a version-specific argument.
 
 .. _git-fetch:
 
-"""
+"""""""
 Git
-"""
+"""""""
 
 Git fetching supports the following parameters to ``version``:
 
@@ -1097,9 +1097,9 @@ version directive.
 
 .. _cvs-fetch:
 
-"""
+"""""""
 CVS
-"""
+"""""""
 
 CVS (Concurrent Versions System) is an old centralized version control
 system. It is a predecessor of Subversion.

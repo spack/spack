@@ -4,9 +4,9 @@
 
 .. _luapackage:
 
----
+------
 Lua
----
+------
 
 The ``Lua`` build system is a helper for the common case of Lua packages that provide
 a rockspec file.  This is not meant to take a rock archive, but to build

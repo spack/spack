@@ -4,9 +4,9 @@
 
 .. _cmakepackage:
 
------
+------
 CMake
------
+------
 
 Like Autotools, CMake is a widely-used build-script generator. Designed
 by Kitware, CMake is the most popular build system for new C, C++, and
