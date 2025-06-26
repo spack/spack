@@ -1098,7 +1098,7 @@ def test_ci_get_stack_changed(mock_git_repo, monkeypatch):
     fake_env_path = os.path.join(
         spack.paths.prefix, os.path.sep.join(("no", "such", "env", "path"))
     )
-    assert ci.get_stack_changed(fake_env_path) is True
+    assert ci.stack_changed(fake_env_path) is True
 
 
 def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeypatch):
@@ -1112,7 +1112,7 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
         else:
             return ["pkg-c"]
 
-    def fake_stack_changed(env_path, rev1="HEAD^", rev2="HEAD"):
+    def fake_stack_changed(env_path):
         return False
 
     def fake_change_revisions(env_path, rev1="HEAD^", rev2="HEAD"):
@@ -1125,7 +1125,7 @@ def test_ci_generate_prune_untouched(ci_generate_test, tmp_path, tmpdir, monkeyp
     builder.add_package("pkg-d")
 
     monkeypatch.setattr(ci, "compute_affected_packages", fake_compute_affected)
-    monkeypatch.setattr(ci, "get_stack_changed", fake_stack_changed)
+    monkeypatch.setattr(ci, "stack_changed", fake_stack_changed)
     monkeypatch.setattr(ci, "get_change_revisions", fake_change_revisions)
 
     with spack.repo.use_repositories(builder.root, override=False):

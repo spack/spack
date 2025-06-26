@@ -136,18 +136,22 @@ def get_added_versions(
     return [checksums_version_dict[c] for c in added_checksums - removed_checksums]
 
 
-def get_stack_changed(env_path, rev1="HEAD^", rev2="HEAD") -> bool:
+def stack_changed(env_path) -> bool:
     """Given an environment manifest path and two revisions to compare, return
     whether or not the stack was changed.  Returns True if the environment
     manifest changed between the provided revisions (or additionally if the
     `.gitlab-ci.yml` file itself changed).  Returns False otherwise."""
     # git returns posix paths always, normalize input to be comptaible
     # with that
+    # Check if the environment changed
     env_path = llnl.path.convert_to_posix_path(os.path.dirname(env_path))
-    git_dir = get_git_root(env_path)
 
-    if not git_dir:
+    rev1, rev2 = get_change_revisions(env_path)
+    if not (rev1 and rev2):
         return False
+
+    # This will never be none, we already checked it in get_change_revisions
+    git_dir = get_git_root(env_path)
 
     with fs.working_dir(git_dir):
         git = spack.util.git.git(required=True)
@@ -429,14 +433,9 @@ def collect_pipeline_options(env: ev.Environment, args) -> PipelineOptions:
 def get_unaffected_pruners(
     env, untouched_pruning_dependent_depth: Optional[int]
 ) -> Optional[PrunerCallback]:
-    # Check if the environment changed
-    stack_changed = False
-    rev1, rev2 = get_change_revisions(os.path.dirname(env.manifest_path))
-    if rev1 and rev2:
-        stack_changed = get_stack_changed(env.manifest_path, rev1, rev2)
 
     # If the stack env has changed, do not apply unaffected pruning
-    if stack_changed:
+    if stack_changed(env.manifest_path):
         tty.info("Skipping unaffected pruning: stack environment changed")
         return None
 
@@ -452,18 +451,17 @@ def get_unaffected_pruners(
 
         tty.debug(f"repo {repo.namespace}: revisions rev1={rev1}, rev2={rev2}")
 
-        affected_pkgs.extend(compute_affected_packages(repo, rev1=rev1, rev2=rev2))
+        repo_affected_pkgs = compute_affected_packages(repo, rev1=rev1, rev2=rev2)
         tty.debug(f"repo {repo.namespace}: affected pkgs")
-        for p in affected_pkgs:
+        for p in repo_affected_pkgs:
             tty.debug(f"  {p}")
+
+        affected_pkgs.extend(repo_affected_pkgs)
 
     affected_specs = get_spec_filter_list(
         env, affected_pkgs, dependent_traverse_depth=untouched_pruning_dependent_depth
     )
-    tty.debug(
-        f"repo {repo.namespace}: dependent_traverse_depth="
-        f"{untouched_pruning_dependent_depth}, affected specs:"
-    )
+    tty.debug(f"dependent_traverse_depth={untouched_pruning_dependent_depth}, affected specs:")
     for s in affected_specs:
         tty.debug(f"  {PipelineDag.key(s)}")
 
@@ -472,10 +470,7 @@ def get_unaffected_pruners(
     if affected_specs:
         return create_unaffected_pruner(affected_specs)
     else:
-        tty.info(
-            f"Skipping unaffected pruning for repo {repo.namespace}:"
-            " no package changes were dectected"
-        )
+        tty.info("Skipping unaffected pruning no package changes were detected")
         return None
 
 
