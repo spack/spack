@@ -103,6 +103,23 @@ by scraping it directly from package web pages. Depending on the
 package and how its releases are organized, Spack may or may not be
 able to find remote versions.
 
+.. _cmd-spack-providers:
+
+^^^^^^^^^^^^^^^^^^^
+``spack providers``
+^^^^^^^^^^^^^^^^^^^
+
+You can see what packages provide a particular virtual package using ``spack providers``.
+If you wanted to see what packages provide ``mpi``, you would just run:
+
+.. command-output:: spack providers mpi
+
+And if you *only* wanted to see packages that provide MPI-2, you would add a version specifier to the spec:
+
+.. command-output:: spack providers mpi@2
+
+Notice that the package versions that provide insufficient MPI versions are now filtered out.
+
 ---------------------------
 Installing and Uninstalling
 ---------------------------
