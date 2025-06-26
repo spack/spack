@@ -498,29 +498,18 @@ Checksum verification
 ^^^^^^^^^^^^^^^^^^^^^
 
 In the above example we see that each version is associated with a ``sha256`` checksum.
-Spack verifies that the source code it downloads is not corrupted or compromised since it was packaged, by verifying that the checksum corresponds to what the original author of the Spack package saw when they created the package.
+Spack uses these checksums to verify that downloaded source code has not been modified, corrupted or compromised.
+This is both a critical security feature and a way to ensure reproducibility of builds.
 
-If Spack uses a download method it can verify, we say the download method is *trusted*. 
-Trust is important for *all downloads*: Spack has no control over the security of the various sites from which it downloads source code, and can never assume that any particular site hasn't been compromised.
+Spack considers a download *trusted* if its contents can be verified.
+For downloads from URLs, this is done by providing a ``sha256`` checksum for the archive.
+For :ref:`Git downloads <git-fetch>`, which we will cover in more detail later, this is done by specifying a full commit hash.
 
-Trust is established in different ways for different download methods.
-For the most common download method --- a single-file tarball --- the tarball is checksummed.
-Git downloads using ``commit=`` are trusted implicitly, as long as a full commit sha is specified.
+Spack requires that all URL downloads have a checksum, and refuses to install packages when checksum verification fails.
+While this check can be disabled for development with ``spack install --no-checksum``, it is not recommended.
 
-Spack also supports untrusted download methods: tarball URLs may be supplied without a checksum, or Git downloads may specify just a branch or tag instead of a commit sha.
-If the user does not control or trust the source of an untrusted download, it is a security risk.
-Unless otherwise specified by the user for special cases, Spack should by default use *only* trusted download methods.
-
-Spack provides the following mechanisms for safety:
-
-#. Spack refuses to install versions of packages that are untrusted.
-   You can override this with ``spack install --no-checksum``.
-
-#. Spack always errors whenever a checksum does not match what the package author specified.
-
-For URL downloads, Spack supports multiple cryptographic algorithms.
-We recommend ``sha256``, but ``sha384``, and ``sha512`` algorithms are also supported.
-Spack determines the algorithm to use based on the hash length.
+For URL downloads, Spack supports multiple cryptographic hash algorithms, including ``sha256``, ``sha384``, and ``sha512``.
+We currently recommend ``sha256``.
 
 .. _cmd-spack-checksum:
 
