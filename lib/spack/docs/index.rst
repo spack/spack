@@ -53,6 +53,7 @@ or refer to the full manual below.
    getting_started
    spec_syntax
    installing_prerequisites
+   windows
 
 .. toctree::
    :maxdepth: 2
@@ -61,7 +62,6 @@ or refer to the full manual below.
    basic_usage
    replace_conda_homebrew
    frequently_asked_questions
-   windows
    getting_help
 
 .. toctree::
