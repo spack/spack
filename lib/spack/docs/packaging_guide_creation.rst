@@ -4,6 +4,16 @@
 
 .. _packaging-guide:
 
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 0
+   :width: 100%
+
+   * - **1. Creation**
+     - :doc:`2. Build <packaging_guide_build>`
+     - :doc:`3. Testing <packaging_guide_testing>`
+     - :doc:`4. Advanced <packaging_guide_advanced>`
+
 ===================================
 Packaging Guide: defining a package
 ===================================

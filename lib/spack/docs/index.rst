@@ -93,10 +93,10 @@ or refer to the full manual below.
    :maxdepth: 2
    :caption: Contributing
 
-   packaging_guide_1
-   packaging_guide_2
-   packaging_guide_3
-   packaging_guide_4
+   packaging_guide_creation
+   packaging_guide_build
+   packaging_guide_testing
+   packaging_guide_advanced
    build_systems
    contribution_guide
    developer_guide

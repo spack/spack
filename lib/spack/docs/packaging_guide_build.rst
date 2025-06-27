@@ -4,6 +4,16 @@
 
 .. _packaging-guide-part-2:
 
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 0
+   :width: 100%
+
+   * - :doc:`1. Creation <packaging_guide_creation>`
+     - **2. Build**
+     - :doc:`3. Testing <packaging_guide_testing>`
+     - :doc:`4. Advanced <packaging_guide_advanced>`
+
 ======================================
 Packaging Guide: customizing the build
 ======================================
@@ -1350,7 +1360,7 @@ Packaging workflow and commands
 
 When you are building packages, you will likely not get things completely right the first time.
 
-After having :doc:`created a package <packaging_guide_1>`, the edit-install loop is a common workflow to get the package building correctly:
+After having :doc:`created a package <packaging_guide_creation>`, the edit-install loop is a common workflow to get the package building correctly:
 
 .. code-block:: console
 

@@ -4,6 +4,16 @@
 
 .. _packaging-guide-part-3:
 
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 0
+   :width: 100%
+
+   * - :doc:`1. Creation <packaging_guide_creation>`
+     - :doc:`2. Build <packaging_guide_build>`
+     - **3. Testing**
+     - :doc:`4. Advanced <packaging_guide_advanced>`
+
 ======================================
 Packaging Guide: testing installations
 ======================================
